@@ -6,10 +6,10 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Eye, Pencil, Trash } from "lucide-react";
+import { Eye, Pencil, Trash,FileText } from "lucide-react";
 import { Outlet, useNavigate } from "react-router-dom";
-// import KanbanView from "./KanbanView";
-import KanbanView from "./StandardTemplates/StandardTemplateKanbanView.jsx";
+import KanbanView from "./KanbanView";
+// import KanbanView from "./StandardTemplates/StandardTemplateKanbanView.jsx";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import Header from "../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
@@ -67,7 +67,7 @@ const FilterTabs = ({
 
 const InterviewTemplates = () => {
   const { effectivePermissions } = usePermissions();
-  const { templatesData, isLoading } = useInterviewTemplates();
+  const { templatesData, isLoading,saveTemplate } = useInterviewTemplates();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const navigate = useNavigate();
   const [view, setView] = useState("table");
@@ -327,6 +327,71 @@ const InterviewTemplates = () => {
     { label: "Hybrid (Online + Offline)", value: "hybrid" },
   ];
 
+  const handleClone = async (template) => {
+    if (!template) {
+      console.error("Invalid template: template is undefined or null");
+      alert("Cannot clone: Invalid template data.");
+      return;
+    }
+  
+    console.log("Cloning:", template);
+  
+    try {
+      // Safely extract and default fields
+      const safeName = typeof template.name === 'string' ? template.name.replace(/_std$/, "") : (template.title || "Cloned Template").replace(/_std$/, "");
+      
+      // Define the fields to pass based on the schema, with safe defaults
+      const clonedTemplateData = {
+        title: template.title || "Untitled Template",
+        name: safeName,
+        description: template.description || "",
+        bestFor: template.bestFor || "General use",
+        format: template.format || "online",
+        status: template.status || "inactive",
+        type: "custom", // Set to custom for cloned template
+        rounds: Array.isArray(template.rounds) ? template.rounds.map((round, index) => ({
+          roundTitle: round.roundTitle || `Round ${index + 1}`,
+          assessmentId: round.assessmentId || null,
+          interviewerViewType: round.interviewerViewType || null,
+          duration: round.duration || null,
+          instructions: round.instructions || null,
+          interviewMode: round.interviewMode || null,
+          minimumInterviewers: round.minimumInterviewers || null,
+          selectedInterviewers: Array.isArray(round.selectedInterviewers) ? round.selectedInterviewers : [],
+          interviewerType: round.interviewerType || null,
+          selectedInterviewersType: round.selectedInterviewersType || null,
+          interviewerGroupName: round.interviewerGroupName || null,
+          interviewers: Array.isArray(round.interviewers) ? round.interviewers : [],
+          questions: Array.isArray(round.questions) ? round.questions.map((question) => ({
+            questionId: question.questionId || null,
+            snapshot: question.snapshot || {},
+          })) : [],
+          sequence: round.sequence || index + 1,
+        })) : [],
+        isSaved: false, // Set to false for new template
+      };
+  
+      // Optionally include interviewTemplateCode if needed (e.g., generate if backend requires uniqueness)
+      // if (template.interviewTemplateCode) {
+      //   clonedTemplateData.interviewTemplateCode = `${clonedTemplateData.name}-clone-${Date.now()}`;
+      // }
+  
+      // Save the cloned template
+      const savedTemplate = await saveTemplate({
+        templateData: clonedTemplateData,
+      });
+  
+      console.log("Cloned template saved:", savedTemplate);
+      // Provide feedback to the user (e.g., via toast in production)
+      alert("Template cloned successfully!");
+      return savedTemplate;
+    } catch (error) {
+      console.error("Error cloning template:", error);
+      alert("Failed to clone template. Please try again.");
+      throw error;
+    }
+  };
+
   const tableColumns = [
     {
       key: "title",
@@ -413,7 +478,19 @@ const InterviewTemplates = () => {
           },
         ]
       : []),
+    ...(effectivePermissions.InterviewTemplates?.Clone
+      ? [
+          {
+            key: "clone",
+            label: "Clone",
+            icon: <FileText className="w-4 h-4 text-green-600" />,
+            onClick: handleClone,
+          },
+        ]
+      : []),
   ];
+
+  
 
   return (
     <div className="bg-background min-h-screen">
@@ -616,7 +693,7 @@ const InterviewTemplates = () => {
             </div>
           </div>
         ) : (
-          <StandardTemplates />
+          <StandardTemplates handleClone={handleClone} />
         )}
       </main>
       <Outlet />

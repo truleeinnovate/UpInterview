@@ -2,12 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import TemplateModal from "./TemplateModal";
-import { Eye, MoreVertical, Trash2, FileText } from "lucide-react";
+import { Eye,FileText } from "lucide-react";
 import { usePermissions } from "../../../Context/PermissionsContext";
 import { useNavigate } from "react-router-dom";
 // v1.0.0 <---------------------------------------------------------------------------------
 import { ReactComponent as FiMoreHorizontal } from "../../../icons/FiMoreHorizontal.svg";
 // v1.0.0 --------------------------------------------------------------------------------->
+
 
 const formatOptions = [
   { label: "Online / Virtual", value: "online" },
@@ -15,7 +16,9 @@ const formatOptions = [
   { label: "Hybrid (Online + Offline)", value: "hybrid" },
 ];
 
-const StandardTemplateTableView = ({ templatesData }) => {
+
+
+const StandardTemplateTableView = ({ templatesData, handleClone }) => {
   const { effectivePermissions } = usePermissions();
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
@@ -172,6 +175,7 @@ const StandardTemplateTableView = ({ templatesData }) => {
   };
   // v1.0.0 ---------------------------------------------------------------------------->
 
+
   return (
     <>
       <div className="w-full">
@@ -273,20 +277,14 @@ const StandardTemplateTableView = ({ templatesData }) => {
                                       className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
                                     >
                                       <Eye className="w-4 h-4 text-custom-blue mr-1" />
-                                      View
-                                    </li>
-                                    <li
-                                      onClick={() => handleDetails(template)}
-                                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                    >
-                                      <FileText className="w-4 h-4 text-custom-blue mr-1" />
                                       View Details
                                     </li>
                                     <li
-                                      onClick={() => handleDelete(template)}
-                                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-red-600 cursor-pointer"
+                                      onClick={() => handleClone(template)}
+                                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
                                     >
-                                      <Trash2 className="w-4 h-4" /> Delete
+                                      <FileText className="w-4 h-4 text-custom-blue mr-1" />
+                                      Clone
                                     </li>
                                   </ul>
                                 </div>

@@ -218,7 +218,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     .concat([{ value: "__other__", label: "+ Others" }]);
   const templateOptions = (templatesData || [])
     .filter((t) => t?.rounds?.length > 0 && t?.status === "active")
-    .map((t) => ({ value: t._id, label: t.templateName }));
+    .map((t) => ({ value: t._id, label: t.title }));
 
   // Generic change handler for shared form fields + live cross-field validation
   const handleChange = (e) => {
@@ -390,7 +390,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       console.log("selectedPosition", selectedPosition);
       const matchingTemplate = templatesData.find(
         (template) =>
-          template.templateName === selectedPosition?.selectedTemplete
+          template.title === selectedPosition?.selectedTemplete
       );
       //setPositionId(id);
 
@@ -543,7 +543,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       jobDescription: dataToSubmit.jobDescription.trim(),
       // templateId: dataToSubmit.template,
       // ✅ fix naming mismatch (backend expects selectedTemplete)
-      selectedTemplete: dataToSubmit.template?.templateName || null,
+      selectedTemplete: dataToSubmit.template?.title || null,
       rounds: dataToSubmit?.template?.rounds || [],
     };
     console.log("basicdetails", basicdetails);

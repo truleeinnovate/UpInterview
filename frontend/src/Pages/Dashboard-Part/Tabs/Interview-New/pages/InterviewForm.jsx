@@ -223,7 +223,7 @@ useEffect(() => {
   console.log("Render state:", {
     templateId,
     templatesDataLength: templatesData?.length,
-    selectedTemplate: templatesData?.find(t => t._id === templateId)?.templatetitle
+    selectedTemplate: templatesData?.find(t => t._id === templateId)?.title
   });
 
   useEffect(() => {
@@ -503,7 +503,7 @@ useEffect(() => {
                       options={
                         templatesData?.map((template) => ({
                           value: template._id,
-                          label: template.templatetitle,
+                          label: template.title,
                         })) || []
                       }
                       onChange={(e) => {
