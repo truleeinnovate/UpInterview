@@ -31,7 +31,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const StandardTemplates = () => {
+const StandardTemplates = ({ handleClone }) => {
   const { templatesData, isLoading } = useInterviewTemplates();
   const { effectivePermissions } = usePermissions();
   const navigate = useNavigate();
@@ -378,7 +378,7 @@ const StandardTemplates = () => {
         {view === "table" ? (
           <div className="w-full overflow-x-auto">
             <ErrorBoundary>
-              <StandardTemplateTableView templatesData={paginatedTemplates} />
+              <StandardTemplateTableView templatesData={paginatedTemplates} handleClone={handleClone} />
             </ErrorBoundary>
           </div>
         ) : (
@@ -389,6 +389,7 @@ const StandardTemplates = () => {
                 effectivePermissions={effectivePermissions}
                 onView={handleView}
                 // onEdit={handleEdit}
+                handleClone={handleClone}
                  />
             </ErrorBoundary>
           </div>
