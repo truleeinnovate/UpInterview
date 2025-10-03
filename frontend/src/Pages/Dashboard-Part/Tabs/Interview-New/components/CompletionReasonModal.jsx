@@ -6,6 +6,7 @@ import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 import { Button } from '../../CommonCode-AllTabs/ui/button';
 import { motion } from 'framer-motion';
+import { notify } from '../../../../../services/toastService';
 
 const CompletionReasonModal = ({
   onClose,
@@ -52,31 +53,15 @@ const CompletionReasonModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (!reason.trim()) {
-      setError('Please provide a completion reason');
+       notify.error('Please provide a reason');
       return;
     }
-
-    // Object.entries(pendingRoundActions).forEach(([roundId, action]) => {
-    //   if (action !== 'keep') {
-    //     const round = interview?.rounds.find(r => r._id === roundId);
-    //     if (round) {
-    //       const now = new Date().toISOString();
-    //       const updatedRound = {
-    //         ...round,
-    //         status: action,
-    //         completedDate: action === 'Completed' ? now : round.completedDate,
-    //         rejectionReason: action === 'Rejected' ? 'Rejected during interview completion' : round.rejectionReason
-    //       };
-
-    //       // updateRound(interviewId, updatedRound);
-    //     }
-    //   }
-    // });
-
     onComplete(reason);
+    setReason(''); // Reset the reason
   };
+
+//   if (!isOpen) return null;
 
   const handleRoundActionChange = (roundId, action) => {
     setPendingRoundActions(prev => ({

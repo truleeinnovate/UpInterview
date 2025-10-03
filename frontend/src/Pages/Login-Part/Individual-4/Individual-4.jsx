@@ -96,10 +96,125 @@ const MultiStepForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Initialize currentStep from location.state or default to 0
-  const [currentStep, setCurrentStep] = useState(
-    location.state?.currentStep || 0
-  );
+  // Initialize all form states with proper structure
+  const [currentStep, setCurrentStep] = useState(location.state?.currentStep || 0);
+
+  // Basic Details
+  const [basicDetails, setBasicDetails] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    countryCode: '+1',
+    profileId: '',
+    dateOfBirth: '',
+    gender: '',
+    linkedinUrl: '',
+    portfolioUrl: ''
+  });
+
+  // Additional Details
+  const [additionalDetails, setAdditionalDetails] = useState({
+    currentRole: '',
+    industry: '',
+    yearsOfExperience: '',
+    location: '',
+    resumeFile: null,
+    coverLetterFile: null,
+    isResumeRemoved: false,
+    isCoverLetterRemoved: false
+  });
+
+  // Interview Details
+  const [interviewDetails, setInterviewDetails] = useState({
+    skills: [],
+    technologies: [],
+    rates: {
+      junior: { usd: 0, inr: 0, isVisible: true },
+      mid: { usd: 0, inr: 0, isVisible: false },
+      senior: { usd: 0, inr: 0, isVisible: false }
+    },
+    interviewFormatWeOffer: [],
+    PreviousExperienceConductingInterviews: '',
+    PreviousExperienceConductingInterviewsYears: '',
+    hourlyRate: 0,
+    expectedRatePerMockInterview: 0,
+    mock_interview_discount: '0',
+    isMockInterviewSelected: false,
+    bio: '',
+    professionalTitle: ''
+  });
+
+  // Availability Details
+  const [availabilityDetails, setAvailabilityDetails] = useState({
+    timeZone: '',
+    preferredDuration: '',
+    availability: []
+  });
+
+  // Local state for file uploads
+//   const [file, setFile] = useState(null);
+//   const [filePreview, setFilePreview] = useState('');
+//   const [isProfileRemoved, setIsProfileRemoved] = useState(false);
+//   const [resumeFile, setResumeFile] = useState(null);
+//   const [coverLetterFile, setCoverLetterFile] = useState(null);
+//   const [isResumeRemoved, setIsResumeRemoved] = useState(false);
+//   const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
+
+  // Other state variables
+//   const [selectedTechnologyies, setSelectedTechnologyies] = useState([]);
+//   const [selectedSkills, setSelectedSkills] = useState([]);
+//   const [previousInterviewExperience, setPreviousInterviewExperience] = useState('');
+//   const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
+//   const [times, setTimes] = useState({
+//     Sun: [{ startTime: null, endTime: null }],
+//     Mon: [{ startTime: null, endTime: null }],
+//     Tue: [{ startTime: null, endTime: null }],
+//     Wed: [{ startTime: null, endTime: null }],
+//     Thu: [{ startTime: null, endTime: null }],
+//     Fri: [{ startTime: null, endTime: null }],
+//     Sat: [{ startTime: null, endTime: null }],
+//   });
+
+  // Save form data to local storage whenever it changes
+  useEffect(() => {
+    const formData = {
+      basicDetails,
+      additionalDetails,
+      interviewDetails,
+      availabilityDetails,
+      currentStep
+    };
+    localStorage.setItem('interviewerFormData', JSON.stringify(formData));
+  }, [basicDetails, additionalDetails, interviewDetails, availabilityDetails, currentStep]);
+
+  // Load form data from local storage on component mount
+  useEffect(() => {
+    const savedFormData = localStorage.getItem('interviewerFormData');
+    if (savedFormData) {
+      const {
+        basicDetails: savedBasicDetails,
+        additionalDetails: savedAdditionalDetails,
+        interviewDetails: savedInterviewDetails,
+        availabilityDetails: savedAvailabilityDetails,
+        currentStep: savedCurrentStep
+      } = JSON.parse(savedFormData);
+
+      if (savedBasicDetails) setBasicDetails(prev => ({ ...prev, ...savedBasicDetails }));
+      if (savedAdditionalDetails) setAdditionalDetails(prev => ({ ...prev, ...savedAdditionalDetails }));
+      if (savedInterviewDetails) setInterviewDetails(prev => ({
+        ...prev,
+        ...savedInterviewDetails,
+        // Ensure rates structure is maintained
+        rates: {
+          ...prev.rates,
+          ...(savedInterviewDetails.rates || {})
+        }
+      }));
+      if (savedAvailabilityDetails) setAvailabilityDetails(prev => ({ ...prev, ...savedAvailabilityDetails }));
+      if (savedCurrentStep !== undefined) setCurrentStep(savedCurrentStep);
+    }
+  }, []);
 
   const {
     Freelancer,

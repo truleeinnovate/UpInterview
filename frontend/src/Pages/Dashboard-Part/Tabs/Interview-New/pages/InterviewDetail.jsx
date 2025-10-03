@@ -1,6 +1,6 @@
 // v1.0.0 - Ranjith added the interview details tab new things relaetd path set for candidate and postion view tab show proeprly
 // v1.0.1 - Ashok - commented extra user icon and user name
-/* 
+/*
    v1.0.2 - Ashok - fixed z-index issue and added createPortal using this
    lets you render a React component into a different part of the DOM
    outside its parent hierarchy.
@@ -39,12 +39,16 @@ import CandidateDetails from "../../Candidate-Tab/CandidateViewDetails/Candidate
 // v1.0.2 <---------------------------------------------------------------------
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.2 --------------------------------------------------------------------->
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
   calculateTimeBeforeInterview,
   getFeeBracket,
   calculateFees,
 } from "../../../../../utils/feeCalculations.js";
+import { notify } from "../../../../../services/toastService.js";
+import axios from "axios";
+import { config } from "../../../../../config.js";
 // import FeeConfirmationModal from '../components/FeeConfirmationModal.js';
 
 const InterviewDetail = () => {
@@ -59,6 +63,10 @@ const InterviewDetail = () => {
   const [modalAction, setModalAction] = useState(null); // 'reschedule' or 'cancel'
   const [selectedRound, setSelectedRound] = useState(null);
   const [calculatedFees, setCalculatedFees] = useState(null);
+
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+const [pendingStatus, setPendingStatus] = useState(null);
+const [pendingReason, setPendingReason] = useState('');
 
   const interview = interviewData?.find((interview) => interview._id === id);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -90,12 +98,65 @@ const InterviewDetail = () => {
   // ----------------------->
 
   const navigate = useNavigate();
-
+  const queryClient = useQueryClient();
   const [candidate, setCandidate] = useState(null);
   const [position, setPosition] = useState(null);
   const [rounds, setRounds] = useState([]);
   const [template, setTemplate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [statusModal, setStatusModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
+
+  const checkRoundStatuses = (action) => {
+    const allowedStatuses = ['Draft', 'Completed', 'Cancelled', 'Selected', 'Rejected'];
+    const invalidRounds = interview?.rounds?.filter(
+      round => !allowedStatuses.includes(round.status)
+    );
+
+    if (invalidRounds && invalidRounds.length > 0) {
+      const roundItems = invalidRounds.map(round => {
+        const roundName = round.roundTitle || `Round ${round.sequence}`;
+        return `
+          <li class="mb-2">
+            <div class="flex items-start">
+              <span class="inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-100 text-red-600 text-xs font-bold mr-2 flex-shrink-0">!</span>
+              <div>
+                <span class="font-bold text-gray-900">${roundName}</span>
+                <span class="text-gray-600 ml-1">(${round.status})</span>
+              </div>
+            </div>
+          </li>`;
+      }).join('');
+
+      setStatusModal({
+        isOpen: true,
+        title: `Cannot ${action.charAt(0).toUpperCase() + action.slice(1)} Interview`,
+        message: `The following rounds are not in a completed state:<ul class="list-disc pl-5 mt-2 mb-3">${roundItems}</ul>Please update all rounds to a completed state (Completed, Cancelled, Selected, or Rejected) before ${action.toLowerCase()} the interview.`,
+        isHTML: true
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleCompleteClick = async () => {
+    if (checkRoundStatuses('complete')) {
+      setShowCompletionModal(true);
+    }
+  };
+
+  const handleCancelClick = async () => {
+    if (checkRoundStatuses('cancel')) {
+      const success = await handleUpdateStatus('Cancelled', 'Cancelled by user');
+      if (success) {
+        setIsModalOpen(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (interview) {
@@ -290,7 +351,7 @@ const InterviewDetail = () => {
     round?.interviewers?.forEach((interviewer) => {
       if (interviewer?._id) {
         allInterviewerIds.add(interviewer._id);
-  
+
         if (round.interviewerType?.toLowerCase() === "internal") {
           internalInterviewerIds.add(interviewer._id);
         } else if (round.interviewerType?.toLowerCase() === "external") {
@@ -339,20 +400,33 @@ const InterviewDetail = () => {
 
   const handleUpdateStatus = async (newStatus, reason = null) => {
     try {
-      await updateInterviewStatus({
-        interviewId: id,
-        status: newStatus,
-        reason,
-      });
+      // Use the correct endpoint for updating status
+      await axios.patch(
+        `${config.REACT_APP_API_URL}/interview/status/${id}/${newStatus}`,
+        { reason },
+        { withCredentials: true }
+      );
+
+      // Refresh the interview data
+      await queryClient.invalidateQueries(['interview', id]);
+      await queryClient.invalidateQueries(['interviews']);
+
+      // Show success message
+      notify.success(`Interview marked as ${newStatus.toLowerCase()} successfully`);
+      return true;
     } catch (error) {
-      console.error("Failed to update interview status:", error);
+      console.error('Error updating interview status:', error);
+      notify.error(`Failed to update status: ${error.response?.data?.message || error.message}`);
+      return false;
     }
   };
 
   // Call this function for completion with a reason
-  const handleCompleteWithReason = (reason) => {
-    handleUpdateStatus("Completed", reason);
-    setShowCompletionModal(false);
+  const handleCompleteWithReason = async (reason) => {
+    const success = await handleUpdateStatus('Completed', reason);
+    if (success) {
+      setShowCompletionModal(false);
+    }
   };
 
   // Call this function for cancellation
@@ -722,7 +796,7 @@ const InterviewDetail = () => {
 
                       {interview?.status === "Draft" && (
                         <button
-                          onClick={() => setShowCompletionModal(true)}
+                          onClick={handleCompleteClick}
                           className="inline-flex flex-shrink-0 items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
@@ -913,6 +987,46 @@ const InterviewDetail = () => {
           onClose={() => setSelectPositionView(null)}
         />
       )} */}
+
+      {/* Status Modal for Round Validation */}
+      {statusModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg transform transition-all duration-300 scale-95 hover:scale-100">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                  <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="ml-3 text-xl font-semibold text-gray-900">
+                  {statusModal.title}
+                </h3>
+              </div>
+              <div className="mt-4">
+                {statusModal.isHTML ? (
+                  <div
+                    className="text-gray-700 [&_ul]:mb-3 [&_ul]:mt-1 [&_li]:bg-gray-50 [&_li]:px-3 [&_li]:py-2 [&_li]:rounded-lg"
+                    dangerouslySetInnerHTML={{ __html: statusModal.message }}
+                  />
+                ) : (
+                  <p className="text-gray-600 whitespace-pre-line">
+                    {statusModal.message}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="bg-gray-50 px-6 py-4 rounded-b-xl flex justify-end space-x-3">
+              <button
+                onClick={() => setStatusModal({...statusModal, isOpen: false})}
+                className="px-6 py-2.5 bg-custom-blue text-white font-medium rounded-lg hover:bg-custom-blue/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 shadow-sm"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
