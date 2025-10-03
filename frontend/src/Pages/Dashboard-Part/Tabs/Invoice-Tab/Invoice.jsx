@@ -2,6 +2,7 @@
 // v1.0.1  - Ashok   - modified in the table columns as clicking invoice ID can open view details popup
 // v1.0.2  - Ashok   - fixed style issues
 // v1.0.3  - Ashok   - fixed responsiveness issue at kanban loading view
+// v1.0.4  - Ashok   - changed loading view of both table and kanban views
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FileText, ChevronDown, ChevronUp } from "lucide-react";
@@ -14,83 +15,9 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../config";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../Components/Shared/Table/TableView";
-import InvocieKanban from "./InvocieKanban";
+import InvoiceKanban from "./InvoiceKanban";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import { formatDateTime } from "../../../../utils/dateFormatter";
-
-
-// Loading Skeleton for Invoice Table
-const InvoiceTableSkeleton = () => {
-  return (
-    <div className="w-full">
-      <div className="skeleton-animation">
-        {/* Table header skeleton */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="grid grid-cols-6 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-4 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-          </div>
-
-          {/* Table rows skeleton */}
-          {[1, 2, 3, 4, 5].map((row) => (
-            <div key={row} className="px-6 py-4 border-b border-gray-100">
-              <div className="grid grid-cols-6 gap-4">
-                {[1, 2, 3, 4, 5, 6].map((cell) => (
-                  <div key={cell} className="h-4 bg-gray-200 rounded"></div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Loading Skeleton for Invoice Kanban
-const InvoiceKanbanSkeleton = () => {
-  return (
-    <div className="w-full px-6">
-      <div className="shimmer">
-        <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((card) => (
-            <div
-              key={card}
-              className="bg-white rounded-xl p-4 shadow-sm border border-gray-200"
-            >
-              {/* Card header skeleton */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center">
-                  <div className="h-8 w-8 bg-gray-200 rounded-full mr-3"></div>
-                  <div>
-                    <div className="h-3 bg-gray-200 rounded w-16 mb-1"></div>
-                    <div className="h-4 bg-gray-200 rounded w-24"></div>
-                  </div>
-                </div>
-                <div className="h-6 w-6 bg-gray-200 rounded"></div>
-              </div>
-
-              {/* Card content skeleton */}
-              <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  {[1, 2, 3, 4].map((item) => (
-                    <div key={item}>
-                      <div className="h-3 bg-gray-200 rounded w-16 mb-1"></div>
-                      <div className="h-4 bg-gray-200 rounded w-20"></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const InvoiceTab = () => {
   const navigate = useNavigate();
@@ -333,9 +260,7 @@ const InvoiceTab = () => {
       key: "dates",
       header: "Created At",
       render: (value) =>
-        value && value.createdAt
-          ? formatDateTime(value.createdAt)
-          : "N/A",
+        value && value.createdAt ? formatDateTime(value.createdAt) : "N/A",
     },
   ];
 
@@ -406,11 +331,12 @@ const InvoiceTab = () => {
     });
 
   return (
+    // v1.0.4 <-------------------------------------------------------------------------------
     <div className="w-full min-h-screen border-0">
       <div className="fixed top-16 left-0 right-0">
-        {/* v1.0.4 <------------------------------------------------- */}
+        {/* v1.0.3 <------------------------------------------------- */}
         <main className="px-6 sm:mt-8 md:mt-8">
-          {/* v1.0.4 <------------------------------------------------- */}
+          {/* v1.0.3 <------------------------------------------------- */}
           <div className="sm:px-0">
             <motion.div
               className="flex justify-between items-center py-4"
@@ -441,47 +367,33 @@ const InvoiceTab = () => {
           </div>
         </main>
       </div>
-      <main className="fixed inset-0 flex items-center justify-center bg-background w-full h-[calc(100vh-13rem)]">
+      <main className="flex items-center justify-center bg-background w-full">
         <div className="w-full overflow-auto">
-          {loading ? (
-            viewMode === "table" ? (
-              <InvoiceTableSkeleton />
-            ) : (
-              // v1.0.2 <---------------------------------------------------
-              // v1.0.3 <---------------------------------------------------
-              <div className="sm:mt-[140px] mt-40 xl:mt-0 2xl:mt-0">
-                <InvoiceKanbanSkeleton />
-              </div>
-              // v1.0.3 --------------------------------------------------->
-              // v1.0.2 --------------------------------------------------->
-            )
-          ) : (
-            <motion.div className="w-full">
-              <div className="relative w-full">
-                {viewMode === "table" ? (
-                  <div className="w-full">
-                    <TableView
-                      data={currentFilteredRows}
-                      columns={tableColumns}
-                      loading={false}
-                      actions={tableActions}
-                      emptyState="No invoices found."
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full px-6">
-                    <InvocieKanban
-                      currentFilteredRows={currentFilteredRows || []}
-                      loading={false}
-                      handleUserClick={() => {}}
-                      handleEditClick={() => {}}
-                      toggleSidebar={() => {}}
-                    />
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
+          <motion.div className="w-full">
+            <div className="relative w-full">
+              {viewMode === "table" ? (
+                <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                  <TableView
+                    data={currentFilteredRows}
+                    columns={tableColumns}
+                    loading={loading}
+                    actions={tableActions}
+                    emptyState="No invoices found."
+                  />
+                </div>
+              ) : (
+                <div className="w-full">
+                  <InvoiceKanban
+                    currentFilteredRows={currentFilteredRows || []}
+                    loading={loading}
+                    handleUserClick={() => {}}
+                    handleEditClick={() => {}}
+                    toggleSidebar={() => {}}
+                  />
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
         <FilterPopup
           isOpen={isFilterPopupOpen}
@@ -606,6 +518,7 @@ const InvoiceTab = () => {
       </main>
       <Outlet />
     </div>
+    // v1.0.4 ------------------------------------------------------------------------------->
   );
 };
 
