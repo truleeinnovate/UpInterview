@@ -244,7 +244,7 @@ const SkillsField = forwardRef(
                         isSearchable
                         value={entry.skill}
                         onChange={(e) => {
-                          if (onUpdateEntry) {
+                          if (onUpdateEntry && e?.target?.value !== undefined) {
                             onUpdateEntry(index, { ...entry, skill: e.target.value });
                           }
                         }}

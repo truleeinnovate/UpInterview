@@ -174,19 +174,27 @@ const DropdownWithSearchField = forwardRef(({
                                 : (options.find((o) => o.value === value) || null)
                         }
                         onChange={(opt) => {
+                            // Ensure onChange is a function before calling
+                            if (!onChange) return;
+                            
                             if (isMulti) {
                                 const vals = Array.isArray(opt) ? opt.map((o) => o.value) : [];
                                 onChange({ target: { name: name, value: vals } });
                                 return;
                             }
+                            
+                            // Handle single select
                             if (opt?.value === "__other__") {
                                 if (typeof setIsCustomName === "function") {
                                     setIsCustomName(true);
                                 }
                                 onChange({ target: { name: name, value: "" } });
-                                    }
-                                onChange({ target: { name: name, value: opt?.value || "" } });
-                            }}
+                            } else {
+                                // Ensure we always pass a valid value
+                                const value = opt?.value !== undefined ? opt.value : "";
+                                onChange({ target: { name: name, value: value } });
+                            }
+                        }}
                             placeholder={placeholder ? placeholder : `Select ${label}`}
                             isDisabled={disabled}
                             hasError={!!error}

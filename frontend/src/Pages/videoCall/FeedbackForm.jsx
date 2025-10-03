@@ -1874,13 +1874,19 @@ const FeedbackForm = ({
               </div>
             ) : (
               <DropdownSelect
-                value={recommendation}
-                onChange={(e) => setRecommendation(e.target.value)}
                 options={[
                   { value: "Yes", label: "Yes" },
                   { value: "Maybe", label: "Maybe" },
                   { value: "No", label: "No" },
                 ]}
+                value={
+                  [
+                    { value: "Yes", label: "Yes" },
+                    { value: "Maybe", label: "Maybe" },
+                    { value: "No", label: "No" },
+                  ].find((opt) => opt.value === recommendation) || null
+                }
+                onChange={(opt) => setRecommendation(opt?.value || "")}
                 placeholder="Select Recommendation"
               />
             )}
