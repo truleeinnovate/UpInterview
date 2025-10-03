@@ -3,10 +3,11 @@
 // v1.0.2 - Ashok - Improved responsiveness
 // v1.0.3 - Ashok - Separated standard and custom templates into tabs
 // v1.0.4 - Ashok - Added common kanban view
+// v1.0.5 - Ashok - Added cloning confirmation popup
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Eye, Pencil, Trash,FileText } from "lucide-react";
+import { Eye, Pencil, Trash, FileText } from "lucide-react";
 import { Outlet, useNavigate } from "react-router-dom";
 import KanbanView from "./KanbanView";
 // import KanbanView from "./StandardTemplates/StandardTemplateKanbanView.jsx";
@@ -22,6 +23,8 @@ import { usePermissions } from "../../Context/PermissionsContext";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 import { formatDateTime } from "../../utils/dateFormatter.js";
 import StandardTemplates from "./StandardTemplates/StandardTemplates.jsx";
+import { notify } from "../../services/toastService.js";
+import { useScrollLock } from "../../apiHooks/scrollHook/useScrollLock.js";
 
 // FilterTabs component for standard/custom tabs
 const FilterTabs = ({
@@ -67,7 +70,7 @@ const FilterTabs = ({
 
 const InterviewTemplates = () => {
   const { effectivePermissions } = usePermissions();
-  const { templatesData, isLoading,saveTemplate } = useInterviewTemplates();
+  const { templatesData, isLoading, saveTemplate } = useInterviewTemplates();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const navigate = useNavigate();
   const [view, setView] = useState("table");
@@ -92,6 +95,12 @@ const InterviewTemplates = () => {
   const filterIconRef = useRef(null);
   const itemsPerPage = 10;
   const [activeTab, setActiveTab] = useState("standard");
+
+  // v1.0.5 <--------------------------------------------------------
+  const [templateToClone, setTemplateToClone] = useState(null);
+  const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
+  useScrollLock(isCloneConfirmOpen);
+  // v1.0.5 -------------------------------------------------------->
 
   // Transform and filter templatesData for custom templates
   const normalizedTemplates = useMemo(() => {
@@ -328,20 +337,29 @@ const InterviewTemplates = () => {
   ];
 
   const handleClone = async (template) => {
+    // v1.0.5 <--------------------------------------------------------------
+    setTemplateToClone(template);
+    setCloneConfirmOpen(true);
     if (!template) {
       console.error("Invalid template: template is undefined or null");
       alert("Cannot clone: Invalid template data.");
       return;
     }
-  
+    // v1.0.5 -------------------------------------------------------------->
+
     console.log("Cloning:", template);
-  
+
     try {
       // Safely extract and default fields
-      const safeName = typeof template.name === 'string'
-      ? template.type === 'standard' ? template.name.replace(/_std$/, "") : template.name
-      : template.type === 'standard' ? (template.title || "Cloned Template").replace(/_std$/, "") : (template.title || "Cloned Template");
-      
+      const safeName =
+        typeof template.name === "string"
+          ? template.type === "standard"
+            ? template.name.replace(/_std$/, "")
+            : template.name
+          : template.type === "standard"
+          ? (template.title || "Cloned Template").replace(/_std$/, "")
+          : template.title || "Cloned Template";
+
       // Define the fields to pass based on the schema, with safe defaults
       const clonedTemplateData = {
         title: template.title || "Untitled Template",
@@ -351,48 +369,81 @@ const InterviewTemplates = () => {
         format: template.format || "online",
         status: template.status || "inactive",
         type: "custom", // Set to custom for cloned template
-        rounds: Array.isArray(template.rounds) ? template.rounds.map((round, index) => ({
-          roundTitle: round.roundTitle || `Round ${index + 1}`,
-          assessmentId: round.assessmentId || null,
-          interviewerViewType: round.interviewerViewType || null,
-          duration: round.duration || null,
-          instructions: round.instructions || null,
-          interviewMode: round.interviewMode || null,
-          minimumInterviewers: round.minimumInterviewers || null,
-          selectedInterviewers: Array.isArray(round.selectedInterviewers) ? round.selectedInterviewers : [],
-          interviewerType: round.interviewerType || null,
-          selectedInterviewersType: round.selectedInterviewersType || null,
-          interviewerGroupName: round.interviewerGroupName || null,
-          interviewers: Array.isArray(round.interviewers) ? round.interviewers : [],
-          questions: Array.isArray(round.questions) ? round.questions.map((question) => ({
-            questionId: question.questionId || null,
-            snapshot: question.snapshot || {},
-          })) : [],
-          sequence: round.sequence || index + 1,
-        })) : [],
+        rounds: Array.isArray(template.rounds)
+          ? template.rounds.map((round, index) => ({
+              roundTitle: round.roundTitle || `Round ${index + 1}`,
+              assessmentId: round.assessmentId || null,
+              interviewerViewType: round.interviewerViewType || null,
+              duration: round.duration || null,
+              instructions: round.instructions || null,
+              interviewMode: round.interviewMode || null,
+              minimumInterviewers: round.minimumInterviewers || null,
+              selectedInterviewers: Array.isArray(round.selectedInterviewers)
+                ? round.selectedInterviewers
+                : [],
+              interviewerType: round.interviewerType || null,
+              selectedInterviewersType: round.selectedInterviewersType || null,
+              interviewerGroupName: round.interviewerGroupName || null,
+              interviewers: Array.isArray(round.interviewers)
+                ? round.interviewers
+                : [],
+              questions: Array.isArray(round.questions)
+                ? round.questions.map((question) => ({
+                    questionId: question.questionId || null,
+                    snapshot: question.snapshot || {},
+                  }))
+                : [],
+              sequence: round.sequence || index + 1,
+            }))
+          : [],
         isSaved: false, // Set to false for new template
       };
-  
+
       // Optionally include interviewTemplateCode if needed (e.g., generate if backend requires uniqueness)
       // if (template.interviewTemplateCode) {
       //   clonedTemplateData.interviewTemplateCode = `${clonedTemplateData.name}-clone-${Date.now()}`;
       // }
-  
+
       // Save the cloned template
       const savedTemplate = await saveTemplate({
         templateData: clonedTemplateData,
       });
-  
+
+      // v1.0.5 <------------------------------------------------------------
       console.log("Cloned template saved:", savedTemplate);
       // Provide feedback to the user (e.g., via toast in production)
-      alert("Template cloned successfully!");
+      notify.success("Template cloned successfully!");
       return savedTemplate;
     } catch (error) {
       console.error("Error cloning template:", error);
-      alert("Failed to clone template. Please try again.");
+      // alert("Failed to clone template. Please try again.");
+      notify.error("Failed to clone template. Please try again.");
+      // v1.0.5 ------------------------------------------------------------>
       throw error;
     }
   };
+
+  // v1.0.5 <------------------------------------------------------------------------
+  const handleCloneClick = (template) => {
+    setTemplateToClone(template);
+    setCloneConfirmOpen(true);
+  };
+
+  const confirmClone = async () => {
+    if (!templateToClone) return;
+    try {
+      await handleClone(templateToClone); // call your existing clone logic
+    } finally {
+      setCloneConfirmOpen(false);
+      setTemplateToClone(null);
+    }
+  };
+
+  const cancelClone = () => {
+    setCloneConfirmOpen(false);
+    setTemplateToClone(null);
+  };
+  // v1.0.5 ------------------------------------------------------------------------>
 
   const tableColumns = [
     {
@@ -486,13 +537,12 @@ const InterviewTemplates = () => {
             key: "clone",
             label: "Clone",
             icon: <FileText className="w-4 h-4 text-green-600" />,
-            onClick: handleClone,
+            // onClick: handleClone,
+            onClick: handleCloneClick,
           },
         ]
       : []),
   ];
-
-  
 
   return (
     <div className="bg-background min-h-screen">
@@ -695,9 +745,42 @@ const InterviewTemplates = () => {
             </div>
           </div>
         ) : (
-          <StandardTemplates handleClone={handleClone} />
+          // v1.0.5 <-----------------------------------------------------------
+          <StandardTemplates handleClone={handleCloneClick} />
+          // v1.0.5 ----------------------------------------------------------->
         )}
       </main>
+      {/* v1.0.5 <----------------------------------------------------------------------------- */}
+      <div>
+        {isCloneConfirmOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-lg p-6 mx-4 max-w-96">
+              <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-4">
+                Confirm Clone
+              </h3>
+              <p className="sm:text-sm mb-6">
+                Are you sure you want to clone template
+                <strong className="ml-1">{templateToClone?.title}</strong>?
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={cancelClone}
+                  className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmClone}
+                  className="px-4 py-2 rounded bg-custom-blue text-white hover:bg-custom-blue/90"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      {/* v1.0.5 -----------------------------------------------------------------------------> */}
       <Outlet />
     </div>
   );

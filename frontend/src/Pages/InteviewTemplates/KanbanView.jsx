@@ -1,10 +1,17 @@
-import { motion } from 'framer-motion';
-import { Calendar, Layers, Trash, FileText } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { FaEye, FaPencilAlt } from 'react-icons/fa';
-import { formatDateTime } from '../../utils/dateFormatter';
+import { motion } from "framer-motion";
+import { Calendar, Layers, Trash, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { FaEye, FaPencilAlt } from "react-icons/fa";
+import { formatDateTime } from "../../utils/dateFormatter";
 
-const KanbanView = ({ templates, loading = false, effectivePermissions, onView, onEdit, handleClone }) => {
+const KanbanView = ({
+  templates,
+  loading = false,
+  effectivePermissions,
+  onView,
+  onEdit,
+  handleClone,
+}) => {
   const navigate = useNavigate();
 
   console.log("templates--", templates);
@@ -30,13 +37,13 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
   };
 
   templates.forEach((template) => {
-    const format = template.format || 'online'; // Default to 'online' per schema
+    const format = template.format || "online"; // Default to 'online' per schema
     groupedTemplates[format].push(template);
   });
 
   if (loading) {
     return (
-      <motion.div 
+      <motion.div
         className="w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -97,29 +104,36 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
   }
 
   return (
-    <motion.div 
-      className="w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
+    <motion.div
+      // v1.0.0 <---------------------------------------------------------------------------------
+      className="w-full h-[calc(100vh-15.6rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto"
+      // v1.0.0 --------------------------------------------------------------------------------->
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <motion.div 
+      <motion.div
         className="flex items-center justify-between mb-6"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <h3 className="text-xl font-semibold text-gray-800">All Interview Templates</h3>
+        <h3 className="text-xl font-semibold text-gray-800">
+          All Interview Templates
+        </h3>
         <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-          {templates.length} {templates.length <= 1 ? 'Template' : 'Templates'}
+          {templates.length} {templates.length <= 1 ? "Template" : "Templates"}
         </span>
       </motion.div>
       {templates.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {['online', 'hybrid', 'offline'].map((format) => (
+        // v1.0.0 <-----------------------------------------------------------------------------------------------------------
+        <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-5 pb-20">
+          {/* v1.0.0 <-----------------------------------------------------------------------------------------------------------> */}
+          {["online", "hybrid", "offline"].map((format) => (
             <div key={format} className="flex flex-col">
               <h4 className="text-lg font-semibold text-gray-700 mb-4">
-                {formatLabelMap[format]} Templates ({groupedTemplates[format].length})
+                {formatLabelMap[format]} Templates (
+                {groupedTemplates[format].length})
               </h4>
               {groupedTemplates[format].length > 0 ? (
                 groupedTemplates[format].map((template, index) => (
@@ -134,7 +148,10 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                     <div className="flex justify-between items-start mb-4 gap-2">
                       <motion.div
                         className="flex-1 min-w-0 cursor-pointer"
-                        onClick={() => effectivePermissions.InterviewTemplates?.View && onView(template)}
+                        onClick={() =>
+                          effectivePermissions.InterviewTemplates?.View &&
+                          onView(template)
+                        }
                         whileHover={{ x: 2 }}
                       >
                         <h4 className="text-xl font-medium text-gray-900 group-hover:text-custom-blue transition-colors duration-200 truncate">
@@ -193,39 +210,46 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                     </div>
                     <div className="mt-auto">
                       <div className="flex items-center gap-4">
-                        <motion.div 
+                        <motion.div
                           className="flex items-center gap-2"
                           whileHover={{ scale: 1.05 }}
                         >
                           <Layers className="h-4 w-4 text-custom-blue" />
-                          <span className="text-sm font-medium text-gray-900 whitespace-nowrap">{template.rounds?.length || 0} {template.rounds?.length <= 1 ? 'Round' : 'Rounds'}</span>
+                          <span className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                            {template.rounds?.length || 0}{" "}
+                            {template.rounds?.length <= 1 ? "Round" : "Rounds"}
+                          </span>
                         </motion.div>
-                        <motion.div 
+                        <motion.div
                           className="flex items-center gap-2"
                           whileHover={{ scale: 1.05 }}
                         >
                           <Calendar className="h-4 w-4 text-custom-blue" />
-                          <span className="text-sm font-medium text-gray-900 whitespace-nowrap">{formatDateTime(template.updatedAt)}</span>
+                          <span className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                            {formatDateTime(template.updatedAt)}
+                          </span>
                         </motion.div>
                       </div>
                       {template.rounds?.length > 0 && (
-                        <motion.div 
+                        <motion.div
                           className="mt-4 space-y-2"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.2 }}
                         >
                           {template.rounds?.slice(0, 2).map((round, index) => (
-                            <motion.div 
-                              key={index} 
+                            <motion.div
+                              key={index}
                               className="bg-gray-50 rounded-lg px-3 py-2 text-sm"
                               whileHover={{ x: 2 }}
                             >
-                              <span className="font-medium text-gray-900">{round.roundTitle}</span>
+                              <span className="font-medium text-gray-900">
+                                {round.roundTitle}
+                              </span>
                             </motion.div>
                           ))}
                           {template.rounds?.length > 2 && (
-                            <motion.div 
+                            <motion.div
                               className="bg-gray-50 rounded-lg px-3 py-2 text-sm text-center text-gray-500"
                               whileHover={{ x: 2 }}
                             >
@@ -244,7 +268,9 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <p className="text-gray-500">No {formatLabelMap[format]} Templates Found</p>
+                  <p className="text-gray-500">
+                    No {formatLabelMap[format]} Templates Found
+                  </p>
                 </motion.div>
               )}
             </div>
