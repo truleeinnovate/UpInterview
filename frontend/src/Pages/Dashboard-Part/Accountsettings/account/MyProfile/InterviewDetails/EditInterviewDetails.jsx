@@ -249,26 +249,26 @@ const EditInterviewDetails = ({
             NoShowPolicy: userProfile?.noShowPolicy || "",
             professionalTitle: userProfile?.professionalTitle || "",
             bio: userProfile?.bio || "",
-            interviewFormatWeOffer: Array.isArray(userProfile?.interviewFormatWeOffer) 
-                ? userProfile.interviewFormatWeOffer 
+            interviewFormatWeOffer: Array.isArray(userProfile?.interviewFormatWeOffer)
+                ? userProfile.interviewFormatWeOffer
                 : [],
             yearsOfExperience: userProfile?.yearsOfExperience || 0,
             id: userProfile?._id,
             rates: userProfile?.rates || {
-                junior: { 
-                    usd: 0, 
-                    inr: 0, 
-                    isVisible: shouldShowJunior 
+                junior: {
+                    usd: 0,
+                    inr: 0,
+                    isVisible: shouldShowJunior
                 },
-                mid: { 
-                    usd: 0, 
-                    inr: 0, 
-                    isVisible: shouldShowMid 
+                mid: {
+                    usd: 0,
+                    inr: 0,
+                    isVisible: shouldShowMid
                 },
-                senior: { 
-                    usd: 0, 
-                    inr: 0, 
-                    isVisible: shouldShowSenior 
+                senior: {
+                    usd: 0,
+                    inr: 0,
+                    isVisible: shouldShowSenior
                 }
             }
         };
@@ -441,15 +441,15 @@ const EditInterviewDetails = ({
     // Handle technology selection
     const handleSelectCandidate = (technology) => {
         if (!technology) return;
-        
+
         const techName = technology.TechnologyMasterName || technology;
-        
+
         if (!selectedCandidates.some(c => c.TechnologyMasterName === techName)) {
             const newCandidate = {
                 TechnologyMasterName: techName,
                 _id: Math.random().toString(36).substr(2, 9)
             };
-            
+
             const updatedCandidates = [...selectedCandidates, newCandidate];
             setSelectedCandidates(updatedCandidates);
 
@@ -459,7 +459,7 @@ const EditInterviewDetails = ({
             }));
 
             setErrors(prev => ({ ...prev, technologies: "" }));
-            
+
             // Fetch rate cards for the selected technology
             if (techName) {
                 fetchRateCards(techName).then(() => {
@@ -640,7 +640,7 @@ const EditInterviewDetails = ({
                 skills: updatedSkills.map(s => s?.SkillName || s).filter(Boolean),
             }));
             setErrors(prev => ({ ...prev, skills: '' }));
-            notify.success("Skill added successfully");
+            console.log("Skill added successfully");
         } else {
             notify.error("Skill already exists");
         }
@@ -811,7 +811,7 @@ const EditInterviewDetails = ({
 
             // Get the years from the current form data or default to 0
             const years = parseInt(formData.PreviousExperienceConductingInterviewsYears) || 0;
-            
+
             // Determine which levels should be visible
             const shouldShowJunior = years <= 6;
             const shouldShowMid = years >= 3 && years <= 9;

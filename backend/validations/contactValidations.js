@@ -51,11 +51,15 @@ const Joi = require("joi");
   industry: Joi.string().messages({
     "string.empty": "Industry is required",
   }),
-  yearsOfExperience: Joi.string()
-    .pattern(/^\d+$/)
+  yearsOfExperience: Joi.number()
+    .integer()
+    .min(0)
+    .max(50)
     .messages({
-      "string.empty": "Years of Experience is required",
-      "string.pattern.base": "Please enter a valid number",
+      "number.base": "Years of Experience must be a number",
+      "number.integer": "Years of Experience must be a whole number",
+      "number.min": "Years of Experience cannot be negative",
+      "number.max": "Years of Experience cannot be more than 50"
     }),
   location: Joi.string().messages({
     "string.empty": "Location is required",

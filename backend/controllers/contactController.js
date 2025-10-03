@@ -433,14 +433,14 @@ const updateContactsDetails = async (req, res) => {
         }
 
         const contactId = req.params.id;
-        const { availability, ...contactData } = req.body;
+        const { availability, yearsOfExperience, ...contactData } = req.body;
 
         console.log("Request body:", req.body);
         console.log("Years of experience from request:", yearsOfExperience);
         
         // Add yearsOfExperience to contactData if it exists in the request
         if (yearsOfExperience !== undefined) {
-            contactData.yearsOfExperience = yearsOfExperience;
+            contactData.yearsOfExperience = Number(yearsOfExperience) || 0;
         }
 
         // If timeZone is an object (e.g., { label: "", value: "" }), extract value

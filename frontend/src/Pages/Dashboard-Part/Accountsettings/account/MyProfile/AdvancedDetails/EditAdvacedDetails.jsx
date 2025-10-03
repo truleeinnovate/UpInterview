@@ -157,7 +157,7 @@ const EditAdvacedDetails = ({
     const cleanFormData = {
       currentRole: formData.currentRole?.trim() || "",
       industry: formData.industry?.trim() || "",
-      yearsOfExperience: formData?.yearsOfExperience || "",
+      yearsOfExperience: formData.yearsOfExperience ? Number(formData.yearsOfExperience) : 0,
       location: formData.location?.trim() || "",
       // coverLetterdescription: formData.coverLetterdescription?.trim() || "",
       // skills: formData.skills
