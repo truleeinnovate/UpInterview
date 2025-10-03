@@ -1,7 +1,8 @@
 // v1.0.0 - mansoor - change resume and cover letter buttons color to custom blue
 // v1.0.1 - Ashok   - fixed style issue
+// v1.0.2 - Ashok   - fixed resume and cover letter issue
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import InfoBox from "./InfoBox.jsx";
 import { useMasterData } from "../../../apiHooks/useMasterData.js";
 import { validateFile } from "../../../utils/FileValidation/FileValidation.js";
@@ -43,13 +44,13 @@ const AdditionalDetails = ({
   const [coverLetterError, setCoverLetterError] = useState("");
 
   // Load all dropdown data when component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     loadCurrentRoles();
     loadIndustries();
     loadLocations();
   }, [loadCurrentRoles, loadIndustries, loadLocations]);
 
-  const handleFileUpload = async (e, fieldName) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       const error = await validateFile(file, "resume");
@@ -63,8 +64,30 @@ const AdditionalDetails = ({
       setErrors((prev) => ({ ...prev, resume: "" }));
       // v1.0.1 ------------------------------------------>
       setResumeName(file.name);
+
+      // v1.0.2 <---------------------------------------------------------------
+      setAdditionalDetailsData((prev) => ({
+        ...prev,
+        resume: {
+          filename: file.name,
+        },
+      }));
+      // v1.0.2 --------------------------------------------------------------->
     }
   };
+
+  // v1.0.2 <-------------------------------------------------------------------
+  // const handleRemoveFile = () => {
+  //   if (resumeInputRef.current) {
+  //     resumeInputRef.current.value = "";
+  //   }
+  //   setResumeFile(null);
+  //   setIsResumeRemoved(true);
+  //   // v1.0.1 <------------------------------------------
+  //   setErrors((prev) => ({ ...prev, resume: "Resume is required" }));
+  //   // v1.0.1 ------------------------------------------>
+  //   setResumeName("");
+  // };
 
   const handleRemoveFile = () => {
     if (resumeInputRef.current) {
@@ -72,11 +95,16 @@ const AdditionalDetails = ({
     }
     setResumeFile(null);
     setIsResumeRemoved(true);
-    // v1.0.1 <------------------------------------------
+    // Clear existing resume from additionalDetailsData
+    setAdditionalDetailsData((prev) => ({
+      ...prev,
+      resume: null,
+    }));
+
     setErrors((prev) => ({ ...prev, resume: "Resume is required" }));
-    // v1.0.1 ------------------------------------------>
     setResumeName("");
   };
+  // v1.0.2 ------------------------------------------------------------------->
 
   const handleChange = (selectedOption, meta) => {
     // Handle both select dropdown and regular input changes
@@ -122,6 +150,14 @@ const AdditionalDetails = ({
         ...prev,
         [fieldName]: file,
       }));
+      // v1.0.2 <-------------------------------------------------------
+      setAdditionalDetailsData((prev) => ({
+        ...prev,
+        coverLetter: {
+          filename: file.name,
+        },
+      }));
+      // v1.0.2 ------------------------------------------------------->
     }
   };
 
@@ -129,6 +165,12 @@ const AdditionalDetails = ({
     if (coverLetterInputRef.current) {
       coverLetterInputRef.current.value = "";
     }
+
+    setAdditionalDetailsData((prev) => ({
+      ...prev,
+      coverLetter: null,
+    }));
+
     setCoverLetterFile(null);
     setIsCoverLetterRemoved(true);
     setCoverLetterName("");
@@ -389,6 +431,7 @@ const AdditionalDetails = ({
                     </span>
                   </div>
                   <button
+                    type="button"
                     className="text-red-500 flex-shrink-0"
                     onClick={handleRemoveCoverLetter}
                   >
