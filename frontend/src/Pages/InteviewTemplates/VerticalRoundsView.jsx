@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import RoundCard from "./RoundCard";
 
-const VerticalRoundsView = ({ rounds, onEditRound }) => {
+const VerticalRoundsView = ({ rounds, onEditRound, template }) => {
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
 
@@ -102,6 +102,7 @@ const VerticalRoundsView = ({ rounds, onEditRound }) => {
                 round={round}
                 onEdit={() => onEditRound(round)}
                 hideHeader={true}
+                template={template}
               />
             </div>
           )}

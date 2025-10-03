@@ -236,92 +236,78 @@ const TemplateDetail = () => {
             </div>
           )}
 
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200/80 p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 mt-4">
-            <div className="flex sm:flex-col flex-row sm:items-start justify-between gap-4 sm:gap-0">
-              {/* v1.0.3 <----------------------------- */}
-              <div className="flex-1 w-full">
-                {/* v1.0.3 -----------------------------> */}
-                <div className="flex justify-between items-center">
-                  <h3 className="sm:text-md md:text-md lg:text-xl xl:text-xl 2xl:text-xl mb-2 leading-6 font-medium text-gray-900">
-                    Interview Details
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex h-6 items-center px-2.5 sm:px-3 py-1 sm:py-1.5 rounded text-xs sm:text-sm font-medium 
-                      ${(template.status === "active" &&
-                          "bg-emerald-50 text-emerald-700 border border-emerald-200/60") ||
-                        (template.status === "inactive" &&
-                          "bg-red-400 text-white border border-slate-200/60") ||
-                        ""
-                        }`}
-                    >
-                      {(template.status === "active" && "Active") ||
-                        (template.status === "inactive" && "In Active")}
-                    </span>
-
-                    {template.status !== "draft" && (
-                      <Switch
-                        checked={isActive}
-                        onChange={handleStatusChange}
-                        className={`${isActive ? "bg-custom-blue" : "bg-red-400"
-                          }
-                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-                        `}
-                      >
-                        <span
-                          className={`${isActive ? "translate-x-6" : "translate-x-1"
-                            }
-                        inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                        />
-                      </Switch>
-                    )}
-                  </div>
-                </div>
-
-                <h1 className="sm:text-md md:text-md lg:text-md xl:text-lg 2xl:text-lg text-lg font-semibold bg-gradient-to-r from-custom-blue to-custom-blue/80 bg-clip-text text-transparent mb-2 sm:mb-3">
-                  {template.title.charAt(0).toUpperCase() +
-                    template.title.slice(1)}
-                </h1>
-                <p className="text-sm text-gray-600 mb-4 break-all whitespace-normal">
-                  {template.description}
-                </p>
-                <p className="text-sm text-gray-600 mb-4 break-all whitespace-normal">
-                  {template.bestFor}
-                </p>
-                <p className="text-sm text-gray-600 mb-4 break-all whitespace-normal">
-                  {template.format}
-                </p>
-
-                <div className="grid sm:grid-cols-1 grid-cols-2 gap-3 sm:gap-6">
-                  <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded sm:rounded-xl">
-                    <Calendar className="h-5 w-5 text-custom-blue" />
-                    <div>
-                      <p className="text-xs sm:text-sm text-gray-500">
-                        Modified
-                      </p>
-                      <p className="font-medium text-gray-900 text-sm sm:text-base">
-                        {formatDateTime(template.updatedAt)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded sm:rounded-xl">
-                    <Layers className="h-5 w-5 text-custom-blue" />
-                    <div>
-                      <p className="text-xs sm:text-sm text-gray-500">Rounds</p>
-                      <p className="font-medium text-gray-900 text-sm sm:text-base">
-                        {template.rounds.map((item, index) => (
-                          <span key={index}>
-                            {item.roundTitle}
-                            {index !== template.rounds.length - 1 && " → "}
-                          </span>
-                        ))}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+<div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200/80 p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 mt-4">
+  <div className="flex sm:flex-col flex-row sm:items-start justify-between gap-4 sm:gap-0">
+    <div className="flex-1 w-full">
+      <h3 className="sm:text-md md:text-md lg:text-xl xl:text-xl 2xl:text-xl mb-4 leading-6 font-medium text-gray-900">
+        Interview Details
+      </h3>
+      <h1 className="sm:text-md md:text-md lg:text-md xl:text-lg 2xl:text-lg text-lg font-semibold bg-gradient-to-r from-custom-blue to-custom-blue/80 bg-clip-text text-transparent mb-4 sm:mb-6">
+        {template.title.charAt(0).toUpperCase() + template.title.slice(1)}
+      </h1>
+      <div className="grid sm:grid-cols-1 grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6">
+        <div className="col-span-2 flex items-start gap-3 p-3 sm:p-4 bg-gray-50 rounded sm:rounded-xl">
+          <div>
+            <p className="text-xs sm:text-sm text-gray-500">Description</p>
+            <p className="font-medium text-gray-900 text-sm sm:text-base break-all whitespace-normal">
+              {template.description || 'No description provided'}
+            </p>
           </div>
+        </div>
+        <div className="flex items-start gap-3 p-3 sm:p-4 bg-gray-50 rounded sm:rounded-xl">
+          <div>
+            <p className="text-xs sm:text-sm text-gray-500">Best For</p>
+            <p className="font-medium text-gray-900 text-sm sm:text-base break-all whitespace-normal">
+              {template.bestFor || 'General use'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-3 p-3 sm:p-4 bg-gray-50 rounded sm:rounded-xl">
+          <div>
+            <p className="text-xs sm:text-sm text-gray-500">Format</p>
+            <p className="font-medium text-gray-900 text-sm sm:text-base break-all whitespace-normal">
+              {(() => {
+                const formatOption = [
+                  { label: "Online / Virtual", value: "online" },
+                  { label: "Face to Face / Onsite", value: "offline" },
+                  { label: "Hybrid (Online + Offline)", value: "hybrid" },
+                ].find(option => option.value === (template.format || 'online'));
+                return formatOption ? formatOption.label : 'Online / Virtual';
+              })()}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded sm:rounded-xl">
+          <Calendar className="h-5 w-5 text-custom-blue" />
+          <div>
+            <p className="text-xs sm:text-sm text-gray-500">Modified</p>
+            <p className="font-medium text-gray-900 text-sm sm:text-base">
+              {formatDateTime(template.updatedAt)}
+            </p>
+          </div>
+        </div>
+        <div className="col-span-2 flex items-start gap-3 p-3 sm:p-4 bg-gray-50 rounded sm:rounded-xl">
+          <Layers className="h-5 w-5 text-custom-blue" />
+          <div>
+            <p className="text-xs sm:text-sm text-gray-500">Rounds</p>
+            <p className="font-medium text-gray-900 text-sm sm:text-base break-all whitespace-normal">
+              {template.rounds?.length > 0 ? (
+                template.rounds.map((item, index) => (
+                  <span key={index}>
+                    {item.roundTitle}
+                    {index !== template.rounds.length - 1 && " → "}
+                  </span>
+                ))
+              ) : (
+                'No rounds defined'
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
           {/* Interview Rounds Section */}
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200/80 p-4 sm:p-6 md:p-8">
@@ -391,6 +377,7 @@ const TemplateDetail = () => {
                 {roundsViewMode === "horizontal" ? (
                   <SingleRoundView
                     rounds={template.rounds}
+                    template={template}
                     currentRoundId={activeRound || template.rounds[0]._id}
                     onEditRound={handleEditRound}
                     onChangeRound={setActiveRound}
@@ -398,6 +385,7 @@ const TemplateDetail = () => {
                 ) : (
                   <VerticalRoundsView
                     rounds={template.rounds}
+                    template={template}
                     onEditRound={handleEditRound}
                   />
                 )}
