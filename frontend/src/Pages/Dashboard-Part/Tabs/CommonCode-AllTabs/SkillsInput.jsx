@@ -139,8 +139,8 @@ const SkillsField = forwardRef(
             }
           }
         } else {
-          // Additional rows (4+) - only validate if partially filled
-          if (hasAnyValue && !isCompleteRow) {
+          // Additional rows (4+) - only validate if partially filled and showValidation is true
+          if (hasAnyValue && !isCompleteRow && showValidation) {
             const errors = {};
             
             if (!entry.skill) {

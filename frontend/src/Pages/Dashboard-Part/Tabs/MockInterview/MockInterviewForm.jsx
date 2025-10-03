@@ -327,12 +327,12 @@ const MockSchedulelater = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.group("Mock Interview Form Submission");
-        console.log("Form data:", formData);
-        console.log("Entries:", entries);
-        console.log("Errors:", errors);
-        console.log("External Interviewers:", externalInterviewers);
-        console.log("Selected Interview Type:", selectedInterviewType);
+        // console.group("Mock Interview Form Submission");
+        // console.log("Form data:", formData);
+        // console.log("Entries:", entries);
+        // console.log("Errors:", errors);
+        // console.log("External Interviewers:", externalInterviewers);
+        // console.log("Selected Interview Type:", selectedInterviewType);
 
         // Show skills validation when submit is attempted
         setShowSkillValidation(true);
@@ -416,6 +416,8 @@ const MockSchedulelater = () => {
                     });
                     setExternalInterviewers([]);
                     setSelectedInterviewType(null);
+                    setShowSkillValidation(false); // Reset validation state
+                    setEntries([]); // Reset entries array
                     console.groupEnd();
                 },
                 //  <------------------  v1.0.0
@@ -692,6 +694,9 @@ const MockSchedulelater = () => {
     // };
 
     const handleNext = () => {
+        // Show skills validation when next is attempted
+        setShowSkillValidation(true);
+        
         const { formIsValid, newErrors } = validatePage1(formData, entries);
         setErrors(newErrors);
         // v1.0.1 <----------------------------------------------------------------

@@ -331,7 +331,7 @@ const MyProfile = () => {
       {/* Tabs */}
       <div className="flex-1">
         <div className="flex flex-col w-full">
-          <div className="border-b sm:mx-0 md:mx-0 lg:mx-6 xl:mx-6 2xl:mx-6 sm:mt-6 md:mt-6 mt-0">
+          <div className="border-b sm:mx-0 md:mx-0  sm:mt-6 md:mt-6 mt-0">
             <nav className="flex overflow-x-auto lg:overflow-x-hidden scrollbar-hide sm:gap-0 gap-8">
               {tabsToShow.map((tabKey) => (
                 <button
@@ -361,7 +361,7 @@ const MyProfile = () => {
       </div>
 
       {/* Content */}
-      <div className="sm:mx-0 mx-6">
+      <div className="sm:mx-0">
         {!isEditMode && renderSubTabContent()}
         {isEditMode && (
           <>
