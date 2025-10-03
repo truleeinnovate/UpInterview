@@ -6,6 +6,7 @@ import RoundCard from "./RoundCard";
 
 const VerticalRoundsView = ({
   rounds,
+  template,
   onEditRound,
   currentRoundId,
   onChangeRound,
@@ -95,6 +96,7 @@ const VerticalRoundsView = ({
           onEdit={() => onEditRound(currentRound)}
           isActive={true}
           hideHeader={true}
+          template={template}
         />
       </div>
     </div>

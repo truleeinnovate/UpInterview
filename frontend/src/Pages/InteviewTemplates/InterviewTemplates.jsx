@@ -338,7 +338,9 @@ const InterviewTemplates = () => {
   
     try {
       // Safely extract and default fields
-      const safeName = typeof template.name === 'string' ? template.name.replace(/_std$/, "") : (template.title || "Cloned Template").replace(/_std$/, "");
+      const safeName = typeof template.name === 'string'
+      ? template.type === 'standard' ? template.name.replace(/_std$/, "") : template.name
+      : template.type === 'standard' ? (template.title || "Cloned Template").replace(/_std$/, "") : (template.title || "Cloned Template");
       
       // Define the fields to pass based on the schema, with safe defaults
       const clonedTemplateData = {
