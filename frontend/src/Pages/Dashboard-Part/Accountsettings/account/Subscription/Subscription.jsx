@@ -1,6 +1,7 @@
 // ----- v1.0.0 ----- Venkatesh----update LoadingButton colors
 // v1.0.1 - Ashok - fixed z-index issue when popup is open
 // v1.0.2 - Ashok - Improved responsiveness
+// v1.0.3 - Ashok - made alignment of cards in small screens
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -468,7 +469,9 @@ const Subscription = () => {
           <SubscriptionPlansSkeleton />
         ) : (
           <div className="w-full px-4 pt-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
+            {/* v1.0.3 <--------------------------------------------------------------------------------------------- */}
+            <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
+            {/* v1.0.3 ---------------------------------------------------------------------------------------------> */}
               {plans.map((plan) => (
                 <div
                   key={plan.name}
