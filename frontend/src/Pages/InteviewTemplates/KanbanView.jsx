@@ -1,3 +1,6 @@
+// v1.0.0 - Ashok - Changed cards for small screens and adjusted height of Kanban
+// v1.0.1 - Ashok - fixed padding issues at cards
+
 import { motion } from "framer-motion";
 import { Calendar, Layers, Trash, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -105,9 +108,11 @@ const KanbanView = ({
 
   return (
     <motion.div
+      // v1.0.1 <---------------------------------------------------------------------------------
       // v1.0.0 <---------------------------------------------------------------------------------
-      className="w-full h-[calc(100vh-15.6rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto"
+      className="w-full h-[calc(100vh-15.6rem)] rounded-xl p-6 overflow-y-auto"
       // v1.0.0 --------------------------------------------------------------------------------->
+      // v1.0.1 --------------------------------------------------------------------------------->
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -130,7 +135,9 @@ const KanbanView = ({
         <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-5 pb-20">
           {/* v1.0.0 <-----------------------------------------------------------------------------------------------------------> */}
           {["online", "hybrid", "offline"].map((format) => (
-            <div key={format} className="flex flex-col">
+            // v1.0.1 <--------------------------------------------------------------------
+            <div key={format} className="bg-gray-200/40 flex flex-col p-4 rounded-lg">
+            {/* v1.0.1 <-------------------------------------------------------------------- */}
               <h4 className="text-lg font-semibold text-gray-700 mb-4">
                 {formatLabelMap[format]} Templates (
                 {groupedTemplates[format].length})
@@ -139,13 +146,17 @@ const KanbanView = ({
                 groupedTemplates[format].map((template, index) => (
                   <motion.div
                     key={template._id}
-                    className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full mb-5"
+                    // v1.0.1 <-----------------------------------------------------------------------------------------------------------------------------------
+                    className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col mb-5"
+                    // v1.0.1 ----------------------------------------------------------------------------------------------------------------------------------->
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: index * 0.05 }}
                     whileHover={{ y: -5 }}
                   >
-                    <div className="flex justify-between items-start mb-4 gap-2">
+                    {/* v1.0.1 <---------------------------------------------------- */}
+                    <div className="flex justify-between items-start gap-2 mb-4">
+                      {/* v1.0.1 ----------------------------------------------------> */}
                       <motion.div
                         className="flex-1 min-w-0 cursor-pointer"
                         onClick={() =>
@@ -157,9 +168,11 @@ const KanbanView = ({
                         <h4 className="text-xl font-medium text-gray-900 group-hover:text-custom-blue transition-colors duration-200 truncate">
                           {template.title}
                         </h4>
-                        <p className="mt-2 text-gray-600 line-clamp-2 h-[40px] text-sm break-words">
-                          {/* {template.description} */}
-                        </p>
+                        {/* v1.0.1 <------------------------------------------------------------------------------------- */}
+                        {/* <p className="mt-2 text-gray-600 line-clamp-2 h-[40px] text-sm break-words mb-3">
+                          {template.description}
+                        </p> */}
+                        {/* v1.0.1 -------------------------------------------------------------------------------------> */}
                       </motion.div>
                       <div className="flex gap-1 flex-shrink-0">
                         {effectivePermissions.InterviewTemplates?.View && (
@@ -173,28 +186,30 @@ const KanbanView = ({
                             <FaEye className="w-4 h-4" />
                           </motion.button>
                         )}
-                        {effectivePermissions.InterviewTemplates?.Edit && template.type !== "standard" && (
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => onEdit(template)}
-                            className="text-purple-500 hover:bg-purple-50 p-2 rounded-lg"
-                            title="Edit"
-                          >
-                            <FaPencilAlt className="w-4 h-4" />
-                          </motion.button>
-                        )}
-                        {effectivePermissions.InterviewTemplates?.Delete && template.type !== "standard" && (
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            // onClick={() => onDelete(template)}
-                            className="text-red-500 hover:bg-red-50 p-2 rounded-lg"
-                            title="Delete"
-                          >
-                            <Trash className="w-4 h-4" />
-                          </motion.button>
-                        )}
+                        {effectivePermissions.InterviewTemplates?.Edit &&
+                          template.type !== "standard" && (
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => onEdit(template)}
+                              className="text-purple-500 hover:bg-purple-50 p-2 rounded-lg"
+                              title="Edit"
+                            >
+                              <FaPencilAlt className="w-4 h-4" />
+                            </motion.button>
+                          )}
+                        {effectivePermissions.InterviewTemplates?.Delete &&
+                          template.type !== "standard" && (
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              // onClick={() => onDelete(template)}
+                              className="text-red-500 hover:bg-red-50 p-2 rounded-lg"
+                              title="Delete"
+                            >
+                              <Trash className="w-4 h-4" />
+                            </motion.button>
+                          )}
                         {effectivePermissions.InterviewTemplates?.Clone && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
@@ -208,7 +223,9 @@ const KanbanView = ({
                         )}
                       </div>
                     </div>
-                    <div className="mt-auto">
+                    {/* v1.0.1 <-------------------------------------- */}
+                    <div>
+                      {/* v1.0.1 --------------------------------------> */}
                       <div className="flex items-center gap-4">
                         <motion.div
                           className="flex items-center gap-2"
@@ -263,7 +280,7 @@ const KanbanView = ({
                 ))
               ) : (
                 <motion.div
-                  className="text-center py-8 px-4 border-2 border-dashed border-gray-200 rounded-xl"
+                  className="text-center py-8 px-4 border-2 border-dashed border-gray-400/60 rounded-xl"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
