@@ -178,7 +178,7 @@ const ProtectedRoute = ({ children }) => {
                     setIsChecking(false);
                     return;
                 }
-
+                console.log('loginType', loginType);
                 // If no tokens at all, redirect to login unless the session expiration modal is visible
                 console.log('No tokens found, assessing redirect to login');
                 if (window.sessionExpirationVisible) {
