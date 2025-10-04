@@ -1,4 +1,6 @@
 // v1.0.0 - Ashok - added format date function
+// v1.0.1 - Ashok - Improved responsiveness
+
 import React, { useState } from "react";
 import {
   Calendar,
@@ -113,17 +115,22 @@ const MoockRoundCard = ({
                 <h4 className="text-sm font-medium text-gray-700 mb-2">
                   Schedule
                 </h4>
-                <div className="flex items-center text-sm text-gray-500 mb-1">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {/* v1.0.0 <------------------------------------------------------------------- */}
-                  <span>Scheduled: {formatDate(round?.dateTime?.split(" ")[0])}</span>
-                  {isInstantInterview() && (
-                    <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
-                      Instant
-                    </span>
-                  )}
-                  {/* v1.0.0 <------------------------------------------------------------------- */}
+                {/* v1.0.0 <------------------------------------------------------------------- */}
+                <div className="flex sm:flex-col sm:items-start items-center text-sm text-gray-500 mb-1">
+                  <div className="flex gap-1">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    Scheduled:
+                  </div>
+                  <div className="flex items-center justify-between sm:w-full">
+                    <span>{formatDate(round?.dateTime?.split(" ")[0])}</span>
+                    {isInstantInterview() && (
+                      <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
+                        Instant
+                      </span>
+                    )}
+                  </div>
                 </div>
+                {/* v1.0.0 <------------------------------------------------------------------- */}
                 {round.completedDate && (
                   <div className="flex items-center text-sm text-gray-500">
                     <Clock className="h-4 w-4 mr-1" />
@@ -161,21 +168,27 @@ const MoockRoundCard = ({
                   <div className="space-y-2">
                     {/* v1.0.0 ------------------------------------------------------------------ */}
                     {round?.interviewers?.length > 0 && (
-                        <div>
-                          <div className="flex items-center text-xs text-gray-500 mb-1">
-                            <User className="h-3 w-3 mr-1" />
-                            <span>Internal ({round?.interviewers?.length})</span>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {round?.interviewers?.map(interviewer => (
-                              <div key={interviewer._id} className="flex items-center">
-                                <InterviewerAvatar interviewer={interviewer} size="sm" />
-                                <span className="ml-1 text-xs text-gray-600">
-                                  {interviewer?.firstName ||
-                                    "" + interviewer.lastName ||
-                                    ""}
-                                </span>
-                                {/* {isRoundActive && canEdit && (
+                      <div>
+                        <div className="flex items-center text-xs text-gray-500 mb-1">
+                          <User className="h-3 w-3 mr-1" />
+                          <span>Internal ({round?.interviewers?.length})</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {round?.interviewers?.map((interviewer) => (
+                            <div
+                              key={interviewer._id}
+                              className="flex items-center"
+                            >
+                              <InterviewerAvatar
+                                interviewer={interviewer}
+                                size="sm"
+                              />
+                              <span className="ml-1 text-xs text-gray-600">
+                                {interviewer?.firstName ||
+                                  "" + interviewer.lastName ||
+                                  ""}
+                              </span>
+                              {/* {isRoundActive && canEdit && (
                                   <button
                                     onClick={() => handleRemoveInterviewer(interviewer._id)}
                                     className="ml-1 text-gray-400 hover:text-red-500"
@@ -183,11 +196,11 @@ const MoockRoundCard = ({
                                     <XCircle className="h-4 w-4" />
                                   </button>
                                 )} */}
-                              </div>
-                            ))}
-                          </div>
+                            </div>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    )}
 
                     {externalInterviewers.length > 0 && (
                       <div>

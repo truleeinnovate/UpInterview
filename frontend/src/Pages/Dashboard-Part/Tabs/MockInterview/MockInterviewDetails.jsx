@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - add first letter capital function
+// v1.0.1 - Ashok - improved responsiveness
 
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
@@ -271,13 +272,16 @@ const MockInterviewDetails = () => {
             <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
               <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    Mock Interview Details{" "}
-                    <span>
-                      {" "}
-                      <StatusBadge status={mockinterview?.status} size="md" />
-                    </span>
+                  {/* v1.0.1 <----------------------------------------------------------------------------- */}
+                  <h3 className="flex items-center text-lg leading-6 font-medium text-gray-900 gap-3">
+                    Mock Interview Details
+                    {mockinterview?.status && (
+                      <span className="ml-1">
+                        <StatusBadge status={mockinterview?.status} size="md" />
+                      </span>
+                    )}
                   </h3>
+                  {/* v1.0.1 -----------------------------------------------------------------------------> */}
                   {/* v1.0.0 <--------------------------------------------------------------- */}
                   <p className="mt-1 max-w-2xl text-sm text-gray-500">
                     Created on{" "}
@@ -288,8 +292,9 @@ const MockInterviewDetails = () => {
                   {/* v1.0.0 ---------------------------------------------------------------> */}
                 </div>
               </div>
-
-              <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+              {/* v1.0.1 <------------------------------------------------------ */}
+              <div className="border-t border-gray-200 px-4 py-5">
+                {/* v1.0.1 ------------------------------------------------------> */}
                 <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-1">
                   <div className="sm:col-span-1">
                     {/* <dt className="text-sm font-medium text-gray-500 flex items-center">
@@ -390,9 +395,11 @@ const MockInterviewDetails = () => {
                 </div>
 
                 {/* Interview Rounds Table Header */}
-                <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+                {/* v1.0.1 <---------------------------------------------- */}
+                <div className="border-t border-gray-200 py-5">
+                  {/* v1.0.1 ----------------------------------------------> */}
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg leading-6 font-medium text-gray-900">
                       Mock Interview Round
                     </h3>
                     <div className="flex space-x-2">
@@ -401,8 +408,8 @@ const MockInterviewDetails = () => {
                         // onClick={() =>  navigate(`/mock-interview/${mockinterview._id}/edit`, { state: { from: location.pathname }})}
                         className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit Interview
+                        <Edit className="h-4 w-4 sm:mr-0 mr-1" />
+                        <span className="sm:hidden inline">Edit Interview</span>
                       </Link>
                     </div>
                   </div>
@@ -433,7 +440,9 @@ const MockInterviewDetails = () => {
                                   </span>
                                 </div> */}
                                 <div>
-                                  <h3 className="text-lg font-semibold text-gray-900">
+                                  {/* v1.0.1 <------------------------------------------------------------------------------------------------------- */}
+                                  <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
+                                  {/* v1.0.1 -------------------------------------------------------------------------------------------------------> */}
                                     {round.roundTitle}
                                   </h3>
                                   {/* v1.0.0 <-------------------------------------------------------------------------- */}
@@ -463,7 +472,9 @@ const MockInterviewDetails = () => {
                             </button>
 
                             {isExpanded(round._id) && (
-                              <div className="px-4 pb-4">
+                              // v1.0.1 <----------------------------------------
+                              <div className="sm:px-0 px-4 pb-4">
+                              {/* v1.0.1 ----------------------------------------> */}
                                 <MoockRoundCard
                                   round={round}
                                   // canEdit={canEditRound(round)}
