@@ -37,13 +37,13 @@ const ProtectedRoute = ({ children }) => {
     const { isInitialized } = usePermissions() || { isInitialized: false };
     // <---------------------------- v1.0.0
 
+    const loginType = sessionStorage.getItem('sessionExpiredLoginType') || 'organization';
     useEffect(() => {
         // If the session expiration modal was active and the user refreshed,
         // redirect them to the appropriate login page with returnUrl
         try {
             const expiredFlag = sessionStorage.getItem('sessionExpired');
             if (expiredFlag === 'true') {
-                const loginType = sessionStorage.getItem('sessionExpiredLoginType') || 'organization';
                 const returnUrl = sessionStorage.getItem('sessionExpiredReturnUrl') || (window.location.pathname + window.location.search + window.location.hash);
                 // Clear flags to avoid loops
                 sessionStorage.removeItem('sessionExpired');
@@ -81,7 +81,11 @@ const ProtectedRoute = ({ children }) => {
                 return;
             }
             const currentUrl = window.location.pathname + window.location.search + window.location.hash;
-            navigate(`/organization-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+            if (loginType === 'individual') {
+                navigate(`/individual-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+            } else {
+                navigate(`/organization-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+            }
         };
 
         // Listen for token refresh failure events from axios interceptor
@@ -91,7 +95,11 @@ const ProtectedRoute = ({ children }) => {
                 return;
             }
             const currentUrl = window.location.pathname + window.location.search + window.location.hash;
-            navigate(`/organization-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+            if (loginType === 'individual') {
+                navigate(`/individual-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+            } else {
+                navigate(`/organization-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+            }
         };
         window.addEventListener('tokenExpired', handleTokenExpired);
         window.addEventListener('tokenRefreshFailed', handleTokenRefreshFailed);
@@ -179,7 +187,12 @@ const ProtectedRoute = ({ children }) => {
                     return;
                 }
                 const currentUrl = window.location.pathname + window.location.search + window.location.hash;
-                navigate(`/organization-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+
+                if (loginType === 'individual') {
+                    navigate(`/individual-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+                } else {
+                    navigate(`/organization-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+                }
             } catch (error) {
                 console.error('Error checking authentication:', error);
                 if (window.sessionExpirationVisible) {
@@ -187,7 +200,11 @@ const ProtectedRoute = ({ children }) => {
                     return;
                 }
                 const currentUrl = window.location.pathname + window.location.search + window.location.hash;
-                navigate(`/organization-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+                if (loginType === 'individual') {
+                    navigate(`/individual-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+                } else {
+                    navigate(`/organization-login?returnUrl=${encodeURIComponent(currentUrl)}`);
+                }
             }
         };
 
