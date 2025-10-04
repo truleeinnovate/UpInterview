@@ -65,8 +65,8 @@ function HeaderBar({
         </div>
 
         {/* Dropdown */}
-       
-        {type !== 'assessment' &&  
+
+        {type !== 'assessment' &&
          <div className="w-48 flex-shrink-0">
         <DropdownSelect
             isSearchable={false}
@@ -86,7 +86,7 @@ function HeaderBar({
           />
           </div>
           }
-        
+
 
         {/* Pagination + Filter */}
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -212,8 +212,8 @@ const SuggestedQuestionsComponent = ({
         isOpen: false,
         options: [
           { type: "MCQ", isChecked: false },
-          { type: "Short Text", isChecked: false },
-          { type: "Long Text", isChecked: false },
+          { type: "Short", isChecked: false },
+          { type: "Long", isChecked: false },
           { type: "Programming", isChecked: false },
           { type: "Number", isChecked: false },
           { type: "Boolean", isChecked: false },
@@ -253,8 +253,8 @@ const SuggestedQuestionsComponent = ({
       isOpen: false,
       options: [
         { type: "MCQ", isChecked: false },
-        { type: "Short Text", isChecked: false },
-        { type: "Long Text", isChecked: false },
+        { type: "Short", isChecked: false },
+        { type: "Long", isChecked: false },
         { type: "Programming", isChecked: false },
         { type: "Number", isChecked: false },
         { type: "Boolean", isChecked: false },
@@ -1227,7 +1227,7 @@ const SuggestedQuestionsComponent = ({
                               <span className="sm:hidden inline">Remove</span>
                               <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                             </button>
-                          ) 
+                          )
                           // (
                           //   <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
                           //     ✓ <span className="sm:hidden inline">Added</span>

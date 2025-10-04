@@ -37,7 +37,7 @@ const ProtectedRoute = ({ children }) => {
     const { isInitialized } = usePermissions() || { isInitialized: false };
     // <---------------------------- v1.0.0
 
-    const loginType = sessionStorage.getItem('sessionExpiredLoginType') || 'organization';
+    const loginType = sessionStorage.getItem('sessionExpiredLoginType');
     useEffect(() => {
         // If the session expiration modal was active and the user refreshed,
         // redirect them to the appropriate login page with returnUrl
@@ -169,6 +169,7 @@ const ProtectedRoute = ({ children }) => {
     useEffect(() => {
         const checkAuthAndRedirect = async () => {
             try {
+                console.log('type', loginType);
                 // SIMPLE CHECK: Just check if tokens exist in cookies
                 const hasAuthToken = !!AuthCookieManager.getAuthToken();
                 const hasImpersonationToken = !!AuthCookieManager.getImpersonationToken();

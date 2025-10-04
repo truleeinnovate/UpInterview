@@ -6,8 +6,8 @@ const objectId = Joi.string().regex(/^[0-9a-fA-F]{24}$/).message('Invalid Object
 const questionTypes = [
   'Interview Questions',
   'MCQ',
-  'Short Text(Single line)',
-  'Long Text(Paragraph)',
+  'Short',
+  'Long',
   'Programming',
   'Programming Questions',
   'Number',

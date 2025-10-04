@@ -169,8 +169,8 @@ const QuestionBankForm = ({
       ? ["Interview Questions"]
       : []), //<----v1.0.7------
     "MCQ",
-    "Short Text(Single line)",
-    "Long Text(Paragraph)",
+    "Short",
+    "Long",
     "Programming",
     "Number",
     "Boolean",
@@ -369,9 +369,9 @@ const QuestionBankForm = ({
 
   // Auto-update character limits when question type changes
   useEffect(() => {
-    if (selectedQuestionType === "Short Text(Single line)") {
+    if (selectedQuestionType === "Short") {
       setCharLimits({ min: 1, max: 500 });
-    } else if (selectedQuestionType === "Long Text(Paragraph)") {
+    } else if (selectedQuestionType === "Long") {
       setCharLimits({ min: 1, max: 2000 });
     } else if (selectedQuestionType === "Number") {
       setCharLimits({ min: 1, max: 15 });
@@ -620,7 +620,7 @@ const extractValidationErrors = (axiosError) => {
 
     // Add conditional data based on question type
     if (
-      ["Short Text(Single line)", "Long Text(Paragraph)"].includes(
+      ["Short", "Long"].includes(
         selectedQuestionType
       )
     ) {
@@ -868,7 +868,7 @@ const extractValidationErrors = (axiosError) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1159,7 +1159,7 @@ const extractValidationErrors = (axiosError) => {
           //   { ' max-w-6xl mx-auto px-6': isFullScreen })} `}
         > */}
         {/* <div className={" fixed inset-0 bg-black bg-opacity-15 z-50  h-full flex flex-col justify-center"}> */}
-        {/* <div className={`flex flex-col justify-center items-center bg-white shadow-lg transition-transform duration-5000 transform 
+        {/* <div className={`flex flex-col justify-center items-center bg-white shadow-lg transition-transform duration-5000 transform
               ${section === "Popup" &&  `right-0 h-full top-0 ${questionBankPopupVisibility ? "w-1/2 right-0 fixed" : "w-full"}`}
               ${section === "interviewerSection" || section==="assessment" ? "w-1/2  fixed h-[95%] flex flex-col justify-between right-9 " : 'fixed right-0 top-0 bottom-0 w-1/2'}
             `}
@@ -1627,7 +1627,7 @@ const extractValidationErrors = (axiosError) => {
                 )}
                 {/* Answer */}
                 <div className="flex flex-col gap-2 mb-2 mt-2">
-                 
+
                   <div className="flex-grow">
                     {selectedQuestionType === "Boolean" ? (
                       <DropdownWithSearchField
@@ -1663,8 +1663,8 @@ const extractValidationErrors = (axiosError) => {
                         placeholder={selectedQuestionType === "MCQ" ? "Enter Correct Answer like this A) Answer" : "Enter Answer"}
                         rows={5}
                         maxLength={
-                          selectedQuestionType === "Short Text(Single line)" ||
-                          selectedQuestionType === "Long Text(Paragraph)"
+                          selectedQuestionType === "Short" ||
+                          selectedQuestionType === "Long"
                             ? charLimits.max
                             : 1000
                         }
@@ -1674,14 +1674,14 @@ const extractValidationErrors = (axiosError) => {
                 </div>
 
                 {/* Character Limits */}
-                {(selectedQuestionType === "Short Text(Single line)" ||
-                  selectedQuestionType === "Long Text(Paragraph)") && (
+                {(selectedQuestionType === "Short" ||
+                  selectedQuestionType === "Long") && (
                   <div className="flex gap-5 mb-4">
                     <div className="mb-4">
                       <label
                         htmlFor="CharactersLimit"
                         className={`block mb-2 text-sm font-medium w-36 ${
-                          selectedQuestionType === "Short Text(Single line)"
+                          selectedQuestionType === "Short"
                             ? "text-gray-400"
                             : ""
                         }`}
@@ -1692,8 +1692,8 @@ const extractValidationErrors = (axiosError) => {
                     <div className="flex-grow flex items-center">
                       <span
                         className={`-mt-5 ${
-                          selectedQuestionType === "Short Text(Single line)" ||
-                          selectedQuestionType === "Long Text(Paragraph)"
+                          selectedQuestionType === "Short" ||
+                          selectedQuestionType === "Long"
                             ? "text-gray-400"
                             : ""
                         }`}
@@ -1710,7 +1710,7 @@ const extractValidationErrors = (axiosError) => {
                       />
                       <span
                         className={`-mt-5 ${
-                          selectedQuestionType === "Short Text(Single line)"
+                          selectedQuestionType === "Short"
                             ? "text-gray-400"
                             : ""
                         }`}
@@ -1722,7 +1722,7 @@ const extractValidationErrors = (axiosError) => {
                         min="1"
                         placeholder="Max"
                         max={
-                          selectedQuestionType === "Short Text(Single line)"
+                          selectedQuestionType === "Short"
                             ? "500"
                             : "2000"
                         }
@@ -1730,7 +1730,7 @@ const extractValidationErrors = (axiosError) => {
                         value={charLimits.max}
                         onChange={(e) => {
                           const maxLimit =
-                            selectedQuestionType === "Short Text(Single line)"
+                            selectedQuestionType === "Short"
                               ? 500
                               : 2000;
                           setCharLimits((prev) => ({
@@ -1883,8 +1883,8 @@ const extractValidationErrors = (axiosError) => {
                 </div>
               )}
               {/* Automation Options */}
-              {(selectedQuestionType === "Short Text(Single line)" ||
-                selectedQuestionType === "Long Text(Paragraph)") && (
+              {(selectedQuestionType === "Short" ||
+                selectedQuestionType === "Long") && (
                 <div>
                   <p className="font-semibold text-lg mb-5">
                     Automation Options:
