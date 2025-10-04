@@ -36,6 +36,7 @@ const roundSchema = Joi.object({
   }),
   interviewers: Joi.array().items(Joi.string()).optional(),
   status: Joi.string().optional().allow("", null),
+  meetingId:Joi.string().optional().allow("", null),
   dateTime: Joi.when("interviewType", {
     is: "scheduled",
     then: Joi.string().required().messages({
@@ -44,7 +45,7 @@ const roundSchema = Joi.object({
     }),
     otherwise: Joi.string().optional().allow("", null),
   }),
-});
+}).unknown(true);
 
 // Main mock interview validation schema
 const mockInterviewValidationSchema = Joi.object({

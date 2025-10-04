@@ -50,10 +50,12 @@ const mockInterviewSchema = new mongoose.Schema(
         duration: String,
         instructions: String,
         interviewType: String,
+        // assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
+        meetingId: String,
         interviewers: [
           {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Interviewavailability",
+            ref: "Contacts",
           },
         ],
         status: String,

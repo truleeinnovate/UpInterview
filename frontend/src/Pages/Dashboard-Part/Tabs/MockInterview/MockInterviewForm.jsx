@@ -1,5 +1,6 @@
 // v1.0.0  - mansoor - improved the error message
 // v1.0.1  - Ashok - addded scroll to first error functionality
+// v2.0.2 - Ranjith added the round save proeprly with all condtions 
 
 import { useState, useRef, useEffect, useCallback, forwardRef } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -21,6 +22,7 @@ import {
     Calendar,
     Search,
     ChevronDown,
+    ChevronUp,
 } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
@@ -38,6 +40,11 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 import InputField from "../../../../Components/FormFields/InputField";
 import DescriptionField from "../../../../Components/FormFields/DescriptionField";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
+import { useAssessments } from "../../../../apiHooks/useAssessments.js";
+import { notify } from "../../../../services/toastService.js";
+import axios from "axios";
+import { config } from "../../../../config.js";
+import { createMeeting } from "../../../../utils/meetingPlatforms.js";
 
 // v1.0.1 ---------------------------------------------------------------->
 
@@ -66,6 +73,7 @@ const formatToCustomDateTime = (date) => {
 
 const MockSchedulelater = () => {
     const { singleContact } = useSingleContact();
+
     const { qualifications, loadQualifications, isQualificationsFetching, technologies, loadTechnologies, isTechnologiesFetching, skills, loadSkills, isSkillsFetching, currentRoles, loadCurrentRoles, isCurrentRolesFetching, lcontacts } = useMasterData();
     const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } = useMockInterviews();
     const { id } = useParams();
@@ -88,8 +96,13 @@ const MockSchedulelater = () => {
             interviewers: [],
             status: "Pending",
             dateTime: "",
+
         },
     });
+
+    const [selectedMeetingPlatform, setSelectedMeetingPlatform] =
+        useState("zoommeet"); // Default to Google Meet googlemeet
+    const [meetingCreationProgress, setMeetingCreationProgress] = useState("");
 
     const [interviewType, setInterviewType] = useState("scheduled");
     const [combinedDateTime, setCombinedDateTime] = useState("");
@@ -136,6 +149,7 @@ const MockSchedulelater = () => {
         "rounds.duration": useRef(null),
         "rounds.instructions": useRef(null),
         scheduledDate: useRef(null),
+
     };
 
     // v1.0.1 ---------------------------------------------------------------------------->
@@ -200,25 +214,114 @@ const MockSchedulelater = () => {
     }, [singleContact, id]);
 
     // Populate formData for edit mode
+    // useEffect(() => {
+    //     if (id && mockinterviewData.length > 0) {
+    //         const MockEditData = mockinterviewData.find((moc) => moc._id === id);
+    //         console.log("MockEditData", MockEditData);
+    //         if (MockEditData) {
+    //             setMockEdit(true);
+    //             // Map interviewers to externalInterviewers format
+    //             const formattedInterviewers =
+    //                 MockEditData.rounds?.[0]?.interviewers?.map((interviewer) => ({
+    //                     _id: interviewer._id,
+    //                     name:
+    //                         interviewer.contact?.Name ||
+    //                         `${interviewer.contact?.firstName || ""} ${interviewer.contact?.lastName || ""
+    //                             }`.trim(),
+    //                 })) || [];
+
+    //             setExternalInterviewers(formattedInterviewers);
+    //             setSelectedInterviewType(
+    //                 formattedInterviewers.length > 0 ? "external" : "scheduled"
+    //             );
+
+
+
+    //             setFormData({
+    //                 skills: MockEditData.skills || [],
+    //                 candidateName: MockEditData.candidateName || "",
+    //                 higherQualification: MockEditData.higherQualification || "",
+    //                 currentExperience: MockEditData.currentExperience || "",
+    //                 technology: MockEditData.technology || "",
+    //                 jobDescription: MockEditData.jobDescription || "",
+    //                 Role: MockEditData.Role || "",
+    //                 rounds: {
+    //                     roundTitle: MockEditData.rounds?.[0]?.roundTitle || "",
+    //                     interviewMode: MockEditData.rounds?.[0]?.interviewMode || "",
+    //                     duration: MockEditData.rounds?.[0]?.duration || "30",
+    //                     instructions: MockEditData.rounds?.[0]?.instructions || "",
+    //                     interviewType:
+    //                         MockEditData.rounds?.[0]?.interviewType || "scheduled",
+    //                     interviewers:
+    //                         MockEditData.rounds?.[0]?.interviewers?.map((i) => i._id) || [],
+    //                     status: MockEditData.rounds?.[0]?.status || "Pending",
+    //                     dateTime: MockEditData.rounds?.[0]?.dateTime || "",
+
+
+    //                 },
+    //             });
+    //             setFileName(MockEditData?.resume?.filename);
+
+    //             setInterviewType(
+    //                 MockEditData.rounds?.[0]?.interviewType || "scheduled"
+    //             );
+    //             if (MockEditData.rounds?.[0]?.dateTime) {
+    //                 const [startStr, endStr] =
+    //                     MockEditData.rounds[0].dateTime.split(" - ");
+    //                 const startDate = parseCustomDateTime(startStr);
+    //                 if (startDate && !isNaN(startDate.getTime())) {
+    //                     setScheduledDate(startDate.toISOString().slice(0, 16));
+    //                     setStartTime(startDate.toISOString());
+    //                     const endDate = endStr
+    //                         ? parseCustomDateTime(`${startStr.split(" ")[0]} ${endStr}`)
+    //                         : null;
+    //                     setEndTime(
+    //                         endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : ""
+    //                     );
+    //                     setCombinedDateTime(MockEditData.rounds[0].dateTime);
+    //                 }
+    //             }
+
+    //             // Populate skills entries
+    //             if (MockEditData.skills?.length > 0) {
+    //                 const skillEntries = MockEditData.skills.map((skill) => ({
+    //                     skill: skill.skill || "",
+    //                     experience: skill.experience || "",
+    //                     expertise: skill.expertise || "",
+    //                 }));
+    //                 setEntries(skillEntries);
+    //                 setAllSelectedSkills(skillEntries.map((entry) => entry.skill));
+    //             }
+    //         }
+    //     } else {
+    //         updateTimes(formData.rounds.duration);
+    //     }
+    // }, [id, mockinterviewData]);
+
+
+    // Populate formData for edit mode
+
+
+
     useEffect(() => {
         if (id && mockinterviewData.length > 0) {
+
+            console.log("mockinterviewData", mockinterviewData);
             const MockEditData = mockinterviewData.find((moc) => moc._id === id);
+            console.log("MockEditData", MockEditData);
             if (MockEditData) {
                 setMockEdit(true);
+
                 // Map interviewers to externalInterviewers format
-                const formattedInterviewers =
-                    MockEditData.rounds?.[0]?.interviewers?.map((interviewer) => ({
-                        _id: interviewer._id,
-                        name:
-                            interviewer.contact?.Name ||
-                            `${interviewer.contact?.firstName || ""} ${interviewer.contact?.lastName || ""
-                                }`.trim(),
-                    })) || [];
+                const formattedInterviewers = MockEditData.rounds?.[0]?.interviewers?.map((interviewer) => ({
+                    _id: interviewer._id,
+                    name: interviewer.contact?.Name ||
+                        `${interviewer?.firstName || ""} ${interviewer?.lastName || ""}`.trim(),
+                })) || [];
+                console.log("formattedInterviewers", formattedInterviewers);
 
                 setExternalInterviewers(formattedInterviewers);
-                setSelectedInterviewType(
-                    formattedInterviewers.length > 0 ? "external" : "scheduled"
-                );
+                // setSelectedInterviewType(formattedInterviewers.length > 0 ? "external" : "scheduled");
 
                 setFormData({
                     skills: MockEditData.skills || [],
@@ -233,33 +336,59 @@ const MockSchedulelater = () => {
                         interviewMode: MockEditData.rounds?.[0]?.interviewMode || "",
                         duration: MockEditData.rounds?.[0]?.duration || "30",
                         instructions: MockEditData.rounds?.[0]?.instructions || "",
-                        interviewType:
-                            MockEditData.rounds?.[0]?.interviewType || "scheduled",
-                        interviewers:
-                            MockEditData.rounds?.[0]?.interviewers?.map((i) => i._id) || [],
+                        interviewType: MockEditData.rounds?.[0]?.interviewType || "scheduled",
+                        interviewers: MockEditData.rounds?.[0]?.interviewers?.map((i) => i._id) || [],
                         status: MockEditData.rounds?.[0]?.status || "Pending",
                         dateTime: MockEditData.rounds?.[0]?.dateTime || "",
                     },
                 });
+                calculateEndTime(
+                    MockEditData.rounds?.[0]?.dateTime,
+                    MockEditData.rounds?.[0]?.duration
+                );
+                console.log("formattedInterviewers", formattedInterviewers);
+
+
                 setFileName(MockEditData?.resume?.filename);
 
-                setInterviewType(
-                    MockEditData.rounds?.[0]?.interviewType || "scheduled"
-                );
+                setInterviewType(MockEditData.rounds?.[0]?.interviewType || "scheduled");
+
+                // FIX: Handle dateTime properly for edit mode
                 if (MockEditData.rounds?.[0]?.dateTime) {
-                    const [startStr, endStr] =
-                        MockEditData.rounds[0].dateTime.split(" - ");
-                    const startDate = parseCustomDateTime(startStr);
+                    let startDate;
+
+                    // Check if it's already in custom format (contains dash and AM/PM)
+                    if (MockEditData.rounds[0].dateTime.includes(' - ') &&
+                        (MockEditData.rounds[0].dateTime.includes('AM') || MockEditData.rounds[0].dateTime.includes('PM'))) {
+                        // It's in custom format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
+                        const [startStr] = MockEditData.rounds[0].dateTime.split(" - ");
+                        startDate = parseCustomDateTime(startStr);
+                    } else {
+                        // It's in ISO format, parse directly
+                        startDate = new Date(MockEditData.rounds[0].dateTime);
+                    }
+
                     if (startDate && !isNaN(startDate.getTime())) {
-                        setScheduledDate(startDate.toISOString().slice(0, 16));
-                        setStartTime(startDate.toISOString());
-                        const endDate = endStr
-                            ? parseCustomDateTime(`${startStr.split(" ")[0]} ${endStr}`)
-                            : null;
-                        setEndTime(
-                            endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : ""
-                        );
-                        setCombinedDateTime(MockEditData.rounds[0].dateTime);
+                        // Set scheduledDate for datetime-local input (YYYY-MM-DDTHH:MM)
+                        const localDateTime = startDate.toISOString().slice(0, 16);
+                        setScheduledDate(localDateTime);
+
+                        // Calculate end time based on duration
+                        const duration = MockEditData.rounds?.[0]?.duration || "30";
+                        const endDate = new Date(startDate.getTime() + parseInt(duration) * 60000);
+
+                        // Set the combinedDateTime for display
+                        const formattedStart = formatToCustomDateTime(startDate);
+                        const formattedEnd = formatToCustomDateTime(endDate);
+                        setCombinedDateTime(`${formattedStart} - ${formattedEnd.split(' ')[1]}`);
+
+                        console.log("Edit mode - DateTime setup:", {
+                            original: MockEditData.rounds[0].dateTime,
+                            startDate,
+                            scheduledDate: localDateTime,
+                            duration,
+                            combinedDateTime: `${formattedStart} - ${formattedEnd.split(' ')[1]}`
+                        });
                     }
                 }
 
@@ -279,6 +408,7 @@ const MockSchedulelater = () => {
         }
     }, [id, mockinterviewData]);
 
+
     const [errors, setErrors] = useState({});
     const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
 
@@ -295,9 +425,97 @@ const MockSchedulelater = () => {
     const [isResumeRemoved, setIsResumeRemoved] = useState(false);
     const [resumeError, setResumeError] = useState("");
 
+    // const handleChange = (e) => {
+    //     const { name, value } = e.target;
+    //     let errorMessage = getErrorMessage(name, value);
+    //     if (name === "currentExperience") {
+    //         const numValue = parseInt(value, 10);
+    //         if (isNaN(numValue) || numValue < 1 || numValue > 15) {
+    //             errorMessage = "Experience must be between 1 and 15";
+    //         }
+    //     } else {
+    //         errorMessage = getErrorMessage(name, value);
+    //     }
+
+    //     if (name.startsWith("rounds.")) {
+    //         const roundField = name.split(".")[1];
+
+    //         // v1.0.2 - Handle round title changes with assessment logic
+    //         if (roundField === "roundTitle") {
+    //             // Auto-set interview mode to Virtual for Assessment
+    //             if (value === "Assessment") {
+    //                 setFormData((prev) => ({
+    //                     ...prev,
+    //                     rounds: {
+    //                         ...prev.rounds,
+    //                         roundTitle: value,
+    //                         interviewMode: "Virtual", // Auto-set to Virtual
+    //                     },
+    //                 }));
+    //                 setErrors((prev) => ({
+    //                     ...prev,
+    //                     [name]: errorMessage,
+    //                     "rounds.interviewMode": "", // Clear interview mode error
+    //                 }));
+
+    //                 // Reset assessment-related fields
+    //                 setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+    //                 setSelectedAssessmentData(null);
+    //                 setSectionQuestions({});
+    //                 setExpandedSections({});
+    //                 setExpandedQuestions({});
+    //             } else {
+    //                 // Reset assessment data when switching away from Assessment
+    //                 setFormData((prev) => ({
+    //                     ...prev,
+    //                     rounds: {
+    //                         ...prev.rounds,
+    //                         roundTitle: value,
+    //                         interviewMode: "", // Clear interview mode
+    //                         assessmentId: "", // Clear assessment ID
+    //                     },
+    //                 }));
+    //                 setErrors((prev) => ({
+    //                     ...prev,
+    //                     [name]: errorMessage,
+    //                 }));
+
+    //                 setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+    //                 setSelectedAssessmentData(null);
+    //                 setSectionQuestions({});
+    //             }
+    //             return;
+    //         }
+
+    //         setFormData((prev) => ({
+    //             ...prev,
+    //             rounds: { ...prev.rounds, [roundField]: value },
+    //         }));
+    //     } else {
+    //         setFormData((prev) => ({ ...prev, [name]: value }));
+    //     }
+    //     setErrors((prev) => ({ ...prev, [name]: errorMessage }));
+
+    //     // if (name.startsWith("rounds.")) {
+    //     //     const roundField = name.split(".")[1];
+    //     //     setFormData((prev) => ({
+    //     //         ...prev,
+    //     //         rounds: { ...prev.rounds, [roundField]: value },
+    //     //     }));
+    //     // } else {
+    //     //     setFormData((prev) => ({ ...prev, [name]: value }));
+    //     // }
+    //     // setErrors((prev) => ({ ...prev, [name]: errorMessage }));
+    // };
+
+
+    // v1.0.2 - Add assessment template selection handler
+
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         let errorMessage = getErrorMessage(name, value);
+
         if (name === "currentExperience") {
             const numValue = parseInt(value, 10);
             if (isNaN(numValue) || numValue < 1 || numValue > 15) {
@@ -309,6 +527,35 @@ const MockSchedulelater = () => {
 
         if (name.startsWith("rounds.")) {
             const roundField = name.split(".")[1];
+
+            // v1.0.2 - Handle round title changes with assessment logic
+            if (roundField === "roundTitle") {
+                // Store previous round title to detect changes
+
+
+
+                setFormData((prev) => ({
+                    ...prev,
+                    rounds: {
+                        ...prev.rounds,
+                        roundTitle: value,
+                        interviewMode: prev.rounds.interviewMode, // Clear only if was Assessment
+                        interviewType: prev.rounds.interviewType,
+                        instructions: prev.rounds.instructions,
+
+                        // Keep duration when switching from Assessment
+                        duration: prev.rounds.duration
+                    },
+                }));
+                setErrors((prev) => ({
+                    ...prev,
+                    [name]: errorMessage,
+                }));
+
+                return;
+            }
+
+            // For other round fields, update normally
             setFormData((prev) => ({
                 ...prev,
                 rounds: { ...prev.rounds, [roundField]: value },
@@ -319,20 +566,291 @@ const MockSchedulelater = () => {
         setErrors((prev) => ({ ...prev, [name]: errorMessage }));
     };
 
+
+
+
+
+
     const handleExperienceKeyDown = (e) => {
         if (e.key === "e" || e.key === "E") {
             e.preventDefault();
         }
     };
 
+    //     const handleSubmit = async (e) => {
+    //         e.preventDefault();
+
+    //         // Show skills validation when submit is attempted
+    //         setShowSkillValidation(true);
+
+    //         const { formIsValid, newErrors } = validatemockForm(
+    //             formData,
+    //             entries,
+    //             errors,
+
+    //         );
+    //         setErrors(newErrors);
+
+    //         if (!formIsValid) {
+    //             // v1.0.1 <--------------------------------------------------------
+    //             scrollToFirstError(newErrors, fieldRefs);
+    //             // v1.0.1 -------------------------------------------------------->
+    //             console.error("Form is not valid:", newErrors);
+    //             console.groupEnd();
+    //             return;
+    //         }
+
+    //         const interviewerIds = externalInterviewers
+    //             .filter((interviewer) => interviewer && interviewer._id)
+    //             .map((interviewer) => interviewer?._id);
+
+    //         if (selectedInterviewType === "external" && interviewerIds.length === 0) {
+    //             setErrors((prev) => ({
+    //                 ...prev,
+    //                 interviewers: "At least one interviewer must be selected",
+    //             }));
+    //             console.error("No interviewers selected");
+    //             console.groupEnd();
+    //             return;
+    //         }
+
+    //         const updatedFormData = {
+    //             ...formData,
+    //             rounds: {
+    //                 ...formData.rounds,
+    //                 status: "Requests Sent",
+    //                 interviewers: interviewerIds,
+    //                 interviewType:  interviewType,
+    //                 dateTime: combinedDateTime,
+
+    //             },
+    //             entries,
+    //             combinedDateTime,
+    //         };
+
+    //         console.log("Updated form data with interviewers:", updatedFormData);
+
+    //         try {
+    //                 // 🔹 Track if all calls succeed
+    //       let allSuccess = true;
+    //        let res =  await addOrUpdateMockInterview(
+    //             {
+    //                 formData: updatedFormData,
+    //                 id: mockEdit ? id : undefined,
+    //                 isEdit: mockEdit,
+    //                 userId,
+    //                 organizationId,
+    //                 resume,
+    //                 isResumeRemoved,
+    //             },
+
+    //         );
+
+    //         if (!(res && (res.success || res.data || res._id))) {
+    //             notify.error("Failed to save interview details");
+    //             return; // stop execution immediately
+    //           }
+
+
+    //             try{
+    //           let meetingLink;
+    //           const roundData = res?.data?.rounds[0];
+    //               // ========================================
+    //               // Google Meet creation
+    //               // ========================================
+    //               if (selectedMeetingPlatform === "googlemeet") {
+    //                 meetingLink = await createMeeting(
+    //                   "googlemeet",
+    //                   {
+    //                     roundTitle: roundData?.roundTitle,
+    //                     instructions: roundData?.instructions,
+    //                     combinedDateTime: roundData?.dateTime,
+    //                     duration: roundData?.duration,
+    //                     selectedInterviewers:roundData?.interviewers,
+    //                   },
+    //                   (progress) => {
+    //                     setMeetingCreationProgress(progress);
+    //                   }
+    //                 );
+
+    //                 // ========================================
+    //                 // Zoom meeting creation
+    //                 // ========================================
+    //               } else if (selectedMeetingPlatform === "zoommeet") {
+    //                 // Format helper
+    //                 function formatStartTimeToUTC(startTimeStr) {
+    //                   if (!startTimeStr) return undefined;
+    //                   try {
+    //                     const parsed = new Date(startTimeStr);
+    //                     if (isNaN(parsed.getTime()))
+    //                       throw new Error("Invalid date");
+
+    //                     const year = parsed.getUTCFullYear();
+    //                     const month = String(parsed.getUTCMonth() + 1).padStart(
+    //                       2,
+    //                       "0"
+    //                     );
+    //                     const day = String(parsed.getUTCDate()).padStart(2, "0");
+    //                     const hours = String(parsed.getUTCHours()).padStart(2, "0");
+    //                     const minutes = String(parsed.getUTCMinutes()).padStart(
+    //                       2,
+    //                       "0"
+    //                     );
+    //                     const seconds = String(parsed.getUTCSeconds()).padStart(
+    //                       2,
+    //                       "0"
+    //                     );
+
+    //                     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    //                   } catch (error) {
+    //                     console.error("Error parsing date:", error);
+    //                     return undefined;
+    //                   }
+    //                 }
+
+    //                 const formattedStartTime = formatStartTimeToUTC(startTime);
+    //                 if (!formattedStartTime)
+    //                   throw new Error("Invalid start time format");
+
+    //                 const payloads = {
+    //                   topic: roundData?.roundTitle,
+    //                   duration: Number(roundData?.duration),
+    //                   userId: undefined,
+    //                 //   ...(interviewType === "scheduled" &&
+    //                     // formattedStartTime && {
+    //                     start_time: formattedStartTime,
+    //                     timezone:
+    //                       Intl.DateTimeFormat().resolvedOptions().timeZone,
+    //                 //   }),
+    //                   settings: {
+    //                     join_before_host: true,
+    //                     host_video: false,
+    //                     participant_video: false,
+    //                   },
+    //                 };
+
+    //                 meetingLink = await createMeeting(
+    //                   "zoommeet",
+    //                   { payload: payloads },
+    //                   (progress) => {
+    //                     setMeetingCreationProgress(progress);
+    //                   }
+    //                 );
+
+    //                 console.log("Zoom meeting response:", meetingLink);
+    //               }
+
+    //               const data = await meetingLink;
+    //               console.log("meetingLink zoom response", data);
+
+    //               // Persist meeting link on the round (avoid reassigning consts)
+    //               if (data) {
+    //                 // const roundData = res?.data?.rounds[0];
+    //                 console.log("roundData",roundData);
+
+    //                 const updatedRoundData = {
+    //                     ...roundData,
+    //                     meetingId: data?.start_url || data?.meetingId || meetingLink,
+    //                 };
+    //                 console.log("start_url",data?.start_url);
+
+
+    //                 // {
+    //                 //     formData: updatedFormData,
+    //                 //     id: mockEdit ? id : undefined,
+    //                 //     isEdit: mockEdit,
+    //                 //     userId,
+    //                 //     organizationId,
+    //                 //     resume,
+    //                 //     isResumeRemoved,
+    //                 // },
+    //                 console.log("res?.data?",res?.data?._id);
+
+    //                 const updatePayload = {
+    //                     roundId: roundData._id,  // ✅ Use the actual round _id
+    //                     id: res?.data?._id ,
+    //                     round: updatedRoundData,
+    //                     isEdit: true,
+    //                     organizationId,
+    //                     userId
+    //                 };
+
+    //                 // const targetRoundId = response?.savedRound?._id || roundId;
+    //                 // const targetRoundId = res && (res.success || res.data || res._id)
+    //                 // const updatePayload = {
+    //                 // //   interviewId,
+    //                 //   roundId: targetRoundId,
+    //                 //   round: updatedRoundData,
+    //                 // //   ...(isEditing ? { questions: interviewQuestionsList } : {}),
+    //                 // };
+    //                 // console.log("updatePayload", updatePayload);
+
+    //                 // 🔹 Call PATCH mutation instead of POST
+    //                 const updateResponse = await addOrUpdateMockInterview(
+    //                   updatePayload
+    //                 );
+    //                 console.log("Round updated with meeting link:", updateResponse);
+    //               }
+    //             } catch (meetingError) {
+    //                 allSuccess = false;
+    //                 notify.error("Failed to create meeting link");
+    //               }
+    //             // }
+    //  if (allSuccess) {
+    //         navigate("/mockinterview");
+    //         notify.success("mock interview created successfully!");
+    //         setFormData({
+    //             skills: [],
+    //             candidateName: "",
+    //             higherQualification: "",
+    //             currentExperience: "",
+    //             technology: "",
+    //             jobDescription: "",
+    //             Role: "",
+    //             rounds: {
+    //                 roundTitle: "",
+    //                 interviewMode: "",
+    //                 duration: "30",
+    //                 instructions: "",
+    //                 interviewType: "scheduled",
+    //                 interviewers: [],
+    //                 status: "Pending",
+    //                 dateTime: "",
+    //                 assessmentId: "",
+    //             },
+    //         });
+    //         setExternalInterviewers([]);
+    //         setSelectedInterviewType(null);
+
+    //         setShowSkillValidation(false); // Reset validation state
+    //         setEntries([]); // Reset entries array
+    //         // console.groupEnd();
+    //     // }
+    //  }
+    //     } catch (error) {
+    //         console.error("Error saving mock interview:", error);
+
+    //         // More specific error message based on the error type
+    //         let errorMessage = "Failed to save interview. Please try again.";
+
+    //         if (error.response?.status === 500) {
+    //             errorMessage =
+    //                 "Server error. Please try again later or contact support.";
+    //         } else if (error.response?.status === 400) {
+    //             errorMessage =
+    //                 "Invalid data. Please check your input and try again.";
+    //         }
+
+    //         setErrors((prev) => ({
+    //             ...prev,
+    //             submit: errorMessage,
+    //         }));
+    //     }
+    //     };
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // console.group("Mock Interview Form Submission");
-        // console.log("Form data:", formData);
-        // console.log("Entries:", entries);
-        // console.log("Errors:", errors);
-        // console.log("External Interviewers:", externalInterviewers);
-        // console.log("Selected Interview Type:", selectedInterviewType);
 
         // Show skills validation when submit is attempted
         setShowSkillValidation(true);
@@ -340,22 +858,19 @@ const MockSchedulelater = () => {
         const { formIsValid, newErrors } = validatemockForm(
             formData,
             entries,
-            errors
+            errors,
         );
         setErrors(newErrors);
 
         if (!formIsValid) {
-            // v1.0.1 <--------------------------------------------------------
             scrollToFirstError(newErrors, fieldRefs);
-            // v1.0.1 -------------------------------------------------------->
             console.error("Form is not valid:", newErrors);
-            console.groupEnd();
             return;
         }
 
         const interviewerIds = externalInterviewers
             .filter((interviewer) => interviewer && interviewer._id)
-            .map((interviewer) => interviewer._id);
+            .map((interviewer) => interviewer?._id);
 
         if (selectedInterviewType === "external" && interviewerIds.length === 0) {
             setErrors((prev) => ({
@@ -363,7 +878,6 @@ const MockSchedulelater = () => {
                 interviewers: "At least one interviewer must be selected",
             }));
             console.error("No interviewers selected");
-            console.groupEnd();
             return;
         }
 
@@ -371,9 +885,9 @@ const MockSchedulelater = () => {
             ...formData,
             rounds: {
                 ...formData.rounds,
+                status: "Requests Sent",
                 interviewers: interviewerIds,
-                interviewType:
-                    selectedInterviewType === "external" ? "external" : interviewType,
+                interviewType: interviewType,
                 dateTime: combinedDateTime,
             },
             entries,
@@ -382,8 +896,10 @@ const MockSchedulelater = () => {
 
         console.log("Updated form data with interviewers:", updatedFormData);
 
-        await addOrUpdateMockInterview(
-            {
+        try {
+            // 🔹 STEP 1: First save the mock interview
+            console.log("🔹 STEP 1: Saving mock interview...");
+            let mockInterviewResponse = await addOrUpdateMockInterview({
                 formData: updatedFormData,
                 id: mockEdit ? id : undefined,
                 isEdit: mockEdit,
@@ -391,60 +907,186 @@ const MockSchedulelater = () => {
                 organizationId,
                 resume,
                 isResumeRemoved,
-            },
-            {
-                onSuccess: () => {
-                    navigate("/mockinterview");
-                    setFormData({
-                        skills: [],
-                        candidateName: "",
-                        higherQualification: "",
-                        currentExperience: "",
-                        technology: "",
-                        jobDescription: "",
-                        Role: "",
-                        rounds: {
-                            roundTitle: "",
-                            interviewMode: "",
-                            duration: "30",
-                            instructions: "",
-                            interviewType: "scheduled",
-                            interviewers: [],
-                            status: "Pending",
-                            dateTime: "",
+            });
+
+            // Check if the response indicates success
+            if (!(mockInterviewResponse && (mockInterviewResponse.success || mockInterviewResponse.data || mockInterviewResponse._id))) {
+                notify.error("Failed to save interview details");
+                return;
+            }
+
+            // console.log("✅ STEP 1 COMPLETE: Mock interview saved successfully", mockInterviewResponse);
+
+            // 🔹 STEP 2: Get the created mock interview ID and round ID
+            const mockInterviewId = mockInterviewResponse.data?._id || mockInterviewResponse._id;
+            const roundData = mockInterviewResponse.data?.rounds?.[0];
+
+            if (!mockInterviewId || !roundData) {
+                notify.error("Failed to get interview details after saving");
+                return;
+            }
+
+            console.log(mockEdit);
+            if (!mockEdit && (mockInterviewResponse && (mockInterviewResponse.success || mockInterviewResponse.data || mockInterviewResponse._id))) {
+
+
+                let meetingLink;
+
+                // ========================================
+                // Google Meet creation
+                // ========================================
+                if (selectedMeetingPlatform === "googlemeet") {
+                    meetingLink = await createMeeting(
+                        "googlemeet",
+                        {
+                            roundTitle: roundData?.roundTitle,
+                            instructions: roundData?.instructions,
+                            combinedDateTime: roundData?.dateTime,
+                            duration: roundData?.duration,
+                            selectedInterviewers: roundData?.interviewers,
                         },
-                    });
-                    setExternalInterviewers([]);
-                    setSelectedInterviewType(null);
-                    setShowSkillValidation(false); // Reset validation state
-                    setEntries([]); // Reset entries array
-                    console.groupEnd();
-                },
-                //  <------------------  v1.0.0
-                onError: (error) => {
-                    console.error("Error saving mock interview:", error);
+                        (progress) => {
+                            setMeetingCreationProgress(progress);
+                        }
+                    );
 
-                    // More specific error message based on the error type
-                    let errorMessage = "Failed to save interview. Please try again.";
+                    // ========================================
+                    // Zoom meeting creation
+                    // ========================================
+                } else if (selectedMeetingPlatform === "zoommeet") {
+                    // Format helper
+                    function formatStartTimeToUTC(startTimeStr) {
+                        if (!startTimeStr) return undefined;
+                        try {
+                            const parsed = new Date(startTimeStr);
+                            if (isNaN(parsed.getTime())) throw new Error("Invalid date");
 
-                    if (error.response?.status === 500) {
-                        errorMessage =
-                            "Server error. Please try again later or contact support.";
-                    } else if (error.response?.status === 400) {
-                        errorMessage =
-                            "Invalid data. Please check your input and try again.";
+                            const year = parsed.getUTCFullYear();
+                            const month = String(parsed.getUTCMonth() + 1).padStart(2, "0");
+                            const day = String(parsed.getUTCDate()).padStart(2, "0");
+                            const hours = String(parsed.getUTCHours()).padStart(2, "0");
+                            const minutes = String(parsed.getUTCMinutes()).padStart(2, "0");
+                            const seconds = String(parsed.getUTCSeconds()).padStart(2, "0");
+
+                            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+                        } catch (error) {
+                            console.error("Error parsing date:", error);
+                            return undefined;
+                        }
                     }
 
-                    setErrors((prev) => ({
-                        ...prev,
-                        submit: errorMessage,
-                    }));
-                    console.groupEnd();
-                },
-                // v1.0.0--------------------------->
+                    // Parse the start time from combinedDateTime
+                    const [startStr] = roundData?.dateTime?.split(" - ") || [];
+                    const formattedStartTime = formatStartTimeToUTC(parseCustomDateTime(startStr));
+
+                    const payloads = {
+                        topic: roundData?.roundTitle,
+                        duration: Number(roundData?.duration),
+                        userId: undefined,
+                        ...(formattedStartTime && {
+                            start_time: formattedStartTime,
+                            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        }),
+                        settings: {
+                            join_before_host: true,
+                            host_video: false,
+                            participant_video: false,
+                        },
+                    };
+
+                    meetingLink = await createMeeting(
+                        "zoommeet",
+                        { payload: payloads },
+                        (progress) => {
+                            setMeetingCreationProgress(progress);
+                        }
+                    );
+                }
+
+                console.log("✅ STEP 2 COMPLETE: Meeting created", meetingLink);
+
+                // 🔹 STEP 3: Update the round with meeting link
+                if (meetingLink) {
+                    console.log("🔹 STEP 3: Updating round with meeting link...");
+
+                    const updatedRoundData = {
+                        ...roundData,
+                        meetingId: meetingLink.join_url || meetingLink.hangoutLink || meetingLink,
+                        // meetingId: meetingLink.id || meetingLink.meetingId,
+                    };
+
+                    const updatePayload = {
+                        // roundId: roundData._id,  // Use the actual round ID
+                        id: mockInterviewId,
+                        round: updatedRoundData,
+                        isEdit: true,
+                        organizationId,
+                        userId
+                    };
+
+                    console.log("Update payload:", updatePayload);
+
+                    const updateResponse = await addOrUpdateMockInterview(updatePayload);
+                    console.log("✅ STEP 3 COMPLETE: Round updated with meeting link", updateResponse);
+                }
+
             }
-        );
+
+            // 🔹 STEP 5: Navigate to success page
+            console.log("🔹 STEP 5: Navigation to success page...");
+            if (mockEdit) {
+                notify.success("Mock interview updated successfully!")
+                navigate("/mockinterview");
+            } else {
+                navigate("/mockinterview");
+                notify.success("Mock interview created successfully!");
+            }
+
+
+            // Reset form
+            setFormData({
+                skills: [],
+                candidateName: "",
+                higherQualification: "",
+                currentExperience: "",
+                technology: "",
+                jobDescription: "",
+                Role: "",
+                rounds: {
+                    roundTitle: "",
+                    interviewMode: "",
+                    duration: "30",
+                    instructions: "",
+                    interviewType: "scheduled",
+                    interviewers: [],
+                    status: "Pending",
+                    dateTime: "",
+                    assessmentId: "",
+                },
+            });
+            setExternalInterviewers([]);
+            setSelectedInterviewType(null);
+            setShowSkillValidation(false);
+            setEntries([]);
+
+        } catch (error) {
+            console.error("❌ Overall process failed:", error);
+            let errorMessage = "Failed to save interview. Please try again.";
+
+            if (error.response?.status === 500) {
+                errorMessage = "Server error. Please try again later or contact support.";
+            } else if (error.response?.status === 400) {
+                errorMessage = "Invalid data. Please check your input and try again.";
+            }
+
+            setErrors((prev) => ({
+                ...prev,
+                submit: errorMessage,
+            }));
+            notify.error(errorMessage);
+        }
     };
+
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const sidebarRef = useRef(null);
@@ -586,21 +1228,67 @@ const MockSchedulelater = () => {
 
     const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
+    // const calculateEndTime = (startTime, duration) => {
+    //     const [startHour, startMinute] = startTime.split(":").map(Number);
+    //     const durationMinutes = Number(duration);
+    //     let endHour = startHour + Math.floor(durationMinutes / 60);
+    //     let endMinute = startMinute + (durationMinutes % 60);
+    //     if (endMinute >= 60) {
+    //         endHour += Math.floor(endMinute / 60);
+    //         endMinute %= 60;
+    //     }
+    //     if (endHour >= 24) endHour %= 24;
+    //     const formattedEndHour = endHour % 12 || 12;
+    //     const ampm = endHour >= 12 ? "PM" : "AM";
+    //     return `${formattedEndHour}:${endMinute
+    //         .toString()
+    //         .padStart(2, "0")} ${ampm}`;
+    // };
+
     const calculateEndTime = (startTime, duration) => {
-        const [startHour, startMinute] = startTime.split(":").map(Number);
-        const durationMinutes = Number(duration);
-        let endHour = startHour + Math.floor(durationMinutes / 60);
-        let endMinute = startMinute + (durationMinutes % 60);
-        if (endMinute >= 60) {
-            endHour += Math.floor(endMinute / 60);
-            endMinute %= 60;
+        let startDate;
+
+        if (startTime.includes('T')) {
+            // Case 1: ISO string (e.g., "2025-10-03T15:07:54.709Z")
+            startDate = new Date(startTime);
+        } else if (/^\d{2}-\d{2}-\d{4}/.test(startTime)) {
+            // Case 2: Full date + time (e.g., "03-10-2025 08:26 PM")
+            const [datePart, timePart, meridian] = startTime.split(/[\s]+/);
+            const [day, month, year] = datePart.split('-').map(Number);
+
+            let [hours, minutes] = timePart.split(':').map(Number);
+            if (meridian?.toUpperCase() === 'PM' && hours < 12) hours += 12;
+            if (meridian?.toUpperCase() === 'AM' && hours === 12) hours = 0;
+
+            startDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+        } else {
+            // Case 3: Time only (e.g., "08:26 PM" or "10:00")
+            let [timePart, meridian] = startTime.split(' ');
+            let [hours, minutes] = timePart.split(':').map(Number);
+
+            if (meridian?.toUpperCase() === 'PM' && hours < 12) hours += 12;
+            if (meridian?.toUpperCase() === 'AM' && hours === 12) hours = 0;
+
+            startDate = new Date();
+            startDate.setHours(hours, minutes, 0, 0);
         }
-        if (endHour >= 24) endHour %= 24;
-        const formattedEndHour = endHour % 12 || 12;
-        const ampm = endHour >= 12 ? "PM" : "AM";
-        return `${formattedEndHour}:${endMinute
-            .toString()
-            .padStart(2, "0")} ${ampm}`;
+
+        // Validate startDate
+        if (isNaN(startDate.getTime())) {
+            console.error('Invalid start time:', startTime);
+            return '';
+        }
+
+        // Add duration in minutes
+        const durationMinutes = Number(duration) || 30;
+        const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+
+        // Always return formatted string
+        return endDate.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
     };
 
     const [selectedDate, setSelectedDate] = useState(getTodayDate());
@@ -608,6 +1296,9 @@ const MockSchedulelater = () => {
     const [endTime, setEndTime] = useState("");
     const [dateTime, setDateTime] = useState("");
     const [showPopup, setShowPopup] = useState(false);
+    // console.log("startTime", startTime);
+    // console.log("duration", formData.rounds.duration);
+    // console.log("endTime", endTime);
 
     useEffect(() => {
         const calculatedEndTime = calculateEndTime(
@@ -657,6 +1348,7 @@ const MockSchedulelater = () => {
         const [year, month, day] = dateString.split("-");
         return `${day}-${month}-${year}`;
     };
+    // console.log("formData.rounds.duration", endTime);
 
     // Technology dropdown states - no longer needed with DropdownWithSearchField
     // const [showDropdownTechnology, setShowDropdownTechnology] = useState(false);
@@ -696,7 +1388,7 @@ const MockSchedulelater = () => {
     const handleNext = () => {
         // Show skills validation when next is attempted
         setShowSkillValidation(true);
-        
+
         const { formIsValid, newErrors } = validatePage1(formData, entries);
         setErrors(newErrors);
         // v1.0.1 <----------------------------------------------------------------
@@ -751,6 +1443,12 @@ const MockSchedulelater = () => {
             const date = new Date();
             date.setMinutes(date.getMinutes() + 15);
             setScheduledDate(date.toISOString().slice(0, 16));
+
+            // Calculate end time and ensure it's a string
+            const calculatedEndTime = calculateEndTime(date.toISOString(), formData.rounds.duration);
+            setEndTime(calculatedEndTime);
+
+
             setFormData((prev) => ({
                 ...prev,
                 rounds: { ...prev.rounds, interviewType: "instant", duration: "30" },
@@ -759,11 +1457,12 @@ const MockSchedulelater = () => {
     }, [interviewType]);
 
     const handleExternalInterviewerSelect = (newInterviewers) => {
+        console.log("newInterviewers", newInterviewers);
         const formattedInterviewers = newInterviewers.map((interviewer) => ({
-            _id: interviewer._id,
+            _id: interviewer?.contact?._id,
             name:
-                interviewer.contact?.Name ||
-                `${interviewer.contact?.firstName || ""} ${interviewer.contact?.lastName || ""
+                interviewer?.contact?.Name ||
+                `${interviewer?.contact?.firstName || ""} ${interviewer?.contact?.lastName || ""
                     }`.trim(),
         }));
 
@@ -809,8 +1508,7 @@ const MockSchedulelater = () => {
         setSelectedInterviewType("scheduled");
     };
 
-    const selectedInterviewers =
-        selectedInterviewType === "external" ? externalInterviewers : [];
+    const selectedInterviewers = externalInterviewers
 
     return (
         <div className="flex items-center justify-center">
@@ -1112,38 +1810,54 @@ const MockSchedulelater = () => {
                                                 required
                                                 error={errors["rounds.roundTitle"]}
                                                 placeholder="Select round title"
-                                                options={ROUND_TITLES}
+                                                // options={ROUND_TITLES}
+                                                options={ROUND_TITLES.filter(title => title.value !== "Assessment")}
                                                 isSearchable
                                             />
-                                            <DropdownWithSearchField
-                                                containerRef={fieldRefs["rounds.interviewMode"]}
-                                                label="Interview Mode"
-                                                name="rounds.interviewMode"
-                                                value={formData.rounds.interviewMode}
-                                                options={[
-                                                    { value: "Face to Face", label: "Face to Face" },
-                                                    { value: "Virtual", label: "Virtual" }
-                                                ]}
-                                                onChange={(e) => {
-                                                    const { name, value } = e.target;
-                                                    setFormData((prevData) => ({
-                                                        ...prevData,
-                                                        rounds: {
-                                                            ...prevData.rounds,
-                                                            [name.split(".")[1]]: value,
-                                                        },
-                                                    }));
-                                                    setErrors((prevErrors) => ({
-                                                        ...prevErrors,
-                                                        [name]: value ? "" : "This field is required",
-                                                    }));
-                                                }}
-                                                error={errors["rounds.interviewMode"]}
-                                                placeholder="Select Interview Mode"
-                                                required
-                                            />
+
+                                            {/* v1.0.2 - Disable interview mode when Assessment is selected */}
+                                            <div className={formData.rounds.roundTitle === "Assessment" ? "pointer-events-none opacity-60" : undefined}>
+
+                                                <DropdownWithSearchField
+                                                    containerRef={fieldRefs["rounds.interviewMode"]}
+                                                    label="Interview Mode"
+                                                    name="rounds.interviewMode"
+                                                    value={formData.rounds.interviewMode}
+                                                    options={[
+                                                        { value: "Face to Face", label: "Face to Face" },
+                                                        { value: "Virtual", label: "Virtual" }
+                                                    ]}
+                                                    onChange={(e) => {
+                                                        const { name, value } = e.target;
+                                                        setFormData((prevData) => ({
+                                                            ...prevData,
+                                                            rounds: {
+                                                                ...prevData.rounds,
+                                                                [name.split(".")[1]]: value,
+                                                            },
+                                                        }));
+                                                        setErrors((prevErrors) => ({
+                                                            ...prevErrors,
+                                                            [name]: value ? "" : "This field is required",
+                                                        }));
+                                                    }}
+
+                                                    error={errors["rounds.interviewMode"]}
+                                                    placeholder="Select Interview Mode"
+                                                    required
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="mb-4">
+
+
+
+
+
+
+
+
+
+                                        {/* <div className="mb-4">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 Interview Scheduling
                                             </label>
@@ -1161,20 +1875,20 @@ const MockSchedulelater = () => {
                                                         }));
                                                     }}
                                                     className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                                                            ? "border-custom-blue bg-blue-50"
-                                                            : "border-gray-300 hover:border-gray-400"
+                                                        ? "border-custom-blue bg-blue-50"
+                                                        : "border-gray-300 hover:border-gray-400"
                                                         }`}
                                                 >
                                                     <Clock
                                                         className={`h-6 w-6 ${interviewType === "instant"
-                                                                ? "text-custom-blue"
-                                                                : "text-gray-400"
+                                                            ? "text-custom-blue"
+                                                            : "text-gray-400"
                                                             }`}
                                                     />
                                                     <span
                                                         className={`mt-2 font-medium ${interviewType === "instant"
-                                                                ? "text-custom-blue"
-                                                                : "text-gray-900"
+                                                            ? "text-custom-blue"
+                                                            : "text-gray-900"
                                                             }`}
                                                     >
                                                         Instant Interview
@@ -1196,20 +1910,20 @@ const MockSchedulelater = () => {
                                                         }));
                                                     }}
                                                     className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                                                            ? "border-custom-blue bg-blue-50"
-                                                            : "border-gray-300 hover:border-gray-400"
+                                                        ? "border-custom-blue bg-blue-50"
+                                                        : "border-gray-300 hover:border-gray-400"
                                                         }`}
                                                 >
                                                     <Calendar
                                                         className={`h-6 w-6 ${interviewType === "scheduled"
-                                                                ? "text-custom-blue"
-                                                                : "text-gray-400"
+                                                            ? "text-custom-blue"
+                                                            : "text-gray-400"
                                                             }`}
                                                     />
                                                     <span
                                                         className={`mt-2 font-medium ${interviewType === "scheduled"
-                                                                ? "text-custom-blue"
-                                                                : "text-gray-900"
+                                                            ? "text-custom-blue"
+                                                            : "text-gray-900"
                                                             }`}
                                                     >
                                                         Schedule for Later
@@ -1301,6 +2015,9 @@ const MockSchedulelater = () => {
                                                 </div>
                                             )}
                                         </div>
+
+
+
                                         <div className="flex justify-between items-center mb-2">
                                             <label className="block text-sm font-medium text-gray-700">
                                                 Interviewers
@@ -1391,17 +2108,292 @@ const MockSchedulelater = () => {
                                             <p className="text-red-500 text-sm -mt-5">
                                                 {errors.interviewers}
                                             </p>
-                                        )}
+                                        )} */}
+
+
+                                        {/* v1.0.2 - Only show interview scheduling for non-Assessment rounds */}
+
+                                        <>
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Interview Scheduling
+                                                </label>
+                                                <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setInterviewType("instant");
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                rounds: {
+                                                                    ...prev.rounds,
+                                                                    interviewType: "instant",
+                                                                },
+                                                            }));
+                                                        }}
+                                                        className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
+                                                            ? "border-custom-blue bg-blue-50"
+                                                            : "border-gray-300 hover:border-gray-400"
+                                                            }`}
+                                                    >
+                                                        <Clock
+                                                            className={`h-6 w-6 ${interviewType === "instant"
+                                                                ? "text-custom-blue"
+                                                                : "text-gray-400"
+                                                                }`}
+                                                        />
+                                                        <span
+                                                            className={`mt-2 font-medium ${interviewType === "instant"
+                                                                ? "text-custom-blue"
+                                                                : "text-gray-900"
+                                                                }`}
+                                                        >
+                                                            Instant Interview
+                                                        </span>
+                                                        <span className="mt-1 text-sm text-gray-500">
+                                                            Starts in 15 minutes
+                                                        </span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setInterviewType("scheduled");
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                rounds: {
+                                                                    ...prev.rounds,
+                                                                    interviewType: "scheduled",
+                                                                },
+                                                            }));
+                                                        }}
+                                                        className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
+                                                            ? "border-custom-blue bg-blue-50"
+                                                            : "border-gray-300 hover:border-gray-400"
+                                                            }`}
+                                                    >
+                                                        <Calendar
+                                                            className={`h-6 w-6 ${interviewType === "scheduled"
+                                                                ? "text-custom-blue"
+                                                                : "text-gray-400"
+                                                                }`}
+                                                        />
+                                                        <span
+                                                            className={`mt-2 font-medium ${interviewType === "scheduled"
+                                                                ? "text-custom-blue"
+                                                                : "text-gray-900"
+                                                                }`}
+                                                        >
+                                                            Schedule for Later
+                                                        </span>
+                                                        <span className="mt-1 text-sm text-gray-500">
+                                                            Pick date & time
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-2">
+                                                    {interviewType === "scheduled" && (
+                                                        <div className="mt-4">
+                                                            <label
+                                                                htmlFor="scheduledDate"
+                                                                className="block text-sm font-medium text-gray-700"
+                                                            >
+                                                                Scheduled Date & Time
+                                                            </label>
+                                                            <input
+                                                                ref={fieldRefs.scheduledDate}
+                                                                type="datetime-local"
+                                                                id="scheduledDate"
+                                                                name="scheduledDate"
+                                                                value={scheduledDate}
+                                                                onChange={(e) => setScheduledDate(e.target.value)}
+                                                                min={new Date().toISOString().slice(0, 16)}
+                                                                className="mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                                border border-gray-300 focus:ring-gray-300 focus:outline-gray-300"
+                                                            />
+                                                        </div>
+                                                    )}
+
+
+                                                    {/* duration field */}
+                                                    <div className="mt-4">
+                                                        <DropdownWithSearchField
+                                                            containerRef={fieldRefs["rounds.duration"]}
+                                                            label="Duration (minutes)"
+                                                            name="rounds.duration"
+                                                            value={formData.rounds.duration}
+                                                            options={[
+                                                                { value: "30", label: "30 min" },
+                                                                { value: "45", label: "45 min" },
+                                                                { value: "60", label: "60 min" },
+                                                                { value: "90", label: "90 min" },
+                                                                { value: "120", label: "120 min" }
+                                                            ]}
+                                                            onChange={handleChange}
+                                                            error={errors["rounds.duration"]}
+                                                            placeholder="Select duration"
+                                                            readOnly={formData.rounds.roundTitle === "Assessment"}
+                                                        />
+                                                    </div>
+
+
+                                                </div>
+                                                {interviewType === "instant" && (
+                                                    <div className="mt-4 p-4 bg-blue-50 rounded-md">
+                                                        <div className="flex items-center">
+                                                            <Clock className="h-5 w-5 text-custom-blue mr-2" />
+                                                            <p className="text-sm text-custom-blue">
+                                                                Interview will start at{" "}
+                                                                <span className="font-medium">
+                                                                    {new Date(startTime).toLocaleTimeString([], {
+                                                                        hour: "2-digit",
+                                                                        minute: "2-digit",
+                                                                    })}
+                                                                </span>
+                                                                {/* {" "}
+                                                                    and end at{" "}
+                                                                    <span className="font-medium">
+                                                                        {typeof endTime === 'string' ? endTime :
+                                                                            endTime && endTime.toLocaleTimeString ?
+                                                                                endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
+                                                                                'Calculating...'}
+                                                                        { new Date(endTime).toLocaleTimeString([], {
+                                                                            hour: "2-digit",
+                                                                            minute: "2-digit",
+                                                                        })}
+                                                                    </span> */}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {interviewType === "scheduled" && scheduledDate && (
+                                                    <div className="mt-4 p-4 bg-green-50 rounded-md">
+                                                        <div className="flex items-center">
+                                                            <Calendar className="h-5 w-5 text-green-500 mr-2" />
+                                                            <p className="text-sm text-green-700">
+                                                                Scheduled from{" "}
+                                                                <span className="font-medium">
+                                                                    {new Date(startTime).toLocaleString([], {
+                                                                        dateStyle: "medium",
+                                                                        timeStyle: "short",
+                                                                    })}
+                                                                    {/* {formatToCustomDateTime(new Date(startTime))} */}
+                                                                </span>{" "}
+                                                                {/* to{" "}
+                                                                    <span className="font-medium">
+                                                                        {formatToCustomDateTime(new Date(endTime))}
+                                                                    </span> */}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Interviewer Selection */}
+                                            <div className="flex justify-between items-center mb-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Interviewers
+                                                </label>
+                                                <div className="flex space-x-2">
+                                                    <Button
+                                                        type="button"
+                                                        onClick={() => setShowOutsourcePopup(true)}
+                                                        variant="outline"
+                                                        size="sm"
+                                                    >
+                                                        <User className="h-4 w-4 mr-1 text-orange-600" />
+                                                        Select Outsourced
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
+                                                {selectedInterviewers.length === 0 ? (
+                                                    <p className="text-sm text-gray-500 text-center">
+                                                        No interviewers selected
+                                                    </p>
+                                                ) : (
+                                                    <div>
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <div className="flex items-center">
+                                                                <Users className="h-4 w-4 text-gray-500 mr-2" />
+                                                                <span className="text-sm text-gray-700">
+                                                                    {selectedInterviewers.length} interviewer
+                                                                    {selectedInterviewers.length !== 1
+                                                                        ? "s"
+                                                                        : ""}{" "}
+                                                                    selected
+                                                                    <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
+                                                                        Outsourced
+                                                                    </span>
+                                                                </span>
+                                                            </div>
+                                                            {selectedInterviewers.length > 0 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleClearAllInterviewers}
+                                                                    className="text-sm text-red-600 hover:text-red-800 flex items-center"
+                                                                >
+                                                                    <Trash2 className="h-3 w-3 mr-1" />
+                                                                    Clear All
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                        <div className="mb-3">
+                                                            <h4 className="text-xs font-medium text-gray-500 mb-2">
+                                                                Outsourced Interviewers
+                                                            </h4>
+                                                            <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
+                                                                {externalInterviewers.map((interviewer) => (
+                                                                    <div
+                                                                        key={interviewer._id}
+                                                                        className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
+                                                                    >
+                                                                        <div className="flex items-center">
+                                                                            <span className="ml-2 text-sm text-orange-800 truncate">
+                                                                                {interviewer.name}
+                                                                            </span>
+                                                                        </div>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                handleRemoveExternalInterviewer(
+                                                                                    interviewer._id
+                                                                                )
+                                                                            }
+                                                                            className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
+                                                                            title="Remove interviewer"
+                                                                        >
+                                                                            <X className="h-4 w-4" />
+                                                                        </button>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {errors.interviewers && (
+                                                <p className="text-red-500 text-sm -mt-5">
+                                                    {errors.interviewers}
+                                                </p>
+                                            )}
+                                        </>
+
+
+
+                                        {/* v1.0.2 - Make instructions read-only for Assessment rounds */}
                                         <DescriptionField
                                             inputRef={fieldRefs["rounds.instructions"]}
                                             value={formData.rounds.instructions}
                                             onChange={handleChange}
                                             name="rounds.instructions"
                                             label="Instructions"
-                                            rows={3}
+                                            rows="10"
                                             maxLength={1000}
-                                            placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
+                                            placeholder="Provide detailed instructions for interviewers including evaluation criteria, scoring guidelines (e.g., 1-10 scale), key focus areas, time allocation, and specific protocols to follow during the interview session."
+
+                                            // placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
                                             error={errors["rounds.instructions"]}
+
                                         />
                                     </>
                                 )}
@@ -1412,7 +2404,7 @@ const MockSchedulelater = () => {
                         <div className="flex justify-end gap-4 mt-5 mb-4">
                             <button
                                 className="border border-custom-blue p-3 rounded py-1"
-                                onClick={() => navigate("/mockinterview")}
+                                onClick={() => navigate(id ? `/mockinterview-details/${id}` : `/mockinterview`)}
                             >
                                 Cancel
                             </button>
@@ -1478,6 +2470,7 @@ const MockSchedulelater = () => {
                     )}
                 </div>
             </div>
+
             {showOutsourcePopup && (
                 <OutsourceOption
                     onClose={() => setShowOutsourcePopup(false)}
@@ -1487,6 +2480,16 @@ const MockSchedulelater = () => {
                     navigatedfrom="mock-interview"
                 />
             )}
+
+            {/* {showOutsourcePopup && (
+                <OutsourceOption
+                    onClose={() => setShowOutsourcePopup(false)}
+                    dateTime={combinedDateTime}
+                    onProceed={handleExternalInterviewerSelect}
+                    skills={formData.skills}
+                    navigatedfrom="mock-interview"
+                />
+            )} */}
         </div>
     );
 };
