@@ -438,34 +438,102 @@ const RoundFormInterviews = () => {
 
   const [isCustomRoundTitle, setIsCustomRoundTitle] = useState(false);
 
+  // const handleRoundTitleUnifiedChange = (e) => {
+  //   const value = e.target.value;
+
+  //   // If already in custom mode, treat changes as typing the custom title
+  //   if (isCustomRoundTitle) {
+  //     setCustomRoundTitle(value);
+  //     setErrors((prev) => ({ ...prev, roundTitle: "" }));
+  //     return;
+  //   }
+
+  //   // DropdownWithSearchField sends an empty string when "Other" is chosen.
+  //   // Enter custom mode and keep roundTitle as "Other" for submission mapping.
+  //   if (value === "") {
+  //     setIsCustomRoundTitle(true);
+  //     setRoundTitle("Other");
+  //     setCustomRoundTitle("");
+  //      setInterviewQuestionsList([]);
+  //     setErrors((prev) => ({ ...prev, roundTitle: "" }));
+  //     return;
+  //   }
+
+  //   // Normal predefined selection
+  //   setRoundTitle(value);
+  //   setCustomRoundTitle("");
+  //   if (value === "Assessment") {
+  //     setInterviewMode("Virtual");
+  //   }
+  //   setErrors((prev) => ({ ...prev, roundTitle: "", interviewMode: "" }));
+  // };
+
   const handleRoundTitleUnifiedChange = (e) => {
     const value = e.target.value;
 
     // If already in custom mode, treat changes as typing the custom title
     if (isCustomRoundTitle) {
-      setCustomRoundTitle(value);
-      setErrors((prev) => ({ ...prev, roundTitle: "" }));
-      return;
+        setCustomRoundTitle(value);
+        setErrors((prev) => ({ ...prev, roundTitle: "" }));
+        return;
     }
 
     // DropdownWithSearchField sends an empty string when "Other" is chosen.
     // Enter custom mode and keep roundTitle as "Other" for submission mapping.
     if (value === "") {
-      setIsCustomRoundTitle(true);
-      setRoundTitle("Other");
-      setCustomRoundTitle("");
-      setErrors((prev) => ({ ...prev, roundTitle: "" }));
-      return;
+        setIsCustomRoundTitle(true);
+        setRoundTitle("Other");
+        setCustomRoundTitle("");
+        setInstructions(""); // Clear instructions when selecting "Other"
+        setErrors((prev) => ({ ...prev, roundTitle: "" }));
+        return;
     }
 
     // Normal predefined selection
     setRoundTitle(value);
     setCustomRoundTitle("");
+    
+    // Clear instructions whenever round title changes
+    setInstructions("");
+    
     if (value === "Assessment") {
-      setInterviewMode("Virtual");
+        setInterviewMode("Virtual");
+        setInterviewQuestionsList([]);
+        setInstructions(""); // Ensure instructions are cleared for Assessment
+        
+        setInterviewerGroupName("");
+        setInterviewerViewType("");
+        setInterviewType("instant");
+        setScheduledDate("");
+        setDuration(60);
+        setStartTime("");
+        setEndTime("");
+        setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+        setSelectedAssessmentData(null);
+        setCombinedDateTime("");
+    } else {
+        setInterviewMode("");
+        setInstructions(""); // Clear instructions for non-Assessment rounds
+        setInterviewType("instant");
+        setScheduledDate("");
+        setDuration(60);
+        setStartTime("");
+        setEndTime("");
+        setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+        setSelectedAssessmentData(null);
+        setCombinedDateTime("");
+
+        setInterviewerGroupName("");
+        setInterviewerViewType("");
     }
-    setErrors((prev) => ({ ...prev, roundTitle: "", interviewMode: "" }));
-  };
+
+    setErrors((prev) => ({ 
+        ...prev, 
+        roundTitle: "", 
+        interviewMode: "",
+        instructions: "" // Clear instructions validation error
+    }));
+};
 
   const handleRoundTitleChange = (e) => {
     const selectedTitle = e.target.value;
@@ -476,6 +544,7 @@ const RoundFormInterviews = () => {
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
       setSelectedAssessmentData(null);
       setCombinedDateTime("");
+      
     } else {
       setRoundTitle(selectedTitle);
       setCustomRoundTitle("");
@@ -1527,7 +1596,7 @@ const RoundFormInterviews = () => {
             }
           }
 
-          notify.success("Selected interview mode is Face to Face");
+          // notify.success("Selected interview mode is Face to Face");
           navigate(`/interviews/${interviewId}`);
         }
       }
@@ -2353,14 +2422,15 @@ const RoundFormInterviews = () => {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                   })}
-                                </span>{" "}
+                                </span>
+                                {/* {" "}
                                 and end at{" "}
                                 <span className="font-medium">
                                   {new Date(endTime).toLocaleTimeString([], {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                   })}
-                                </span>
+                                </span> */}
                               </p>
                             </div>
                           </div>
@@ -2378,12 +2448,12 @@ const RoundFormInterviews = () => {
                                     timeStyle: "short",
                                   })}
                                 </span>{" "}
-                                to{" "}
+                                {/* to{" "}
                                 <span className="font-medium">
                                   {new Date(endTime).toLocaleString([], {
                                     timeStyle: "short", // ✅ only show time
                                   })}
-                                </span>
+                                </span> */}
                               </p>
                             </div>
                           </div>

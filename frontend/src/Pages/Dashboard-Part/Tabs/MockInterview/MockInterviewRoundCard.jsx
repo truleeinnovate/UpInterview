@@ -6,6 +6,8 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
+  XCircle,
+  User,
 } from "lucide-react";
 
 // import { useCustomContext } from '../../../../Context/Contextfetch';
@@ -158,32 +160,34 @@ const MoockRoundCard = ({
                 {
                   <div className="space-y-2">
                     {/* v1.0.0 ------------------------------------------------------------------ */}
-                    {/* {internalInterviewers.length > 0 && (
+                    {round?.interviewers?.length > 0 && (
                         <div>
                           <div className="flex items-center text-xs text-gray-500 mb-1">
                             <User className="h-3 w-3 mr-1" />
-                            <span>Internal ({internalInterviewers.length})</span>
+                            <span>Internal ({round?.interviewers?.length})</span>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {internalInterviewers.map(interviewer => (
+                            {round?.interviewers?.map(interviewer => (
                               <div key={interviewer._id} className="flex items-center">
                                 <InterviewerAvatar interviewer={interviewer} size="sm" />
                                 <span className="ml-1 text-xs text-gray-600">
-                                  {interviewer.name}
+                                  {interviewer?.firstName ||
+                                    "" + interviewer.lastName ||
+                                    ""}
                                 </span>
-                                {isRoundActive && canEdit && (
+                                {/* {isRoundActive && canEdit && (
                                   <button
                                     onClick={() => handleRemoveInterviewer(interviewer._id)}
                                     className="ml-1 text-gray-400 hover:text-red-500"
                                   >
                                     <XCircle className="h-4 w-4" />
                                   </button>
-                                )}
+                                )} */}
                               </div>
                             ))}
                           </div>
                         </div>
-                      )} */}
+                      )}
 
                     {externalInterviewers.length > 0 && (
                       <div>

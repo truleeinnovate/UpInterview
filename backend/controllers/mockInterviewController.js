@@ -34,6 +34,7 @@ exports.createMockInterview = async (req, res) => {
       rounds,
       createdById,
       lastModifiedById,
+      
     } = req.body;
 
     // ✅ Generate custom mockInterviewCode like MINT-00001
@@ -138,8 +139,12 @@ exports.updateMockInterview = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Update mock interview";
   const mockId = req.params.id;
+  console.log("mockId",mockId);
+  
   const { tenantId, ownerId, ...updateFields } = req.body;
 
+  console.log("req.body",req.body);
+  
   try {
     // Validate update data
     const { error } = mockInterviewUpdateSchema.validate(updateFields, { abortEarly: false });

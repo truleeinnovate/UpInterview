@@ -8,6 +8,7 @@ const getErrorMessage = (field, value) => {
       Role: "Role is required",
       "rounds.roundTitle": "Round Title is required",
       "rounds.interviewMode": "Interview Mode is required",
+
       skills: "At least one skill is required",
     };
   
@@ -66,7 +67,7 @@ const getErrorMessage = (field, value) => {
     return { formIsValid, newErrors };
   };
   
-  const validatemockForm = (formData, entries, errors) => {
+  const validatemockForm = (formData, entries, errors, ) => {
     console.log("formData", formData);
     
     let formIsValid = true;
@@ -86,6 +87,10 @@ const getErrorMessage = (field, value) => {
     if (formData.rounds.interviewType === "scheduled") {
       requiredFields["rounds.dateTime"] = formData.rounds.dateTime;
     }
+
+
+
+    
   
     Object.keys(requiredFields).forEach((field) => {
       const errorMessage = getErrorMessage(field, requiredFields[field]);

@@ -419,18 +419,19 @@ const MockInterviewDetails = () => {
                         {normalizedRounds.map((round) => (
                           <div
                             key={round._id}
-                            className="bg-white rounded-lg shadow-md overflow-hidden"
+                            className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden"
+                            // className="bg-white rounded-lg shadow-md overflow-hidden"
                           >
                             <button
                               onClick={() => toggleRound(round._id)}
                               className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50"
                             >
                               <div className="flex items-center">
-                                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
+                                {/* <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
                                   <span className="text-sm font-medium">
-                                    {round.sequence}
+                                    {round.sequence + 1}
                                   </span>
-                                </div>
+                                </div> */}
                                 <div>
                                   <h3 className="text-lg font-semibold text-gray-900">
                                     {round.roundTitle}
