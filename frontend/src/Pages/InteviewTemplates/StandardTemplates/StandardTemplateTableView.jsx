@@ -271,21 +271,25 @@ const StandardTemplateTableView = ({ templatesData, handleClone }) => {
                                     }`}
                                 >
                                   <ul className="py-1 text-sm text-gray-700">
-                                    <li
-                                      onClick={() => handleView(template)}
-                                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                    >
-                                      <Eye className="w-4 h-4 text-custom-blue mr-1" />
-                                      View Details
-                                    </li>
-                                    <li
-                                      onClick={() => handleClone(template)}
-                                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                    >
-                                      <FileText className="w-4 h-4 text-custom-blue mr-1" />
-                                      Clone
-                                    </li>
-                                  </ul>
+  {effectivePermissions.InterviewTemplates?.View && (
+    <li
+      onClick={() => handleView(template)}
+      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+    >
+      <Eye className="w-4 h-4 text-custom-blue mr-1" />
+      View Details
+    </li>
+  )}
+  {effectivePermissions.InterviewTemplates?.Clone && (
+    <li
+      onClick={() => handleClone(template)}
+      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+    >
+      <FileText className="w-4 h-4 text-custom-blue mr-1" />
+      Clone
+    </li>
+  )}
+</ul>
                                 </div>
                               )}
                             </td>

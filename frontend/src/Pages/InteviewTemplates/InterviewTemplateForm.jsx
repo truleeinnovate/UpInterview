@@ -40,7 +40,7 @@ const InterviewSlideover = ({ mode }) => {
   const [formKey, setFormKey] = useState(Date.now());
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
-    templateTitle: "",
+    title: "",
     name: "",
     description: "",
     status: "draft",
@@ -63,7 +63,7 @@ const InterviewSlideover = ({ mode }) => {
 
   // v1.0.3 <------------------------------------------------------------------------------------
   const fieldRefs = {
-    templateTitle: useRef(null),
+    title: useRef(null),
     // label: useRef(null),
     bestFor: useRef(null),
     format: useRef(null),
@@ -75,10 +75,11 @@ const InterviewSlideover = ({ mode }) => {
       if (id) {
         setIsEditMode(true);
         const foundTemplate = templatesData.find((tem) => tem._id === id);
+        console.log("Found Template:", foundTemplate);
         if (foundTemplate) {
           setNewTemplate((prev) => ({
             ...prev,
-            templateTitle: foundTemplate.templateName || "",
+            title: foundTemplate.title || "",
             name: foundTemplate.name || "",
             description: foundTemplate.description || "",
             status: foundTemplate.status || "draft",
@@ -90,13 +91,14 @@ const InterviewSlideover = ({ mode }) => {
       } else {
         setIsEditMode(false);
         setNewTemplate({
-          templateTitle: "",
+          title: "",
           name: "",
           description: "",
           status: "draft",
           rounds: [],
           bestFor: "",
           format: "",
+          type: "custom",
         });
       }
       setIsLoading(false);
@@ -107,7 +109,7 @@ const InterviewSlideover = ({ mode }) => {
   // v1.0.3 <------------------------------------------------------
   const validateForm = () => {
     const templateForValidation = {
-      templateTitle: newTemplate.templateTitle,
+      title: newTemplate.title,
       name: newTemplate.name,
       description: newTemplate.description,
       rounds: newTemplate.rounds,
@@ -148,13 +150,13 @@ const handleTitleChange = (e) => {
 
   setNewTemplate((prev) => ({
     ...prev,
-    templateTitle: sanitizedValue,
+    title: sanitizedValue,
   }));
 
   if (isSubmitted) {
     setErrors((prev) => ({
       ...prev,
-      templateTitle: "",
+      title: "",
     }));
   }
 };
@@ -221,7 +223,7 @@ const handleNameChange = (e) => {
 
     // Mark all fields as touched
     const allFieldsTouched = {
-      templateTitle: true,
+      title: true,
       name: true,
       description: true,
       rounds: true,
@@ -258,13 +260,14 @@ const handleNameChange = (e) => {
 
     try {
       const templateData = {
-        title: newTemplate.templateTitle,
+        title: newTemplate.title,
         name: newTemplate.name,
         description: newTemplate.description,
         status: newTemplate.status,
         isSaved: !isTemplate,
         bestFor: newTemplate.bestFor,
         format: newTemplate.format,
+        type: newTemplate.type,
       };
       // console.log('Template Data:', templateData);
 
@@ -346,17 +349,17 @@ const handleNameChange = (e) => {
                 <InputField
                   label="Title"
                   // v1.0.3 <---------------------------------------------------
-                  ref={fieldRefs.templateTitle}
+                  ref={fieldRefs.title}
                   // v1.0.3 --------------------------------------------------->
                   type="text"
-                  id="templateTitle"
-                  name="templateTitle"
+                  id="title"
+                  name="title"
                   placeholder="e.g., Senior Frontend Developer"
-                  value={newTemplate.templateTitle}
+                  value={newTemplate.title}
                   onChange={handleTitleChange}
-                  onBlur={() => handleBlur("templateTitle")}
+                  onBlur={() => handleBlur("title")}
                   autoComplete="off"
-                  error={errors.templateTitle}
+                  error={errors.title}
                   required
                 />
               </div>
