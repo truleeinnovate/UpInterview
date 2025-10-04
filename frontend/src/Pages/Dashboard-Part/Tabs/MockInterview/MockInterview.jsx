@@ -2,6 +2,8 @@
 // v1.0.1  -  Ashok   -  added status badge as common code
 // v1.0.2  -  Ashok   -  Disabled outer scrollbar when popups (reschedule and cancel schedule) open
 // v1.0.3  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
+// v1.0.4  -  Ashok   -  Improved responsiveness
+
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -24,7 +26,7 @@ import { usePermissions } from "../../../../Context/PermissionsContext";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 // v1.0.1 -------------------------------------------------------------------------->
 // v1.0.2 <-----------------------------------------------------------------------------------
-import {useScrollLock} from "../../../../apiHooks/scrollHook/useScrollLock.js"
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.2 ----------------------------------------------------------------------------------->
 
 const MockInterview = () => {
@@ -41,7 +43,7 @@ const MockInterview = () => {
     technology: [],
     duration: { min: "", max: "" },
     createdDate: "", // '', 'last7', 'last30', 'last90'
-    interviewer: []
+    interviewer: [],
   });
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -59,7 +61,7 @@ const MockInterview = () => {
   const filterIconRef = useRef(null);
 
   // v1.0.2 <--------------------------------------------
-  useScrollLock(reschedule || cancelSchedule)
+  useScrollLock(reschedule || cancelSchedule);
   // v1.0.2 -------------------------------------------->
 
   useEffect(() => {
@@ -114,14 +116,15 @@ const MockInterview = () => {
 
   const handleTechnologyToggle = (tech) => {
     setSelectedTechnology((prev) =>
-      prev.includes(tech)
-        ? prev.filter((t) => t !== tech)
-        : [...prev, tech]
+      prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech]
     );
   };
 
   const handleDurationChange = (e, type) => {
-    const value = e.target.value === "" ? "" : Math.max(0, Math.min(180, Number(e.target.value) || ""));
+    const value =
+      e.target.value === ""
+        ? ""
+        : Math.max(0, Math.min(180, Number(e.target.value) || ""));
     setDurationRange((prev) => ({
       ...prev,
       [type]: value,
@@ -137,21 +140,21 @@ const MockInterview = () => {
   };
 
   const handleApplyFilters = () => {
-    const filters = { 
+    const filters = {
       status: selectedStatus,
       technology: selectedTechnology,
       duration: durationRange,
       createdDate: createdDatePreset,
-      interviewer: selectedInterviewers
+      interviewer: selectedInterviewers,
     };
     setSelectedFilters(filters);
     setIsFilterActive(
       filters.status.length > 0 ||
-      filters.technology.length > 0 ||
-      filters.duration.min !== "" ||
-      filters.duration.max !== "" ||
-      filters.createdDate !== "" ||
-      filters.interviewer.length > 0
+        filters.technology.length > 0 ||
+        filters.duration.min !== "" ||
+        filters.duration.max !== "" ||
+        filters.createdDate !== "" ||
+        filters.interviewer.length > 0
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -163,7 +166,7 @@ const MockInterview = () => {
       technology: [],
       duration: { min: "", max: "" },
       createdDate: "",
-      interviewer: []
+      interviewer: [],
     };
     setSelectedStatus([]);
     setSelectedTechnology([]);
@@ -198,10 +201,10 @@ const MockInterview = () => {
         interview?.candidateName,
         interview?.Role,
         interview?.rounds?.[0]?.status,
-        interview?.interviewer
+        interview?.interviewer,
       ].filter(Boolean);
 
-      const matchesSearchQuery = 
+      const matchesSearchQuery =
         searchQuery === "" ||
         fieldsToSearch.some((field) =>
           normalizeSpaces(field).includes(normalizedQuery)
@@ -232,13 +235,13 @@ const MockInterview = () => {
         const createdAt = new Date(interview.createdAt);
         const now = new Date();
         const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-        
+
         switch (selectedFilters.createdDate) {
-          case 'last7':
+          case "last7":
             return daysDiff <= 7;
-          case 'last30':
+          case "last30":
             return daysDiff <= 30;
-          case 'last90':
+          case "last90":
             return daysDiff <= 90;
           default:
             return true;
@@ -249,17 +252,18 @@ const MockInterview = () => {
       const matchesInterviewer = () => {
         if (selectedFilters.interviewer.length === 0) return true;
         const interviewers = interview?.rounds?.[0]?.interviewers || [];
-        return interviewers.some(interviewer => {
+        return interviewers.some((interviewer) => {
           const contact = interviewer?.contact;
-          const name = contact?.Name || 
+          const name =
+            contact?.Name ||
             `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim();
           return selectedFilters.interviewer.includes(name);
         });
       };
 
       return (
-        matchesSearchQuery && 
-        matchesStatus && 
+        matchesSearchQuery &&
+        matchesStatus &&
         matchesTechnology &&
         matchesDuration &&
         matchesCreatedDate() &&
@@ -472,25 +476,33 @@ const MockInterview = () => {
           </div>
         </main>
       </div>
-      <main className="fixed top-48 left-0 right-0 bg-background">
+      {/* v1.0.4 <------------------------------------------------------------------------------------------- */}
+      <main className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+        {/* v1.0.4 -------------------------------------------------------------------------------------------> */}
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {viewMode === "kanban" ? (
               <MockInterviewKanban
                 mockinterviews={currentFilteredRows}
                 loading={isLoading}
-                onRescheduleClick={(mockinterview) => onRescheduleClick(mockinterview)}
+                onRescheduleClick={(mockinterview) =>
+                  onRescheduleClick(mockinterview)
+                }
                 onCancel={() => onCancelClick()}
               />
             ) : (
-              <TableView
-                data={currentFilteredRows}
-                columns={tableColumns}
-                actions={tableActions}
-                loading={isLoading}
-                emptyState="No interviews found."
-                className="table-fixed w-full"
-              />
+              // v1.0.4 <-----------------------------------------------------------------------------
+              <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                <TableView
+                  data={currentFilteredRows}
+                  columns={tableColumns}
+                  actions={tableActions}
+                  loading={isLoading}
+                  emptyState="No interviews found."
+                  className="table-fixed w-full"
+                />
+              </div>
+              // v1.0.4 ----------------------------------------------------------------------------->
             )}
 
             <FilterPopup
@@ -516,7 +528,14 @@ const MockInterview = () => {
                   </div>
                   {isStatusOpen && (
                     <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                      {["Draft", "Scheduled", "Completed", "Cancelled", "In Progress", "Requests Sent"].map((status) => (
+                      {[
+                        "Draft",
+                        "Scheduled",
+                        "Completed",
+                        "Cancelled",
+                        "In Progress",
+                        "Requests Sent",
+                      ].map((status) => (
                         <label
                           key={status}
                           className="flex items-center space-x-2"
@@ -540,7 +559,9 @@ const MockInterview = () => {
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => setIsDurationOpen(!isDurationOpen)}
                   >
-                    <span className="font-medium text-gray-700">Duration (Minutes)</span>
+                    <span className="font-medium text-gray-700">
+                      Duration (Minutes)
+                    </span>
                     {isDurationOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />
                     ) : (
@@ -576,19 +597,32 @@ const MockInterview = () => {
 
                 {/* Dynamic Technology and Interviewer Filters */}
                 {(() => {
-                  const uniqueTechnologies = [...new Set(
-                    mockinterviewData?.map(i => i.technology).filter(Boolean) || []
-                  )];
-                  const uniqueInterviewers = [...new Set(
-                    mockinterviewData?.flatMap(i => {
-                      const interviewers = i.rounds?.[0]?.interviewers || [];
-                      return interviewers.map(interviewer => {
-                        const contact = interviewer?.contact;
-                        return contact?.Name || 
-                          `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim();
-                      });
-                    }).filter(Boolean) || []
-                  )];
+                  const uniqueTechnologies = [
+                    ...new Set(
+                      mockinterviewData
+                        ?.map((i) => i.technology)
+                        .filter(Boolean) || []
+                    ),
+                  ];
+                  const uniqueInterviewers = [
+                    ...new Set(
+                      mockinterviewData
+                        ?.flatMap((i) => {
+                          const interviewers =
+                            i.rounds?.[0]?.interviewers || [];
+                          return interviewers.map((interviewer) => {
+                            const contact = interviewer?.contact;
+                            return (
+                              contact?.Name ||
+                              `${contact?.firstName || ""} ${
+                                contact?.lastName || ""
+                              }`.trim()
+                            );
+                          });
+                        })
+                        .filter(Boolean) || []
+                    ),
+                  ];
 
                   return (
                     <>
@@ -597,9 +631,13 @@ const MockInterview = () => {
                         <div>
                           <div
                             className="flex justify-between items-center cursor-pointer"
-                            onClick={() => setIsTechnologyOpen(!isTechnologyOpen)}
+                            onClick={() =>
+                              setIsTechnologyOpen(!isTechnologyOpen)
+                            }
                           >
-                            <span className="font-medium text-gray-700">Technology</span>
+                            <span className="font-medium text-gray-700">
+                              Technology
+                            </span>
                             {isTechnologyOpen ? (
                               <MdKeyboardArrowUp className="text-xl text-gray-700" />
                             ) : (
@@ -616,7 +654,9 @@ const MockInterview = () => {
                                   <input
                                     type="checkbox"
                                     checked={selectedTechnology.includes(tech)}
-                                    onChange={() => handleTechnologyToggle(tech)}
+                                    onChange={() =>
+                                      handleTechnologyToggle(tech)
+                                    }
                                     className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
                                   />
                                   <span className="text-sm">{tech}</span>
@@ -632,9 +672,13 @@ const MockInterview = () => {
                         <div>
                           <div
                             className="flex justify-between items-center cursor-pointer"
-                            onClick={() => setIsInterviewerOpen(!isInterviewerOpen)}
+                            onClick={() =>
+                              setIsInterviewerOpen(!isInterviewerOpen)
+                            }
                           >
-                            <span className="font-medium text-gray-700">Interviewer</span>
+                            <span className="font-medium text-gray-700">
+                              Interviewer
+                            </span>
                             {isInterviewerOpen ? (
                               <MdKeyboardArrowUp className="text-xl text-gray-700" />
                             ) : (
@@ -650,8 +694,12 @@ const MockInterview = () => {
                                 >
                                   <input
                                     type="checkbox"
-                                    checked={selectedInterviewers.includes(interviewer)}
-                                    onChange={() => handleInterviewerToggle(interviewer)}
+                                    checked={selectedInterviewers.includes(
+                                      interviewer
+                                    )}
+                                    onChange={() =>
+                                      handleInterviewerToggle(interviewer)
+                                    }
                                     className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
                                   />
                                   <span className="text-sm">{interviewer}</span>
@@ -671,7 +719,9 @@ const MockInterview = () => {
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
                   >
-                    <span className="font-medium text-gray-700">Created Date</span>
+                    <span className="font-medium text-gray-700">
+                      Created Date
+                    </span>
                     {isCreatedDateOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />
                     ) : (
@@ -686,12 +736,17 @@ const MockInterview = () => {
                         { value: "last30", label: "Last 30 days" },
                         { value: "last90", label: "Last 90 days" },
                       ].map((option) => (
-                        <label key={option.value} className="flex items-center space-x-2">
+                        <label
+                          key={option.value}
+                          className="flex items-center space-x-2"
+                        >
                           <input
                             type="radio"
                             value={option.value}
                             checked={createdDatePreset === option.value}
-                            onChange={(e) => setCreatedDatePreset(e.target.value)}
+                            onChange={(e) =>
+                              setCreatedDatePreset(e.target.value)
+                            }
                             className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
                           />
                           <span className="text-sm">{option.label}</span>

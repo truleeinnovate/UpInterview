@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Improved responsiveness
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { DndContext, closestCenter } from '@dnd-kit/core';
@@ -20,8 +22,9 @@ const MockInterviewKanban = ({ mockinterviews, onRescheduleClick, onCancel, load
           <div className="h-8 w-1/3 bg-gray-200 skeleton-animation rounded"></div>
           <div className="h-8 w-24 bg-gray-200 skeleton-animation rounded"></div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+        {/* v1.0.0 <--------------------------------------------------------------------------------------------- */}
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+        {/* v1.0.0 ---------------------------------------------------------------------------------------------> */}
           {[...Array(6)].map((_, index) => (
             <motion.div
               key={index}
