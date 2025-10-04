@@ -4,11 +4,11 @@ export const validateInterviewTemplate = (templateData) => {
   let isValid = true;
 
   // Validate template name
-  if (!templateData.templateTitle || !templateData.templateTitle.trim()) {
-    errors.templateTitle = 'Title is required';
+  if (!templateData.title || !templateData.title.trim()) {
+    errors.title = 'Title is required';
     isValid = false;
-  } else if (templateData.templateTitle.trim().length > 100) {
-    errors.templateTitle = 'Title cannot exceed 100 characters';
+  } else if (templateData.title.trim().length > 100) {
+    errors.title = 'Title cannot exceed 100 characters';
     isValid = false;
   }
 

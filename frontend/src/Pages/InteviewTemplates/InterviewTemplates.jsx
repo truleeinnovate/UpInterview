@@ -110,7 +110,8 @@ const InterviewTemplates = () => {
       .filter((template) => template.type === "custom") // Filter for custom templates
       .map((template) => ({
         _id: template._id || `template-${Math.random()}`, // Keep _id for navigation
-        title: template.title || template.roundTitle || "Unnamed Template", // Map title or fallback to roundTitle
+        title: template.title || template.roundTitle || "Unnamed Template",
+        name: template.name || "",
         rounds: Array.isArray(template.rounds)
           ? template.rounds
           : template.sequence || [], // Keep rounds as array for TableView
@@ -351,14 +352,12 @@ const InterviewTemplates = () => {
 
     try {
       // Safely extract and default fields
-      const safeName =
-        typeof template.name === "string"
-          ? template.type === "standard"
-            ? template.name.replace(/_std$/, "")
-            : template.name
-          : template.type === "standard"
-          ? (template.title || "Cloned Template").replace(/_std$/, "")
-          : template.title || "Cloned Template";
+      const safeName = typeof template.name === "string"
+      ? template.name.replace(/_std$/, "")
+      : "cloned_template";
+
+      console.log("Original name:", template.name); // Debug
+      console.log("Safe name:", safeName); // Debug
 
       // Define the fields to pass based on the schema, with safe defaults
       const clonedTemplateData = {
@@ -425,6 +424,7 @@ const InterviewTemplates = () => {
 
   // v1.0.5 <------------------------------------------------------------------------
   const handleCloneClick = (template) => {
+    console.log("Cloning template:", template);
     setTemplateToClone(template);
     setCloneConfirmOpen(true);
   };
@@ -536,7 +536,7 @@ const InterviewTemplates = () => {
           {
             key: "clone",
             label: "Clone",
-            icon: <FileText className="w-4 h-4 text-green-600" />,
+            icon: <FileText className="w-4 h-4 text-custom-blue" />,
             // onClick: handleClone,
             onClick: handleCloneClick,
           },

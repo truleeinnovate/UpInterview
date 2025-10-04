@@ -45,6 +45,7 @@ const StandardTemplates = ({ handleClone }) => {
       .map((template) => ({
         _id: template._id || `template-${Math.random()}`,
         title: template.title || template.roundTitle || "Unnamed Template",
+        name: template.name || "",
         description: template.description || "No description available",
         rounds: Array.isArray(template.rounds)
           ? template.rounds

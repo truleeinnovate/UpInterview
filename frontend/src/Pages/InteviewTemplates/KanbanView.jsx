@@ -173,7 +173,7 @@ const KanbanView = ({
                             <FaEye className="w-4 h-4" />
                           </motion.button>
                         )}
-                        {effectivePermissions.InterviewTemplates?.Edit && (
+                        {effectivePermissions.InterviewTemplates?.Edit && template.type !== "standard" && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
@@ -184,7 +184,7 @@ const KanbanView = ({
                             <FaPencilAlt className="w-4 h-4" />
                           </motion.button>
                         )}
-                        {effectivePermissions.InterviewTemplates?.Delete && (
+                        {effectivePermissions.InterviewTemplates?.Delete && template.type !== "standard" && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
