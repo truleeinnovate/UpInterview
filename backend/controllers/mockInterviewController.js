@@ -2,7 +2,8 @@
 // v1.0.1 - Ashok - added the sort by _id in the createMockInterview controller
 // v1.0.2 - Added backend validation for mock interview
 // controllers/mockInterviewController.js
-const { MockInterview } = require("../models/mockinterview");
+const { MockInterview } = require("../models/Mockinterview/mockinterview");
+const { MockInterviewRound } = require("../models/Mockinterview/mockinterviewRound");
 const { validateMockInterview, mockInterviewUpdateSchema } = require("../validations/mockInterviewValidation");
 
 exports.createMockInterview = async (req, res) => {
@@ -67,7 +68,7 @@ exports.createMockInterview = async (req, res) => {
       // duration,
       // instructions,
       Role,
-      rounds,
+      // rounds,
       candidateName,
       higherQualification,
       currentExperience,
@@ -80,6 +81,7 @@ exports.createMockInterview = async (req, res) => {
       updatedBy: lastModifiedById || createdById || ownerId, // Map lastModifiedById to updatedBy
     });
     const newMockInterview = await mockInterview.save();
+    
     // const mockInterviews = await MockInterview.find({ ownerId });
     // Generate feed
     res.locals.feedData = {

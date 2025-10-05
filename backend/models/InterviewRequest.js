@@ -32,7 +32,15 @@ const OutsourceInterviewRequestSchema = new mongoose.Schema(
     candidateId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Candidate",
-    },
+    },//only for interviews
+    isMockInterview: {
+      type: Boolean,
+      default: false,
+    },//is mock interview true use contactId else use candidateId
+    contactId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Contacts",
+    },//from mockinterview candidate
     positionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Position",
@@ -47,8 +55,8 @@ const OutsourceInterviewRequestSchema = new mongoose.Schema(
     // },
     roundId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "InterviewRounds",
-    },
+      // ref: "InterviewRounds",
+    },//both mock and interviews saves here
     requestMessage: {
       type: String,
     },
