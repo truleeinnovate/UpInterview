@@ -78,24 +78,24 @@ export const useInterviewTemplates = () => {
         authToken
     }), [tenantId, userId, organization, authToken]);
 
-  const {
-    data: templatesData = [],
-    isLoading:isQueryLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ['interviewTemplates'],
-    queryFn: async () => {
-      const data = await fetchFilterData('interviewtemplate'); // <- lowercase to match backend
-    // v1.0.1 <------------------------------------------------------
-      //   return data.reverse();
-    return data;
-    // v1.0.1 ------------------------------------------------------>
-    },
-    enabled: !!hasViewPermission,
-    retry: 1,
-    staleTime: 1000 * 60 * 5
-  });
+    const {
+        data: templatesData = [],
+        isLoading: isQueryLoading,
+        isError,
+        error,
+    } = useQuery({
+        queryKey: ['interviewTemplates'],
+        queryFn: async () => {
+            const data = await fetchFilterData('interviewtemplate'); // <- lowercase to match backend
+            // v1.0.1 <------------------------------------------------------
+            //   return data.reverse();
+            return data;
+            // v1.0.1 ------------------------------------------------------>
+        },
+        enabled: !!hasViewPermission,
+        retry: 1,
+        staleTime: 1000 * 60 * 5
+    });
 
     // Save template mutation
     const saveTemplate = useMutation({
@@ -125,6 +125,24 @@ export const useInterviewTemplates = () => {
                 );
                 return response.data;
             }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['interviewTemplates']);
+        },
+        onError: (error) => {
+            console.error('Template save error:', error.message);
+        },
+    });
+
+    // get templates by tenantId
+    const getTemplatesByTenantId = useMutation({
+        mutationFn: async (tenantId) => {
+            const headers = { Authorization: `Bearer ${queryParams.authToken}` };
+            const response = await axios.get(
+                `${config.REACT_APP_API_URL}/interviewTemplates/tenant/${tenantId}`,
+                { headers }
+            );
+            return response.data.data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['interviewTemplates']);
@@ -204,8 +222,8 @@ export const useInterviewTemplates = () => {
 
             // Remove the round being edited
             const filteredRounds = roundId
-            ? currentRounds.filter((r) => r._id !== roundId)
-            : [...currentRounds];
+                ? currentRounds.filter((r) => r._id !== roundId)
+                : [...currentRounds];
 
             // Insert the updated round at the correct sequence index (sequence is 1-based)
             const newIndex = Math.max((roundData.sequence || 1) - 1, 0);
@@ -213,17 +231,17 @@ export const useInterviewTemplates = () => {
 
             // Normalize all sequence values before sending
             const reorderedRounds = filteredRounds.map((round, index) => ({
-            ...round,
-            sequence: index + 1,
+                ...round,
+                sequence: index + 1,
             }));
 
             const response = await axios.patch(
-            `${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
-            {
-                tenantId: queryParams.tenantId,
-                rounds: reorderedRounds,
-            },
-            { headers }
+                `${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
+                {
+                    tenantId: queryParams.tenantId,
+                    rounds: reorderedRounds,
+                },
+                { headers }
             );
 
             return response.data;
@@ -235,12 +253,12 @@ export const useInterviewTemplates = () => {
                 if (!oldData) return oldData;
 
                 return oldData.map(template =>
-                template._id === variables.id
-                    ? {
-                        ...template,
-                        rounds: data?.data?.rounds || [], // Backend will return ordered rounds
-                    }
-                    : template
+                    template._id === variables.id
+                        ? {
+                            ...template,
+                            rounds: data?.data?.rounds || [], // Backend will return ordered rounds
+                        }
+                        : template
                 );
             });
 
@@ -251,7 +269,7 @@ export const useInterviewTemplates = () => {
         onError: (error) => {
             console.error('Error adding/updating round:', error);
         },
-        });
+    });
     // v1.0.0 ------------------------------------------------------------------------->
 
     const deleteRoundMutation = useMutation({
@@ -303,6 +321,7 @@ export const useInterviewTemplates = () => {
         addOrUpdateRoundError: addOrUpdateRound.error,
         saveTemplate: saveTemplate.mutateAsync,
         addOrUpdateRound: addOrUpdateRound.mutateAsync,
-        deleteRoundMutation: deleteRoundMutation.mutateAsync
+        deleteRoundMutation: deleteRoundMutation.mutateAsync,
+        getTemplatesByTenantId: getTemplatesByTenantId.mutateAsync
     };
 };
