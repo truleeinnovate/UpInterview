@@ -1,20 +1,5 @@
 // v1.0.0  -  Ashraf  -  fixed mock interview code unique issue
 const mongoose = require("mongoose");
-
-const formatDateTime = () => {
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, "0");
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const year = now.getFullYear();
-  let hour = now.getHours();
-  const minute = String(now.getMinutes()).padStart(2, "0");
-  const second = String(now.getSeconds()).padStart(2, "0");
-  const ampm = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12;
-  hour = hour ? hour : 12;
-  return `${day}/${month}/${year} ${hour}:${minute} ${ampm}`;
-};
-
 const mockInterviewSchema = new mongoose.Schema(
   {
     // title: String,
@@ -42,26 +27,26 @@ const mockInterviewSchema = new mongoose.Schema(
     technology: String,
     // interviewType: String, // instant or schedule later
     // status: String,
-    rounds: [
-      {
-        roundTitle: String,
-        interviewMode: String,
-        interviewerType: String,
-        duration: String,
-        instructions: String,
-        interviewType: String,
-        // assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
-        meetingId: String,
-        interviewers: [
-          {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Contacts",
-          },
-        ],
-        status: String,
-        dateTime: String,
-      },
-    ],
+    // rounds: [
+    //   {
+    //     roundTitle: String,
+    //     interviewMode: String,
+    //     interviewerType: String,
+    //     duration: String,
+    //     instructions: String,
+    //     interviewType: String,
+    //     // assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
+    //     meetingId: String,
+    //     interviewers: [
+    //       {
+    //         type: mongoose.Schema.Types.ObjectId,
+    //         ref: "Contacts",
+    //       },
+    //     ],
+    //     status: String,
+    //     dateTime: String,
+    //   },
+    // ],
     resume: {
       // Added by Ashok
       filename: String,

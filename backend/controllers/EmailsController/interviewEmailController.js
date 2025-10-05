@@ -491,7 +491,8 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       positionId,
       dateTime,
       duration,
-      roundTitle
+      roundTitle,
+      type
     } = req.body;
 
     // Set company name and support email from environment variables or defaults

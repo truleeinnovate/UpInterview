@@ -4,7 +4,7 @@ const { Candidate } = require("../../models/candidate.js");
 const { Contacts } = require("../../models/Contacts");
 const Tenant = require("../../models/Tenant");
 const SupportUser = require("../../models/SupportUser");
-const { MockInterview } = require("../../models/mockinterview");
+const { MockInterview } = require("../../models/Mockinterview/mockinterview.js");
 const uploadToCloudinary = require("../../utils/uploadToCloudinary");
 
 const entityModels = {

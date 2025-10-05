@@ -19,7 +19,8 @@ const { Position } = require('../models/Position/position.js');
 const InterviewTemplate = require("../models/InterviewTemplate");
 const { Interview } = require('../models/Interview/Interview.js');
 // v1.0.5 <-----------------------------
-const { MockInterview } = require('../models/MockInterview');
+const { MockInterview } = require('../models/Mockinterview/mockinterview.js');
+const { MockInterviewRound } = require('../models/Mockinterview/mockinterviewRound.js');
 // v1.0.5-------------------------------->
 const { TenantQuestions } = require('../models/tenantQuestions');
 const TenantQuestionsListNames = require('../models/QuestionBank/tenantQuestionsListNames.js');
@@ -242,11 +243,21 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       case 'mockinterview':
         // console.log('[19] Processing MockInterview model');
         data = await DataModel.find(query)
-          .populate({
-            path: 'rounds.interviewers',
-            model: 'Contacts',
-            select: 'firstName lastName email',
-          })
+        const mockInterviewRoundsData = await MockInterviewRound.find({
+          interviewId: { $in: interviewIds },
+          // ------------------------------ v1.0.1 >
+        })
+        .populate({
+          path: 'interviewers',
+          model: 'Contacts',
+          select: 'firstName lastName email',
+        })
+
+          // .populate({
+          //   path: 'rounds.interviewers',
+          //   model: 'Contacts',
+          //   select: 'firstName lastName email',
+          // })
           .lean();
         // console.log('[20] Found', data.length, 'MockInterview records');
         break;
