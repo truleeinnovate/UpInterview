@@ -36,6 +36,10 @@ function Activity({ parentId, parentId2, mode }) {
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  console.log("parentId, parentId2, mode",
+    parentId, parentId2, mode
+  );
+  
 
   // Close filters when clicking outside
   useEffect(() => {
@@ -97,6 +101,8 @@ function Activity({ parentId, parentId2, mode }) {
         const response = await axios.get(`${config.REACT_APP_API_URL}/feeds`, {
           params: { parentId },
         });
+        console.log("response",response);
+        
 
         // Check if response has data
         if (
@@ -358,7 +364,7 @@ function Activity({ parentId, parentId2, mode }) {
         {value}
       </span>
     );
-    console.log("metadata", metadata, feed.parentObject, mode, action.name);
+    // console.log("metadata", metadata, feed.parentObject, mode, action.name);
 
     // v1.0.3 <-------------------------------------------------------------------------------
 
