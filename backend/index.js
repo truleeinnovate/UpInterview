@@ -1040,6 +1040,13 @@ app.get("/api/rolesdata/:organizationId", async (req, res) => {
   }
 });
 
+
+// ✅ Import video router AFTER logging middleware
+const videoRouter = require('./routes/VideoCallingSettingRoutes/VideoCallingSettingRoutes.js');
+
+// ✅ Mount the router
+app.use('/video-details', videoRouter);
+
 // tabs
 const candidateRoutes = require("./routes/candidateRoutes.js");
 app.use("/candidate", candidateRoutes);
@@ -1390,6 +1397,9 @@ app.use("/upload", uploadRoute);
 const tenantRoutes = require("./routes/tenantRoutes");
 app.use("/tenants", tenantRoutes);
 
+
+
+
 // <==================================================================================
 const InvoiceRouter = require("./routes/InvoiceRoutes.js");
 const PaymentsRoute = require("./routes/paymentsRoutes.js"); // SUPER ADMIN added by Ashok
@@ -1486,6 +1496,8 @@ app.get("/api/kpis", (req, res) => {
     res.status(500).json({ error: "Failed to fetch KPI data" });
   }
 });
+
+
 
 app.get("/api/charts", (req, res) => {
   try {
@@ -1711,6 +1723,8 @@ app.post('/api/create-meeting', async (req, res) => {
     });
   }
 });
+
+
 
 
 

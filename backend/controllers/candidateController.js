@@ -201,48 +201,106 @@ const updateCandidatePatchCall = async (req, res) => {
     
 
     // Compare current values with updateFields to identify changes
-    const changes = Object.entries(updateFields)
-      .filter(([key, newValue]) => {
-        const oldValue = currentCandidate[key];
+    // const changes = Object.entries(updateFields)
+    //   .filter(([key, newValue]) => {
+    //     const oldValue = currentCandidate[key];
 
-        // Normalize PositionId (convert to string for comparison)
-        if (key === "PositionId") {
-          return oldValue?.toString() !== newValue?.toString();
-        }
+    //     // Normalize PositionId (convert to string for comparison)
+    //     if (key === "PositionId") {
+    //       return oldValue?.toString() !== newValue?.toString();
+    //     }
 
-        // Handle arrays (e.g., `skills`) by comparing stringified versions
-        if (Array.isArray(oldValue) && Array.isArray(newValue)) {
-          const normalizeArray = (array) =>
-            array
-              .map((item) => {
-                const { _id, ...rest } = item; // Ignore _id for comparison
-                return rest;
-              })
-              .sort((a, b) => a.skill.localeCompare(b.skill)); // Sort by `skill` or another key
+    //     // Handle arrays (e.g., `skills`) by comparing stringified versions
+    //     if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+    //       const normalizeArray = (array) =>
+    //         array
+    //           .map((item) => {
+    //             const { _id, ...rest } = item; // Ignore _id for comparison
+    //             return rest;
+    //           })
+    //           .sort((a, b) => a.skill.localeCompare(b.skill)); // Sort by `skill` or another key
 
-          return (
-            JSON.stringify(normalizeArray(oldValue)) !==
-            JSON.stringify(normalizeArray(newValue))
-          );
-        }
+    //       return (
+    //         JSON.stringify(normalizeArray(oldValue)) !==
+    //         JSON.stringify(normalizeArray(newValue))
+    //       );
+    //     }
 
-        // Handle dates (convert to ISO strings for comparison)
-        if (
-          (oldValue instanceof Date || new Date(oldValue).toString() !== "Invalid Date") &&
-          (newValue instanceof Date || new Date(newValue).toString() !== "Invalid Date")
-        ) {
-          return new Date(oldValue).toISOString() !== new Date(newValue).toISOString();
-        }
+    //     // Handle dates (convert to ISO strings for comparison)
+    //     if (
+    //       (oldValue instanceof Date || new Date(oldValue).toString() !== "Invalid Date") &&
+    //       (newValue instanceof Date || new Date(newValue).toString() !== "Invalid Date")
+    //     ) {
+    //       return new Date(oldValue).toISOString() !== new Date(newValue).toISOString();
+    //     }
 
-        // Default comparison for strings, numbers, and other types
-        return oldValue !== newValue;
-      })
-      .map(([key, newValue]) => ({
-        fieldName: key,
-        oldValue: currentCandidate[key],
-        newValue,
-      }));
+    //     // Default comparison for strings, numbers, and other types
+    //     return oldValue !== newValue;
+    //   })
+    //   .map(([key, newValue]) => ({
+    //     fieldName: key,
+    //     oldValue: currentCandidate[key],
+    //     newValue,
+    //   }));
 
+
+
+      // ✅ Utility function to detect empty values  // added by Ranjith
+      const isEmptyValue = (val) => {
+        return (
+          val === null ||
+          val === undefined ||
+          (typeof val === "string" && val.trim() === "")
+        );
+      };
+  
+      // ✅ Compare current values with updateFields to identify changes // changed by Ranjith
+      const changes = Object.entries(updateFields)
+        .filter(([key, newValue]) => {
+          const oldValue = currentCandidate[key];
+  
+          // ✅ Skip when both old & new are empty  // added by Ranjith
+          if (isEmptyValue(oldValue) && isEmptyValue(newValue)) {
+            return false;
+          }
+  
+          // Normalize PositionId (convert to string for comparison)
+          if (key === "PositionId") {
+            return oldValue?.toString() !== newValue?.toString();
+          }
+  
+          // Handle arrays (e.g., `skills`)
+          if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+            const normalizeArray = (array) =>
+              array
+                .map((item) => {
+                  const { _id, ...rest } = item; // Ignore _id for comparison
+                  return rest;
+                })
+                .sort((a, b) => a.skill.localeCompare(b.skill));
+  
+            return (
+              JSON.stringify(normalizeArray(oldValue)) !==
+              JSON.stringify(normalizeArray(newValue))
+            );
+          }
+  
+          // Handle dates
+          if (
+            (oldValue instanceof Date || new Date(oldValue).toString() !== "Invalid Date") &&
+            (newValue instanceof Date || new Date(newValue).toString() !== "Invalid Date")
+          ) {
+            return new Date(oldValue).toISOString() !== new Date(newValue).toISOString();
+          }
+  
+          // Default comparison for strings, numbers, etc.
+          return oldValue !== newValue;
+        })
+        .map(([key, newValue]) => ({
+          fieldName: key,
+          oldValue: currentCandidate[key],
+          newValue,
+        }));
 
     // If no changes detected, return early
     if (changes.length === 0) {
@@ -286,7 +344,9 @@ const updateCandidatePatchCall = async (req, res) => {
       severity: res.statusCode >= 500 ? 'high' : 'low',
       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
         fieldName,
-        message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
+        message: isEmptyValue(oldValue) ? isEmptyValue(newValue)
+        : `${fieldName} updated from `
+        , // '${oldValue}' to '${newValue}'
       })),
       history: changes,
     };

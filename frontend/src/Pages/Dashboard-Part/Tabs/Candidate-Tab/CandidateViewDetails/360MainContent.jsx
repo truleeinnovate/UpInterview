@@ -69,6 +69,10 @@ const MainContent = () => {
   const { interviewData } = useInterviews();
 
   const interview = interviewData.find((data) => data?.candidateId?._id === id);
+  // console.log("interview",interview);
+  console.log("candidate?._id",candidate?._id);
+  
+  
 
   useEffect(() => {
     fetchCandidate();
@@ -313,8 +317,8 @@ const MainContent = () => {
                   <Documents documents={candidate.documents || []} />
                 )}
                 {/* v1.0.0 <---------------------------------------------------- */}
-                {activeTab === "Activity" && (
-                  <ActivityComponent parentId={id} />
+                {activeTab === "activity" && (
+                  <ActivityComponent parentId={candidate?._id} />
                 )}
                 {/* v1.0.0 <----------------------------------------------------> */}
               </div>
