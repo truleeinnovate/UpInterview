@@ -351,13 +351,38 @@ const InterviewTemplates = () => {
     console.log("Cloning:", template);
 
     try {
+      // Get all existing template names for uniqueness check
+      const existingNames = templatesData.map(t => t.name);
+      
+      // Generate a unique name
+      const generateUniqueName = (baseName) => {
+        let newName = baseName;
+        let counter = 1;
+        
+        // Check if the name already exists
+        while (existingNames.includes(newName)) {
+          // If we've tried 99 times, append a timestamp instead
+          if (counter > 99) {
+            return `${baseName}_${Date.now().toString().slice(-4)}`;
+          }
+          // Append a random 2-digit number (01-99)
+          const randomNum = Math.floor(Math.random() * 99) + 1;
+          newName = `${baseName}_${randomNum.toString().padStart(2, '0')}`;
+          counter++;
+        }
+        return newName;
+      };
+
       // Safely extract and default fields
-      const safeName = typeof template.name === "string"
-      ? template.name.replace(/_std$/, "")
-      : "cloned_template";
+      const baseName = typeof template.name === "string" 
+        ? template.name.replace(/_std$/, "")
+        : "cloned_template";
+      
+      // Generate a unique name
+      const safeName = generateUniqueName(baseName);
 
       console.log("Original name:", template.name); // Debug
-      console.log("Safe name:", safeName); // Debug
+      console.log("New unique name:", safeName); // Debug
 
       // Define the fields to pass based on the schema, with safe defaults
       const clonedTemplateData = {

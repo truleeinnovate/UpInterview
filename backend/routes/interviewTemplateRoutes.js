@@ -3,7 +3,7 @@ const router = express.Router();
 const {
     createInterviewTemplate,
     getAllTemplates,
-    
+    getTemplatesByTenantId,
     // getTemplateById,
     updateTemplate,
     deleteTemplate,
@@ -14,7 +14,7 @@ const {
 // Create and get all templates
 router.route('/')
     .post(createInterviewTemplate)
-    // .get(getAllTemplates);
+// .get(getAllTemplates);
 
 // Get, update and delete template by ID
 router.route('/:id')
@@ -22,6 +22,9 @@ router.route('/:id')
     .patch(updateTemplate)
     .delete(deleteTemplate);
 
-    router.delete('/delete-round/:roundId',deleteRound)
+router.delete('/delete-round/:roundId', deleteRound)
+
+// want to get the data of interview templates by matching tenantId
+router.route('/tenant/:tenantId').get(getTemplatesByTenantId)
 
 module.exports = router;
