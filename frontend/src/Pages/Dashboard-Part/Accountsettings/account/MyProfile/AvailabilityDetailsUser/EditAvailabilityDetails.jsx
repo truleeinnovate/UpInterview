@@ -2,7 +2,7 @@
 // v1.0.1 - Ashok - Changed Maximize and Minimize icons to follow consistent design
 // v1.0.2 - Ashok - Improved responsiveness and added common code to popup
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import TimezoneSelect from "react-timezone-select"; // Make sure to install this package
 import { selectBaseStyles } from "../../../../../../Components/Dropdowns/DropdownSelect";
 import DatePicker from "react-datepicker";
@@ -28,7 +28,9 @@ import {
   useUserProfile,
 } from "../../../../../../apiHooks/useUsers";
 import { useQueryClient } from "@tanstack/react-query";
-// v1.0.1 <---------------------------------------------------------------------------------
+import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
+import { notify } from "../../../../../../services/toastService";
+// v1.0.1 <--------------------------------------------------------------------------------
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
@@ -62,7 +64,26 @@ const EditAvailabilityDetails = ({
   const navigationState = location.state;
   const availabilityDataFromProps = availabilityData || navigationState;
 
-  const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId);
+  // Fetch user profile for "my-profile" context
+  const { userProfile, isLoading, isError, error } = useUserProfile(from === "my-profile" ? resolvedId : null);
+  
+  // Fetch outsource interviewers for "outsource-interviewer" context
+  const { outsourceInterviewers } = useOutsourceInterviewers();
+  
+  // Get the appropriate profile data based on context
+  const profileData = useMemo(() => {
+    if (from === "outsource-interviewer") {
+      // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
+      // Try to find the interviewer by matching the contactId._id with resolvedId
+      const interviewer = outsourceInterviewers?.find(
+        (i) => i.contactId?._id === resolvedId
+      );
+      // Return the Contact object which has the actual profile data
+      return interviewer?.contactId || null;
+    }
+    return userProfile;
+  }, [from, outsourceInterviewers, resolvedId, userProfile]);
+  
   // const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
   const queryClient = useQueryClient();
@@ -269,8 +290,29 @@ const EditAvailabilityDetails = ({
       //   cleanFormData
       // );
 
+      // Both contexts use the same endpoint since outsource interviewers are Contact records
+      // Determine the correct ID to use for the update
+      let updateId;
+      if (from === "outsource-interviewer") {
+        // For outsource interviewers, profileData is the Contact object
+        if (!profileData || !profileData._id) {
+          console.error("Profile data not loaded or missing ID:", { profileData });
+          notify.error("Profile data is not loaded. Please wait and try again.");
+          return;
+        }
+        updateId = profileData._id;
+      } else {
+        // For regular users (my-profile), profileData is the User object with a contactId field
+        if (!profileData || !profileData.contactId) {
+          console.error("Profile data not loaded or missing contactId:", { profileData });
+          notify.error("Profile data is not loaded. Please wait and try again.");
+          return;
+        }
+        updateId = profileData.contactId; // Use contactId for regular users
+      }
+      
       const response = await updateContactDetail.mutateAsync({
-        resolvedId,
+        resolvedId: updateId,
         data: cleanFormData,
       });
       await queryClient.invalidateQueries(["userProfile", resolvedId]);

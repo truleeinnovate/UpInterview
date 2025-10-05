@@ -22,6 +22,9 @@ import {
     useUpdateContactDetail,
     useUserProfile,
 } from "../../../../../../apiHooks/useUsers.js";
+import { 
+    useOutsourceInterviewers
+} from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
 
 import { toast } from "react-hot-toast";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode.js";
@@ -75,11 +78,34 @@ const BasicDetailsEditPage = ({
     const [isCheckingEmail, setIsCheckingEmail] = useState(false);
     const [originalEmail, setOriginalEmail] = useState("");
     const [originalProfileId, setOriginalProfileId] = useState("");
-    const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId);
+    
+    // Fetch user profile for "my-profile" context
+    const { userProfile, isLoading, isError, error } = useUserProfile(from === "my-profile" ? resolvedId : null);
+    
+    // Fetch outsource interviewers for "outsource-interviewer" context
+    const { outsourceInterviewers } = useOutsourceInterviewers();
+    
+    // Get the appropriate profile data based on context
+    const profileData = useMemo(() => {
+        if (from === "outsource-interviewer") {
+            // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
+            // Try to find the interviewer by matching the contactId._id with resolvedId
+            const interviewer = outsourceInterviewers?.find(
+                (i) => i.contactId?._id === resolvedId
+            );
+            console.log("Looking for Contact ID:", resolvedId);
+            console.log("Found interviewer:", interviewer);
+            console.log("ContactId object:", interviewer?.contactId);
+            // Return the Contact object which has the actual profile data
+            return interviewer?.contactId || null;
+        }
+        return userProfile;
+    }, [from, outsourceInterviewers, resolvedId, userProfile]);
+    
     // Role dropdown state
     const [currentRole, setCurrentRole] = useState([]);
 
-    console.log("userProfile BasicDetailsEditPage", userProfile);
+    console.log("profileData BasicDetailsEditPage", profileData);
 
     const [selectedCurrentRoleId, setSelectedCurrentRoleId] = useState("");
 
@@ -143,30 +169,30 @@ const BasicDetailsEditPage = ({
 
     useEffect(() => {
         // const contact = usersRes.find(user => user.contactId === resolvedId);
-        if (!userProfile) return;
-        // console.log("contact userProfile BasicDetailsEditPage", userProfile);
+        if (!profileData) return;
+        // console.log("contact profileData BasicDetailsEditPage", profileData);
         setFormData({
-            email: userProfile.email || "",
-            firstName: userProfile.firstName || "",
-            lastName: userProfile.lastName || "",
-            countryCode: userProfile.countryCode || "+91",
-            phone: userProfile.phone || "",
-            profileId: userProfile.profileId || "",
-            dateOfBirth: formatDateOfBirth(userProfile.dateOfBirth) || "",
-            gender: userProfile.gender || "",
-            linkedinUrl: userProfile.linkedinUrl || "",
-            portfolioUrl: userProfile.portfolioUrl || "",
-            id: userProfile._id,
-            roleLabel: userProfile?.roleLabel || "",
-            roleId: userProfile?.roleId || "",
+            email: profileData.email || "",
+            firstName: profileData.firstName || "",
+            lastName: profileData.lastName || "",
+            countryCode: profileData.countryCode || "+91",
+            phone: profileData.phone || "",
+            profileId: profileData.profileId || "",
+            dateOfBirth: formatDateOfBirth(profileData.dateOfBirth) || "",
+            gender: profileData.gender || "",
+            linkedinUrl: profileData.linkedinUrl || "",
+            portfolioUrl: profileData.portfolioUrl || "",
+            id: profileData._id,
+            roleLabel: profileData?.roleLabel || "",
+            roleId: profileData?.roleId || "",
         });
 
-        setFilePreview(userProfile?.imageData?.path);
-        setSelectedCurrentRoleId(userProfile?.roleId || "");
+        setFilePreview(profileData?.imageData?.path);
+        setSelectedCurrentRoleId(profileData?.roleId || "");
 
-        setOriginalEmail(userProfile.email || "");
-        setOriginalProfileId(userProfile.profileId || "");
-        setStartDate(userProfile.dateOfBirth ? new Date(userProfile.dateOfBirth) : null);
+        setOriginalEmail(profileData.email || "");
+        setOriginalProfileId(profileData.profileId || "");
+        setStartDate(profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : null);
         // if (userProfile.dateOfBirth?.match(/^\d{2}-\d{2}-\d{4}$/)) {
         //   const parsedDate = parse(
         //     userProfile.dateOfBirth,
@@ -179,7 +205,7 @@ const BasicDetailsEditPage = ({
         // }
 
         setErrors({});
-    }, [resolvedId, userProfile]);
+    }, [resolvedId, profileData]);
 
     // Old custom dropdown handlers removed after switching to common field
 
@@ -466,11 +492,40 @@ const BasicDetailsEditPage = ({
                         newEmail: formData.email.trim(),
                     };
 
+                    // Both contexts use the same endpoint since outsource interviewers are Contact records
+                    // Determine the correct ID to use for the update
+                    let updateId;
+                    if (from === "outsource-interviewer") {
+                        // For outsource interviewers, profileData is the Contact object
+                        if (!profileData || !profileData._id) {
+                            console.error("Profile data not loaded or missing ID for email update:", { profileData });
+                            notify.error("Profile data is not loaded. Please wait and try again.");
+                            setLoading(false);
+                            return;
+                        }
+                        updateId = profileData._id;
+                    } else {
+                        // For regular users (my-profile), profileData is the User object with a contactId field
+                        if (!profileData || !profileData.contactId) {
+                            console.error("Profile data not loaded or missing contactId for email update:", { profileData });
+                            notify.error("Profile data is not loaded. Please wait and try again.");
+                            setLoading(false);
+                            return;
+                        }
+                        updateId = profileData.contactId; // Use contactId for regular users
+                    }
+                    
+                    if (!updateId) {
+                        console.error("No valid ID for email update:", { from, profileData, resolvedId });
+                        notify.error("Unable to update profile: Invalid ID");
+                        setLoading(false);
+                        return;
+                    }
+                    
                     const response = await updateContactDetail.mutateAsync({
-                        resolvedId,
+                        resolvedId: updateId,
                         data: dataWithNewEmail,
                     });
-
                     // if (usersId) onSuccess();
                     // handleCloseModal();
                     if (response.status === 200) {
@@ -494,27 +549,62 @@ const BasicDetailsEditPage = ({
             } else {
                 // console.log("data With old Email",cleanFormData);
 
-                const contactId = userProfile.contactId;
+                const contactId = profileData?.contactId || profileData?._id;
                 if (isProfileRemoved && !file) {
                     await uploadFile(null, "image", "contact", contactId);
                 } else if (file instanceof File) {
                     await uploadFile(file, "image", "contact", contactId);
                 }
 
-                const response = await updateContactDetail.mutateAsync({
-                    resolvedId,
-                    data: cleanFormData,
-                    // profilePic: file,
-                    // isProfileRemoved,
-                    // contactId: userProfile?.contactId,
-                });
-                if (response.status === 200) {
-                    notify.success("Updated Basic Details Successfully");
+                // Both contexts use the same endpoint since outsource interviewers are Contact records
+                // Determine the correct ID to use for the update
+            let updateId;
+            if (from === "outsource-interviewer") {
+                // For outsource interviewers, profileData is the Contact object
+                if (!profileData || !profileData._id) {
+                    console.error("Profile data not loaded or missing ID:", { profileData });
+                    notify.error("Profile data is not loaded. Please wait and try again.");
+                    setLoading(false);
+                    return;
                 }
+                updateId = profileData._id;
+            } else {
+                // For regular users (my-profile), profileData is the User object with a contactId field
+                if (!profileData || !profileData.contactId) {
+                    console.error("Profile data not loaded or missing contactId:", { profileData });
+                    notify.error("Profile data is not loaded. Please wait and try again.");
+                    setLoading(false);
+                    return;
+                }
+                updateId = profileData.contactId; // Use contactId for regular users
+            }
+                
+                if (!updateId) {
+                    console.error("No valid ID for update:", { from, profileData, resolvedId });
+                    notify.error("Unable to update profile: Invalid ID");
+                    setLoading(false);
+                    return;
+                }
+                
+                console.log("Update ID determination:", { 
+                    from, 
+                    profileData, 
+                    profileDataId: profileData?._id, 
+                    resolvedId, 
+                    updateId 
+                });
+                
+                const response = await updateContactDetail.mutateAsync({
+                    resolvedId: updateId,
+                    data: cleanFormData,
+                });
+                
 
                 if (response.status === 200) {
                     if (usersId) onSuccess();
+                    setLoading(false);
                     handleCloseModal();
+                    notify.success("Updated Basic Details Successfully");
                 } else {
                     setErrors((prev) => ({
                         ...prev,

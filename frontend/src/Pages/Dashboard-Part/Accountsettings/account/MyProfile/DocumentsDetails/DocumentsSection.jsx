@@ -14,14 +14,18 @@ import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import { uploadFile } from "../../../../../../apiHooks/imageApis";
 
-export function DocumentsSection({ documents, onUpdate }) {
+export function DocumentsSection({ documents, onUpdate, externalData = null }) {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
   const userId = tokenPayload?.userId;
 
+  // Always call the hook to comply with React rules
   const { userProfile } = useUserProfile(userId);
-  console.log("usersRes---", userProfile);
+  
+  // Use external data if provided, otherwise use userProfile
+  const profileData = externalData || userProfile;
+  console.log("usersRes---", profileData);
 
   const [resumeError, setResumeError] = useState("");
   const [coverLetterError, setCoverLetterError] = useState("");

@@ -15,6 +15,7 @@ const AvailabilityUser = ({
   setAvailabilityEditOpen,
   isFullScreen,
   onEditClick,
+  externalData = null
 }) => {
   // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
@@ -38,12 +39,19 @@ const AvailabilityUser = ({
 
   const ownerId = usersId || userId;
 
+  // Always call the hooks to comply with React rules
   const { userProfile } = useUserProfile(ownerId);
+  
+  // Use external data if provided for the availability hook
+  const availabilityId = externalData 
+    ? (externalData?.contactId || externalData?._id)
+    : (userProfile?.contactId || userProfile?._id);
+    
   const {
     availability,
     loading: isAvailabilityLoading,
     error: availabilityError,
-  } = useInterviewAvailability(userProfile?.contactId || userProfile?._id);
+  } = useInterviewAvailability(availabilityId);
   console.log("availability", availability);
 
   useEffect(() => {
@@ -52,18 +60,13 @@ const AvailabilityUser = ({
   }, [userProfile]);
 
   useEffect(() => {
-    // const selectedContact = usersId
-    //   ? usersRes.find(user => user?.contactId === usersId)
-    //   : usersRes.find(user => user?._id === userId);
-
-    // console.log("contactId", userProfile);
-
-    if (!userProfile || !userProfile._id) return;
-    if (userProfile) {
+    // Use external data if provided, otherwise use userProfile from hook
+    if (externalData) {
+      setContactData(externalData);
+    } else if (userProfile && userProfile._id) {
       setContactData(userProfile);
-      //  console.log("Selected contact:", selectedContact);
     }
-  }, [ownerId, userProfile]);
+  }, [ownerId, userProfile, externalData]);
 
   useEffect(() => {
     if (!availability) return;
@@ -226,6 +229,12 @@ const AvailabilityUser = ({
 
         <button
           onClick={() => {
+            const editId = contactData?._id || ownerId || usersId;
+            if (!editId) {
+              console.error("No ID available for editing");
+              return;
+            }
+            
             if (mode === "users") {
               // Pass availability data to the parent component
               if (onEditClick) {
@@ -238,10 +247,24 @@ const AvailabilityUser = ({
                 });
               }
               setAvailabilityEditOpen(true);
-            } else {
-              // Pass availability data through navigation state
+            } else if (externalData) {
+              // Navigate to outsource interviewer edit page
               navigate(
-                `/account-settings/my-profile/availability-edit/${contactData?._id}`,
+                `/outsource-interviewers/edit/availability/${editId}`,
+                {
+                  state: {
+                    availabilityData: availability,
+                    userProfile: externalData,
+                    times: times,
+                    selectedTimezone: selectedTimezone,
+                    selectedOption: selectedOption,
+                  },
+                }
+              );
+            } else {
+              // Navigate to my profile edit page
+              navigate(
+                `/account-settings/my-profile/availability-edit/${editId}`,
                 {
                   state: {
                     availabilityData: availability,
@@ -254,7 +277,7 @@ const AvailabilityUser = ({
               );
             }
           }}
-          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
+          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg"
         >
           Edit
         </button>

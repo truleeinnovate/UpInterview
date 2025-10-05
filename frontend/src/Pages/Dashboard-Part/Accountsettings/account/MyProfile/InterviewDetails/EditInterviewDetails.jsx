@@ -2,7 +2,7 @@
 // v1.0.1 - Ashok - Changed Maximize and Minimize icons to follow consistent design
 // v1.0.2 - Ashok - Improved responsiveness and added common code to popup
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 
 import { X } from "lucide-react";
 import axios from "axios";
@@ -23,6 +23,7 @@ import {
 } from "../../../../../../apiHooks/useUsers";
 import { useQueryClient } from "@tanstack/react-query";
 import { notify } from "../../../../../../services/toastService";
+import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
 // v1.0.1 --------------------------------------------------------------------------------->
 // v1.0.2 <-----------------------------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
@@ -46,7 +47,27 @@ const EditInterviewDetails = ({
     const { id } = useParams();
     const navigate = useNavigate();
     const resolvedId = usersId || id;
-    const { userProfile } = useUserProfile(resolvedId);
+    
+    // Fetch user profile for "my-profile" context
+    const { userProfile } = useUserProfile(from === "my-profile" ? resolvedId : null);
+    
+    // Fetch outsource interviewers for "outsource-interviewer" context
+    const { outsourceInterviewers } = useOutsourceInterviewers();
+    
+    // Get the appropriate profile data based on context
+    const profileData = useMemo(() => {
+        if (from === "outsource-interviewer") {
+            // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
+            // Try to find the interviewer by matching the contactId._id with resolvedId
+            const interviewer = outsourceInterviewers?.find(
+                (i) => i.contactId?._id === resolvedId
+            );
+            // Return the Contact object which has the actual profile data
+            return interviewer?.contactId || null;
+        }
+        return userProfile;
+    }, [from, outsourceInterviewers, resolvedId, userProfile]);
+    
     const updateContactDetail = useUpdateContactDetail();
     const queryClient = useQueryClient();
 
@@ -134,8 +155,8 @@ const EditInterviewDetails = ({
         return () => clearInterval(interval);
     }, [fetchExchangeRate]);
 
-    // Get years of experience from user profile or props
-    const expYears = parseInt(userProfile?.yearsOfExperience || yearsOfExperience || 0, 10);
+    // Get years of experience from profile data or props
+    const expYears = parseInt(profileData?.yearsOfExperience || yearsOfExperience || 0, 10);
 
     const showJuniorLevel = expYears > 0;
     const showMidLevel = expYears >= 4;
@@ -147,7 +168,7 @@ const EditInterviewDetails = ({
         isSkillsFetching,
     } = useMasterData();
 
-    console.log("userProfile", userProfile);
+    console.log("profileData", profileData);
     // State for form errors and loading
     const [errors, setErrors] = useState({});
     const [isReady, setIsReady] = useState(false);
@@ -215,12 +236,48 @@ const EditInterviewDetails = ({
         }
     }, [formData, initialFormData, checkForChanges]);
 
+    // Fetch rate cards for a specific technology - moved here to avoid hoisting issue
+    const fetchRateCardsMemoized = useCallback(async (techName) => {
+        if (!techName) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const baseUrl = process.env.REACT_APP_API_URL || '';
+            const encodedTech = encodeURIComponent(techName);
+            const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
+
+            const response = await axios.get(apiUrl, {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data) {
+                const rateCardsData = Array.isArray(response.data) ? response.data : [response.data];
+                setRateCards(rateCardsData);
+            }
+        } catch (error) {
+            console.error('Error fetching rate cards:', {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
+            setRateCards([]);
+        }
+    }, []);
+
+    const fetchRateCards = useCallback((technologyName) => {
+        return fetchRateCardsMemoized(technologyName);
+    }, [fetchRateCardsMemoized]);
+
     // Changed: Updated useEffect to properly map all backend fields and fetch rate cards
     useEffect(() => {
-        if (!userProfile || !userProfile._id) return;
+        if (!profileData || !profileData._id) return;
 
         // Calculate which levels should be visible based on years of experience
-        const years = parseInt(userProfile?.previousExperienceConductingInterviewsYears) || 0;
+        const years = parseInt(profileData?.previousExperienceConductingInterviewsYears) || 0;
         console.log("Years of experience for rate calculation:", years);
 
         // Show Junior if years <= 6 (0-6 years)
@@ -238,23 +295,25 @@ const EditInterviewDetails = ({
 
         // Create the form data with proper rate visibility
         const newFormData = {
-            PreviousExperienceConductingInterviews: userProfile?.previousExperienceConductingInterviews || "",
-            PreviousExperienceConductingInterviewsYears: years,
-            ExpertiseLevel_ConductingInterviews: userProfile?.expertiseLevelConductingInterviews || "",
-            hourlyRate: userProfile?.hourlyRate || "",
-            expectedRatePerMockInterview: userProfile?.expectedRatePerMockInterview || "",
-            mock_interview_discount: userProfile?.mock_interview_discount || "",
-            Technology: Array.isArray(userProfile?.technologies) ? userProfile.technologies : [],
-            skills: Array.isArray(userProfile?.skills) ? userProfile.skills : [],
-            NoShowPolicy: userProfile?.noShowPolicy || "",
-            professionalTitle: userProfile?.professionalTitle || "",
-            bio: userProfile?.bio || "",
-            interviewFormatWeOffer: Array.isArray(userProfile?.interviewFormatWeOffer)
-                ? userProfile.interviewFormatWeOffer
+            PreviousExperienceConductingInterviews: profileData?.previousExperienceConductingInterviews || "",
+            // If experience is "no", keep years empty; otherwise use the parsed value
+            PreviousExperienceConductingInterviewsYears: 
+                profileData?.previousExperienceConductingInterviews === "no" ? "" : years || 1,
+            ExpertiseLevel_ConductingInterviews: profileData?.expertiseLevelConductingInterviews || "",
+            hourlyRate: profileData?.hourlyRate || "",
+            expectedRatePerMockInterview: profileData?.expectedRatePerMockInterview || "",
+            mock_interview_discount: profileData?.mock_interview_discount || "",
+            Technology: Array.isArray(profileData?.technologies) ? profileData.technologies : [],
+            skills: Array.isArray(profileData?.skills) ? profileData.skills : [],
+            NoShowPolicy: profileData?.noShowPolicy || "",
+            professionalTitle: profileData?.professionalTitle || "",
+            bio: profileData?.bio || "",
+            interviewFormatWeOffer: Array.isArray(profileData?.interviewFormatWeOffer)
+                ? profileData.interviewFormatWeOffer
                 : [],
-            yearsOfExperience: userProfile?.yearsOfExperience || 0,
-            id: userProfile?._id,
-            rates: userProfile?.rates || {
+            yearsOfExperience: profileData?.yearsOfExperience || 0,
+            id: profileData?._id,
+            rates: profileData?.rates || {
                 junior: {
                     usd: 0,
                     inr: 0,
@@ -278,27 +337,29 @@ const EditInterviewDetails = ({
         setFormData(newFormData);
 
         // Set selected candidates for the UI
-        const selectedTechs = Array.isArray(userProfile?.technologies) ? userProfile.technologies : [];
+        const selectedTechs = Array.isArray(profileData?.technologies) ? profileData.technologies : [];
         setSelectedCandidates(
             selectedTechs.map(tech => ({
                 TechnologyMasterName: tech,
-                _id: Math.random().toString(36).substr(2, 9) // Generate a temporary ID if needed
+                value: tech,
+                label: tech
             }))
         );
 
-        // Fetch rate cards for the first technology if available
+        // Fetch rate cards for selected technologies
         if (selectedTechs.length > 0) {
+            // Fetch rate cards for the first technology
             fetchRateCards(selectedTechs[0]);
         }
 
         // Set other UI states
-        setIsMockInterviewSelected(!!userProfile?.expectedRatePerMockInterview);
-        setSelectedSkills(Array.isArray(userProfile?.skills) ? userProfile.skills : []);
-        setIsReady(userProfile?.IsReadyForMockInterviews === "yes");
+        setIsMockInterviewSelected(!!profileData?.expectedRatePerMockInterview);
+        setSelectedSkills(Array.isArray(profileData?.skills) ? profileData.skills : []);
+        setIsReady(profileData?.IsReadyForMockInterviews === "yes");
         setErrors({});
 
         console.log("Form data initialized:", newFormData);
-    }, [resolvedId, userProfile, userProfile?._id, expYears]);
+    }, [resolvedId, profileData, expYears, fetchRateCards]);
 
     const handleBioChange = (e) => {
         const value = e.target.value;
@@ -335,11 +396,21 @@ const EditInterviewDetails = ({
     const handleRadioChange = (value) => {
         // console.log("handleRadioChange called with:", value);
         setFormData((prev) => {
+            // When changing to "yes", ensure years has a valid value (minimum 1)
+            let yearsValue = prev.PreviousExperienceConductingInterviewsYears;
+            if (value === "yes") {
+                // If current value is 0, empty, or NaN, set to minimum valid value (1)
+                if (!yearsValue || yearsValue === 0 || yearsValue === "" || isNaN(yearsValue)) {
+                    yearsValue = 1;
+                }
+            } else if (value === "no") {
+                yearsValue = "";
+            }
+            
             const newFormData = {
                 ...prev,
                 PreviousExperienceConductingInterviews: value,
-                PreviousExperienceConductingInterviewsYears:
-                    value === "no" ? "" : prev.PreviousExperienceConductingInterviewsYears,
+                PreviousExperienceConductingInterviewsYears: yearsValue,
             };
             // console.log("Updated formData:", newFormData);
             return newFormData;
@@ -347,8 +418,7 @@ const EditInterviewDetails = ({
         setErrors((prevErrors) => ({
             ...prevErrors,
             PreviousExperienceConductingInterviews: "",
-            PreviousExperienceConductingInterviewsYears:
-                value === "no" ? "" : prevErrors.PreviousExperienceConductingInterviewsYears,
+            PreviousExperienceConductingInterviewsYears: "",
         }));
     };
 
@@ -370,55 +440,6 @@ const EditInterviewDetails = ({
     //                 : prevErrors.PreviousExperienceConductingInterviewsYears,
     //     }));
     // };
-
-    const fetchRateCardsMemoized = useCallback(async (techName) => {
-        if (!techName) return;
-
-        // console.group('=== fetchRateCards ===');
-        // console.log('1. Input technologyName:', techName);
-
-        try {
-            const token = localStorage.getItem('token');
-            const baseUrl = process.env.REACT_APP_API_URL || '';
-            const encodedTech = encodeURIComponent(techName);
-            // Updated endpoint to match new backend route structure
-            const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
-
-            // console.log('2. Making API request to:', apiUrl);
-
-            const response = await axios.get(apiUrl, {
-                withCredentials: true,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            // console.log('3. API Response:', {
-            //     status: response.status,
-            //     data: response.data || 'No data'
-            // });
-
-            if (response.data) {
-                const rateCardsData = Array.isArray(response.data) ? response.data : [response.data];
-                setRateCards(rateCardsData);
-            }
-        } catch (error) {
-            console.error('Error fetching rate cards:', {
-                message: error.message,
-                status: error.response?.status,
-                data: error.response?.data
-            });
-            setRateCards([]);
-        } finally {
-            console.groupEnd();
-        }
-    }, []);
-
-    // Fetch rate cards for a specific technology
-    const fetchRateCards = (technologyName) => {
-        return fetchRateCardsMemoized(technologyName);
-    }
 
     // Helper function to get rate ranges for a specific level
     const getRateRanges = (level) => {
@@ -570,11 +591,31 @@ const EditInterviewDetails = ({
         };
 
         try {
+            // Both contexts use the same endpoint since outsource interviewers are Contact records
+            // Determine the correct ID to use for the update
+            let updateId;
+            if (from === "outsource-interviewer") {
+                // For outsource interviewers, profileData is the Contact object
+                if (!profileData || !profileData._id) {
+                    console.error("Profile data not loaded or missing ID:", { profileData });
+                    notify.error("Profile data is not loaded. Please wait and try again.");
+                    return;
+                }
+                updateId = profileData._id;
+            } else {
+                // For regular users (my-profile), profileData is the User object with a contactId field
+                if (!profileData || !profileData.contactId) {
+                    console.error("Profile data not loaded or missing contactId:", { profileData });
+                    notify.error("Profile data is not loaded. Please wait and try again.");
+                    return;
+                }
+                updateId = profileData.contactId; // Use contactId for regular users
+            }
+            
             const response = await updateContactDetail.mutateAsync({
-                resolvedId,
+                resolvedId: updateId,
                 data: cleanFormData,
             });
-
             // Invalidate the query to refetch the updated data
             await queryClient.invalidateQueries(["userProfile", resolvedId]);
 

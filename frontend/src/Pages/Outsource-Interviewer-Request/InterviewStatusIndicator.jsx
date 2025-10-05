@@ -2,20 +2,30 @@ import { FaCheckCircle, FaCircle } from "react-icons/fa";
 
 function InterviewStatusIndicator({ currentStatus, isExpanded }) {
   const getStatusSteps = (status) => {
-    const baseSteps = ["", "New", "Contacted", "In Progress"];
-    if (status === "Active") {
-      return [...baseSteps, "Active"];
-    } else if (status === "InActive" || status === "Blacklisted") {
-      return [...baseSteps, status];
+    const baseSteps = ["", "New", "Under Review", "Approved"];
+    if (status === "approved") {
+      return baseSteps;
+    } else if (status === "rejected" || status === "suspended") {
+      return [...baseSteps.slice(0, 3), status === "rejected" ? "Rejected" : "Suspended"];
     } else {
-      return [...baseSteps, "Active/InActive"];
+      return [...baseSteps.slice(0, 3), "Pending"];
     }
   };
 
+  // Map lowercase status to display format
+  const statusDisplayMap = {
+    "new": "New",
+    "underReview": "Under Review",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "suspended": "Suspended"
+  };
+
+  const displayStatus = statusDisplayMap[currentStatus] || currentStatus;
   const statusSteps = getStatusSteps(currentStatus);
-  const currentStepIndex = statusSteps.indexOf(currentStatus);
+  const currentStepIndex = statusSteps.indexOf(displayStatus);
   const isFinalRed =
-    currentStatus === "InActive" || currentStatus === "Blacklisted";
+    currentStatus === "rejected" || currentStatus === "suspended";
 
   const circleSize = isExpanded ? "w-5 h-5" : "w-8 h-8";
   const iconSize = isExpanded ? "h-3 w-3" : "h-5 w-5";
@@ -36,7 +46,7 @@ function InterviewStatusIndicator({ currentStatus, isExpanded }) {
                   ? "border-custom-blue"
                   : isFinalRed && index === statusSteps.length - 1
                   ? "border-red-600"
-                  : currentStatus === "Active" && index > 0
+                  : currentStatus === "approved" && index > 0
                   ? "border-custom-blue"
                   : index < currentStepIndex
                   ? "border-custom-blue"
@@ -49,7 +59,7 @@ function InterviewStatusIndicator({ currentStatus, isExpanded }) {
                 <FaCircle className={`text-custom-blue ${iconSize}`} />
               ) : isFinalRed && index === statusSteps.length - 1 ? (
                 <FaCheckCircle className={`text-red-600 ${iconSize}`} />
-              ) : currentStatus === "Active" && index > 0 ? (
+              ) : currentStatus === "approved" && index > 0 ? (
                 <FaCheckCircle className={`text-custom-blue ${iconSize}`} />
               ) : index < currentStepIndex ? (
                 <FaCheckCircle className={`text-custom-blue ${iconSize}`} />
@@ -75,7 +85,7 @@ function InterviewStatusIndicator({ currentStatus, isExpanded }) {
                 className={`h-full ${
                   isFinalRed && index === statusSteps.length - 2
                     ? "bg-red-600"
-                    : currentStatus === "Active"
+                    : currentStatus === "approved"
                     ? "bg-custom-blue"
                     : index < currentStepIndex - 1
                     ? "bg-custom-blue"

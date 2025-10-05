@@ -9,7 +9,7 @@ const CustomerSubscriptionSchema = new mongoose.Schema({
     nextBillingDate: { type: Date, required: false },
     status: { type: String, enum: ['active', 'inactive', 'paused', 'cancelled','pending', 'failed', 'expired', 'created'], default: 'pending' },
     endDate: { type: Date, default: null },
-    endReason: { type: String, enum: ['upgrade', 'downgrade', 'cancelled'], default: null },
+    endReason: { type: String, enum: ['upgrade', 'downgrade', 'cancelled', 'renewal_failed'], default: null },
     price: { type: Number, required: true },
     discount: { type: Number, default: 0 },
     features: [
@@ -29,6 +29,7 @@ const CustomerSubscriptionSchema = new mongoose.Schema({
     razorpayPaymentId: { type: String, required: false },
     lastPaymentId: { type: String, required: false },
     lastPaymentDate:{type: Date},
+    lastRenewalCheck: { type: Date },
     // razorpaySubscriptionStatus: { type: String, enum: ['active', 'inactive', 'paused', 'cancelled','pending'], default: 'pending' },
     razorpayPlanId: { type: String, required: false }
     

@@ -499,9 +499,9 @@ const updateContactsDetails = async (req, res) => {
             contactData.isMockInterviewSelected = Boolean(contactData.isMockInterviewSelected);
         }
 
-        // Update the contact document based on ownerId (contactId)
+        // Update the contact document by _id (contactId is the document _id)
         const updatedContact = await Contacts.findOneAndUpdate(
-            { ownerId: contactId },
+            { _id: contactId },
             { $set: contactData },
             { new: true, runValidators: true }
         );
@@ -518,8 +518,9 @@ const updateContactsDetails = async (req, res) => {
             }
         );
 
-        if (Object.keys(userUpdateFields).length) {
-            await Users.findByIdAndUpdate(contactId, { $set: userUpdateFields });
+        if (Object.keys(userUpdateFields).length && updatedContact.ownerId) {
+            // Use the ownerId from the Contact document to update the User
+            await Users.findByIdAndUpdate(updatedContact.ownerId, { $set: userUpdateFields });
         }
 
         // Handle interview availability if provided

@@ -1,5 +1,6 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
+const moment = require('moment');
 const Payment = require('../models/Payments');
 const SUBSCRIPTION_STATUSES = require('../constants/subscriptionStatuses');
 const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js');
@@ -1936,20 +1937,54 @@ const handleSubscriptionCharged = async (subscription) => {
         const ownerIdForUsage = customerSubscription.ownerId;
 
         let activeUsage = await Usage.findOne({ tenantId: tenantIdForUsage, ownerId: ownerIdForUsage });
-        const isSamePeriod = activeUsage &&
-            activeUsage.fromDate && activeUsage.toDate &&
-            activeUsage.fromDate.getTime() === periodStart.getTime() &&
-            activeUsage.toDate.getTime() === newEndDate.getTime();
+        
+        // Helper function to check if we're in the same billing period
+        const isInSameBillingPeriod = (usage, billingCycle) => {
+            if (!usage || !usage.fromDate || !usage.toDate) return false;
+            
+            const now = new Date();
+            const nowMoment = moment(now);
+            const fromMoment = moment(usage.fromDate);
+            const toMoment = moment(usage.toDate);
+            
+            // Check if current date is within the existing usage period
+            if (nowMoment.isBetween(fromMoment, toMoment, null, '[]')) {
+                return true;
+            }
+            
+            // For monthly: check if we're in the same month and year
+            if (billingCycle === 'monthly') {
+                return nowMoment.year() === fromMoment.year() && 
+                       nowMoment.month() === fromMoment.month();
+            }
+            
+            // For annual: check if we're in the same year cycle
+            if (billingCycle === 'annual') {
+                const yearsSinceStart = nowMoment.diff(fromMoment, 'years');
+                const nextRenewalDate = moment(fromMoment).add(yearsSinceStart + 1, 'years');
+                return nowMoment.isBefore(nextRenewalDate);
+            }
+            
+            return false;
+        };
 
-        if (!isSamePeriod) {
+        const billingCycle = customerSubscription.selectedBillingCycle || 'monthly';
+        const needsNewUsagePeriod = !activeUsage || !isInSameBillingPeriod(activeUsage, billingCycle);
+
+        if (needsNewUsagePeriod) {
+            // Only create/update if we're in a new billing period
+            console.log(`[WEBHOOK] New billing period detected, creating/updating usage for tenant ${tenantIdForUsage}`);
+            
             if (activeUsage && activeUsage.fromDate && activeUsage.toDate) {
-                // Archive previous period inside the same Usage document (idempotent)
-                const alreadyArchived = Array.isArray(activeUsage.usageHistory) && activeUsage.usageHistory.some(h =>
-                    h.fromDate && h.toDate &&
-                    h.fromDate.getTime() === activeUsage.fromDate.getTime() &&
-                    h.toDate.getTime() === activeUsage.toDate.getTime()
-                );
-                if (!alreadyArchived) {
+                // Archive previous period (only if not already archived and it's expired)
+                const periodKey = `${moment(activeUsage.fromDate).format('YYYY-MM-DD')}_${moment(activeUsage.toDate).format('YYYY-MM-DD')}`;
+                const alreadyArchived = Array.isArray(activeUsage.usageHistory) && 
+                    activeUsage.usageHistory.some(h => {
+                        const archiveKey = `${moment(h.fromDate).format('YYYY-MM-DD')}_${moment(h.toDate).format('YYYY-MM-DD')}`;
+                        return archiveKey === periodKey;
+                    });
+                    
+                if (!alreadyArchived && activeUsage.toDate < new Date()) {
                     activeUsage.usageHistory = Array.isArray(activeUsage.usageHistory) ? activeUsage.usageHistory : [];
                     activeUsage.usageHistory.push({
                         usageAttributes: activeUsage.usageAttributes,
@@ -1957,6 +1992,7 @@ const handleSubscriptionCharged = async (subscription) => {
                         toDate: activeUsage.toDate,
                         archivedAt: new Date()
                     });
+                    console.log(`[WEBHOOK] Archived previous period: ${periodKey}`);
                 }
             }
 
@@ -1973,8 +2009,10 @@ const handleSubscriptionCharged = async (subscription) => {
             activeUsage.fromDate = periodStart;
             activeUsage.toDate = newEndDate;
             await activeUsage.save();
+            console.log(`[WEBHOOK] Usage updated for ${billingCycle} subscription (${moment(periodStart).format('YYYY-MM-DD')} to ${moment(newEndDate).format('YYYY-MM-DD')})`);
+        } else {
+            console.log(`[WEBHOOK] Usage already exists for current ${billingCycle} period, skipping creation`);
         }
-        console.log("usage updated-----successfully")
 
         // Build usageAttributes payload (reset utilization for new period)
         // const now = new Date();

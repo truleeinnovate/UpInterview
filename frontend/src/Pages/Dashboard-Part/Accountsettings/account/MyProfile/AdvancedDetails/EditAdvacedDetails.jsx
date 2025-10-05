@@ -33,6 +33,7 @@ import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/Sideb
 // Shared form fields
 import { InputField, DropdownWithSearchField, IncreaseAndDecreaseField } from "../../../../../../Components/FormFields";
 import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
 // Skills.svg
 
 Modal.setAppElement("#root");
@@ -69,12 +70,33 @@ const EditAdvacedDetails = ({
 
   const resolvedId = usersId || id;
 
+  // Fetch user profile for "my-profile" context
   const {
     userProfile,
-    isLoading,
+    isLoading: isUserLoading,
     //  isError,
     //  error
-  } = useUserProfile(resolvedId);
+  } = useUserProfile(from === "my-profile" ? resolvedId : null);
+  
+  // Fetch outsource interviewers for "outsource-interviewer" context
+  const { outsourceInterviewers } = useOutsourceInterviewers();
+  
+  // Get the appropriate profile data based on context
+  const profileData = useMemo(() => {
+    if (from === "outsource-interviewer") {
+      // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
+      // Try to find the interviewer by matching the contactId._id with resolvedId
+      const interviewer = outsourceInterviewers?.find(
+        (i) => i.contactId?._id === resolvedId
+      );
+      // Return the Contact object which has the actual profile data
+      return interviewer?.contactId || null;
+    }
+    return userProfile;
+  }, [from, outsourceInterviewers, resolvedId, userProfile]);
+  
+  const isLoading = from === "my-profile" ? isUserLoading : !outsourceInterviewers;
+  
   // const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
   const queryClient = useQueryClient();
@@ -94,24 +116,23 @@ const EditAdvacedDetails = ({
 
 
   useEffect(() => {
-    // const contact = usersRes.find(user => user.contactId === resolvedId);
-    // if (!userProfile) return;
-    if (!userProfile || !userProfile._id) return;
+    // Use profileData which works for both contexts
+    if (!profileData || !profileData._id) return;
 
-    if (userProfile) {
+    if (profileData) {
       setFormData({
-        currentRole: userProfile.currentRole || "",
-        industry: userProfile.industry || "",
-        yearsOfExperience: userProfile.yearsOfExperience || "",
-        location: userProfile.location || "",
-        // coverLetterdescription: userProfile.coverLetterdescription || "",
-        id: userProfile._id,
+        currentRole: profileData.currentRole || "",
+        industry: profileData.industry || "",
+        yearsOfExperience: profileData.yearsOfExperience || "",
+        location: profileData.location || "",
+        // coverLetterdescription: profileData.coverLetterdescription || "",
+        id: profileData._id,
       });
-      // setResumeName(userProfile?.resume?.filename);
-      // setCoverLetterName(userProfile?.coverLetter?.filename);
+      // setResumeName(profileData?.resume?.filename);
+      // setCoverLetterName(profileData?.coverLetter?.filename);
       setErrors({});
     }
-  }, [resolvedId, userProfile?._id]);
+  }, [resolvedId, profileData]);
 
 
 
@@ -164,19 +185,38 @@ const EditAdvacedDetails = ({
       id: formData.id,
     };
 
-
     try {
-
-
+      setLoading(true);
+      
+      // Both contexts use the same endpoint since outsource interviewers are Contact records
+      // Determine the correct ID to use for the update
+      let updateId;
+      if (from === "outsource-interviewer") {
+        // For outsource interviewers, profileData is the Contact object
+        if (!profileData || !profileData._id) {
+          console.error("Profile data not loaded or missing ID:", { profileData });
+          notify.error("Profile data is not loaded. Please wait and try again.");
+          setLoading(false);
+          return;
+        }
+        updateId = profileData._id;
+      } else {
+        // For regular users (my-profile), profileData is the User object with a contactId field
+        if (!profileData || !profileData.contactId) {
+          console.error("Profile data not loaded or missing contactId:", { profileData });
+          notify.error("Profile data is not loaded. Please wait and try again.");
+          setLoading(false);
+          return;
+        }
+        updateId = profileData.contactId; // Use contactId for regular users
+      }
+      
       const response = await updateContactDetail.mutateAsync({
-        resolvedId,
+        resolvedId: updateId,
         data: cleanFormData,
       });
 
-
-
       await queryClient.invalidateQueries(["userProfile", resolvedId]);
-
 
       if (response.status === 200) {
         notify.success("Updated Advanced Details Successfully");

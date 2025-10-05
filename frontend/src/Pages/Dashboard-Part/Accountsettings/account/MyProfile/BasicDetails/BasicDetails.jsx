@@ -24,12 +24,7 @@ export const formatDateOfBirth = (dateString) => {
     });
 };
 
-const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
-    // console.log("type in BasicDetails", type);
-    // console.log(
-    //     "SELECTED USER ID IN BASIC DETAILS ==============================> ",
-    //     usersId
-    // );
+const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = null }) => {
     // const { usersRes } = useCustomContext();
 
     const [contactData, setContactData] = useState({});
@@ -55,13 +50,17 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
 
     // console.log("ownerId ownerId",ownerId);
 
+    // Always call the hook to comply with React rules
     const { userProfile } = useUserProfile();
 
     useEffect(() => {
-        if (userProfile) {
+        // Use external data if provided, otherwise use userProfile from hook
+        if (externalData) {
+            setContactData(externalData);
+        } else if (userProfile) {
             setContactData(userProfile);
         }
-    }, [userProfile, usersId]);
+    }, [userProfile, usersId, externalData]);
 
     // console.log("USER PROFILE: ", userProfile);
 
@@ -143,11 +142,21 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
                 {/* <------------------------------- v1.0.0  */}
                 <button
                     onClick={() => {
-                        mode === "users"
-                            ? setBasicEditOpen(true)
-                            : navigate(
-                                `/account-settings/my-profile/basic-edit/${contactData?._id}`
-                            );
+                        const editId = contactData?._id || ownerId || usersId;
+                        if (!editId) {
+                            console.error("No ID available for editing");
+                            return;
+                        }
+                        
+                        if (mode === "users") {
+                            setBasicEditOpen(true);
+                        } else if (externalData) {
+                            // Navigate to outsource interviewer edit page
+                            navigate(`/outsource-interviewers/edit/basic/${editId}`);
+                        } else {
+                            // Navigate to my profile edit page
+                            navigate(`/account-settings/my-profile/basic-edit/${editId}`);
+                        }
                     }}
                     // v1.0.1 <---------------------------------------------------------------------------------------------
                     className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg ml-2 my-4 transition-colors"

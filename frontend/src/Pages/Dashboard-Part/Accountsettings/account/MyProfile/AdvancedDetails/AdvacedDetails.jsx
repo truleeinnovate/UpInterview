@@ -4,12 +4,10 @@
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
-import { useCustomContext } from "../../../../../../Context/Contextfetch";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 
-const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
-//   console.log("type in AdvancedDetails", type);
+const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type, externalData = null }) => {
 
   // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
@@ -28,6 +26,7 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
     ownerId = usersId;
   }
 
+  // Always call the hook to comply with React rules
   const { userProfile } = useUserProfile(ownerId);
 
   // console.log("userId AdvancedDetails", userId);
@@ -44,12 +43,13 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
   //  }, [usersId, userId, usersRes]);
 
   useEffect(() => {
-    if (!userProfile || !userProfile._id) return;
-    if (userProfile) {
-      // console.log("contact userProfile",userProfile )
+    // Use external data if provided, otherwise use userProfile from hook
+    if (externalData) {
+      setContactData(externalData);
+    } else if (userProfile && userProfile._id) {
       setContactData(userProfile);
     }
-  }, [userProfile, ownerId, userProfile._id]);
+  }, [userProfile, ownerId, externalData]);
 
   //  console.log("contactData?.contactId", contactData);
 
@@ -65,15 +65,25 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
         {/* <------------------------------- v1.0.0  */}
         <button
           onClick={() => {
-            mode === "users"
-              ? setAdvacedEditOpen(true)
-              : navigate(
-                  `/account-settings/my-profile/advanced-edit/${contactData?._id}`
-                );
+            const editId = contactData?._id || ownerId || usersId;
+            if (!editId) {
+              console.error("No ID available for editing");
+              return;
+            }
+            
+            if (mode === "users") {
+              setAdvacedEditOpen(true);
+            } else if (externalData) {
+              // Navigate to outsource interviewer edit page
+              navigate(`/outsource-interviewers/edit/advanced/${editId}`);
+            } else {
+              // Navigate to my profile edit page
+              navigate(`/account-settings/my-profile/advanced-edit/${editId}`);
+            }
           }}
           // ------------------------------ v1.0.0 >
           // onClick={() => setIsBasicModalOpen(true)}
-          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
+          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg"
         >
           Edit
         </button>

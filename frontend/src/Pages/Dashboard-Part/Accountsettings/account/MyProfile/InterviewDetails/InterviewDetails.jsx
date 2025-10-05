@@ -4,7 +4,6 @@
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
-import { useCustomContext } from "../../../../../../Context/Contextfetch";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 
@@ -49,8 +48,8 @@ const formatCurrency = (amount, currency = 'USD') => {
     });
 };
 
-const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
-    const { usersRes } = useCustomContext();
+const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen, externalData = null }) => {
+    // const { usersRes } = useCustomContext();
     const navigate = useNavigate();
     const [contactData, setContactData] = useState({});
 
@@ -70,6 +69,7 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
     const userId = tokenPayload?.userId;
     const ownerId = usersId || userId;
 
+    // Always call the hook to comply with React rules
     const { userProfile } = useUserProfile(ownerId);
 
     // useEffect(() => {
@@ -111,12 +111,13 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
     // }, [usersId, userId, usersRes]);
 
     useEffect(() => {
-        if (!userProfile || !userProfile._id) return;
-        if (userProfile) {
-            // console.log("contact userProfile",userProfile )
+        // Use external data if provided, otherwise use userProfile from hook
+        if (externalData) {
+            setContactData(externalData);
+        } else if (userProfile && userProfile._id) {
             setContactData(userProfile);
         }
-    }, [userProfile, ownerId, userProfile._id]);
+    }, [userProfile, ownerId, externalData]);
 
     // console.log("contactData?.contactId", contactData);
 
@@ -134,11 +135,23 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
                 </h3> */}
                 <button
                     onClick={() => {
-                        mode === "users"
-                            ? setInterviewEditOpen(true)
-                            : navigate(`/account-settings/my-profile/interview-edit/${contactData?._id}`);
+                        const editId = contactData?._id || ownerId || usersId;
+                        if (!editId) {
+                            console.error("No ID available for editing");
+                            return;
+                        }
+                        
+                        if (mode === "users") {
+                            setInterviewEditOpen(true);
+                        } else if (externalData) {
+                            // Navigate to outsource interviewer edit page
+                            navigate(`/outsource-interviewers/edit/interview/${editId}`);
+                        } else {
+                            // Navigate to my profile edit page
+                            navigate(`/account-settings/my-profile/interview-edit/${editId}`);
+                        }
                     }}
-                    className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
+                    className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg"
                 >
                     Edit
                 </button>
@@ -147,7 +160,7 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
             <div className={`bg-white rounded-lg ${mode !== "users" ? "p-4" : ""}`}>
                 <div className="grid grid-cols-2 gap-4 mb-3">
                     {/* Row 1: Technologies and Skills */}
-                    <div classN ame="col-span-1 space-y-2">
+                    <div className="col-span-1 space-y-2">
                         <p className="text-sm text-gray-500">Technologies</p>
                         <div className="flex flex-wrap gap-2 mt-1">
                             {contactData?.technologies?.length > 0 ? (

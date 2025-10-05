@@ -1,6 +1,7 @@
 // controllers/outsourceInterviewerController.js
 
 const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js");
+const { Contacts } = require("../models/Contacts.js");
 
 exports.getAllInterviewers = async (req, res) => {
   try {
@@ -37,6 +38,17 @@ exports.updateInterviewerFeedback = async (req, res) => {
         .json({ success: false, message: "Contact ID is required" });
     }
 
+    // Validate status value if provided
+    if (status) {
+      const validStatuses = ['new', 'underReview', 'approved', 'rejected', 'suspended'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` 
+        });
+      }
+    }
+
     // Find and update the interviewer based on contactId
     const updatedInterviewer = await OutsourceInterviewer.findOneAndUpdate(
       { contactId: contactId },
@@ -59,6 +71,22 @@ exports.updateInterviewerFeedback = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: "Interviewer not found" });
+    }
+
+    // If status was updated, also update the Contact status
+    if (status) {
+      const updatedContact = await Contacts.findByIdAndUpdate(
+        contactId,
+        {
+          $set: {
+            status: status,
+            updatedAt: new Date()
+          }
+        },
+        { new: true }
+      );
+     
+      console.log(`✅ Status synced for Contact ${contactId}: ${status}`);
     }
 
     res.status(200).json({

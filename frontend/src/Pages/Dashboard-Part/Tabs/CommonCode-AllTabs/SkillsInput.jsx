@@ -207,13 +207,16 @@ const SkillsField = forwardRef(
     return (
       <div ref={ref}>
         <div className="flex justify-between items-center">
-          <div className="flex items-center mb-2">
+          <div className="flex flex-col mb-2">
             <label
               htmlFor="Skills"
               className="text-sm font-medium text-gray-900"
             >
               Skills Details <span className="text-red-500">*</span>
             </label>
+            <span className="text-xs text-gray-500 mt-0.5">
+              First 3 skills are mandatory
+            </span>
           </div>
           {entries.length < 10 && (
             <button
