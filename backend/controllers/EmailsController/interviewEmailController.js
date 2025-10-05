@@ -2,6 +2,8 @@
 
 const CryptoJS = require('crypto-js');
 const { Interview } = require("../../models/Interview/Interview.js");
+const { MockInterview } = require("../../models/MockInterview/MockInterview.js");
+const { MockInterviewRound } = require("../../models/MockInterview/mockinterviewRound.js");
 const { InterviewRounds } = require("../../models/Interview/InterviewRounds.js");
 const { Candidate } = require("../../models/candidate.js");
 const { Contacts } = require("../../models/Contacts");
@@ -100,7 +102,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       return error;
     }
 
-  
+
 
 
     // Check if emails should be sent based on the sendEmails parameter
@@ -287,20 +289,20 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         // Add meeting links if available
         if (round.meetingId && round.meetingId.length > 0) {
 
-         
-            const encryptedInterviewerId = encryptData(interviewerEmail?._id);
-            const encryptedOwnerId = encryptData(interviewerEmail?.ownerId);
 
-            const interviewerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(encryptedMeetingLink)}
+          const encryptedInterviewerId = encryptData(interviewerEmail?._id);
+          const encryptedOwnerId = encryptData(interviewerEmail?.ownerId);
+
+          const interviewerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(encryptedMeetingLink)}
         &round=${encodeURIComponent(encryptedRoundId)}&interviewertoken=${encodeURIComponent(encryptedInterviewerId)}&owner=${encodeURIComponent(encryptedOwnerId)}`;
 
-            console.log("🔍 Interviewer link:", interviewerLink);
-            
-            //  const interviewerLink = round.meetingId
-            if (interviewerLink) {
-              emailBody = emailBody.replace('{{meetingLink}}', interviewerLink);
-            }
-          
+          console.log("🔍 Interviewer link:", interviewerLink);
+
+          //  const interviewerLink = round.meetingId
+          if (interviewerLink) {
+            emailBody = emailBody.replace('{{meetingLink}}', interviewerLink);
+          }
+
         } else {
           // If no meeting links available, replace placeholder with a message
           emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
@@ -366,7 +368,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       // Add meeting links if available
       if (round.meetingId && round.meetingId.length > 0) {
         const hostLink = round.meetingId
-             
+
         const encryptedSchedulerId = encryptData(scheduler?._id);
         const encryptedSchedulerOwnerId = encryptData(scheduler?.ownerId);
 
@@ -489,9 +491,9 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       interviewerIds, // Array of interviewer IDs
       candidateId,
       positionId,
-      dateTime,
-      duration,
-      roundTitle,
+      // dateTime,
+      // duration,
+      // roundTitle,
       type
     } = req.body;
 
@@ -532,11 +534,15 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       }
       return error;
     }
-
-    // Fetch interview with candidate details
-    const interview = await Interview.findById(interviewId)
-      .populate('candidateId')
-      .populate('ownerId');
+    let interview;
+    if (type == 'mockinterview') {
+      interview = await MockInterview.findById(interviewId)
+    } else {
+      // Fetch interview with candidate details
+      interview = await Interview.findById(interviewId)
+        .populate('candidateId')
+        .populate('ownerId');
+    }
 
     if (!interview) {
       const error = {
@@ -550,7 +556,14 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     }
 
     // Fetch candidate details
-    const candidate = interview.candidateId;
+    let candidate;
+    if (type == 'mockinterview') {
+      candidate = await Contacts.findOne({
+        ownerId: interview.ownerId
+      });
+    } else {
+      candidate = interview.candidateId;
+    }
     if (!candidate) {
       const error = {
         success: false,
@@ -563,7 +576,12 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     }
 
     // Get candidate name
-    const candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
+    let candidateName;
+    if (type == 'mockinterview') {
+      candidateName = [candidate.firstName, candidate.lastName].filter(Boolean).join(' ') || 'Candidate';
+    } else {
+      candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
+    }
 
     // Get outsource interview request email template
     const outsourceRequestTemplate = await emailTemplateModel.findOne({
@@ -598,6 +616,12 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       }
       return error;
     }
+    let round;
+    if(type == 'mockinterview'){
+    round = await MockInterviewRound.findById(roundId);
+    }else{
+    round = await InterviewRounds.findById(roundId);
+    }
 
     const notifications = [];
     const emailPromises = [];
@@ -610,11 +634,11 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       }
 
       const interviewerName = [interviewer.firstName, interviewer.lastName].filter(Boolean).join(' ') || 'Interviewer';
-      const roundTitleText = roundTitle || 'Interview Round';
-      const interviewMode = 'Online'; // Default for outsource interviews
-      const dateTimeText = dateTime || 'To be scheduled';
-      const durationText = duration || '60 minutes';
-      const instructions = 'Please review the interview request and accept if you are available.';
+      const roundTitleText = round.roundTitle || 'Interview Round';
+      const interviewMode = round.interviewMode || 'Online'; // Default for outsource interviews
+      const dateTimeText = round.dateTime || 'To be scheduled';
+      const durationText = round.duration || '60 minutes';
+      const instructions = round.instructions || 'Please review the interview request and accept if you are available.';
 
       const emailSubject = outsourceRequestTemplate.subject
         .replace('{{companyName}}', companyName)

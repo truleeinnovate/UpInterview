@@ -97,5 +97,9 @@ currentAction: {
   rejectionReason: String,
 });
 
-const MockInterviewRound = mongoose.model("MockInterviewRound", MockInterviewRoundSchema);
+// Check if model is already defined to avoid overwriting
+const MockInterviewRound =
+  mongoose.models.MockInterviewRound ||
+  mongoose.model("MockInterviewRound", MockInterviewRoundSchema);
+
 module.exports = { MockInterviewRound };
