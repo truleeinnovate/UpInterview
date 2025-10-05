@@ -4,6 +4,47 @@ const { Users } = require("../models/Users");
 const mongoose = require("mongoose");
 const { contactValidationSchema, contactPatchSchema } = require("../validations/contactValidations");
 
+// Update contact status
+const updateContactStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!id || !status) {
+            return res.status(400).json({ message: 'Contact ID and status are required' });
+        }
+
+        // Validate status value
+        const validStatuses = ['new', 'underReview', 'approved', 'rejected', 'suspended'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ message: 'Invalid status value' });
+        }
+
+        const updatedContact = await Contacts.findByIdAndUpdate(
+            id,
+            { status },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedContact) {
+            return res.status(404).json({ message: 'Contact not found' });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Contact status updated successfully',
+            data: updatedContact
+        });
+    } catch (error) {
+        console.error('Error updating contact status:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Error updating contact status',
+            error: error.message 
+        });
+    }
+};
+
 // Mansoor: for fetching the total contacts to the login pages (Individual-4)
 const getAllContacts = async (req, res) => {
     try {
@@ -634,16 +675,14 @@ const getContactsByOrganizationId = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
-
-// ---------------------------------------------------------------------------->
-
 module.exports = {
     // fetchContacts,
+    getAllContacts,
     createContact,
     updateContact,
+    getContactsByOwnerId,
     updateContactsDetails,
     getUniqueContactsByOwnerId,
-    getContactsByOwnerId,
-    getAllContacts,
-    getContactsByOrganizationId,
+    getContactsByOrganizationId, // SUPER ADMIN added by Ashok
+    updateContactStatus,
 };

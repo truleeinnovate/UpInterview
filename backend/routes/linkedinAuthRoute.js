@@ -211,6 +211,7 @@ router.post("/check-user", async (req, res) => {
           ownerId: newUser._id,
           tenantId: newTenant._id,
           createdBy: newUser._id,
+          status: "new",
         });
       } catch (contactError) {
         console.error("Error creating contact:", contactError);

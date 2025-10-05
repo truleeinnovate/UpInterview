@@ -861,6 +861,28 @@ const MultiStepForm = () => {
         await clearAllAuth();
         await setAuthCookies({ authToken: response.data.token });
 
+        // Update contact status to 'underReview' if this is the last step
+        if (currentStep === (isInternalInterviewer || Freelancer ? 3 : 1)) {
+          try {
+            const targetContactId = response.data.contactId || contactId;
+            if (targetContactId) {
+              await axios.patch(
+                `${config.REACT_APP_API_URL}/contacts/status/${targetContactId}`,
+                { status: 'underReview' },
+                {
+                  withCredentials: true,
+                  headers: {
+                    Authorization: `Bearer ${response.data.token}`,
+                  },
+                }
+              );
+            }
+          } catch (error) {
+            console.error('Error updating contact status:', error);
+            // Don't block the user flow if status update fails
+          }
+        }
+
         // update state immediately after setting cookie
         // setAuthToken(response.data.token);
 
