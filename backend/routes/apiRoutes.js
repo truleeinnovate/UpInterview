@@ -243,22 +243,23 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       case 'mockinterview':
         // console.log('[19] Processing MockInterview model');
         data = await DataModel.find(query)
-        const mockInterviewRoundsData = await MockInterviewRound.find({
-          interviewId: { $in: interviewIds },
-          // ------------------------------ v1.0.1 >
-        })
-        .populate({
-          path: 'interviewers',
-          model: 'Contacts',
-          select: 'firstName lastName email',
-        })
+        // .populate({
+        //   path: 'rounds.interviewers',
+        //   model: 'Contacts',
+        //   select: 'firstName lastName email',
+        // })
+        .lean();
+        // const mockInterviewRoundsData = await MockInterviewRound.find({
+        //   interviewId: { $in: interviewIds },
+        //   // ------------------------------ v1.0.1 >
+        // })
+        // .populate({
+        //   path: 'interviewers',
+        //   model: 'Contacts',
+        //   select: 'firstName lastName email',
+        // })
 
-          // .populate({
-          //   path: 'rounds.interviewers',
-          //   model: 'Contacts',
-          //   select: 'firstName lastName email',
-          // })
-          .lean();
+          
         // console.log('[20] Found', data.length, 'MockInterview records');
         break;
 
