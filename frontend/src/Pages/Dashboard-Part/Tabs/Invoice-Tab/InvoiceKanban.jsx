@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - added loading view for the kanban itself
+// v1.0.1 - Ashok - fixed responsiveness issue
 
 import React from "react";
 import { motion } from "framer-motion";
@@ -19,10 +20,14 @@ const InvoiceKanban = ({
   const navigate = useNavigate();
   return (
     <>
-      <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto">
+     {/* v1.0.1 <------------------------------------------------------------------------------------------------- */}
+      <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto mx-6">
+     {/* v1.0.1 -------------------------------------------------------------------------------------------------> */}
         {loading ? (
           // shimmer cards
-          <div className="w-full px-6 col-span-full">
+          // v1.0.1 <-----------------------------------------------------------
+          <div className="w-full col-span-full">
+          {/* v1.0.1 -----------------------------------------------------------> */}
             <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((card) => (
                 <div
