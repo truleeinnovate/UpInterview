@@ -1084,6 +1084,9 @@ require("./controllers/PushNotificationControllers/pushNotificationInterviewCont
 // Start Assessment notification system and cron jobs
 require("./controllers/PushNotificationControllers/pushNotificationAssessmentController");
 
+// Start Subscription Renewal system and cron jobs
+require("./controllers/SubscriptionRenewalController");
+
 // in contextfetch for fetchUserProfile
 app.get("/auth/users/:id", async (req, res) => {
   try {
@@ -1355,6 +1358,10 @@ app.use("/candidateposition", candidatePositionRoutes);
 // Subscription update routes
 const subscriptionUpdateRoutes = require("./routes/subscriptionUpdateRoutes.js");
 app.use("/subscription-update", subscriptionUpdateRoutes);
+
+// Subscription renewal routes
+const subscriptionRenewalRoutes = require("./routes/subscriptionRenewalRoutes.js");
+app.use("/subscription-renewal", subscriptionRenewalRoutes);
 
 const interviewRoundsRoutes = require("./routes/interviewRoundsRoutes.js");
 app.use("/interviewRounds", interviewRoundsRoutes);

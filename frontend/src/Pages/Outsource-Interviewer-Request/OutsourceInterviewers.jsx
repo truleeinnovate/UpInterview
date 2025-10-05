@@ -49,8 +49,8 @@ const OutsourceInterviewers = () => {
     const [selectedInterviewerId, setSelectedInterviewerId] = useState(null);
     const [selectedInterviewer, setSelectedInterviewer] = useState(null);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
-    const [interviewers, setInterviewers] = useState([]);
 
+    // eslint-disable-next-line no-unused-vars
     const { outsourceInterviewers, isLoading, isError, error, refetch } =
         useOutsourceInterviewers();
     console.log("outsourceInterviewers", outsourceInterviewers);
@@ -64,12 +64,6 @@ const OutsourceInterviewers = () => {
             setSelectedInterviewer(foundUser || null);
         }
     }, [selectedInterviewerId, outsourceInterviewers]);
-
-    useEffect(() => {
-        if (outsourceInterviewers) {
-            setInterviewers(outsourceInterviewers);
-        }
-    }, [outsourceInterviewers]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -139,7 +133,7 @@ const OutsourceInterviewers = () => {
         }
     }, [isTablet]);
 
-    const dataToUse = interviewers;
+    const dataToUse = outsourceInterviewers || [];
 
     const handleFilterIconClick = () => {
         if (dataToUse?.length !== 0) {
@@ -230,7 +224,7 @@ const OutsourceInterviewers = () => {
                         // v1.0.0 --------------------------------------------------------->
                     }}
                 >
-                    {row?.interviewerNo ? row?.interviewerNo : "N/A"}
+                    {row?.interviewerNo || `TEMP-${row?._id?.slice(-6) || 'NA'}`}
                 </span>
             ),
         },
@@ -303,7 +297,11 @@ const OutsourceInterviewers = () => {
             key: "pricePerHour",
             header: "Price/Hour",
             render: (value, row) => (
-                <span>{row?.requestedRate?.hourlyRate || "N/A"}</span>
+                <span>
+                    {row?.requestedRate?.hourlyRate !== undefined 
+                        ? `$${row.requestedRate.hourlyRate}` 
+                        : "Not set"}
+                </span>
             ),
         },
         {
@@ -362,7 +360,9 @@ const OutsourceInterviewers = () => {
             header: "Price per hour",
             render: (value, row) => (
                 <div className="font-medium">
-                    {row.requestedRate?.hourlyRate || "N/A"}
+                    {row?.requestedRate?.hourlyRate !== undefined 
+                        ? `$${row.requestedRate.hourlyRate}` 
+                        : "Not set"}
                 </div>
             ),
         },
@@ -556,7 +556,7 @@ const OutsourceInterviewers = () => {
                                     data={currentFilteredRows.map((interview) => ({
                                         ...interview,
                                         id: interview._id,
-                                        title: interview.interviewerNo || "N/A",
+                                        title: interview.interviewerNo || `TEMP-${interview?._id?.slice(-6) || 'NA'}`,
                                         subtitle:
                                             interview?.contactId?.firstName &&
                                                 interview?.contactId?.lastName

@@ -914,7 +914,7 @@ const MainAppRoutes = ({
                     />
                     <Route
                       path="availability-edit/:id"
-                      element={<EditAvailabilityDetails />}
+                      element={<EditAvailabilityDetails from="my-profile" />}
                     />
                     <Route path="documents" element={<DocumentsSection />} />
                   </Route>
@@ -1227,10 +1227,29 @@ const MainAppRoutes = ({
                 />
               )}
               {hasPermission("OutsourceInterviewerRequest") && (
-                <Route
-                  path="/outsource-interviewers"
-                  element={<OutsourceInterviewersPage />}
-                />
+                <>
+                  <Route
+                    path="/outsource-interviewers"
+                    element={<OutsourceInterviewersPage />}
+                  />
+                  {/* Edit routes for outsource interviewers */}
+                  <Route
+                    path="/outsource-interviewers/edit/basic/:id"
+                    element={<><OutsourceInterviewersPage /> <BasicDetailsEditPage from="outsource-interviewer" /></>}
+                  />
+                  <Route
+                    path="/outsource-interviewers/edit/advanced/:id"
+                    element={<><OutsourceInterviewersPage /> <EditAdvacedDetails from="outsource-interviewer" /></>}
+                  />
+                  <Route
+                    path="/outsource-interviewers/edit/interview/:id"
+                    element={<><OutsourceInterviewersPage /> <EditInterviewDetails from="outsource-interviewer" /></>}
+                  />
+                  <Route
+                    path="/outsource-interviewers/edit/availability/:id"
+                    element={<><OutsourceInterviewersPage /> <EditAvailabilityDetails from="outsource-interviewer" /></>}
+                  />
+                </>
               )}
               {hasPermission("InterviewRequest") && (
                 <Route

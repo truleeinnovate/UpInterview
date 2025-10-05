@@ -65,3 +65,30 @@ export const useUpdateInterviewerFeedback = () => {
     },
   });
 };
+
+// Hook to update outsource interviewer profile details
+// Since outsource interviewers are Contact records, we update via the contact-detail endpoint
+export const useUpdateOutsourceInterviewer = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ resolvedId, data }) => {
+      // Use the contact-detail endpoint to update the profile
+      const response = await axios.patch(
+        `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
+        data
+      );
+      return response.data;
+    },
+    onSuccess: (response, { resolvedId }) => {
+      toast.success("Profile updated successfully!");
+      // Invalidate to refetch updated data
+      queryClient.invalidateQueries(["outsourceInterviewers"]);
+      queryClient.invalidateQueries(["userProfile", resolvedId]);
+    },
+    onError: (error) => {
+      console.error("Error updating interviewer profile:", error);
+      toast.error(error.response?.data?.message || "Error updating profile");
+    },
+  });
+};

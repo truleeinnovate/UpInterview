@@ -260,10 +260,10 @@ const MyProfile = () => {
 
     // Show actual content when not loading
     const subTabComponents = {
-      basic: <BasicDetailsTab />,
-      advanced: <AdvancedDetails />,
-      interview: <InterviewUserDetails />,
-      availability: <AvailabilityUser />,
+      basic: <BasicDetailsTab mode="profile" usersId={userId} />,
+      advanced: <AdvancedDetails mode="profile" usersId={userId} />,
+      interview: <InterviewUserDetails mode="profile" usersId={userId} />,
+      availability: <AvailabilityUser mode="profile" usersId={userId} />,
       documents: (
         <DocumentsSection documents={documents} onUpdate={setDocuments} />
       ),

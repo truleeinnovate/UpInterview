@@ -258,14 +258,17 @@ export const validateInterviewForm = (formData, isReady) => {
   if (!formData.skills || formData.skills.length === 0) {
     errors.skills = "At least one skill is required";
   }
-
+  
   // Previous Experience validation - checks if option is selected
   if (!formData.PreviousExperienceConductingInterviews) {
     errors.PreviousExperienceConductingInterviews = "Please select an option";
   } else if (formData.PreviousExperienceConductingInterviews === "yes") {
     // Additional validation if 'yes' is selected
-    if (!formData.PreviousExperienceConductingInterviewsYears) {
-      errors.PreviousExperienceConductingInterviewsYears = "Years of Experience is required";
+    // Check for empty, null, undefined, or 0
+    if (!formData.PreviousExperienceConductingInterviewsYears || 
+        formData.PreviousExperienceConductingInterviewsYears === 0 ||
+        formData.PreviousExperienceConductingInterviewsYears === "0") {
+      errors.PreviousExperienceConductingInterviewsYears = "Years of Experience is required (minimum 1)";
     } else if (!/^\d+$/.test(formData.PreviousExperienceConductingInterviewsYears) || 
              Number(formData.PreviousExperienceConductingInterviewsYears) < 1 || 
              Number(formData.PreviousExperienceConductingInterviewsYears) > 15) {

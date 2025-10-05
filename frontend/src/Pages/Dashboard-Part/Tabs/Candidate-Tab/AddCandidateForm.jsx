@@ -118,7 +118,12 @@ const AddCandidateForm = ({
   // const [imageFile, setImageFile] = useState(null);
   // const [resumeFile, setResumeFile] = useState(null);
 
-  const [entries, setEntries] = useState([]);
+  // Initialize with 3 default empty skill rows
+  const [entries, setEntries] = useState([
+    { skill: "", experience: "", expertise: "" },
+    { skill: "", experience: "", expertise: "" },
+    { skill: "", experience: "", expertise: "" },
+  ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -230,7 +235,17 @@ const AddCandidateForm = ({
         setSelectedResume(null);
       }
 
-      setEntries(selectedCandidate.skills || []);
+      // In edit mode, use existing skills or default to 3 empty rows
+      const candidateSkills = selectedCandidate.skills || [];
+      if (candidateSkills.length === 0) {
+        setEntries([
+          { skill: "", experience: "", expertise: "" },
+          { skill: "", experience: "", expertise: "" },
+          { skill: "", experience: "", expertise: "" },
+        ]);
+      } else {
+        setEntries(candidateSkills);
+      }
       // Initialize allSelectedSkills with the skills from the candidate being edited
       setAllSelectedSkills(
         selectedCandidate.skills?.map((skill) => skill.skill) || []
@@ -241,6 +256,18 @@ const AddCandidateForm = ({
   }, [id, candidateData]);
 
   console.log("candidate Form Details", formData);
+
+  // Ensure form starts with 3 default skill rows when in Add mode
+  useEffect(() => {
+    if (!id && entries.length === 0) {
+      setEntries([
+        { skill: "", experience: "", expertise: "" },
+        { skill: "", experience: "", expertise: "" },
+        { skill: "", experience: "", expertise: "" },
+      ]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]); // Only depend on id to run when form mode changes
 
   // Ensure University/College custom input is shown in edit mode when the saved value
   // is not present in master list (handles the '+ Others' flow gracefully)
@@ -479,7 +506,12 @@ const AddCandidateForm = ({
     });
 
     setErrors({});
-    setEntries([]);
+    // Reset to 3 default empty skill rows instead of empty array
+    setEntries([
+      { skill: "", experience: "", expertise: "" },
+      { skill: "", experience: "", expertise: "" },
+      { skill: "", experience: "", expertise: "" },
+    ]);
     setSelectedSkill("");
     setSelectedExp("");
     setSelectedLevel("");
