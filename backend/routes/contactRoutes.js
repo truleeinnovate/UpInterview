@@ -8,6 +8,7 @@ const {
   getUniqueContactsByOwnerId,
   getContactsByOwnerId,
   getContactsByOrganizationId, // SUPER ADMIN added by ashok
+  updateContactStatus,
 } = require("../controllers/contactController");
 
 const router = express.Router();
@@ -28,4 +29,7 @@ router.get(
   getContactsByOrganizationId
 );
 // -----------------------------------------------
+// Add route to update contact status
+router.patch('/contacts/status/:id', updateContactStatus);
+
 module.exports = router;
