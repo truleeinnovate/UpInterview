@@ -242,24 +242,24 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     switch (model.toLowerCase()) {
       case 'mockinterview':
         // console.log('[19] Processing MockInterview model');
-        data = await DataModel.find(query)
-        // .populate({
-        //   path: 'rounds.interviewers',
-        //   model: 'Contacts',
-        //   select: 'firstName lastName email',
-        // })
-        .lean();
-        // const mockInterviewRoundsData = await MockInterviewRound.find({
-        //   interviewId: { $in: interviewIds },
-        //   // ------------------------------ v1.0.1 >
-        // })
-        // .populate({
-        //   path: 'interviewers',
-        //   model: 'Contacts',
-        //   select: 'firstName lastName email',
-        // })
+        const mockInterviews = await DataModel.find(query).lean();
+        const interviewIds1 = mockInterviews.map((interview) => interview._id);
+        const mockInterviewRoundsData = await MockInterviewRound.find({
+          mockInterviewId: { $in: interviewIds1 },
+        })
+          .populate({
+            path: 'interviewers',
+            model: 'Contacts',
+            select: 'firstName lastName email',
+          })
+          .lean();
+        data = mockInterviews.map((interview) => ({
+          ...interview,
+          rounds: mockInterviewRoundsData.filter((round) => round.mockInterviewId.toString() === interview._id.toString()),
+        }));
 
-          
+
+
         // console.log('[20] Found', data.length, 'MockInterview records');
         break;
 
@@ -379,7 +379,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
             },
           ],
         };
-    
+
         // console.log('[34.1] InterviewTemplate query:', JSON.stringify(query, null, 2));
         data = await DataModel.find(query)
           .populate({
@@ -415,24 +415,24 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       // <------------------------v1.0.7
       case 'feedback':
         // console.log('[34] Processing Feedback model with complex logic');
-        
+
         // Get all interviews for the current tenant/owner (using the already filtered query)
         const feedbackInterviews = await Interview.find(query)
           .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
           .populate('positionId', 'title companyname jobDescription Location')
           .lean();
-        
+
         // console.log('[35] Found', feedbackInterviews.length, 'interviews for feedback lookup');
-        
+
         // Get all interview round IDs from these interviews
         const feedbackInterviewIds = feedbackInterviews.map(interview => interview._id);
         const feedbackInterviewRounds = await InterviewRounds.find({
           interviewId: { $in: feedbackInterviewIds }
         }).lean();
-        
+
         const feedbackRoundIds = feedbackInterviewRounds.map(round => round._id);
         // console.log('[36] Found', feedbackRoundIds.length, 'interview round IDs');
-        
+
         // Get feedback based on round IDs and tenant/owner matching
         // The query already includes tenantId and ownerId filtering from the general logic above
         let feedbackQuery = {
@@ -441,14 +441,14 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
             { tenantId: tenantId }
           ]
         };
-        
+
         // For non-admin users, also include feedback they own (the general logic already handles this)
         if (roleType === 'individual' || (roleType === 'organization' && roleName !== 'Admin')) {
           feedbackQuery.$or.push({ ownerId: userId });
         }
-        
+
         // console.log('[37] Feedback query:', JSON.stringify(feedbackQuery, null, 2));
-        
+
         const feedbacks = await FeedbackModel.find(feedbackQuery)
           .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
           .populate('positionId', 'title companyname jobDescription Location')
@@ -456,15 +456,15 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           .populate('interviewerId', 'firstName lastName email')
           .populate('ownerId', 'firstName lastName email')
           .lean();
-        
+
         // console.log('[38] Found', feedbacks.length, 'feedback records');
-        
+
         // Get interview questions for each feedback
         const feedbackWithQuestions = await Promise.all(feedbacks.map(async (feedback) => {
-          const preSelectedQuestions = await InterviewQuestions.find({ 
-            roundId: feedback.interviewRoundId?._id 
+          const preSelectedQuestions = await InterviewQuestions.find({
+            roundId: feedback.interviewRoundId?._id
           }).lean();
-          
+
           return {
             ...feedback,
             preSelectedQuestions,
@@ -473,7 +473,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
             canView: true
           };
         }));
-        
+
         data = feedbackWithQuestions;
         // console.log('[39] Final feedback data prepared with', data.length, 'records');
         break;
@@ -481,7 +481,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       default:
         // console.log('[40] Processing generic model:', model);
         data = await DataModel.find(query).lean();
-        // console.log('[41] Found', data.length, 'records for model', model);
+      // console.log('[41] Found', data.length, 'records for model', model);
     }
 
     // console.log('[36] Sending response with data');

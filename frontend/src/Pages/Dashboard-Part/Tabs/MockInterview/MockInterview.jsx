@@ -32,6 +32,7 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js"
 const MockInterview = () => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const { mockinterviewData, isLoading } = useMockInterviews();
+  console.log("mockinterviewData", mockinterviewData);
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");

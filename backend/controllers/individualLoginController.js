@@ -282,6 +282,7 @@ exports.individualLogin = async (req, res) => {
               comments: "",
               createdAt: new Date()
             }],
+            status: 'underReview',
             createdBy: ownerId,
             currency: 'USD'
           }
