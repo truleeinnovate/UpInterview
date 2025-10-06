@@ -8,10 +8,8 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Eye, Pencil, Trash, Files } from "lucide-react";
-import { ReactComponent as IoIosCopy } from "../../icons/IoIosCopy.svg";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import KanbanView from "./KanbanView";
-// import KanbanView from "./StandardTemplates/StandardTemplateKanbanView.jsx";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import Header from "../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
@@ -19,13 +17,11 @@ import TableView from "../../Components/Shared/Table/TableView.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../icons/MdKeyboardArrowDown.svg";
 import { useInterviewTemplates } from "../../apiHooks/useInterviewTemplates.js";
-import { useMediaQuery } from "react-responsive";
 import { usePermissions } from "../../Context/PermissionsContext";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 import { formatDateTime } from "../../utils/dateFormatter.js";
 import StandardTemplates from "./StandardTemplates/StandardTemplates.jsx";
 import { notify } from "../../services/toastService.js";
-import { useScrollLock } from "../../apiHooks/scrollHook/useScrollLock.js";
 
 // FilterTabs component for standard/custom tabs
 const FilterTabs = ({
@@ -69,11 +65,12 @@ const FilterTabs = ({
 };
 
 const InterviewTemplates = () => {
-    const { effectivePermissions } = usePermissions();
     const { templatesData, isLoading, saveTemplate } = useInterviewTemplates();
-    const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const itemsPerPage = 10;
+    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'custom');
+    const { effectivePermissions } = usePermissions();
 
     // Search and filter states
     const [searchQuery, setSearchQuery] = useState("");
@@ -81,16 +78,17 @@ const InterviewTemplates = () => {
     const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
     const [isFilterActive, setIsFilterActive] = useState(false);
 
-    // View state
-    const [view, setView] = useState("table");
+    // UI states
+    const [view, setView] = useState('table'); // 'table' or 'kanban'
+    const [isStatusOpen, setIsStatusOpen] = useState(false);
+    const [isRoundsOpen] = useState(false);
+    const [isModifiedDateOpen] = useState(false);
+    const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
+    const [isFormatOpen, setIsFormatOpen] = useState(false);
 
-    // Tab state
-    const [activeTab, setActiveTab] = useState(() => {
-        // Initialize from URL on first render
-        const params = new URLSearchParams(window.location.search);
-        const tabFromUrl = params.get('tab');
-        return (tabFromUrl === 'standard' || tabFromUrl === 'custom') ? tabFromUrl : 'standard';
-    });
+    // Template cloning states
+    const [templateToClone, setTemplateToClone] = useState(null);
+    const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
     // Keep URL in sync with tab state
     useEffect(() => {
         console.log('Current active tab:', activeTab);
@@ -136,25 +134,17 @@ const InterviewTemplates = () => {
 
     // Filter states
     const [selectedStatus, setSelectedStatus] = useState([]);
+    const [selectedFormats, setSelectedFormats] = useState([]);
     const [roundsRange, setRoundsRange] = useState({ min: "", max: "" });
     const [modifiedDatePreset, setModifiedDatePreset] = useState("");
     const [createdDatePreset, setCreatedDatePreset] = useState("");
     const [selectedFilters, setSelectedFilters] = useState({
         status: [],
+        formats: [],
         rounds: { min: "", max: "" },
         modifiedDate: "",
         createdDate: "",
     });
-
-    // UI states
-    const [isStatusOpen, setIsStatusOpen] = useState(false);
-    const [isRoundsOpen, setIsRoundsOpen] = useState(false);
-    const [isModifiedDateOpen, setIsModifiedDateOpen] = useState(false);
-    const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
-
-    // Template cloning states
-    const [templateToClone, setTemplateToClone] = useState(null);
-    const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
 
     // Refs
     const filterIconRef = useRef(null);
@@ -169,20 +159,25 @@ const InterviewTemplates = () => {
     const customCount = templatesData?.filter(t => t.type === 'custom').length || 0;
     const totalCount = templatesData?.length || 0;
 
-    // Handle tab change
-    const handleFilterChange = (tab) => {
-        setActiveTab(tab);
-        // Update URL with the selected tab
-        const searchParams = new URLSearchParams(window.location.search);
-        searchParams.set('tab', tab);
-        navigate({ search: searchParams.toString() }, { replace: true });
+    // Handler for view toggle
+    const toggleView = () => {
+        setView(prev => prev === 'table' ? 'kanban' : 'table');
     };
 
+    // Status toggle handler
     const handleStatusToggle = (status) => {
         setSelectedStatus((prev) =>
             prev.includes(status)
                 ? prev.filter((s) => s !== status)
                 : [...prev, status]
+        );
+    };
+
+    const handleFormatToggle = (format) => {
+        setSelectedFormats(prev =>
+            prev.includes(format)
+                ? prev.filter(f => f !== format)
+                : [...prev, format]
         );
     };
 
@@ -225,6 +220,7 @@ const InterviewTemplates = () => {
             createdDate: "",
         };
         setSelectedStatus([]);
+        setSelectedFormats([]);
         setRoundsRange({ min: "", max: "" });
         setModifiedDatePreset("");
         setCreatedDatePreset("");
@@ -311,10 +307,14 @@ const InterviewTemplates = () => {
                 }
             };
 
+            const matchesFormat = selectedFilters.formats.length === 0 ||
+                (template.format && selectedFilters.formats.includes(template.format));
+
             return (
                 matchesSearchQuery &&
                 matchesStatus &&
                 matchesRounds &&
+                matchesFormat &&
                 matchesModifiedDate() &&
                 matchesCreatedDate()
             );
@@ -373,7 +373,7 @@ const InterviewTemplates = () => {
     const formatOptions = [
         { label: "Online / Virtual", value: "online" },
         { label: "Face to Face / Onsite", value: "offline" },
-        { label: "Hybrid (Online + Offline)", value: "hybrid" },
+        { label: "Hybrid (Online + Onsite)", value: "hybrid" },
     ];
 
     const handleClone = async (template) => {
@@ -605,19 +605,9 @@ const InterviewTemplates = () => {
                     onClick: handleCloneClick,
                 },
             ]
-            : []),
+            : [])
     ];
 
-    const [isFormatOpen, setIsFormatOpen] = useState(false);
-    const [selectedFormats, setSelectedFormats] = useState([]);
-
-    const handleFormatToggle = (format) => {
-        setSelectedFormats(prev =>
-            prev.includes(format)
-                ? prev.filter(f => f !== format)
-                : [...prev, format]
-        );
-    };
 
     return (
         <div className="bg-background min-h-screen">
@@ -790,7 +780,7 @@ const InterviewTemplates = () => {
                                                     {[
                                                         { label: "Online / Virtual", value: "online" },
                                                         { label: "Face to Face / Onsite", value: "offline" },
-                                                        { label: "Hybrid (Online + Offline)", value: "hybrid" }
+                                                        { label: "Hybrid (Online + Onsite)", value: "hybrid" }
                                                     ].map((format) => (
                                                         <label
                                                             key={format.value}

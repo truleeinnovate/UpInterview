@@ -31,7 +31,7 @@ const TemplateDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [template, setTemplate] = useState(null);
-  
+
   // Get the current tab from URL or default to 'standard'
   const searchParams = new URLSearchParams(window.location.search);
   const activeTab = searchParams.get('tab') || 'standard';
@@ -287,7 +287,7 @@ const TemplateDetail = () => {
                 const formatOption = [
                   { label: "Online / Virtual", value: "online" },
                   { label: "Face to Face / Onsite", value: "offline" },
-                  { label: "Hybrid (Online + Offline)", value: "hybrid" },
+                  { label: "Hybrid (Online + Onsite)", value: "hybrid" },
                 ].find(option => option.value === (template.format || 'online'));
                 return formatOption ? formatOption.label : 'Online / Virtual';
               })()}
