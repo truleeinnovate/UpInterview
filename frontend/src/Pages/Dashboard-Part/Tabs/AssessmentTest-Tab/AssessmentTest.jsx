@@ -18,7 +18,7 @@ import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 const AssessmentTest = () => {
   const { fetchAssessmentQuestions } = useAssessments();
   // <---------------------- v1.0.0
-  const [isVerified, setIsVerified] = useState(false);
+  // const [isVerified, setIsVerified] = useState(false);
   const [assessment, setAssessment] = useState(null);
   const [assessmentQuestions, setAssessmentQuestions] = useState(null);
   const [calculatedScores, setCalculatedScores] = useState(null);
@@ -409,9 +409,9 @@ const AssessmentTest = () => {
             setCurrentStep={setCurrentStep}
             candidate={candidate}
             candidateId={candidateId}
-            setIsVerified={setIsVerified}
+            // setIsVerified={setIsVerified}
             assessment={assessment}
-            isVerified={isVerified}
+            // isVerified={isVerified}
             calculatedScores={calculatedScores}
             candidateAssessmentId={candidateAssessmentId}
           />
@@ -423,7 +423,7 @@ const AssessmentTest = () => {
             candidate={candidate}
             assessmentQuestions={assessmentQuestions}
             setCurrentStep={setCurrentStep}
-            isVerified={isVerified}
+            // isVerified={isVerified}
           />
         )}
 

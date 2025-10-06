@@ -13,7 +13,7 @@ const AssessmentTestPage2 = ({
   candidate,
   assessmentQuestions,
   setCurrentStep,
-  isVerified,
+  // isVerified,
 }) => {
   // Remove console logs to prevent loops
   // console.log('assessment', assessment);
@@ -148,9 +148,9 @@ const AssessmentTestPage2 = ({
               <div></div>
               <button
                 onClick={handleStartAssessment}
-                disabled={!isVerified}
+                // disabled={!isVerified}
                 className={`group inline-flex items-center px-6 py-2 rounded-xl sm:text-sm md:text-sm lg:text-base xl:text-base 2xl:text-base font-medium transition-all duration-300 ${
-                  isVerified
+                  true
                     ? "text-white bg-custom-blue hover:bg-custom-blue/80"
                     : "bg-gray-100 text-gray-400 cursor-not-allowed"
                 }`}

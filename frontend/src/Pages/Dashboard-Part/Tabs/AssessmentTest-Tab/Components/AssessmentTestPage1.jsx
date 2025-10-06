@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashraf - commented otp verification
 
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -22,9 +23,9 @@ const AssessmentTestPage1 = ({
   setCurrentStep,
   candidate,
   candidateId,
-  setIsVerified,
+  // setIsVerified,
   assessment,
-  isVerified,
+  // isVerified,
   calculatedScores,
   candidateAssessmentId,
 }) => {
@@ -32,11 +33,11 @@ const AssessmentTestPage1 = ({
     console.log("assessment", assessment);
   }, [assessment]);
 
-  const [showOtpInput, setShowOtpInput] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", "", ""]);
-  const [isResending, setIsResending] = useState(false);
+  // const [showOtpInput, setShowOtpInput] = useState(false);
+  // const [otp, setOtp] = useState(["", "", "", "", ""]);
+  // const [isResending, setIsResending] = useState(false);
   const [isAgreed, setIsAgreed] = useState(false);
-  const [timer, setTimer] = useState(30);
+  // const [timer, setTimer] = useState(30);
 
   const handleProceed = () => {
     // if (isVerified && isAgreed) {
@@ -46,98 +47,98 @@ const AssessmentTestPage1 = ({
     // }
   };
 
-  useEffect(() => {
-    const countdown = timer > 0 && setInterval(() => setTimer(timer - 1), 1000);
-    return () => clearInterval(countdown);
-  }, [timer]);
+  // useEffect(() => {
+  //   const countdown = timer > 0 && setInterval(() => setTimer(timer - 1), 1000);
+  //   return () => clearInterval(countdown);
+  // }, [timer]);
 
-  const verifyOtp = async (candidateAssessmentId, otp) => {
-    const url = `${config.REACT_APP_API_URL}/candidate-assessment/verify-otp`;
-    try {
-      const response = await axios.post(url, { candidateAssessmentId, otp });
-      return response.data.isValid;
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to verify OTP.");
-      return false;
-    }
-  };
+  // const verifyOtp = async (candidateAssessmentId, otp) => {
+  //   const url = `${config.REACT_APP_API_URL}/candidate-assessment/verify-otp`;
+  //   try {
+  //     const response = await axios.post(url, { candidateAssessmentId, otp });
+  //     return response.data.isValid;
+  //   } catch (error) {
+  //     toast.error(error.response?.data?.message || "Failed to verify OTP.");
+  //     return false;
+  //   }
+  // };
 
-  const handleChange = async (element, index) => {
-    if (isNaN(element.value)) return;
+  // const handleChange = async (element, index) => {
+  //   if (isNaN(element.value)) return;
 
-    const newOtp = [...otp];
-    newOtp[index] = element.value;
-    setOtp(newOtp);
+  //   const newOtp = [...otp];
+  //   newOtp[index] = element.value;
+  //   setOtp(newOtp);
 
-    // Move to next input if current field is filled
-    if (element.value && index < 4) {
-      const nextInput =
-        element.parentElement.nextSibling.querySelector("input");
-      if (nextInput) {
-        nextInput.focus();
-      }
-    }
+  //   // Move to next input if current field is filled
+  //   if (element.value && index < 4) {
+  //     const nextInput =
+  //       element.parentElement.nextSibling.querySelector("input");
+  //     if (nextInput) {
+  //       nextInput.focus();
+  //     }
+  //   }
 
-    // Submit if all fields are filled
-    if (newOtp.every((digit) => digit !== "")) {
-      const isValid = await verifyOtp(candidateAssessmentId, newOtp.join(""));
-      if (isValid) {
-        setIsVerified(true);
-        setShowOtpInput(false);
-        toast.success("OTP verified successfully");
-      } else {
-        toast.error("Invalid OTP");
-        setOtp(["", "", "", "", ""]);
-      }
-    }
-  };
+  //   // Submit if all fields are filled
+  //   if (newOtp.every((digit) => digit !== "")) {
+  //     const isValid = await verifyOtp(candidateAssessmentId, newOtp.join(""));
+  //     if (isValid) {
+  //       setIsVerified(true);
+  //       setShowOtpInput(false);
+  //       toast.success("OTP verified successfully");
+  //     } else {
+  //       toast.error("Invalid OTP");
+  //       setOtp(["", "", "", "", ""]);
+  //     }
+  //   }
+  // };
 
-  const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      const prevInput =
-        e.target.parentElement.previousSibling.querySelector("input");
-      if (prevInput) {
-        prevInput.focus();
-      }
-    }
-  };
+  // const handleKeyDown = (e, index) => {
+  //   if (e.key === "Backspace" && !otp[index] && index > 0) {
+  //     const prevInput =
+  //       e.target.parentElement.previousSibling.querySelector("input");
+  //     if (prevInput) {
+  //       prevInput.focus();
+  //     }
+  //   }
+  // };
 
-  const handleResend = async () => {
-    setIsResending(true);
-    setOtp(["", "", "", "", ""]); // Clear existing OTP inputs
-    try {
-      const response = await axios.post(
-        `${config.REACT_APP_API_URL}/emails/send-otp/${scheduledAssessmentId}/${candidateId}/${candidateAssessmentId}`
-      );
-      if (response.data.success) {
-        setTimer(30);
-        toast.success("OTP resent successfully!");
-      } else {
-        toast.error("Failed to resend OTP.");
-      }
-    } catch (error) {
-      toast.error("Failed to resend OTP.");
-    } finally {
-      setIsResending(false);
-    }
-  };
+  // const handleResend = async () => {
+  //   setIsResending(true);
+  //   setOtp(["", "", "", "", ""]); // Clear existing OTP inputs
+  //   try {
+  //     const response = await axios.post(
+  //       `${config.REACT_APP_API_URL}/emails/send-otp/${scheduledAssessmentId}/${candidateId}/${candidateAssessmentId}`
+  //     );
+  //     if (response.data.success) {
+  //       setTimer(30);
+  //       toast.success("OTP resent successfully!");
+  //     } else {
+  //       toast.error("Failed to resend OTP.");
+  //     }
+  //   } catch (error) {
+  //     toast.error("Failed to resend OTP.");
+  //   } finally {
+  //     setIsResending(false);
+  //   }
+  // };
 
-  const handleSendOtp = async () => {
-    try {
-      const response = await axios.post(
-        `${config.REACT_APP_API_URL}/emails/send-otp/${scheduledAssessmentId}/${candidateId}/${candidateAssessmentId}`
-      );
-      if (response.data.success) {
-        setShowOtpInput(true);
-        setTimer(30);
-        toast.success("OTP sent successfully!");
-      } else {
-        toast.error("Failed to send OTP.");
-      }
-    } catch (error) {
-      toast.error("Failed to send OTP.");
-    }
-  };
+  // const handleSendOtp = async () => {
+  //   try {
+  //     const response = await axios.post(
+  //       `${config.REACT_APP_API_URL}/emails/send-otp/${scheduledAssessmentId}/${candidateId}/${candidateAssessmentId}`
+  //     );
+  //     if (response.data.success) {
+  //       setShowOtpInput(true);
+  //       setTimer(30);
+  //       toast.success("OTP sent successfully!");
+  //     } else {
+  //       toast.error("Failed to send OTP.");
+  //     }
+  //   } catch (error) {
+  //     toast.error("Failed to send OTP.");
+  //   }
+  // };
 
   return (
     <React.Fragment>
@@ -235,9 +236,9 @@ const AssessmentTestPage1 = ({
               </div>
               {/* v1.0.0 ------------------------------------------------------------------> */}
 
-              {!showOtpInput && (
+              {/* {!showOtpInput && (
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                  {/* v1.0.0 <--------------------------------------------------------------------- */}
+                  {/* v1.0.0 <--------------------------------------------------------------------- *
                   <div className="flex items-center space-x-4 mb-6">
                     <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg">
                       <ShieldCheckIcon className="sm:h-5 sm:w-5 h-6 w-6 text-custom-blue" />
@@ -254,7 +255,7 @@ const AssessmentTestPage1 = ({
                       </p>
                     </div>
                   </div>
-                  {/* v1.0.0 ---------------------------------------------------------------------> */}
+                  {/* v1.0.0 ---------------------------------------------------------------------> *
 
                   <button
                     onClick={handleSendOtp}
@@ -263,11 +264,11 @@ const AssessmentTestPage1 = ({
                     Send Code
                   </button>
                 </div>
-              )}
+              )} */}
 
-              {showOtpInput && !isVerified && (
+              {/* {showOtpInput && !isVerified && (
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                  {/* v1.0.0 <------------------------------------------------------ */}
+                  {/* v1.0.0 <------------------------------------------------------ *
                   <div className="flex items-center space-x-4 mb-6">
                     <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg">
                       <ShieldCheckIcon className="sm:h-5 sm:w-5 h-6 w-6 text-custom-blue" />
@@ -284,7 +285,7 @@ const AssessmentTestPage1 = ({
                       </p>
                     </div>
                   </div>
-                  {/* v1.0.0 ------------------------------------------------------> */}
+                  {/* v1.0.0 ------------------------------------------------------> *
 
                   <div className="flex justify-center space-x-4 mb-8">
                     {otp?.map((digit, index) => (
@@ -326,7 +327,7 @@ const AssessmentTestPage1 = ({
 
               {isVerified && (
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                  {/* v1.0.0 <---------------------------------------------------- */}
+                  {/* v1.0.0 <---------------------------------------------------- *
                   <div className="flex items-center space-x-4">
                     <div className="p-2 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg">
                       <CheckCircleIcon className="sm:h-5 sm:w-5 h-6 w-6 text-green-600" />
@@ -340,9 +341,9 @@ const AssessmentTestPage1 = ({
                       </p>
                     </div>
                   </div>
-                  {/* v1.0.0 ----------------------------------------------------> */}
+                  {/* v1.0.0 ----------------------------------------------------> *
                 </div>
-              )}
+              )} */}
 
               {assessment?.assessmentId?.AdditionalNotes && (
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
@@ -428,12 +429,12 @@ const AssessmentTestPage1 = ({
             <div className="flex justify-end">
               <button
                 onClick={handleProceed}
-                disabled={!isVerified || !isAgreed}
+                disabled={ !isAgreed}
                 className={`
                   group inline-flex items-center px-4 py-2 rounded-xl sm:text-sm md:text-sm lg:text-base xl:text-base 2xl:text-base font-medium
                   transition-all duration-300 transform
                   ${
-                    isVerified && isAgreed
+                    isAgreed
                       ? "text-white bg-custom-blue hover:bg-custom-blue/90"
                       : "text-gray-500 bg-gray-300 cursor-not-allowed"
                   }
