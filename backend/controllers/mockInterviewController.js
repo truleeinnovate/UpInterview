@@ -6,14 +6,19 @@ const { MockInterview } = require("../models/Mockinterview/mockinterview");
 const { MockInterviewRound } = require("../models/Mockinterview/mockinterviewRound");
 const { validateMockInterview, validateMockInterviewUpdate } = require("../validations/mockInterviewValidation");
 
+
 // exports.createMockInterview = async (req, res) => {
 //   // Mark that logging will be handled by the controller
 //   res.locals.loggedByController = true;
-//   res.locals.processName = "Create mock interview";
+//   res.locals.processName = "Create mock interview with rounds";
+
+//   // const session = await mongoose.startSession();
+//   // session.startTransaction();
+//   console.log("req.body", req.body);
 
 //   try {
 //     // Validate request data
-//     const validation = validateMockInterview(req.body);
+//         const validation = validateMockInterview(req.body);
 //     if (!validation.isValid) {
 //       return res.status(400).json({
 //         status: "error",
@@ -32,20 +37,14 @@ const { validateMockInterview, validateMockInterviewUpdate } = require("../valid
 //       technology,
 //       Role,
 //       jobDescription,
-//       rounds,
+//       rounds, // Now rounds are included in the request
 //       createdById,
 //       lastModifiedById,
-      
 //     } = req.body;
 
 //     // ✅ Generate custom mockInterviewCode like MINT-00001
 //     const lastMockInterview = await MockInterview.findOne({})
-//       // <---------------- v1.0.0
-//       // .sort({ createdAt: -1 })
-//       // v1.0.1 ------------------------------------->
-//       .sort({_id:-1})
-//       // v1.0.1 <-------------------------------------
-//       // v1.0.0------------------->
+//       .sort({ _id: -1 })
 //       .select("mockInterviewCode")
 //       .lean();
 
@@ -59,16 +58,10 @@ const { validateMockInterview, validateMockInterviewUpdate } = require("../valid
 
 //     const mockInterviewCode = `MINT-${String(nextNumber).padStart(5, "0")}`;
 
+//     // Create mock interview
 //     const mockInterview = new MockInterview({
-//       // title,
 //       skills,
-//       // dateTime,
-//       // interviewer,
-//       // interviewType,
-//       // duration,
-//       // instructions,
 //       Role,
-//       // rounds,
 //       candidateName,
 //       higherQualification,
 //       currentExperience,
@@ -77,52 +70,89 @@ const { validateMockInterview, validateMockInterviewUpdate } = require("../valid
 //       ownerId,
 //       tenantId,
 //       mockInterviewCode,
-//       createdBy: createdById || ownerId, // Map createdById to createdBy, fallback to ownerId
-//       updatedBy: lastModifiedById || createdById || ownerId, // Map lastModifiedById to updatedBy
+//       createdBy: createdById || ownerId,
+//       updatedBy: lastModifiedById || createdById || ownerId,
 //     });
+
 //     const newMockInterview = await mockInterview.save();
-    
-//     // const mockInterviews = await MockInterview.find({ ownerId });
+
+//     // Create rounds if provided
+//     let createdRounds = [];
+//     if (rounds && Array.isArray(rounds) && rounds.length > 0) {
+//       const roundPromises = rounds.map((round, index) => {
+//         const mockInterviewRound = new MockInterviewRound({
+//           mockInterviewId: newMockInterview._id,
+//           sequence: round.sequence || index + 1,
+//           roundTitle: round.roundTitle,
+//           interviewMode: round.interviewMode,
+//           interviewType: round.interviewType,
+//           interviewerType: round.interviewerType,
+//           duration: round.duration,
+//           instructions: round.instructions,
+//           dateTime: round.dateTime,
+//           interviewerViewType: round.interviewerViewType,
+//           interviewers: round.interviewers || [],
+//           status: round.status || "Draft",
+//           currentAction: round.currentAction,
+//           currentActionReason: round.currentActionReason
+//         });
+        
+//         return mockInterviewRound.save();
+//       });
+
+//       createdRounds = await Promise.all(roundPromises);
+//     }
+
+//     // await session.commitTransaction();
+
 //     // Generate feed
 //     res.locals.feedData = {
 //       tenantId,
 //       feedType: "info",
 //       action: {
 //         name: "mock_interview_created",
-//         description: `Mock interview was created successfully`,
+//         description: `Mock interview with ${createdRounds.length} rounds was created successfully`,
 //       },
 //       ownerId,
 //       parentId: newMockInterview._id,
 //       parentObject: "Mock interview",
 //       metadata: req.body,
 //       severity: res.statusCode >= 500 ? "high" : "low",
-//       message: `Mock interview was created successfully`,
+//       message: `Mock interview with ${createdRounds.length} rounds was created successfully`,
 //     };
 
 //     // Generate logs
 //     res.locals.logData = {
 //       tenantId,
 //       ownerId,
-//       processName: "Create mock interview",
+//       processName: "Create mock interview with rounds",
 //       requestBody: req.body,
-//       message: "Mock interview created successfully",
+//       message: "Mock interview with rounds created successfully",
 //       status: "success",
-//       responseBody: newMockInterview,
+//       responseBody: {
+//         mockInterview: newMockInterview,
+//         rounds: createdRounds
+//       },
 //     };
 
 //     // Send response
 //     res.status(201).json({
 //       status: "success",
-//       message: "Mock interview created successfully",
-//       data: newMockInterview,
+//       message: `Mock interview with ${createdRounds.length} rounds created successfully`,
+//       data: {
+//         mockInterview: newMockInterview,
+//         rounds: createdRounds
+//       },
 //     });
 //   } catch (error) {
-//     console.error("Error creating mock interview:", error);
+//     // await session.abortTransaction();
+//     console.error("Error creating mock interview with rounds:", error);
+    
 //     // Generate logs for the error
 //     res.locals.logData = {
 //       tenantId: req.body.tenantId,
 //       ownerId: req.body.ownerId,
-//       processName: "Create mock interview",
+//       processName: "Create mock interview with rounds",
 //       requestBody: req.body,
 //       message: error.message,
 //       status: "error",
@@ -131,24 +161,28 @@ const { validateMockInterview, validateMockInterviewUpdate } = require("../valid
 //     // Send error response
 //     res.status(500).json({
 //       status: "error",
-//       message: "Failed to create mock interview. Please try again later.",
+//       message: "Failed to create mock interview with rounds. Please try again later.",
 //       data: { error: error.message },
 //     });
+//   } finally {
+//     // session.endSession();
 //   }
 // };
 
+
+
+
+
+
+
+// In mockInterviewController.js - Update the createMockInterview function
+
 exports.createMockInterview = async (req, res) => {
-  // Mark that logging will be handled by the controller
   res.locals.loggedByController = true;
   res.locals.processName = "Create mock interview with rounds";
 
-  // const session = await mongoose.startSession();
-  // session.startTransaction();
-  console.log("req.body", req.body);
-
   try {
-    // Validate request data
-        const validation = validateMockInterview(req.body);
+    const validation = validateMockInterview(req.body);
     if (!validation.isValid) {
       return res.status(400).json({
         status: "error",
@@ -167,12 +201,12 @@ exports.createMockInterview = async (req, res) => {
       technology,
       Role,
       jobDescription,
-      rounds, // Now rounds are included in the request
+      rounds,
       createdById,
       lastModifiedById,
     } = req.body;
 
-    // ✅ Generate custom mockInterviewCode like MINT-00001
+    // Generate mockInterviewCode
     const lastMockInterview = await MockInterview.findOne({})
       .sort({ _id: -1 })
       .select("mockInterviewCode")
@@ -206,7 +240,11 @@ exports.createMockInterview = async (req, res) => {
 
     const newMockInterview = await mockInterview.save();
 
-    // Create rounds if provided
+    console.log("New mock interview created:", newMockInterview);
+    console.log("rounds",rounds);
+    
+
+    // Create rounds if provided (for Page 2 submit)
     let createdRounds = [];
     if (rounds && Array.isArray(rounds) && rounds.length > 0) {
       const roundPromises = rounds.map((round, index) => {
@@ -224,7 +262,8 @@ exports.createMockInterview = async (req, res) => {
           interviewers: round.interviewers || [],
           status: round.status || "Draft",
           currentAction: round.currentAction,
-          currentActionReason: round.currentActionReason
+          currentActionReason: round.currentActionReason,
+          meetingId: round.meetingId
         });
         
         return mockInterviewRound.save();
@@ -233,31 +272,28 @@ exports.createMockInterview = async (req, res) => {
       createdRounds = await Promise.all(roundPromises);
     }
 
-    // await session.commitTransaction();
-
-    // Generate feed
+    // Generate feed and logs
     res.locals.feedData = {
       tenantId,
       feedType: "info",
       action: {
         name: "mock_interview_created",
-        description: `Mock interview with ${createdRounds.length} rounds was created successfully`,
+        description: `Mock interview ${rounds && rounds.length > 0 ? 'with ' + rounds.length + ' rounds ' : ''}was created successfully`,
       },
       ownerId,
       parentId: newMockInterview._id,
       parentObject: "Mock interview",
       metadata: req.body,
-      severity: res.statusCode >= 500 ? "high" : "low",
-      message: `Mock interview with ${createdRounds.length} rounds was created successfully`,
+      severity: "low",
+      message: `Mock interview ${rounds && rounds.length > 0 ? 'with ' + rounds.length + ' rounds ' : ''}was created successfully`,
     };
 
-    // Generate logs
     res.locals.logData = {
       tenantId,
       ownerId,
       processName: "Create mock interview with rounds",
       requestBody: req.body,
-      message: "Mock interview with rounds created successfully",
+      message: "Mock interview created successfully",
       status: "success",
       responseBody: {
         mockInterview: newMockInterview,
@@ -268,37 +304,31 @@ exports.createMockInterview = async (req, res) => {
     // Send response
     res.status(201).json({
       status: "success",
-      message: `Mock interview with ${createdRounds.length} rounds created successfully`,
+      message: `Mock interview ${rounds && rounds.length > 0 ? 'with ' + rounds.length + ' rounds ' : ''}created successfully`,
       data: {
         mockInterview: newMockInterview,
         rounds: createdRounds
       },
     });
   } catch (error) {
-    // await session.abortTransaction();
-    console.error("Error creating mock interview with rounds:", error);
+    console.error("Error creating mock interview:", error);
     
-    // Generate logs for the error
     res.locals.logData = {
       tenantId: req.body.tenantId,
       ownerId: req.body.ownerId,
-      processName: "Create mock interview with rounds",
+      processName: "Create mock interview",
       requestBody: req.body,
       message: error.message,
       status: "error",
     };
 
-    // Send error response
     res.status(500).json({
       status: "error",
-      message: "Failed to create mock interview with rounds. Please try again later.",
+      message: "Failed to create mock interview. Please try again later.",
       data: { error: error.message },
     });
-  } finally {
-    // session.endSession();
   }
 };
-
 
 exports.updateMockInterview = async (req, res) => {
   res.locals.loggedByController = true;
@@ -309,7 +339,7 @@ exports.updateMockInterview = async (req, res) => {
   console.log("UPDATE - req.body:", req.body);
 
   try {
-    // Validate update data using PATCH validation (more flexible)
+    // Validate update data using PATCH validation
     const validation = validateMockInterviewUpdate(req.body);
     if (!validation.isValid) {
       return res.status(400).json({
@@ -329,7 +359,7 @@ exports.updateMockInterview = async (req, res) => {
       technology,
       Role,
       jobDescription,
-      rounds,
+      rounds, // This should be an array of rounds
       createdById,
       lastModifiedById,
     } = req.body;
@@ -383,44 +413,143 @@ exports.updateMockInterview = async (req, res) => {
     }
     existingMockInterview.updatedAt = new Date();
 
-    // Handle rounds update - COMPLETE ROUNDS MANAGEMENT
-    if (rounds && Array.isArray(rounds)) {
-      console.log("Updating rounds for mock interview:", mockId);
+    // FIX: Handle rounds update - PROPERLY VALIDATE AND PROCESS ROUNDS
+    if (rounds !== undefined) {
+      console.log("Processing rounds update for mock interview:", mockId);
       
-      // Delete existing rounds and create new ones (or update if you have round IDs)
-      await MockInterviewRound.deleteMany({ mockInterviewId: mockId });
-      
-      const roundPromises = rounds.map((round, index) => {
-        const mockInterviewRound = new MockInterviewRound({
-          mockInterviewId: mockId,
-          sequence: round.sequence || index + 1,
-          roundTitle: round.roundTitle,
-          interviewMode: round.interviewMode,
-          interviewType: round.interviewType,
-          interviewerType: round.interviewerType,
-          duration: round.duration,
-          instructions: round.instructions,
-          dateTime: round.dateTime,
-          interviewerViewType: round.interviewerViewType,
-          interviewers: round.interviewers || [],
-          status: round.status || "Draft",
-          currentAction: round.currentAction,
-          currentActionReason: round.currentActionReason,
-          meetingId: round.meetingId
+      // Check if rounds is an array, if it's an object, convert it to array with single item
+      let roundsArray = [];
+      if (Array.isArray(rounds)) {
+        roundsArray = rounds;
+      } else if (rounds && typeof rounds === 'object') {
+        // If rounds is sent as single object, convert to array
+        console.log("Converting single round object to array");
+        roundsArray = [rounds];
+      }
+
+      if (roundsArray.length > 0) {
+        const roundUpdates = [];
+        const newRounds = [];
+        const existingRoundIds = [];
+
+        // Separate rounds into updates and new rounds
+        for (const round of roundsArray) {
+          if (round._id) {
+            // Existing round - update
+            roundUpdates.push(round);
+            existingRoundIds.push(round._id);
+          } else {
+            // New round - create
+            newRounds.push(round);
+          }
+        }
+
+        // Update existing rounds
+        if (roundUpdates.length > 0) {
+          console.log(`Updating ${roundUpdates.length} existing rounds`);
+          
+          const updatePromises = roundUpdates.map(async (round) => {
+            try {
+              const existingRound = await MockInterviewRound.findOne({
+                _id: round._id,
+                mockInterviewId: mockId
+              });
+
+              if (existingRound) {
+                // Track round changes
+                const roundChanges = [];
+                const updateFields = [
+                  'sequence', 'roundTitle', 'interviewMode', 'interviewType',
+                  'interviewerType', 'duration', 'instructions', 'dateTime',
+                  'interviewerViewType', 'status', 'currentAction', 
+                  'currentActionReason', 'meetingId'
+                ];
+
+                updateFields.forEach(field => {
+                  if (round[field] !== undefined && existingRound[field] !== round[field]) {
+                    roundChanges.push({
+                      fieldName: `${field} (round ${round.sequence || existingRound.sequence})`,
+                      oldValue: existingRound[field],
+                      newValue: round[field]
+                    });
+                    existingRound[field] = round[field];
+                  }
+                });
+
+                // Update interviewers if provided
+                if (round.interviewers && Array.isArray(round.interviewers)) {
+                  roundChanges.push({
+                    fieldName: `interviewers (round ${round.sequence || existingRound.sequence})`,
+                    oldValue: existingRound.interviewers,
+                    newValue: round.interviewers
+                  });
+                  existingRound.interviewers = round.interviewers;
+                }
+
+                // Add round changes to main changes array
+                changes.push(...roundChanges);
+
+                return await existingRound.save();
+              } else {
+                console.warn(`Round with ID ${round._id} not found, treating as new round`);
+                newRounds.push(round);
+              }
+            } catch (error) {
+              console.error(`Error updating round ${round._id}:`, error);
+              throw error;
+            }
+          });
+
+          await Promise.all(updatePromises);
+        }
+
+        // Create new rounds
+        if (newRounds.length > 0) {
+          console.log(`Creating ${newRounds.length} new rounds`);
+          
+          const createPromises = newRounds.map(async (round, index) => {
+            const mockInterviewRound = new MockInterviewRound({
+              mockInterviewId: mockId,
+              sequence: round.sequence || (await MockInterviewRound.countDocuments({ mockInterviewId: mockId })) + index + 1,
+              roundTitle: round.roundTitle,
+              interviewMode: round.interviewMode,
+              interviewType: round.interviewType,
+              interviewerType: round.interviewerType,
+              duration: round.duration,
+              instructions: round.instructions,
+              dateTime: round.dateTime,
+              interviewerViewType: round.interviewerViewType,
+              interviewers: round.interviewers || [],
+              status: round.status || "Draft",
+              currentAction: round.currentAction,
+              currentActionReason: round.currentActionReason,
+              meetingId: round.meetingId
+            });
+            
+            return await mockInterviewRound.save();
+          });
+
+          const createdRounds = await Promise.all(createPromises);
+          
+          // Add new round IDs to mock interview
+          existingMockInterview.rounds = [
+            ...(existingMockInterview.rounds || []),
+            ...createdRounds.map(round => round._id)
+          ];
+
+          changes.push({
+            fieldName: "new_rounds",
+            oldValue: "none",
+            newValue: `${createdRounds.length} rounds created`
+          });
+        }
+
+        changes.push({
+          fieldName: "rounds_management",
+          oldValue: "previous rounds state",
+          newValue: `${roundUpdates.length} updated, ${newRounds.length} created`
         });
-        
-        return mockInterviewRound.save();
-      });
-
-      const updatedRounds = await Promise.all(roundPromises);
-      changes.push({
-        fieldName: "rounds",
-        oldValue: "previous rounds",
-        newValue: `${updatedRounds.length} updated rounds`
-      });
-
-      // Also store rounds reference in main document if needed
-      existingMockInterview.rounds = updatedRounds.map(round => round._id);
+      }
     }
 
     // Save the updated mock interview
@@ -457,8 +586,8 @@ exports.updateMockInterview = async (req, res) => {
       responseBody: updatedMockInterview,
     };
 
-    // Get updated rounds for response
-    const updatedRounds = await MockInterviewRound.find({ mockInterviewId: mockId });
+    // Get all updated rounds for response
+    const updatedRounds = await MockInterviewRound.find({ mockInterviewId: mockId }).sort({ sequence: 1 });
 
     // Send response
     res.status(200).json({
@@ -466,7 +595,12 @@ exports.updateMockInterview = async (req, res) => {
       message: "Mock interview updated successfully",
       data: {
         mockInterview: updatedMockInterview,
-        rounds: updatedRounds
+        rounds: updatedRounds,
+        updateSummary: {
+          roundsUpdated: rounds ? (Array.isArray(rounds) ? rounds.filter(r => r._id).length : rounds._id ? 1 : 0) : 0,
+          roundsCreated: rounds ? (Array.isArray(rounds) ? rounds.filter(r => !r._id).length : !rounds._id ? 1 : 0) : 0,
+          totalChanges: changes.length
+        }
       },
     });
 

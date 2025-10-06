@@ -72,6 +72,8 @@ exports.createRequest = async (req, res) => {
       roundId,
       requestMessage,
       expiryDateTime,
+      isMockInterview,
+      contactId
     } = req.body;
     const isInternal = interviewerType === "internal";
 
@@ -96,17 +98,19 @@ exports.createRequest = async (req, res) => {
       interviewRequestCode: customRequestId,
       tenantId: new mongoose.Types.ObjectId(tenantId),
       ownerId,
-      scheduledInterviewId: new mongoose.Types.ObjectId(scheduledInterviewId),
+      scheduledInterviewId: isMockInterview ? undefined :  new mongoose.Types.ObjectId(scheduledInterviewId),
       interviewerType,
+      contactId: new mongoose.Types.ObjectId(contactId),
       interviewerId: new mongoose.Types.ObjectId(interviewerId), // Save interviewerId instead of an array
       dateTime,
       duration,
-      candidateId: new mongoose.Types.ObjectId(candidateId),
-      positionId: new mongoose.Types.ObjectId(positionId),
+      candidateId: isMockInterview ? undefined : new mongoose.Types.ObjectId(candidateId),
+      positionId: isMockInterview ? undefined : new mongoose.Types.ObjectId(positionId),
       status: isInternal ? "accepted" : "inprogress",
       roundId: new mongoose.Types.ObjectId(roundId),
       requestMessage,
       expiryDateTime,
+      isMockInterview
     });
 
     await newRequest.save();
