@@ -69,7 +69,7 @@ export const useMockInterviews = () => {
   
       // safely build rounds
       let rounds = Array.isArray(formData.rounds) ? formData.rounds : [formData.rounds || {}];
-      const status = rounds[0]?.interviewers?.length > 0 ? "Requests Sent" : "Draft";
+      const status = rounds[0]?.interviewers?.length > 0 ? "RequestsSent" : "Draft";
   
       const formatDateTime = (dateTimeStr) => {
         if (!dateTimeStr) return new Date().toISOString();
