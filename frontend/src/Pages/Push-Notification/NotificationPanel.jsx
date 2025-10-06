@@ -20,6 +20,7 @@ const NotificationList = ({
   notifications = [],
   detailed = false,
   onMarkAsRead,
+  onClickNotification,
 }) => {
   if (!Array.isArray(notifications)) return null;
 
@@ -31,7 +32,12 @@ const NotificationList = ({
           className={`px-3 sm:px-4 py-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors ${
             notification?.unread ? "bg-blue-50" : ""
           }`}
-          onClick={() => notification?._id && onMarkAsRead(notification._id)}
+          onClick={() => {
+            if (notification?._id) {
+              onMarkAsRead(notification._id);
+              onClickNotification(notification);
+            }
+          }}
         >
           <div className="flex justify-between items-start">
             <div className="flex-1 min-w-0">
@@ -77,15 +83,17 @@ NotificationList.propTypes = {
   ),
   detailed: PropTypes.bool,
   onMarkAsRead: PropTypes.func,
+  onClickNotification: PropTypes.func,
 };
-
 const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [selectedNotificationInAll, setSelectedNotificationInAll] = useState(null);
   const [filterType, setFilterType] = useState("all");
   const [showPermissionRequest, setShowPermissionRequest] = useState(false);
-  useScrollLock(showPermissionRequest);
-  // v1.0.1 ------------------------------------------------------------->
+  const [selectedSingleNotification, setSelectedSingleNotification] = useState(null);
+  const [showSingleNotificationPopup, setShowSingleNotificationPopup] = useState(false);
+  useScrollLock(showPermissionRequest || showSingleNotificationPopup);
+  // v1.0.1 --------------------------------------------------------------------->
 
   // <---------------------- v1.0.0
   const authToken = getAuthToken(); // Use validated token getter
@@ -117,6 +125,11 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
   const handlePermissionGranted = () => {
     setShowPermissionRequest(false);
     // Optionally refresh notifications or show success message
+  };
+
+  const handleSingleNotificationClick = (notification) => {
+    setSelectedSingleNotification(notification);
+    setShowSingleNotificationPopup(true);
   };
   // ---------------------- v1.0.0 >
   const typeFilteredNotifications = (notificationList || []).filter(
@@ -230,6 +243,7 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
                 <NotificationList
                   notifications={filteredNotifications.slice(0, 3)}
                   onMarkAsRead={markAsRead}
+                  onClickNotification={handleSingleNotificationClick}
                 />
                 <div className="px-3 sm:px-4 py-2 border-t border-gray-200">
                   <button
@@ -244,6 +258,123 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+      
+      {/* Single Notification View Popup */}
+      {showSingleNotificationPopup && selectedSingleNotification && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-full max-w-2xl mx-4 max-h-[85vh] overflow-hidden shadow-2xl">
+            <div className="flex justify-between items-center px-6 py-4 bg-white">
+              <h2 className="text-lg font-medium text-gray-900">Notification Details</h2>
+              <button
+                onClick={() => {
+                  setShowSingleNotificationPopup(false);
+                  setSelectedSingleNotification(null);
+                }}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(85vh-80px)]">
+              <div className="space-y-5">
+                {/* Title Section */}
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                    {selectedSingleNotification.title || 'Notification'}
+                  </h3>
+                  {selectedSingleNotification.unread && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-custom-blue/20 text-custom-blue border border-blue-200">
+                      <span className="w-1.5 h-1.5 bg-custom-blue/80 rounded-full mr-1.5"></span>
+                      New
+                    </span>
+                  )}
+                </div>
+
+                {/* Message Section */}
+                <div className="bg-blue-50 border-l-4 border-custom-blue rounded-r-lg p-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </h4>
+                  <p className="text-gray-800 text-sm leading-6">
+                    {selectedSingleNotification.message || 'No message content'}
+                  </p>
+                </div>
+
+                {/* Metadata Grid */}
+                <div className="grid grid-cols-1 gap-3">
+                  {/* Type */}
+                 
+
+                  {/* Date & Time */}
+                  <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                    <span className="text-sm font-medium text-gray-600">
+                      Date
+                    </span>
+                    <span className="text-sm text-gray-900">
+                      {formatDateTime(selectedSingleNotification.createdAt)}
+                    </span>
+                  </div>
+
+                  {/* Priority */}
+                  {selectedSingleNotification.priority && (
+                    <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                      <span className="text-sm font-medium text-gray-600">
+                        Priority
+                      </span>
+                      <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${
+                        selectedSingleNotification.priority === 'high' 
+                          ? 'bg-red-100 text-red-800'
+                          : selectedSingleNotification.priority === 'medium'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-green-100 text-green-800'
+                      }`}>
+                        {selectedSingleNotification.priority.charAt(0).toUpperCase() + selectedSingleNotification.priority.slice(1)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Data */}
+                {/* {selectedSingleNotification.data && Object.keys(selectedSingleNotification.data).length > 0 && (
+                  <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                      Additional Information
+                    </h4>
+                    <div className="space-y-2">
+                      {Object.entries(selectedSingleNotification.data).map(([key, value]) => (
+                        <div key={key} className="flex items-start">
+                          <span className="text-sm font-medium text-gray-600 min-w-[120px]">
+                            {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
+                          </span>
+                          <span className="text-sm text-gray-900 ml-2">
+                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )} */}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="px-6 py-3 bg-gray-50">
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    setShowSingleNotificationPopup(false);
+                    setSelectedSingleNotification(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -286,40 +417,42 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
       {/* Rest of the component remains the same */}
       {showAllNotifications && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full mx-28 h-[90vh] overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold">All Notifications</h2>
+          <div className="bg-white rounded-xl w-full mx-28 h-[90vh] overflow-hidden shadow-2xl">
+            <div className="flex justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">All Notifications</h2>
               <button
                 onClick={() => {
                   setShowAllNotifications(false);
                   setSelectedNotificationInAll(null);
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
 
             <div className="flex h-[calc(90vh-80px)]">
               {/* Notification List - Left Panel */}
-              <div className={`${selectedNotificationInAll ? 'w-1/2' : 'w-full'} border-r p-4 overflow-y-auto`}>
+              <div className={`${selectedNotificationInAll ? 'w-1/2' : 'w-full'} border-r bg-gray-50 overflow-y-auto`}>
                 {loading ? (
-                  <div className="text-center text-gray-500">
-                    Loading notifications...
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500 text-sm">Loading notifications...</p>
                   </div>
                 ) : filteredNotifications.length === 0 ? (
-                  <div className="text-center text-gray-500">No notifications</div>
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500 text-sm">No notifications</p>
+                  </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="p-4 space-y-3">
                     {filteredNotifications.map((notification) => (
                       <div
                         key={notification._id}
-                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        className={`p-4 rounded-lg cursor-pointer transition-all duration-200 border ${
                           selectedNotificationInAll?._id === notification._id
-                            ? "bg-custom-blue/20 border-custom-blue"
+                            ? "bg-white border-custom-blue shadow-md"
                             : notification.unread
-                            ? "bg-blue-50 hover:bg-blue-100"
-                            : "bg-white hover:bg-gray-50"
+                            ? "bg-white border-blue-200 hover:border-blue-300 hover:shadow-sm"
+                            : "bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm"
                         }`}
                         onClick={() => {
                           setSelectedNotificationInAll(notification);
@@ -328,17 +461,23 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
                           }
                         }}
                       >
-                        <div className="flex justify-between items-start">
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold truncate">{notification.title}</h4>
-                            <p className="text-gray-600 line-clamp-2">{notification.message}</p>
-                            <p className="text-xs text-gray-500 mt-1">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="text-sm font-semibold text-gray-900 truncate">
+                                {notification.title}
+                              </h4>
+                              {notification.unread && (
+                                <span className="flex-shrink-0 w-2 h-2 bg-custom-blue rounded-full"></span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 line-clamp-2 leading-5 mb-2">
+                              {notification.message}
+                            </p>
+                            <p className="text-xs text-gray-400">
                               {formatDateTime(notification.createdAt)}
                             </p>
                           </div>
-                          {notification.unread && (
-                            <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 ml-2" />
-                          )}
                         </div>
                       </div>
                     ))}
@@ -348,61 +487,80 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
 
               {/* Notification Detail - Right Panel */}
               {selectedNotificationInAll && (
-                <div className="w-1/2 p-6 overflow-y-auto bg-gray-50">
-                  <div className="bg-white rounded-lg p-6 shadow-sm">
-                    <h3 className="text-xl font-semibold mb-4">{selectedNotificationInAll.title}</h3>
+                <div className="w-1/2 p-6 overflow-y-auto bg-white">
+                  <div className="space-y-5">
+                    {/* Header */}
+                    <div className="flex justify-between">
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {selectedNotificationInAll.title}
+                      </h3>
+                      {selectedNotificationInAll.unread && (
+                        <span className="inline-flex items-center mt-2 px-2.5 py-1 rounded-md text-xs font-medium bg-custom-blue/10 text-custom-blue">
+                          <span className="w-1.5 h-1.5 bg-custom-blue rounded-full mr-1.5"></span>
+                          New
+                        </span>
+                      )}
+                    </div>
                     
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 mb-1">Message</p>
-                        <p className="text-gray-800 whitespace-pre-wrap">{selectedNotificationInAll.message}</p>
+                    {/* Message */}
+                    <div className="bg-blue-50 border-l-4 border-custom-blue rounded-r-lg p-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Message</h4>
+                      <p className="text-sm text-gray-800 leading-6">
+                        {selectedNotificationInAll.message}
+                      </p>
+                    </div>
+                    
+                    {/* Metadata Grid */}
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                        <span className="text-sm font-medium text-gray-600">Type</span>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {selectedNotificationInAll.type?.charAt(0).toUpperCase() + selectedNotificationInAll.type?.slice(1) || 'System'}
+                        </span>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-500 mb-1">Type</p>
-                          <span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">
-                            {selectedNotificationInAll.type || 'General'}
-                          </span>
-                        </div>
-                        
-                        <div>
-                          <p className="text-sm font-medium text-gray-500 mb-1">Category</p>
-                          <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                            {selectedNotificationInAll.category || 'General'}
-                          </span>
-                        </div>
-                      </div>
                       
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 mb-1">Date & Time</p>
-                        <p className="text-gray-800">{formatDateTime(selectedNotificationInAll.createdAt)}</p>
+                      <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                        <span className="text-sm font-medium text-gray-600">Date & Time</span>
+                        <span className="text-sm text-gray-900">
+                          {formatDateTime(selectedNotificationInAll.createdAt)}
+                        </span>
                       </div>
                       
                       {selectedNotificationInAll.priority && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-500 mb-1">Priority</p>
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
+                        <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                          <span className="text-sm font-medium text-gray-600">Priority</span>
+                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${
                             selectedNotificationInAll.priority === 'high' 
                               ? 'bg-red-100 text-red-800'
                               : selectedNotificationInAll.priority === 'medium'
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-green-100 text-green-800'
                           }`}>
-                            {selectedNotificationInAll.priority}
+                            {selectedNotificationInAll.priority.charAt(0).toUpperCase() + selectedNotificationInAll.priority.slice(1)}
                           </span>
                         </div>
                       )}
-                      
-                      {selectedNotificationInAll.data && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-500 mb-1">Additional Details</p>
-                          <div className="bg-gray-50 rounded p-3 text-sm text-gray-700">
-                            <pre className="whitespace-pre-wrap">{JSON.stringify(selectedNotificationInAll.data, null, 2)}</pre>
-                          </div>
-                        </div>
-                      )}
                     </div>
+                    
+                    {/* Additional Data */}
+                    {selectedNotificationInAll.data && Object.keys(selectedNotificationInAll.data).length > 0 && (
+                      <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Additional Information</h4>
+                        <div className="space-y-2">
+                          {Object.entries(selectedNotificationInAll.data).map(([key, value]) => (
+                            <div key={key} className="flex items-start">
+                              <span className="text-sm font-medium text-gray-600 min-w-[120px]">
+                                {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
+                              </span>
+                              <span className="text-sm text-gray-900 ml-2">
+                                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
