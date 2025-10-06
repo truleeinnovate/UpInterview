@@ -418,7 +418,7 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
       {showAllNotifications && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl w-full mx-28 h-[90vh] overflow-hidden shadow-2xl">
-            <div className="flex justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
+            <div className="flex justify-between items-center px-6 py-4 bg-white">
               <h2 className="text-lg font-medium text-gray-900">All Notifications</h2>
               <button
                 onClick={() => {
