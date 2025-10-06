@@ -1252,7 +1252,7 @@ function OutsourcedInterviewerModal({
 
                     {/* Fixed Footer (Hidden when navigatedfrom is 'dashboard') */}
                     {navigatedfrom !== "dashboard" && (
-                        <div className="absolute bottom-10 right-10 flex justify-end">
+                        <div className="flex justify-end mt-5 mr-6">
                             <button
                                 onClick={handleProceed}
                                 disabled={selectedInterviewersLocal.length === 0}

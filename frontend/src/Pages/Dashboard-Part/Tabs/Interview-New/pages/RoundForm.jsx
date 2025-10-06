@@ -1243,6 +1243,7 @@ const RoundFormInterviews = () => {
                 candidateId: candidate?._id,
                 positionId: position?._id,
                 roundId: response.savedRound._id,
+                isMockInterview: false,
                 requestMessage: isInternal
                   ? "Internal interview request"
                   : "Outsource interview request",
@@ -1287,8 +1288,9 @@ const RoundFormInterviews = () => {
                     candidateId: candidate?._id,
                     positionId: position?._id,
                     dateTime: combinedDateTime,
-                    duration: duration,
-                    roundTitle: roundTitle,
+                    type:"interview",
+                    // duration: duration,
+                    // roundTitle: roundTitle,
                   },
                   {
                     headers: {

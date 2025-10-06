@@ -32,11 +32,11 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
     if (selectedTimeRange !== 'all') {
       const now = new Date();
       const notificationDate = (timestamp) => new Date(timestamp);
-      
+
       switch (selectedTimeRange) {
         case 'today':
           filtered = filtered.filter(
-            notification => 
+            notification =>
               notificationDate(notification.timestamp).toDateString() === now.toDateString()
           );
           break;

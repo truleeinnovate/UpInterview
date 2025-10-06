@@ -217,8 +217,12 @@ const ContactsSchema = new mongoose.Schema(
     // Status field for outsource interviewers
     status: {
       type: String,
-      enum: ['new', 'underReview', 'approved', 'rejected', 'suspended'],
-      default: 'new'
+      enum: ["New",
+        "Under Review",
+        "Approved",
+        "Rejected",
+        "Suspended",],
+      default: 'New'
     },
   },
   { timestamps: true }

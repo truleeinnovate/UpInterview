@@ -671,24 +671,96 @@ const EditInterviewDetails = ({
           );
           return;
         }
-        updateId = profileData.contactId; // Use contactId for regular users
-      }
 
-      const response = await updateContactDetail.mutateAsync({
-        resolvedId: updateId,
-        data: cleanFormData,
-      });
-      // Invalidate the query to refetch the updated data
-      await queryClient.invalidateQueries(["userProfile", resolvedId]);
+        console.log("form", formData, typeof Number(formData.hourlyRate));
 
-      console.log("response cleanFormData", response);
+        const cleanFormData = {
+            PreviousExperienceConductingInterviews: String(
+                formData.PreviousExperienceConductingInterviews?.trim() || ""
+            ).trim(),
+            ...(formData.PreviousExperienceConductingInterviews === 'yes' && {
+                PreviousExperienceConductingInterviewsYears: String(
+                    formData.PreviousExperienceConductingInterviewsYears || "1"
+                ).trim()
+            }),
+            ExpertiseLevel_ConductingInterviews: String(
+                formData.ExpertiseLevel_ConductingInterviews || ""
+            ).trim(),
+            hourlyRate: Number(formData.hourlyRate) || "",
+            technologies: Array.isArray(formData.Technology)
+                ? formData.Technology
+                : [],
+            skills: Array.isArray(formData.skills) ? formData.skills : [],
+            NoShowPolicy: String(formData.NoShowPolicy || "").trim(),
+            InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
+            expectedRatePerMockInterview: formData.interviewFormatWeOffer.includes("mock")
+                ? formData.expectedRatePerMockInterview
+                : "",
+            mock_interview_discount: formData.interviewFormatWeOffer.includes("mock")
+                ? formData.mock_interview_discount
+                : "",
+            professionalTitle: String(formData.professionalTitle || "").trim(),
+            bio: String(formData.bio || "").trim(),
+            id: formData.id,
+            yearsOfExperience: formData.yearsOfExperience,
+            rates: formData.rates
+        };
 
-      if (response.status === 200) {
-        notify.success("Updated Interview Details Successfully");
-        // Only close the modal after successful update
-        handleCloseModal();
-        if (usersId && onSuccess) {
-          onSuccess();
+        try {
+            // Both contexts use the same endpoint since outsource interviewers are Contact records
+            // Determine the correct ID to use for the update
+            let updateId;
+            if (from === "outsource-interviewer") {
+                // For outsource interviewers, profileData is the Contact object
+                if (!profileData || !profileData._id) {
+                    console.error("Profile data not loaded or missing ID:", { profileData });
+                    notify.error("Profile data is not loaded. Please wait and try again.");
+                    return;
+                }
+                updateId = profileData._id;
+            } else {
+                // For regular users (my-profile), profileData is the User object with a contactId field
+                if (!profileData || !profileData.contactId) {
+                    console.error("Profile data not loaded or missing contactId:", { profileData });
+                    notify.error("Profile data is not loaded. Please wait and try again.");
+                    return;
+                }
+                updateId = profileData.contactId; // Use contactId for regular users
+            }
+            
+            const response = await updateContactDetail.mutateAsync({
+                resolvedId: updateId,
+                data: cleanFormData,
+            });
+            // Invalidate the query to refetch the updated data
+            await queryClient.invalidateQueries(["userProfile", resolvedId]);
+
+            console.log("response cleanFormData", response);
+
+            if (response.status === 200) {
+                notify.success("Updated Interview Details Successfully");
+                // Only close the modal after successful update
+                handleCloseModal();
+                if (usersId && onSuccess) {
+                    onSuccess();
+                }
+            }
+        } catch (error) {
+            console.error("Error updating interview details:", error);
+
+            if (error.response) {
+                if (error.response.status === 400) {
+                    const backendErrors = error.response.data.errors || {};
+                    console.log("backendErrors", backendErrors);
+                    setErrors(backendErrors);
+                } else {
+                    notify.error("Error updating interview details. Please try again.");
+                    setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
+                }
+            } else {
+                notify.error("Network error. Please check your connection and try again.");
+                setErrors((prev) => ({ ...prev, form: "Network error" }));
+            }
         }
       }
     } catch (error) {

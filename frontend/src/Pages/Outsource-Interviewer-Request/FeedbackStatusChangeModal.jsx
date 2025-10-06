@@ -253,7 +253,7 @@ const FeedbackStatusChangeModal = ({
                     </form>
 
                     {/* Footer pinned at modal bottom */}
-                    <div className="w-full flex justify-end gap-4 p-4 border-t bg-white">
+                    <div className="w-full flex justify-end gap-4 p-4 bg-white">
                         <button
                             type="submit"
                             form="feedback-status-change-form"
