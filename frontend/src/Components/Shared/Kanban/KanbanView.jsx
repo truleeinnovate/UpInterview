@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  added assessment expiry date in kanban view
 // v1.0.1  -  Ashok   - Improved responsiveness
+// v1.0.2  -  Ashok   - changed values style
 
 // src/Components/Shared/Kanban/KanbanView.jsx
 import React from "react";
@@ -203,88 +204,31 @@ const KanbanView = ({
                         renderActions(item, { onView, onEdit, onResendLink })}
                     </div>
                   </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-1.5 text-gray-600 truncate">
-                        <span className="truncate">{item.email || "N/A"}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-gray-600 truncate">
-                        <span className="truncate">{item.phone || "N/A"}</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-1.5 text-gray-600 truncate">
-                        <span className="truncate">
-                          {item.industry || "N/A"}
+                  {/* v1.0.2 <----------------------------------------------------- */}
+                  <div className="space-y-3 text-sm">
+                    {/* Candidate Info */}
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className="text-gray-600 truncate">
+                        Email:
+                        <span className="font-semibold ml-2">
+                          {item.email || "N/A"}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-gray-600 truncate">
-                        <span className="truncate">
-                          {item.linkedinUrl || "N/A"}
+                      <div className="text-gray-600 truncate">
+                        <span className="font-bold"></span>
+                      </div>
+                      <div className="text-gray-600 truncate">
+                        Phone:
+                        <span className="font-semibold ml-2">
+                          {item.phone || "N/A"}
                         </span>
                       </div>
                     </div>
-                    {/* <-------------------------------v1.0.0 */}
-                    {/* Show expiry date for assessment view */}
-                    {item.expiryAt && (
-                      <div className="mt-2 p-2 bg-gray-50 rounded-lg">
-                        <div className="text-xs text-gray-600 font-medium mb-1">
-                          Assessment Expiry
-                        </div>
-                        <div className="text-xs text-gray-800">
-                          {(() => {
-                            const now = new Date();
-                            const expiry = new Date(item.expiryAt);
-                            const timeDiff = expiry.getTime() - now.getTime();
 
-                            if (timeDiff <= 0) {
-                              return (
-                                <span className="text-red-600 font-medium">
-                                  Expired
-                                </span>
-                              );
-                            }
-
-                            const days = Math.floor(
-                              timeDiff / (1000 * 60 * 60 * 24)
-                            );
-                            const hours = Math.floor(
-                              (timeDiff % (1000 * 60 * 60 * 24)) /
-                                (1000 * 60 * 60)
-                            );
-
-                            let timeText = "";
-                            if (days > 0) {
-                              timeText = `${days}d ${hours}h`;
-                            } else if (hours > 0) {
-                              timeText = `${hours}h`;
-                            } else {
-                              const minutes = Math.floor(
-                                (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
-                              );
-                              timeText = `${minutes}m`;
-                            }
-
-                            return (
-                              <span
-                                className={
-                                  timeDiff < 24 * 60 * 60 * 1000
-                                    ? "text-red-600"
-                                    : "text-gray-600"
-                                }
-                              >
-                                {timeText} remaining
-                              </span>
-                            );
-                          })()}
-                        </div>
-                      </div>
-                    )}
-                    {/* ------------------------------v1.0.0 > */}
-                  </div>
-                  <div className="mt-4">
-                    <div className="flex flex-wrap gap-1">
-                      {(item.skills || []).slice(0, 3).map((skill, index) => (
+                    {/* Skills */}
+                    <div className="flex gap-1">
+                      <span className="mr-2">Skills: </span>
+                      {(item.skills || []).slice(0, 1).map((skill, index) => (
                         <span
                           key={index}
                           className="px-2 py-1 bg-custom-bg text-custom-blue rounded-lg text-xs font-medium truncate max-w-[100px]"
@@ -292,13 +236,14 @@ const KanbanView = ({
                           {skill.skill || "N/A"}
                         </span>
                       ))}
-                      {(item.skills || []).length > 3 && (
+                      {(item.skills || []).length > 1 && (
                         <span className="px-2 py-1 bg-gray-50 text-gray-700 rounded-lg text-xs font-medium">
-                          +{(item.skills || []).length - 3} more
+                          +{(item.skills || []).length - 1} more
                         </span>
                       )}
                     </div>
                   </div>
+                  {/* v1.0.2 -----------------------------------------------------> */}
                 </motion.div>
               ))}
             </div>

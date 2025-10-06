@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - fixed style issue
 
 import React, { useState, useEffect } from "react";
 import {
@@ -301,7 +302,9 @@ const InterviewRequests = () => {
       {/* Details Popup */}
       {selectedRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg sm:w-full mx-4 w-1/2 max-h-[90vh] overflow-y-auto">
+          {/* v1.0.1 <-------------------------------------------------------------------------------------------------------- */}
+          <div className="bg-white p-6 rounded-xl shadow-lg sm:w-full md:w-full mx-4 w-1/2 max-h-[90vh] overflow-y-auto">
+          {/* v1.0.1 --------------------------------------------------------------------------------------------------------> */}
             <div className="flex justify-between items-center mb-4">
               {/* v1.0.0 <--------------------------------------------------------------------------------------------- */}
               <h3 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl font-semibold text-gray-800">

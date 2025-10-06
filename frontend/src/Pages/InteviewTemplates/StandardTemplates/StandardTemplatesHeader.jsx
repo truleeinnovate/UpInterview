@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Tooltip from "@mui/material/Tooltip";
 
@@ -69,18 +69,38 @@ const StandardTemplatesToolbar = ({
   showViewToggles = true,
   searchPlaceholder = "Search...",
   filterIconRef,
+  templatesData,
+  activeTab,
+  setActiveTab,
 }) => {
   const isTablet = useMediaQuery({ maxWidth: 320 });
+
+  // Tab state
+  // const [activeTab, setActiveTab] = useState(() => {
+  //   // Initialize from URL on first render
+  //   const params = new URLSearchParams(window.location.search);
+  //   const tabFromUrl = params.get("tab");
+  //   return tabFromUrl === "standard" || tabFromUrl === "custom"
+  //     ? tabFromUrl
+  //     : "standard";
+  // });
+
+  const standardCount =
+    templatesData?.filter((t) => t.type === "standard").length || 0;
+  const customCount =
+    templatesData?.filter((t) => t.type === "custom").length || 0;
+  const totalCount = templatesData?.length || 0;
+
   return (
     <motion.div
-      className="flex items-center justify-between flex-wrap lg:flex-nowrap mb-4 gap-4"
+      className="w-full flex items-center justify-between mb-4 gap-4 overflow-x-auto"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       {/* View Toggle Icons */}
       {showViewToggles && (
-        <>
+        <div>
           {!isTablet ? (
             <div className="flex items-center">
               <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
@@ -111,10 +131,20 @@ const StandardTemplatesToolbar = ({
           ) : (
             <div></div>
           )}
-        </>
+        </div>
       )}
 
       <div className="flex items-center">
+        {/* Toggle Buttons */}
+        <div className="mr-4">
+          <FilterTabs
+            activeTab={activeTab}
+            onFilterChange={setActiveTab}
+            standardCount={standardCount}
+            customCount={customCount}
+            totalCount={totalCount}
+          />
+        </div>
         {/* Search Input */}
         <div className="sm:mt-0 flex justify-end w-full sm:w-auto">
           <div className="max-w-lg w-full">
@@ -130,7 +160,7 @@ const StandardTemplatesToolbar = ({
                 placeholder={searchPlaceholder}
                 value={searchQuery}
                 onChange={onSearch}
-                className="block w-full pl-10 pr-3 py-2 border border-input rounded-md bg-background placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-input rounded-md bg-background placeholder-muted-foreground focus:ring-custom-blue sm:text-sm"
               />
             </div>
           </div>

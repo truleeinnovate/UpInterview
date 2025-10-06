@@ -1,9 +1,11 @@
 // v1.0.0 - Ashok - removed loading in this
+// v1.0.1 - Ashok - changed UI only
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import StandardTemplateTableView from "./StandardTemplateTableView";
 import StandardTemplateKanbanView from "../KanbanView.jsx";
-import Toolbar from "../../../Components/Shared/Toolbar/Toolbar";
+// import Toolbar from "../../../Components/Shared/Toolbar/Toolbar";
+import Toolbar from "./StandardTemplatesHeader.jsx";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup";
 import { useInterviewTemplates } from "../../../apiHooks/useInterviewTemplates.js";
@@ -50,8 +52,8 @@ const StandardTemplates = ({ handleClone }) => {
         rounds: Array.isArray(template.rounds)
           ? template.rounds
           : Array.isArray(template.sequence)
-            ? template.sequence
-            : [{ roundTitle: "Unknown round" }],
+          ? template.sequence
+          : [{ roundTitle: "Unknown round" }],
         bestFor: template.bestFor || "General roles",
         format: template.format || "Unknown format",
         type: template.type || "standard",
@@ -83,6 +85,63 @@ const StandardTemplates = ({ handleClone }) => {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isRoundsOpen, setIsRoundsOpen] = useState(false);
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
+
+  // v1.0.1 <----------------------------------------------------------------------
+  const [activeTab, setActiveTab] = useState(() => {
+    // Initialize from URL on first render
+    const params = new URLSearchParams(window.location.search);
+    const tabFromUrl = params.get("tab");
+    return tabFromUrl === "standard" || tabFromUrl === "custom"
+      ? tabFromUrl
+      : "standard";
+  });
+
+  // Keep URL in sync with tab state
+  useEffect(() => {
+    console.log("Current active tab:", activeTab);
+    const params = new URLSearchParams(window.location.search);
+
+    // Only update URL if it doesn't match the current tab
+    if (params.get("tab") !== activeTab) {
+      console.log("Updating URL to match active tab:", activeTab);
+      params.set("tab", activeTab);
+      navigate({ search: params.toString() }, { replace: true });
+    }
+  }, [activeTab, navigate]);
+
+  // Handle tab change from URL (e.g., browser back/forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tabFromUrl = params.get("tab");
+      console.log("URL changed, tab from URL:", tabFromUrl);
+
+      if (
+        tabFromUrl &&
+        (tabFromUrl === "standard" || tabFromUrl === "custom")
+      ) {
+        console.log("Updating active tab from URL:", tabFromUrl);
+        setActiveTab(tabFromUrl);
+      } else if (!tabFromUrl) {
+        // If no tab in URL, set default and update URL
+        console.log("No tab in URL, setting to default");
+        setActiveTab("standard");
+        params.set("tab", "standard");
+        navigate({ search: params.toString() }, { replace: true });
+      }
+    };
+
+    // Listen for URL changes
+    window.addEventListener("popstate", handlePopState);
+
+    // Initial check
+    handlePopState();
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [navigate]);
+  // v1.0.1 ---------------------------------------------------------------------->
 
   const normalizeSpaces = (str) =>
     str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
@@ -209,10 +268,10 @@ const StandardTemplates = ({ handleClone }) => {
     setSelectedFilters(filters);
     setIsFilterActive(
       filters.status.length > 0 ||
-      filters.rounds.min !== "" ||
-      filters.rounds.max !== "" ||
-      filters.modifiedDate !== "" ||
-      filters.createdDate !== ""
+        filters.rounds.min !== "" ||
+        filters.rounds.max !== "" ||
+        filters.modifiedDate !== "" ||
+        filters.createdDate !== ""
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -258,6 +317,11 @@ const StandardTemplates = ({ handleClone }) => {
           dataLength={normalizedTemplates.length}
           searchPlaceholder="Search Interview Templates..."
           filterIconRef={filterIconRef}
+          // v1.0.2 <------------------------------------------
+          templatesData={paginatedTemplates}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          // v1.0.2 ------------------------------------------>
         />
         <FilterPopup
           isOpen={isFilterPopupOpen}
@@ -379,19 +443,23 @@ const StandardTemplates = ({ handleClone }) => {
         {view === "table" ? (
           <div className="w-full overflow-x-auto">
             <ErrorBoundary>
-              <StandardTemplateTableView templatesData={paginatedTemplates} handleClone={handleClone} />
+              <StandardTemplateTableView
+                templatesData={paginatedTemplates}
+                handleClone={handleClone}
+              />
             </ErrorBoundary>
           </div>
         ) : (
           <div>
             <ErrorBoundary>
-              <StandardTemplateKanbanView templates={paginatedTemplates}
+              <StandardTemplateKanbanView
+                templates={paginatedTemplates}
                 loading={isLoading}
                 effectivePermissions={effectivePermissions}
                 onView={handleView}
                 // onEdit={handleEdit}
                 handleClone={handleClone}
-                 />
+              />
             </ErrorBoundary>
           </div>
         )}
