@@ -400,16 +400,40 @@ exports.acceptInterviewRequest = async (req, res) => {
         .json({ message: "requestId, contactId, and roundId are required" });
     }
 
-    // Update InterviewRounds: Add contactId to interviewers array
-    const round = await InterviewRounds.findById(roundId);
-    if (!round) {
-      console.log(
-        `acceptInterviewRequest: Interview round not found for roundId ${roundId}`
-      );
-      return res.status(404).json({ message: "Interview round not found" });
+    // Get the interview request to check if it's a mock interview
+    const request = await InterviewRequest.findById(requestId);
+    if (!request) {
+      console.log(`acceptInterviewRequest: Interview request not found for requestId ${requestId}`);
+      return res.status(404).json({ message: "Interview request not found" });
+    }
+    
+    console.log(`Interview request isMockInterview: ${request.isMockInterview}`);
+    
+    let round;
+    
+    // Update based on interview type: MockInterviewRound or InterviewRounds
+    if (request.isMockInterview) {
+      // For mock interviews, use MockInterviewRound
+      const { MockInterviewRound } = require('../models/Mockinterview/mockinterviewRound');
+      round = await MockInterviewRound.findById(roundId);
+      if (!round) {
+        console.log(
+          `acceptInterviewRequest: Mock interview round not found for roundId ${roundId}`
+        );
+        return res.status(404).json({ message: "Mock interview round not found" });
+      }
+    } else {
+      // For regular interviews, use InterviewRounds
+      round = await InterviewRounds.findById(roundId);
+      if (!round) {
+        console.log(
+          `acceptInterviewRequest: Interview round not found for roundId ${roundId}`
+        );
+        return res.status(404).json({ message: "Interview round not found" });
+      }
     }
 
-    console.log(`Found interview round: ${JSON.stringify(round, null, 2)}`);
+    console.log(`Found ${request.isMockInterview ? 'mock ' : ''}interview round: ${JSON.stringify(round, null, 2)}`);
 
     if (!round.interviewers.includes(contactId)) {
       round.interviewers.push(contactId);
@@ -449,12 +473,24 @@ exports.acceptInterviewRequest = async (req, res) => {
 
     console.log(`Found hourly rate for contact ${contactId}: ${hourlyRate}`);
 
-    const request = await InterviewRequest.findById(requestId);
     const duration = request.duration;
     const durationInMinutes = parseInt(duration.split(" ")[0]);
-    // if hourlyRate is 100$ and duration is 45 minutes, totalAmount is 75$
-    const totalAmount = (hourlyRate * durationInMinutes) / 60;
-    console.log(`Calculated total amount for this request: ${totalAmount}`);
+    
+    // Calculate base amount
+    let totalAmount = (hourlyRate * durationInMinutes) / 60;
+    console.log(`Calculated base amount for this request: ${totalAmount}`);
+    
+    // Apply discount if it's a mock interview
+    if (request.isMockInterview && findHourlyRate.mock_interview_discount) {
+      const discountPercentage = parseFloat(findHourlyRate.mock_interview_discount) || 0;
+      const discountAmount = (totalAmount * discountPercentage) / 100;
+      totalAmount = totalAmount - discountAmount;
+      console.log(`Applied mock interview discount of ${discountPercentage}%`);
+      console.log(`Discount amount: ${discountAmount}`);
+      console.log(`Final amount after discount: ${totalAmount}`);
+    }
+    
+    console.log(`Final total amount for this request: ${totalAmount}`);
 
     const wallet = await Wallet.findOne({ ownerId: request.ownerId });
     if (!wallet) {
@@ -484,27 +520,33 @@ exports.acceptInterviewRequest = async (req, res) => {
     console.log(`Attempting to deduct ${totalAmount} from wallet balance and add to hold amount`);
     //<-----v1.0.2------
     // Use human-readable code if available, else fallback to last 10 chars of ObjectId
-    const holdID =request?.interviewRequestCode
+    const holdID = request?.interviewRequestCode
       // (request?._id ? String(request._id).slice(-10) : String(requestId));
+    
     // Prepare a transaction record for wallet history (type: 'hold')
     const holdTransaction = {
       type: "hold",
       amount: totalAmount,
-      description: `Hold for interview round ${round?.roundTitle}`,
+      description: `Hold for ${request.isMockInterview ? 'mock ' : ''}interview round ${round?.roundTitle}`,
       relatedInvoiceId: holdID,
       status: "completed",
       metadata: {
-        interviewId: String(round?.interviewId || ""),
+        interviewId: String(request.isMockInterview ? round?.mockInterviewId : round?.interviewId || ""),
         roundId: String(roundId),
         requestId: String(requestId),
         interviewerContactId: String(findHourlyRate._id),
         hourlyRate: Number(hourlyRate),
         duration: String(duration),
         durationInMinutes: Number(durationInMinutes),
+        isMockInterview: Boolean(request.isMockInterview),
+        mockInterviewDiscount: request.isMockInterview ? (findHourlyRate.mock_interview_discount || 0) : null,
         calculation: {
-          formula: "hourlyRate * minutes / 60",
+          formula: request.isMockInterview && findHourlyRate.mock_interview_discount ? 
+            "(hourlyRate * minutes / 60) - discount" : 
+            "hourlyRate * minutes / 60",
           hourlyRate: Number(hourlyRate),
           minutes: Number(durationInMinutes),
+          discountPercentage: request.isMockInterview ? (parseFloat(findHourlyRate.mock_interview_discount) || 0) : 0,
         },
         prevBalance: Number(wallet.balance || 0),
         prevHoldAmount: Number(wallet.holdAmount || 0),
@@ -552,12 +594,13 @@ exports.acceptInterviewRequest = async (req, res) => {
   
     return res.status(200).json({
       success: true,
-      message: "Interview request accepted; funds held and emails processed",
+      message: `${request.isMockInterview ? 'Mock i' : 'I'}nterview request accepted; funds held and emails processed`,
       wallet: {
         balance: updatedWallet?.balance,
         holdAmount: updatedWallet?.holdAmount,
       },
       transaction: holdTransaction,
+      appliedDiscount: request.isMockInterview ? (findHourlyRate.mock_interview_discount || 0) : null,
     });
   } catch (error) {
     console.error("[acceptInterviewRequest] Error:", error);

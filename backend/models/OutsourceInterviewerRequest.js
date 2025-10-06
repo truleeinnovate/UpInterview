@@ -5,7 +5,11 @@ const OutsourceInterviewerSchema = new mongoose.Schema({
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users',},
     contactId: { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts', required: true },
 
-    status: { type: String, enum: ['new', 'underReview', 'approved', 'rejected', 'suspended'], default: 'new' },
+    status: { type: String, enum: ["New",
+        "Under Review",
+        "Approved",
+        "Rejected",
+        "Suspended",], default: 'New' },
 
     requestedRate: {
         hourlyRate: { type: Number }

@@ -40,7 +40,11 @@ exports.updateInterviewerFeedback = async (req, res) => {
 
     // Validate status value if provided
     if (status) {
-      const validStatuses = ['new', 'underReview', 'approved', 'rejected', 'suspended'];
+      const validStatuses = ["New",
+        "Under Review",
+        "Approved",
+        "Rejected",
+        "Suspended",];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({ 
           success: false, 
