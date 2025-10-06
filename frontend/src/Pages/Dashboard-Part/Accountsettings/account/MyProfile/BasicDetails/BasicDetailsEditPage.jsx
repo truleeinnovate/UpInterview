@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Removed form border left and set outline none
 // v1.0.1 - Ashok - Improved responsiveness and added common code to popup
 // v1.0.2 - Ashok - Fixed profile deletion issue
+// v1.0.3 - Ashok - removed some space
 
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import Modal from "react-modal";
@@ -852,7 +853,9 @@ const BasicDetailsEditPage = ({
   // v1.0.2 ------------------------------------------------------------------------------------>
 
   return (
-    <SidebarPopup title=" Edit Basic Details" onClose={handleCloseModal}>
+    // v1.0.3 <---------------------------------------------------------
+    <SidebarPopup title="Edit Basic Details" onClose={handleCloseModal}>
+    {/* v1.0.3 --------------------------------------------------------> */}
       {loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>

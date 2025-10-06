@@ -1,6 +1,7 @@
 //v1.0.0 removed coverLetterdescription feild by Ranjith
 // v1.0.1 - Ashok - Removed border left and set outline as none
 // v1.0.2 - Ashok - Improved responsiveness and Added common code to popup
+// v1.0.3 - Ashok - Added loading view when saving the form
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
 // removed unused lucide-react icons after refactor to shared components
@@ -31,7 +32,11 @@ import Loading from "../../../../../../Components/Loading";
 import { notify } from "../../../../../../services/toastService";
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 // Shared form fields
-import { InputField, DropdownWithSearchField, IncreaseAndDecreaseField } from "../../../../../../Components/FormFields";
+import {
+  InputField,
+  DropdownWithSearchField,
+  IncreaseAndDecreaseField,
+} from "../../../../../../Components/FormFields";
 import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
 // Skills.svg
@@ -61,7 +66,7 @@ const EditAdvacedDetails = ({
     industries,
     currentRoles,
     loadCurrentRoles,
-    isCurrentRolesFetching
+    isCurrentRolesFetching,
   } = useMasterData();
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -77,10 +82,10 @@ const EditAdvacedDetails = ({
     //  isError,
     //  error
   } = useUserProfile(from === "my-profile" ? resolvedId : null);
-  
+
   // Fetch outsource interviewers for "outsource-interviewer" context
   const { outsourceInterviewers } = useOutsourceInterviewers();
-  
+
   // Get the appropriate profile data based on context
   const profileData = useMemo(() => {
     if (from === "outsource-interviewer") {
@@ -94,9 +99,10 @@ const EditAdvacedDetails = ({
     }
     return userProfile;
   }, [from, outsourceInterviewers, resolvedId, userProfile]);
-  
-  const isLoading = from === "my-profile" ? isUserLoading : !outsourceInterviewers;
-  
+
+  const isLoading =
+    from === "my-profile" ? isUserLoading : !outsourceInterviewers;
+
   // const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
   const queryClient = useQueryClient();
@@ -111,9 +117,7 @@ const EditAdvacedDetails = ({
     // coverLetterdescription: "",
   });
 
-
   const [loading, setLoading] = useState(false);
-
 
   useEffect(() => {
     // Use profileData which works for both contexts
@@ -133,9 +137,6 @@ const EditAdvacedDetails = ({
       setErrors({});
     }
   }, [resolvedId, profileData]);
-
-
-
 
   // Handle input changes for text fields
   const handleInputChange = (e) => {
@@ -178,7 +179,9 @@ const EditAdvacedDetails = ({
     const cleanFormData = {
       currentRole: formData.currentRole?.trim() || "",
       industry: formData.industry?.trim() || "",
-      yearsOfExperience: formData.yearsOfExperience ? Number(formData.yearsOfExperience) : 0,
+      yearsOfExperience: formData.yearsOfExperience
+        ? Number(formData.yearsOfExperience)
+        : 0,
       location: formData.location?.trim() || "",
       // coverLetterdescription: formData.coverLetterdescription?.trim() || "",
       // skills: formData.skills
@@ -187,15 +190,19 @@ const EditAdvacedDetails = ({
 
     try {
       setLoading(true);
-      
+
       // Both contexts use the same endpoint since outsource interviewers are Contact records
       // Determine the correct ID to use for the update
       let updateId;
       if (from === "outsource-interviewer") {
         // For outsource interviewers, profileData is the Contact object
         if (!profileData || !profileData._id) {
-          console.error("Profile data not loaded or missing ID:", { profileData });
-          notify.error("Profile data is not loaded. Please wait and try again.");
+          console.error("Profile data not loaded or missing ID:", {
+            profileData,
+          });
+          notify.error(
+            "Profile data is not loaded. Please wait and try again."
+          );
           setLoading(false);
           return;
         }
@@ -203,14 +210,18 @@ const EditAdvacedDetails = ({
       } else {
         // For regular users (my-profile), profileData is the User object with a contactId field
         if (!profileData || !profileData.contactId) {
-          console.error("Profile data not loaded or missing contactId:", { profileData });
-          notify.error("Profile data is not loaded. Please wait and try again.");
+          console.error("Profile data not loaded or missing contactId:", {
+            profileData,
+          });
+          notify.error(
+            "Profile data is not loaded. Please wait and try again."
+          );
           setLoading(false);
           return;
         }
         updateId = profileData.contactId; // Use contactId for regular users
       }
-      
+
       const response = await updateContactDetail.mutateAsync({
         resolvedId: updateId,
         data: cleanFormData,
@@ -268,23 +279,35 @@ const EditAdvacedDetails = ({
   };
 
   // Shared dropdown options
-  const industryOptions = useMemo(() => (
-    Array.isArray(industries)
-      ? industries.map((i) => ({ value: i.IndustryName, label: i.IndustryName }))
-      : []
-  ), [industries]);
+  const industryOptions = useMemo(
+    () =>
+      Array.isArray(industries)
+        ? industries.map((i) => ({
+            value: i.IndustryName,
+            label: i.IndustryName,
+          }))
+        : [],
+    [industries]
+  );
 
-  const locationOptions = useMemo(() => (
-    Array.isArray(locations)
-      ? locations.map((l) => ({ value: l.LocationName, label: l.LocationName }))
-      : []
-  ), [locations]);
+  const locationOptions = useMemo(
+    () =>
+      Array.isArray(locations)
+        ? locations.map((l) => ({
+            value: l.LocationName,
+            label: l.LocationName,
+          }))
+        : [],
+    [locations]
+  );
 
-  const currentRoleOptions = useMemo(() => (
-    Array.isArray(currentRoles)
-      ? currentRoles.map((r) => ({ value: r.RoleName, label: r.RoleName }))
-      : []
-  ), [currentRoles]);
+  const currentRoleOptions = useMemo(
+    () =>
+      Array.isArray(currentRoles)
+        ? currentRoles.map((r) => ({ value: r.RoleName, label: r.RoleName }))
+        : [],
+    [currentRoles]
+  );
 
   // Ensure current values are visible even if not in the fetched lists yet
   const industryOptionsWithCurrent = useMemo(() => {
@@ -321,7 +344,14 @@ const EditAdvacedDetails = ({
   return (
     // v1.0.1 <----------------------------------------------------------------
     <SidebarPopup title="Edit Advanced Details" onClose={handleCloseModal}>
-      {loading && <Loading message="Loading..." />}
+      {/* v1.0.3 <--------------------------------------------------------------------------------------------------- */}
+      {/* {loading && <Loading message="Loading..." />} */}
+      {loading && (
+        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
+        </div>
+      )}
+      {/* v1.0.3 ---------------------------------------------------------------------------------------------------> */}
       <div className="flex flex-col justify-between h-full sm:p-0 p-6">
         <form className="h-full space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6">
@@ -383,26 +413,25 @@ const EditAdvacedDetails = ({
                 loading={isLocationsFetching}
               />
             </div>
-
           </div>
         </form>
         <div className="sticky bottom-0 bg-white pt-3">
-            <div className="flex justify-end gap-3 pt-3 mr-2">
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                onClick={handleSave}
-                className="px-4 py-2 bg-custom-blue text-white rounded-lg"
-              >
-                Save Changes
-              </button>
-            </div>
+          <div className="flex justify-end gap-3 pt-3 mr-2">
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              onClick={handleSave}
+              className="px-4 py-2 bg-custom-blue text-white rounded-lg"
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </SidebarPopup>

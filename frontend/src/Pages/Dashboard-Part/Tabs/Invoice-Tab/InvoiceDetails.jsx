@@ -2,6 +2,7 @@
 // v1.0.1 - Ashok - Removed border left and set outline as none for better UI
 // v1.0.2 - commented man.png, woman.png, transgender.png
 // v1.0.3 - Ashok - Improved responsiveness and added common code to popup
+// v1.0.4 - Ashok - Made capitalize some fields
 
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
@@ -74,6 +75,11 @@ const UserInvoiceDetails = () => {
     return null;
   }
 
+  // v1.0.4 <---------------------------------------------------------------------
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  // v1.0.4 --------------------------------------------------------------------->
+
   // v1.0.3 <---------------------------------------------------------------------
   return (
     <SidebarPopup title="Invoice Details" onClose={() => navigate(-1)}>
@@ -115,9 +121,11 @@ const UserInvoiceDetails = () => {
                 {" "}
                 {/* Changed from items-center to items-start */}
                 <span className="text-gray-700">Payment Service</span>
+                {/* v1.0.4 <--------------------------------------------------- */}
                 <p className="text-black font-medium">
-                  {invoiceData?.type || ""}
+                  {capitalizeFirstLetter(invoiceData?.type) || ""}
                 </p>
+                {/* v1.0.4 ---------------------------------------------------> */}
               </div>
               <div className="flex flex-col items-start">
                 {" "}
@@ -136,16 +144,18 @@ const UserInvoiceDetails = () => {
                 {" "}
                 {/* Changed from items-center to items-start */}
                 <span className="text-gray-700">Status</span>
+                {/* v1.0.4 <----------------------------------------------- */}
                 <p className="text-black font-medium">
-                  {invoiceData?.status || ""}
+                  {capitalizeFirstLetter(invoiceData?.status) || ""}
                 </p>
+                {/* v1.0.4 -----------------------------------------------> */}
               </div>
               <div className="flex flex-col items-start">
                 {" "}
                 {/* Changed from items-center to items-start */}
                 <span className="text-gray-700">Total Amount</span>
                 <p className="text-black font-medium">
-                ₹ {invoiceData?.amount?.paid || 0}
+                  ₹ {invoiceData?.amount?.paid || 0}
                 </p>
               </div>
             </div>
