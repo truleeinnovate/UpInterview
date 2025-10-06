@@ -13,7 +13,7 @@ import { ReactComponent as FiMoreHorizontal } from "../../../icons/FiMoreHorizon
 const formatOptions = [
     { label: "Online / Virtual", value: "online" },
     { label: "Face to Face / Onsite", value: "offline" },
-    { label: "Hybrid (Online + Offline)", value: "hybrid" },
+    { label: "Hybrid (Online + Onsite)", value: "hybrid" },
 ];
 
 const StandardTemplateTableView = ({ templatesData, handleClone }) => {

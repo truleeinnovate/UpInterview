@@ -1731,12 +1731,12 @@ function RoundFormTemplates() {
               >
                 {roundId ? (
                   <span>
-                    Update
+                    Update{" "}
                     <span className="sm:hidden inline">Round</span>
                   </span>
                 ) : (
                   <span>
-                    Save
+                    Save{" "}
                     <span className="sm:hidden inline">Round</span>
                   </span>
                 )}
@@ -1749,8 +1749,7 @@ function RoundFormTemplates() {
                   loadingText="Adding..."
                   variant="outline"
                 >
-                  <FaPlus className="w-5 h-5 mr-1" /> Add{" "}
-                  <span className="sm:hidden inline">New Round</span>
+                  <FaPlus className="w-5 h-5 mr-1" /> Add <span className="sm:hidden inline ml-1">New Round</span>
                 </LoadingButton>
               )}
               {/* ------------------------------ v1.0.1 > */}
