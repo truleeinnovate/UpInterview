@@ -2,6 +2,7 @@
 const Joi = require('joi');
 
 const roundSchema = Joi.object({
+  _id: Joi.string().optional(),
   sequence: Joi.number().integer().min(1).optional(),
   roundTitle: Joi.string().required(),
   interviewMode: Joi.string().required(),
@@ -33,6 +34,7 @@ const roundSchema = Joi.object({
 
 // ✅ PAGE 1 VALIDATION - Without rounds (used for "Save & Next" on Page 1)
 const mockInterviewPage1Schema = Joi.object({
+  _id: Joi.string().optional(),
   skills: Joi.array().items(
     Joi.object({
       skill: Joi.string().required(),
@@ -68,6 +70,7 @@ const mockInterviewPage1Schema = Joi.object({
 
 // ✅ FULL VALIDATION - With rounds (used for final submission on Page 2)
 const mockInterviewFullSchema = Joi.object({
+  _id: Joi.string().optional(),
   skills: Joi.array().items(
     Joi.object({
       skill: Joi.string().required(),
@@ -93,6 +96,7 @@ const mockInterviewFullSchema = Joi.object({
 
 // ✅ UPDATE VALIDATION - Very flexible (for PATCH operations)
 const mockInterviewUpdateSchema = Joi.object({
+  _id: Joi.string().optional(),
   skills: Joi.array().items(
     Joi.object({
       skill: Joi.string().optional(),
