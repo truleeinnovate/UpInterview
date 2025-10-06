@@ -134,22 +134,33 @@ const InterviewSlideover = ({ mode }) => {
             ...prev,
             ...validationErrors
         }));
-        
+
         return validationErrors;
     };
 
     // v1.0.3 ------------------------------------------------------>
+    const formatName = (str) => {
+        // Split by underscore, capitalize first letter of each part, then join with underscore
+        return str
+            .split('_')
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join('_');
+    };
+
     const handleNameChange = (e) => {
         if (isLoading) return;
 
-        const value = e.target.value;
-        // Allow alphabets, numbers, and underscores only
-        const sanitizedValue = value.replace(/[^a-zA-Z0-9_]/g, "");
+        let value = e.target.value;
+        // Allow only alphanumeric and underscores, no spaces
+        let sanitizedValue = value.replace(/[^a-zA-Z0-9_]/g, "");
+
+        // Format the name with proper capitalization
+        const formattedValue = formatName(sanitizedValue);
 
         // Update the name immediately for better UX
         setNewTemplate(prev => ({
             ...prev,
-            name: sanitizedValue
+            name: formattedValue
         }));
 
         // Clear any existing name error when typing
@@ -160,13 +171,13 @@ const InterviewSlideover = ({ mode }) => {
             }));
         }
 
-        // Check for existing name in real-time
-        if (sanitizedValue) {
-            const nameExists = templatesData?.some(template => 
-                template.name?.toLowerCase() === sanitizedValue.toLowerCase() && 
+        // Check for existing name in real-time (case-insensitive check)
+        if (formattedValue) {
+            const nameExists = templatesData?.some(template =>
+                template.name?.toLowerCase() === formattedValue.toLowerCase() &&
                 template._id !== id
             );
-            
+
             if (nameExists) {
                 setErrors(prev => ({
                     ...prev,
@@ -181,12 +192,15 @@ const InterviewSlideover = ({ mode }) => {
         if (isLoading) return;
 
         const value = e.target.value;
-        // Allow only alphanumeric and underscores, no spaces
-        const sanitizedValue = value.replace(/[^a-zA-Z0-9_]/g, "");
+        // Allow alphanumeric, spaces, and underscores
+        const sanitizedValue = value.replace(/[^a-zA-Z0-9_ ]/g, "");
+
+        // Remove multiple consecutive spaces
+        const cleanedValue = sanitizedValue.replace(/\s+/g, ' ');
 
         setNewTemplate(prev => ({
             ...prev,
-            title: sanitizedValue
+            title: cleanedValue
         }));
 
         // Clear any existing title error when typing
@@ -252,13 +266,13 @@ const InterviewSlideover = ({ mode }) => {
         if (!isValid) {
             // Reset active button on validation failure
             setActiveButton(null);
-            
+
             // Combine validation errors with name error if exists
             const allErrors = {
                 ...validationErrors,
                 ...(hasNameError && { name: 'A template with this name already exists' })
             };
-            
+
             // Scroll to first error
             scrollToFirstError(allErrors, fieldRefs);
             return;
@@ -325,15 +339,21 @@ const InterviewSlideover = ({ mode }) => {
     };
 
     const onClose = () => {
-        if (mode === "Edit" || mode === "Create") {
-            navigate(`/interview-templates`);
-        } else if (mode === "Template Edit") {
-            navigate(`/interview-templates/${id}`);
-        }
+        // Get the current tab from the URL or default to 'standard'
+        const searchParams = new URLSearchParams(window.location.search);
+        const tab = searchParams.get('tab') || 'standard';
 
-        // else if (!isCreatingRound){
-        //     navigate('/interview-templates');
-        // }
+        if (mode === "Edit" || mode === "Create") {
+            navigate({
+                pathname: '/interview-templates',
+                search: `?tab=${tab}`
+            });
+        } else if (mode === "Template Edit") {
+            navigate({
+                pathname: `/interview-templates/${id}`,
+                search: `?tab=${tab}`
+            });
+        }
     };
 
     return (
@@ -484,7 +504,7 @@ const InterviewSlideover = ({ mode }) => {
                         </div>
                     </div>
 
-                    <div className="flex-shrink-0 px-4 py-4 flex justify-end items-end gap-3">
+                    <div className="flex-shrink-0 py-4 flex justify-end items-end gap-3">
                         {/* <------ v1.0.0 */}
                         {/* <button
                 type="button"

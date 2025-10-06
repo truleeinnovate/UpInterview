@@ -564,9 +564,11 @@ const EditInterviewDetails = ({
             PreviousExperienceConductingInterviews: String(
                 formData.PreviousExperienceConductingInterviews?.trim() || ""
             ).trim(),
-            PreviousExperienceConductingInterviewsYears: String(
-                formData.PreviousExperienceConductingInterviewsYears || ""
-            ).trim(),
+            ...(formData.PreviousExperienceConductingInterviews === 'yes' && {
+                PreviousExperienceConductingInterviewsYears: String(
+                    formData.PreviousExperienceConductingInterviewsYears || "1"
+                ).trim()
+            }),
             ExpertiseLevel_ConductingInterviews: String(
                 formData.ExpertiseLevel_ConductingInterviews || ""
             ).trim(),

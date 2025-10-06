@@ -526,7 +526,7 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
                           {formatDateTime(selectedNotificationInAll.createdAt)}
                         </span>
                       </div>
-                      
+
                       {selectedNotificationInAll.priority && (
                         <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
                           <span className="text-sm font-medium text-gray-600">Priority</span>
@@ -568,7 +568,7 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
           </div>
         </div>
       )}
-      
+
       {/* Notification Details Modal - to be implemented if needed */}
     </div>
   );
