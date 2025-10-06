@@ -1679,7 +1679,7 @@ const RoundCard = ({
                   {/* Share (always for Assessment) */}
                   {permissions.canResendLink && round.roundTitle === "Assessment" 
                   && round?.scheduleAssessmentId 
-                  && shouldShowResultButton()
+                  // && shouldShowResultButton()
                    && (
                     <button
                       onClick={() => handleResendClick(round)}
@@ -1703,9 +1703,9 @@ const RoundCard = ({
                   )}
 
                   {/* Share (always for Assessment) */}
-                  {/* {permissions.canShareLink && round.roundTitle === "  Assessment" &&  !round?.scheduleAssessmentId 
+                  {permissions.canShareLink && round.roundTitle === "Assessment" &&  !round?.scheduleAssessmentId 
                   && shouldShowResultButton()
-                  && ( */}
+                  && (
                   <button
                     onClick={() => handleResultClick(round)}
                     // onClick={ handleShareClick}
@@ -1713,7 +1713,7 @@ const RoundCard = ({
                   >
                     <BarChart3 className="h-4 w-4 mr-1" />Result
                   </button>
-                  {/* )} */}
+                   )} 
                 </div>
               </div>
               {/* v1.0.5 -----------------------------------------------------------------> */}
