@@ -126,7 +126,6 @@ const Subscription = () => {
     refetchSubscription,
     refetchPlans,
   } = useSubscription();
- // console.log("subscriptionData", subscriptionData);
   const [isAnnual, setIsAnnual] = useState(false);
   const [hoveredPlan, setHoveredPlan] = useState(null);
   const user = { userType, tenantId, ownerId };
@@ -198,7 +197,7 @@ const Subscription = () => {
       const isFreePlan = Number(selectedPrice) === 0;
 
       if (
-        subscriptionData.subscriptionPlanId === plan.planId &&
+        subscriptionData.planId === plan.planId &&
         subscriptionData.selectedBillingCycle === viewingCycle &&
         subscriptionData.status === "active"
       ) {
@@ -233,7 +232,7 @@ const Subscription = () => {
       }
 
       if (
-        subscriptionData.subscriptionPlanId === plan.planId &&
+        subscriptionData.planId === plan.planId &&
         subscriptionData.selectedBillingCycle === viewingCycle &&
         subscriptionData.status === "created"
       ) {
@@ -271,14 +270,14 @@ const Subscription = () => {
       }
 
       // Check if this is an upgrade
-      if (subscriptionData.subscriptionPlanId) {
+      if (subscriptionData.planId) {
         const currentPlanIndex = plans.findIndex(
-          (p) => p.planId === subscriptionData.subscriptionPlanId
+          (p) => p.planId === subscriptionData.planId
         );
         const thisPlanIndex = plans.findIndex((p) => p.planId === plan.planId);
         const viewingCycle = isAnnual ? "annual" : "monthly";
         const currentCycle = subscriptionData.selectedBillingCycle;
-        const isSamePlan = subscriptionData.subscriptionPlanId === plan.planId;
+        const isSamePlan = subscriptionData.planId === plan.planId;
 
         // Treat monthly -> annual on the same plan as an upgrade
         if (
@@ -511,7 +510,7 @@ const Subscription = () => {
                   </div>
                   <div className="flex-grow mt-4">
                     <ul className="space-y-2 text-xs sm:text-sm md:text-base lg:text-lg">
-                      {plan.features.map((feature, idx) => (
+                      {plan.features && plan.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start">
                           <span className="mr-2">•</span>
                           <span>{feature}</span>
@@ -539,7 +538,7 @@ const Subscription = () => {
                     : "text-white bg-custom-blue"
                 }
                 ${
-                  subscriptionData.subscriptionPlanId === plan.planId &&
+                  subscriptionData.planId === plan.planId &&
                   subscriptionData.selectedBillingCycle ===
                     (isAnnual ? "annual" : "monthly") &&
                   subscriptionData.status === "active"
@@ -548,10 +547,10 @@ const Subscription = () => {
                 }
                 ${(() => {
                   // Check if this is an upgrade button
-                  if (subscriptionData.subscriptionPlanId) {
+                  if (subscriptionData.planId) {
                     const viewingCycle = isAnnual ? "annual" : "monthly";
                     const isSamePlan =
-                      subscriptionData.subscriptionPlanId === plan.planId;
+                      subscriptionData.planId === plan.planId;
                     // Monthly -> Annual on the same plan should show upgrade animation
                     if (
                       (isSamePlan || !isSamePlan) &&
@@ -561,7 +560,7 @@ const Subscription = () => {
                       return "upgrade-button-animation";
                     }
                     const currentPlanIndex = plans.findIndex(
-                      (p) => p.planId === subscriptionData.subscriptionPlanId
+                      (p) => p.planId === subscriptionData.planId
                     );
                     const thisPlanIndex = plans.findIndex(
                       (p) => p.planId === plan.planId
@@ -590,7 +589,7 @@ const Subscription = () => {
                   return "";
                 })()}`}
                     disabled={
-                      subscriptionData.subscriptionPlanId === plan.planId &&
+                      subscriptionData.planId === plan.planId &&
                       subscriptionData.selectedBillingCycle ===
                         (isAnnual ? "annual" : "monthly") &&
                       subscriptionData.status === "active"
@@ -619,12 +618,12 @@ const Subscription = () => {
                         </svg>
                         Processing...
                       </span>
-                    ) : subscriptionData.subscriptionPlanId === plan.planId &&
+                    ) : subscriptionData.planId === plan.planId &&
                       subscriptionData.selectedBillingCycle ===
                         (isAnnual ? "annual" : "monthly") &&
                       subscriptionData.status === "active" ? (
                       "Subscribed"
-                    ) : subscriptionData.subscriptionPlanId === plan.planId &&
+                    ) : subscriptionData.planId === plan.planId &&
                       subscriptionData.selectedBillingCycle ===
                         (isAnnual ? "annual" : "monthly") &&
                       subscriptionData.status === "created" ? (
@@ -632,12 +631,12 @@ const Subscription = () => {
                     ) : (
                       (() => {
                         // Determine if this plan is higher or lower than current plan
-                        if (subscriptionData.subscriptionPlanId) {
+                        if (subscriptionData.planId) {
                           const viewingCycle = isAnnual ? "annual" : "monthly";
                           const currentCycle =
                             subscriptionData.selectedBillingCycle;
                           const isSamePlan =
-                            subscriptionData.subscriptionPlanId === plan.planId;
+                            subscriptionData.planId === plan.planId;
 
                           // Show Upgrade/Downgrade when switching billing cycle on the same plan
                           if (
@@ -652,7 +651,7 @@ const Subscription = () => {
 
                           const currentPlanIndex = plans.findIndex(
                             (p) =>
-                              p.planId === subscriptionData.subscriptionPlanId
+                              p.planId === subscriptionData.planId
                           );
                           const thisPlanIndex = plans.findIndex(
                             (p) => p.planId === plan.planId
