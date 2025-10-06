@@ -26,7 +26,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     // Removed unused states as we're using MyProfile components now
     const [activeTab, setActiveTab] = useState("Basic Details");
 
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(false);
     
     // Documents state for DocumentsSection component
     const [documents, setDocuments] = useState({
@@ -97,11 +97,11 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
 
     const statusOptions = [
-        "new",
-        "underReview",
-        "approved",
-        "rejected",
-        "suspended",
+        "New",
+        "Under Review",
+        "Approved",
+        "Rejected",
+        "Suspended",
     ];
 
     const handleChangeStatus = () => {
