@@ -31,6 +31,10 @@ const TemplateDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [template, setTemplate] = useState(null);
+  
+  // Get the current tab from URL or default to 'standard'
+  const searchParams = new URLSearchParams(window.location.search);
+  const activeTab = searchParams.get('tab') || 'standard';
   const [isLoading, setIsLoading] = useState(true);
   // const [editedTemplate, setEditedTemplate] = useState(null);
   const [roundsViewMode, setRoundsViewMode] = useState("vertical");
@@ -120,13 +124,17 @@ const TemplateDetail = () => {
 
   const handleAddRound = () => {
     // Since this is a new round, we'll use 'new' as the roundId
-    navigate(`/interview-templates/${id}/round/new`);
+    navigate({
+      pathname: `/interview-templates/${id}/round/new`,
+      search: `?tab=${activeTab}`
+    });
   };
 
   const handleEditRound = (round) => {
-    navigate(
-      `/interview-templates/${id}/round?roundId=${round._id}&type=${round.roundName}`
-    );
+    navigate({
+      pathname: `/interview-templates/${id}/round`,
+      search: `?roundId=${round._id}&type=${round.roundName}&tab=${activeTab}`
+    });
   };
 
   // Create breadcrumb items with status
@@ -159,7 +167,10 @@ const TemplateDetail = () => {
             Template not found
           </h2>
           <button
-            onClick={() => navigate("/interview-templates")}
+            onClick={() => navigate({
+              pathname: '/interview-templates',
+              search: `?tab=${activeTab}`
+            })}
             className="text-custom-blue hover:text-custom-blue/80"
           >
             Go back to templates
@@ -183,7 +194,10 @@ const TemplateDetail = () => {
           {/* Header */}
           <div className="flex flex-row sm:items-center justify-between gap-4 sm:gap-0 mb-6 sm:mb-8">
             <button
-              onClick={() => navigate("/interview-templates")}
+              onClick={() => navigate({
+              pathname: '/interview-templates',
+              search: `?tab=${activeTab}`
+            })}
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
               <ArrowLeft className="sm:h-4 h-5 ms:w-4 w-5 mr-2" />
@@ -191,7 +205,10 @@ const TemplateDetail = () => {
             </button>
             {/* <div className="flex items-center gap-3">
               <button
-                onClick={() => navigate(`edit/${template._id}`)}
+                onClick={() => navigate({
+                  pathname: `edit/${template._id}`,
+                  search: `?tab=${activeTab}`
+                })}
                 className="flex items-center gap-2 px-3 sm:px-4 py-2 text-custom-blue bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors duration-200 text-sm sm:text-base"
               >
                 <Edit2 className="h-4 w-4" />

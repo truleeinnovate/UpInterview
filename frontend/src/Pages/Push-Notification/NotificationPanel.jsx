@@ -331,7 +331,7 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
                         <div className="flex justify-between items-start">
                           <div className="min-w-0 flex-1">
                             <h4 className="font-semibold truncate">{notification.title}</h4>
-                            <p className="text-gray-600 line-clamp-2">{notification.message}</p>
+                            <p className="text-gray-600 text-[14px] line-clamp-2">{notification.message}</p>
                             <p className="text-xs text-gray-500 mt-1">
                               {formatDateTime(notification.createdAt)}
                             </p>
@@ -351,13 +351,13 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
                 <div className="w-1/2 p-6 overflow-y-auto bg-gray-50">
                   <div className="bg-white rounded-lg p-6 shadow-sm">
                     <h3 className="text-xl font-semibold mb-4">{selectedNotificationInAll.title}</h3>
-                    
+
                     <div className="space-y-4">
                       <div>
                         <p className="text-sm font-medium text-gray-500 mb-1">Message</p>
                         <p className="text-gray-800 whitespace-pre-wrap">{selectedNotificationInAll.message}</p>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm font-medium text-gray-500 mb-1">Type</p>
@@ -365,7 +365,7 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
                             {selectedNotificationInAll.type || 'General'}
                           </span>
                         </div>
-                        
+
                         <div>
                           <p className="text-sm font-medium text-gray-500 mb-1">Category</p>
                           <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
@@ -373,17 +373,17 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
                           </span>
                         </div>
                       </div>
-                      
+
                       <div>
                         <p className="text-sm font-medium text-gray-500 mb-1">Date & Time</p>
                         <p className="text-gray-800">{formatDateTime(selectedNotificationInAll.createdAt)}</p>
                       </div>
-                      
+
                       {selectedNotificationInAll.priority && (
                         <div>
                           <p className="text-sm font-medium text-gray-500 mb-1">Priority</p>
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
-                            selectedNotificationInAll.priority === 'high' 
+                            selectedNotificationInAll.priority === 'high'
                               ? 'bg-red-100 text-red-800'
                               : selectedNotificationInAll.priority === 'medium'
                               ? 'bg-yellow-100 text-yellow-800'
@@ -393,7 +393,7 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
                           </span>
                         </div>
                       )}
-                      
+
                       {selectedNotificationInAll.data && (
                         <div>
                           <p className="text-sm font-medium text-gray-500 mb-1">Additional Details</p>
@@ -410,7 +410,7 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
           </div>
         </div>
       )}
-      
+
       {/* Notification Details Modal - to be implemented if needed */}
     </div>
   );
