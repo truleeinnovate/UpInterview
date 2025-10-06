@@ -20,19 +20,17 @@ const SubscriptionPlanSchema = new mongoose.Schema({
             description: { type: String }
         }
     ],
-    maxUsers: { type: Number, default: 1 },
     razorpayPlanIds:{
         monthly:{type:String},
         annual:{type:String}
     },
-    trialPeriod: { type: Number, default: 0 },
+    // maxUsers: { type: Number, default: 1 },
+    // trialPeriod: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
     isCustomizable: { type: Boolean, default: false },
     subscriptionType: { type: String, enum: ['organization', 'individual'], required: true }, 
     createdBy:{type:String, required:true},
-    modifiedBy:{type:String},
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    updatedBy:{type:String},
 }, { timestamps: true });
 
 module.exports = mongoose.model('SubscriptionPlan', SubscriptionPlanSchema);

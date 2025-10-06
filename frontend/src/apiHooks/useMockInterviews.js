@@ -54,9 +54,7 @@ export const useMockInterviews = () => {
   
       // ✅ CASE 1: Updating just the round (meeting link update)
       if (round && id) {
-        const { _id, ...cleanRound } = round;
-        const payload = { rounds: [cleanRound] }; // wrap in array, strip _id
-  
+        const payload = { rounds: [round] };
         const response = await axios.patch(
           `${config.REACT_APP_API_URL}/updateMockInterview/${id}`,
           payload
@@ -94,15 +92,12 @@ export const useMockInterviews = () => {
         currentExperience: formData.currentExperience || "",
         technology: formData.technology || "",
         jobDescription: formData.jobDescription || "",
-        rounds: rounds.map(r => {
-          const { _id, ...cleanRound } = r; // 🚀 remove _id
-          return {
-            ...cleanRound,
-            dateTime: formatDateTime(formData.combinedDateTime || r.dateTime),
-            status,
-            interviewers: Array.isArray(r.interviewers) ? r.interviewers : []
-          };
-        }),
+        rounds: rounds.map(r => ({
+          ...r,  // Keep everything, including _id if present
+          dateTime: formatDateTime(formData.combinedDateTime || r.dateTime),
+          status,
+          interviewers: Array.isArray(r.interviewers) ? r.interviewers : []
+        })),
         createdById: userId,
         lastModifiedById: userId,
         ownerId: userId,
@@ -115,6 +110,7 @@ export const useMockInterviews = () => {
   
       const method = isEdit ? "patch" : "post";
       const response = await axios[method](url, payload);
+      console.log("responsemock", response);
   
       // handle resume
       const mockInterviewId = response.data.data?._id || response.data._id;
