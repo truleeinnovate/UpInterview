@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Removed border left and set outline as none
 // v1.0.1 - Ashok - Changed Maximize and Minimize icons to follow consistent design
 // v1.0.2 - Ashok - Improved responsiveness and added common code to popup
+// v1.0.3 - Ashok - Added loading view when saving the form
 
 import React, { useEffect, useState, useMemo } from "react";
 import TimezoneSelect from "react-timezone-select"; // Make sure to install this package
@@ -57,6 +58,9 @@ const EditAvailabilityDetails = ({
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedDays, setSelectedDays] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+  // v1.0.3 <--------------------------------------------------
+  const [loading, setLoading] = useState(false);
+  // v1.0.3 -------------------------------------------------->
 
   const resolvedId = usersId || id;
 
@@ -65,11 +69,13 @@ const EditAvailabilityDetails = ({
   const availabilityDataFromProps = availabilityData || navigationState;
 
   // Fetch user profile for "my-profile" context
-  const { userProfile, isLoading, isError, error } = useUserProfile(from === "my-profile" ? resolvedId : null);
-  
+  const { userProfile, isLoading, isError, error } = useUserProfile(
+    from === "my-profile" ? resolvedId : null
+  );
+
   // Fetch outsource interviewers for "outsource-interviewer" context
   const { outsourceInterviewers } = useOutsourceInterviewers();
-  
+
   // Get the appropriate profile data based on context
   const profileData = useMemo(() => {
     if (from === "outsource-interviewer") {
@@ -83,7 +89,7 @@ const EditAvailabilityDetails = ({
     }
     return userProfile;
   }, [from, outsourceInterviewers, resolvedId, userProfile]);
-  
+
   // const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
   const queryClient = useQueryClient();
@@ -283,7 +289,9 @@ const EditAvailabilityDetails = ({
     };
 
     console.log("cleanFormData", cleanFormData);
-
+    // v1.0.3 <--------------------------------------------
+    setLoading(true);
+    // v1.0.3 -------------------------------------------->
     try {
       // const response = await axios.patch(
       //   `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
@@ -296,21 +304,29 @@ const EditAvailabilityDetails = ({
       if (from === "outsource-interviewer") {
         // For outsource interviewers, profileData is the Contact object
         if (!profileData || !profileData._id) {
-          console.error("Profile data not loaded or missing ID:", { profileData });
-          notify.error("Profile data is not loaded. Please wait and try again.");
+          console.error("Profile data not loaded or missing ID:", {
+            profileData,
+          });
+          notify.error(
+            "Profile data is not loaded. Please wait and try again."
+          );
           return;
         }
         updateId = profileData._id;
       } else {
         // For regular users (my-profile), profileData is the User object with a contactId field
         if (!profileData || !profileData.contactId) {
-          console.error("Profile data not loaded or missing contactId:", { profileData });
-          notify.error("Profile data is not loaded. Please wait and try again.");
+          console.error("Profile data not loaded or missing contactId:", {
+            profileData,
+          });
+          notify.error(
+            "Profile data is not loaded. Please wait and try again."
+          );
           return;
         }
         updateId = profileData.contactId; // Use contactId for regular users
       }
-      
+
       const response = await updateContactDetail.mutateAsync({
         resolvedId: updateId,
         data: cleanFormData,
@@ -351,6 +367,10 @@ const EditAvailabilityDetails = ({
         ...prev,
         apiError: "Failed to save changes. Please try again.",
       }));
+    } finally {
+      // v1.0.3 <--------------------------------------------
+      setLoading(false);
+      // v1.0.3 -------------------------------------------->
     }
   };
 
@@ -364,18 +384,16 @@ const EditAvailabilityDetails = ({
   //     setIsBasicModalOpen(false);
   // };
   // v1.0.0 <--------------------------------------------------------------------
-  const modalClass = classNames(
-    // 'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
-    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
-    // v1.0.0 -------------------------------------------------------------------->
-    {
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
 
   return (
     <SidebarPopup title="Edit Availability Details" onClose={handleCloseModal}>
+      {/* v1.0.3 <----------------------------------------------------------------------------------------------- */}
+      {loading && (
+        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
+        </div>
+      )}
+      {/* v1.0.3 <----------------------------------------------------------------------------------------------- */}
       <div className="sm:p-0 p-6">
         <div className="flex flex-col md:flex-col lg:flex-col xl:flex-col 2xl:flex-col md:gap-10 lg:gap-10 xl:gap-12 2xl:gap-12">
           {/* Left Side: Time Zone and Availability Times */}

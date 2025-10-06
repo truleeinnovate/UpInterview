@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Improved responsiveness
 // v1.0.1 - Ashok - changed entire kanban for passing actions
+// v1.0.2 - Ashok - added loading view for kanban and fixed cards for small screens
 
 // import { motion } from 'framer-motion';
 // import { DndContext, closestCenter } from '@dnd-kit/core';
@@ -242,21 +243,57 @@ const PositionKanban = ({
     >
       <div className="min-h-[400px]">
         {/* Header */}
+        {/* v1.0.2 <------------------------------------------------------------------------------------------------------------------- */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
+          <h3 className="text-xl font-semibold text-gray-800">All Positions</h3>
           <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-            {data?.length || 0} {title}
+            {data?.length || 0} {data?.length > 1 ? "Positions" : "Position"}
           </span>
         </div>
+        {/* v1.0.2 -------------------------------------------------------------------------------------------------------------------> */}
 
         {/* Loading / Empty / Content */}
         {loading ? (
-          <div className="text-center py-10 text-gray-500">Loading...</div>
-        ) : data?.length === 0 ? (
+          // v1.0.2 <-------------------------------------------------------------------------
+          <div className="overflow-y-auto max-h-[calc(100vh-270px)] pb-8 pr-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 flex flex-col h-full"
+                >
+                  {/* Header shimmer */}
+                  <div className="flex justify-between items-start mb-4 gap-2">
+                    <div className="flex items-start gap-3 w-full">
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="h-4 w-3/4 shimmer rounded"></div>
+                        <div className="h-3 w-1/2 shimmer rounded"></div>
+                      </div>
+                    </div>
+                    <div className="h-6 w-6 shimmer rounded"></div>
+                  </div>
+
+                  {/* Body shimmer */}
+                  <div className="mt-auto space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="grid grid-cols-2 gap-2">
+                        <div className="h-3 w-16 shimmer rounded"></div>
+                        <div className="h-3 w-24 shimmer rounded"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : // v1.0.2 ------------------------------------------------------------------------->
+        data?.length === 0 ? (
           <div className="text-center py-10 text-gray-500">{emptyState}</div>
         ) : (
           <div className="overflow-y-auto max-h-[calc(100vh-270px)] pb-8 pr-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+            {/* v1.0.2 <----------------------------------------------------------------------------------------------- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
+              {/* v1.0.2 -----------------------------------------------------------------------------------------------> */}
               {data.map((item, index) => (
                 <motion.div
                   key={item.id || item._id || index}

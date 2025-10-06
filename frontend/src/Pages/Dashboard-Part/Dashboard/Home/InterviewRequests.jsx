@@ -1,12 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronRight, Clock, User, Video, Building, Inbox } from 'lucide-react';
-import axios from 'axios';
-import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
-import Cookies from 'js-cookie';
-import { config } from '../../../../config';
+// v1.0.0 - Ashok - Improved responsiveness
+
+import React, { useState, useEffect } from "react";
+import {
+  ChevronRight,
+  Clock,
+  User,
+  Video,
+  Building,
+  Inbox,
+} from "lucide-react";
+import axios from "axios";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import Cookies from "js-cookie";
+import { config } from "../../../../config";
+// v1.0.0 <-----------------------------------------------------------------------
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+// v1.0.0 ----------------------------------------------------------------------->
 
 const InterviewRequests = () => {
-  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
 
@@ -17,19 +29,25 @@ const InterviewRequests = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  //  v1.0.0 <----------------------------------------------------
+  useScrollLock(!!selectedRequest);
+  //  v1.0.0 ---------------------------------------------------->
 
   // Reusable function to fetch interview requests
   const fetchInterviewRequests = async (contactId) => {
     try {
-      const requestRes = await axios.get(`${config.REACT_APP_API_URL}/interviewrequest/requests`, {
-        params: { interviewerId: contactId }
-      });
+      const requestRes = await axios.get(
+        `${config.REACT_APP_API_URL}/interviewrequest/requests`,
+        {
+          params: { interviewerId: contactId },
+        }
+      );
       // console.log("Fetched interview requests:", requestRes.data);
       setRequests(requestRes.data);
       return requestRes.data;
     } catch (err) {
-      console.error('Failed to fetch interview requests:', err);
-      setError('Error fetching interview requests');
+      console.error("Failed to fetch interview requests:", err);
+      setError("Error fetching interview requests");
       throw err;
     }
   };
@@ -39,13 +57,15 @@ const InterviewRequests = () => {
       try {
         setLoading(true);
         // Step 1: Fetch Contacts
-        const contactRes = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
+        const contactRes = await axios.get(
+          `${config.REACT_APP_API_URL}/contacts`
+        );
         const allContacts = contactRes.data;
         // console.log("All contacts:", allContacts);
 
         // Step 2: Find the specific contact with matching ownerId
-        const matchedContact = allContacts.find(contact =>
-          contact.ownerId?.toString() === ownerId
+        const matchedContact = allContacts.find(
+          (contact) => contact.ownerId?.toString() === ownerId
         );
 
         if (!matchedContact) {
@@ -60,8 +80,8 @@ const InterviewRequests = () => {
         // Step 3: Fetch Interview Requests using matched contact ID
         await fetchInterviewRequests(matchedContact._id);
       } catch (err) {
-        console.error('Failed to fetch data:', err);
-        setError('Error fetching data');
+        console.error("Failed to fetch data:", err);
+        setError("Error fetching data");
       } finally {
         setLoading(false);
       }
@@ -122,9 +142,9 @@ const InterviewRequests = () => {
         await fetchInterviewRequests(selectedContact._id);
       }
 
-      console.log('Interview request accepted successfully!');
+      console.log("Interview request accepted successfully!");
     } catch (err) {
-      console.error('Failed to accept interview request', err);
+      console.error("Failed to accept interview request", err);
       if (err.response?.status === 400) {
         // Refresh the requests list to show current status
         if (selectedContact?._id) {
@@ -146,14 +166,24 @@ const InterviewRequests = () => {
 
   return (
     <div className="mt-8">
-
       <div className="flex items-center justify-between mb-6">
+        {/* v1.0.0 <----------------------------------------------------------------------------------------------------- */}
         <div>
-          <h3 className="text-xl font-semibold">Interview Requests</h3>
-          <p className="text-gray-500 text-sm mt-1">Recent interview requests from candidates</p>
+          <h3 className="sm:text-md md:text-md lg:text-xl xl:text-xl 2xl:text-xl font-semibold">
+            Interview Requests
+          </h3>
+          <p className="sm:text-xs text-gray-500 text-sm mt-1 sm:w-[90%]">
+            Recent interview requests from candidates
+          </p>
         </div>
-        <button className="flex items-center space-x-2 text-sm text-custom-blue hover:text-custom-blue/80 font-medium bg-custom-blue/5 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105">
-          <span>View All Requests</span>
+        {/* v1.0.0 -----------------------------------------------------------------------------------------------------> */}
+        <button className="flex items-center space-x-2 text-sm bg-custom-blue text-white hover:text-white hover:bg-custom-blue/90 font-medium px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105">
+          {/* v1.0.0 <----------------------------------------------------------------- */}
+          <span className="sm:hidden">View All Requests</span>
+          <span className="md:hidden lg:hidden xl:hidden 2xl:hidden sm:text-sm">
+            View All
+          </span>
+          {/* v1.0.0 -----------------------------------------------------------------> */}
           <ChevronRight size={16} />
         </button>
       </div>
@@ -162,7 +192,9 @@ const InterviewRequests = () => {
         <div className="flex flex-col items-center justify-center bg-white/80 backdrop-blur-lg p-8 rounded-xl border border-gray-200 text-center">
           <Inbox size={48} className="text-gray-400 mb-4" />
           <h4 className="text-lg font-semibold">No Requests Yet</h4>
-          <p className="text-gray-500 text-sm mt-2">Looks good! You have no pending interview requests at the moment.</p>
+          <p className="text-gray-500 text-sm mt-2">
+            Looks good! You have no pending interview requests at the moment.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
@@ -181,16 +213,19 @@ const InterviewRequests = () => {
                       {/* {request.contactId?.firstName + " " + request.contactId?.lastName} */}
                       {request?.roundDetails?.roundTitle}
                     </h4>
-                    <p className="text-xs text-gray-600">{request.positionId?.title || 'N/A'}</p>
+                    <p className="text-xs text-gray-600">
+                      {request.positionId?.title || "N/A"}
+                    </p>
                   </div>
                 </div>
                 <span
-                  className={`px-2 py-0.5 rounded-lg text-xs font-medium ${request.urgency === 'High'
-                    ? 'bg-red-100 text-red-600'
-                    : request.urgency === 'Medium'
-                      ? 'bg-yellow-100 text-yellow-600'
-                      : 'bg-green-100 text-green-600'
-                    }`}
+                  className={`px-2 py-0.5 rounded-lg text-xs font-medium ${
+                    request.urgency === "High"
+                      ? "bg-red-100 text-red-600"
+                      : request.urgency === "Medium"
+                      ? "bg-yellow-100 text-yellow-600"
+                      : "bg-green-100 text-green-600"
+                  }`}
                 >
                   {request.urgency}
                 </span>
@@ -199,7 +234,9 @@ const InterviewRequests = () => {
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div className="flex items-center gap-1.5">
                   <Building size={14} className="text-gray-400" />
-                  <span className="text-xs text-gray-600 truncate">{request.positionId?.companyname || 'N/A'}</span>
+                  <span className="text-xs text-gray-600 truncate">
+                    {request.positionId?.companyname || "N/A"}
+                  </span>
                 </div>
                 {/* <div className="flex items-center gap-1.5">
                   <Video size={14} className="text-gray-400" />
@@ -207,7 +244,9 @@ const InterviewRequests = () => {
                 </div> */}
                 <div className="flex items-center gap-1.5 col-span-2">
                   <Clock size={14} className="text-gray-400" />
-                  <span className="text-xs text-gray-600">Requested for {request.requestedDate}</span>
+                  <span className="text-xs text-gray-600">
+                    Requested for {request.requestedDate}
+                  </span>
                 </div>
               </div>
 
@@ -231,7 +270,7 @@ const InterviewRequests = () => {
                   >
                     Accept
                   </button> */}
-                  {request.status === 'accepted' ? (
+                  {request.status === "accepted" ? (
                     <button
                       className="px-2.5 py-1 text-xs font-medium text-white bg-green-600/60 rounded-lg cursor-default"
                       disabled
@@ -240,7 +279,13 @@ const InterviewRequests = () => {
                     </button>
                   ) : (
                     <button
-                      onClick={() => handleAccept(request.id, request.interviewerId, request.roundId)}
+                      onClick={() =>
+                        handleAccept(
+                          request.id,
+                          request.interviewerId,
+                          request.roundId
+                        )
+                      }
                       className="px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 cursor-pointer"
                     >
                       Accept
@@ -256,52 +301,111 @@ const InterviewRequests = () => {
       {/* Details Popup */}
       {selectedRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-1/2 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white p-6 rounded-xl shadow-lg sm:w-full mx-4 w-1/2 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">Interview Request Details</h3>
-              <button onClick={closePopup} className="text-gray-500 hover:text-gray-700 text-xl font-bold">&times;</button>
+              {/* v1.0.0 <--------------------------------------------------------------------------------------------- */}
+              <h3 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl font-semibold text-gray-800">
+                {/* v1.0.0 <--------------------------------------------------------------------------------------------- */}
+                Interview Request Details
+              </h3>
+              <button
+                onClick={closePopup}
+                className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+              >
+                &times;
+              </button>
             </div>
-            
+
             <div className="space-y-5">
+              {/* v1.0.0 <---------------------------------------------------------------------- */}
               <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                <h4 className="text-lg font-medium text-gray-700 mb-2">Candidate Information:-</h4>
+                <h4 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-700 mb-2">
+                  Candidate Information:-
+                </h4>
                 <div className="space-y-2 text-gray-600">
-                  <p><strong>Candidate:</strong> {selectedRequest.candidateId?.FirstName + " " + selectedRequest.candidateId?.LastName}</p>
-                  <p><strong>Position:</strong> {selectedRequest.positionId?.title || 'N/A'}</p>
-                  <p><strong>Company:</strong> {selectedRequest.positionId?.companyname || 'N/A'}</p>
+                  <p className="sm:text-sm">
+                    <strong>Candidate:</strong>{" "}
+                    {selectedRequest.candidateId?.FirstName +
+                      " " +
+                      selectedRequest.candidateId?.LastName}
+                  </p>
+                  <p className="sm:text-sm">
+                    <strong>Position:</strong>{" "}
+                    {selectedRequest.positionId?.title || "N/A"}
+                  </p>
+                  <p className="sm:text-sm">
+                    <strong>Company:</strong>{" "}
+                    {selectedRequest.positionId?.companyname || "N/A"}
+                  </p>
                 </div>
               </div>
-              
+              {/* v1.0.0 ----------------------------------------------------------------------> */}
+              {/* v1.0.0 <---------------------------------------------------------------------- */}
               <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                <h4 className="text-lg font-medium text-gray-700 mb-2">Interview Details:-</h4>
+                <h4 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-700 mb-2">
+                  Interview Details:-
+                </h4>
                 <div className="space-y-2 text-gray-600">
-                  <p><strong>Interview Type:</strong> {selectedRequest.type}</p>
-                  <p><strong>Status: </strong> 
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${selectedRequest.status === 'accepted' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                  <p className="sm:text-sm">
+                    <strong>Interview Type:</strong> {selectedRequest.type}
+                  </p>
+                  <p className="sm:text-sm">
+                    <strong>Status: </strong>
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        selectedRequest.status === "accepted"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
                       {selectedRequest.status}
                     </span>
                   </p>
-                  <p><strong>Requested Date:</strong> {selectedRequest.requestedDate}</p>
-                  <p><strong>Urgency: </strong> 
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${selectedRequest.urgency === 'High' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+                  <p className="sm:text-sm">
+                    <strong>Requested Date:</strong>{" "}
+                    {selectedRequest.requestedDate}
+                  </p>
+                  <p className="sm:text-sm">
+                    <strong>Urgency: </strong>
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        selectedRequest.urgency === "High"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}
+                    >
                       {selectedRequest.urgency}
                     </span>
                   </p>
                 </div>
               </div>
-              
+              {/* v1.0.0 ----------------------------------------------------------------------> */}
+
               {selectedRequest.roundDetails && (
+                // v1.0.0 <---------------------------------------------------------------------
                 <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                  <h4 className="text-lg font-medium text-gray-700 mb-2">Round Information:-</h4>
+                  <h4 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-700 mb-2">
+                    Round Information:-
+                  </h4>
                   <div className="space-y-2 text-gray-600">
-                    <p><strong>Round Title:</strong> {selectedRequest.roundDetails.roundTitle}</p>
-                    <p><strong>Duration:</strong> {selectedRequest.roundDetails.duration}</p>
-                    <p><strong>Date & Time:</strong> {selectedRequest.roundDetails.dateTime}</p>
+                    <p className="sm:text-sm">
+                      <strong>Round Title:</strong>{" "}
+                      {selectedRequest.roundDetails.roundTitle}
+                    </p>
+                    <p className="sm:text-sm">
+                      <strong>Duration:</strong>{" "}
+                      {selectedRequest.roundDetails.duration}
+                    </p>
+                    <p className="sm:text-sm">
+                      <strong>Date & Time:</strong>{" "}
+                      {selectedRequest.roundDetails.dateTime}
+                    </p>
                   </div>
                 </div>
+                // v1.0.0 --------------------------------------------------------------------->
               )}
             </div>
-            
+
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={closePopup}
@@ -309,7 +413,7 @@ const InterviewRequests = () => {
               >
                 Close
               </button>
-              {selectedRequest.status === 'accepted' ? (
+              {selectedRequest.status === "accepted" ? (
                 <button
                   className="px-2.5 py-1 text-xs font-medium text-white bg-green-600/60 rounded-lg cursor-default"
                   disabled
@@ -319,7 +423,11 @@ const InterviewRequests = () => {
               ) : (
                 <button
                   onClick={() => {
-                    handleAccept(selectedRequest.id, selectedRequest.interviewerId, selectedRequest.roundId);
+                    handleAccept(
+                      selectedRequest.id,
+                      selectedRequest.interviewerId,
+                      selectedRequest.roundId
+                    );
                     setSelectedRequest(null);
                   }}
                   className="px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 cursor-pointer"
