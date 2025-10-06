@@ -64,7 +64,10 @@ export function VideoCallingSettings() {
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
+  const isOrganization = tokenPayload?.organization;
+ 
 
+  console.log("isOrganization", isOrganization);
   const [showCredentials, setShowCredentials] = useState({
     googleMeet: false,
     zoom: false,
@@ -120,7 +123,7 @@ export function VideoCallingSettings() {
           }
         )
         
-        console.log("✅ API Response:", data);
+        // console.log("✅ API Response:", data);
         
         if (data.success && data.data) {
           setSettings(data.data)
