@@ -101,7 +101,7 @@ exports.createRequest = async (req, res) => {
       interviewRequestCode: customRequestId,
       tenantId: new mongoose.Types.ObjectId(tenantId),
       ownerId,
-      scheduledInterviewId: isMockInterview ? undefined :  new mongoose.Types.ObjectId(scheduledInterviewId),
+      scheduledInterviewId: isMockInterview ? undefined : new mongoose.Types.ObjectId(scheduledInterviewId),
       interviewerType,
       contactId: new mongoose.Types.ObjectId(contactId),
       interviewerId: new mongoose.Types.ObjectId(interviewerId), // Save interviewerId instead of an array
@@ -216,7 +216,7 @@ exports.updateRequestStatus = async (req, res) => {
         }));
         await interview.save();
 
-      
+
       } else {
         return res.status(404).json({
           message: "Interview not found for the scheduledInterviewId",
@@ -249,6 +249,7 @@ exports.getInterviewRequests = async (req, res) => {
       const requests = await InterviewRequest.find({ interviewerId: interviewerObjectId })
         .populate("candidateId")
         .populate("positionId")
+        .populate("contactId")
         .populate("tenantId")
         .populate("roundId")
         .populate("interviewerId")
@@ -413,11 +414,11 @@ exports.getInterviewRequests = async (req, res) => {
 //       console.log(`acceptInterviewRequest: Interview request not found for requestId ${requestId}`);
 //       return res.status(404).json({ message: "Interview request not found" });
 //     }
-    
+
 //     console.log(`Interview request isMockInterview: ${request.isMockInterview}`);
-    
+
 //     let round;
-    
+
 //     // Update based on interview type: MockInterviewRound or InterviewRounds
 //     if (request.isMockInterview) {
 //       // For mock interviews, use MockInterviewRound
@@ -482,11 +483,11 @@ exports.getInterviewRequests = async (req, res) => {
 
 //     const duration = request.duration;
 //     const durationInMinutes = parseInt(duration.split(" ")[0]);
-    
+
 //     // Calculate base amount
 //     let totalAmount = (hourlyRate * durationInMinutes) / 60;
 //     console.log(`Calculated base amount for this request: ${totalAmount}`);
-    
+
 //     // Apply discount if it's a mock interview
 //     if (request.isMockInterview && findHourlyRate.mock_interview_discount) {
 //       const discountPercentage = parseFloat(findHourlyRate.mock_interview_discount) || 0;
@@ -496,7 +497,7 @@ exports.getInterviewRequests = async (req, res) => {
 //       console.log(`Discount amount: ${discountAmount}`);
 //       console.log(`Final amount after discount: ${totalAmount}`);
 //     }
-    
+
 //     console.log(`Final total amount for this request: ${totalAmount}`);
 
 //     const wallet = await Wallet.findOne({ ownerId: request.ownerId });
@@ -529,7 +530,7 @@ exports.getInterviewRequests = async (req, res) => {
 //     // Use human-readable code if available, else fallback to last 10 chars of ObjectId
 //     const holdID = request?.interviewRequestCode
 //       // (request?._id ? String(request._id).slice(-10) : String(requestId));
-    
+
 //     // Prepare a transaction record for wallet history (type: 'hold')
 //     const holdTransaction = {
 //       type: "hold",
@@ -598,7 +599,7 @@ exports.getInterviewRequests = async (req, res) => {
 //       console.error('Failed to send interview round emails after acceptance:', emailError);
 //       // Don't fail the request if email sending fails
 //     }
-  
+
 //     return res.status(200).json({
 //       success: true,
 //       message: `${request.isMockInterview ? 'Mock i' : 'I'}nterview request accepted; funds held and emails processed`,
@@ -641,11 +642,11 @@ exports.acceptInterviewRequest = async (req, res) => {
       console.log(`acceptInterviewRequest: Interview request not found for requestId ${requestId}`);
       return res.status(404).json({ message: "Interview request not found" });
     }
-    
+
     console.log(`Interview request isMockInterview: ${request.isMockInterview}`);
-    
+
     let round;
-    
+
     // Update based on interview type: MockInterviewRound or InterviewRounds
     if (request.isMockInterview) {
       round = await MockInterviewRound.findById(roundId);
@@ -713,7 +714,7 @@ exports.acceptInterviewRequest = async (req, res) => {
     // Determine rate based on experience level
     let rate;
     let experienceLevel;
-    
+
     if (request.isMockInterview) {
       // Mock interview: Use contact's expertiseLevel
       experienceLevel = contact.expertiseLevel?.toLowerCase();
@@ -747,9 +748,19 @@ exports.acceptInterviewRequest = async (req, res) => {
           message: `Invalid or missing CurrentExperience for candidate (${request.candidateId}).`
         });
       }
-      // Map experience to level
-      experienceLevel = experienceYears <= 3 ? 'junior' :
-                        experienceYears <= 7 ? 'mid' : 'senior';
+      if (experienceYears <= 3) {
+        experienceLevel = 'junior';
+      } else if (experienceYears <= 6) {
+        experienceLevel = 'mid';
+      } else if (experienceYears >= 7) {
+        experienceLevel = 'senior';
+      } else {
+        console.log(`Invalid experienceYears for candidate ${request.candidateId}: ${experienceYears}`);
+        return res.status(400).json({
+          success: false,
+          message: `Invalid experience years for candidate (${request.candidateId}). Must be a non-negative number.`
+        });
+      }
       rate = contact.rates?.[experienceLevel]?.inr;
       if (typeof rate !== 'number' || rate <= 0) {
         console.log(`Invalid INR rate for contact ${contactId}, level ${experienceLevel}: ${rate}`);
@@ -773,7 +784,7 @@ exports.acceptInterviewRequest = async (req, res) => {
     }
 
     console.log(`Calculated base amount for this request: ${totalAmount}`);
-    
+
     // Apply discount if it's a mock interview
     let appliedDiscountPercentage = 0;
     let discountAmount = 0;
@@ -786,7 +797,7 @@ exports.acceptInterviewRequest = async (req, res) => {
         console.log(`Discount amount: ${discountAmount}`);
       }
     }
-    
+
     console.log(`Final total amount for this request: ${totalAmount}`);
 
     // Fetch wallet
@@ -836,8 +847,8 @@ exports.acceptInterviewRequest = async (req, res) => {
         isMockInterview: Boolean(request.isMockInterview),
         mockInterviewDiscount: request.isMockInterview ? appliedDiscountPercentage : null,
         calculation: {
-          formula: request.isMockInterview && appliedDiscountPercentage > 0 
-            ? "(rate * minutes / 60) - discount" 
+          formula: request.isMockInterview && appliedDiscountPercentage > 0
+            ? "(rate * minutes / 60) - discount"
             : "rate * minutes / 60",
           rate: rate,
           minutes: durationInMinutes,
@@ -884,7 +895,7 @@ exports.acceptInterviewRequest = async (req, res) => {
     } catch (emailError) {
       console.error('Failed to send interview round emails:', emailError);
     }
-  
+
     return res.status(200).json({
       success: true,
       message: `${request.isMockInterview ? 'Mock i' : 'I'}nterview request accepted; funds held and emails processed`,
