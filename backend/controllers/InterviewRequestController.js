@@ -10,6 +10,7 @@ const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
 const Wallet = require("../models/WalletTopup");
 const { Candidate } = require("../models/Candidate");
 const { MockInterviewRound } = require('../models/Mockinterview/mockinterviewRound');
+const { MockInterview } = require('../models/Mockinterview/mockinterview');
 
 
 //old mansoor code i have changed this code because each interviwer send one request
@@ -631,11 +632,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       roundDetails = mockRound
         ? {
-            roundTitle: mockRound.roundTitle,
-            interviewType: mockRound.interviewType,
-            duration: mockRound.duration,
-            dateTime: mockRound.dateTime,
-          }
+          roundTitle: mockRound.roundTitle,
+          interviewType: mockRound.interviewType,
+          duration: mockRound.duration,
+          dateTime: mockRound.dateTime,
+        }
         : null;
     } else {
       // Fetch from InterviewRounds collection
@@ -644,11 +645,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       roundDetails = interviewRound
         ? {
-            roundTitle: interviewRound.roundTitle,
-            interviewType: interviewRound.interviewType,
-            duration: interviewRound.duration,
-            dateTime: interviewRound.dateTime,
-          }
+          roundTitle: interviewRound.roundTitle,
+          interviewType: interviewRound.interviewType,
+          duration: interviewRound.duration,
+          dateTime: interviewRound.dateTime,
+        }
         : null;
     }
   }
@@ -661,11 +662,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       candidateDetails = contact
         ? {
-            id: contact._id,
-            name: `${contact.firstName} ${contact.lastName}`,
-            email: contact.email,
-            phone: contact.phone,
-          }
+          id: contact._id,
+          name: `${contact.firstName} ${contact.lastName}`,
+          email: contact.email,
+          phone: contact.phone,
+        }
         : null;
     }
   } else {
@@ -675,11 +676,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       candidateDetails = candidate
         ? {
-            id: candidate._id,
-            name: `${candidate.FirstName} ${candidate.LastName}`,
-            email: candidate.Email,
-            phone: candidate.Phone,
-          }
+          id: candidate._id,
+          name: `${candidate.FirstName} ${candidate.LastName}`,
+          email: candidate.Email,
+          phone: candidate.Phone,
+        }
         : null;
     }
   }
@@ -691,12 +692,12 @@ const formatInterviewRequest = async (request) => {
       .lean();
     positionDetails = position
       ? {
-          id: position._id,
-          title: position.title,
-          description: position.description,
-          location: position.location,
-          companyname: position.companyname, // Added to match frontend
-        }
+        id: position._id,
+        title: position.title,
+        description: position.description,
+        location: position.location,
+        companyname: position.companyname, // Added to match frontend
+      }
       : null;
   }
 
@@ -888,13 +889,23 @@ exports.acceptInterviewRequest = async (req, res) => {
 
     if (request.isMockInterview) {
       // Mock interview: Map numeric expertiseLevel to junior, mid, or senior
-      console.log(`Mock interview: Expertise level for contact ${contactId}: ${contact.yearsOfExperience}`);
-      const expertiseYears = Number(contact.yearsOfExperience);
+      let mockInterview = null;
+      try {
+        mockInterview = await MockInterview.findById(round.mockInterviewId);
+        if (!mockInterview) {
+          console.log("Mock interview not found");
+        }
+      } catch (error) {
+        console.error("Invalid MockInterview ID:", error.message);
+      }
+      console.log("Mock interview:", mockInterview.currentExperience);
+
+      const expertiseYears = Number(mockInterview.currentExperience);
       if (isNaN(expertiseYears) || expertiseYears < 0) {
-        console.log(`Invalid expertiseLevel for contact ${contactId}: ${contact.yearsOfExperience}`);
+        console.log(`Invalid expertiseLevel for contact ${mockInterview.currentExperience}`);
         return res.status(400).json({
           success: false,
-          message: `Invalid or missing expertiseLevel for interviewer (${contactId}). Must be a non-negative number.`
+          message: `Invalid or missing expertiseLevel for interviewer (${mockInterview}). Must be a non-negative number.`
         });
       }
       if (expertiseYears <= 3) {

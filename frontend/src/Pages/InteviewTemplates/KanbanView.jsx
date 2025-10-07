@@ -2,9 +2,10 @@
 // v1.0.1 - Ashok - fixed padding issues at cards
 
 import { motion } from "framer-motion";
-import { Calendar, Layers, Trash, FileText } from "lucide-react";
+import { Calendar, Layers, Trash, Files } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaPencilAlt } from "react-icons/fa";
+
 import { formatDateTime } from "../../utils/dateFormatter";
 
 const KanbanView = ({
@@ -222,7 +223,7 @@ const KanbanView = ({
                             className="text-green-500 hover:bg-green-50 p-2 rounded-lg"
                             title="Clone"
                           >
-                            <FileText className="w-4 h-4" />
+                            <Files className="w-4 h-4" />
                           </motion.button>
                         )}
                       </div>
