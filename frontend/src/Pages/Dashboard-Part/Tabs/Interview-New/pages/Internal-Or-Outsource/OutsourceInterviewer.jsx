@@ -2,6 +2,7 @@
 // v1.0.1  -  Venkatesh  -  interviewer if  wallet balance is less than hourlyrate then show wallet modal
 // v1.0.2  -  Ashok   -  Improved responsiveness and added common code to popups
 // v1.0.3  -  Ashok   -  Fixed issues in responsiveness
+// v1.0.4  -  Venkatesh  -  Updated to handle rates object (junior/mid/senior) and show current balance in header
 
 import React, { useState, useRef, useEffect, useMemo } from "react"; //<----v1.0.1-----
 import {
@@ -43,7 +44,42 @@ const OutsourcedInterviewerCard = ({
         interviewer?.contact?.CurrentRole ||
         "Interviewer";
     const company = interviewer?.contact?.industry || "Freelancer";
-    const hourlyRate = interviewer?.contact?.hourlyRate || "not provided";
+    
+    //<-----v1.0.4-----Venkatesh---- Display rate range from rates object (junior/mid/senior)
+    const getRateDisplay = () => {
+        const rates = interviewer?.contact?.rates;
+        if (!rates) return interviewer?.contact?.hourlyRate || "not provided";
+        
+        const visibleRates = [];
+        if (rates.junior?.isVisible && rates.junior?.inr > 0) {
+            visibleRates.push(rates.junior.inr);
+        }
+        if (rates.mid?.isVisible && rates.mid?.inr > 0) {
+            visibleRates.push(rates.mid.inr);
+        }
+        if (rates.senior?.isVisible && rates.senior?.inr > 0) {
+            visibleRates.push(rates.senior.inr);
+        }
+        
+        if (visibleRates.length === 0) {
+            // If no visible rates, show all non-zero rates
+            ['junior', 'mid', 'senior'].forEach(level => {
+                if (rates[level]?.inr > 0) {
+                    visibleRates.push(rates[level].inr);
+                }
+            });
+        }
+        
+        if (visibleRates.length === 0) return "not provided";
+        if (visibleRates.length === 1) return `₹${visibleRates[0]}/hr`;
+        
+        const minRate = Math.min(...visibleRates);
+        const maxRate = Math.max(...visibleRates);
+        return `₹${minRate}-${maxRate}/hr`;
+    };
+    
+    const hourlyRate = getRateDisplay();
+    //-----v1.0.4-----Venkatesh---->
     const rating = interviewer?.contact?.rating || "4.5";
     const introduction =
         interviewer?.contact?.introduction || "No introduction provided.";
@@ -87,7 +123,7 @@ const OutsourcedInterviewerCard = ({
                                 </span>
                             </div>
                             <span className="text-sm font-medium text-gray-700">
-                                ${hourlyRate}/hr
+                                {hourlyRate}
                             </span>
                         </div>
                     </div>
@@ -171,9 +207,11 @@ function OutsourcedInterviewerModal({
     onProceed,
     skills,
     navigatedfrom,
+    candidateExperience, //<-----v1.0.4-----Venkatesh---- Added to determine experience level for rate calculation
+    isMockInterview = false, //<-----v1.0.4-----Venkatesh---- Added to determine interview type (mock vs regular)
 }) {
     const { interviewers, contacts } = useCustomContext(); //<----v1.0.1-----
-    //console.log("contacts===",contacts)
+    console.log("contacts===",contacts)
     const { data: walletBalance, refetch } = useWallet(); //<----v1.0.1-----
 
     console.log("navigatedfrom", {
@@ -198,16 +236,27 @@ function OutsourcedInterviewerModal({
     const [showWalletModal, setShowWalletModal] = useState(false); //<----v1.0.1-----
 
     //<----v1.0.1-----
-    // Compute the highest hourlyRate from backend contacts
+    //<-----v1.0.4-----Venkatesh---- Updated to compute the highest rate from all contacts and all levels (junior/mid/senior)
     const maxHourlyRate = useMemo(() => {
-        const rates = Array.isArray(contacts)
-            ? contacts
-                .map((c) => parseFloat(c?.hourlyRate))
-                .filter((n) => Number.isFinite(n))
-            : [];
-        return rates.length ? Math.max(...rates) : 0;
+        if (!Array.isArray(contacts) || contacts.length === 0) return 0;
+        
+        const allRates = [];
+        contacts.forEach(contact => {
+            if (contact?.rates) {
+                // Extract all INR rates from junior, mid, senior levels
+                ['junior', 'mid', 'senior'].forEach(level => {
+                    const rate = contact.rates[level]?.inr;
+                    if (typeof rate === 'number' && rate > 0) {
+                        allRates.push(rate);
+                    }
+                });
+            }
+        });
+        
+        return allRates.length > 0 ? Math.max(...allRates) : 0;
     }, [contacts]);
     //----v1.0.1----->
+    //-----v1.0.4-----Venkatesh---->
 
     // Toast is shown inside handleProceed before opening the wallet modal
 
@@ -1066,13 +1115,44 @@ function OutsourcedInterviewerModal({
 
     const handleProceed = () => {
         //<----v1.0.1-----
+        //<-----v1.0.4-----Venkatesh---- Updated to calculate required amount based on experience level
         const balance = walletBalance?.balance || 0;
-        if (balance > maxHourlyRate) {
+        
+        // Calculate the required amount based on selected interviewers' rates and experience level
+        let requiredAmount = maxHourlyRate; // Default to max rate
+        
+        if (selectedInterviewersLocal.length > 0) {
+            // If interviewers are selected, calculate based on their actual rates
+            const selectedRates = selectedInterviewersLocal.map(interviewer => {
+                const contact = interviewer?.contact;
+                if (!contact?.rates) return 0;
+                
+                let experienceLevel;
+                if (isMockInterview) {
+                    // For mock interviews, use the contact's expertise level
+                    experienceLevel = contact.expertiseLevel?.toLowerCase() || 'mid';
+                } else {
+                    // For regular interviews, map candidate experience to level
+                    const expYears = Number(candidateExperience) || 0;
+                    experienceLevel = expYears <= 3 ? 'junior' : 
+                                     expYears <= 7 ? 'mid' : 'senior';
+                }
+                
+                // Get the rate for the determined level
+                return contact.rates[experienceLevel]?.inr || 0;
+            });
+            
+            // Use the highest rate among selected interviewers
+            requiredAmount = Math.max(...selectedRates, 0);
+        }
+        
+        if (balance >= requiredAmount) {
             console.log("Selected Interviewers:", selectedInterviewersLocal);
             onProceed(selectedInterviewersLocal);
             onClose();
         } else {
-            const required = Number(maxHourlyRate || 0).toFixed(2);
+            const required = Number(requiredAmount || 0).toFixed(2);
+            const currentBalance = Number(balance || 0).toFixed(2);
             toast.error(
                 `Your wallet balance is less than the highest interviewer hourly rate.\nRequired: $${required}\nPlease add funds to proceed.`,
                 {
@@ -1087,6 +1167,7 @@ function OutsourcedInterviewerModal({
             setTimeout(() => setShowWalletModal(true), 1000);
         }
         //----v1.0.1----->
+        //-----v1.0.4-----Venkatesh---->
     };
 
     const [isOpen, setIsOpen] = useState(false);
@@ -1097,8 +1178,26 @@ function OutsourcedInterviewerModal({
             {/* v1.0.2 <-------------------------------------------------------------------------- */}
             <SidebarPopup
                 title="Select Outsourced Interviewers"
-                subTitle={`${selectedInterviewersLocal?.length} interviewer${selectedInterviewersLocal?.length !== 1 ? "s" : ""
-                    } selected`}
+                subTitle={
+                    //<-----v1.0.4-----Venkatesh---- Added wallet balance display in header
+                    <div className="flex items-center gap-4">
+                        <span>
+                            {selectedInterviewersLocal?.length} interviewer
+                            {selectedInterviewersLocal?.length !== 1 ? "s" : ""} selected
+                        </span>
+                        <span className="text-sm font-medium">
+                            Current Balance: 
+                            <span className={`ml-1 font-bold ${
+                                (walletBalance?.balance || 0) >= maxHourlyRate 
+                                    ? 'text-green-600' 
+                                    : 'text-red-600'
+                            }`}>
+                                ₹{Number(walletBalance?.balance || 0).toFixed(2)}
+                            </span>
+                        </span>
+                    </div>
+                    //-----v1.0.4-----Venkatesh---->
+                }
                 onClose={onClose}
                 setIsFullscreen={setIsFullscreen}
             >

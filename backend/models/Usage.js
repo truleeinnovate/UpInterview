@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const UsageSchema = new mongoose.Schema({
   usageAttributes: [{
     entitled: { type: Number, required: true },// limit
-    type: { type: String, required: true },// Assessment, InternalInterviewer, OutsourceInterviewer
+    type: { type: String, required: true },// Assessments, Internal Interviews, Outsource Interviews
     utilized: { type: Number, required: true, default: 0 },//
     remaining: { type: Number, required: true, default: 0 }
   }],
@@ -13,19 +13,7 @@ const UsageSchema = new mongoose.Schema({
   ownerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-      },
-  // Embedded history of previous billing periods (monthly/annual snapshots)
-  usageHistory: [{
-    usageAttributes: [{
-      entitled: { type: Number, required: true },
-      type: { type: String, required: true },
-      utilized: { type: Number, required: true, default: 0 },
-      remaining: { type: Number, required: true, default: 0 }
-    }],
-    fromDate: { type: Date, required: true },
-    toDate: { type: Date, required: true },
-    archivedAt: { type: Date, default: Date.now }
-  }]
+      }
 });
 
 module.exports = mongoose.model('Usage', UsageSchema);

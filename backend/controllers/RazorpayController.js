@@ -559,61 +559,103 @@ const verifyPayment = async (req, res) => {
                         tenant.usersBandWidth = bandwidthLimit;
                         tenant.totalUsers = usersLimit;
                         await tenant.save();
-                        // Ensure Usage exists for this billing period even if webhook events differ in prod
+                        // Create Usage document only once per billing period after payment verification
                         try {
-                            const usageAttributes = features
-                                .filter(f => ['Assessments', 'Internal Interviewers', 'Outsource Interviewers'].includes(f?.name))
-                                .map(f => ({
-                                    entitled: Number(f?.limit) || 0,
-                                    type: f?.name,
-                                    utilized: 0,
-                                    remaining: Number(f?.limit) || 0,
-                                }));
-
-                            // Determine the exact billing period bounds
-                            let periodStart = null;
-                            let periodEnd = endDate; // fallback to computed endDate
-
-                            if (isSubscription && razorpay_subscription_id) {
-                                try {
-                                    const sub = await razorpay.subscriptions.fetch(razorpay_subscription_id);
-                                    if (sub?.current_start) periodStart = new Date(sub.current_start * 1000);
-                                    if (sub?.current_end) periodEnd = new Date(sub.current_end * 1000);
-                                } catch (e) {
-                                    console.warn('Unable to fetch subscription period for verifyPayment:', e?.message);
+                            const now = new Date();
+                            const billingCycle = (billingCycle || membershipType || 'monthly').toLowerCase();
+                            
+                            // Check if Usage already exists for current billing period
+                            const existingUsage = await Usage.findOne({ tenantId, ownerId });
+                            
+                            // Helper function to check if we're in the same billing period
+                            const isInSameBillingPeriod = (usage) => {
+                                if (!usage || !usage.fromDate || !usage.toDate) return false;
+                                
+                                const nowMoment = moment(now);
+                                const fromMoment = moment(usage.fromDate);
+                                const toMoment = moment(usage.toDate);
+                                
+                                // Check if current date is within the existing usage period
+                                if (nowMoment.isBetween(fromMoment, toMoment, null, '[]')) {
+                                    return true;
                                 }
-                            }
+                                
+                                // For monthly: check if we're in the same month and year
+                                if (billingCycle.includes('month')) {
+                                    return nowMoment.year() === fromMoment.year() && 
+                                           nowMoment.month() === fromMoment.month();
+                                }
+                                
+                                // For annual: check if we're in the same year cycle
+                                if (billingCycle.includes('year') || billingCycle.includes('annual')) {
+                                    return nowMoment.year() === fromMoment.year();
+                                }
+                                
+                                return false;
+                            };
+                            
+                            // Only create Usage if it doesn't exist for current billing period
+                            if (!existingUsage || !isInSameBillingPeriod(existingUsage)) {
+                                const usageAttributes = features
+                                    .filter(f => ['Assessments', 'Internal_Interviews'].includes(f?.name))
+                                    .map(f => ({
+                                        entitled: Number(f?.limit) || 0,
+                                        type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' : f?.name,
+                                        utilized: 0,
+                                        remaining: Number(f?.limit) || 0,
+                                    }));
 
-                            if (!periodStart) {
-                                // Fallback: derive start from billing cycle and endDate
-                                const end = new Date(periodEnd);
-                                const start = new Date(end);
-                                const cycle = (billingCycle || membershipType || '').toLowerCase();
-                                if (cycle.includes('year')) {
-                                    start.setFullYear(start.getFullYear() - 1);
+                                // Determine the exact billing period bounds
+                                let periodStart = null;
+                                let periodEnd = endDate; // fallback to computed endDate
+
+                                if (isSubscription && razorpay_subscription_id) {
+                                    try {
+                                        const sub = await razorpay.subscriptions.fetch(razorpay_subscription_id);
+                                        if (sub?.current_start) periodStart = new Date(sub.current_start * 1000);
+                                        if (sub?.current_end) periodEnd = new Date(sub.current_end * 1000);
+                                    } catch (e) {
+                                        console.warn('Unable to fetch subscription period for verifyPayment:', e?.message);
+                                    }
+                                }
+
+                                if (!periodStart) {
+                                    // Fallback: derive start from billing cycle and endDate
+                                    const end = new Date(periodEnd);
+                                    const start = new Date(end);
+                                    if (billingCycle.includes('year') || billingCycle.includes('annual')) {
+                                        start.setFullYear(start.getFullYear() - 1);
+                                    } else {
+                                        // default monthly
+                                        start.setMonth(start.getMonth() - 1);
+                                    }
+                                    periodStart = start;
+                                }
+
+                                if (existingUsage) {
+                                    // Update existing Usage with new period
+                                    existingUsage.usageAttributes = usageAttributes;
+                                    existingUsage.fromDate = periodStart;
+                                    existingUsage.toDate = periodEnd;
+                                    await existingUsage.save();
+                                    console.log('[verifyPayment] Updated Usage for new billing period');
                                 } else {
-                                    // default monthly
-                                    start.setMonth(start.getMonth() - 1);
-                                }
-                                periodStart = start;
-                            }
-
-                            // Create the active Usage only once per tenant/owner at initial payment
-                            await Usage.findOneAndUpdate(
-                                { tenantId, ownerId },
-                                {
-                                    $setOnInsert: {
+                                    // Create new Usage document
+                                    const newUsage = new Usage({
                                         tenantId,
                                         ownerId,
                                         usageAttributes,
                                         fromDate: periodStart,
-                                        toDate: periodEnd,
-                                    }
-                                },
-                                { new: true, upsert: true, setDefaultsOnInsert: true }
-                            );
+                                        toDate: periodEnd
+                                    });
+                                    await newUsage.save();
+                                    console.log('[verifyPayment] Created new Usage document');
+                                }
+                            } else {
+                                console.log('[verifyPayment] Usage already exists for current billing period, skipping creation');
+                            }
                         } catch (usageErr) {
-                            console.warn('Usage upsert failed during verifyPayment:', usageErr?.message);
+                            console.warn('Usage creation/update failed during verifyPayment:', usageErr?.message);
                         }
                     } else {
                         console.warn('Tenant not found when updating limits for subscription payment');
@@ -1922,24 +1964,17 @@ const handleSubscriptionCharged = async (subscription) => {
             tenant.totalUsers = features.find(feature => feature.name === 'Users').limit;
         await tenant.save();
 
-        // Archive previous active Usage and roll the single active Usage document to the new cycle
+        // Create or update Usage document only once per billing period
         const periodStart = subscription.current_start ? new Date(subscription.current_start * 1000) : new Date();
-        const usageAttributes = features
-            .filter(f => ['Assessments', 'Internal Interviewers', 'Outsource Interviewers'].includes(f?.name))
-            .map(f => ({
-                entitled: Number(f?.limit) || 0,
-                type: f?.name,
-                utilized: 0,
-                remaining: Number(f?.limit) || 0,
-            }));
-
         const tenantIdForUsage = customerSubscription.tenantId;
         const ownerIdForUsage = customerSubscription.ownerId;
+        const billingCycle = customerSubscription.selectedBillingCycle || 'monthly';
 
+        // Check if Usage already exists for current billing period
         let activeUsage = await Usage.findOne({ tenantId: tenantIdForUsage, ownerId: ownerIdForUsage });
         
         // Helper function to check if we're in the same billing period
-        const isInSameBillingPeriod = (usage, billingCycle) => {
+        const isInSameBillingPeriod = (usage) => {
             if (!usage || !usage.fromDate || !usage.toDate) return false;
             
             const now = new Date();
@@ -1959,59 +1994,45 @@ const handleSubscriptionCharged = async (subscription) => {
             }
             
             // For annual: check if we're in the same year cycle
-            if (billingCycle === 'annual') {
-                const yearsSinceStart = nowMoment.diff(fromMoment, 'years');
-                const nextRenewalDate = moment(fromMoment).add(yearsSinceStart + 1, 'years');
-                return nowMoment.isBefore(nextRenewalDate);
+            if (billingCycle === 'annual' || billingCycle === 'yearly') {
+                return nowMoment.year() === fromMoment.year();
             }
             
             return false;
         };
 
-        const billingCycle = customerSubscription.selectedBillingCycle || 'monthly';
-        const needsNewUsagePeriod = !activeUsage || !isInSameBillingPeriod(activeUsage, billingCycle);
+        // Only create/update Usage if we're in a new billing period
+        if (!activeUsage || !isInSameBillingPeriod(activeUsage)) {
+            const usageAttributes = features
+                .filter(f => ['Assessments', 'Internal_Interviews'].includes(f?.name))
+                .map(f => ({
+                    entitled: Number(f?.limit) || 0,
+                    type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' : f?.name,
+                    utilized: 0,
+                    remaining: Number(f?.limit) || 0,
+                }));
 
-        if (needsNewUsagePeriod) {
-            // Only create/update if we're in a new billing period
-            console.log(`[WEBHOOK] New billing period detected, creating/updating usage for tenant ${tenantIdForUsage}`);
-            
-            if (activeUsage && activeUsage.fromDate && activeUsage.toDate) {
-                // Archive previous period (only if not already archived and it's expired)
-                const periodKey = `${moment(activeUsage.fromDate).format('YYYY-MM-DD')}_${moment(activeUsage.toDate).format('YYYY-MM-DD')}`;
-                const alreadyArchived = Array.isArray(activeUsage.usageHistory) && 
-                    activeUsage.usageHistory.some(h => {
-                        const archiveKey = `${moment(h.fromDate).format('YYYY-MM-DD')}_${moment(h.toDate).format('YYYY-MM-DD')}`;
-                        return archiveKey === periodKey;
-                    });
-                    
-                if (!alreadyArchived && activeUsage.toDate < new Date()) {
-                    activeUsage.usageHistory = Array.isArray(activeUsage.usageHistory) ? activeUsage.usageHistory : [];
-                    activeUsage.usageHistory.push({
-                        usageAttributes: activeUsage.usageAttributes,
-                        fromDate: activeUsage.fromDate,
-                        toDate: activeUsage.toDate,
-                        archivedAt: new Date()
-                    });
-                    console.log(`[WEBHOOK] Archived previous period: ${periodKey}`);
-                }
-            }
-
-            if (!activeUsage) {
-                // Create the active usage if it doesn't exist yet
-                activeUsage = new Usage({
+            if (activeUsage) {
+                // Update existing Usage document with new period
+                activeUsage.usageAttributes = usageAttributes;
+                activeUsage.fromDate = periodStart;
+                activeUsage.toDate = newEndDate;
+                await activeUsage.save();
+                console.log(`[WEBHOOK subscription.charged] Updated Usage for new ${billingCycle} period (${moment(periodStart).format('YYYY-MM-DD')} to ${moment(newEndDate).format('YYYY-MM-DD')})`);
+            } else {
+                // Create new Usage document
+                const newUsage = new Usage({
                     tenantId: tenantIdForUsage,
                     ownerId: ownerIdForUsage,
+                    usageAttributes,
+                    fromDate: periodStart,
+                    toDate: newEndDate
                 });
+                await newUsage.save();
+                console.log(`[WEBHOOK subscription.charged] Created new Usage for ${billingCycle} subscription (${moment(periodStart).format('YYYY-MM-DD')} to ${moment(newEndDate).format('YYYY-MM-DD')})`);
             }
-
-            // Roll active usage to the new period with reset attributes
-            activeUsage.usageAttributes = usageAttributes;
-            activeUsage.fromDate = periodStart;
-            activeUsage.toDate = newEndDate;
-            await activeUsage.save();
-            console.log(`[WEBHOOK] Usage updated for ${billingCycle} subscription (${moment(periodStart).format('YYYY-MM-DD')} to ${moment(newEndDate).format('YYYY-MM-DD')})`);
         } else {
-            console.log(`[WEBHOOK] Usage already exists for current ${billingCycle} period, skipping creation`);
+            console.log(`[WEBHOOK subscription.charged] Usage already exists for current ${billingCycle} period, skipping creation`);
         }
 
         // Build usageAttributes payload (reset utilization for new period)

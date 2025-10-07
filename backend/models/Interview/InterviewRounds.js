@@ -198,5 +198,86 @@ currentAction: {
   rejectionReason: String,
 });
 
+// Add middleware to track status changes for internal interview usage
+const { handleInterviewStatusChange } = require('../../services/interviewUsageService');
+
+// Pre-save hook to track status changes
+interviewRoundSchema.pre('save', async function(next) {
+  try {
+    // Check if status has changed
+    if (this.isModified('status') && !this.isNew) {
+      const oldStatus = this._original_status || 'Draft';
+      const newStatus = this.status;
+      
+      // Only track for internal interviews
+      if (this.interviewerType === 'internal') {
+        // Get the interview details for tenantId and ownerId
+        const Interview = require('../Interview/Interview').Interview;
+        const interview = await Interview.findById(this.interviewId);
+        
+        if (interview) {
+          const result = await handleInterviewStatusChange(
+            this._id,
+            oldStatus,
+            newStatus,
+            {
+              tenantId: interview.tenantId,
+              ownerId: interview.ownerId
+            }
+          );
+          
+          if (!result.success && newStatus === 'Scheduled') {
+            // If scheduling fails due to usage limit, prevent the save
+            return next(new Error(result.message || 'Usage limit exceeded'));
+          }
+        }
+      }
+    }
+    
+    next();
+  } catch (error) {
+    console.error('[InterviewRounds] Error in pre-save hook:', error);
+    next(error);
+  }
+});
+
+// Pre-findOneAndUpdate hook to track the original status
+interviewRoundSchema.pre('findOneAndUpdate', async function() {
+  const docToUpdate = await this.model.findOne(this.getQuery());
+  if (docToUpdate) {
+    this._originalDoc = docToUpdate;
+  }
+});
+
+// Post-findOneAndUpdate hook to handle status change
+interviewRoundSchema.post('findOneAndUpdate', async function(doc) {
+  try {
+    if (!doc || !this._originalDoc) return;
+    
+    const oldStatus = this._originalDoc.status;
+    const newStatus = doc.status;
+    
+    // Check if status changed and it's an internal interview
+    if (oldStatus !== newStatus && doc.interviewerType === 'internal') {
+      const Interview = require('../Interview/Interview').Interview;
+      const interview = await Interview.findById(doc.interviewId);
+      
+      if (interview) {
+        await handleInterviewStatusChange(
+          doc._id,
+          oldStatus,
+          newStatus,
+          {
+            tenantId: interview.tenantId,
+            ownerId: interview.ownerId
+          }
+        );
+      }
+    }
+  } catch (error) {
+    console.error('[InterviewRounds] Error in post-findOneAndUpdate hook:', error);
+  }
+});
+
 const InterviewRounds = mongoose.model("InterviewRounds", interviewRoundSchema);
 module.exports = { InterviewRounds };

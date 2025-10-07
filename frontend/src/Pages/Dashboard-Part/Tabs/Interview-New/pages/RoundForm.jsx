@@ -34,6 +34,7 @@ import QuestionBank from "../../QuestionBank-Tab/QuestionBank.jsx";
 import Loading from "../../../../../Components/Loading.js";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
+import { useInternalInterviewUsage } from "../../../../../apiHooks/useInternalInterviewUsage.js";
 import toast from "react-hot-toast";
 // Test import to see if the file can be imported
 // import { processMeetingUrls } from "../../../../../utils/meetingUrlGenerator.js";
@@ -49,6 +50,7 @@ import DescriptionField from "../../../../../Components/FormFields/DescriptionFi
 import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
 import { notify } from "../../../../../services/toastService.js";
 import { ROUND_TITLES } from "../../CommonCode-AllTabs/roundTitlesConfig.js";
+import InternalInterviewUsageDisplay from "../../../../../Components/InternalInterviewUsageDisplay.jsx";
 
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
@@ -90,6 +92,7 @@ const RoundFormInterviews = () => {
     updateRoundWithMeetingLinks,
   } = useInterviews();
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  const { checkInternalInterviewUsage, isChecking } = useInternalInterviewUsage();
   // v1.0.2 <-----------------------------------------
 
   // State for meeting creation loading
@@ -1140,6 +1143,29 @@ const RoundFormInterviews = () => {
 
       // console.log("=== Round Saving Process ===");
       // console.log("Payload for submission:", payload);
+
+      // Check internal interview usage before scheduling
+      if (selectedInterviewType === 'internal' && status === 'Scheduled') {
+        // Check if this is a new scheduling (not already scheduled)
+        const isNewScheduling = !isEditing || (isEditing && roundEditData?.status !== 'Scheduled');
+        
+        if (isNewScheduling) {
+          console.log("Checking internal interview usage limits...");
+          const usageCheck = await checkInternalInterviewUsage(orgId, !organization ? userId : null);
+          
+          if (!usageCheck.canSchedule) {
+            // Show detailed error with usage stats
+            const usageInfo = usageCheck.usageStats || usageCheck.usage || {};
+            toast.error(
+              `Cannot schedule: ${usageCheck.message}. ` +
+              `Used: ${usageInfo.utilized || 0}/${usageInfo.entitled || 0} interviews.`,
+              { duration: 5000 }
+            );
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
 
       // Use saveInterviewRound mutation from useInterviews hook
 
@@ -2522,6 +2548,14 @@ const RoundFormInterviews = () => {
                       </div>
                       {/* v1.0.5 --------------------------------------------------------> */}
 
+                      {/* Internal Interview Usage Display */}
+                      {isInternalSelected && (
+                        <InternalInterviewUsageDisplay 
+                          className="mt-3 mb-3"
+                          showOnlyWarning={false}
+                        />
+                      )}
+
                       {/* Selected Interviewers Summary */}
                       {/* v1.0.5 <------------------------------------------------------------ */}
                       <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
@@ -2924,6 +2958,8 @@ const RoundFormInterviews = () => {
           dateTime={combinedDateTime}
           positionData={position}
           onProceed={handleExternalInterviewerSelect}
+          candidateExperience={candidate?.CurrentExperience}
+          isMockInterview={false} // For regular interview rounds, set to true for mock interviews
         />
       )}
 

@@ -131,17 +131,16 @@ const createSubscriptionControllers = async (req, res) => {
         status
       );
 
-      // Create Usage for active subscriptions (free plans)
       if (status === "active" && plan.name === "Free") {
         try {
           const Usage = require('../models/Usage.js');
           const features = plan.features || [];
           
           const usageAttributes = features
-            .filter(f => ['Assessments', 'Internal Interviewers', 'Outsource Interviewers'].includes(f?.name))
+            .filter(f => ['Assessments', 'Internal_Interviews'].includes(f?.name))
             .map(f => ({
               entitled: Number(f?.limit) || 0,
-              type: f?.name,
+              type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' : f?.name,
               utilized: 0,
               remaining: Number(f?.limit) || 0,
             }));
