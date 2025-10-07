@@ -5,6 +5,7 @@
 // v1.0.4  -  Ashok   -  Improved responsiveness
 // v1.0.5  -  Ashok   -  changed kanban and Added delete and change status buttons for Kanban
 // v1.0.6  -  Fixed   - Fixed alignment style issues at table
+// v1.0.7  -  Ashok   - fixed style issue
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -503,8 +504,9 @@ const PositionTab = () => {
       key: "skills",
       header: "Skills",
       render: (value) => (
-        <div className="flex flex-wrap gap-1">
-          {value.slice(0, 2).map((skill, idx) => (
+        // v1.0. <----------------------------------------------------------------------------
+        <div className="flex gap-1">
+          {value.slice(0, 1).map((skill, idx) => (
             <span
               key={idx}
               className="px-2 py-0.5 bg-custom-bg text-custom-blue rounded-full text-xs"
@@ -512,12 +514,14 @@ const PositionTab = () => {
               {skill.skill || "N/A"}
             </span>
           ))}
-          {value.length > 2 && (
+          {value.length > 1 && (
             <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
-              +{value.length - 2}
+              +{value.length - 1}
             </span>
           )}
         </div>
+        // v1.0. <----------------------------------------------------------------------------
+
       ),
     },
     {

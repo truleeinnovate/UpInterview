@@ -1,9 +1,11 @@
 // v1.0.0 - Ashok - removed loading in this
+// v1.0.1 - Ashok - changed UI only
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import StandardTemplateTableView from "./StandardTemplateTableView";
 import StandardTemplateKanbanView from "../KanbanView.jsx";
-import Toolbar from "../../../Components/Shared/Toolbar/Toolbar";
+// import Toolbar from "../../../Components/Shared/Toolbar/Toolbar";
+import Toolbar from "./StandardTemplatesHeader.jsx";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup";
 import { useInterviewTemplates } from "../../../apiHooks/useInterviewTemplates.js";
@@ -50,8 +52,8 @@ const StandardTemplates = ({ handleClone }) => {
         rounds: Array.isArray(template.rounds)
           ? template.rounds
           : Array.isArray(template.sequence)
-            ? template.sequence
-            : [{ roundTitle: "Unknown round" }],
+          ? template.sequence
+          : [{ roundTitle: "Unknown round" }],
         bestFor: template.bestFor || "General roles",
         format: template.format || "Unknown format",
         type: template.type || "standard",
@@ -243,6 +245,11 @@ const StandardTemplates = ({ handleClone }) => {
           dataLength={normalizedTemplates.length}
           searchPlaceholder="Search Interview Templates..."
           filterIconRef={filterIconRef}
+          // v1.0.2 <------------------------------------------
+          templatesData={paginatedTemplates}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          // v1.0.2 ------------------------------------------>
         />
         <FilterPopup
           isOpen={isFilterPopupOpen}
@@ -355,19 +362,23 @@ const StandardTemplates = ({ handleClone }) => {
         {view === "table" ? (
           <div className="w-full overflow-x-auto">
             <ErrorBoundary>
-              <StandardTemplateTableView templatesData={paginatedTemplates} handleClone={handleClone} />
+              <StandardTemplateTableView
+                templatesData={paginatedTemplates}
+                handleClone={handleClone}
+              />
             </ErrorBoundary>
           </div>
         ) : (
           <div>
             <ErrorBoundary>
-              <StandardTemplateKanbanView templates={paginatedTemplates}
+              <StandardTemplateKanbanView
+                templates={paginatedTemplates}
                 loading={isLoading}
                 effectivePermissions={effectivePermissions}
                 onView={handleView}
                 // onEdit={handleEdit}
                 handleClone={handleClone}
-                 />
+              />
             </ErrorBoundary>
           </div>
         )}
