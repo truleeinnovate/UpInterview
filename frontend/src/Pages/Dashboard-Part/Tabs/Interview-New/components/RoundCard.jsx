@@ -460,21 +460,17 @@ const RoundCard = ({
     }
   };
 
-
-  console.log("candidateAssessment", candidateAssessment);
-//  permissions for hide the share and result page view
+// result showing
   const shouldShowResultButton = () => {
-    if (round.roundTitle !== "Assessment") return true;
+    if (round.roundTitle !== "Assessment") return false;
     
-    // For assessment rounds, check candidate assessment status
-    if (candidateAssessment) {
-      const hideStatuses = ['completed', 'cancelled','failed','pass','extended',"expired"];
-      return !hideStatuses.includes(candidateAssessment.status);
+    if (candidateAssessment?.status) {
+      const showStatuses = ['completed', 'failed', 'pass'];
+      return showStatuses.includes(candidateAssessment.status.toLowerCase());
     }
     
-    return true;
+    return false;
   };
-
 
   const [showResultModal, setShowResultModal] = useState(false);
   const [assessmentQuestions, setAssessmentQuestions] = useState([]);
@@ -748,7 +744,7 @@ const RoundCard = ({
       canSelect: false,
       canFeedback: false,
       canResendLink: false,
-      canShareLink: true
+      canShareLink: true,
     },
     RequestSent: {
       canEdit: true,
@@ -1679,7 +1675,7 @@ const RoundCard = ({
                   {/* Share (always for Assessment) */}
                   {permissions.canResendLink && round.roundTitle === "Assessment" 
                   && round?.scheduleAssessmentId 
-                  && shouldShowResultButton()
+                  // && shouldShowResultButton()
                    && (
                     <button
                       onClick={() => handleResendClick(round)}
@@ -1703,7 +1699,7 @@ const RoundCard = ({
                   )}
 
                   {/* Share (always for Assessment) */}
-                  {permissions.canShareLink && round.roundTitle === "Assessment" &&  !round?.scheduleAssessmentId 
+                  { round.roundTitle === "Assessment" &&  !round?.scheduleAssessmentId 
                   && shouldShowResultButton()
                   && (
                   <button
