@@ -6,6 +6,7 @@ import { useEffect, useMemo } from 'react';
 import { config } from '../config';
 import { useRef } from 'react';
 import Cookies from "js-cookie";
+import { notify } from '../services/toastService';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
@@ -288,8 +289,45 @@ export const useInterviewTemplates = () => {
         },
     });
 
+    // Delete interview template mutation
+    const deleteInterviewTemplate = useMutation({
+        mutationFn: async (templateId) => {
+            const token = Cookies.get('authToken');
+            const tokenPayload = decodeJwt(token);
+            const tenantId = tokenPayload?.tenantId;
+            
+            if (!tenantId) {
+                throw new Error('Tenant ID not found in authentication token');
+            }
+
+            const { data } = await axios.delete(
+                `${config.REACT_APP_API_URL}/interviewTemplates/${templateId}`,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'X-Tenant-ID': tenantId
+                    },
+                    params: {
+                        tenantId: tenantId
+                    }
+                }
+            );
+            return data;
+        },
+        onSuccess: () => {
+            // Invalidate and refetch the templates query to update the UI
+            queryClient.invalidateQueries(['interviewTemplates']);
+            notify.success('Interview template deleted successfully');
+        },
+        onError: (error) => {
+            console.error('Error deleting interview template:', error);
+            notify.error(error.response?.data?.message || 'Failed to delete interview template');
+        },
+    });
+
     // Calculate loading states
-    const isMutationLoading = saveTemplate.isPending || addOrUpdateRound.isPending || deleteRoundMutation.isPending;
+    const isMutationLoading = saveTemplate.isPending || addOrUpdateRound.isPending || deleteRoundMutation.isPending || deleteInterviewTemplate.isPending;
     const isLoading = isQueryLoading || isMutationLoading;
 
     // Controlled logging
@@ -319,9 +357,14 @@ export const useInterviewTemplates = () => {
         saveTemplateError: saveTemplate.error,
         isAddOrUpdateRoundError: addOrUpdateRound.isError,
         addOrUpdateRoundError: addOrUpdateRound.error,
+        isDeleteInterviewTemplateError: deleteInterviewTemplate.isError,
+        deleteInterviewTemplateError: deleteInterviewTemplate.error,
         saveTemplate: saveTemplate.mutateAsync,
         addOrUpdateRound: addOrUpdateRound.mutateAsync,
-        deleteRoundMutation: deleteRoundMutation.mutateAsync,
-        getTemplatesByTenantId: getTemplatesByTenantId.mutateAsync
+        deleteRound: deleteRoundMutation.mutateAsync,
+        deleteInterviewTemplate: deleteInterviewTemplate.mutateAsync,
+        isDeleting: deleteInterviewTemplate.isPending,
+        getTemplatesByTenantId: getTemplatesByTenantId.mutateAsync,
+        isGetTemplatesLoading: getTemplatesByTenantId.isPending,
     };
 };

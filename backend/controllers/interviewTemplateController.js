@@ -307,17 +307,26 @@ exports.updateTemplate = async (req, res) => {
 // Delete template
 exports.deleteTemplate = async (req, res) => {
     try {
-        // For now, we'll use a default tenant ID since auth is not implemented
-        // const tenantId = "670286b86ebcb318dab2f676";
+        const { id } = req.params;
+        // Get tenantId from headers or query params
+        const tenantId = req.headers['x-tenant-id'] || req.query.tenantId;
+        
+        if (!tenantId) {
+            return res.status(400).json({
+                success: false,
+                message: "Tenant ID is required",
+            });
+        }
+
         const template = await InterviewTemplate.findOneAndDelete({
-            _id: req.params.id,
+            _id: id,
             tenantId,
         });
 
         if (!template) {
             return res.status(404).json({
                 success: false,
-                message: "Template not found",
+                message: "Template not found or you don't have permission to delete it",
             });
         }
 
@@ -326,9 +335,10 @@ exports.deleteTemplate = async (req, res) => {
             message: "Template deleted successfully",
         });
     } catch (error) {
-        res.status(400).json({
+        console.error('Error deleting interview template:', error);
+        res.status(500).json({
             success: false,
-            message: error.message,
+            message: error.message || 'Internal server error',
         });
     }
 };
