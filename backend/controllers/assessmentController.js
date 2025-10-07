@@ -27,6 +27,66 @@ const {
   validateAssessmentByTab,
 } = require("../validations/assessmentValidation");
 
+// Delete an assessment
+exports.deleteAssessment = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
+  try {
+    const { id } = req.params;
+
+    // Validate ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid assessment ID',
+      });
+    }
+
+    // Check if assessment exists
+    const assessment = await Assessment.findById(id).session(session);
+    if (!assessment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Assessment not found',
+      });
+    }
+
+    // Check if there are any scheduled assessments using this template
+    const scheduledAssessments = await ScheduleAssessment.find({ templateId: id }).session(session);
+    if (scheduledAssessments.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete assessment template that is being used in scheduled assessments',
+      });
+    }
+
+    // Delete the assessment
+    await Assessment.findByIdAndDelete(id).session(session);
+
+    // Delete related candidate assessments
+    await CandidateAssessment.deleteMany({ assessmentId: id }).session(session);
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({
+      success: true,
+      message: 'Assessment deleted successfully',
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    
+    console.error('[ASSESSMENT] Error deleting assessment:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete assessment',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
+
 // Validate assessment by tab/step (for frontend step-wise validation)
 exports.validateAssessmentStep = async (req, res) => {
   try {
