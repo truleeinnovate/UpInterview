@@ -7,6 +7,7 @@
 // v1.0.6 - Ashok -  Improved Responsiveness and (Fixed issue while selecting labels said by Ranjith)
 // v1.0.7 - Ashok - Fixed loading issue
 // v1.0.8 - Ashok - Fixed responsive issues
+// v1.0.9 - Ashok - Fixed responsive issues at header
 
 import React, {
   useState,
@@ -153,7 +154,9 @@ function QuestionHeaderBar({
 
         {/* Rest of your buttons */}
         <button
-          className="text-md sm:w-[60px] md:w-[60px] lg:w-[60px] hover:underline text-custom-blue font-semibold flex items-center gap-2"
+        // v1.0.9 <-------------------------------------------------------------------------------------------------------------------------------------------------------
+          className="text-md sm:w-[60px] md:w-[60px] lg:w-[60px] xl:w-[60px] 2xl:w-[60px] hover:underline text-custom-blue font-semibold flex items-center gap-2"
+        // v1.0.9 ------------------------------------------------------------------------------------------------------------------------------------------------------->
           onClick={() => {
             const meta = Array.isArray(createdLists)
               ? createdLists.find(
@@ -172,14 +175,18 @@ function QuestionHeaderBar({
         </button>
         <strong className="text-md text-gray-400"> | </strong>
         <button
-          className="text-md sm:w-[120px] md:w-[120px] lg:w-[120px] hover:underline text-custom-blue font-semibold flex items-center gap-2"
+        // v1.0.9 <---------------------------------------------------------------------------------------------------------------------------------------------------------------
+          className="text-md sm:w-[120px] md:w-[120px] lg:w-[120px] xl:w-[120px] 2xl:w-[120px] hover:underline text-custom-blue font-semibold flex items-center gap-2"
+        // v1.0.9 --------------------------------------------------------------------------------------------------------------------------------------------------------------->
           onClick={openListPopup}
         >
           Create New List
         </button>
         <strong className="text-md text-gray-400"> | </strong>
         <button
-          className="text-md sm:w-[90px] md:w-[90px] lg:w-[90px] hover:underline text-red-600 font-semibold flex items-center gap-2"
+        // v1.0.9 <----------------------------------------------------------------------------------------------------------------------------------------------
+          className="text-md sm:w-[90px] md:w-[90px] lg:w-[90px] xl:w-[90px] 2xl:w-[120px] hover:underline text-red-600 font-semibold flex items-center gap-2"
+        // v1.0.9 ---------------------------------------------------------------------------------------------------------------------------------------------->
           onClick={() => setShowCheckboxes(true)}
         >
           <TrashIcon className="w-4 h-4" />
@@ -189,7 +196,9 @@ function QuestionHeaderBar({
 
       {/* Search & Pagination Section */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center sm:w-[120px] md:w-[120px] lg:w-[120px]">
+        {/* v1.0.9 <-------------------------------------------------------------------------------------------- */}
+        <div className="flex items-center sm:w-[120px] md:w-[120px] lg:w-[120px] xl:w-[120px] 2xl:w-[120px]">
+        {/* v1.0.9 --------------------------------------------------------------------------------------------> */}
           <p>{rangeLabel}</p>
         </div>
         <div className="relative flex items-center rounded-md border">

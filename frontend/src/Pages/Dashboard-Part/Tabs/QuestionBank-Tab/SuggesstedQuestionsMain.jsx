@@ -8,6 +8,7 @@
 // v1.0.5 - Ashok - Improved responsiveness
 // v1.0.6 - Ashok - Fixed alignment issues
 // v1.0.7 - Ashok - Fixed responsive issues
+// v1.0.7 - Ashok - Fixed suggested questions header
 
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
@@ -1130,7 +1131,9 @@ const SuggestedQuestionsComponent = ({
               </div>
               // v1.0.6 ---------------------------------------------------------------------->
             )}
-            <ul className="flex flex-col gap-4 pr-2">
+            {/* v1.0.7 <----------------------------------------------------------------------- */}
+            <ul className="flex flex-col gap-4 pr-2 h-[calc(100vh-210px)] overflow-y-auto">
+            {/* v1.0.7 <----------------------------------------------------------------------- */}
               {paginatedData.length > 0 ? (
                 paginatedData.map((item, index) => (
                   <div
