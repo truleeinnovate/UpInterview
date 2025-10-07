@@ -1181,10 +1181,10 @@ function OutsourcedInterviewerModal({
                 subTitle={
                     //<-----v1.0.4-----Venkatesh---- Added wallet balance display in header
                     <div className="flex items-center gap-4">
-                        <span>
+                        {/* <span>
                             {selectedInterviewersLocal?.length} interviewer
                             {selectedInterviewersLocal?.length !== 1 ? "s" : ""} selected
-                        </span>
+                        </span> */}
                         <span className="text-sm font-medium">
                             Current Balance: 
                             <span className={`ml-1 font-bold ${
