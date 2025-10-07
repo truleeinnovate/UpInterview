@@ -348,10 +348,11 @@ const MockInterview = () => {
       key: "status",
       // v1.0.0 <--------------------------------------------------------------------
       header: "Status",
+      
       // render: (value, row) => row?.rounds?.[0]?.status || "Not Provided",
       render: (value, row) => {
         return row?.rounds?.[0]?.status ? (
-          <StatusBadge status={row.rounds[0].status} />
+          <StatusBadge status={row.rounds[0].status === "RequestSent" ? "Request Sent" : row?.rounds[0]?.status} />
         ) : (
           <span className="text-gray-400 text-sm">Not Provided</span>
         );

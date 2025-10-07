@@ -66,158 +66,75 @@ const MoockRoundCard = ({
     });
   };
 
-  // const handleStatusChange = async (newStatus, reason = null) => {
-  //   const roundData = {
-  //     ...round,
-  //     _id: round._id,
-     
-  //     status: newStatus,
-  //     completedDate: newStatus === "Completed",
-  //     rejectionReason: reason || null,
-  //   };
 
-  //   const formData = {
-  //     id: round?.mockInterviewId,
-  //     rounds: [ roundData ],
-  //     isEdit: true,
-  //     // roundId: round._id,
-  //     // isEditing: true, // Always set isEditing to true
-  //   };
-  //   console.log("done",
-  //     {
-  //       formData: {
-  //         // id: round?.mockInterviewId,      // ID of existing mock interview (if editing)
-  //         ...mockinterview,
-  //         rounds: [                        // Always an array of rounds
-  //           {
-  //             ...round,
-  //             _id: round?._id,             // keep round ID for updates
-  //             status: newStatus,           // e.g. "Scheduled", "Completed", etc.
-  //             completedDate: newStatus === "Completed" ? new Date() : null,
-  //             rejectionReason: reason || null,
-  //           },
-  //         ],
-  //         isEdit: true,                    // Always true for update
-  //       },
-  //       id: round?.mockInterviewId,        // duplicate for backend compatibility
-  //       isEdit: true,
-  //       userId,
-  //       organizationId,
-  //                                    // the original round reference
-  //     }
-  //   );
+  console.log("mock interview",mockinterview);
+  const handleStatusChange = async (newStatus, reason = null) => {
+    const roundData = {
+      ...round,
+      _id: round._id,
+     
+      status: newStatus,
+      completedDate: newStatus === "Completed",
+      rejectionReason: reason || null,
+    };
+    console.log("newStatus",newStatus);
     
 
-  //   try {
-  //     // const response = await axios.patch(
-  //     //   `${config.REACT_APP_API_URL}/updateMockInterview/${round?.mockInterviewId}`,
-  //     //   payload
-  //     // );
-  //      // Call API to save/update Page 1 data
-  //      const response = await addOrUpdateMockInterview(
-  //       {
-  //         formData: {
-  //           // id: round?.mockInterviewId,      // ID of existing mock interview (if editing)
-  //           ...mockinterview,
-  //           rounds: [                        // Always an array of rounds
-  //             {
-  //               ...round,
-  //               _id: round?._id,             // keep round ID for updates
-  //               status: newStatus,           // e.g. "Scheduled", "Completed", etc.
-  //               completedDate: newStatus === "Completed" ? new Date() : null,
-  //               rejectionReason: reason || null,
-  //             },
-  //           ],
-  //           isEdit: true,                    // Always true for update
-  //         },
-  //         id: round?.mockInterviewId,        // duplicate for backend compatibility
-  //         isEdit: true,
-  //         userId,
-  //         organizationId,
-  //                                      // the original round reference
-  //       }
-  //      );
-  //      const savedMockId = response?.data?.mockInterview?._id || response?._id || response?.data?._id;
+
+    try {
+      // const response = await axios.patch(
+      //   `${config.REACT_APP_API_URL}/updateMockInterview/${round?.mockInterviewId}`,
+      //   payload
+      // );
+       // Call API to save/update Page 1 data
+       const response = await addOrUpdateMockInterview(
+        {
+          formData: {
+            // id: round?.mockInterviewId,      // ID of existing mock interview (if editing)
+            ...mockinterview,
+            
+            rounds: [                        // Always an array of rounds
+              {
+                ...round,
+                _id: round?._id,             // keep round ID for updates
+                status: newStatus,           // e.g. "Scheduled", "Completed", etc.
+                completedDate: newStatus === "Completed" ? new Date() : null,
+                rejectionReason: reason || null,
+                interviewers: Array.isArray(round?.interviewers)
+      ? round.interviewers.map((i) => (typeof i === "object" ? i._id : i))
+      : [],
+              },
+            ],
+            isEdit: true,                    // Always true for update
+          },
+          id: round?.mockInterviewId,        // duplicate for backend compatibility
+          isEdit: true,
+          userId,
+          organizationId,
+                                       // the original round reference
+        }
+       );
+       const savedMockId = response?.data?.mockInterview?._id || response?._id || response?.data?._id;
 
 
-  //      console.log("Status updated:", response.data);
-  //      // Show success toast
-  //      if (savedMockId) {
-  //       notify.success(`Round status updated to ${newStatus}`, {
-  //       });
-  //      }
+       console.log("Status updated:", response.data);
+       // Show success toast
+       if (savedMockId) {
+        notify.success(`Round status updated to ${newStatus}`, {
+        });
+       }
 
-  //       if (!savedMockId) {
-  //              notify.error("Failed to save mock interview data");
-  //              return;
-  //            }
+        if (!savedMockId) {
+               notify.error("Failed to save mock interview data");
+               return;
+             }
   
      
    
-  //   } catch (error) {
-  //     console.error("Error updating status:", error);
-  //   }
-  // };
-
-
-  const handleStatusChange = async (newStatus, reason = null) => {
-    try {
-      // 🧩 Ensure interviewer IDs are strings
-      const interviewerIds =
-        Array.isArray(round?.interviewers)
-          ? round.interviewers.map((i) => (typeof i === "object" ? i._id : i))
-          : [];
-  
-      // 🧩 Prepare round data in backend-expected shape
-      const roundData = {
-        ...round,
-        _id: round._id,
-        interviewers: interviewerIds, // ✅ Fix: send string IDs, not objects
-        status: newStatus,
-        completedDate: newStatus === "Completed" ? new Date() : null,
-        rejectionReason: reason || null,
-      };
-  
-      // 🧩 Prepare formData payload
-      const formData = {
-        id: round?.mockInterviewId,
-        rounds: [roundData],
-        isEdit: true,
-      };
-  
-      console.log("✅ Mock Interview Status Update Payload:", {
-        formData,
-        id: round?.mockInterviewId,
-        isEdit: true,
-        userId,
-        organizationId,
-      });
-  
-      // 🧩 Call mutation
-      const response = await addOrUpdateMockInterview({
-        formData,
-        id: round?.mockInterviewId,
-        isEdit: true,
-        userId,
-        organizationId,
-      });
-  
-      const savedMockId =
-        response?.data?.mockInterview?._id ||
-        response?._id ||
-        response?.data?._id;
-  
-      if (savedMockId) {
-        notify.success(`Round status updated to "${newStatus}" successfully.`);
-      } else {
-        notify.error("Failed to save mock interview data.");
-      }
     } catch (error) {
-      console.error("❌ Error updating mock interview status:", error);
-      notify.error("Failed to update round status. Please try again.");
+      console.error("Error updating status:", error);
     }
   };
-  
 
   const handleConfirmStatusChange = () => {
     if (confirmAction) {

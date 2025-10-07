@@ -85,7 +85,7 @@ const addOrUpdateMockInterview = useMutation({
     }
 
     // Set proper status based on interviewers
-    const status = rounds.length > 0 && rounds[0]?.interviewers?.length > 0 ? "RequestSent" : "Draft";
+    // const status = rounds.length > 0 && rounds[0]?.interviewers?.length > 0 ? "RequestSent" : "Draft";
 
     // Format skills properly
     const skills = formData.entries
@@ -114,7 +114,7 @@ const addOrUpdateMockInterview = useMutation({
       payload.rounds = rounds.map(r => ({
         ...r,
         dateTime: formData.combinedDateTime || r.dateTime,
-        status,
+        // status,
         interviewers: Array.isArray(r.interviewers) ? r.interviewers : []
       }));
     }
