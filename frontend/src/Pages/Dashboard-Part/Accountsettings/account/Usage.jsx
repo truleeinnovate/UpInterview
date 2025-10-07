@@ -14,7 +14,7 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 const Usage = () => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  //const organization = tokenPayload?.organization;
+  const organization = tokenPayload?.organization;
   const tenantId = tokenPayload?.tenantId;
   console.log("tenantId", tenantId);
 
@@ -247,7 +247,7 @@ const Usage = () => {
           <h3 className="text-lg font-medium">User Bandwidth</h3>
           <div className="mt-2">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Value:</span>
+              <span className="text-gray-600">GB:</span>
               <span className="text-gray-600">
                 {usage?.usersBandWidth ?? "—"}
               </span>
@@ -257,6 +257,7 @@ const Usage = () => {
       </div>
 
       {/* Active Users */}
+    {organization && (
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium mb-4">Active Users</h3>
         <div className="flex justify-between items-center mb-4">
@@ -285,6 +286,7 @@ const Usage = () => {
           />
         </div>
       </div>
+    )}
 
       {/* Usage Trends */}
       {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> */}

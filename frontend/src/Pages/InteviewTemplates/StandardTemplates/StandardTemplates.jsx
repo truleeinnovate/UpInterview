@@ -72,125 +72,102 @@ const StandardTemplates = ({ handleClone }) => {
   const [isFilterActive, setIsFilterActive] = useState(false);
   const filterIconRef = useRef(null);
 
-  const [selectedFilters, setSelectedFilters] = useState({
-    status: [],
-    rounds: { min: "", max: "" },
-    modifiedDate: "",
-    createdDate: "",
-  });
+  // Filter states
   const [selectedStatus, setSelectedStatus] = useState([]);
-  const [roundsRange, setRoundsRange] = useState({ min: "", max: "" });
-  const [modifiedDatePreset, setModifiedDatePreset] = useState("");
+  const [selectedFormats, setSelectedFormats] = useState([]);
   const [createdDatePreset, setCreatedDatePreset] = useState("");
+
+  // UI states for dropdowns
   const [isStatusOpen, setIsStatusOpen] = useState(false);
-  const [isRoundsOpen, setIsRoundsOpen] = useState(false);
+  const [isFormatOpen, setIsFormatOpen] = useState(false);
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
 
-  // v1.0.1 <----------------------------------------------------------------------
-  const [activeTab, setActiveTab] = useState(() => {
-    // Initialize from URL on first render
-    const params = new URLSearchParams(window.location.search);
-    const tabFromUrl = params.get("tab");
-    return tabFromUrl === "standard" || tabFromUrl === "custom"
-      ? tabFromUrl
-      : "standard";
+  // Selected filters state
+  const [selectedFilters, setSelectedFilters] = useState({
+    status: [],
+    formats: [],
+    createdDate: "",
   });
-
-  // Keep URL in sync with tab state
-  useEffect(() => {
-    console.log("Current active tab:", activeTab);
-    const params = new URLSearchParams(window.location.search);
-
-    // Only update URL if it doesn't match the current tab
-    if (params.get("tab") !== activeTab) {
-      console.log("Updating URL to match active tab:", activeTab);
-      params.set("tab", activeTab);
-      navigate({ search: params.toString() }, { replace: true });
-    }
-  }, [activeTab, navigate]);
-
-  // Handle tab change from URL (e.g., browser back/forward)
-  useEffect(() => {
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      const tabFromUrl = params.get("tab");
-      console.log("URL changed, tab from URL:", tabFromUrl);
-
-      if (
-        tabFromUrl &&
-        (tabFromUrl === "standard" || tabFromUrl === "custom")
-      ) {
-        console.log("Updating active tab from URL:", tabFromUrl);
-        setActiveTab(tabFromUrl);
-      } else if (!tabFromUrl) {
-        // If no tab in URL, set default and update URL
-        console.log("No tab in URL, setting to default");
-        setActiveTab("standard");
-        params.set("tab", "standard");
-        navigate({ search: params.toString() }, { replace: true });
-      }
-    };
-
-    // Listen for URL changes
-    window.addEventListener("popstate", handlePopState);
-
-    // Initial check
-    handlePopState();
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [navigate]);
-  // v1.0.1 ---------------------------------------------------------------------->
 
   const normalizeSpaces = (str) =>
     str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
+
+  // Status toggle handler
+  // Status toggle handler
+  const handleStatusToggle = (status) => {
+    setSelectedStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  // Format toggle handler
+  const handleFormatToggle = (format) => {
+    setSelectedFormats(prev =>
+      prev.includes(format)
+        ? prev.filter(f => f !== format)
+        : [...prev, format]
+    );
+  };
+
+  // Format options for the filter
+  const formatOptions = [
+    { label: "Online / Virtual", value: "online" },
+    { label: "Face to Face / Onsite", value: "offline" },
+    { label: "Hybrid (Online + Onsite)", value: "hybrid" }
+  ];
+
+  // Apply filters
+  const handleApplyFilters = () => {
+    const filters = {
+      status: selectedStatus,
+      formats: selectedFormats,
+      createdDate: createdDatePreset,
+    };
+    setSelectedFilters(filters);
+    setIsFilterActive(selectedStatus.length > 0 || selectedFormats.length > 0 || createdDatePreset !== "");
+    setFilterPopupOpen(false);
+    setCurrentPage(0);
+  };
+
+  // Clear all filters
+  const handleClearAll = () => {
+    setSelectedStatus([]);
+    setSelectedFormats([]);
+    setCreatedDatePreset("");
+    setSelectedFilters({
+      status: [],
+      formats: [],
+      createdDate: "",
+    });
+    setIsFilterActive(false);
+  };
 
   // Filtered templates based on search & filters
   const filteredTemplates = useMemo(() => {
     return normalizedTemplates.filter((template) => {
       const normalizedQuery = normalizeSpaces(searchQuery);
-      const fieldsToSearch = [template.title, template.status].filter(Boolean);
+      const fieldsToSearch = [template.title, template.status, template.format].filter(Boolean);
 
+      // Search query matching
       const matchesSearchQuery =
         searchQuery === "" ||
         fieldsToSearch.some((field) =>
           normalizeSpaces(field).includes(normalizedQuery)
         );
 
+      // Status filter
       const matchesStatus =
         selectedFilters.status.length === 0 ||
-        selectedFilters.status.includes(
-          template.status
-            ? template.status.charAt(0).toUpperCase() + template.status.slice(1)
-            : "Active"
-        );
+        selectedFilters.status.includes(template.status || "Active");
 
-      const roundsCount = template.rounds?.length || 0; // Fix: Use array length
-      const matchesRounds =
-        (selectedFilters.rounds.min === "" ||
-          roundsCount >= Number(selectedFilters.rounds.min)) &&
-        (selectedFilters.rounds.max === "" ||
-          roundsCount <= Number(selectedFilters.rounds.max));
+      // Format filter
+      const matchesFormat =
+        selectedFilters.formats.length === 0 ||
+        (template.format && selectedFilters.formats.includes(template.format));
 
-      const matchesModifiedDate = () => {
-        if (!selectedFilters.modifiedDate) return true;
-        if (!template.updatedAt) return false;
-        const daysDiff = Math.floor(
-          (new Date() - new Date(template.updatedAt)) / (1000 * 60 * 60 * 24)
-        );
-        switch (selectedFilters.modifiedDate) {
-          case "last7":
-            return daysDiff <= 7;
-          case "last30":
-            return daysDiff <= 30;
-          case "last90":
-            return daysDiff <= 90;
-          default:
-            return true;
-        }
-      };
-
+      // Created date filter
       const matchesCreatedDate = () => {
         if (!selectedFilters.createdDate) return true;
         if (!template.createdAt) return false;
@@ -212,8 +189,7 @@ const StandardTemplates = ({ handleClone }) => {
       return (
         matchesSearchQuery &&
         matchesStatus &&
-        matchesRounds &&
-        matchesModifiedDate() &&
+        matchesFormat &&
         matchesCreatedDate()
       );
     });
@@ -242,57 +218,9 @@ const StandardTemplates = ({ handleClone }) => {
     }
   };
 
-  const handleStatusToggle = (status) => {
-    setSelectedStatus((prev) =>
-      prev.includes(status)
-        ? prev.filter((s) => s !== status)
-        : [...prev, status]
-    );
-  };
+  // Filter handler functions are already defined above
+  // Removed duplicate function declarations
 
-  const handleRoundsChange = (e, type) => {
-    const value =
-      e.target.value === ""
-        ? ""
-        : Math.max(0, Math.min(10, Number(e.target.value) || ""));
-    setRoundsRange((prev) => ({ ...prev, [type]: value }));
-  };
-
-  const handleApplyFilters = () => {
-    const filters = {
-      status: selectedStatus,
-      rounds: roundsRange,
-      modifiedDate: modifiedDatePreset,
-      createdDate: createdDatePreset,
-    };
-    setSelectedFilters(filters);
-    setIsFilterActive(
-      filters.status.length > 0 ||
-        filters.rounds.min !== "" ||
-        filters.rounds.max !== "" ||
-        filters.modifiedDate !== "" ||
-        filters.createdDate !== ""
-    );
-    setFilterPopupOpen(false);
-    setCurrentPage(0);
-  };
-
-  const handleClearAll = () => {
-    const clearedFilters = {
-      status: [],
-      rounds: { min: "", max: "" },
-      modifiedDate: "",
-      createdDate: "",
-    };
-    setSelectedStatus([]);
-    setRoundsRange({ min: "", max: "" });
-    setModifiedDatePreset("");
-    setCreatedDatePreset("");
-    setSelectedFilters(clearedFilters);
-    setIsFilterActive(false);
-    setFilterPopupOpen(false);
-    setCurrentPage(0);
-  };
   const handleView = (template) => {
     if (effectivePermissions.InterviewTemplates?.View) {
       navigate(`/interview-templates/${template._id}`);
@@ -359,47 +287,38 @@ const StandardTemplates = ({ handleClone }) => {
                 </div>
               )}
             </div>
-            <div>
+            {/* Format Filter */}
+            <div className="mt-4">
               <div
                 className="flex justify-between items-center cursor-pointer"
-                onClick={() => setIsRoundsOpen(!isRoundsOpen)}
+                onClick={() => setIsFormatOpen(!isFormatOpen)}
               >
-                <span className="font-medium text-gray-700">
-                  Number of Rounds
-                </span>
-                {isRoundsOpen ? (
+                <span className="font-medium text-gray-700">Format</span>
+                {isFormatOpen ? (
                   <ChevronUp className="text-xl text-gray-700" />
                 ) : (
                   <ChevronDown className="text-xl text-gray-700" />
                 )}
               </div>
-              {isRoundsOpen && (
+              {isFormatOpen && (
                 <div className="mt-2 pl-3 space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="number"
-                      value={roundsRange.min}
-                      onChange={(e) => handleRoundsChange(e, "min")}
-                      placeholder="Min"
-                      className="w-20 p-1 border rounded"
-                      min="0"
-                      max="10"
-                    />
-                    <span className="text-sm">to</span>
-                    <input
-                      type="number"
-                      value={roundsRange.max}
-                      onChange={(e) => handleRoundsChange(e, "max")}
-                      placeholder="Max"
-                      className="w-20 p-1 border rounded"
-                      min="0"
-                      max="10"
-                    />
-                  </div>
+                  {formatOptions.map((format) => (
+                    <label key={format.value} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedFormats.includes(format.value)}
+                        onChange={() => handleFormatToggle(format.value)}
+                        className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                      />
+                      <span className="text-sm">{format.label}</span>
+                    </label>
+                  ))}
                 </div>
               )}
             </div>
-            <div>
+
+            {/* Created Date Filter */}
+            <div className="mt-4">
               <div
                 className="flex justify-between items-center cursor-pointer"
                 onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}

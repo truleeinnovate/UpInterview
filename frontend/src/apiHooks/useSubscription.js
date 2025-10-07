@@ -11,7 +11,6 @@ const getUserContext = () => {
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const ownerId = tokenPayload?.userId;
-  console.log("ownerId",ownerId);
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization; // could be boolean true or string 'false'
   const userType = organization === true ? 'organization' : 'individual';
@@ -29,15 +28,38 @@ const formatPlans = (plans, userType) => {
 
     const calcPct = (price, discount) => (price && discount ? Math.round((discount / price) * 100) : 0);
 
-    return {
+    const formattedPlan = {
       name: plan.name,
-      planId: plan._id,
+      planId: plan.planId || plan._id,
       monthlyPrice: monthlyPricing?.price || 0,
       annualPrice: annualPricing?.price || 0,
       isDefault: plan.name === 'Pro',
       razorpayPlanIds: plan.razorpayPlanIds || {},
       features: Array.isArray(plan.features)
-        ? plan.features.map((f) => `${f.name} (${f.description})`)
+        ? plan.features
+            .map((f) => {
+              // Return just the description string for display
+              return f.description || f.name || 'Feature';
+            })
+            .filter((feature) => {
+              // Hide user-related features for individual accounts
+              if (userType === 'individual') {
+                const featureLower = feature.toLowerCase();
+                // Check for various user/team member related patterns
+                if (
+                  featureLower.includes('only 1 user')
+                  // featureLower.includes('1 user') ||
+                  // featureLower.includes('single user') ||
+                  // featureLower.includes('team member') ||
+                  // featureLower.includes('team members') ||
+                  // (featureLower.includes('up to') && featureLower.includes('user')) ||
+                  // (featureLower.includes('up to') && featureLower.includes('member'))
+                ) {
+                  return false;
+                }
+              }
+              return true;
+            })
         : [],
       monthlyBadge:
         monthlyPricing?.discountType === 'percentage' && monthlyPricing?.discount > 0
@@ -56,6 +78,7 @@ const formatPlans = (plans, userType) => {
           ? parseInt(annualPricing.discount)
           : null,
     };
+    return formattedPlan;
   });
 };
 

@@ -92,7 +92,7 @@ export function VideoCallingSettings() {
     {
       id: 'google-meet',
       name: 'Google Meet',
-      description: 'Integrate with Google Meet for video interviews',
+      description: 'Integrate with Google Meet for video interviews (Note: Only if the scheduler joins, the candidate can join.)',
       icon: VideoCameraIcon,
       specifications: [
         'Google Workspace Integration',
@@ -106,8 +106,17 @@ export function VideoCallingSettings() {
   ]
 
   useEffect(() => {
-    console.log("tenantId", tenantId);
-    console.log("ownerId", ownerId);
+    if (settings && isOrganization === false) {
+      setSettings(prev => ({
+        ...prev,
+        credentialType: 'platform'
+      }));
+    }
+  }, [settings, isOrganization]);
+  
+
+  useEffect(() => {
+   
     const fetchSettings = async () => {
       try {
         setLoading(true)
@@ -123,7 +132,7 @@ export function VideoCallingSettings() {
           }
         )
         
-        // console.log("✅ API Response:", data);
+        console.log("✅ API Response:", data);
         
         if (data.success && data.data) {
           setSettings(data.data)
@@ -278,7 +287,7 @@ export function VideoCallingSettings() {
           ownerId: ownerId
         }
       );
-
+console.log(response.data);
       if (response.data.success) {
         setSettings(prev => ({
           ...prev,
@@ -599,20 +608,21 @@ export function VideoCallingSettings() {
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <h4 className="font-medium text-gray-900 mb-3">Need help choosing?</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-[#217989]">Google Meet:</span>
-              <p className="text-gray-600">Ideal for Google Workspace users</p>
-            </div>
+          
             <div>
               <span className="font-medium text-[#217989]">Zoom:</span>
               <p className="text-gray-600">Perfect for enterprise environments</p>
+            </div>
+            <div>
+              <span className="font-medium text-[#217989]">Google Meet:</span>
+              <p className="text-gray-600">Ideal for Google Workspace users</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Credential Configuration */}
-      {settings.defaultProvider !== 'platform' && (
+      {/* {settings.defaultProvider !== 'platform' && (
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium mb-4">Credential Configuration</h3>
           
@@ -627,7 +637,7 @@ export function VideoCallingSettings() {
                     type="radio"
                     name="credentialType"
                     value="platform"
-                    checked={settings.credentialType === 'platform'}
+                    checked={ settings.credentialType === 'platform'}
                     onChange={(e) => handleCredentialTypeChange(e.target.value)}
                     className="text-[#217989] focus:ring-[#217989]"
                   />
@@ -681,6 +691,90 @@ export function VideoCallingSettings() {
           </div>
         </div>
       )}
+*/}
+
+{/* Credential Configuration */}
+{settings.defaultProvider !== 'platform' && (
+  <div className="bg-white p-6 rounded-lg shadow">
+    <h3 className="text-lg font-medium mb-4">Credential Configuration</h3>
+    
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Choose Credential Type
+        </label>
+
+        <div className="space-y-3">
+          {/* Always show Platform Credentials */}
+          <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input
+              type="radio"
+              name="credentialType"
+              value="platform"
+              checked={settings.credentialType === 'platform'}
+              onChange={(e) => handleCredentialTypeChange(e.target.value)}
+              className="text-[#217989] focus:ring-[#217989]"
+              disabled={isOrganization === false} 
+              // added by Ranjith – disable change when org is false
+            />
+            <div className="ml-3">
+              <div className="font-medium">Use Platform Credentials</div>
+              <div className="text-sm text-gray-500">
+                Use our managed {videoProviders.find(p => p.id === settings.defaultProvider)?.name} integration (Recommended)
+              </div>
+            </div>
+          </label>
+
+          {/* Show “Use Your Own Credentials” only if organization is true */}
+          {isOrganization === true && (
+            // added by Ranjith – show tenant option only for organization=true
+            <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <input
+                type="radio"
+                name="credentialType"
+                value="tenant"
+                checked={settings.credentialType === 'tenant'}
+                onChange={(e) => handleCredentialTypeChange(e.target.value)}
+                className="text-[#217989] focus:ring-[#217989]"
+              />
+              <div className="ml-3">
+                <div className="font-medium">Use Your Own Credentials</div>
+                <div className="text-sm text-gray-500">
+                  Connect your own {videoProviders.find(p => p.id === settings.defaultProvider)?.name} account for full control
+                </div>
+              </div>
+            </label>
+          )}
+        </div>
+      </div>
+
+      {/* Show tenant credential form only if selected & organization=true */}
+      {isOrganization === true && settings.credentialType === 'tenant' && (
+        // added by Ranjith – tenant credential form only for organization=true
+        <div className="mt-6">
+          <h4 className="text-lg font-medium mb-4">
+            {videoProviders.find(p => p.id === settings.defaultProvider)?.name} Credentials
+          </h4>
+          {renderCredentialForm(settings.defaultProvider)}
+        </div>
+      )}
+
+      {/* Always show platform info box */}
+      {settings.credentialType === 'platform' && (
+        <div className="bg-[#217989]/5 border-l-4 border-[#217989] p-4 rounded-r-lg">
+          <div className="flex items-center">
+            <CheckCircleIcon className="h-5 w-5 text-[#217989] mr-2" />
+            <p className="text-sm text-[#217989]">
+              You're using our managed {videoProviders.find(p => p.id === settings.defaultProvider)?.name} integration. 
+              No additional setup required - meetings will be created automatically during interview scheduling.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
 
       {/* Usage Instructions */}
       <div className="bg-white p-6 rounded-lg shadow">

@@ -440,7 +440,7 @@ const InterviewSlideover = ({ mode }) => {
                                 options={[
                                     { label: "Online / Virtual", value: "online" },
                                     { label: "Face to Face / Onsite", value: "offline" },
-                                    { label: "Hybrid (Online + Offline)", value: "hybrid" },
+                                    { label: "Hybrid (Online + Onsite)", value: "hybrid" },
                                 ]}
                                 onChange={(e) => {
                                     setNewTemplate((prev) => ({
