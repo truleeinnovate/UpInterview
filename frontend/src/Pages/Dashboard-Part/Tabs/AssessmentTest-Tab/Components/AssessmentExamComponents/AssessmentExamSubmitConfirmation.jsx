@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - Fixed style issue
 
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
@@ -22,7 +23,9 @@ function SubmitConfirmation({
             <h2 className="sm:text-lg md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-bold text-gray-900 mb-4">
               Ready to Submit?
             </h2>
-            <p className="sm:text-sm md:text-md lg:text-xl xl:text-xl 2xl:text-xl text-gray-600">
+            {/* v1.0.1 <-------------------------------------------------------------------------- */}
+            <p className="sm:text-sm md:text-md lg:text-md xl:text-md 2xl:text-md text-gray-600">
+              {/* v1.0.1 --------------------------------------------------------------------------> */}
               You have answered {answeredQuestions} out of {totalQuestions}{" "}
               questions.
             </p>
@@ -71,20 +74,22 @@ function SubmitConfirmation({
               })}
             </div>
           </div>
+          {/* v1.0.1 <---------------------------------------------------------------------- */}
           <div className="flex justify-center space-x-4">
             <button
               onClick={handleStartReview}
-              className="sm:px-3 px-6 sm:py-2 py-3 border border-gray-300 rounded-xl sm:text-sm md:text-sm lg:text-base xl:text-base 2xl:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue transition-all duration-200"
+              className="sm:px-3 px-4 sm:py-2 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue transition-all duration-200"
             >
               Review Answers
             </button>
             <button
               onClick={handleConfirmSubmit}
-              className="sm:px-3 px-6 sm:py-2 py-3 rounded-xl sm:text-sm md:text-sm lg:text-base xl:text-base 2xl:text-base font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+              className="sm:px-3 px-4 sm:py-2 py-3 rounded-xl text-sm font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
             >
               Submit Assessment
             </button>
           </div>
+          {/* v1.0.1 ----------------------------------------------------------------------> */}
         </div>
       </div>
     </div>
