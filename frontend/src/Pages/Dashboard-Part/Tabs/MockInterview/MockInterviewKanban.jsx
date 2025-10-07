@@ -186,7 +186,7 @@ const MockInterviewKanban = ({ mockinterviews, onRescheduleClick, onCancel, load
                     whileHover={{ x: 2 }}
                   >
                     <Hourglass className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    <span className="text-gray-700">{mockinterview?.rounds?.[0]?.status || mockinterview?.status || "N/A"}</span>
+                    <span className="text-gray-700">{mockinterview?.rounds?.[0]?.status === "RequestSent" ? "Request Sent" : mockinterview?.rounds?.[0]?.status || "N/A"}</span>
                   </motion.div>
                 </div>
 

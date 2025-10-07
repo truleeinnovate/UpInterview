@@ -115,7 +115,7 @@ const MockSchedulelater = () => {
             dateTime: "",
         },
     });
-
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedMeetingPlatform, setSelectedMeetingPlatform] =
         useState("zoommeet"); // Default to Google Meet googlemeet
     const [meetingCreationProgress, setMeetingCreationProgress] = useState("");
@@ -554,6 +554,11 @@ const handleNext = async () => {
       console.log("Page 1 validation failed:", newErrors);
       return;
     }
+
+    
+  // Prevent multiple clicks
+  if (isSubmitting) return;
+  setIsSubmitting(true);
   
     try {
       // ✅ FIX: Prepare Page 1 data WITHOUT rounds
@@ -597,8 +602,11 @@ const handleNext = async () => {
       // Extract the mock interview ID from response
       const savedMockId = response?.data?.mockInterview?._id || response?._id || response?.data?._id;
   
-      if (!savedMockId) {
+  
+
+    if (!savedMockId) {
         notify.error("Failed to save mock interview data");
+        setIsSubmitting(false);
         return;
       }
   
@@ -607,12 +615,16 @@ const handleNext = async () => {
         setCreatedMockInterviewId(savedMockId);
       }
   
-      notify.success("Candidate details saved successfully");
+    //   notify.success("Candidate details saved successfully");
       setCurrentPage(2);
+      setIsSubmitting(false);
+
   
     } catch (error) {
-      console.error("Error saving Page 1 data:", error);
+      console.error("Error saving Page 1 data:", error);      
       notify.error("Failed to save candidate details");
+      setIsSubmitting(false);
+
     }
   };
 
@@ -653,7 +665,8 @@ const handleSubmit = async (e) => {
       notify.error("At least one interviewer must be selected");
       return;
     }
-  
+   // Set loading state
+   setIsSubmitting(true);
     // Use the ID from Page 1 save, or edit ID, or create new
     const mockIdToUse = mockEdit ? id : createdMockInterviewId;
   
@@ -664,7 +677,7 @@ const handleSubmit = async (e) => {
       rounds: [{
         ...formData.rounds,
         sequence: 1, // Always set sequence for new rounds
-        status: "RequestSent",
+        status: selectedInterviewers.length > 0 ? "RequestSent" : "Draft",
         interviewers: interviewerIds,
         interviewType: interviewType,
         dateTime: combinedDateTime,
@@ -703,6 +716,8 @@ const handleSubmit = async (e) => {
          !mockInterviewResponse._id)
       ) {
         notify.error("Failed to save interview details");
+        setIsSubmitting(false);
+
         return;
       }
   
@@ -722,6 +737,7 @@ const handleSubmit = async (e) => {
   
       if (!mockInterviewId) {
         notify.error("Failed to get interview details after saving");
+        setIsSubmitting(false);
         return;
       }
   
@@ -799,6 +815,7 @@ const handleSubmit = async (e) => {
         } catch (outsourceError) {
           console.error("Error in outsource requests:", outsourceError);
           notify.error("Failed to send interview requests");
+          setIsSubmitting(false);
           return;
         }
       }
@@ -875,7 +892,7 @@ const handleSubmit = async (e) => {
             );
           }
   
-          console.log("✅ Meeting created:", meetingLink);
+     
   
           // Update the round with meeting link
           if (meetingLink) {
@@ -898,23 +915,26 @@ const handleSubmit = async (e) => {
   
             // Use the mutation to update just the round
             await addOrUpdateMockInterview({
-              round: updateRoundData,
+                formData: {
+                    ...mockInterviewResponse?.data?.mockInterview, 
+                    rounds: [updateRoundData], 
+                    isEdit: true,
+                  },
+            //   round: updateRoundData,
               id: mockInterviewId,
               isEdit: true,
               userId,
               organizationId,
             });
   
-            console.log("✅ Round updated with meeting link");
+         
           }
         } catch (meetingError) {
           console.error("Error creating meeting:", meetingError);
           console.warn("Meeting creation failed, but continuing with interview creation");
         }
       }
-  
-      // 🔹 STEP 5: SUCCESS - Clear form and navigate
-      console.log("🔹 STEP 5: SUCCESS - All operations completed");
+
   
       // Clear all form data
       setFormData({
@@ -952,10 +972,14 @@ const handleSubmit = async (e) => {
       navigate("/mockinterview");
       setTimeout(() => {
         notify.success(mockEdit ? "Mock interview updated successfully!" : "Mock interview created successfully!");
-      }, 100);
+        setIsSubmitting(false);
+        setMeetingCreationProgress("");  
+    }, 100);
   
     } catch (error) {
-      console.error("❌ Overall process failed:", error);
+        console.error("❌ Overall process failed:", error);
+        setIsSubmitting(false);
+        setMeetingCreationProgress("");
       let errorMessage = "Failed to save interview. Please try again.";
   
       if (error.response?.status === 500) {
@@ -2402,7 +2426,8 @@ const handleSubmit = async (e) => {
                             </button>
                             <LoadingButton
                                 onClick={handleNext}
-                                isLoading={isMutationLoading}
+                                // isLoading={isMutationLoading}
+                                isLoading={isSubmitting || isMutationLoading}
                                 loadingText={mockEdit ? "Updating..." : "Saving..."}
                             >
                                 {mockEdit ? "Update" : "Save"} & Next
@@ -2418,7 +2443,8 @@ const handleSubmit = async (e) => {
                             </button>
                             <LoadingButton
                                 onClick={(e) => handleSubmit(e)}
-                                isLoading={isMutationLoading}
+                                // isLoading={isMutationLoading}
+                                isLoading={isSubmitting || isMutationLoading}
                                 loadingText={mockEdit ? "Updating..." : "Saving..."}
                             >
                                 {formData.rounds.interviewType === "instant"

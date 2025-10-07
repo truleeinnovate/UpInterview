@@ -101,7 +101,7 @@ const MockinterviewTable = ({ mockinterviews, onRescheduleClick, onCancel }) => 
                         </td>
                         <td className="px-4 py-2 text-sm text-gray-600">{mockinterview.technology}</td>
                         <td className="px-4 py-2 text-sm text-gray-600">
-                          {mockinterview?.rounds?.status || "N/A"}
+                          {mockinterview?.rounds?.status === "RequestSent" ? "Request Sent" : mockinterview?.rounds?.status  || "N/A"}
                         </td>
                         <td className="px-4 py-2 text-sm text-gray-600">
                           {mockinterview?.rounds?.duration || "N/A"}
