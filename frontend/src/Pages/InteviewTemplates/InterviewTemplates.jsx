@@ -620,15 +620,17 @@ const InterviewTemplates = () => {
                             addButtonText="New Template"
                             canCreate={effectivePermissions.InterviewTemplates?.Create}
                         />
-                        <div className="flex justify-end mb-4">
-                            <FilterTabs
-                                activeTab={activeTab}
-                                onFilterChange={setActiveTab}
-                                standardCount={standardCount}
-                                customCount={customCount}
-                                totalCount={totalCount}
-                            />
-                        </div>
+                        {/* v1.0.6 <--------------------------------------------------- */}
+                        {/* <div className="flex justify-end mb-4">
+              <FilterTabs
+                activeTab={activeTab}
+                onFilterChange={setActiveTab}
+                standardCount={standardCount}
+                customCount={customCount}
+                totalCount={totalCount}
+              />
+            </div> */}
+                        {/* v1.0.6 ---------------------------------------------------> */}
                     </div>
                 </main>
             </div>
@@ -651,6 +653,11 @@ const InterviewTemplates = () => {
                                 dataLength={normalizedTemplates.length}
                                 searchPlaceholder="Search Interview Templates..."
                                 filterIconRef={filterIconRef}
+                                // v1.0.6 <----------------------------------------
+                                templatesData={paginatedTemplates}
+                                activeTab={activeTab}
+                                setActiveTab={setActiveTab}
+                            // v1.0.6 ---------------------------------------->
                             />
                         </div>
                         <div className="sm:px-0">
