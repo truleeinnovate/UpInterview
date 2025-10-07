@@ -1366,10 +1366,12 @@ function OutsourcedInterviewerModal({
             {/* v1.0.2 --------------------------------------------------------------------------> */}
             <AnimatePresence>
                 {selectedInterviewer && navigatedfrom !== "dashboard" && (
+                     <div className="relative z-[60]">
                     <InterviewerDetailsModal
                         interviewer={selectedInterviewer}
                         onClose={() => setSelectedInterviewer(null)}
                     />
+                    </div>
                 )}
             </AnimatePresence>
 
