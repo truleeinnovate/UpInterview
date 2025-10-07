@@ -36,10 +36,30 @@ const formatPlans = (plans, userType) => {
       isDefault: plan.name === 'Pro',
       razorpayPlanIds: plan.razorpayPlanIds || {},
       features: Array.isArray(plan.features)
-        ? plan.features.map((f) => {
-            // Return just the description string for display
-            return f.description || f.name || 'Feature';
-          })
+        ? plan.features
+            .map((f) => {
+              // Return just the description string for display
+              return f.description || f.name || 'Feature';
+            })
+            .filter((feature) => {
+              // Hide user-related features for individual accounts
+              if (userType === 'individual') {
+                const featureLower = feature.toLowerCase();
+                // Check for various user/team member related patterns
+                if (
+                  featureLower.includes('only 1 user')
+                  // featureLower.includes('1 user') ||
+                  // featureLower.includes('single user') ||
+                  // featureLower.includes('team member') ||
+                  // featureLower.includes('team members') ||
+                  // (featureLower.includes('up to') && featureLower.includes('user')) ||
+                  // (featureLower.includes('up to') && featureLower.includes('member'))
+                ) {
+                  return false;
+                }
+              }
+              return true;
+            })
         : [],
       monthlyBadge:
         monthlyPricing?.discountType === 'percentage' && monthlyPricing?.discount > 0
