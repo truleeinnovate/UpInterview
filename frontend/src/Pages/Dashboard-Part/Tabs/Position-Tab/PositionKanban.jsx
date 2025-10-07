@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Improved responsiveness
 // v1.0.1 - Ashok - changed entire kanban for passing actions
 // v1.0.2 - Ashok - added loading view for kanban and fixed cards for small screens
+// v1.0.3 - Ashok - changed grid layout for xl screens
 
 // import { motion } from 'framer-motion';
 // import { DndContext, closestCenter } from '@dnd-kit/core';
@@ -256,7 +257,9 @@ const PositionKanban = ({
         {loading ? (
           // v1.0.2 <-------------------------------------------------------------------------
           <div className="overflow-y-auto max-h-[calc(100vh-270px)] pb-8 pr-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
+            {/* v1.0.3 <------------------------------------------------------------------------------------------- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+            {/* v1.0.3 -------------------------------------------------------------------------------------------> */}
               {Array.from({ length: 6 }).map((_, index) => (
                 <div
                   key={index}
@@ -292,7 +295,9 @@ const PositionKanban = ({
         ) : (
           <div className="overflow-y-auto max-h-[calc(100vh-270px)] pb-8 pr-1">
             {/* v1.0.2 <----------------------------------------------------------------------------------------------- */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
+            {/* v1.0.3 <----------------------------------------------------------------------------------------------- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+              {/* v1.0.3 -----------------------------------------------------------------------------------------------> */}
               {/* v1.0.2 -----------------------------------------------------------------------------------------------> */}
               {data.map((item, index) => (
                 <motion.div
