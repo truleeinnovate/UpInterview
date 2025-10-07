@@ -15,6 +15,7 @@ import {
   CheckCircle,
   Edit,
 } from "lucide-react";
+import Cookies from "js-cookie";
 import { createPortal } from "react-dom";
 // import { useCustomContext } from '../../../../Context/Contextfetch';
 // import { Button } from '../CommonCode-AllTabs/ui/button';
@@ -25,8 +26,11 @@ import { Button } from "../CommonCode-AllTabs/ui/button";
 import axios from "axios";
 import { notify } from "../../../../services/toastService";
 import { config } from "../../../../config";
+import { useMockInterviews } from "../../../../apiHooks/useMockInterviews";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 
 const MoockRoundCard = ({
+  mockinterview,
   round,
     canEdit,
     onEdit,
@@ -41,8 +45,13 @@ const MoockRoundCard = ({
       const [confirmAction, setConfirmAction] = useState(null);
       const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-      console.log("round",round);
-      
+      // console.log("round",round);
+      const { addOrUpdateMockInterview } = useMockInterviews();
+
+       const authToken = Cookies.get("authToken");
+          const tokenPayload = decodeJwt(authToken);
+          const userId = tokenPayload?.userId;
+          const organizationId = tokenPayload?.tenantId;
 
   const formatDate = (dateString) => {
     if (!dateString) return "Not scheduled";
@@ -57,36 +66,158 @@ const MoockRoundCard = ({
     });
   };
 
+  // const handleStatusChange = async (newStatus, reason = null) => {
+  //   const roundData = {
+  //     ...round,
+  //     _id: round._id,
+     
+  //     status: newStatus,
+  //     completedDate: newStatus === "Completed",
+  //     rejectionReason: reason || null,
+  //   };
+
+  //   const formData = {
+  //     id: round?.mockInterviewId,
+  //     rounds: [ roundData ],
+  //     isEdit: true,
+  //     // roundId: round._id,
+  //     // isEditing: true, // Always set isEditing to true
+  //   };
+  //   console.log("done",
+  //     {
+  //       formData: {
+  //         // id: round?.mockInterviewId,      // ID of existing mock interview (if editing)
+  //         ...mockinterview,
+  //         rounds: [                        // Always an array of rounds
+  //           {
+  //             ...round,
+  //             _id: round?._id,             // keep round ID for updates
+  //             status: newStatus,           // e.g. "Scheduled", "Completed", etc.
+  //             completedDate: newStatus === "Completed" ? new Date() : null,
+  //             rejectionReason: reason || null,
+  //           },
+  //         ],
+  //         isEdit: true,                    // Always true for update
+  //       },
+  //       id: round?.mockInterviewId,        // duplicate for backend compatibility
+  //       isEdit: true,
+  //       userId,
+  //       organizationId,
+  //                                    // the original round reference
+  //     }
+  //   );
+    
+
+  //   try {
+  //     // const response = await axios.patch(
+  //     //   `${config.REACT_APP_API_URL}/updateMockInterview/${round?.mockInterviewId}`,
+  //     //   payload
+  //     // );
+  //      // Call API to save/update Page 1 data
+  //      const response = await addOrUpdateMockInterview(
+  //       {
+  //         formData: {
+  //           // id: round?.mockInterviewId,      // ID of existing mock interview (if editing)
+  //           ...mockinterview,
+  //           rounds: [                        // Always an array of rounds
+  //             {
+  //               ...round,
+  //               _id: round?._id,             // keep round ID for updates
+  //               status: newStatus,           // e.g. "Scheduled", "Completed", etc.
+  //               completedDate: newStatus === "Completed" ? new Date() : null,
+  //               rejectionReason: reason || null,
+  //             },
+  //           ],
+  //           isEdit: true,                    // Always true for update
+  //         },
+  //         id: round?.mockInterviewId,        // duplicate for backend compatibility
+  //         isEdit: true,
+  //         userId,
+  //         organizationId,
+  //                                      // the original round reference
+  //       }
+  //      );
+  //      const savedMockId = response?.data?.mockInterview?._id || response?._id || response?.data?._id;
+
+
+  //      console.log("Status updated:", response.data);
+  //      // Show success toast
+  //      if (savedMockId) {
+  //       notify.success(`Round status updated to ${newStatus}`, {
+  //       });
+  //      }
+
+  //       if (!savedMockId) {
+  //              notify.error("Failed to save mock interview data");
+  //              return;
+  //            }
+  
+     
+   
+  //   } catch (error) {
+  //     console.error("Error updating status:", error);
+  //   }
+  // };
+
+
   const handleStatusChange = async (newStatus, reason = null) => {
-    const roundData = {
-      ...round,
-      _id: round._id,
-
-      status: newStatus,
-      completedDate: newStatus === "Completed",
-      rejectionReason: reason || null,
-    };
-
-    const payload = {
-      // interviewId: interview._id,
-      rounds: [ roundData ],
-      // roundId: round._id,
-      // isEditing: true, // Always set isEditing to true
-    };
-
     try {
-      const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/updateMockInterview/${round?.mockInterviewId}`,
-        payload
-      );
-      console.log("Status updated:", response.data);
-      // Show success toast
-      notify.success(`Round status updated to ${newStatus}`, {
-    });
+      // 🧩 Ensure interviewer IDs are strings
+      const interviewerIds =
+        Array.isArray(round?.interviewers)
+          ? round.interviewers.map((i) => (typeof i === "object" ? i._id : i))
+          : [];
+  
+      // 🧩 Prepare round data in backend-expected shape
+      const roundData = {
+        ...round,
+        _id: round._id,
+        interviewers: interviewerIds, // ✅ Fix: send string IDs, not objects
+        status: newStatus,
+        completedDate: newStatus === "Completed" ? new Date() : null,
+        rejectionReason: reason || null,
+      };
+  
+      // 🧩 Prepare formData payload
+      const formData = {
+        id: round?.mockInterviewId,
+        rounds: [roundData],
+        isEdit: true,
+      };
+  
+      console.log("✅ Mock Interview Status Update Payload:", {
+        formData,
+        id: round?.mockInterviewId,
+        isEdit: true,
+        userId,
+        organizationId,
+      });
+  
+      // 🧩 Call mutation
+      const response = await addOrUpdateMockInterview({
+        formData,
+        id: round?.mockInterviewId,
+        isEdit: true,
+        userId,
+        organizationId,
+      });
+  
+      const savedMockId =
+        response?.data?.mockInterview?._id ||
+        response?._id ||
+        response?.data?._id;
+  
+      if (savedMockId) {
+        notify.success(`Round status updated to "${newStatus}" successfully.`);
+      } else {
+        notify.error("Failed to save mock interview data.");
+      }
     } catch (error) {
-      console.error("Error updating status:", error);
+      console.error("❌ Error updating mock interview status:", error);
+      notify.error("Failed to update round status. Please try again.");
     }
   };
+  
 
   const handleConfirmStatusChange = () => {
     if (confirmAction) {
@@ -174,9 +305,9 @@ const MoockRoundCard = ({
     //   canFeedback: true,
     // },
     Draft: {
-      canEdit: true,
-      canDelete: true,
-      canMarkScheduled: true,
+      // canEdit: true,
+      // canDelete: true,
+      // canMarkScheduled: true,
       canReschedule: false,
       canCancel: false,
       canComplete: false,
@@ -185,9 +316,9 @@ const MoockRoundCard = ({
      
     },
     RequestSent: {
-      canEdit: true,
-      canDelete: false,
-      canMarkScheduled: true,
+      // canEdit: true,
+      // canDelete: false,
+      // canMarkScheduled: true,
       canReschedule: false,
       canCancel: false,
       canComplete: false,
@@ -196,9 +327,9 @@ const MoockRoundCard = ({
     
     },
     Scheduled: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
+      // canEdit: false,
+      // canDelete: false,
+      // canMarkScheduled: false,
       canReschedule: true,
       canCancel: true,
       canComplete: true,
@@ -207,31 +338,31 @@ const MoockRoundCard = ({
      
     },
     Rescheduled: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
+      // canEdit: false,
+      // canDelete: false,
+      // canMarkScheduled: false,
       canReschedule: true,
       canCancel: true,
       canComplete: true,
-      canReject: false,
-      canSelect: false,
+      // canReject: false,
+      // canSelect: false,
      
     },
     Completed: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
+      // canEdit: false,
+      // canDelete: false,
+      // canMarkScheduled: false,
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      canReject: true,
-      canSelect: true,
+      // canReject: true,
+      // canSelect: true,
      
     },
     Cancelled: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
+      // canEdit: false,
+      // canDelete: false,
+      // canMarkScheduled: false,
       canReschedule: false,
       canCancel: false,
       canComplete: false,
@@ -239,28 +370,28 @@ const MoockRoundCard = ({
       canSelect: false,
       
     },
-    Rejected: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
-      canReschedule: false,
-      canCancel: false,
-      canComplete: false,
-      canReject: false,
-      canSelect: false,
+    // Rejected: {
+    //   canEdit: false,
+    //   canDelete: false,
+    //   canMarkScheduled: false,
+    //   canReschedule: false,
+    //   canCancel: false,
+    //   canComplete: false,
+    //   canReject: false,
+    //   canSelect: false,
       
-    },
-    Selected: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
-      canReschedule: false,
-      canCancel: false,
-      canComplete: false,
-      canReject: false,
-      canSelect: false,
+    // },
+    // Selected: {
+    //   canEdit: false,
+    //   canDelete: false,
+    //   canMarkScheduled: false,
+    //   canReschedule: false,
+    //   canCancel: false,
+    //   canComplete: false,
+    //   canReject: false,
+    //   canSelect: false,
     
-    },
+    // },
     InComplete: {
       canEdit: false,
       canDelete: false,
