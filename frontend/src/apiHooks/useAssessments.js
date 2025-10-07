@@ -37,7 +37,7 @@ export const useAssessments = (filters = {}) => {
     // ---------------------- v1.0.1 >
     queryFn: async () => {
       const data = await fetchFilterData('assessment');
-      
+
       return data.map(assessment => ({
         ...assessment,
         // <---------------------- v1.0.4
@@ -61,17 +61,17 @@ export const useAssessments = (filters = {}) => {
 
   const addOrUpdateAssessment = useMutation({
     mutationFn: async ({ isEditing, id, assessmentData, tabsSubmitStatus }) => {
-      
+
       if (isEditing && id && id !== '' && id !== null && id !== undefined) {
-        
+
         const { data } = await axios.patch(
           `${config.REACT_APP_API_URL}/assessments/update/${id}`,
           assessmentData,
         );
         return data;
       }
-      
-      
+
+
       const { data } = await axios.post(
         `${config.REACT_APP_API_URL}/assessments/new-assessment`,
         assessmentData,
@@ -84,12 +84,12 @@ export const useAssessments = (filters = {}) => {
       queryClient.setQueryData(['AssessmentTemplates', filters], (oldData) => {
       // ---------------------- v1.0.1 >
         if (!oldData) return oldData;
-        
+
         if (variables.isEditing && variables.id && variables.id !== '' && variables.id !== null && variables.id !== undefined) {
           // <---------------------- v1.0.0
           // Update existing assessment
-          return oldData.map(assessment => 
-            assessment._id === variables.id 
+          return oldData.map(assessment =>
+            assessment._id === variables.id
               ? { ...assessment, ...data.data }
               : assessment
           );
@@ -98,7 +98,7 @@ export const useAssessments = (filters = {}) => {
           return [data.data, ...oldData];
         }
       });
-      
+
       // Invalidate to ensure consistency
       // <---------------------- v1.0.1
       queryClient.invalidateQueries(['AssessmentTemplates']);
@@ -233,7 +233,7 @@ export const useAssessments = (filters = {}) => {
         if (response.data.exists === false) {
           return { data: { sections: [] }, error: null };
         }
-        
+
         return { data: response.data.data, error: null };
       } else {
         return { data: null, error: response.data.message };
@@ -317,6 +317,29 @@ export const useAssessments = (filters = {}) => {
     });
   }, [assessmentData.length, isLoading, isQueryLoading, isMutationLoading]);
 
+  // Delete assessment mutation
+  const deleteAssessment = useMutation({
+    mutationFn: async (assessmentId) => {
+      const { data } = await axios.delete(
+        `${config.REACT_APP_API_URL}/assessments/${assessmentId}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return data;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch the assessments query to update the UI
+      queryClient.invalidateQueries(['AssessmentTemplates']);
+    },
+    onError: (error) => {
+      console.error('Error deleting assessment:', error);
+      throw error;
+    },
+  });
+
   return {
     assessmentData,
     isLoading,
@@ -330,7 +353,7 @@ export const useAssessments = (filters = {}) => {
     upsertQuestionsError: upsertAssessmentQuestions.error,
     addOrUpdateAssessment: addOrUpdateAssessment.mutateAsync,
     upsertAssessmentQuestions: upsertAssessmentQuestions.mutateAsync,
-    fetchAssessmentQuestions, // assessment questions getting 
+    fetchAssessmentQuestions, // assessment questions getting
     fetchAssessmentResults,
     // ------------------------------ v1.0.5 >
     fetchScheduledAssessments, // Keep for backward compatibility
@@ -341,6 +364,7 @@ export const useAssessments = (filters = {}) => {
     cancelAssessment,
     checkExpiredAssessments,
     updateAllScheduleStatuses,
-    // ------------------------------ v1.0.5 >  
+    // ------------------------------ v1.0.5 >
+    deleteAssessment
   };
 };
