@@ -24,65 +24,6 @@ import StandardTemplates from "./StandardTemplates/StandardTemplates.jsx";
 import { notify } from "../../services/toastService.js";
 import StandardTemplatesToolbar from "./StandardTemplates/StandardTemplatesHeader.jsx";
 
-// Format options for interview templates
-const formatOptions = [
-  { label: "Recommended (Online)", value: "online" },
-  { label: "Hybrid (Mix of Online & Onsite)", value: "hybrid" },
-  { label: "On-Site (Traditional)", value: "offline" },
-  { label: "Specialized Technical", value: "technical" },
-  { label: "Company-Specific", value: "company" },
-  { label: "Experience Level", value: "experience" },
-  { label: "Leadership", value: "leadership" },
-  { label: "Employment Type", value: "employment" },
-  { label: "Specialized Requirements", value: "specialized" },
-];
-
-// Helper function to get display label for format value
-const getFormatLabel = (formatValue) => {
-  const option = formatOptions.find((opt) => opt.value === formatValue);
-  return option ? option.label : formatValue || "Uncategorized";
-};
-
-// FilterTabs component for standard/custom tabs
-const FilterTabs = ({
-    activeTab,
-    onFilterChange,
-    standardCount,
-    customCount,
-    totalCount,
-}) => {
-    const tabs = [
-        { id: "standard", label: "Standard", count: standardCount },
-        { id: "custom", label: "Custom", count: customCount },
-    ];
-
-    return (
-        <div className="flex gap-1.5 bg-gray-100 p-1 rounded-md border border-slate-200 px-2">
-            {tabs.map((tab) => (
-                <button
-                    key={tab.id}
-                    onClick={() => onFilterChange(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-1.5 rounded-md font-semibold text-sm transition-all duration-200
-            ${activeTab === tab.id
-                            ? "bg-custom-blue text-white shadow-md"
-                            : "text-slate-600 hover:bg-[#2179891A] hover:text-custom-blue/90 bg-white/100"
-                        }
-          `}
-                >
-                    {tab.label}
-                    <span
-                        className={`
-              px-2 py-0.5 min-w-[20px] text-center text-xs font-semibold rounded-md
-              ${activeTab === tab.id ? "bg-white/30" : "bg-gray-100"}
-            `}
-                    >
-                        {tab.count}
-                    </span>
-                </button>
-            ))}
-        </div>
-    );
-};
 
 const InterviewTemplates = () => {
     const { templatesData, isLoading, saveTemplate } = useInterviewTemplates();
@@ -107,8 +48,8 @@ const InterviewTemplates = () => {
     const [isFormatOpen, setIsFormatOpen] = useState(false);
 
     // Template cloning states
-    const [templateToClone, setTemplateToClone] = useState(null);
-    const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
+    // const [templateToClone, setTemplateToClone] = useState(null);
+    // const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
     // Keep URL in sync with tab state
     useEffect(() => {
         console.log('Current active tab:', activeTab);
@@ -175,14 +116,14 @@ const InterviewTemplates = () => {
         return templatesData.filter(template => template.type === 'custom');
     }, [templatesData]);
 
-    const standardCount = templatesData?.filter(t => t.type === 'standard').length || 0;
-    const customCount = templatesData?.filter(t => t.type === 'custom').length || 0;
-    const totalCount = templatesData?.length || 0;
+    // const standardCount = templatesData?.filter(t => t.type === 'standard').length || 0;
+    // const customCount = templatesData?.filter(t => t.type === 'custom').length || 0;
+    // const totalCount = templatesData?.length || 0;
 
     // Handler for view toggle
-    const toggleView = () => {
-        setView(prev => prev === 'table' ? 'kanban' : 'table');
-    };
+    // const toggleView = () => {
+    //     setView(prev => prev === 'table' ? 'kanban' : 'table');
+    // };
 
     // Status toggle handler
     const handleStatusToggle = (status) => {
@@ -390,143 +331,146 @@ const InterviewTemplates = () => {
         return str.charAt(0).toUpperCase() + str.slice(1);
     };
 
-    const formatOptions = [
+    const formatOptionsfortable = [
         { label: "Online / Virtual", value: "online" },
         { label: "Face to Face / Onsite", value: "offline" },
         { label: "Hybrid (Online + Onsite)", value: "hybrid" },
     ];
 
-    const handleClone = async (template) => {
-        // v1.0.5 <--------------------------------------------------------------
-        setTemplateToClone(template);
-        setCloneConfirmOpen(true);
-        if (!template) {
-            console.error("Invalid template: template is undefined or null");
-            alert("Cannot clone: Invalid template data.");
-            return;
-        }
-        // v1.0.5 -------------------------------------------------------------->
+    const getFormatLabelfortable = (formatValue) => {
+        const option = formatOptionsfortable.find((opt) => opt.value === formatValue);
+        return option ? option.label : formatValue || "Uncategorized";
+      };
+      
+    // const handleClone = async (template) => {
+    //     // v1.0.5 <--------------------------------------------------------------
+    //     // setTemplateToClone(template);
+    //     // setCloneConfirmOpen(true);
+    //     if (!template) {
+    //         console.error("Invalid template: template is undefined or null");
+    //         alert("Cannot clone: Invalid template data.");
+    //         return;
+    //     }
+    //     // v1.0.5 -------------------------------------------------------------->
 
-        console.log("Cloning:", template);
+    //     console.log("Cloning:", template);
 
-        try {
-            // Get all existing template names for uniqueness check
-            const existingNames = templatesData.map(t => t.name);
+    //     try {
+    //         // Get all existing template names for uniqueness check
+    //         const existingNames = templatesData.map(t => t.name);
 
-            // Generate a unique name
-            const generateUniqueName = (baseName) => {
-                let newName = baseName;
-                let counter = 1;
+    //         // Generate a unique name
+    //         const generateUniqueName = (baseName) => {
+    //             let newName = baseName;
+    //             let counter = 1;
 
-                // Check if the name already exists
-                while (existingNames.includes(newName)) {
-                    // If we've tried 99 times, append a timestamp instead
-                    if (counter > 99) {
-                        return `${baseName}_${Date.now().toString().slice(-4)}`;
-                    }
-                    // Append a random 2-digit number (01-99)
-                    const randomNum = Math.floor(Math.random() * 99) + 1;
-                    newName = `${baseName}_${randomNum.toString().padStart(2, '0')}`;
-                    counter++;
-                }
-                return newName;
-            };
+    //             // Check if the name already exists
+    //             while (existingNames.includes(newName)) {
+    //                 // If we've tried 99 times, append a timestamp instead
+    //                 if (counter > 99) {
+    //                     return `${baseName}_${Date.now().toString().slice(-4)}`;
+    //                 }
+    //                 // Append a random 2-digit number (01-99)
+    //                 const randomNum = Math.floor(Math.random() * 99) + 1;
+    //                 newName = `${baseName}_${randomNum.toString().padStart(2, '0')}`;
+    //                 counter++;
+    //             }
+    //             return newName;
+    //         };
 
-            // Safely extract and default fields
-            const baseName = typeof template.name === "string"
-                ? template.name.replace(/_std$/, "")
-                : "cloned_template";
+    //         // Safely extract and default fields
+    //         const baseName = typeof template.name === "string"
+    //             ? template.name.replace(/_std$/, "")
+    //             : "cloned_template";
 
-            // Generate a unique name
-            const safeName = generateUniqueName(baseName);
+    //         // Generate a unique name
+    //         const safeName = generateUniqueName(baseName);
 
-            console.log("Original name:", template.name); // Debug
-            console.log("New unique name:", safeName); // Debug
+    //         console.log("Original name:", template.name); // Debug
+    //         console.log("New unique name:", safeName); // Debug
 
-            // Define the fields to pass based on the schema, with safe defaults
-            const clonedTemplateData = {
-                title: template.title || "Untitled Template",
-                name: safeName,
-                description: template.description || "",
-                bestFor: template.bestFor || "General use",
-                format: template.format || "online",
-                status: template.status || "inactive",
-                type: "custom", // Set to custom for cloned template
-                rounds: Array.isArray(template.rounds)
-                    ? template.rounds.map((round, index) => ({
-                        roundTitle: round.roundTitle || `Round ${index + 1}`,
-                        assessmentId: round.assessmentId || null,
-                        interviewerViewType: round.interviewerViewType || null,
-                        duration: round.duration || null,
-                        instructions: round.instructions || null,
-                        interviewMode: round.interviewMode || null,
-                        minimumInterviewers: round.minimumInterviewers || null,
-                        selectedInterviewers: Array.isArray(round.selectedInterviewers)
-                            ? round.selectedInterviewers
-                            : [],
-                        interviewerType: round.interviewerType || null,
-                        selectedInterviewersType: round.selectedInterviewersType || null,
-                        interviewerGroupName: round.interviewerGroupName || null,
-                        interviewers: Array.isArray(round.interviewers)
-                            ? round.interviewers
-                            : [],
-                        questions: Array.isArray(round.questions)
-                            ? round.questions.map((question) => ({
-                                questionId: question.questionId || null,
-                                snapshot: question.snapshot || {},
-                            }))
-                            : [],
-                        sequence: round.sequence || index + 1,
-                    }))
-                    : [],
-                isSaved: false, // Set to false for new template
-            };
+    //         // Define the fields to pass based on the schema, with safe defaults
+    //         const clonedTemplateData = {
+    //             title: template.title || "Untitled Template",
+    //             name: safeName,
+    //             description: template.description || "",
+    //             bestFor: template.bestFor || "General use",
+    //             format: template.format || "online",
+    //             status: template.status || "inactive",
+    //             type: "custom", // Set to custom for cloned template
+    //             rounds: Array.isArray(template.rounds)
+    //                 ? template.rounds.map((round, index) => ({
+    //                     roundTitle: round.roundTitle || `Round ${index + 1}`,
+    //                     assessmentId: round.assessmentId || null,
+    //                     interviewerViewType: round.interviewerViewType || null,
+    //                     duration: round.duration || null,
+    //                     instructions: round.instructions || null,
+    //                     interviewMode: round.interviewMode || null,
+    //                     minimumInterviewers: round.minimumInterviewers || null,
+    //                     selectedInterviewers: Array.isArray(round.selectedInterviewers)
+    //                         ? round.selectedInterviewers
+    //                         : [],
+    //                     interviewerType: round.interviewerType || null,
+    //                     selectedInterviewersType: round.selectedInterviewersType || null,
+    //                     interviewerGroupName: round.interviewerGroupName || null,
+    //                     interviewers: Array.isArray(round.interviewers)
+    //                         ? round.interviewers
+    //                         : [],
+    //                     questions: Array.isArray(round.questions)
+    //                         ? round.questions.map((question) => ({
+    //                             questionId: question.questionId || null,
+    //                             snapshot: question.snapshot || {},
+    //                         }))
+    //                         : [],
+    //                     sequence: round.sequence || index + 1,
+    //                 }))
+    //                 : [],
+    //             isSaved: false, // Set to false for new template
+    //         };
 
-            // Optionally include interviewTemplateCode if needed (e.g., generate if backend requires uniqueness)
-            // if (template.interviewTemplateCode) {
-            //   clonedTemplateData.interviewTemplateCode = `${clonedTemplateData.name}-clone-${Date.now()}`;
-            // }
+    //         // Optionally include interviewTemplateCode if needed (e.g., generate if backend requires uniqueness)
+    //         // if (template.interviewTemplateCode) {
+    //         //   clonedTemplateData.interviewTemplateCode = `${clonedTemplateData.name}-clone-${Date.now()}`;
+    //         // }
 
-            // Save the cloned template
-            const savedTemplate = await saveTemplate({
-                templateData: clonedTemplateData,
-            });
+    //         // Save the cloned template
+    //         const savedTemplate = await saveTemplate({
+    //             templateData: clonedTemplateData,
+    //         });
 
-            // v1.0.5 <------------------------------------------------------------
-            console.log("Cloned template saved:", savedTemplate);
-            // Provide feedback to the user (e.g., via toast in production)
-            notify.success("Template cloned successfully!");
-            return savedTemplate;
-        } catch (error) {
-            console.error("Error cloning template:", error);
-            // alert("Failed to clone template. Please try again.");
-            notify.error("Failed to clone template. Please try again.");
-            // v1.0.5 ------------------------------------------------------------>
-            throw error;
-        }
-    };
+    //         // v1.0.5 <------------------------------------------------------------
+    //         console.log("Cloned template saved:", savedTemplate);
+    //         // Provide feedback to the user (e.g., via toast in production)
+    //         notify.success("Template cloned successfully!");
+    //         return savedTemplate;
+    //     } catch (error) {
+    //         console.error("Error cloning template:", error);
+    //         // alert("Failed to clone template. Please try again.");
+    //         notify.error("Failed to clone template. Please try again.");
+    //         // v1.0.5 ------------------------------------------------------------>
+    //         throw error;
+    //     }
+    // };
 
     // v1.0.5 <------------------------------------------------------------------------
     const handleCloneClick = (template) => {
-        console.log("Cloning template:", template);
-        setTemplateToClone(template);
-        setCloneConfirmOpen(true);
+        navigate(`/interview-templates/${template._id}/clone`);
     };
 
-    const confirmClone = async () => {
-        if (!templateToClone) return;
-        try {
-            await handleClone(templateToClone); // call your existing clone logic
-        } finally {
-            setCloneConfirmOpen(false);
-            setTemplateToClone(null);
-        }
-    };
+    // const confirmClone = async () => {
+    //     if (!templateToClone) return;
+    //     try {
+    //         await handleClone(templateToClone); // call your existing clone logic
+    //     } finally {
+    //         // setCloneConfirmOpen(false);
+    //         setTemplateToClone(null);
+    //     }
+    // };
 
-    const cancelClone = () => {
-        setCloneConfirmOpen(false);
-        setTemplateToClone(null);
-    };
+    // const cancelClone = () => {
+    //     // setCloneConfirmOpen(false);
+    //     setTemplateToClone(null);
+    // };
     // v1.0.5 ------------------------------------------------------------------------>
 
     const tableColumns = [
@@ -604,7 +548,7 @@ const InterviewTemplates = () => {
             key: "format",
             header: "Format",
             render: (value) => {
-                const formatLabel = getFormatLabel(value);
+                const formatLabel = getFormatLabelfortable(value);
                 return (
                     <span className="whitespace-nowrap">
                         {formatLabel}
@@ -921,7 +865,7 @@ const InterviewTemplates = () => {
                 )}
             </main>
             {/* v1.0.5 <----------------------------------------------------------------------------- */}
-            <div>
+            {/* <div>
                 {isCloneConfirmOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                         <div className="bg-white rounded-lg p-6 mx-4 max-w-96">
@@ -949,7 +893,7 @@ const InterviewTemplates = () => {
                         </div>
                     </div>
                 )}
-            </div>
+            </div> */}
             {/* v1.0.5 -----------------------------------------------------------------------------> */}
             <Outlet />
         </div>

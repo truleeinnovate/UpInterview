@@ -1047,6 +1047,10 @@ const MainAppRoutes = ({
                     path="edit/:id"
                     element={<InterviewTemplateForm mode="Edit" />}
                   />
+                  <Route
+                    path=":id/clone"
+                    element={<InterviewTemplateForm mode="Clone" />}
+                  />
                 </Route>
               )}
               {hasPermission("InterviewTemplates", "Edit") && (

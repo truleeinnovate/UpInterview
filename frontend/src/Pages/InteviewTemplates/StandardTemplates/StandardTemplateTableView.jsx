@@ -28,9 +28,12 @@ const formatOptions = [
 ];
 // v1.0.2 ---------------------------------------------------------->
 
-const StandardTemplateTableView = ({ templatesData, handleClone }) => {
+const StandardTemplateTableView = ({ templatesData }) => {
+    const navigate = useNavigate();
+    const handleCloneClick = (template) => {
+      navigate(`/interview-templates/${template._id}/clone`);
+    };
   const { effectivePermissions } = usePermissions();
-  const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   // v1.0.0 <------------------------------------------------------------
@@ -189,7 +192,16 @@ const StandardTemplateTableView = ({ templatesData, handleClone }) => {
   };
   // v1.0.2 ---------------------------------------------------------------------------->
   // v1.0.0 ---------------------------------------------------------------------------->
+  const formatOptionsfortable = [
+    { label: "Online / Virtual", value: "online" },
+    { label: "Face to Face / Onsite", value: "offline" },
+    { label: "Hybrid (Online + Onsite)", value: "hybrid" },
+];
 
+const getFormatLabelfortable = (formatValue) => {
+    const option = formatOptionsfortable.find((opt) => opt.value === formatValue);
+    return option ? option.label : formatValue || "Uncategorized";
+  };
   return (
     <>
       {/* v1.0.2 <------------------------------------------------------------------------------ */}
@@ -278,7 +290,7 @@ const StandardTemplateTableView = ({ templatesData, handleClone }) => {
                               {template.bestFor}
                             </td>
                             <td className="px-3 py-2 text-sm text-gray-600">
-                              {template.format}
+                              {getFormatLabelfortable(template.format)}
                             </td>
                             <td className="px-3 py-2">
                               <span
@@ -321,7 +333,7 @@ const StandardTemplateTableView = ({ templatesData, handleClone }) => {
                                     {effectivePermissions.InterviewTemplates
                                       ?.Clone && (
                                       <li
-                                        onClick={() => handleClone(template)}
+                                        onClick={() => handleCloneClick(template)}
                                         className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
                                       >
                                         <Files className="w-4 h-4 text-custom-blue mr-1" />

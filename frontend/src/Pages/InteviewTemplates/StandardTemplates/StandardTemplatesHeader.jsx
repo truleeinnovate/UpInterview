@@ -10,6 +10,7 @@ import { ReactComponent as LuFilter } from "../../../icons/LuFilter.svg";
 import { ReactComponent as LuFilterX } from "../../../icons/LuFilterX.svg";
 import { ReactComponent as FaList } from "../../../icons/FaList.svg";
 import { useMediaQuery } from "react-responsive";
+import { useInterviewTemplates } from "../../../apiHooks/useInterviewTemplates.js";
 
 // FilterTabs component for standard/custom tabs
 const FilterTabs = ({
@@ -69,11 +70,12 @@ const StandardTemplatesToolbar = ({
   showViewToggles = true,
   searchPlaceholder = "Search...",
   filterIconRef,
-  templatesData,
+  // templatesData,
   activeTab,
   setActiveTab,
 }) => {
   const isTablet = useMediaQuery({ maxWidth: 320 });
+    const { templatesData } = useInterviewTemplates();
 
   // Tab state
   // const [activeTab, setActiveTab] = useState(() => {

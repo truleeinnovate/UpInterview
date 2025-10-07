@@ -13,11 +13,15 @@ const KanbanView = ({
   effectivePermissions,
   onView,
   onEdit,
-  handleClone,
+  // handleClone,
 }) => {
-  const navigate = useNavigate();
 
-  console.log("templates--", templates);
+
+  const navigate = useNavigate();
+  const handleCloneClick = (template) => {
+    navigate(`/interview-templates/${template._id}/clone`);
+  };
+
 
   // Format options for UI labels
   const formatOptions = [
@@ -137,7 +141,7 @@ const KanbanView = ({
           {["online", "hybrid", "offline"].map((format) => (
             // v1.0.1 <--------------------------------------------------------------------
             <div key={format} className="bg-gray-200/40 flex flex-col p-4 rounded-lg">
-            {/* v1.0.1 <-------------------------------------------------------------------- */}
+              {/* v1.0.1 <-------------------------------------------------------------------- */}
               <h4 className="text-lg font-semibold text-gray-700 mb-4">
                 {formatLabelMap[format]} Templates (
                 {groupedTemplates[format].length})
@@ -214,7 +218,7 @@ const KanbanView = ({
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => handleClone(template)}
+                            onClick={() => handleCloneClick(template)}
                             className="text-green-500 hover:bg-green-50 p-2 rounded-lg"
                             title="Clone"
                           >
