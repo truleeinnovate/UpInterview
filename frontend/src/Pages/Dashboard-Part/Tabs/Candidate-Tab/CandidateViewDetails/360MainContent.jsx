@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Changed icons
+// v1.0.1 - Ashok - Adding loading view
 
 import React, { useEffect, useState } from "react";
 import InterviewRounds from "./InterviewRounds";
@@ -70,9 +71,7 @@ const MainContent = () => {
 
   const interview = interviewData.find((data) => data?.candidateId?._id === id);
   // console.log("interview",interview);
-  console.log("candidate?._id",candidate?._id);
-  
-  
+  console.log("candidate?._id", candidate?._id);
 
   useEffect(() => {
     fetchCandidate();
@@ -105,8 +104,93 @@ const MainContent = () => {
     setEditModeOn(true);
     setShowAddForm(true);
   };
+  // v1.0.1 <------------------------------------------------------------------------------
+  // if (!candidate) return null;
+  const ShimmerLoader = () => {
+    return (
+      <div className="flex sm:flex-col md:flex-col flex-row min-h-screen bg-gray-50 sm:mt-0 mt-3">
+        {/* Sidebar shimmer */}
+        <aside
+          className={`w-full lg:w-[25%] xl:w-[25%] 2xl:w-[25%] h-auto lg:h-screen sm:pt-4 md:pt-3 bg-white shadow-md lg:shadow-lg transition-transform duration-300 z-40 lg:block`}
+        >
+          <div className="px-9 py-2 border-b border-gray-100">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center gap-1.5">
+                <div className="h-6 w-24 rounded shimmer"></div>
+              </div>
+              <div className="flex gap-1.5">
+                <div className="h-6 w-6 rounded-full shimmer"></div>
+              </div>
+            </div>
 
-  if (!candidate) return null;
+            {/* Profile Picture */}
+            <div className="mb-3 flex flex-col items-center">
+              <div className="w-16 h-16 rounded-full shimmer mb-2 shadow-lg"></div>
+              <div className="h-5 w-28 rounded shimmer mb-1"></div>
+              <div className="h-4 w-20 rounded shimmer"></div>
+            </div>
+          </div>
+
+          {/* Contact Info & Skills */}
+          <div className="px-9 py-2 space-y-2">
+            {/* Contact Info Box */}
+            <div className="bg-white rounded-lg p-2 shadow-sm border border-gray-100 space-y-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex gap-4">
+                  <div className="h-5 w-5 rounded-full shimmer flex-shrink-0"></div>
+                  <div className="flex-1 space-y-1">
+                    <div className="h-3 w-full rounded shimmer"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Skills Box */}
+            <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
+              <div className="h-5 w-20 rounded shimmer mb-3 mx-auto"></div>
+              <div className="flex flex-wrap gap-2 items-center">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="h-6 w-16 rounded-full shimmer"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main content shimmer */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Tabs shimmer */}
+          <div className="w-full px-4 py-2 bg-white border-b border-gray-200 flex gap-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-8 w-28 rounded shimmer"></div>
+            ))}
+          </div>
+
+          {/* Content shimmer */}
+          <main className="flex md:pt-3 h-full bg-gray-50">
+            <div className="w-full px-4 py-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-4 py-6 h-[calc(100vh-200px)] overflow-y-auto">
+                {/* Simulate sections */}
+                <div className="flex w-full justify-between">
+                  <div className="shimmer h-8 w-44"></div>
+                  <div className="shimmer h-8 w-32"></div>
+                </div>
+                <div className="space-y-4 text-gray-500 text-center mt-16">
+                  Loading...
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  };
+  // v1.0.1 ------------------------------------------------------------------------------>
+
+  if (!candidate) {
+    return <ShimmerLoader />;
+  }
 
   return (
     // <div className="flex lg:mr-6 xl:mr-6 2xl:mr-6 min-h-screen md:mt-20 sm:mt-20 lg:ms-6 xl:ms-6 2xl:ms-6 lg:mt-5 xl:mt-5 2xl:mt-5 lg:ml-14 xl:ml-14 2xl:ml-24">

@@ -7,6 +7,7 @@
 // v1.0.6  -  Ashok   -  Disabled outer scrollbar
 // v1.0.7  -  Ashok   -  Added table view for mobiles (small devices)
 // v1.0.8  -  Ashok   -  changed kanban UI
+// v1.0.9  -  Ashok   -  table columns modified
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -522,7 +523,9 @@ function Candidate({
           </div>
           <div className="ml-3">
             <div
-              className="text-sm font-medium text-custom-blue cursor-pointer"
+              // v1.0.9 <------------------------------------------------------------------------------
+              className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
+              // v1.0.9 ------------------------------------------------------------------------------>
               onClick={
                 () =>
                   navigate(
@@ -560,7 +563,11 @@ function Candidate({
       render: (value) => (
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4" />
-          <span>{value || "Not Provided"}</span>
+          {/* v1.0.9 <--------------------------------- */}
+          <span className="truncate max-w-[140px]">
+            {value || "Not Provided"}
+          </span>
+          {/* v1.0.9 ---------------------------------> */}
         </div>
       ),
     },
@@ -572,7 +579,13 @@ function Candidate({
     {
       key: "HigherQualification",
       header: "Higher Qualification",
-      render: (value) => value || "Not Provided",
+      render: (value) => (
+        // v1.0.9 <----------------------------------------------
+        <span className="block truncate max-w-[140px]">
+          {value || "Not Provided"}
+        </span>
+        // v1.0.9 ---------------------------------------------->
+      ),
     },
     {
       key: "CurrentExperience",
@@ -583,8 +596,9 @@ function Candidate({
       key: "skills",
       header: "Skills",
       render: (value) => (
+        // v1.0.9 <-----------------------------------------------------------------------------
         <div className="flex flex-wrap gap-1">
-          {value.slice(0, 2).map((skill, idx) => (
+          {value.slice(0, 1).map((skill, idx) => (
             <span
               key={idx}
               className="px-2 py-0.5 bg-custom-bg text-custom-blue rounded-full text-xs"
@@ -592,12 +606,13 @@ function Candidate({
               {skill.skill || "Not Provided"}
             </span>
           ))}
-          {value.length > 2 && (
+          {value.length > 1 && (
             <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
-              +{value.length - 2}
+              +{value.length - 1}
             </span>
           )}
         </div>
+        // v1.0.9 ----------------------------------------------------------------------------->
       ),
     },
     //<-----v1.0.4--------
