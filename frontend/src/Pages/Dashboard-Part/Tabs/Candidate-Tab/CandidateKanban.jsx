@@ -1,180 +1,148 @@
-// import { DndContext, closestCenter } from '@dnd-kit/core';
-// import { Eye, Mail, UserCircle, Pencil } from 'lucide-react';
-// import { useNavigate } from 'react-router-dom';
+import { motion } from "framer-motion";
 
-// const CandidateList = ({ candidates, onView, onEdit, onResendLink, isAssessmentView, navigate }) => (
-//   <div className={`w-full bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10 ${isAssessmentView ? '' : 'h-[calc(100vh-12rem)]'}`}>
-//  <div className="h-full">
-//     <div className="flex items-center justify-between mb-4">
-//       <h3 className="text-lg font-semibold text-gray-800">All Candidates</h3>
-//       <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-//         {candidates.length} candidates
-//       </span>
-//     </div>
+const capitalizeFirstLetter = (str) =>
+  str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
-//     {candidates.length === 0 ? (
-//       <div className="flex justify-center items-center h-full py-20 text-gray-500 text-lg">
-//         No candidates found.
-//       </div>
-//     ) : (
-//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
-//         {candidates.map((candidate) => (
-//           <div
-//             key={candidate._id || candidate.id} // Use _id or id based on context
-//             className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
-//           >
-//             <div className="flex items-start justify-between mb-4">
-//               <div className="flex items-center">
-//                 <div className="relative">
-//                   {candidate?.ImageData ? (
-//                     <img
-//                       src={`http://localhost:5000/${candidate?.ImageData?.path}`}
-//                       alt={candidate?.FirstName || 'Candidate'}
-//                       onError={(e) => {
-//                         e.target.src = '/default-profile.png';
-//                       }}
-//                       className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
-//                     />
-//                   ) : (
-//                     <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center text-white text-lg font-semibold shadow-sm">
-//                       {candidate?.FirstName?.charAt(0) || '?'}
-//                     </div>
-//                   )}
-//                 </div>
-//                 <div className="ml-3">
-//                   <h4 className="text-sm font-medium text-custom-blue"
-//                     onClick={() => navigate(`view-details/${candidate._id}`)}
-//                   >
-//                     {candidate?.FirstName || ''}{' '}
-//                     {candidate?.LastName || ''}
-//                   </h4>
-//                   <p className="text-sm text-gray-500 flex items-center gap-1">
-//                     {candidate.CurrentRole || candidate.CurrentExperience || 'N/A'}
-//                   </p>
-//                 </div>
-//               </div>
-
-//               <div className="flex items-center gap-1">
-//                 <button
-//                   onClick={() => navigate(`view-details/${candidate._id}`)}
-//                   className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-//                   title="View Details"
-//                 >
-//                   <Eye className="w-4 h-4" />
-//                 </button>
-//                 {!isAssessmentView ? (
-//                   <>
-//                     <button
-//                       onClick={() => candidate?._id && navigate(`/candidate/${candidate._id}`)}
-//                       className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-//                       title="360° View"
-//                     >
-//                       <UserCircle className="w-4 h-4" />
-//                     </button>
-//                     <button
-//                       onClick={() => navigate(`edit/${candidate._id}`)}
-//                       className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-//                       title="Edit"
-//                     >
-//                       <Pencil className="w-4 h-4" />
-//                     </button>
-//                   </>
-//                 ) : (
-//                   <button
-//                     onClick={() => onResendLink(candidate.id)}
-//                     disabled={candidate.status === 'completed'}
-//                     className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-//                     title="Resend Link"
-//                   >
-//                     <Mail className="w-4 h-4" />
-//                   </button>
-//                 )}
-//               </div>
-//             </div>
-
-//             <div className="space-y-2 text-sm">
-//               <div className="grid grid-cols-2 gap-2">
-//                 <div className="flex items-center gap-1.5 text-gray-600">
-//                   <span className=" truncate">{candidate?.Email || 'N/A'}</span>
-//                 </div>
-//                 <div className="flex items-center gap-1.5 text-gray-600">
-//                   <span>{candidate?.Phone || 'N/A'}</span>
-//                 </div>
-//               </div>
-//               <div className="grid grid-cols-2 gap-2">
-//                 <div className="flex items-center gap-1.5 text-gray-600">
-//                   <span>{candidate?.HigherQualification || 'N/A'}</span>
-//                 </div>
-//                 <div className="flex items-center gap-1.5 text-gray-600">
-//                   <span>{candidate?.UniversityCollege || 'N/A'}</span>
-//                 </div>
-//               </div>
-//             </div>
-
-//             <div className="mt-4">
-//               <div className="flex flex-wrap gap-1">
-//                 {candidate.skills.slice(0, 3).map((skill, index) => (
-//                   <span
-//                     key={index}
-//                     className="px-2 py-1 bg-custom-bg text-custom-blue rounded-lg text-xs font-medium"
-//                   >
-//                     {skill.skill || 'N/A'}
-//                   </span>
-//                 ))}
-//                 {candidate.skills.length > 3 && (
-//                   <span className="px-2 py-1 bg-gray-50 text-gray-700 rounded-lg text-xs font-medium">
-//                     +{candidate.skills.length - 3} more
-//                   </span>
-//                 )}
-//               </div>
-//             </div>
-
-//             {!isAssessmentView && (
-//               <div className="mt-4 pt-4 border-t border-gray-100">
-//                 <div className="flex items-center justify-between text-sm">
-//                   <span className="text-gray-600">Latest Interview:</span>
-//                   <span className="font-medium text-gray-800">
-//                     {'interviews'} - {'round'}
-//                   </span>
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-//         ))}
-//       </div>
-//     )}
-//     </div>
-//   </div>
-// );
-
-// const CandidateKanban = ({ candidates, onView, onEdit, onResendLink, isAssessmentView }) => {
-//   const navigate = useNavigate();
-//   return (
-//     <DndContext collisionDetection={closestCenter}>
-//       <div className="w-full">
-//         <CandidateList
-//           candidates={candidates}
-//           onView={onView}
-//           onEdit={onEdit}
-//           onResendLink={onResendLink}
-//           isAssessmentView={isAssessmentView}
-//           navigate={navigate}
-//         />
-//       </div>
-//     </DndContext>
-//   );
-// };
-
-// export default CandidateKanban;
-
-import React from 'react'
-
-const CandidateKanban = () => {
+const CandidateKanban = ({
+  data = [],
+  columns = [],
+  loading = false,
+  renderActions = () => null,
+  emptyState = "No Data Found",
+  title = "Candidates",
+}) => {
   return (
-    <div>CandidateKanban</div>
-  )
-}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="w-full bg-gray-50 rounded-xl px-6 pt-4 pb-6"
+    >
+      <div className="min-h-[400px]">
+        {/* Header */}
 
-export default CandidateKanban
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-semibold text-gray-800">
+            All Candidates
+          </h3>
+          <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
+            {data?.length || 0} {data?.length > 1 ? "Candidates" : "Candidate"}
+          </span>
+        </div>
 
-// this page is not required
+        {/* Loading / Empty / Content */}
+        {loading ? (
+          <div className="overflow-y-auto max-h-[calc(100vh-270px)] pb-8 pr-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 flex flex-col h-full"
+                >
+                  {/* Header shimmer */}
+                  <div className="flex justify-between items-start mb-4 gap-2">
+                    <div className="flex items-start gap-3 w-full">
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="h-4 w-3/4 shimmer rounded"></div>
+                        <div className="h-3 w-1/2 shimmer rounded"></div>
+                      </div>
+                    </div>
+                    <div className="h-6 w-6 shimmer rounded"></div>
+                  </div>
+
+                  {/* Body shimmer */}
+                  <div className="mt-auto space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="grid grid-cols-2 gap-2">
+                        <div className="h-3 w-16 shimmer rounded"></div>
+                        <div className="h-3 w-24 shimmer rounded"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : data?.length === 0 ? (
+          <div className="text-center py-10 text-gray-500">{emptyState}</div>
+        ) : (
+          <div className="overflow-y-auto max-h-[calc(100vh-270px)] pb-8 pr-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
+              {data.map((item, index) => (
+                <motion.div
+                  key={item.id || item._id || index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full"
+                >
+                  {/* Card Header */}
+                  <div className="flex justify-between items-start mb-4 gap-2">
+                    <div className="flex items-start gap-3">
+                      <div className="relative flex-shrink-0">
+                        {item.avatar ? (
+                          <img
+                            src={item.avatar}
+                            alt={item.title || "Candidate"}
+                            onError={(e) => {
+                              e.target.src = "/default-profile.png";
+                            }}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center text-white text-lg font-semibold shadow-sm">
+                            {item.title?.charAt(0).toUpperCase() || "?"}
+                          </div>
+                        )}
+                      </div>
+                      <div className="overflow-hidden truncate">
+                        <h4
+                          className="text-sm font-medium text-custom-blue"
+                        >
+                          {item?.firstName
+                            ? item?.firstName.length > 12
+                              ? item?.firstName?.slice(0, 12) + "..."
+                              : item?.firstName
+                            : "Untitled"}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          {item?.currentRole
+                            ? item?.currentRole.length > 12
+                              ? item?.currentRole?.slice(0, 12) + "..."
+                              : item?.currentRole
+                            : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      {renderActions(item)}
+                    </div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="mt-auto space-y-2 text-sm">
+                    {columns.map(({ key, header, render }) => (
+                      <div
+                        key={key}
+                        className="grid grid-cols-2 items-center text-gray-600"
+                      >
+                        <span className="text-gray-500 text-sm">{header}</span>
+                        <span className="truncate font-semibold text-sm">
+                          {render
+                            ? render(item[key], item)
+                            : item[key] || "N/A"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+export default CandidateKanban;

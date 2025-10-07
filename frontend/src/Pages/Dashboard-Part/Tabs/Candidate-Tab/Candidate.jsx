@@ -6,6 +6,7 @@
 // v1.0.5  -  Ashok   -  Improved responsiveness
 // v1.0.6  -  Ashok   -  Disabled outer scrollbar
 // v1.0.7  -  Ashok   -  Added table view for mobiles (small devices)
+// v1.0.8  -  Ashok   -  changed kanban UI
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +16,10 @@ import { useCustomContext } from "../../../../Context/Contextfetch";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../Components/Shared/Table/TableView";
-import KanbanView from "../../../../Components/Shared/Kanban/KanbanView";
+// v1.0.8 <----------------------------------------------------------------------
+// import KanbanView from "../../../../Components/Shared/Kanban/KanbanView";
+import KanbanView from "./CandidateKanban.jsx";
+// v1.0.8 ---------------------------------------------------------------------->
 import AddCandidateForm from "./AddCandidateForm.jsx";
 import CandidateDetails from "./CandidateViewDetails/CandidateDetails";
 import { useMediaQuery } from "react-responsive";
@@ -102,7 +106,9 @@ function Candidate({
 
   // v1.0.6 <--------------------------------------------------------
   // v1.0.7 <--------------------------------------------------------
-  useScrollLock(showDeleteConfirmModal || view === "table" || view === "kanban");
+  useScrollLock(
+    showDeleteConfirmModal || view === "table" || view === "kanban"
+  );
   // v1.0.7 -------------------------------------------------------->
   // v1.0.6 -------------------------------------------------------->
 
@@ -489,7 +495,6 @@ function Candidate({
     setSearchQuery(e.target.value);
     setCurrentPage(0);
   };
-  const kanbanColumns = [];
 
   // Table Columns Configuration
   const tableColumns = [
@@ -805,114 +810,301 @@ function Candidate({
     // ------------------------------v1.0.1 >
   ];
 
+  // v1.0.8 <------------------------------------------------------------------------------
   // Render Actions for Kanban
-  const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
-    <div className="flex items-center">
-      {effectivePermissions.Candidates?.View && (
+  // const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
+  //   <div className="flex items-center">
+  //     {effectivePermissions.Candidates?.View && (
+  //       <button
+  //         onClick={(e) => {
+  //           e.stopPropagation();
+  //           isAssessmentView
+  //             ? navigate(`/${item?.assessmentId}/view-details/${item._id}`)
+  //             : navigate(`view-details/${item._id}`);
+  //         }}
+  //         // onClick={(e) => {
+  //         //   e.stopPropagation();
+  //         //   navigate(`view-details/${item._id}`);
+  //         // }}
+  //         className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
+  //         title="View Details"
+  //       >
+  //         <Eye className="w-4 h-4" />
+  //       </button>
+  //     )}
+  //     {!isAssessmentView ? (
+  //       <>
+  //         <button
+  //           onClick={(e) => {
+  //             e.stopPropagation();
+  //             item?._id && navigate(`/candidate/${item._id}`);
+  //           }}
+  //           className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+  //           title="360° View"
+  //         >
+  //           <CircleUser className="w-4 h-4" />
+  //         </button>
+  //         {effectivePermissions.Candidates?.Edit && (
+  //           <button
+  //             onClick={(e) => {
+  //               e.stopPropagation();
+  //               navigate(`edit/${item._id}`);
+  //             }}
+  //             className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+  //             title="Edit"
+  //           >
+  //             <Pencil className="w-4 h-4" />
+  //           </button>
+  //         )}
+  //       </>
+  //     ) : (
+  //       <>
+  //         {/* // <-------------------------------v1.0.1 */}
+  //         {/* Only show resend link for candidates that can be resent */}
+  //         {(() => {
+  //           const result = shouldShowButton(item, "resend");
+  //           return result;
+  //         })() && (
+  //           <button
+  //             onClick={(e) => {
+  //               e.stopPropagation();
+  //               if (!resendLoading[item.id]) {
+  //                 onResendLink(item.id);
+  //               }
+  //             }}
+  //             disabled={resendLoading[item.id]}
+  //             className={`p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors ${
+  //               resendLoading[item.id] ? "opacity-50 cursor-not-allowed" : ""
+  //             }`}
+  //             title="Resend Link"
+  //           >
+  //             {resendLoading[item.id] ? (
+  //               <svg
+  //                 className="animate-spin h-4 w-4 text-custom-blue"
+  //                 xmlns="http://www.w3.org/2000/svg"
+  //                 fill="none"
+  //                 viewBox="0 0 24 24"
+  //               >
+  //                 <circle
+  //                   className="opacity-25"
+  //                   cx="12"
+  //                   cy="12"
+  //                   r="10"
+  //                   stroke="currentColor"
+  //                   strokeWidth="4"
+  //                 ></circle>
+  //                 <path
+  //                   className="opacity-75"
+  //                   fill="currentColor"
+  //                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+  //                 ></path>
+  //               </svg>
+  //             ) : (
+  //               <Mail className="w-4 h-4" />
+  //             )}
+  //           </button>
+  //         )}
+  //       </>
+  //     )}
+  //     {effectivePermissions.Candidates?.Delete && (
+  //       <button
+  //         // onClick: (row) => navigate(`delete/${row._id}`),
+  //         onClick={() => {
+  //           setShowDeleteConfirmModal(true);
+  //           setDeleteCandidate(item);
+  //         }}
+  //       >
+  //         <Trash className="w-4 h-4 text-red-600" />
+  //       </button>
+  //     )}
+  //   </div>
+  // );
+
+  // const kanbanActions = [
+  //   ...(effectivePermissions.Candidates?.View
+  //     ? [
+  //         {
+  //           key: "view",
+  //           label: "View Details",
+  //           icon: <Eye className="w-4 h-4 text-blue-600" />,
+  //           // onClick: (row) => handleView(row),
+  //         },
+  //       ]
+  //     : []),
+
+  //   ...(effectivePermissions.Candidates?.Edit
+  //     ? [
+  //         {
+  //           key: "change_status",
+  //           label: "Change Status",
+  //           // icon: <Repeat className="w-4 h-4 text-green-600" />,
+  //           // onClick: (row) => openStatusModal(row),
+  //         },
+  //       ]
+  //     : []),
+  //   ...(effectivePermissions.Candidates?.Edit
+  //     ? [
+  //         {
+  //           key: "edit",
+  //           label: "Edit",
+  //           icon: <Pencil className="w-4 h-4 text-green-600" />,
+  //           // onClick: (row) => handleEdit(row),
+  //         },
+  //       ]
+  //     : []),
+  //   ...(effectivePermissions.Candidates?.Delete
+  //     ? [
+  //         {
+  //           key: "delete",
+  //           label: "Delete",
+  //           icon: <Trash className="w-4 h-4 text-red-600" />,
+  //           onClick: (row) => {
+  //             setShowDeleteConfirmModal(true);
+  //             // setDeletePosition(row);
+  //           },
+  //         },
+  //       ]
+  //     : []),
+  // ];
+  const kanbanColumns = [
+    {
+      key: "email",
+      header: "Email",
+      render: (value, row) => <span>{row.Email}</span> || "N/A",
+    },
+    {
+      key: "currentRole",
+      header: "Current Role",
+    },
+    {
+      key: "skills",
+      header: "Skills",
+      render: (skills) =>
+        skills && skills.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {skills?.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {skills?.length > 0 ? (
+                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    {skills[0].skill?.length > 12
+                      ? skills[0].skill.slice(0, 12) + "..."
+                      : skills[0].skill}
+                  </span>
+                ) : (
+                  <span className="text-gray-400 text-xs">No Skills</span>
+                )}
+                {skills?.length > 0 && (
+                  <span className="text-gray-500 text-xs">
+                    +{skills.length - 0} more
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          "N/A"
+        ),
+    },
+  ];
+
+  const kanbanActions = [
+    // View Details
+    ...(effectivePermissions.Candidates?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: (item, e) => {
+              isAssessmentView
+                ? navigate(`/${item?.assessmentId}/view-details/${item._id}`)
+                : navigate(`view-details/${item._id}`);
+            },
+          },
+        ]
+      : []),
+
+    // 360° View (only if not in assessment view)
+    ...(!isAssessmentView
+      ? [
+          {
+            key: "360view",
+            label: "360° View",
+            icon: <CircleUser className="w-4 h-4 text-purple-600" />,
+            onClick: (item, e) => {
+              item?._id && navigate(`/candidate/${item._id}`);
+            },
+          },
+        ]
+      : []),
+
+    // Edit (only if not in assessment view)
+    ...(!isAssessmentView && effectivePermissions.Candidates?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (item, e) => {
+              navigate(`edit/${item._id}`);
+            },
+          },
+        ]
+      : []),
+
+    // Resend Link (only if in assessment view)
+    ...(isAssessmentView
+      ? [
+          {
+            key: "resend",
+            label: "Resend Link",
+            icon: <Mail className="w-4 h-4 text-custom-blue" />,
+            isVisible: (item) => shouldShowButton(item, "resend"),
+            onClick: (item, e) => {
+              if (!resendLoading[item.id]) {
+                onResendLink(item.id);
+              }
+            },
+            loading: (item) => resendLoading[item.id],
+            disabled: (item) => resendLoading[item.id],
+          },
+        ]
+      : []),
+
+    // Delete
+    ...(effectivePermissions.Candidates?.Delete
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (item) => {
+              setShowDeleteConfirmModal(true);
+              setDeleteCandidate(item);
+            },
+          },
+        ]
+      : []),
+  ];
+
+  const renderKanbanActions = (item) => (
+    <div className="flex items-center gap-1">
+      {kanbanActions.map((action) => (
         <button
+          key={action.key}
           onClick={(e) => {
             e.stopPropagation();
-            isAssessmentView
-              ? navigate(`/${item?.assessmentId}/view-details/${item._id}`)
-              : navigate(`view-details/${item._id}`);
+            action.onClick(item);
           }}
-          // onClick={(e) => {
-          //   e.stopPropagation();
-          //   navigate(`view-details/${item._id}`);
-          // }}
-          className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
-          title="View Details"
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title={action.label}
         >
-          <Eye className="w-4 h-4" />
+          {action.icon}
         </button>
-      )}
-      {!isAssessmentView ? (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              item?._id && navigate(`/candidate/${item._id}`);
-            }}
-            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-            title="360° View"
-          >
-            <CircleUser className="w-4 h-4" />
-          </button>
-          {effectivePermissions.Candidates?.Edit && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`edit/${item._id}`);
-              }}
-              className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-          )}
-        </>
-      ) : (
-        <>
-          {/* // <-------------------------------v1.0.1 */}
-          {/* Only show resend link for candidates that can be resent */}
-          {(() => {
-            const result = shouldShowButton(item, "resend");
-            return result;
-          })() && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!resendLoading[item.id]) {
-                  onResendLink(item.id);
-                }
-              }}
-              disabled={resendLoading[item.id]}
-              className={`p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors ${
-                resendLoading[item.id] ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              title="Resend Link"
-            >
-              {resendLoading[item.id] ? (
-                <svg
-                  className="animate-spin h-4 w-4 text-custom-blue"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              ) : (
-                <Mail className="w-4 h-4" />
-              )}
-            </button>
-          )}
-        </>
-      )}
-      {effectivePermissions.Candidates?.Delete && (
-        <button
-          // onClick: (row) => navigate(`delete/${row._id}`),
-          onClick={() => {
-            setShowDeleteConfirmModal(true);
-            setDeleteCandidate(item);
-          }}
-        >
-          <Trash className="w-4 h-4 text-red-600" />
-        </button>
-      )}
+      ))}
     </div>
   );
+  // v1.0.8 ------------------------------------------------------------------------------>
 
   return (
     <div className={isAssessmentView ? "" : "bg-background min-h-screen"}>
@@ -982,8 +1174,9 @@ function Candidate({
                     />
                   </div>
                 ) : (
+                  // v1.0.8 <-------------------------------------------------------------------
                   <div className="w-full">
-                    <KanbanView
+                    {/* <KanbanView
                       data={currentFilteredRows.map((candidate) => ({
                         ...candidate,
                         id: candidate._id,
@@ -1019,8 +1212,34 @@ function Candidate({
                       loading={isLoading}
                       renderActions={renderKanbanActions}
                       emptyState="No Candidates Found."
+                    /> */}
+                    <KanbanView
+                      loading={isLoading}
+                      data={currentFilteredRows.map((candidate) => ({
+                        ...candidate,
+                        id: candidate._id,
+                        title: `${candidate?.FirstName || ""} ${
+                          candidate?.LastName || ""
+                        }`.trim(),
+                        firstName: `${
+                          candidate?.FirstName.charAt(0).toUpperCase() +
+                            candidate?.FirstName.slice(1) || ""
+                        } ${
+                          candidate?.LastName.charAt(0).toUpperCase() +
+                            candidate?.LastName.slice(1) || ""
+                        }`.trim(),
+                        currentRole:
+                          candidate?.CurrentRole ||
+                          candidate?.CurrentExperience ||
+                          "N/A",
+                        avatar: candidate?.ImageData?.path || null,
+                      }))}
+                      columns={kanbanColumns}
+                      renderActions={renderKanbanActions}
+                      emptyState="No candidates found."
                     />
                   </div>
+                  // v1.0.8 ------------------------------------------------------------------->
                 )}
                 <FilterPopup
                   isOpen={isFilterPopupOpen}

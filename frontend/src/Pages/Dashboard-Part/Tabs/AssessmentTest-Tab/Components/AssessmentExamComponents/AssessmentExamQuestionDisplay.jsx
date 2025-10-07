@@ -56,6 +56,7 @@
 // export default QuestionDisplay;
 
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - Fixed style issues
 
 import React from "react";
 // v1.0.0 <----------------------------------------------------------------------
@@ -75,12 +76,13 @@ const AnswerInput = ({
   switch (questionType) {
     case "MCQ":
       // v1.0.0 <-----------------------------------------------------------------------------------
+      // v1.0.1 <-----------------------------------------------------------------------------------
       return (
         <div className="space-y-4">
           {options?.map((option, index) => (
             <label
               key={index}
-              className={`flex items-center space-x-4 p-6 border rounded-2xl transition-all duration-300 cursor-pointer
+              className={`flex items-center space-x-4 p-3 border rounded-lg transition-all duration-300 cursor-pointer
                 ${
                   value === option
                     ? "bg-blue-50 border-blue-200 shadow-inner"
@@ -93,20 +95,22 @@ const AnswerInput = ({
                 value={option}
                 checked={value === option}
                 onChange={(e) => onChange(e.target.value)}
-                className="sm:h-4 sm:w-4 h-5 w-5 accent-custom-blue text-custom-blue focus:ring-custom-blue"
+                className="sm:h-3 sm:w-3 h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue"
                 disabled={disabled}
               />
-              <span className="sm:text-sm md:text-md lg:text-lg xl:text-lg 2xl:text-lg text-gray-900">
+              <span className="sm:text-sm md:text-md lg:text-md xl:text-md 2xl:text-md text-gray-900">
                 {option}
               </span>
             </label>
           ))}
         </div>
       );
+    // v1.0.1 ----------------------------------------------------------------------------------->
     // v1.0.0 ----------------------------------------------------------------------------------->
 
     case "Short":
       // v1.0.0 <--------------------------------------------------------------------------------
+      // v1.0.1 <--------------------------------------------------------------------------------
       return (
         <input
           type="text"
@@ -117,6 +121,7 @@ const AnswerInput = ({
           disabled={disabled}
         />
       );
+    // v1.0.1 -------------------------------------------------------------------------------->
     // v1.0.0 -------------------------------------------------------------------------------->
 
     case "Long":
@@ -174,6 +179,7 @@ const AnswerInput = ({
 
     case "Boolean":
       // v1.0.0 <--------------------------------------------------------------------------------
+      // v1.0.1 <--------------------------------------------------------------------------------
       return (
         <div className="flex space-x-6">
           <label className="inline-flex items-center">
@@ -183,10 +189,10 @@ const AnswerInput = ({
               value="true"
               checked={value === "true"}
               onChange={(e) => onChange(e.target.value)}
-              className="sm:h-4 sm:w-4 h-5 w-5 accent-custom-blue text-custom-blue focus:ring-custom-blue"
+              className="sm:h-3 sm:w-3 h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue"
               disabled={disabled}
             />
-            <span className="ml-2 sm:text-sm md:text-md lg:text-lg xl:text-lg 2xl:text-lg">
+            <span className="ml-2 text-sm">
               True
             </span>
           </label>
@@ -197,15 +203,16 @@ const AnswerInput = ({
               value="false"
               checked={value === "false"}
               onChange={(e) => onChange(e.target.value)}
-              className="sm:h-4 sm:w-4 h-5 w-5 accent-custom-blue text-custom-blue focus:ring-custom-blue"
+              className="sm:h-3 sm:w-3 h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue"
               disabled={disabled}
             />
-            <span className="ml-2 sm:text-sm md:text-md lg:text-lg xl:text-lg 2xl:text-lg">
+            <span className="ml-2 text-sm">
               False
             </span>
           </label>
         </div>
       );
+    // v1.0.1 -------------------------------------------------------------------------------->
     // v1.0.0 -------------------------------------------------------------------------------->
 
     case "Interview":
@@ -240,7 +247,7 @@ const AnswerInput = ({
           </div>
         </div>
       );
-      // v1.0.0 -------------------------------------------------------------------------------->
+    // v1.0.0 -------------------------------------------------------------------------------->
 
     default:
       return (
@@ -267,7 +274,9 @@ function QuestionDisplay({ question, answers, handleAnswer, isReviewing }) {
       <div>
         {question?.snapshot?.hints?.length > 0 && (
           // v1.0.0 <----------------------------------------------------------------
-          <div className="bg-blue-50 border-l-4 border-blue-400 sm:p-2 p-4 mb-6">
+          // v1.0.1 <----------------------------------------------------------------
+          <div className="bg-blue-50 border-l-4 border-blue-400 sm:p-2 p-3 mb-6">
+            {/* v1.0.1 ----------------------------------------------------------------> */}
             {/* v1.0.0 ----------------------------------------------------------------> */}
             <div className="flex">
               <div className="flex-shrink-0">

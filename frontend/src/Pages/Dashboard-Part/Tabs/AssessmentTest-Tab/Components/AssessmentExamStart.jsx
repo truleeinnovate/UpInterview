@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness and fixed minor UI issues and scroll lock
+// v1.0.1 - Ashok - Fixed style issues
 
 import { useState, useEffect } from "react";
 import { ClockIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -253,6 +254,7 @@ function AssessmentTest({
           />
           <div className="flex-1">
             <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg">
+            {/* v1.0.1 <----------------------------------------------------------------------------------------------- */}
               <div className="sm:p-4 md:px-4 p-8">
                 <div className="flex sm:flex-col sm:items-start items-center sm:justify-start sm:gap-4 justify-between mb-6">
                   <div className="flex sm:justify-between items-center space-x-4 sm:w-full">
@@ -268,38 +270,39 @@ function AssessmentTest({
                     {isReviewing ? (
                       <button
                         onClick={handleCancelReview}
-                        className="sm:text-xs md:text-sm lg:text-md xl:text-md 2xl:text-md inline-flex items-center px-4 py-2 sm:rounded-lg rounded-xl text-sm font-medium text-custom-blue bg-gray-100 hover:bg-gray-200 transition-colors"
+                        className="sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-custom-blue bg-gray-100 hover:bg-gray-200 transition-colors"
                       >
                         <XMarkIcon className="sm:h-4 sm:w-4 h-5 w-5 mr-2" />
                         Exit Review
                       </button>
                     ) : (
                       <div
-                        className={`flex items-center px-4 py-2 sm:rounded-lg rounded-xl ${
+                        className={`flex items-center px-4 py-2 rounded-lg ${
                           timeLeft < 300
                             ? "bg-red-100 text-red-800"
                             : "bg-blue-100 text-custom-blue"
                         }`}
                       >
-                        <ClockIcon className="sm:h-4 sm:w-4 h-6 w-6 mr-3" />
-                        <span className="sm:text-xs md:text-sm lg:text-md xl:text-md 2xl:text-md font-mono font-medium">
+                        <ClockIcon className="sm:h-4 sm:w-4 h-5 w-5 mr-3" />
+                        <span className="sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm font-mono font-semibold">
                           {formatTime(timeLeft)}
                         </span>
                       </div>
                     )}
                     <button
                       onClick={handleSubmit}
-                      className="sm:text-xs md:text-sm lg:text-md xl:text-md 2xl:text-md inline-flex items-center px-4 py-2 sm:rounded-lg rounded-xl font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transition-colors duration-300"
+                      className="sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm inline-flex items-center px-4 py-2 rounded-lg font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transition-colors duration-300"
                     >
                       {isReviewing ? "Finish Review" : "Review & Submit"}
                     </button>
                   </div>
                 </div>
-                <h3 className="sm:text-sm md:text-md lg:text-xl xl:text-xl 2xl:text-2xl font-semibold text-gray-900">
+                <h3 className="sm:text-sm md:text-md lg:text-md xl:text-md 2xl:text-md font-semibold text-gray-900">
                   {currentQuestionIndex + 1}.{" "}
                   {currentQuestion?.snapshot?.questionText}
                 </h3>
               </div>
+            {/* v1.0.1 -----------------------------------------------------------------------------------------------> */}
               <QuestionDisplay
                 question={currentQuestion}
                 answers={answers}
