@@ -247,7 +247,7 @@ const Usage = () => {
           <h3 className="text-lg font-medium">User Bandwidth</h3>
           <div className="mt-2">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Value:</span>
+              <span className="text-gray-600">GB:</span>
               <span className="text-gray-600">
                 {usage?.usersBandWidth ?? "—"}
               </span>
