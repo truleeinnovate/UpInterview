@@ -24,6 +24,25 @@ import StandardTemplates from "./StandardTemplates/StandardTemplates.jsx";
 import { notify } from "../../services/toastService.js";
 import StandardTemplatesToolbar from "./StandardTemplates/StandardTemplatesHeader.jsx";
 
+// Format options for interview templates
+const formatOptions = [
+  { label: "Recommended (Online)", value: "online" },
+  { label: "Hybrid (Mix of Online & Onsite)", value: "hybrid" },
+  { label: "On-Site (Traditional)", value: "offline" },
+  { label: "Specialized Technical", value: "technical" },
+  { label: "Company-Specific", value: "company" },
+  { label: "Experience Level", value: "experience" },
+  { label: "Leadership", value: "leadership" },
+  { label: "Employment Type", value: "employment" },
+  { label: "Specialized Requirements", value: "specialized" },
+];
+
+// Helper function to get display label for format value
+const getFormatLabel = (formatValue) => {
+  const option = formatOptions.find((opt) => opt.value === formatValue);
+  return option ? option.label : formatValue || "Uncategorized";
+};
+
 // FilterTabs component for standard/custom tabs
 const FilterTabs = ({
     activeTab,
@@ -513,7 +532,7 @@ const InterviewTemplates = () => {
     const tableColumns = [
         {
             key: "title",
-            header: "Title",
+            header: "Template",
             render: (value, row) => {
                 const formattedValue = value
                     ? value.charAt(0).toUpperCase() + value.slice(1)
@@ -530,9 +549,51 @@ const InterviewTemplates = () => {
             },
         },
         {
+            key: "description",
+            header: "Description",
+            render: (value) => {
+                const displayValue = value || "N/A";
+                return (
+                    <span
+                        className="truncate max-w-[160px] block"
+                        title={displayValue}
+                    >
+                        {displayValue}
+                    </span>
+                );
+            },
+        },
+        {
             key: "rounds",
             header: "Rounds",
-            render: (value) => value?.length || 0,
+            render: (value) => {
+                if (!Array.isArray(value) || value.length === 0) {
+                    const noRounds = "No rounds";
+                    return (
+                        <span
+                            className="truncate max-w-[160px] block"
+                            title={noRounds}
+                        >
+                            {noRounds}
+                        </span>
+                    );
+                }
+                const fullRounds = value.map((item, index) => (
+                    <span key={index}>
+                        {item.roundTitle}
+                        {index !== value.length - 1 && " → "}
+                    </span>
+                ));
+                const fullText = value.map(item => item.roundTitle).join(" → ");
+                return (
+                    <span
+                        className="truncate max-w-[160px] block"
+                        title={fullText}
+                    >
+                        {fullRounds}
+                    </span>
+                );
+            },
         },
         {
             key: "bestFor",
@@ -543,8 +604,12 @@ const InterviewTemplates = () => {
             key: "format",
             header: "Format",
             render: (value) => {
-                const option = formatOptions.find((opt) => opt.value === value);
-                return option ? option.label : "N/A";
+                const formatLabel = getFormatLabel(value);
+                return (
+                    <span className="whitespace-nowrap">
+                        {formatLabel}
+                    </span>
+                );
             },
         },
         {
@@ -557,11 +622,6 @@ const InterviewTemplates = () => {
                     <span className="text-gray-400 text-sm">N/A</span>
                 );
             },
-        },
-        {
-            key: "updatedAt",
-            header: "Last Modified",
-            render: (value, row) => formatDateTime(row.updatedAt) || "N/A",
         },
     ];
 
