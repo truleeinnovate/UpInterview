@@ -12,7 +12,7 @@ import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import KanbanView from "./KanbanView";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import Header from "../../Components/Shared/Header/Header.jsx";
-import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
+// import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../icons/MdKeyboardArrowDown.svg";
@@ -22,6 +22,7 @@ import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadg
 import { formatDateTime } from "../../utils/dateFormatter.js";
 import StandardTemplates from "./StandardTemplates/StandardTemplates.jsx";
 import { notify } from "../../services/toastService.js";
+import StandardTemplatesToolbar from "./StandardTemplates/StandardTemplatesHeader.jsx";
 
 // FilterTabs component for standard/custom tabs
 const FilterTabs = ({
@@ -634,11 +635,11 @@ const InterviewTemplates = () => {
                     </div>
                 </main>
             </div>
-            <main className="fixed sm:top-48 top-48 md:top-48 lg:top-48 xl:top-48 2xl:top-48 left-0 right-0 bg-background">
+            <main className="fixed top-36 left-0 right-0 bg-background">
                 {activeTab === "custom" ? (
                     <div>
                         <div className="sm:px-4 px-6">
-                            <Toolbar
+                            <StandardTemplatesToolbar
                                 view={view}
                                 setView={setView}
                                 searchQuery={searchQuery}

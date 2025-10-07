@@ -81,6 +81,62 @@ const StandardTemplates = ({ handleClone }) => {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isFormatOpen, setIsFormatOpen] = useState(false);
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
+  // v1.0.1 <----------------------------------------------------------------------
+  const [activeTab, setActiveTab] = useState(() => {
+    // Initialize from URL on first render
+    const params = new URLSearchParams(window.location.search);
+    const tabFromUrl = params.get("tab");
+    return tabFromUrl === "standard" || tabFromUrl === "custom"
+      ? tabFromUrl
+      : "standard";
+  });
+
+  // Keep URL in sync with tab state
+  useEffect(() => {
+    console.log("Current active tab:", activeTab);
+    const params = new URLSearchParams(window.location.search);
+
+    // Only update URL if it doesn't match the current tab
+    if (params.get("tab") !== activeTab) {
+      console.log("Updating URL to match active tab:", activeTab);
+      params.set("tab", activeTab);
+      navigate({ search: params.toString() }, { replace: true });
+    }
+  }, [activeTab, navigate]);
+
+  // Handle tab change from URL (e.g., browser back/forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tabFromUrl = params.get("tab");
+      console.log("URL changed, tab from URL:", tabFromUrl);
+
+      if (
+        tabFromUrl &&
+        (tabFromUrl === "standard" || tabFromUrl === "custom")
+      ) {
+        console.log("Updating active tab from URL:", tabFromUrl);
+        setActiveTab(tabFromUrl);
+      } else if (!tabFromUrl) {
+        // If no tab in URL, set default and update URL
+        console.log("No tab in URL, setting to default");
+        setActiveTab("standard");
+        params.set("tab", "standard");
+        navigate({ search: params.toString() }, { replace: true });
+      }
+    };
+
+    // Listen for URL changes
+    window.addEventListener("popstate", handlePopState);
+
+    // Initial check
+    handlePopState();
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [navigate]);
+  // v1.0.1 ---------------------------------------------------------------------->
 
   // Selected filters state
   const [selectedFilters, setSelectedFilters] = useState({
