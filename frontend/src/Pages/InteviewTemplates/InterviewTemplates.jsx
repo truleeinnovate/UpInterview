@@ -26,7 +26,7 @@ import StandardTemplatesToolbar from "./StandardTemplates/StandardTemplatesHeade
 
 
 const InterviewTemplates = () => {
-    const { templatesData, isLoading, saveTemplate } = useInterviewTemplates();
+    const { templatesData, isLoading, saveTemplate, deleteInterviewTemplate } = useInterviewTemplates();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const itemsPerPage = 10;
@@ -319,16 +319,30 @@ const InterviewTemplates = () => {
             // Preserve the current tab in the URL when navigating to edit
             const params = new URLSearchParams();
             params.set('tab', activeTab);
-            navigate({
-                pathname: `edit/${template._id}`,
-                search: params.toString()
-            });
+            navigate(`/interview-templates/${template._id}/edit?${params.toString()}`);
         }
     };
 
     const capitalizeFirstLetter = (str) => {
         if (!str) return "";
         return str.charAt(0).toUpperCase() + str.slice(1);
+    };
+
+    const handleDelete = async (template) => {
+        if (!effectivePermissions.InterviewTemplates?.Delete) {
+            return;
+        }
+        
+        if (window.confirm(`Are you sure you want to delete the interview template "${template.name}"? This action cannot be undone.`)) {
+            try {
+                // deleteInterviewTemplate is already the mutateAsync function
+                await deleteInterviewTemplate(template._id);
+                // The success toast will be shown by the mutation's onSuccess handler
+            } catch (error) {
+                console.error('Error deleting interview template:', error);
+                // The error toast will be shown by the mutation's onError handler
+            }
+        }
     };
 
     const formatOptionsfortable = [
@@ -341,7 +355,7 @@ const InterviewTemplates = () => {
         const option = formatOptionsfortable.find((opt) => opt.value === formatValue);
         return option ? option.label : formatValue || "Uncategorized";
       };
-      
+
     // const handleClone = async (template) => {
     //     // v1.0.5 <--------------------------------------------------------------
     //     // setTemplateToClone(template);
@@ -596,7 +610,7 @@ const InterviewTemplates = () => {
                     key: "delete",
                     label: "Delete",
                     icon: <Trash className="w-4 h-4 text-red-600" />,
-                    // onClick: handleDelete,
+                    onClick: handleDelete,
                 },
             ]
             : []),
