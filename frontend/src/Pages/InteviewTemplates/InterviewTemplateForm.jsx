@@ -264,7 +264,7 @@ const InterviewSlideover = ({ mode }) => {
 
         try {
             const baseName = templateData.name.replace(/_std$/, "");
-            const safeName = `Clone_${baseName}`; // Use Clone_[baseName] directly
+            const safeName = `${baseName}`; // Use Clone_[baseName] directly
 
             const clonedTemplateData = {
                 title: templateData.title || "Untitled Template",

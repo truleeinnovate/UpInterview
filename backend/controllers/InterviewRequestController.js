@@ -236,156 +236,156 @@ exports.updateRequestStatus = async (req, res) => {
   }
 };
 
-exports.getInterviewRequests = async (req, res) => {
-  try {
-    const { ownerId, interviewerId } = req.query;
+// exports.getInterviewRequests = async (req, res) => {
+//   try {
+//     const { ownerId, interviewerId } = req.query;
 
-    // If interviewerId is provided, fetch requests for that interviewer only
-    if (interviewerId) {
-      if (!mongoose.Types.ObjectId.isValid(interviewerId)) {
-        return res.status(400).json({ message: 'Invalid interviewerId' });
-      }
-      const interviewerObjectId = new mongoose.Types.ObjectId(interviewerId);
-      const requests = await InterviewRequest.find({ interviewerId: interviewerObjectId })
-        .populate("candidateId")
-        .populate("positionId")
-        .populate("contactId")
-        .populate("tenantId")
-        .populate("roundId")
-        .populate("interviewerId")
-        .lean();
-      const formattedRequests = requests.map((request) => ({
-        ...request,
-        _id: request._id,
-        id: request._id,
-        positionId: request.positionId || null,
-        tenantId: request.tenantId || null,
-        roundId: request.roundId || null,
-        contactId: request.interviewerId || null,
-        status: request.status,
-        requestedDate: request.requestedAt
-          ? new Date(request.requestedAt).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        urgency: request.expiryDateTime
-          ? new Date(request.expiryDateTime) < new Date()
-            ? "High"
-            : "Medium"
-          : "Low",
-        type: request.roundId?.interviewType || "Unknown Type",
-        roundId: request.roundId?._id || null,
-        roundDetails: request.roundId
-          ? {
-            roundTitle: request.roundId.roundTitle,
-            interviewType: request.roundId.interviewType,
-            duration: request.roundId.duration,
-            dateTime: request.roundId.dateTime,
-          }
-          : null,
-        originalRequest: {
-          dateTime: request.dateTime,
-          duration: request.duration,
-          status: request.status,
-          interviewerType: request.interviewerType,
-          expiryDateTime: request.expiryDateTime,
-        },
-      }));
-      return res.status(200).json(formattedRequests);
-    }
+//     // If interviewerId is provided, fetch requests for that interviewer only
+//     if (interviewerId) {
+//       if (!mongoose.Types.ObjectId.isValid(interviewerId)) {
+//         return res.status(400).json({ message: 'Invalid interviewerId' });
+//       }
+//       const interviewerObjectId = new mongoose.Types.ObjectId(interviewerId);
+//       const requests = await InterviewRequest.find({ interviewerId: interviewerObjectId })
+//         .populate("candidateId")
+//         .populate("positionId")
+//         .populate("contactId")
+//         .populate("tenantId")
+//         .populate("roundId")
+//         .populate("interviewerId")
+//         .lean();
+//       const formattedRequests = requests.map((request) => ({
+//         ...request,
+//         _id: request._id,
+//         id: request._id,
+//         positionId: request.positionId || null,
+//         tenantId: request.tenantId || null,
+//         roundId: request.roundId || null,
+//         contactId: request.interviewerId || null,
+//         status: request.status,
+//         requestedDate: request.requestedAt
+//           ? new Date(request.requestedAt).toISOString().split("T")[0]
+//           : new Date().toISOString().split("T")[0],
+//         urgency: request.expiryDateTime
+//           ? new Date(request.expiryDateTime) < new Date()
+//             ? "High"
+//             : "Medium"
+//           : "Low",
+//         type: request.roundId?.interviewType || "Unknown Type",
+//         roundId: request.roundId?._id || null,
+//         roundDetails: request.roundId
+//           ? {
+//             roundTitle: request.roundId.roundTitle,
+//             interviewType: request.roundId.interviewType,
+//             duration: request.roundId.duration,
+//             dateTime: request.roundId.dateTime,
+//           }
+//           : null,
+//         originalRequest: {
+//           dateTime: request.dateTime,
+//           duration: request.duration,
+//           status: request.status,
+//           interviewerType: request.interviewerType,
+//           expiryDateTime: request.expiryDateTime,
+//         },
+//       }));
+//       return res.status(200).json(formattedRequests);
+//     }
 
-    // Default: use ownerId logic
-    if (!ownerId) {
-      return res.status(400).json({ message: "ownerId is required" });
-    }
+//     // Default: use ownerId logic
+//     if (!ownerId) {
+//       return res.status(400).json({ message: "ownerId is required" });
+//     }
 
-    console.log(`ownerId: ${ownerId}`);
+//     console.log(`ownerId: ${ownerId}`);
 
-    // Find all contacts where ownerId matches
-    const contacts = await Contacts.find({ ownerId });
+//     // Find all contacts where ownerId matches
+//     const contacts = await Contacts.find({ ownerId });
 
-    if (!contacts || contacts.length === 0) {
-      console.log("No contacts found for ownerId:", ownerId);
-      return res
-        .status(404)
-        .json({ message: "No contacts found for this ownerId" });
-    }
+//     if (!contacts || contacts.length === 0) {
+//       console.log("No contacts found for ownerId:", ownerId);
+//       return res
+//         .status(404)
+//         .json({ message: "No contacts found for this ownerId" });
+//     }
 
-    console.log(`Found ${contacts.length} contacts for ownerId:`, ownerId);
+//     console.log(`Found ${contacts.length} contacts for ownerId:`, ownerId);
 
-    // Get all contact IDs for the query
-    console.log("contacts:", contacts);
-    const contactIds = contacts.map((contact) => contact._id);
-    console.log("contactIds:", contactIds);
+//     // Get all contact IDs for the query
+//     console.log("contacts:", contacts);
+//     const contactIds = contacts.map((contact) => contact._id);
+//     console.log("contactIds:", contactIds);
 
-    // Find interview requests where interviewerId matches any of the contact IDs
-    const query = { interviewerId: { $in: contactIds } };
-    console.log(
-      "Querying interview requests with:",
-      JSON.stringify(query, null, 2)
-    );
+//     // Find interview requests where interviewerId matches any of the contact IDs
+//     const query = { interviewerId: { $in: contactIds } };
+//     console.log(
+//       "Querying interview requests with:",
+//       JSON.stringify(query, null, 2)
+//     );
 
-    // Find all matching interview requests and populate all fields from referenced models
-    const requests = await InterviewRequest.find(query)
-      .populate("candidateId") // Populate all candidate fields
-      .populate("positionId") // Populate all position fields
-      .populate("tenantId") // Populate all tenant fields
-      .populate("roundId") // Populate all round fields
-      .populate("interviewerId") // Populate all contact fields
-      .lean();
+//     // Find all matching interview requests and populate all fields from referenced models
+//     const requests = await InterviewRequest.find(query)
+//       .populate("candidateId") // Populate all candidate fields
+//       .populate("positionId") // Populate all position fields
+//       .populate("tenantId") // Populate all tenant fields
+//       .populate("roundId") // Populate all round fields
+//       .populate("interviewerId") // Populate all contact fields
+//       .lean();
 
-    console.log(`Found ${requests.length} matching interview requests`);
+//     console.log(`Found ${requests.length} matching interview requests`);
 
-    const formattedRequests = requests.map((request) => {
-      // Create a new object with all request fields
-      return {
-        ...request, // Spread all original request fields
-        _id: request._id, // Keep the original _id
-        id: request._id, // Also include as id for backward compatibility
-        // Include full populated objects
-        positionId: request.positionId || null,
-        tenantId: request.tenantId || null,
-        roundId: request.roundId || null,
-        contactId: request.interviewerId || null,
-        // Keep existing calculated fields
-        status: request.status,
-        requestedDate: request.requestedAt
-          ? new Date(request.requestedAt).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        urgency: request.expiryDateTime
-          ? new Date(request.expiryDateTime) < new Date()
-            ? "High"
-            : "Medium"
-          : "Low",
-        // For backward compatibility, keep these fields
-        type: request.roundId?.interviewType || "Unknown Type",
-        roundId: request.roundId?._id || null,
-        roundDetails: request.roundId
-          ? {
-            roundTitle: request.roundId.roundTitle,
-            interviewType: request.roundId.interviewType,
-            duration: request.roundId.duration,
-            dateTime: request.roundId.dateTime,
-          }
-          : null,
-        originalRequest: {
-          dateTime: request.dateTime,
-          duration: request.duration,
-          status: request.status,
-          interviewerType: request.interviewerType,
-          expiryDateTime: request.expiryDateTime,
-        },
-      };
-    });
+//     const formattedRequests = requests.map((request) => {
+//       // Create a new object with all request fields
+//       return {
+//         ...request, // Spread all original request fields
+//         _id: request._id, // Keep the original _id
+//         id: request._id, // Also include as id for backward compatibility
+//         // Include full populated objects
+//         positionId: request.positionId || null,
+//         tenantId: request.tenantId || null,
+//         roundId: request.roundId || null,
+//         contactId: request.interviewerId || null,
+//         // Keep existing calculated fields
+//         status: request.status,
+//         requestedDate: request.requestedAt
+//           ? new Date(request.requestedAt).toISOString().split("T")[0]
+//           : new Date().toISOString().split("T")[0],
+//         urgency: request.expiryDateTime
+//           ? new Date(request.expiryDateTime) < new Date()
+//             ? "High"
+//             : "Medium"
+//           : "Low",
+//         // For backward compatibility, keep these fields
+//         type: request.roundId?.interviewType || "Unknown Type",
+//         roundId: request.roundId?._id || null,
+//         roundDetails: request.roundId
+//           ? {
+//             roundTitle: request.roundId.roundTitle,
+//             interviewType: request.roundId.interviewType,
+//             duration: request.roundId.duration,
+//             dateTime: request.roundId.dateTime,
+//           }
+//           : null,
+//         originalRequest: {
+//           dateTime: request.dateTime,
+//           duration: request.duration,
+//           status: request.status,
+//           interviewerType: request.interviewerType,
+//           expiryDateTime: request.expiryDateTime,
+//         },
+//       };
+//     });
 
-    console.log(
-      `Sending ${formattedRequests.length} formatted requests to frontend`
-    );
+//     console.log(
+//       `Sending ${formattedRequests.length} formatted requests to frontend`
+//     );
 
-    res.status(200).json(formattedRequests);
-  } catch (error) {
-    console.error("[getInterviewRequests] Error:", error, error.stack);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
+//     res.status(200).json(formattedRequests);
+//   } catch (error) {
+//     console.error("[getInterviewRequests] Error:", error, error.stack);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
 
 // exports.acceptInterviewRequest = async (req, res) => {
 //   try {
@@ -617,6 +617,177 @@ exports.getInterviewRequests = async (req, res) => {
 // };
 
 
+const formatInterviewRequest = async (request) => {
+  let roundDetails = null;
+  let candidateDetails = null;
+  let positionDetails = null;
+
+  // Handle roundId (MockInterviewRounds or InterviewRounds)
+  if (request.roundId) {
+    if (request.isMockInterview) {
+      // Fetch from MockInterviewRounds collection
+      const mockRound = await mongoose.model("MockInterviewRound").findById(request.roundId)
+        .select("roundTitle interviewType duration dateTime")
+        .lean();
+      roundDetails = mockRound
+        ? {
+            roundTitle: mockRound.roundTitle,
+            interviewType: mockRound.interviewType,
+            duration: mockRound.duration,
+            dateTime: mockRound.dateTime,
+          }
+        : null;
+    } else {
+      // Fetch from InterviewRounds collection
+      const interviewRound = await mongoose.model("InterviewRounds").findById(request.roundId)
+        .select("roundTitle interviewType duration dateTime")
+        .lean();
+      roundDetails = interviewRound
+        ? {
+            roundTitle: interviewRound.roundTitle,
+            interviewType: interviewRound.interviewType,
+            duration: interviewRound.duration,
+            dateTime: interviewRound.dateTime,
+          }
+        : null;
+    }
+  }
+
+  // Handle candidate/contact data based on isMockInterview
+  if (request.isMockInterview) {
+    if (request.contactId) {
+      const contact = await mongoose.model("Contacts").findById(request.contactId)
+        .select("firstName lastName email phone")
+        .lean();
+      candidateDetails = contact
+        ? {
+            id: contact._id,
+            name: `${contact.firstName} ${contact.lastName}`,
+            email: contact.email,
+            phone: contact.phone,
+          }
+        : null;
+    }
+  } else {
+    if (request.candidateId) {
+      const candidate = await mongoose.model("Candidate").findById(request.candidateId)
+        .select("FirstName LastName Email Phone")
+        .lean();
+      candidateDetails = candidate
+        ? {
+            id: candidate._id,
+            name: `${candidate.FirstName} ${candidate.LastName}`,
+            email: candidate.Email,
+            phone: candidate.Phone,
+          }
+        : null;
+    }
+  }
+
+  // Handle position data only for non-mock interviews
+  if (!request.isMockInterview && request.positionId) {
+    const position = await mongoose.model("Position").findById(request.positionId)
+      .select("title description location companyname")
+      .lean();
+    positionDetails = position
+      ? {
+          id: position._id,
+          title: position.title,
+          description: position.description,
+          location: position.location,
+          companyname: position.companyname, // Added to match frontend
+        }
+      : null;
+  }
+
+  return {
+    ...request,
+    _id: request._id,
+    id: request._id,
+    positionId: request.positionId || null,
+    tenantId: request.tenantId || null,
+    roundId: request.roundId || null,
+    contactId: request.interviewerId || null,
+    status: request.status,
+    isMockInterview: request.isMockInterview, // Added for frontend
+    requestedDate: request.requestedAt
+      ? new Date(request.requestedAt).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0],
+    urgency: request.expiryDateTime
+      ? new Date(request.expiryDateTime) < new Date()
+        ? "High"
+        : "Medium"
+      : "Low",
+    type: roundDetails?.interviewType || "Unknown Type",
+    roundDetails,
+    candidateDetails,
+    positionDetails,
+    originalRequest: {
+      dateTime: request.dateTime,
+      duration: request.duration,
+      status: request.status,
+      interviewerType: request.interviewerType,
+      expiryDateTime: request.expiryDateTime,
+    },
+  };
+};
+
+exports.getInterviewRequests = async (req, res) => {
+  try {
+    const { ownerId, interviewerId } = req.query;
+
+    let requests = [];
+
+    // If interviewerId is provided, fetch requests for that interviewer only
+    if (interviewerId) {
+      if (!mongoose.Types.ObjectId.isValid(interviewerId)) {
+        return res.status(400).json({ message: "Invalid interviewerId" });
+      }
+      const interviewerObjectId = new mongoose.Types.ObjectId(interviewerId);
+      requests = await InterviewRequest.find({ interviewerId: interviewerObjectId }).lean();
+    } else {
+      // Default: use ownerId logic
+      if (!ownerId) {
+        return res.status(400).json({ message: "ownerId is required" });
+      }
+
+      console.log(`ownerId: ${ownerId}`);
+
+      // Find all contacts where ownerId matches
+      const contacts = await mongoose.model("Contacts").find({ ownerId }).lean();
+
+      if (!contacts || contacts.length === 0) {
+        console.log("No contacts found for ownerId:", ownerId);
+        return res.status(404).json({ message: "No contacts found for this ownerId" });
+      }
+
+      console.log(`Found ${contacts.length} contacts for ownerId:`, ownerId);
+
+      // Get all contact IDs for the query
+      console.log("contacts:", contacts);
+      const contactIds = contacts.map((contact) => contact._id);
+      console.log("contactIds:", contactIds);
+
+      // Find interview requests where interviewerId matches any of the contact IDs
+      const query = { interviewerId: { $in: contactIds } };
+      console.log("Querying interview requests with:", JSON.stringify(query, null, 2));
+
+      requests = await InterviewRequest.find(query).lean();
+
+      console.log(`Found ${requests.length} matching interview requests`);
+    }
+
+    // Format all requests using the shared function
+    const formattedRequests = await Promise.all(requests.map(formatInterviewRequest));
+
+    console.log(`Sending ${formattedRequests.length} formatted requests to frontend`);
+
+    res.status(200).json(formattedRequests);
+  } catch (error) {
+    console.error("[getInterviewRequests] Error:", error, error.stack);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 exports.acceptInterviewRequest = async (req, res) => {
   try {
     const { requestId, contactId, roundId } = req.body;
@@ -716,14 +887,22 @@ exports.acceptInterviewRequest = async (req, res) => {
     let experienceLevel;
 
     if (request.isMockInterview) {
-      // Mock interview: Use contact's expertiseLevel
-      experienceLevel = contact.expertiseLevel?.toLowerCase();
-      if (!['junior', 'mid', 'senior'].includes(experienceLevel)) {
-        console.log(`Invalid expertiseLevel for contact ${contactId}: ${contact.expertiseLevel}`);
+      // Mock interview: Map numeric expertiseLevel to junior, mid, or senior
+      console.log(`Mock interview: Expertise level for contact ${contactId}: ${contact.yearsOfExperience}`);
+      const expertiseYears = Number(contact.yearsOfExperience);
+      if (isNaN(expertiseYears) || expertiseYears < 0) {
+        console.log(`Invalid expertiseLevel for contact ${contactId}: ${contact.yearsOfExperience}`);
         return res.status(400).json({
           success: false,
-          message: `Invalid expertise level for interviewer (${contactId}). Must be "junior", "mid", or "senior".`
+          message: `Invalid or missing expertiseLevel for interviewer (${contactId}). Must be a non-negative number.`
         });
+      }
+      if (expertiseYears <= 3) {
+        experienceLevel = 'junior';
+      } else if (expertiseYears <= 6) {
+        experienceLevel = 'mid';
+      } else {
+        experienceLevel = 'senior';
       }
       rate = contact.rates?.[experienceLevel]?.inr;
       if (typeof rate !== 'number' || rate <= 0) {
@@ -752,14 +931,8 @@ exports.acceptInterviewRequest = async (req, res) => {
         experienceLevel = 'junior';
       } else if (experienceYears <= 6) {
         experienceLevel = 'mid';
-      } else if (experienceYears >= 7) {
-        experienceLevel = 'senior';
       } else {
-        console.log(`Invalid experienceYears for candidate ${request.candidateId}: ${experienceYears}`);
-        return res.status(400).json({
-          success: false,
-          message: `Invalid experience years for candidate (${request.candidateId}). Must be a non-negative number.`
-        });
+        experienceLevel = 'senior';
       }
       rate = contact.rates?.[experienceLevel]?.inr;
       if (typeof rate !== 'number' || rate <= 0) {

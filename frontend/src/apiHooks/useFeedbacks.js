@@ -8,13 +8,6 @@ export const useFeedbacks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const hasViewPermission = effectivePermissions?.Feedback?.View;
 
-  console.log('[useFeedbacks] Debug:', {
-    hasViewPermission,
-    isInitialized,
-    effectivePermissions: !!effectivePermissions,
-    feedbackPermissions: effectivePermissions?.Feedback
-  });
-
   return useQuery({
     queryKey: ['feedbacks', filters],
     queryFn: async () => {
