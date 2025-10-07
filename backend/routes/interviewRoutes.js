@@ -12,6 +12,7 @@ const {
   updateInterview,
   updateInterviewRound,
   updateInterviewStatus,
+  checkInternalInterviewUsage,
 } = require("../controllers/interviewController");
 
 // router.get('/', getAllInterviews);
@@ -37,5 +38,8 @@ router.get("/interviews", getAllInterviews);
 // v1.0.0 ------------------------------------------------------------->
 
 router.patch('/status/:interviewId/:status', updateInterviewStatus);
+
+// Check internal interview usage
+router.get('/check-usage', checkInternalInterviewUsage);
 
 module.exports = router;

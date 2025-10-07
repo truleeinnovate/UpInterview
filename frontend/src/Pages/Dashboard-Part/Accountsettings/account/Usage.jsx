@@ -148,9 +148,9 @@ const Usage = () => {
     return null;
   }
 
-  // Derived metrics from API
+  // Derived metrics from API (matches both "Internal Interviews" and any future interview types)
   const interviewerAttrs =
-    usage?.attributes?.filter((a) => /Interviewer/i.test(a.type)) || [];
+    usage?.attributes?.filter((a) => /Interview/i.test(a.type)) || [];
   const interviewerEntitled = interviewerAttrs.reduce(
     (sum, a) => sum + (Number(a.entitled) || 0),
     0
@@ -188,7 +188,7 @@ const Usage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Interviewers (Internal + Outsource) */}
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium">Interviewers</h3>
+          <h3 className="text-lg font-medium">Internal Interviews</h3>
           <div className="mt-2">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Used: {interviewerUtilized}</span>

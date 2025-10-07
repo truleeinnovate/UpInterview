@@ -24,6 +24,11 @@ const {
     sendInterviewRoundEmails,
 } = require("./EmailsController/interviewEmailController");
 const { updateInterviewStatus, TERMINAL_STATUSES } = require('../services/interviewStatusService');
+// Import usage service for internal interview tracking
+const { 
+    checkInternalInterviewUsageLimit, 
+    getInternalInterviewUsageStats 
+} = require('../services/interviewUsageService');
 // v1.0.2 <-----------------------------------------
 // ------------------------------v1.0.0 >
 
@@ -1107,6 +1112,35 @@ const updateInterviewRound = async (req, res) => {
 
         console.log("Found existing round:", existingRound._id);
 
+        // Check usage limit if changing status to Scheduled for internal interview
+        if (round.status === 'Scheduled' && 
+            existingRound.status !== 'Scheduled' && 
+            existingRound.interviewerType === 'internal') {
+            
+            // Get interview details for tenantId
+            const interview = await Interview.findById(interviewId);
+            if (interview) {
+                const usageCheck = await checkInternalInterviewUsageLimit(
+                    interview.tenantId, 
+                    interview.ownerId
+                );
+                
+                if (!usageCheck.canSchedule) {
+                    return res.status(400).json({
+                        message: usageCheck.message,
+                        usageStats: {
+                            utilized: usageCheck.utilized,
+                            entitled: usageCheck.entitled,
+                            remaining: usageCheck.remaining
+                        }
+                    });
+                }
+            }
+        }
+
+        // Store original status for tracking
+        existingRound._original_status = existingRound.status;
+
         // Handle meetLink field separately to prevent conversion issues
         const { meetLink, ...otherRoundData } = round;
         Object.assign(existingRound, otherRoundData);
@@ -1465,19 +1499,19 @@ const getAllInterviews = async (req, res) => {
 
 // -------------------------------------------------------------------------------------->
 
-module.exports = {
-    createInterview,
-    updateInterview,
-    //  interview round
-    saveInterviewRound,
-    updateInterviewRound,
-    // interview round
-    getDashboardStats,
-    deleteRound,
-    getInterviews,
-    getAllInterviews,
-    updateInterviewStatus,
-};
+// module.exports = {
+//     createInterview,
+//     updateInterview,
+//     //  interview round
+//     saveInterviewRound,
+//     updateInterviewRound,
+//     // interview round
+//     getDashboardStats,
+//     deleteRound,
+//     getInterviews,
+//     getAllInterviews,
+//     updateInterviewStatus,
+// };
 
 
 
@@ -1899,8 +1933,38 @@ module.exports = {
 
 // module.exports = { createInterview, saveInterviewRound, getDashboardStats };
 
+// Check internal interview usage before scheduling
+const checkInternalInterviewUsage = async (req, res) => {
+    try {
+        const { tenantId, ownerId } = req.query;
+        
+        if (!tenantId) {
+            return res.status(400).json({ message: 'TenantId is required' });
+        }
+        
+        const usageCheck = await checkInternalInterviewUsageLimit(tenantId, ownerId);
+        const usageStats = await getInternalInterviewUsageStats(tenantId, ownerId);
+        
+        return res.status(200).json({
+            canSchedule: usageCheck.canSchedule,
+            message: usageCheck.message,
+            usage: usageStats || {
+                utilized: usageCheck.utilized || 0,
+                entitled: usageCheck.entitled || 0,
+                remaining: usageCheck.remaining || 0,
+                percentage: 0
+            }
+        });
+    } catch (error) {
+        console.error('Error checking internal interview usage:', error);
+        return res.status(500).json({ 
+            message: 'Error checking usage limits', 
+            error: error.message 
+        });
+    }
+};
 
-exports.updateInterviewStatus = async (req, res) => {
+const updateInterviewStatusController = async (req, res) => {
     try {
         const { interviewId, status } = req.params;
         const { reason } = req.body;
@@ -1913,7 +1977,7 @@ exports.updateInterviewStatus = async (req, res) => {
             });
         }
 
-        // Update the interview status
+        // Update the interview status service call
         const updatedInterview = await updateInterviewStatus(interviewId, status);
 
         if (!updatedInterview) {
@@ -1941,4 +2005,18 @@ exports.updateInterviewStatus = async (req, res) => {
             error: error.message
         });
     }
+};
+
+// Export all controller functions
+module.exports = {
+    createInterview,
+    getAllInterviews,
+    updateInterview,
+    saveInterviewRound,
+    updateInterviewRound,
+    getDashboardStats,
+    deleteRound,
+    getInterviews,
+    checkInternalInterviewUsage,
+    updateInterviewStatus: updateInterviewStatusController,
 };

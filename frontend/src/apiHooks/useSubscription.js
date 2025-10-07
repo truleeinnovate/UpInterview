@@ -30,7 +30,7 @@ const formatPlans = (plans, userType) => {
 
     const formattedPlan = {
       name: plan.name,
-      planId: plan.planId || plan._id,
+      planId: plan._id,
       monthlyPrice: monthlyPricing?.price || 0,
       annualPrice: annualPricing?.price || 0,
       isDefault: plan.name === 'Pro',

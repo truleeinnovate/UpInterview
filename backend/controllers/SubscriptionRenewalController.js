@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const moment = require('moment');
 const CustomerSubscription = require('../models/CustomerSubscriptionmodels');
 const SubscriptionPlan = require('../models/Subscriptionmodels');
-const Usage = require('../models/Usage');
+// Usage creation removed - now handled only in RazorpayController after payment verification
+// // const Usage = require('../models/Usage'); // Usage creation removed - now handled only in RazorpayController after payment verification
 const Tenant = require('../models/Tenant');
 const Invoicemodels = require('../models/Invoicemodels');
 const Payment = require('../models/Payments');
@@ -20,162 +21,38 @@ const LOCK_TTL_MS = parseInt(process.env.RENEWAL_LOCK_TTL_MS || '', 10) || (55 *
 console.log('[SUBSCRIPTION RENEWAL] Controller initialized at', new Date().toISOString());
 
 /**
- * Check if a usage period needs to be renewed/reset
- * Only creates ONE usage document per billing period (monthly/yearly)
+ * Update tenant limits on renewal (Usage creation removed - handled in RazorpayController)
  */
-const checkAndResetUsagePeriod = async (subscription) => {
+const updateTenantLimits = async (subscription) => {
     try {
-        const now = new Date();
         const tenantId = subscription.tenantId;
-        const ownerId = subscription.ownerId;
+        console.log(`[RENEWAL] Updating tenant limits for ${tenantId}`);
 
-        // Get current usage document
-        let currentUsage = await Usage.findOne({ 
-            tenantId, 
-            ownerId 
-        });
-
-        // Helper function to check if we're in the same period
-        const isInSamePeriod = (usageFromDate, usageToDate, billingCycle) => {
-            if (!usageFromDate || !usageToDate) return false;
-            
-            const nowMoment = moment(now);
-            const fromMoment = moment(usageFromDate);
-            const toMoment = moment(usageToDate);
-            
-            // Check if current date is within the existing usage period
-            if (nowMoment.isBetween(fromMoment, toMoment, null, '[]')) {
-                return true;
-            }
-            
-            // For monthly: check if we're in the same month and year
-            if (billingCycle === 'monthly') {
-                return nowMoment.year() === fromMoment.year() && 
-                       nowMoment.month() === fromMoment.month();
-            }
-            
-            // For annual: check if we're in the same year cycle
-            if (billingCycle === 'annual') {
-                // Check if we're within the same annual period
-                const yearsSinceStart = nowMoment.diff(fromMoment, 'years');
-                const nextRenewalDate = moment(fromMoment).add(yearsSinceStart + 1, 'years');
-                return nowMoment.isBefore(nextRenewalDate);
-            }
-            
-            return false;
-        };
-
-        const billingCycle = subscription.selectedBillingCycle || 'monthly';
-        
-        // Only create new period if:
-        // 1. No usage exists OR
-        // 2. Current usage exists but we're in a new billing period
-        const needsNewPeriod = !currentUsage || 
-            !isInSamePeriod(currentUsage.fromDate, currentUsage.toDate, billingCycle);
-
-        if (needsNewPeriod) {
-            console.log(`[RENEWAL] New billing period detected for tenant ${tenantId}`);
-
-            // Get subscription plan to fetch features
-            const plan = await SubscriptionPlan.findById(subscription.subscriptionPlanId).lean();
-            if (!plan) {
-                console.error(`[RENEWAL] Plan not found: ${subscription.subscriptionPlanId}`);
-                return;
-            }
-
-            // Calculate new period dates based on subscription dates
-            let fromDate, toDate;
-            
-            if (billingCycle === 'monthly') {
-                // Start from beginning of current month
-                fromDate = moment().startOf('month').toDate();
-                toDate = moment().endOf('month').toDate();
-            } else if (billingCycle === 'annual') {
-                // Use subscription start date anniversary
-                if (subscription.startDate) {
-                    const startMoment = moment(subscription.startDate);
-                    const yearsSinceStart = moment().diff(startMoment, 'years');
-                    fromDate = moment(startMoment).add(yearsSinceStart, 'years').toDate();
-                    toDate = moment(fromDate).add(1, 'year').subtract(1, 'day').toDate();
-                } else {
-                    // Fallback to calendar year
-                    fromDate = moment().startOf('year').toDate();
-                    toDate = moment().endOf('year').toDate();
-                }
-            } else {
-                // Default case
-                fromDate = now;
-                toDate = calculateEndDate(billingCycle, fromDate);
-            }
-
-            // Build new usage attributes with reset limits
-            const features = plan.features || [];
-            const usageAttributes = features
-                .filter(f => ['Assessments', 'Internal Interviewers', 'Outsource Interviewers'].includes(f?.name))
-                .map(f => ({
-                    entitled: Number(f?.limit) || 0,
-                    type: f?.name,
-                    utilized: 0,
-                    remaining: Number(f?.limit) || 0,
-                }));
-
-            if (currentUsage && currentUsage.fromDate && currentUsage.toDate) {
-                // Archive current period before creating new one (only if not already archived)
-                const periodKey = `${moment(currentUsage.fromDate).format('YYYY-MM-DD')}_${moment(currentUsage.toDate).format('YYYY-MM-DD')}`;
-                const alreadyArchived = Array.isArray(currentUsage.usageHistory) && 
-                    currentUsage.usageHistory.some(h => {
-                        const archiveKey = `${moment(h.fromDate).format('YYYY-MM-DD')}_${moment(h.toDate).format('YYYY-MM-DD')}`;
-                        return archiveKey === periodKey;
-                    });
-
-                if (!alreadyArchived && currentUsage.toDate < now) {
-                    currentUsage.usageHistory = currentUsage.usageHistory || [];
-                    currentUsage.usageHistory.push({
-                        usageAttributes: currentUsage.usageAttributes,
-                        fromDate: currentUsage.fromDate,
-                        toDate: currentUsage.toDate,
-                        archivedAt: new Date()
-                    });
-                    console.log(`[RENEWAL] Archived previous period: ${periodKey}`);
-                }
-
-                // Update with new period
-                currentUsage.usageAttributes = usageAttributes;
-                currentUsage.fromDate = fromDate;
-                currentUsage.toDate = toDate;
-                await currentUsage.save();
-                console.log(`[RENEWAL] Usage period reset for ${billingCycle} subscription (${moment(fromDate).format('YYYY-MM-DD')} to ${moment(toDate).format('YYYY-MM-DD')})`);
-            } else {
-                // Create new usage document (first time)
-                const newUsage = new Usage({
-                    tenantId,
-                    ownerId,
-                    usageAttributes,
-                    fromDate,
-                    toDate,
-                    usageHistory: []
-                });
-                await newUsage.save();
-                console.log(`[RENEWAL] New usage document created for ${billingCycle} subscription (${moment(fromDate).format('YYYY-MM-DD')} to ${moment(toDate).format('YYYY-MM-DD')})`);
-            }
-
-            // Update tenant limits
-            const tenant = await Tenant.findById(tenantId);
-            if (tenant) {
-                const bandwidthLimit = features.find(f => f?.name === 'Bandwidth')?.limit || tenant.usersBandWidth || 0;
-                const usersLimit = features.find(f => f?.name === 'Users')?.limit || tenant.totalUsers || 0;
-                
-                tenant.usersBandWidth = bandwidthLimit;
-                tenant.totalUsers = usersLimit;
-                tenant.status = 'active';
-                await tenant.save();
-                console.log(`[RENEWAL] Tenant limits updated for ${tenantId}`);
-            }
-        } else {
-            console.log(`[RENEWAL] Usage already exists for current ${billingCycle} period (${moment(currentUsage.fromDate).format('YYYY-MM-DD')} to ${moment(currentUsage.toDate).format('YYYY-MM-DD')})`);
+        // Get subscription plan to fetch features
+        const plan = await SubscriptionPlan.findById(subscription.subscriptionPlanId).lean();
+        if (!plan) {
+            console.error(`[RENEWAL] Plan not found: ${subscription.subscriptionPlanId}`);
+            return;
         }
+
+        // Update tenant limits only
+        const features = plan.features || [];
+        const tenant = await Tenant.findById(tenantId);
+        if (tenant) {
+            const bandwidthLimit = features.find(f => f?.name === 'Bandwidth')?.limit || tenant.usersBandWidth || 0;
+            const usersLimit = features.find(f => f?.name === 'Users')?.limit || tenant.totalUsers || 0;
+            
+            tenant.usersBandWidth = bandwidthLimit;
+            tenant.totalUsers = usersLimit;
+            tenant.status = 'active';
+            await tenant.save();
+            console.log(`[RENEWAL] Tenant limits updated for ${tenantId}`);
+        }
+
+        // Note: Usage document will be created/updated only after payment verification in RazorpayController
+        console.log(`[RENEWAL] Usage document will be handled by payment verification process`);
     } catch (error) {
-        console.error('[RENEWAL] Error in checkAndResetUsagePeriod:', error);
+        console.error('[RENEWAL] Error updating tenant limits:', error);
     }
 };
 
@@ -228,8 +105,8 @@ const processSubscriptionRenewal = async (subscription) => {
 
         await subscription.save();
 
-        // Reset usage limits for new period
-        await checkAndResetUsagePeriod(subscription);
+        // Update tenant limits only (Usage will be created after payment in RazorpayController)
+        await updateTenantLimits(subscription);
 
         console.log(`[RENEWAL] Successfully renewed subscription ${subscription._id} until ${newEndDate}`);
         return true;
@@ -296,23 +173,23 @@ const runSubscriptionRenewalJob = async () => {
                     }
                 }
 
-                // Always check and reset usage if needed
-                await checkAndResetUsagePeriod(subscription);
+                // Update tenant limits if needed
+                await updateTenantLimits(subscription);
 
             } catch (subError) {
                 console.error(`[RENEWAL] Error processing subscription ${subscription._id}:`, subError);
             }
         }
 
-        // Also check all active subscriptions for usage period resets
+        // Also update tenant limits for all active subscriptions
         const activeSubscriptions = await CustomerSubscription.find({
             status: SUBSCRIPTION_STATUSES.ACTIVE
         });
 
-        console.log(`[RENEWAL] Checking usage periods for ${activeSubscriptions.length} active subscriptions`);
+        console.log(`[RENEWAL] Updating tenant limits for ${activeSubscriptions.length} active subscriptions`);
 
         for (const sub of activeSubscriptions) {
-            await checkAndResetUsagePeriod(sub);
+            await updateTenantLimits(sub);
         }
 
         console.log('[RENEWAL] Subscription renewal check completed');
@@ -361,13 +238,13 @@ const getSubscriptionRenewalStatus = async (req, res) => {
         const daysUntilRenewal = subscription.nextBillingDate ? 
             Math.ceil((subscription.nextBillingDate - now) / (1000 * 60 * 60 * 24)) : null;
 
-        // Get current usage
-        const usage = await Usage.findOne({
-            tenantId: subscription.tenantId,
-            ownerId: subscription.ownerId,
-            fromDate: { $lte: now },
-            toDate: { $gte: now }
-        });
+        // Usage information removed - now managed only in RazorpayController
+        // const usage = await Usage.findOne({
+        //     tenantId: subscription.tenantId,
+        //     ownerId: subscription.ownerId,
+        //     fromDate: { $lte: now },
+        //     toDate: { $gte: now }
+        // });
 
         res.json({
             subscriptionId: subscription._id,
@@ -379,14 +256,8 @@ const getSubscriptionRenewalStatus = async (req, res) => {
             },
             nextBillingDate: subscription.nextBillingDate,
             daysUntilRenewal,
-            lastRenewalCheck: subscription.lastRenewalCheck,
-            usage: usage ? {
-                period: {
-                    from: usage.fromDate,
-                    to: usage.toDate
-                },
-                attributes: usage.usageAttributes
-            } : null
+            lastRenewalCheck: subscription.lastRenewalCheck
+            // Usage information removed - now fetched separately from Usage endpoints
         });
     } catch (error) {
         console.error('[RENEWAL] Status check error:', error);
@@ -426,6 +297,5 @@ module.exports = {
     runSubscriptionRenewalJob,
     manualRenewalCheck,
     getSubscriptionRenewalStatus,
-    checkAndResetUsagePeriod,
     processSubscriptionRenewal
 };

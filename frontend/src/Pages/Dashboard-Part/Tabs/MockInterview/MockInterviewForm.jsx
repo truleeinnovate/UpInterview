@@ -75,6 +75,7 @@ const formatToCustomDateTime = (date) => {
 const MockSchedulelater = () => {
 
     const { singleContact } = useSingleContact();
+    console.log("singleContact===",singleContact);
 
     const {
         qualifications,
@@ -220,7 +221,7 @@ const MockSchedulelater = () => {
                 candidateName: `${contact.firstName || ""} ${contact.lastName || ""
                     }`.trim(),
                 higherQualification: contact.HigherQualification || "",
-                currentExperience: contact.Experience || "",
+                currentExperience: contact.yearsOfExperience || "",
                 technology: contact.technologies?.[0] || "",
                 Role: contact.currentRole || "",
                 skills: contact.skills || [],
@@ -2867,6 +2868,7 @@ const handleSubmit = async (e) => {
                     onProceed={handleExternalInterviewerSelect}
                     skills={formData.skills}
                     navigatedfrom="mock-interview"
+                    isMockInterview={true}  // Correctly passes true for mock interviews
                 />
             )}
 
