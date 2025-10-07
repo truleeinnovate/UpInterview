@@ -476,6 +476,7 @@ const MockInterviewDetails = () => {
                               <div className="sm:px-0 px-4 pb-4">
                               {/* v1.0.1 ----------------------------------------> */}
                                 <MoockRoundCard
+                                mockinterview={mockinterview}
                                   round={round}
                                   // canEdit={canEditRound(round)}
                                   // onEdit={() => onEditRound(round)}

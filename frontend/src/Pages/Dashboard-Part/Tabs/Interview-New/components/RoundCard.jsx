@@ -1679,7 +1679,7 @@ const RoundCard = ({
                   {/* Share (always for Assessment) */}
                   {permissions.canResendLink && round.roundTitle === "Assessment" 
                   && round?.scheduleAssessmentId 
-                  // && shouldShowResultButton()
+                  && shouldShowResultButton()
                    && (
                     <button
                       onClick={() => handleResendClick(round)}

@@ -990,17 +990,17 @@ const RoundFormInterviews = () => {
 
   const handleSubmit = async (e) => {
     // v1.0.2 <-----------------------------------------
-    console.log("=== handleSubmit START ===");
-    console.log("Form submission started");
-    console.log("Current form data:", {
-      roundTitle,
-      interviewType,
-      scheduledDate,
-      duration,
-      instructions,
-      selectedInterviewers: selectedInterviewers?.length || 0,
-      selectedMeetingPlatform,
-    });
+    // console.log("=== handleSubmit START ===");
+    // console.log("Form submission started");
+    // console.log("Current form data:", {
+    //   roundTitle,
+    //   interviewType,
+    //   scheduledDate,
+    //   duration,
+    //   instructions,
+    //   selectedInterviewers: selectedInterviewers?.length || 0,
+    //   selectedMeetingPlatform,
+    // });
     e.preventDefault();
 
     // Prevent multiple submissions
@@ -1349,8 +1349,15 @@ const RoundFormInterviews = () => {
 
         // Meeting platform link creation
         if (response.status === "ok") {
-          console.log("Generating meeting link for the interview");
-          if (payload?.round?.interviewMode !== "Face to Face") {
+          // console.log("Generating meeting link for the interview");
+          const shouldGenerateMeeting =
+          !isEditing &&                                   // 🧩 Skip in edit mode
+          payload?.round?.interviewMode !== "Face to Face" &&
+          Array.isArray(selectedInterviewers) &&
+          selectedInterviewers.length > 0;  
+          console.log(shouldGenerateMeeting,"shouldGenerateMeeting");
+          
+          if (shouldGenerateMeeting) {
             try {
               setIsMeetingCreationLoading(true);
               // v1.0.3 <-----------------------------------------------------------
@@ -1361,18 +1368,7 @@ const RoundFormInterviews = () => {
                 "../../../../../utils/meetingPlatforms.js"
               );
 
-              // console.log("Selected interviewers for meeting creation:", selectedInterviewers);
-
-              // Create meeting using the platform utility
-              // const meetingLink = await createMeeting(selectedMeetingPlatform, {
-              //   roundTitle,
-              //   instructions,
-              //   combinedDateTime,
-              //   duration,
-              //   selectedInterviewers: selectedInterviewers
-              // }, (progress) => {
-              //   setMeetingCreationProgress(progress);
-              // });
+            
 
               let meetingLink;
 
@@ -1490,27 +1486,7 @@ const RoundFormInterviews = () => {
               try {
                 console.log("=== Starting meeting URL processing ===");
 
-                // // Dynamic import to avoid import issues
-                // const { processMeetingUrls } = await import("../../../../../utils/meetingUrlGenerator.js");
-                // console.log("Dynamic import successful, processMeetingUrls type:", typeof processMeetingUrls);
-
-                // console.log("Calling processMeetingUrls with:", {
-                //   meetingLink,
-                //   roundId: response.savedRound._id,
-                //   interviewId,
-                //   roundData,
-                //   updateRoundWithMeetingLinks: typeof updateRoundWithMeetingLinks
-                // });
-                // console.log("updateRoundWithMeetingLinks function:", updateRoundWithMeetingLinks);
-                // console.log("roundData details:", roundData);
-
-                // const result = await processMeetingUrls(
-                //   meetingLink, // meetingLink
-                //   response.savedRound._id, // roundId
-                //   interviewId, // interviewId
-                //   roundData, // roundData
-                //   updateRoundWithMeetingLinks // Function from useInterviews hook
-                // );
+            
 
                 // console.log("Meeting URL processing completed successfully:", result);
                 const isInternal = selectedInterviewType === "Internal";

@@ -54,14 +54,22 @@ const addOrUpdateMockInterview = useMutation({
     const { formData, id, isEdit, userId, organizationId, resume, isResumeRemoved, round } = params;
 
     // ✅ CASE 1: Updating just the round (meeting link update)
-    if (round && id) {
-      const payload = { rounds: [round] };
-      const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/updateMockInterview/${id}`,
-        payload
-      );
-      return response.data;
-    }
+    // if (round && id) {
+    //   // ✅ Normalize id to _id before sending
+    //   const normalizedRound = { ...round };
+    //   if (normalizedRound.id && !normalizedRound._id) {
+    //     normalizedRound._id = normalizedRound.id;
+    //     delete normalizedRound.id;
+    //   }
+    
+    //   const payload = { rounds: [normalizedRound] };
+    //   const response = await axios.patch(
+    //     `${config.REACT_APP_API_URL}/updateMockInterview/${id}`,
+    //     payload
+    //   );
+    //   return response.data;
+    // }
+    
 
     // ✅ CASE 2: Normal full create/update
     if (!formData) throw new Error("formData is required for create/update");
@@ -116,7 +124,7 @@ const addOrUpdateMockInterview = useMutation({
       : `${config.REACT_APP_API_URL}/mockinterview`;
 
     const method = isEdit ? "patch" : "post";
-    console.log("API Call:", { url, method, payload });
+    console.log("API Call:", { url, method, payload,isEdit });
     
     const response = await axios[method](url, payload);
     console.log("API Response:", response.data);
