@@ -7,6 +7,7 @@
 // v1.0.6 - Ashok - Changed default active tab
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from "@mui/material";
 import { motion } from "framer-motion";
 import { Eye, Pencil, Trash, Files } from "lucide-react";
 import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
@@ -25,70 +26,164 @@ import StandardTemplates from "./StandardTemplates/StandardTemplates.jsx";
 import { notify } from "../../services/toastService.js";
 import StandardTemplatesToolbar from "./StandardTemplates/StandardTemplatesHeader.jsx";
 
-const InterviewTemplates = () => {
-  const { templatesData, isLoading, saveTemplate, deleteInterviewTemplate } =
-    useInterviewTemplates();
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const itemsPerPage = 10;
-  // v1.0.6 <----------------------------------------------
-  const [activeTab, setActiveTab] = useState(
-    searchParams.get("tab") || "standard"
-  );
-  // v1.0.6 ---------------------------------------------->
 
-  const { effectivePermissions } = usePermissions();
-
-  // Search and filter states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
-  const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [isFilterActive, setIsFilterActive] = useState(false);
-
-  // UI states
-  const [view, setView] = useState("table"); // 'table' or 'kanban'
-  const [isStatusOpen, setIsStatusOpen] = useState(false);
-  const [isRoundsOpen] = useState(false);
-  const [isModifiedDateOpen] = useState(false);
-  const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
-  const [isFormatOpen, setIsFormatOpen] = useState(false);
-
-  // Template cloning states
-  // const [templateToClone, setTemplateToClone] = useState(null);
-  // const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
-  // Keep URL in sync with tab state
-  useEffect(() => {
-    console.log("Current active tab:", activeTab);
-    const params = new URLSearchParams(window.location.search);
-
-    // Only update URL if it doesn't match the current tab
-    if (params.get("tab") !== activeTab) {
-      console.log("Updating URL to match active tab:", activeTab);
-      params.set("tab", activeTab);
-      navigate({ search: params.toString() }, { replace: true });
-    }
-  }, [activeTab, navigate]);
-
-  // Handle tab change from URL (e.g., browser back/forward)
-  useEffect(() => {
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      const tabFromUrl = params.get("tab");
-      console.log("URL changed, tab from URL:", tabFromUrl);
-
-      if (
-        tabFromUrl &&
-        (tabFromUrl === "standard" || tabFromUrl === "custom")
-      ) {
-        console.log("Updating active tab from URL:", tabFromUrl);
-        setActiveTab(tabFromUrl);
-      } else if (!tabFromUrl) {
-        // If no tab in URL, set default and update URL
-        console.log("No tab in URL, setting to default");
-        setActiveTab("standard");
-        params.set("tab", "standard");
-        navigate({ search: params.toString() }, { replace: true });
+const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => (
+  <Dialog
+    open={open}
+    onClose={onClose}
+    maxWidth="sm"
+    fullWidth
+    PaperProps={{
+      style: {
+        width: '400px',
+        maxWidth: '90vw',
+        margin: '16px',
       }
+    }}
+  >
+    <DialogTitle sx={{ pb: 1, fontSize: '1.1rem' }}>{title}</DialogTitle>
+    <DialogContent sx={{ py: 1 }}>
+      <div style={{ fontSize: '0.95rem' }}>{message}</div>
+    </DialogContent>
+    <DialogActions sx={{ px: 3, py: 2 }}>
+      <Button
+        onClick={onClose}
+        color="gray"
+        variant="outlined"
+        size="small"
+        sx={{
+          color: 'gray',
+          borderColor: 'gray',
+          '&:hover': {
+            borderColor: 'gray',
+            backgroundColor: 'rgba(0, 0, 0, 0.04)'
+          }
+        }}
+      >
+        Cancel
+      </Button>
+      <Button
+        onClick={onConfirm}
+        color="error"
+        variant="contained"
+        size="small"
+        sx={{ ml: 1 }}
+      >
+        Delete
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
+
+const InterviewTemplates = () => {
+    const { templatesData, isLoading, saveTemplate, deleteInterviewTemplate } = useInterviewTemplates();
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const itemsPerPage = 10;
+    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'custom');
+    const { effectivePermissions } = usePermissions();
+
+    // Search and filter states
+    const [searchQuery, setSearchQuery] = useState("");
+    const [currentPage, setCurrentPage] = useState(0);
+    const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
+    const [isFilterActive, setIsFilterActive] = useState(false);
+
+    // UI states
+    const [view, setView] = useState('table'); // 'table' or 'kanban'
+    const [isStatusOpen, setIsStatusOpen] = useState(false);
+    const [isRoundsOpen] = useState(false);
+    const [isModifiedDateOpen] = useState(false);
+    const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
+    const [isFormatOpen, setIsFormatOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [templateToDelete, setTemplateToDelete] = useState(null);
+
+    // Template cloning states
+    // const [templateToClone, setTemplateToClone] = useState(null);
+    // const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
+    // Keep URL in sync with tab state
+    useEffect(() => {
+        console.log('Current active tab:', activeTab);
+        const params = new URLSearchParams(window.location.search);
+
+        // Only update URL if it doesn't match the current tab
+        if (params.get('tab') !== activeTab) {
+            console.log('Updating URL to match active tab:', activeTab);
+            params.set('tab', activeTab);
+            navigate({ search: params.toString() }, { replace: true });
+        }
+    }, [activeTab, navigate]);
+
+    // Handle tab change from URL (e.g., browser back/forward)
+    useEffect(() => {
+        const handlePopState = () => {
+            const params = new URLSearchParams(window.location.search);
+            const tabFromUrl = params.get('tab');
+            console.log('URL changed, tab from URL:', tabFromUrl);
+
+            if (tabFromUrl && (tabFromUrl === 'standard' || tabFromUrl === 'custom')) {
+                console.log('Updating active tab from URL:', tabFromUrl);
+                setActiveTab(tabFromUrl);
+            } else if (!tabFromUrl) {
+                // If no tab in URL, set default and update URL
+                console.log('No tab in URL, setting to default');
+                setActiveTab('standard');
+                params.set('tab', 'standard');
+                navigate({ search: params.toString() }, { replace: true });
+            }
+        };
+
+        // Listen for URL changes
+        window.addEventListener('popstate', handlePopState);
+
+        // Initial check
+        handlePopState();
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, [navigate]);
+
+    // Filter states
+    const [selectedStatus, setSelectedStatus] = useState([]);
+    const [selectedFormats, setSelectedFormats] = useState([]);
+    const [roundsRange, setRoundsRange] = useState({ min: "", max: "" });
+    const [modifiedDatePreset, setModifiedDatePreset] = useState("");
+    const [createdDatePreset, setCreatedDatePreset] = useState("");
+    const [selectedFilters, setSelectedFilters] = useState({
+        status: [],
+        formats: [],
+        rounds: { min: "", max: "" },
+        modifiedDate: "",
+        createdDate: "",
+    });
+
+    // Refs
+    const filterIconRef = useRef(null);
+
+    // Derived state
+    const normalizedTemplates = useMemo(() => {
+        if (!templatesData || !Array.isArray(templatesData)) return [];
+        return templatesData.filter(template => template.type === 'custom');
+    }, [templatesData]);
+
+    // const standardCount = templatesData?.filter(t => t.type === 'standard').length || 0;
+    // const customCount = templatesData?.filter(t => t.type === 'custom').length || 0;
+    // const totalCount = templatesData?.length || 0;
+
+    // Handler for view toggle
+    // const toggleView = () => {
+    //     setView(prev => prev === 'table' ? 'kanban' : 'table');
+    // };
+
+    // Status toggle handler
+    const handleStatusToggle = (status) => {
+        setSelectedStatus((prev) =>
+            prev.includes(status)
+                ? prev.filter((s) => s !== status)
+                : [...prev, status]
+        );
     };
 
     // Listen for URL changes
@@ -276,6 +371,39 @@ const InterviewTemplates = () => {
           default:
             return true;
         }
+
+        setTemplateToDelete(template);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (templateToDelete) {
+            try {
+                await deleteInterviewTemplate(templateToDelete._id);
+                // The success toast will be shown by the mutation's onSuccess handler
+            } catch (error) {
+                console.error('Error deleting interview template:', error);
+            } finally {
+                setDeleteDialogOpen(false);
+                setTemplateToDelete(null);
+            }
+        }
+    };
+
+    const handleCloseDeleteDialog = () => {
+        setDeleteDialogOpen(false);
+        setTemplateToDelete(null);
+    };
+
+    const formatOptionsfortable = [
+        { label: "Online / Virtual", value: "online" },
+        { label: "Face to Face / Onsite", value: "offline" },
+        { label: "Hybrid (Online + Onsite)", value: "hybrid" },
+    ];
+
+    const getFormatLabelfortable = (formatValue) => {
+        const option = formatOptionsfortable.find((opt) => opt.value === formatValue);
+        return option ? option.label : formatValue || "Uncategorized";
       };
 
       const matchesFormat =
@@ -929,10 +1057,17 @@ const InterviewTemplates = () => {
                     </div>
                 )}
             </div> */}
-      {/* v1.0.5 -----------------------------------------------------------------------------> */}
-      <Outlet />
-    </div>
-  );
+            {/* v1.0.5 -----------------------------------------------------------------------------> */}
+            <Outlet />
+            <ConfirmationDialog
+                open={deleteDialogOpen}
+                onClose={handleCloseDeleteDialog}
+                onConfirm={handleConfirmDelete}
+                title="Confirm Deletion"
+                message={`Are you sure you want to delete the interview template "${templateToDelete?.name}"? This action cannot be undone.`}
+            />
+        </div>
+    );
 };
 
 export default InterviewTemplates;
