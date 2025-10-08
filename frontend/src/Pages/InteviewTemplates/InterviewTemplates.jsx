@@ -6,6 +6,7 @@
 // v1.0.5 - Ashok - Added cloning confirmation popup
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from "@mui/material";
 import { motion } from "framer-motion";
 import { Eye, Pencil, Trash, Files } from "lucide-react";
 import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
@@ -24,6 +25,54 @@ import StandardTemplates from "./StandardTemplates/StandardTemplates.jsx";
 import { notify } from "../../services/toastService.js";
 import StandardTemplatesToolbar from "./StandardTemplates/StandardTemplatesHeader.jsx";
 
+
+const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => (
+  <Dialog
+    open={open}
+    onClose={onClose}
+    maxWidth="sm"
+    fullWidth
+    PaperProps={{
+      style: {
+        width: '400px',
+        maxWidth: '90vw',
+        margin: '16px',
+      }
+    }}
+  >
+    <DialogTitle sx={{ pb: 1, fontSize: '1.1rem' }}>{title}</DialogTitle>
+    <DialogContent sx={{ py: 1 }}>
+      <div style={{ fontSize: '0.95rem' }}>{message}</div>
+    </DialogContent>
+    <DialogActions sx={{ px: 3, py: 2 }}>
+      <Button
+        onClick={onClose}
+        color="gray"
+        variant="outlined"
+        size="small"
+        sx={{
+          color: 'gray',
+          borderColor: 'gray',
+          '&:hover': {
+            borderColor: 'gray',
+            backgroundColor: 'rgba(0, 0, 0, 0.04)'
+          }
+        }}
+      >
+        Cancel
+      </Button>
+      <Button
+        onClick={onConfirm}
+        color="error"
+        variant="contained"
+        size="small"
+        sx={{ ml: 1 }}
+      >
+        Delete
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
 
 const InterviewTemplates = () => {
     const { templatesData, isLoading, saveTemplate, deleteInterviewTemplate } = useInterviewTemplates();
@@ -46,6 +95,8 @@ const InterviewTemplates = () => {
     const [isModifiedDateOpen] = useState(false);
     const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
     const [isFormatOpen, setIsFormatOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [templateToDelete, setTemplateToDelete] = useState(null);
 
     // Template cloning states
     // const [templateToClone, setTemplateToClone] = useState(null);
@@ -332,17 +383,28 @@ const InterviewTemplates = () => {
         if (!effectivePermissions.InterviewTemplates?.Delete) {
             return;
         }
-        
-        if (window.confirm(`Are you sure you want to delete the interview template "${template.name}"? This action cannot be undone.`)) {
+
+        setTemplateToDelete(template);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (templateToDelete) {
             try {
-                // deleteInterviewTemplate is already the mutateAsync function
-                await deleteInterviewTemplate(template._id);
+                await deleteInterviewTemplate(templateToDelete._id);
                 // The success toast will be shown by the mutation's onSuccess handler
             } catch (error) {
                 console.error('Error deleting interview template:', error);
-                // The error toast will be shown by the mutation's onError handler
+            } finally {
+                setDeleteDialogOpen(false);
+                setTemplateToDelete(null);
             }
         }
+    };
+
+    const handleCloseDeleteDialog = () => {
+        setDeleteDialogOpen(false);
+        setTemplateToDelete(null);
     };
 
     const formatOptionsfortable = [
@@ -910,6 +972,13 @@ const InterviewTemplates = () => {
             </div> */}
             {/* v1.0.5 -----------------------------------------------------------------------------> */}
             <Outlet />
+            <ConfirmationDialog
+                open={deleteDialogOpen}
+                onClose={handleCloseDeleteDialog}
+                onConfirm={handleConfirmDelete}
+                title="Confirm Deletion"
+                message={`Are you sure you want to delete the interview template "${templateToDelete?.name}"? This action cannot be undone.`}
+            />
         </div>
     );
 };
