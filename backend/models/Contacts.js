@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - changed enum values to lower case
+
 const mongoose = require("mongoose");
 
 // const ContactsSchema = new mongoose.Schema({
@@ -171,18 +173,18 @@ const ContactsSchema = new mongoose.Schema(
       junior: {
         usd: { type: Number, default: 0 },
         inr: { type: Number, default: 0 },
-        isVisible: { type: Boolean, default: true }
+        isVisible: { type: Boolean, default: true },
       },
       mid: {
         usd: { type: Number, default: 0 },
         inr: { type: Number, default: 0 },
-        isVisible: { type: Boolean, default: false }
+        isVisible: { type: Boolean, default: false },
       },
       senior: {
         usd: { type: Number, default: 0 },
         inr: { type: Number, default: 0 },
-        isVisible: { type: Boolean, default: false }
-      }
+        isVisible: { type: Boolean, default: false },
+      },
     },
     lead_rate: { type: Number },
     // expectedRatePerMockInterview: String, //newly added  Ranjith
@@ -205,7 +207,11 @@ const ContactsSchema = new mongoose.Schema(
       { type: mongoose.Schema.Types.ObjectId, ref: "InterviewAvailability" },
     ],
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users", index: true },
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      index: true,
+    },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     completionStatus: {
@@ -215,15 +221,22 @@ const ContactsSchema = new mongoose.Schema(
       availabilityDetails: { type: Boolean, default: false },
     },
     // Status field for outsource interviewers
+    // v1.0.0 <------------------------------------------------------
+    // status: {
+    //   type: String,
+    //   enum: ["New",
+    //     "Under Review",
+    //     "Approved",
+    //     "Rejected",
+    //     "Suspended",],
+    //   default: 'New'
+    // },
     status: {
       type: String,
-      enum: ["New",
-        "Under Review",
-        "Approved",
-        "Rejected",
-        "Suspended",],
-      default: 'New'
+      enum: ["new", "underReview", "approved", "rejected", "suspended"],
+      default: "new",
     },
+    // v1.0.0 ------------------------------------------------------>
   },
   { timestamps: true }
 );

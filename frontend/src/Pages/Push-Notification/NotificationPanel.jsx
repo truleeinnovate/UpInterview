@@ -1,5 +1,7 @@
 // v1.0.0  -  Ashraf  -  using authcookie manager to get current tokein
 // v1.0.1  -  Ashok   -  Disabled outer scrollbar when popup is open
+// v1.0.2  -  Ashok   -  Removed notification popup
+
 import { useState, useEffect } from "react";
 import { BellIcon } from "@heroicons/react/24/outline";
 import PropTypes from "prop-types";
@@ -92,7 +94,6 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
   const [showPermissionRequest, setShowPermissionRequest] = useState(false);
   const [selectedSingleNotification, setSelectedSingleNotification] = useState(null);
   const [showSingleNotificationPopup, setShowSingleNotificationPopup] = useState(false);
-  useScrollLock(showPermissionRequest || showSingleNotificationPopup);
   // v1.0.1 --------------------------------------------------------------------->
 
   // <---------------------- v1.0.0
@@ -381,7 +382,8 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
       {/* // ---------------------- v1.0.0 > */}
 
       {/* Permission Request Modal */}
-      {showPermissionRequest && (
+      {/* v1.0.2 <------------------------------------------------------------------------- */}
+      {/* {showPermissionRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-semibold mb-4">Enable Notifications</h2>
@@ -410,9 +412,10 @@ const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
               </button>
             </div>
           </div>
-          {/* // ---------------------- v1.0.0 > */}
         </div>
-      )}
+      )} */}
+      {/* v1.0.2 -------------------------------------------------------------------------> */}
+
       {/* // ---------------------- v1.0.0 > */}
       {/* Rest of the component remains the same */}
       {showAllNotifications && (

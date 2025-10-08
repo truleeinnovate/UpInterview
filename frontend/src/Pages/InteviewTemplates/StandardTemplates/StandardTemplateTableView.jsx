@@ -1,6 +1,8 @@
 // v1.0.0 - Ashok - Fixed style issues and added loading view
 // v1.0.1 - Ashok - Adjusted table height
 // v1.0.2 - Ashok - changed UI
+// v1.0.3 - Ashok - commented some options
+// v1.0.4 - Ashok - adjusted width of rows in table
 
 import React, { useEffect, useState } from "react";
 import TemplateModal from "./TemplateModal";
@@ -12,6 +14,7 @@ import { ReactComponent as FiMoreHorizontal } from "../../../icons/FiMoreHorizon
 // v1.0.0 --------------------------------------------------------------------------------->
 
 // v1.0.2 <----------------------------------------------------------
+// v1.0.3 <----------------------------------------------------------
 const formatOptions = [
   //   { label: "Online / Virtual", value: "online" },
   //   { label: "Face to Face / Onsite", value: "offline" },
@@ -19,20 +22,21 @@ const formatOptions = [
   { label: "Recommended (Online)", value: "online" },
   { label: "Hybrid (Mix of Online & Onsite)", value: "online" },
   { label: "On-Site (Traditional)", value: "offline" },
-  { label: "Specialized Technical", value: "hybrid" },
-  { label: "Company-Specific", value: "online" },
-  { label: "Experience Level", value: "offline" },
-  { label: "Leadership", value: "hybrid" },
-  { label: "Employment Type", value: "online" },
-  { label: "Specialized Requirements", value: "offline" },
+  // { label: "Specialized Technical", value: "hybrid" },
+  // { label: "Company-Specific", value: "online" },
+  // { label: "Experience Level", value: "offline" },
+  // { label: "Leadership", value: "hybrid" },
+  // { label: "Employment Type", value: "online" },
+  // { label: "Specialized Requirements", value: "offline" },
 ];
+// v1.0.3 ---------------------------------------------------------->
 // v1.0.2 ---------------------------------------------------------->
 
 const StandardTemplateTableView = ({ templatesData }) => {
-    const navigate = useNavigate();
-    const handleCloneClick = (template) => {
-      navigate(`/interview-templates/${template._id}/clone`);
-    };
+  const navigate = useNavigate();
+  const handleCloneClick = (template) => {
+    navigate(`/interview-templates/${template._id}/clone`);
+  };
   const { effectivePermissions } = usePermissions();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
@@ -196,10 +200,12 @@ const StandardTemplateTableView = ({ templatesData }) => {
     { label: "Online / Virtual", value: "online" },
     { label: "Face to Face / Onsite", value: "offline" },
     { label: "Hybrid (Online + Onsite)", value: "hybrid" },
-];
+  ];
 
-const getFormatLabelfortable = (formatValue) => {
-    const option = formatOptionsfortable.find((opt) => opt.value === formatValue);
+  const getFormatLabelfortable = (formatValue) => {
+    const option = formatOptionsfortable.find(
+      (opt) => opt.value === formatValue
+    );
     return option ? option.label : formatValue || "Uncategorized";
   };
   return (
@@ -240,6 +246,7 @@ const getFormatLabelfortable = (formatValue) => {
                 </thead>
 
                 {/* All content inside one tbody */}
+                {/* v1.0.4 <--------------------------------------------------- */}
                 <tbody className="divide-y divide-gray-200">
                   {Object.entries(groupedTemplates).map(
                     ([format, templates]) => (
@@ -248,7 +255,7 @@ const getFormatLabelfortable = (formatValue) => {
                         <tr className="bg-gray-50">
                           <td
                             colSpan="7"
-                            className="text-xl text-custom-blue font-bold py-2 px-4"
+                            className="text-xl text-custom-blue font-bold py-4 px-4"
                           >
                             {format}
                           </td>
@@ -267,20 +274,20 @@ const getFormatLabelfortable = (formatValue) => {
                               {/* <span className="font-medium text-gray-800">
                                 {template.title}
                               </span> */}
-                              <span className="px-3 py-2 text-sm text-gray-600 truncate max-w-[200px]">
+                              <span className="px-3 py-2 text-sm text-gray-600 truncate max-w-[160px]">
                                 {template.title}
                               </span>
                             </td>
                             {/* <td className="px-3 py-2 text-sm text-gray-600">
                               {template.description}
                             </td> */}
-                            <td className="px-3 py-2 text-sm text-gray-600 truncate max-w-[160px]">
+                            <td className="px-3 py-2 text-sm text-gray-600 truncate max-w-[140px]">
                               {template.description}
                             </td>
                             {/* <td className="px-3 py-2 text-sm text-gray-600">
                               {renderRounds(template.rounds)}
                             </td> */}
-                            <td className="px-3 py-2 text-sm text-gray-600 truncate max-w-[160px]">
+                            <td className="px-3 py-2 text-sm text-gray-600 truncate max-w-[140px]">
                               {renderRounds(template.rounds)}
                             </td>
                             {/* <td className="px-3 py-2 text-sm text-gray-600">
@@ -289,7 +296,7 @@ const getFormatLabelfortable = (formatValue) => {
                             <td className="px-3 py-2 text-sm text-gray-600 truncate max-w-[160px]">
                               {template.bestFor}
                             </td>
-                            <td className="px-3 py-2 text-sm text-gray-600">
+                            <td className="px-3 py-2 text-sm text-gray-600 truncate max-w-[160px]">
                               {getFormatLabelfortable(template.format)}
                             </td>
                             <td className="px-3 py-2">
@@ -333,7 +340,9 @@ const getFormatLabelfortable = (formatValue) => {
                                     {effectivePermissions.InterviewTemplates
                                       ?.Clone && (
                                       <li
-                                        onClick={() => handleCloneClick(template)}
+                                        onClick={() =>
+                                          handleCloneClick(template)
+                                        }
                                         className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
                                       >
                                         <Files className="w-4 h-4 text-custom-blue mr-1" />
@@ -350,6 +359,7 @@ const getFormatLabelfortable = (formatValue) => {
                     )
                   )}
                 </tbody>
+                {/* v1.0.4 ---------------------------------------------------> */}
               </table>
             )}
           </div>

@@ -4,6 +4,7 @@
 // v1.0.3 - Ashok - Improved responsiveness and modified clickable id
 // v1.0.4 - Ashok - Fixed style issue
 // v1.0.5 - Ashok - Fixed table view in small screens and added delete button for kanban
+// v1.0.6 - Ashok - changed check box colors to brand color
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
@@ -639,7 +640,9 @@ const Task = () => {
                               type="checkbox"
                               checked={selectedStatus.includes(status)}
                               onChange={() => handleStatusToggle(status)}
-                              className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                              // v1.0.5 <----------------------------------------------------------------
+                              className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                              // v1.0.5 ---------------------------------------------------------------->
                             />
                             <span className="text-sm">{status}</span>
                           </label>
@@ -674,7 +677,9 @@ const Task = () => {
                             type="checkbox"
                             checked={selectedPriorities.includes(p)}
                             onChange={() => handlePriorityToggle(p)}
-                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                            // v1.0.5 <---------------------------------------------------------------
+                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            // v1.0.5 --------------------------------------------------------------->
                           />
                           <span className="text-sm">{p}</span>
                         </label>
@@ -705,7 +710,9 @@ const Task = () => {
                           value=""
                           checked={selectedDueDate === ""}
                           onChange={() => handleDueDateChange("")}
-                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 <--------------------------------------------------------
+                          className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 -------------------------------------------------------->
                         />
                         <span className="text-sm">Any due date</span>
                       </label>
@@ -716,7 +723,9 @@ const Task = () => {
                           value="overdue"
                           checked={selectedDueDate === "overdue"}
                           onChange={() => handleDueDateChange("overdue")}
-                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 <---------------------------------------------------------
+                          className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 --------------------------------------------------------->
                         />
                         <span className="text-sm">Overdue</span>
                       </label>
@@ -727,7 +736,9 @@ const Task = () => {
                           value="today"
                           checked={selectedDueDate === "today"}
                           onChange={() => handleDueDateChange("today")}
-                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 <-------------------------------------------------------
+                          className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 ------------------------------------------------------->
                         />
                         <span className="text-sm">Today</span>
                       </label>
@@ -738,7 +749,9 @@ const Task = () => {
                           value="thisWeek"
                           checked={selectedDueDate === "thisWeek"}
                           onChange={() => handleDueDateChange("thisWeek")}
-                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 <------------------------------------------------------
+                          className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 ------------------------------------------------------>
                         />
                         <span className="text-sm">This week</span>
                       </label>
@@ -867,7 +880,9 @@ const Task = () => {
                           value=""
                           checked={selectedCreatedDate === ""}
                           onChange={() => handleCreatedDateChange("")}
-                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 <--------------------------------------------------------
+                          className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 -------------------------------------------------------->
                         />
                         <span className="text-sm">Any time</span>
                       </label>
@@ -878,7 +893,9 @@ const Task = () => {
                           value="last7"
                           checked={selectedCreatedDate === "last7"}
                           onChange={() => handleCreatedDateChange("last7")}
-                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 <--------------------------------------------------------
+                          className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 -------------------------------------------------------->
                         />
                         <span className="text-sm">Last 7 days</span>
                       </label>
@@ -889,7 +906,9 @@ const Task = () => {
                           value="last30"
                           checked={selectedCreatedDate === "last30"}
                           onChange={() => handleCreatedDateChange("last30")}
-                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 <----------------------------------------------------------
+                          className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 ---------------------------------------------------------->
                         />
                         <span className="text-sm">Last 30 days</span>
                       </label>
