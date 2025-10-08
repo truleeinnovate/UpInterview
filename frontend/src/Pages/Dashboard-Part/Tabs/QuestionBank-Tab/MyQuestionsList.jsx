@@ -176,11 +176,11 @@ function QuestionHeaderBar({
         <strong className="text-md text-gray-400"> | </strong>
         <button
         // v1.0.9 <---------------------------------------------------------------------------------------------------------------------------------------------------------------
-          className="text-md sm:w-[120px] md:w-[120px] lg:w-[120px] xl:w-[120px] 2xl:w-[120px] hover:underline text-custom-blue font-semibold flex items-center gap-2"
+          className="text-md sm:w-[80px] md:w-[80px] lg:w-[80px] xl:w-[80px] 2xl:w-[80px] hover:underline text-custom-blue font-semibold flex items-center gap-2"
         // v1.0.9 --------------------------------------------------------------------------------------------------------------------------------------------------------------->
           onClick={openListPopup}
         >
-          Create New List
+          Create List
         </button>
         <strong className="text-md text-gray-400"> | </strong>
         <button
@@ -189,7 +189,7 @@ function QuestionHeaderBar({
         // v1.0.9 ---------------------------------------------------------------------------------------------------------------------------------------------->
           onClick={() => setShowCheckboxes(true)}
         >
-          <TrashIcon className="w-4 h-4" />
+          {/* <TrashIcon className="w-4 h-4" /> */}
           Delete
         </button>
       </div>

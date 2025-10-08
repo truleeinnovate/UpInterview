@@ -15,6 +15,7 @@
 // v1.0.8 - Venkatesh - validation updated
 // v1.0.9 - Venkatesh - added isInterviewType to formData
 // v2.0.0 - Ashok - Improved responsiveness and added common code to popup
+// v2.0.1 - Ashraf - min experience and max experience validation removed and commented
 
 import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -89,8 +90,8 @@ const QuestionBankForm = ({
     // v1.0.6 <------------------------------------
     questionListRef: useRef(null),
     // v1.0.6 ------------------------------------>
-    minexperience: useRef(null),
-    maxexperience: useRef(null),
+    // minexperience: useRef(null),
+    // maxexperience: useRef(null),
     questionText: useRef(null),
     correctAnswer: useRef(null),
     options: useRef(null),
@@ -202,8 +203,8 @@ const QuestionBankForm = ({
     options: [],
     tenantListId: [],
     hints: "",
-    minexperience: "",
-    maxexperience: "",
+    // minexperience: "",
+    // maxexperience: "",
   });
   const [charLimits, setCharLimits] = useState({ min: 1, max: 100 });
   const [hintCharLimit, setHintCharLimit] = useState(300);
@@ -314,14 +315,14 @@ const QuestionBankForm = ({
         options: question.options || [],
         // hints: question.hints || "", // Add this line for hint field
         programmingDetails: question.programmingDetails || [],
-        minexperience:
-          question.minexperience === 0 || question.minexperience
-            ? String(question.minexperience)
-            : "",
-        maxexperience:
-          question.maxexperience === 0 || question.maxexperience
-            ? String(question.maxexperience)
-            : "",
+        // minexperience:
+        //   question.minexperience === 0 || question.minexperience
+        //     ? String(question.minexperience)
+        //     : "",
+        // maxexperience:
+        //   question.maxexperience === 0 || question.maxexperience
+        //     ? String(question.maxexperience)
+        //     : "",
       });
       setDropdownValue(
         question.isInterviewQuestionType
@@ -349,16 +350,16 @@ const QuestionBankForm = ({
       const labelNames = question.tenantListId.map((tenant) => tenant);
       console.log("labelNames ----------------", question.tenantListId);
       setSelectedLabels(labelNames);
-      setSelectedMinExperience(
-        question.minexperience === 0 || question.minexperience
-          ? String(question.minexperience)
-          : ""
-      );
-      setSelectedMaxExperience(
-        question.maxexperience === 0 || question.maxexperience
-          ? String(question.maxexperience)
-          : ""
-      );
+      // setSelectedMinExperience(
+      //   question.minexperience === 0 || question.minexperience
+      //     ? String(question.minexperience)
+      //     : ""
+      // );
+      // setSelectedMaxExperience(
+      //   question.maxexperience === 0 || question.maxexperience
+      //     ? String(question.maxexperience)
+      //     : ""
+      // );
 
       // Set boolean answer for Boolean question type
       if (question.questionType === "Boolean") {
@@ -421,8 +422,8 @@ const QuestionBankForm = ({
       options: [],
       //tenantListId: [],
       hints: "",
-      minexperience: "",
-      maxexperience: "",
+      // minexperience: "",
+      // maxexperience: "",
     });
 
     setSelectedSkill("");
@@ -433,8 +434,8 @@ const QuestionBankForm = ({
     setHintContent("");
     //setSelectedListId([]);
     //setSelectedLabels([]);
-    setSelectedMinExperience("");
-    setSelectedMaxExperience("");
+    // setSelectedMinExperience("");
+    // setSelectedMaxExperience("");
     setMcqOptions([
       { option: "", isSaved: false, isEditing: false },
       { option: "", isSaved: false, isEditing: false },
@@ -586,8 +587,8 @@ const extractValidationErrors = (axiosError) => {
     // Construct question data object
     const questionData = {
       ...formData,
-      minexperience: parseInt(formData.minexperience),
-      maxexperience: parseInt(formData.maxexperience),
+      // minexperience: parseInt(formData.minexperience),
+      // maxexperience: parseInt(formData.maxexperience),
       isCustom: true,
       //<--v1.0.8-----
       // sanitize and de-duplicate list ids to satisfy backend Joi (array of ObjectId strings)
@@ -894,10 +895,10 @@ const extractValidationErrors = (axiosError) => {
     if (currentDropdown !== "showDropdownDifficultyLevel")
       setShowDropdownDifficultyLevel(false);
     if (currentDropdown !== "showDropdownSkillPopup") setShowSkillsPopup(false);
-    if (currentDropdown !== "showDropdownMinExperience")
-      setShowDropdownMinExperience(false);
-    if (currentDropdown !== "showDropdownMaxExperience")
-      setShowDropdownMaxExperience(false);
+    // if (currentDropdown !== "showDropdownMinExperience")
+    //   setShowDropdownMinExperience(false);
+    // if (currentDropdown !== "showDropdownMaxExperience")
+    //   setShowDropdownMaxExperience(false);
     if (currentDropdown !== "showDropdownBooleanAnswer")
       setShowDropdownBooleanAnswer(false);
     if (currentDropdown !== "showDropdownAssInt") setShowDropdownAssInt(false);//<---v1.0.9-----
@@ -1080,39 +1081,39 @@ const extractValidationErrors = (axiosError) => {
   };
 
   const handleMinExperienceSelect = (value) => {
-    setSelectedMinExperience(value);
+    // setSelectedMinExperience(value);
     setShowDropdownMinExperience(false);
-    setFormData((prev) => ({ ...prev, minexperience: value, maxexperience: "" }));
+    setFormData((prev) => ({ ...prev }));
     setErrors((prevErrors) => ({ ...prevErrors, minexperience: "" }));
-    setSelectedMaxExperience(""); // Reset max experience
+    // setSelectedMaxExperience(""); // Reset max experience
   };
 
-  const [selectedMaxExperience, setSelectedMaxExperience] = useState("");
-  const [showDropdownMaxExperience, setShowDropdownMaxExperience] =
-    useState(false);
-  const maxExperienceOptions = Array.from({ length: 12 }, (_, i) => ({
-    value: `${i + 1}`,
-    label: `${i + 1}${i === 10 ? "+" : ""}`,
-  })).filter(
-    (option) => parseInt(option.value) > parseInt(formData.minexperience || "0")
-  );
+  // const [selectedMaxExperience, setSelectedMaxExperience] = useState("");
+  // const [showDropdownMaxExperience, setShowDropdownMaxExperience] =
+  //   useState(false);
+  // const maxExperienceOptions = Array.from({ length: 12 }, (_, i) => ({
+  //   value: `${i + 1}`,
+  //   label: `${i + 1}${i === 10 ? "+" : ""}`,
+  // })).filter(
+  //   (option) => parseInt(option.value) > parseInt(formData.minexperience || "0")
+  // );
 
-  const toggleDropdownMaxExperience = () => {
-    closeOtherDropdowns("showDropdownMaxExperience");
-    setShowDropdownMaxExperience((prev) => !prev);
-  };
+  // const toggleDropdownMaxExperience = () => {
+  //   closeOtherDropdowns("showDropdownMaxExperience");
+  //   setShowDropdownMaxExperience((prev) => !prev);
+  // };
 
-  const handleMaxExperienceSelect = (value) => {
-    setSelectedMaxExperience(value);
-    setShowDropdownMaxExperience(false);
-    setFormData((prev) => ({ ...prev, maxexperience: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, maxexperience: "" }));
-  };
+  // const handleMaxExperienceSelect = (value) => {
+  //   setSelectedMaxExperience(value);
+  //   setShowDropdownMaxExperience(false);
+  //   setFormData((prev) => ({ ...prev, maxexperience: value }));
+  //   setErrors((prevErrors) => ({ ...prevErrors, maxexperience: "" }));
+  // };
 
-  const toggleDropdownBooleanAnswer = () => {
-    closeOtherDropdowns("showDropdownBooleanAnswer");
-    setShowDropdownBooleanAnswer((prev) => !prev);
-  };
+  // const toggleDropdownBooleanAnswer = () => {
+  //   closeOtherDropdowns("showDropdownBooleanAnswer");
+  //   setShowDropdownBooleanAnswer((prev) => !prev);
+  // };
 
   const handleBooleanAnswerSelect = (value) => {
     setSelectedBooleanAnswer(value);
@@ -1292,6 +1293,7 @@ const extractValidationErrors = (axiosError) => {
                     onChange={(e) => handleAssIntSelect(e.target.value)}
                     label="Ass/Int Questions"
                     name="assInt"
+                    required
                   />
                 </div>
 
@@ -1498,6 +1500,19 @@ const extractValidationErrors = (axiosError) => {
                     maxLength={1000}
                   />
                 </div>
+                    {/* Difficulty Level */}
+              <div className="flex flex-col gap-5 mb-3">
+                <DropdownWithSearchField
+                  value={selectedDifficultyLevel}
+                  options={difficultyOptionsRS}
+                  onChange={(e) => handleDifficultyLevelSelect(e.target.value)}
+                  error={errors.difficultyLevel}
+                  containerRef={fieldRefs.difficultyLevel}
+                  label="Difficulty Level"
+                  name="difficultyLevel"
+                  required
+                />
+              </div>
               </div>
 
               <div className="">
@@ -1784,11 +1799,11 @@ const extractValidationErrors = (axiosError) => {
                   </div>
                 </div>
               </div>
-              <div className="font-semibold text-xl mb-8 mt-4">
+              {/* <div className="font-semibold text-xl mb-8 mt-4">
                 Evaluation Criteria:
-              </div>
+              </div> */}
               {/* experience */}
-              <div>
+              {/* <div>
                 <div>
                   <label
                     htmlFor="experience"
@@ -1799,7 +1814,7 @@ const extractValidationErrors = (axiosError) => {
 
                   <div className="grid w-full mt-4 grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
                     {/* <div className="flex items-center justify-center w-full gap-5"> */}
-                    {/* Min Experience */}
+                    {/* Min Experience *
                     <div className="w-full">
                       <DropdownWithSearchField
                         value={formData.minexperience}
@@ -1813,7 +1828,7 @@ const extractValidationErrors = (axiosError) => {
                       />
                     </div>
 
-                    {/* Max Experience */}
+                    {/* Max Experience *
                     <div className="w-full">
                       <DropdownWithSearchField
                         value={formData.maxexperience}
@@ -1827,22 +1842,10 @@ const extractValidationErrors = (axiosError) => {
                       />
                     </div>
                   </div>
-                  {/* </div> */}
+                  {/* </div> *
               </div>
-              </div>
-              {/* Difficulty Level */}
-              <div className="flex flex-col gap-5 mb-3">
-                <DropdownWithSearchField
-                  value={selectedDifficultyLevel}
-                  options={difficultyOptionsRS}
-                  onChange={(e) => handleDifficultyLevelSelect(e.target.value)}
-                  error={errors.difficultyLevel}
-                  containerRef={fieldRefs.difficultyLevel}
-                  label="Difficulty Level"
-                  name="difficultyLevel"
-                  required
-                />
-              </div>
+              </div> */}
+          
 
               {/* Score */}
               {/* //shashank - [13/01/2025] */}
