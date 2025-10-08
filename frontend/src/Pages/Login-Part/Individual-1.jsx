@@ -20,7 +20,7 @@ const Login = () => {
     return (
         <Layout>
             <div className="min-h-screen bg-gray-50">
-                <div className="max-w-[80rem] xl:max-w-[100rem] mx-auto px-4 sm:px-4 md:px-6 lg:px-8 xl:px-8 2xl:px-8 py-8 sm:py-10 md:py-12 lg:py-12 xl:py-12 2xl:py-12">
+                <div className="py-8">
                     {/* Hero Section */}
                     <div className="text-center mb-12 sm:mb-16 md:mb-20 lg:mb-20 xl:mb-20 2xl:mb-20">
                         <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl 2xl:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 md:mb-8 lg:mb-8 xl:mb-8 2xl:mb-8 leading-tight">
@@ -51,8 +51,10 @@ const Login = () => {
                     </div>
 
                     {/* Value Proposition Cards */}
-                    <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-8 sm:gap-10 md:gap-12 lg:gap-12 xl:gap-12 2xl:gap-12 mx-auto mb-12 sm:mb-16 md:mb-20 lg:mb-20 xl:mb-20 2xl:mb-20">
-                        <div className="bg-white rounded-xl p-6 sm:p-8 md:p-8 lg:p-8 xl:p-8 2xl:p-8 shadow-lg border-l-4 border-custom-blue hover:shadow-2xl transition-all duration-300">
+                    <div className=" flex sm:flex-col md:flex-col justify-center lg:space-x-14 xl:space-x-14 2xl:space-x-14 sm:space-y-10 md:space-y-10 mb-8 items-center"
+                    >
+                        {/* for individual */}
+                        <div className="w-full max-w-md sm:max-w-lg md:max-w-xl bg-white rounded-xl p-6 shadow-lg border-l-4 border-custom-blue hover:shadow-2xl transition-all duration-300">
                             <div className="w-16 sm:w-20 md:w-20 lg:w-20 xl:w-20 2xl:w-20 h-16 sm:h-20 md:h-20 lg:h-20 xl:h-20 2xl:h-20 bg-custom-blue/10 rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 md:mb-8 lg:mb-8 xl:mb-8 2xl:mb-8">
                                 <svg
                                     className="w-8 sm:w-10 md:w-10 lg:w-10 xl:w-10 2xl:w-10 h-8 sm:h-10 md:h-10 lg:h-10 xl:h-10 2xl:h-10 text-custom-blue"
@@ -136,12 +138,13 @@ const Login = () => {
                             </div>
                             <button
                                 onClick={handleIndividualLogin}
-                                className="w-full bg-custom-blue text-white text-base sm:text-lg md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-medium py-3 sm:py-4 md:py-4 lg:py-4 xl:py-4 2xl:py-4 rounded-lg hover:bg-custom-blue/90 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                className="w-full bg-custom-blue text-white text-base font-medium py-3 rounded-lg hover:bg-custom-blue/90 transition-all duration-300 transform hover:scale-105 shadow-lg"
                             >
                                 Login
                             </button>
                         </div>
-                        <div className="bg-white rounded-xl p-6 sm:p-8 md:p-8 lg:p-8 xl:p-8 2xl:p-8 shadow-lg border-l-4 border-custom-blue hover:shadow-2xl transition-all duration-300">
+                        {/* for organization */}
+                        <div className="w-full max-w-md sm:max-w-lg md:max-w-xl bg-white rounded-xl p-6 shadow-lg border-l-4 border-custom-blue hover:shadow-2xl transition-all duration-300">
                             <div className="w-16 sm:w-20 md:w-20 lg:w-20 xl:w-20 2xl:w-20 h-16 sm:h-20 md:h-20 lg:h-20 xl:h-20 2xl:h-20 bg-custom-blue/10 rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 md:mb-8 lg:mb-8 xl:mb-8 2xl:mb-8">
                                 <svg
                                     className="w-8 sm:w-10 md:w-10 lg:w-10 xl:w-10 2xl:w-10 h-8 sm:h-10 md:h-10 lg:h-10 xl:h-10 2xl:h-10 text-custom-blue"
@@ -225,7 +228,7 @@ const Login = () => {
                             </div>
                             <button
                                 onClick={handleOrganizationLogin}
-                                className="w-full bg-custom-blue text-white text-base sm:text-lg md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-medium py-3 sm:py-4 md:py-4 lg:py-4 xl:py-4 2xl:py-4 rounded-lg hover:bg-custom-blue/90 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                className="w-full bg-custom-blue text-white text-base font-medium py-3 rounded-lg hover:bg-custom-blue/90 transition-all duration-300 transform hover:scale-105 shadow-lg"
                             >
                                 Login
                             </button>
