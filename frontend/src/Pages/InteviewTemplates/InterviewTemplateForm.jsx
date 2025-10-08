@@ -4,6 +4,7 @@
 // v1.0.3  -  Ashok   -  added scroll to first error functionality
 // v1.0.3  -  Ashok   -  Removed border left and set outline as none
 // v1.0.4  -  Ashok   -  Improved responsiveness and added common code to popup
+// v1.0.5  -  Ashok   -  changed name labels Clone to Copy of and Clone_ to Copy_of_
 
 
 import { useState, useEffect, useRef } from "react";
@@ -69,8 +70,10 @@ const InterviewSlideover = ({ mode }) => {
                         setIsEditMode(false);
                         const baseName = foundTemplate.name.replace(/_std$/, "");
                         setNewTemplate({
-                            title: `Clone ${foundTemplate.title || "Untitled Template"}`,
-                            name: `Clone_${baseName}`,
+                            // v1.0.5 <--------------------------------------------------------
+                            title: `Copy of ${foundTemplate.title || "Untitled Template"}`,
+                            name: `Copy_of_${baseName}`,
+                            // v1.0.5 -------------------------------------------------------->
                             description: foundTemplate.description || "",
                             status: "draft",
                             rounds: Array.isArray(foundTemplate.rounds)

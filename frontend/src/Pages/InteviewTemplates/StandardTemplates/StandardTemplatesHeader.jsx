@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - fixed searchbar width
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Tooltip from "@mui/material/Tooltip";
@@ -149,7 +151,9 @@ const StandardTemplatesToolbar = ({
         </div>
         {/* Search Input */}
         <div className="sm:mt-0 flex justify-end w-full sm:w-auto">
-          <div className="max-w-lg w-full">
+          {/* v1.0.0 <------------------------------------- */}
+          <div className="w-[280px]">
+          {/* v1.0.0 -------------------------------------> */}
             <label htmlFor="search" className="sr-only">
               Search
             </label>

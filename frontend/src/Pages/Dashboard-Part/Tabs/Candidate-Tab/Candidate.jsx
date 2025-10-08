@@ -8,6 +8,7 @@
 // v1.0.7  -  Ashok   -  Added table view for mobiles (small devices)
 // v1.0.8  -  Ashok   -  changed kanban UI
 // v1.0.9  -  Ashok   -  table columns modified
+// v2.0.0  -  Ashok   -  changed kanban column names
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -985,12 +986,26 @@ function Candidate({
     {
       key: "email",
       header: "Email",
-      render: (value, row) => <span>{row.Email}</span> || "N/A",
+      render: (value, row) => <span>{row?.Email}</span> || "N/A",
+    },
+    // v2.0.0 <-------------------------------------------------------------
+    {
+      key: "phone",
+      header: "Phone",
+      render: (value, row) => <span>{row?.Phone}</span> || "N/A",
     },
     {
-      key: "currentRole",
-      header: "Current Role",
+      key: "currentExperience",
+      header: "Experience",
+      render: (value, row) =>
+        (
+          <span>
+            {row?.CurrentExperience}
+            <span className="ml-1">{row?.CurrentExperience > 1 ? "Years" : "Year"}</span>
+          </span>
+        ) || "N/A",
     },
+    // v2.0.0 ------------------------------------------------------------->
     {
       key: "skills",
       header: "Skills",
@@ -1103,7 +1118,7 @@ function Candidate({
   ];
 
   const renderKanbanActions = (item) => (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-2">
       {kanbanActions.map((action) => (
         <button
           key={action.key}
