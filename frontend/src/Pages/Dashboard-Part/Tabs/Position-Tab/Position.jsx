@@ -116,14 +116,20 @@ const PositionTab = () => {
       let res = await deletePositionMutation(
         deletePosition?._id || deletePosition?.id || "N/A"
       );
-      // console.log("res deleteCandidateData", res);
-      if (res.status === "success") {
+   
+      if (res?.status === "success") {
         setShowDeleteConfirmModal(false);
-        notify.success("Position Deleted successfully");
+        notify.success(res?.message || "Position deleted successfully");
+      } else {
+        notify.warning(res?.message || "Unable to delete position");
       }
+
     } catch (error) {
-      console.error("Error Deleting Round:", error);
-      notify.error("Failed to Delete Round");
+      // console.error("Error deleting position:", error);
+      setShowDeleteConfirmModal(false);
+      const backendMessage =
+        error?.response?.data?.message || "Failed to delete position";
+      notify.error(backendMessage);
     }
   };
 
@@ -340,13 +346,13 @@ const PositionTab = () => {
     setCurrentPage(0);
     setIsFilterActive(
       filters.location.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        //<-----v1.03-----
-        filters.experience.max ||
-        filters.company.length > 0 ||
-        (filters.salaryMin && filters.salaryMin > 0) ||
-        !!filters.createdDate
+      filters.tech.length > 0 ||
+      filters.experience.min ||
+      //<-----v1.03-----
+      filters.experience.max ||
+      filters.company.length > 0 ||
+      (filters.salaryMin && filters.salaryMin > 0) ||
+      !!filters.createdDate
       //-----v1.03----->
     );
     setFilterPopupOpen(false);
@@ -541,44 +547,44 @@ const PositionTab = () => {
   const tableActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => handleView(row),
-          },
-        ]
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (row) => handleView(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-          //<----v1.02-----
-          {
-            key: "change_status",
-            label: "Change Status",
-            icon: <Repeat className="w-4 h-4 text-green-600" />,
-            onClick: (row) => openStatusModal(row),
-          },
-          //----v1.02----->
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => handleEdit(row),
-          },
-        ]
+        //<----v1.02-----
+        {
+          key: "change_status",
+          label: "Change Status",
+          icon: <Repeat className="w-4 h-4 text-green-600" />,
+          onClick: (row) => openStatusModal(row),
+        },
+        //----v1.02----->
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (row) => handleEdit(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (row) => {
-              setShowDeleteConfirmModal(true);
-              setDeletePosition(row);
-            },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: (row) => {
+            setShowDeleteConfirmModal(true);
+            setDeletePosition(row);
           },
-        ]
+        },
+      ]
       : []),
   ];
   // v1.0.5 <----------------------------------------------------------------------------------
@@ -636,47 +642,47 @@ const PositionTab = () => {
   const actions = [
     ...(effectivePermissions.Positions?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
-            onClick: (row) => handleView(row),
-          },
-        ]
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-blue-600" />,
+          onClick: (row) => handleView(row),
+        },
+      ]
       : []),
 
     ...(effectivePermissions.Positions?.Edit
       ? [
-          {
-            key: "change_status",
-            label: "Change Status",
-            icon: <Repeat className="w-4 h-4 text-green-600" />,
-            onClick: (row) => openStatusModal(row),
-          },
-        ]
+        {
+          key: "change_status",
+          label: "Change Status",
+          icon: <Repeat className="w-4 h-4 text-green-600" />,
+          onClick: (row) => openStatusModal(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => handleEdit(row),
-          },
-        ]
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (row) => handleEdit(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (row) => {
-              setShowDeleteConfirmModal(true);
-              setDeletePosition(row);
-            },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: (row) => {
+            setShowDeleteConfirmModal(true);
+            setDeletePosition(row);
           },
-        ]
+        },
+      ]
       : []),
   ];
 
@@ -856,7 +862,7 @@ const PositionTab = () => {
                                 onChange={() => handleLocationToggle(location)}
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                // v1.0.1 --------------------------------------------------------------->
+                              // v1.0.1 --------------------------------------------------------------->
                               />
                               <span className="text-sm">{location}</span>
                             </label>
@@ -897,7 +903,7 @@ const PositionTab = () => {
                                 }
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                // v1.0.1 <---------------------------------------------------------------
+                              // v1.0.1 <---------------------------------------------------------------
                               />
                               <span className="text-sm">{skill.SkillName}</span>
                             </label>

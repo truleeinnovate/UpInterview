@@ -5,6 +5,8 @@ const CandidatePosition = require('../models/CandidatePosition.js');
 const { validateCandidateData, candidateUpdateSchema } = require('../validations/candidateValidation.js');
 // const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Candidate } = require('../models/candidate.js');
+const { Interview } = require('../models/Interview/Interview.js');
+const { CandidateAssessment } = require('../models/Assessment/candidateAssessment.js');
 
 
 
@@ -511,6 +513,131 @@ const getCandidateById = async (req, res) => {
   }
 };
 
+// // Delete candidate by ID
+// const deleteCandidate = async (req, res) => {
+//   res.locals.loggedByController = true;
+//   res.locals.processName = "Delete Candidate";
+
+//   const { id } = req.params;
+
+//   try {
+//     // // Permission check - adjust permission name as needed
+//     // const canDelete = await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Delete');
+//     // if (!canDelete) {
+//     //   return res.status(403).json({ message: 'Forbidden: missing Candidates.Delete permission' });
+//     // }
+
+//     // Validate ID format
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({
+//         status: 'error',
+//         message: 'Invalid candidate ID format'
+//       });
+//     }
+
+//     // Find the candidate first to get details for logging
+//     const candidate = await Candidate.findById(id);
+    
+//     if (!candidate) {
+//       return res.status(404).json({
+//         status: 'error',
+//         message: 'Candidate not found'
+//       });
+//     };
+
+//     console.log("candidate delete before",candidate);
+
+//     // Store candidate data for logging before deletion
+//     // const candidateData = {
+//     //   name: `${candidate.FirstName} ${candidate.LastName}`,
+//     //   email: candidate.Email,
+//     //   id: candidate._id
+//     // };
+
+//     // Delete the candidate
+//     const deletedCandidate = await Candidate.findByIdAndDelete(id);
+
+//     console.log("candidate delete after",deletedCandidate);
+    
+
+//     if (!deletedCandidate) {
+//       return res.status(404).json({
+//         status: 'error',
+//         message: 'Candidate not found or already deleted'
+//       });
+//     }
+
+//     // Set feed data for activity feed
+//     // res.locals.feedData = {
+//     //   tenantId: candidate.tenantId,
+//     //   feedType: "delete",
+//     //   action: {
+//     //     name: "candidate_deleted",
+//     //     description: `Candidate "${candidate.FirstName} ${candidate.LastName}" was deleted`,
+//     //   },
+//     //   ownerId: candidate.ownerId,
+//     //   parentId: id,
+//     //   parentObject: "Candidate",
+//     //   metadata: {
+//     //     candidateName: `${candidate.FirstName} ${candidate.LastName}`,
+//     //     candidateEmail: candidate.Email,
+//     //     deletedAt: new Date().toISOString()
+//     //   },
+//     //   severity: "medium",
+//     //   fieldMessage: [{
+//     //     fieldName: "deletion",
+//     //     message: `Candidate "${candidate.FirstName} ${candidate.LastName}" (${candidate.Email}) was permanently deleted`
+//     //   }],
+//     //   history: [{
+//     //     fieldName: "deletion",
+//     //     oldValue: `Candidate ${candidate._id}`,
+//     //     newValue: null
+//     //   }]
+//     // };
+
+//     // Set log data for auditing
+//     // res.locals.logData = {
+//     //   tenantId: candidate.tenantId,
+//     //   ownerId: candidate.ownerId,
+//     //   processName: "Delete Candidate",
+//     //   requestBody: req.body,
+//     //   status: "success",
+//     //   message: "Candidate deleted successfully",
+//     //   responseBody: {
+//     //     deletedCandidate: candidateData,
+//     //     deletionTime: new Date().toISOString()
+//     //   },
+//     // };
+
+//     res.status(200).json({
+//       status: 'success',
+//       message: 'Candidate deleted successfully',
+      
+//     });
+
+//   } catch (error) {
+//     console.error('Error deleting candidate:', error);
+
+//     // // Error logging
+//     // res.locals.logData = {
+//     //   tenantId: req.body?.tenantId,
+//     //   ownerId: req.body?.ownerId,
+//     //   processName: "Delete Candidate",
+//     //   requestBody: req.body,
+//     //   message: error.message,
+//     //   status: "error",
+//     //   error: error.stack
+//     // };
+
+//     res.status(500).json({
+//       status: 'error',
+//       message: 'Internal server error while deleting candidate',
+//       error: process.env.NODE_ENV === 'development' ? error.message : undefined
+//     });
+//   }
+// };
+
+
 // Delete candidate by ID
 const deleteCandidate = async (req, res) => {
   res.locals.loggedByController = true;
@@ -519,13 +646,7 @@ const deleteCandidate = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // // Permission check - adjust permission name as needed
-    // const canDelete = await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Delete');
-    // if (!canDelete) {
-    //   return res.status(403).json({ message: 'Forbidden: missing Candidates.Delete permission' });
-    // }
-
-    // Validate ID format
+    // Validate ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         status: 'error',
@@ -533,30 +654,33 @@ const deleteCandidate = async (req, res) => {
       });
     }
 
-    // Find the candidate first to get details for logging
+    // Check if candidate exists
     const candidate = await Candidate.findById(id);
-    
     if (!candidate) {
       return res.status(404).json({
         status: 'error',
         message: 'Candidate not found'
       });
-    };
+    }
 
-    console.log("candidate delete before",candidate);
+    // Check if candidate exists in Interview schema
+    const existingInterview = await Interview.findOne({ candidateId: id });
 
-    // Store candidate data for logging before deletion
-    // const candidateData = {
-    //   name: `${candidate.FirstName} ${candidate.LastName}`,
-    //   email: candidate.Email,
-    //   id: candidate._id
-    // };
+    // Check if candidate exists in CandidateAssessment schema
+    const existingAssessment = await CandidateAssessment.findOne({ candidateId: id });
 
-    // Delete the candidate
+    if (existingInterview || existingAssessment) {
+      // Candidate linked elsewhere — do not delete
+      return res.status(400).json({
+        status: 'error',
+        message: existingInterview
+          ? 'Candidate cannot be deleted. Found in Interview records.'
+          : 'Candidate cannot be deleted. Found in Candidate Assessment records.'
+      });
+    }
+
+    // Safe to delete
     const deletedCandidate = await Candidate.findByIdAndDelete(id);
-
-    console.log("candidate delete after",deletedCandidate);
-    
 
     if (!deletedCandidate) {
       return res.status(404).json({
@@ -565,67 +689,13 @@ const deleteCandidate = async (req, res) => {
       });
     }
 
-    // Set feed data for activity feed
-    // res.locals.feedData = {
-    //   tenantId: candidate.tenantId,
-    //   feedType: "delete",
-    //   action: {
-    //     name: "candidate_deleted",
-    //     description: `Candidate "${candidate.FirstName} ${candidate.LastName}" was deleted`,
-    //   },
-    //   ownerId: candidate.ownerId,
-    //   parentId: id,
-    //   parentObject: "Candidate",
-    //   metadata: {
-    //     candidateName: `${candidate.FirstName} ${candidate.LastName}`,
-    //     candidateEmail: candidate.Email,
-    //     deletedAt: new Date().toISOString()
-    //   },
-    //   severity: "medium",
-    //   fieldMessage: [{
-    //     fieldName: "deletion",
-    //     message: `Candidate "${candidate.FirstName} ${candidate.LastName}" (${candidate.Email}) was permanently deleted`
-    //   }],
-    //   history: [{
-    //     fieldName: "deletion",
-    //     oldValue: `Candidate ${candidate._id}`,
-    //     newValue: null
-    //   }]
-    // };
-
-    // Set log data for auditing
-    // res.locals.logData = {
-    //   tenantId: candidate.tenantId,
-    //   ownerId: candidate.ownerId,
-    //   processName: "Delete Candidate",
-    //   requestBody: req.body,
-    //   status: "success",
-    //   message: "Candidate deleted successfully",
-    //   responseBody: {
-    //     deletedCandidate: candidateData,
-    //     deletionTime: new Date().toISOString()
-    //   },
-    // };
-
     res.status(200).json({
       status: 'success',
-      message: 'Candidate deleted successfully',
-      
+      message: 'Candidate deleted successfully'
     });
 
   } catch (error) {
     console.error('Error deleting candidate:', error);
-
-    // // Error logging
-    // res.locals.logData = {
-    //   tenantId: req.body?.tenantId,
-    //   ownerId: req.body?.ownerId,
-    //   processName: "Delete Candidate",
-    //   requestBody: req.body,
-    //   message: error.message,
-    //   status: "error",
-    //   error: error.stack
-    // };
 
     res.status(500).json({
       status: 'error',
@@ -634,7 +704,6 @@ const deleteCandidate = async (req, res) => {
     });
   }
 };
-
 
 
 

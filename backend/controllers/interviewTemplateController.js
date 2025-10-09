@@ -1,5 +1,7 @@
 // v1.0.0 - Ashok - Added sort when fetching all interview templates
+const { Interview } = require("../models/Interview/Interview");
 const InterviewTemplate = require("../models/InterviewTemplate");
+const { Position } = require("../models/Position/position");
 
 // Create a new interview template
 exports.createInterviewTemplate = async (req, res) => {
@@ -307,41 +309,79 @@ exports.updateTemplate = async (req, res) => {
 // Delete template
 exports.deleteTemplate = async (req, res) => {
     try {
-        const { id } = req.params;
-        // Get tenantId from headers or query params
-        const tenantId = req.headers['x-tenant-id'] || req.query.tenantId;
-        
-        if (!tenantId) {
-            return res.status(400).json({
-                success: false,
-                message: "Tenant ID is required",
-            });
-        }
-
-        const template = await InterviewTemplate.findOneAndDelete({
-            _id: id,
-            tenantId,
+      const { id } = req.params;
+      const tenantId = req.headers['x-tenant-id'] || req.query.tenantId;
+  
+      // ✅ Validate tenantId
+      if (!tenantId) {
+        return res.status(400).json({
+          success: false,
+          message: "Tenant ID is required",
         });
-
-        if (!template) {
-            return res.status(404).json({
-                success: false,
-                message: "Template not found or you don't have permission to delete it",
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Template deleted successfully",
+      }
+  
+      // ✅ Validate ID format
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid template ID format",
         });
+      }
+  
+      // ✅ Check if this template exists
+      const template = await InterviewTemplate.findOne({ _id: id, tenantId });
+      if (!template) {
+        return res.status(404).json({
+          success: false,
+          message: "Template not found or you don't have permission to delete it",
+        });
+      }
+  
+      // ✅ Check if template is used in Interview collection
+      const existingInterview = await Interview.findOne({ templateId: id });
+      if (existingInterview) {
+        return res.status(400).json({
+          success: false,
+          message: "Template cannot be deleted. It is used in one or more Interviews.",
+        });
+      }
+  
+      // ✅ Check if template is used in Position collection
+      const existingPosition = await Position.findOne({ templateId: id });
+      if (existingPosition) {
+        return res.status(400).json({
+          success: false,
+          message: "Template cannot be deleted. It is linked with one or more Positions.",
+        });
+      }
+  
+      // ✅ Safe to delete
+      const deletedTemplate = await InterviewTemplate.findOneAndDelete({
+        _id: id,
+        tenantId,
+      });
+  
+      if (!deletedTemplate) {
+        return res.status(404).json({
+          success: false,
+          message: "Template not found or already deleted",
+        });
+      }
+  
+      // ✅ Success
+      res.status(200).json({
+        success: true,
+        message: "Template deleted successfully",
+      });
+  
     } catch (error) {
-        console.error('Error deleting interview template:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message || 'Internal server error',
-        });
+      console.error("Error deleting interview template:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Internal server error while deleting template",
+      });
     }
-};
+  };
 
 exports.deleteRound = async (req, res) => {
     const { roundId } = req.params;

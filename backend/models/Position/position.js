@@ -44,7 +44,7 @@ const positionSchema = new mongoose.Schema(
     jobDescription: String,
     minexperience: Number,
     maxexperience: Number,
-    selectedTemplete: String,
+      templateId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewTemplate' },
     skills: [
       {
         skill: String,

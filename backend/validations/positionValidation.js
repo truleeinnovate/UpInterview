@@ -144,12 +144,13 @@ const positionValidationSchema = Joi.object({
 
   minSalary: Joi.string().allow(null, "").optional(),
   maxSalary: Joi.string().allow(null, "").optional(),
-  selectedTemplete: Joi.string().allow(null, "").optional(),
-  NoofPositions: Joi.number().integer().min(1).required().messages({
-    "any.required": "Number of Positions is required",
-    "number.min": "Number of Positions must be greater than 0",
-  }),
-
+  templateId: Joi.string().allow(null, "").optional(),
+  // NoofPositions: Joi.number().integer().min(1).required().messages({
+  //   "any.required": "Number of Positions is required",
+  //   "number.min": "Number of Positions must be greater than 0",
+  // }),
+  // NoofPositions: Joi.number().integer().min(1).optional().allow(null, ""),
+  NoofPositions: Joi.number().integer().min(1).optional().allow(null),
   Location: Joi.string().optional().allow(null, ""),
 
   // Location: Joi.string().required().messages({
@@ -190,7 +191,25 @@ additionalNotes: Joi.string().allow(null, "").optional(),
 
   ownerId: Joi.string().required(),
   tenantId: Joi.string().required(),
-});
+}).unknown(true);
+
+
+// ✅ For "standard" templates, make all round fields optional
+const validateRoundDataStandard = Joi.object({
+  sequence: Joi.number().optional(),
+  roundTitle: Joi.string().optional(),
+  interviewMode: Joi.string().optional(),
+  duration: Joi.number().optional(),
+  instructions: Joi.string().allow("").optional(),
+  interviewerType: Joi.string().allow("").optional(),
+  interviewers: Joi.array().optional(),
+  interviewerGroupName: Joi.string().allow("").optional(),
+  interviewerViewType: Joi.string().allow("").optional(),
+  selectedInterviewersType: Joi.string().allow("").optional(),
+  assessmentId: Joi.string().allow(null, "").optional(),
+  questions: Joi.array().optional(),
+}).unknown(true);
+
 
 // PATCH schema (all optional)
 const positionPatchValidationSchema = positionValidationSchema.fork(
@@ -306,4 +325,4 @@ const validateRoundPatchData = Joi.object({
 
 
 
-module.exports = { positionValidationSchema, positionPatchValidationSchema, validateRoundData,validateRoundPatchData };
+module.exports = { positionValidationSchema, positionPatchValidationSchema, validateRoundData,validateRoundPatchData,validateRoundDataStandard };

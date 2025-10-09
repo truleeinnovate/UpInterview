@@ -2,8 +2,9 @@
 //<-----v1.0.1---Venkatesh------add permission
 const { mongoose } = require("mongoose");
 const { Position } = require("../models/Position/position.js");
-const { validatePosition, validateRoundData, validateRoundPatchData, positionValidationSchema, positionPatchValidationSchema } = require("../validations/positionValidation.js");
+const { validatePosition, validateRoundData, validateRoundPatchData, positionValidationSchema, positionPatchValidationSchema, validateRoundDataStandard } = require("../validations/positionValidation.js");
 const { hasPermission } = require("../middleware/permissionMiddleware");
+const { Interview } = require("../models/Interview/Interview.js");
 
 // const createPosition = async (req, res) => {
 //   res.locals.loggedByController = true;
@@ -217,20 +218,37 @@ const createPosition = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Create Position";
 
+
+  const isStandardType =
+    req.body.type === "standard" ||
+    req.body?.template?.type === "standard";
+
+  let schemaToUse = positionValidationSchema;
+
+  // if standard — make rounds optional
+  if (isStandardType) {
+    schemaToUse = positionValidationSchema.fork(["rounds"], (field) =>
+      field.items(validateRoundDataStandard).optional()
+    );
+  }
+
+  // validate
+  const { error } = schemaToUse.validate(req.body, { abortEarly: false });
+
   // --- VALIDATE REQUEST BODY ---
-  const { error } = positionValidationSchema.validate(req.body, { abortEarly: false });
-  console.log("error found before",error);
+  // const { error } = positionValidationSchema.validate(req.body, { abortEarly: false });
+  // console.log("error found before",error);
 
   if (error) {
     const errors = {};
     error.details.forEach((err) => {
-      console.log("error found after",err);
+      console.log("error found after", err);
       errors[err.path.join(".")] = err.message;
     });
     return res.status(400).json({ status: "error", errors });
   }
   // console.log("req.body",req.body);
-  
+
 
   // // --- Validate req.body using Joi ---
   // const { error } = Position.validate(req.body, { abortEarly: false });
@@ -257,12 +275,12 @@ const createPosition = async (req, res) => {
   //console.log("effectivePermissions",res.locals?.effectivePermissions)
   //<-----v1.0.1---
   // Permission: Tasks.Create (or super admin override)
-//   const canCreate =
-//   await hasPermission(res.locals?.effectivePermissions?.Positions, 'Create')
-//  //await hasPermission(res.locals?.superAdminPermissions?.Positions, 'Create')
-//   if (!canCreate) {
-//     return res.status(403).json({ message: 'Forbidden: missing Positions.Create permission' });
-//   }
+  //   const canCreate =
+  //   await hasPermission(res.locals?.effectivePermissions?.Positions, 'Create')
+  //  //await hasPermission(res.locals?.superAdminPermissions?.Positions, 'Create')
+  //   if (!canCreate) {
+  //     return res.status(403).json({ message: 'Forbidden: missing Positions.Create permission' });
+  //   }
   //-----v1.0.1--->
 
   try {
@@ -299,16 +317,16 @@ const createPosition = async (req, res) => {
       maxSalary: req.body.maxSalary || "",
       NoofPositions: req.body.NoofPositions
         ? Number(req.body.NoofPositions)
-        : undefined,
+        : null,
       Location: req.body.Location || "",
-      selectedTemplete: req.body.selectedTemplete || null,
+      templateId: req.body.templateId || null,
       createdBy: req.body.ownerId, // Fixed: use req.body.ownerId instead of undefined ownerId
       positionCode, // Custom code added
     };
 
     // Handle rounds if template exists
     if (
-      req.body.selectedTemplete &&
+      req.body.templateId &&
       req.body.rounds &&
       req.body.rounds.length > 0
     ) {
@@ -322,14 +340,14 @@ const createPosition = async (req, res) => {
         interviewerViewType: round?.interviewerViewType || "",
         selectedInterviewersType: round?.selectedInterviewersType || "",
         // interviewers: round?.interviewers?.map((interviewer) => interviewer._id) || [],
-        interviewers: round?.interviewers?.map((i) => 
+        interviewers: round?.interviewers?.map((i) =>
           typeof i === "string" ? i : i._id  // FIX: ensure only ids stored
         ) || [],
         assessmentId: round?.assessmentId || null,
         sequence: round?.sequence || 0,
         questions: round?.questions
           ? round.questions?.map((q) => ({
-            questionId: q.questionId ,
+            questionId: q.questionId,
             snapshot: q.snapshot,
           }))
           : [],
@@ -346,7 +364,7 @@ const createPosition = async (req, res) => {
     // console.log("✅ Position saved to DB:", newPosition);
 
     // Feed and log data
-   let feedData = res.locals.feedData = {
+    let feedData = res.locals.feedData = {
       tenantId: req.body.tenantId,
       feedType: "info",
       action: {
@@ -361,9 +379,9 @@ const createPosition = async (req, res) => {
       message: `Position was created successfully`,
     };
 
-    console.log("feedData",feedData);
+    console.log("feedData", feedData);
 
-    
+
 
     res.locals.logData = {
       tenantId: req.body.tenantId,
@@ -407,6 +425,7 @@ const updatePosition = async (req, res) => {
   const { tenantId, ownerId, ...updateFields } = req.body;
   console.log("updateFields", updateFields);
 
+
   // Validate incoming PATCH data
   const { error } = positionPatchValidationSchema.validate(req.body, { abortEarly: false });
   if (error) {
@@ -438,8 +457,8 @@ const updatePosition = async (req, res) => {
         updateFields.minexperience || currentPosition.minexperience,
       maxexperience:
         updateFields.maxexperience || currentPosition.maxexperience,
-      selectedTemplete:
-        updateFields?.selectedTemplete ?? currentPosition.selectedTemplete,
+      templateId:
+        updateFields?.templateId ?? currentPosition.templateId,
       skills: updateFields.skills || currentPosition.skills,
       additionalNotes:
         updateFields.additionalNotes || currentPosition.additionalNotes,
@@ -456,8 +475,8 @@ const updatePosition = async (req, res) => {
     };
 
     // CHANGED: Check if template name has changed before updating rounds
-    const isTemplateChanged = updateFields?.selectedTemplete !== currentPosition.selectedTemplete;
-    
+    const isTemplateChanged = updateFields?.templateId !== currentPosition.templateId;
+
     // Handle rounds update only if template is provided, has rounds, AND template name has changed
     if (updateFields?.rounds && isTemplateChanged) {
       positionData.rounds = updateFields.rounds.map((round) => ({
@@ -486,14 +505,14 @@ const updatePosition = async (req, res) => {
     const changes = Object.entries(positionData)
       .filter(([key, newValue]) => {
         const oldValue = currentPosition[key];
-        
+
         // Special handling for ObjectId vs string comparison
         if (['ownerId', 'tenantId', 'updatedBy', 'assessmentId'].includes(key)) {
           const oldIdString = oldValue?.toString();
           const newIdString = newValue?.toString();
           return oldIdString !== newIdString;
         }
-        
+
         if (Array.isArray(oldValue) && Array.isArray(newValue)) {
           const normalizeArray = (array) =>
             array
@@ -504,7 +523,7 @@ const updatePosition = async (req, res) => {
             JSON.stringify(normalizeArray(newValue))
           );
         }
-        
+
         // For other fields, use strict equality
         return oldValue !== newValue;
       })
@@ -528,7 +547,7 @@ const updatePosition = async (req, res) => {
     console.log("Changes:", changes);
 
     for (const change of changes) {
-     console.log("Change: Data", change);
+      console.log("Change: Data", change);
     }
 
     const updatedPosition = await Position.findByIdAndUpdate(
@@ -544,11 +563,11 @@ const updatePosition = async (req, res) => {
     await updatedPosition.save()
 
 
-        // NEW: Generate proper field messages with formatted values
-        const fieldMessages = changes.map(({ fieldName, formattedOldValue, formattedNewValue }) => ({
-          fieldName,
-          message: `${fieldName} updated from '${formattedOldValue}' to '${formattedNewValue}'`
-        }));
+    // NEW: Generate proper field messages with formatted values
+    const fieldMessages = changes.map(({ fieldName, formattedOldValue, formattedNewValue }) => ({
+      fieldName,
+      message: `${fieldName} updated from '${formattedOldValue}' to '${formattedNewValue}'`
+    }));
 
     // Only set feedData and logData when there are actual changes
     res.locals.feedData = {
@@ -588,7 +607,7 @@ const updatePosition = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error updating position:", error);
-    
+
     res.locals.logData = {
       tenantId: req.body?.tenantId,
       ownerId: req.body?.ownerId,
@@ -616,15 +635,6 @@ const deletePosition = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Permission check
-    // const canDelete = await hasPermission(res.locals?.effectivePermissions?.Positions, 'Delete');
-    // if (!canDelete) {
-    //   return res.status(403).json({ 
-    //     status: 'error',
-    //     message: 'Forbidden: missing Positions.Delete permission' 
-    //   });
-    // }
-
     // Validate ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
@@ -633,9 +643,8 @@ const deletePosition = async (req, res) => {
       });
     }
 
-    // Find the position first to get details for logging
+    // Find position
     const position = await Position.findById(id);
-    
     if (!position) {
       return res.status(404).json({
         status: 'error',
@@ -643,15 +652,17 @@ const deletePosition = async (req, res) => {
       });
     }
 
-    // Store position data for logging before deletion
-    // const positionData = {
-    //   title: position.title,
-    //   positionCode: position.positionCode,
-    //   company: position.companyname,
-    //   id: position._id
-    // };
+    // ✅ Check if this position is referenced in Interview schema
+    const existingInterview = await Interview.findOne({ positionId: id });
 
-    // Delete the position
+    if (existingInterview) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Position cannot be deleted. It is referenced in one or more Interviews.'
+      });
+    }
+
+    // ✅ If not found in Interview, delete the position
     const deletedPosition = await Position.findByIdAndDelete(id);
 
     if (!deletedPosition) {
@@ -661,69 +672,13 @@ const deletePosition = async (req, res) => {
       });
     }
 
-    // Set feed data for activity feed
-    // res.locals.feedData = {
-    //   tenantId: position.tenantId,
-    //   feedType: "delete",
-    //   action: {
-    //     name: "position_deleted",
-    //     description: `Position "${position.title}" (${position.positionCode}) was deleted`,
-    //   },
-    //   ownerId: position.ownerId,
-    //   parentId: id,
-    //   parentObject: "Position",
-    //   metadata: {
-    //     positionTitle: position.title,
-    //     positionCode: position.positionCode,
-    //     company: position.companyname,
-    //     deletedAt: new Date().toISOString()
-    //   },
-    //   severity: "medium",
-    //   fieldMessage: [{
-    //     fieldName: "deletion",
-    //     message: `Position "${position.title}" (${position.positionCode}) at ${position.companyname} was permanently deleted`
-    //   }],
-    //   history: [{
-    //     fieldName: "deletion",
-    //     oldValue: `Position ${position.positionCode} - ${position.title}`,
-    //     newValue: null
-    //   }]
-    // };
-
-    // Set log data for auditing
-    // res.locals.logData = {
-    //   tenantId: position.tenantId,
-    //   ownerId: position.ownerId,
-    //   processName: "Delete Position",
-    //   requestBody: req.body,
-    //   status: "success",
-    //   message: "Position deleted successfully",
-    //   responseBody: {
-    //     deletedPosition: positionData,
-    //     deletionTime: new Date().toISOString()
-    //   },
-    // };
-
     res.status(200).json({
       status: 'success',
-      message: 'Position deleted successfully',
-   
+      message: 'Position deleted successfully'
     });
 
   } catch (error) {
     console.error('Error deleting position:', error);
-
-    // Error logging
-    // res.locals.logData = {
-    //   tenantId: req.body?.tenantId,
-    //   ownerId: req.body?.ownerId,
-    //   processName: "Delete Position",
-    //   requestBody: req.body,
-    //   message: error.message,
-    //   status: "error",
-    //   error: error.stack
-    // };
-
     res.status(500).json({
       status: 'error',
       message: 'Internal server error while deleting position',
@@ -731,7 +686,6 @@ const deletePosition = async (req, res) => {
     });
   }
 };
-
 
 
 
@@ -1020,18 +974,18 @@ const saveInterviewRoundPosition = async (req, res) => {
   try {
     const { positionId, round, roundId } = req.body;
 
-    console.log("round round",round);
-    
+    console.log("round round", round);
+
     //res.locals.loggedByController = true;
     //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
-  //   const canCreate =
-  //   await hasPermission(res.locals?.effectivePermissions?.Positions, 'Edit')
-  //  //await hasPermission(res.locals?.superAdminPermissions?.Positions, 'Edit')
-  //   if (!canCreate) {
-  //     return res.status(403).json({ message: 'Forbidden: missing Positions.Edit permission' });
-  //   }
+    //   const canCreate =
+    //   await hasPermission(res.locals?.effectivePermissions?.Positions, 'Edit')
+    //  //await hasPermission(res.locals?.superAdminPermissions?.Positions, 'Edit')
+    //   if (!canCreate) {
+    //     return res.status(403).json({ message: 'Forbidden: missing Positions.Edit permission' });
+    //   }
     //-----v1.0.1--->
 
     if (!positionId || !round) {
@@ -1087,46 +1041,46 @@ const saveInterviewRoundPosition = async (req, res) => {
     //   await position.save();
 
     //   return res.status(200).json({
-     
+
     //     message: "Round updated successfully.",
     //     data: updatedRound,
     //   });
     // } else {
-      // === Adding New Round ===
-      
-      const newSequence = round.sequence || position.rounds.length + 1;
-      const newIndex = Math.max(newSequence - 1, 0);
+    // === Adding New Round ===
 
-      // console.log("newIndex", round);
+    const newSequence = round.sequence || position.rounds.length + 1;
+    const newIndex = Math.max(newSequence - 1, 0);
 
-      const newRound = {
-        ...round,
-        sequence: newSequence,
-      };
+    // console.log("newIndex", round);
 
-      // Insert at proper index
-      position.rounds.splice(newIndex, 0, newRound);
+    const newRound = {
+      ...round,
+      sequence: newSequence,
+    };
 
-      reorderInterviewRounds(position);
+    // Insert at proper index
+    position.rounds.splice(newIndex, 0, newRound);
 
-      // Set roundsModified to true
-      position.roundsModified = true;
+    reorderInterviewRounds(position);
 
-      await position.save();
+    // Set roundsModified to true
+    position.roundsModified = true;
 
-  
+    await position.save();
 
-        // Get the latest saved position to access the round with _id
+
+
+    // Get the latest saved position to access the round with _id
     const updatedPosition = await Position.findById(positionId);
     const savedRound = updatedPosition.rounds.find(
-      r => r.sequence === newSequence && 
-           r.roundTitle === newRound.roundTitle
+      r => r.sequence === newSequence &&
+        r.roundTitle === newRound.roundTitle
     );
 
     console.log("round.savedRound", savedRound);
     console.log("round.ownerId", req.body.ownerId);
 
-          // Feed and log data
+    // Feed and log data
     res.locals.feedData = {
       tenantId: req.body.tenantId,
       feedType: "info",
@@ -1153,11 +1107,11 @@ const saveInterviewRoundPosition = async (req, res) => {
     };
 
 
-      return res.status(201).json({
-        status: "Created Round successfully",
-        message: "Interview round created successfully.",
-        data: newRound,
-      });
+    return res.status(201).json({
+      status: "Created Round successfully",
+      message: "Interview round created successfully.",
+      data: newRound,
+    });
     // }
 
     // === Utility to Normalize Sequence ===
@@ -1168,9 +1122,9 @@ const saveInterviewRoundPosition = async (req, res) => {
     }
   } catch (error) {
     console.error("Error saving interview round:", error);
-    
-     // Error logging
-     res.locals.logData = {
+
+    // Error logging
+    res.locals.logData = {
       tenantId: req.body.tenantId,
       ownerId: req.body.ownerId,
       processName: "Create Position Round",
@@ -1178,7 +1132,7 @@ const saveInterviewRoundPosition = async (req, res) => {
       message: error.message,
       status: "error",
     };
-    
+
     return res.status(500).json({ message: "Internal server error." });
   }
 };
@@ -1390,7 +1344,7 @@ const saveInterviewRoundPosition = async (req, res) => {
 //     // If changing interviewerType, clear dependent fields appropriately
 //     if (updates.interviewerType && updates.interviewerType !== round.interviewerType) {
 //       console.log(`Changing interviewerType from ${round.interviewerType} to ${updates.interviewerType}`);
-      
+
 //       if (updates.interviewerType === 'internal') {
 //         // Clear fields not relevant for internal interviewers
 //         updates.interviewerViewType = '';
@@ -1470,7 +1424,7 @@ const updateInterviewRound = async (req, res) => {
     // Log request parameters
     const { positionId: rawPositionId, roundId: rawRoundId } = req.params;
     const { tenantId, ownerId, round: updates } = req.body;
-    
+
     console.log("📍 Request Parameters:");
     console.log("  - positionId:", rawPositionId);
     console.log("  - roundId:", rawRoundId);
@@ -1515,15 +1469,15 @@ const updateInterviewRound = async (req, res) => {
     if (updates.assessmentId) {
       console.log("🎯 Assessment round detected - clearing interviewer fields");
       console.log("📝 Before clearing - interviewerType:", round.interviewerType);
-      
+
       updates.interviewerType = '';
       updates.interviewerGroupName = '';
       updates.interviewerViewType = '';
       updates.selectedInterviewersType = '';
       updates.interviewers = [];
-      
+
       console.log("📝 After clearing - interviewerType:", updates.interviewerType);
-      
+
       if (updates.roundTitle && updates.roundTitle.toLowerCase() !== "assessment") {
         console.log("🔄 Non-assessment round detected - resetting assessmentId");
         updates.assessmentId = null;
@@ -1535,7 +1489,7 @@ const updateInterviewRound = async (req, res) => {
     if (!updates.assessmentId) {
       if (updates.interviewerType && updates.interviewerType !== round.interviewerType) {
         console.log(`🔄 Changing interviewerType from '${round.interviewerType}' to '${updates.interviewerType}'`);
-        
+
         if (updates.interviewerType === 'Internal') {
           console.log("🏢 Internal interviewer type - clearing selectedInterviewersType");
           updates.selectedInterviewersType = '';
@@ -1568,16 +1522,16 @@ const updateInterviewRound = async (req, res) => {
     // ---------- Apply Updates ----------
     console.log("🔄 Applying updates to round...");
     console.log("📊 Current round state before updates:", JSON.stringify(round.toObject(), null, 2));
-    
+
     // Track changes for logging and feed
     const changes = [];
-    
+
     Object.keys(updates).forEach((key) => {
       console.log(`   Processing field: ${key}`);
-      
+
       const oldValue = round[key];
       let newValue = updates[key];
-      
+
       if (key === "assessmentId") {
         if (updates.assessmentId) {
           console.log(`   ↳ Setting assessmentId to ObjectId: ${updates.assessmentId}`);
@@ -1596,7 +1550,7 @@ const updateInterviewRound = async (req, res) => {
         console.log(`   ↳ Setting ${key} from '${round[key]}' to '${updates[key]}'`);
         round[key] = newValue;
       }
-      
+
       // Track changes for logging and feed
       if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
         changes.push({
@@ -1623,11 +1577,11 @@ const updateInterviewRound = async (req, res) => {
     if (updates.sequence !== undefined && updates.sequence !== round.sequence) {
       console.log(`🔄 Reordering rounds - moving to sequence ${updates.sequence}`);
       console.log(`   Current sequence: ${round.sequence}`);
-      
+
       position.rounds = position.rounds.filter((r) => !r._id.equals(rawRoundId));
       const desiredIndex = Math.max(updates.sequence - 1, 0);
       position.rounds.splice(desiredIndex, 0, round);
-      
+
       position.rounds.forEach((r, idx) => {
         console.log(`   Setting round ${r._id} sequence from ${r.sequence} to ${idx + 1}`);
         r.sequence = idx + 1;
@@ -1684,7 +1638,7 @@ const updateInterviewRound = async (req, res) => {
     console.error("❌ Error updating interview round:", err);
     console.error("📋 Error details:", err.message);
     console.error("🔍 Error stack:", err.stack);
-    
+
     // Error logging - only set logData for actual errors
     res.locals.logData = {
       tenantId: req.body?.tenantId,
@@ -1761,15 +1715,15 @@ const updateInterviewRound = async (req, res) => {
 //     if (updates.assessmentId) {
 //       console.log("🎯 Assessment round detected - clearing interviewer fields");
 //       console.log("📝 Before clearing - interviewerType:", round.interviewerType);
-      
+
 //       updates.interviewerType = '';
 //       updates.interviewerGroupName = '';
 //       updates.interviewerViewType = '';
 //       updates.selectedInterviewersType = '';
 //       updates.interviewers = [];
-      
+
 //       console.log("📝 After clearing - interviewerType:", updates.interviewerType);
-      
+
 //       if (updates.roundTitle && updates.roundTitle.toLowerCase() !== "assessment") {
 //         console.log("🔄 Non-assessment round detected - resetting assessmentId");
 //         updates.assessmentId = null;
@@ -1781,7 +1735,7 @@ const updateInterviewRound = async (req, res) => {
 //     if (!updates.assessmentId) {
 //       if (updates.interviewerType && updates.interviewerType !== round.interviewerType) {
 //         console.log(`🔄 Changing interviewerType from '${round.interviewerType}' to '${updates.interviewerType}'`);
-        
+
 //         if (updates.interviewerType === 'Internal') {
 //           console.log("🏢 Internal interviewer type - clearing selectedInterviewersType");
 //           updates.selectedInterviewersType = '';
@@ -1814,10 +1768,10 @@ const updateInterviewRound = async (req, res) => {
 //     // ---------- Apply Updates ----------
 //     console.log("🔄 Applying updates to round...");
 //     console.log("📊 Current round state before updates:", JSON.stringify(round.toObject(), null, 2));
-    
+
 //     Object.keys(updates).forEach((key) => {
 //       console.log(`   Processing field: ${key}`);
-      
+
 //       if (key === "assessmentId") {
 //         if (updates.assessmentId) {
 //           console.log(`   ↳ Setting assessmentId to ObjectId: ${updates.assessmentId}`);
@@ -1841,11 +1795,11 @@ const updateInterviewRound = async (req, res) => {
 //     if (updates.sequence !== undefined && updates.sequence !== round.sequence) {
 //       console.log(`🔄 Reordering rounds - moving to sequence ${updates.sequence}`);
 //       console.log(`   Current sequence: ${round.sequence}`);
-      
+
 //       position.rounds = position.rounds.filter((r) => !r._id.equals(rawRoundId));
 //       const desiredIndex = Math.max(updates.sequence - 1, 0);
 //       position.rounds.splice(desiredIndex, 0, round);
-      
+
 //       position.rounds.forEach((r, idx) => {
 //         console.log(`   Setting round ${r._id} sequence from ${r.sequence} to ${idx + 1}`);
 //         r.sequence = idx + 1;
@@ -1895,7 +1849,7 @@ const updateInterviewRound = async (req, res) => {
 //     const { round: updates } = req.body;
 //     console.log("updates round",updates)
 //     // console.log("round round",round);
-    
+
 
 //     // ---------- Validate ObjectId ----------
 //     if (!mongoose.Types.ObjectId.isValid(rawPositionId)) {
@@ -1922,7 +1876,7 @@ const updateInterviewRound = async (req, res) => {
 //       return res.status(404).json({ message: "Round not found." });
 //     }
 
-   
+
 //     // || round.assessmentId
 //     // ---------- Handle assessment rounds (interviewerType should be empty) ----------
 //     if (updates.assessmentId) {
@@ -1932,7 +1886,7 @@ const updateInterviewRound = async (req, res) => {
 //       updates.interviewerViewType = '';
 //       updates.selectedInterviewersType = '';
 //       updates.interviewers = [];
-  
+
 //       if (updates.roundTitle && updates.roundTitle.toLowerCase() !== "assessment") {
 //       console.log("Non-assessment round detected - resetting assessmentId");
 //       updates.assessmentId = null;   // force clear assessmentId
@@ -1950,7 +1904,7 @@ const updateInterviewRound = async (req, res) => {
 //           updates.interviewers = [];
 //         }
 //       }
-  
+
 //     } 
 //   }
 //     // else {
@@ -1959,17 +1913,17 @@ const updateInterviewRound = async (req, res) => {
 //     //   // If changing interviewerType, clear dependent fields appropriately
 //     //   if (updates.interviewerType && updates.interviewerType !== round.interviewerType) {
 //     //     console.log(`Changing interviewerType from ${round.interviewerType} to ${updates.interviewerType}`);
-   
+
 //     //     if (updates.interviewerType === 'Internal') {
 //     //       // Clear fields not relevant for internal interviewers
 //     //       // updates.interviewerViewType = '';
 //     //       updates.selectedInterviewersType = '';
-          
+
 //     //     } else if (updates.interviewerType === 'External') {
 //     //       // Clear fields not relevant for external interviewers
 //     //       updates.interviewerGroupName = '';
 //     //       updates.interviewers = [];
-         
+
 //     //     }
 //     //   }
 //     // }
@@ -1994,7 +1948,7 @@ const updateInterviewRound = async (req, res) => {
 //     }
 
 //     console.log("updates.assessmentId",updates?.assessmentId);
-    
+
 //     // ---------- Apply Updates ----------
 //     Object.keys(updates).forEach((key) => {
 //       console.log("key",key === "assessmentId" && updates.assessmentId);
@@ -2007,7 +1961,7 @@ const updateInterviewRound = async (req, res) => {
 //         }
 //         // round[key] = new mongoose.Types.ObjectId(updates.assessmentId);
 //       } else if (key === "interviewers" && Array.isArray(updates.interviewers)) {
-        
+
 //         round[key] = updates.interviewers.map((id) => new mongoose.Types.ObjectId(id));
 //       } else {
 //         round[key] = updates[key];
@@ -2022,7 +1976,7 @@ const updateInterviewRound = async (req, res) => {
 //       position.rounds.forEach((r, idx) => (r.sequence = idx + 1));
 //     }
 //     console.log("updates updates",updates);
-    
+
 
 //     // ---------- Save Position ----------
 //     await position.save();
@@ -2044,121 +1998,121 @@ const updateInterviewRound = async (req, res) => {
 
 
 
-    // v1.0.0 ----------------------------------------------------------------------------------->
-    
-    
-    const deleteRound = async (req, res) => {
-      const { roundId } = req.params;
+// v1.0.0 ----------------------------------------------------------------------------------->
 
-      try {
-        const position = await Position.findOne({ "rounds._id": roundId });
-        if (!position) {
-          return res.status(404).json({ message: "Round not found" });
-        }
 
-        // Find the index of the round to delete
-        const roundIndex = position.rounds.findIndex(
-          (round) => round._id.toString() === roundId
-        );
-        if (roundIndex === -1) {
-          return res.status(404).json({ message: "Round not found" });
-        }
+const deleteRound = async (req, res) => {
+  const { roundId } = req.params;
 
-        // if (roundIndex === -1) {
-        //   console.log("❌ Round not found in position:", roundId);
-          
-        //   res.locals.logData = {
-        //     processName: 'Delete Interview Round',
-        //     requestBody: req.body,
-        //     status: 'error',
-        //     message: 'Round not found in position',
-        //   };
-          
-        //   return res.status(404).json({ message: "Round not found" });
-        // }
-    
-        // // Store the round data BEFORE splicing for logging
-        // const deletedRound = position.rounds[roundIndex];
-        // console.log("🗑️ Round to be deleted:", JSON.stringify(deletedRound.toObject(), null, 2));
-    
-        // // Generate feed data BEFORE removing the round
-        // res.locals.feedData = {
-        //   tenantId: position.tenantId,
-        //   feedType: 'delete',
-        //   action: {
-        //     name: 'interview_round_deleted',
-        //     description: `Interview round was deleted`,
-        //   },
-        //   ownerId: position.ownerId,
-        //   parentId: position._id,
-        //   parentObject: 'Position',
-        //   metadata: req.body,
-        //   severity: 'medium',
-        //   fieldMessage: [{
-        //     fieldName: 'round',
-        //     message: `Round '${deletedRound.roundTitle}' (sequence: ${deletedRound.sequence}) was deleted`,
-        //   }],
-        //   history: [{
-        //     fieldName: 'deletedRound',
-        //     oldValue: deletedRound.toObject(),
-        //     newValue: null
-        //   }],
-        // };
-    
-        // // Update log data for successful operation
-        // res.locals.logData = {
-        //   tenantId: position.tenantId,
-        //   ownerId: position.ownerId,
-        //   processName: 'Delete Interview Round',
-        //   requestBody: req.body,
-        //   status: 'success',
-        //   message: 'Round deleted successfully',
-        //   responseBody: { 
-        //     deletedRoundId: roundId, 
-        //     roundTitle: deletedRound.roundTitle,
-        //     sequence: deletedRound.sequence 
-        //   },
-        //   changes: [{
-        //     action: 'delete',
-        //     roundId: roundId,
-        //     roundTitle: deletedRound.roundTitle,
-        //     sequence: deletedRound.sequence
-        //   }],
-        // };
+  try {
+    const position = await Position.findOne({ "rounds._id": roundId });
+    if (!position) {
+      return res.status(404).json({ message: "Round not found" });
+    }
 
-        // Remove the round from the array
-        
-        
-        position.rounds.splice(roundIndex, 1);
+    // Find the index of the round to delete
+    const roundIndex = position.rounds.findIndex(
+      (round) => round._id.toString() === roundId
+    );
+    if (roundIndex === -1) {
+      return res.status(404).json({ message: "Round not found" });
+    }
 
-        // Save the updated position
-        await position.save();
+    // if (roundIndex === -1) {
+    //   console.log("❌ Round not found in position:", roundId);
 
-   
+    //   res.locals.logData = {
+    //     processName: 'Delete Interview Round',
+    //     requestBody: req.body,
+    //     status: 'error',
+    //     message: 'Round not found in position',
+    //   };
 
-        res.status(200).json({ message: "Round deleted successfully" });
-      } catch (error) {
-        console.error("Error deleting round:", error);
+    //   return res.status(404).json({ message: "Round not found" });
+    // }
 
- // Error logging
- res.locals.logData = {
-  tenantId: req.body.tenantId,
-  ownerId: req.body.ownerId,
-  processName: "Update Ticket",
-  requestBody: req.body,
-  message: error.message,
-  status: "error",
+    // // Store the round data BEFORE splicing for logging
+    // const deletedRound = position.rounds[roundIndex];
+    // console.log("🗑️ Round to be deleted:", JSON.stringify(deletedRound.toObject(), null, 2));
+
+    // // Generate feed data BEFORE removing the round
+    // res.locals.feedData = {
+    //   tenantId: position.tenantId,
+    //   feedType: 'delete',
+    //   action: {
+    //     name: 'interview_round_deleted',
+    //     description: `Interview round was deleted`,
+    //   },
+    //   ownerId: position.ownerId,
+    //   parentId: position._id,
+    //   parentObject: 'Position',
+    //   metadata: req.body,
+    //   severity: 'medium',
+    //   fieldMessage: [{
+    //     fieldName: 'round',
+    //     message: `Round '${deletedRound.roundTitle}' (sequence: ${deletedRound.sequence}) was deleted`,
+    //   }],
+    //   history: [{
+    //     fieldName: 'deletedRound',
+    //     oldValue: deletedRound.toObject(),
+    //     newValue: null
+    //   }],
+    // };
+
+    // // Update log data for successful operation
+    // res.locals.logData = {
+    //   tenantId: position.tenantId,
+    //   ownerId: position.ownerId,
+    //   processName: 'Delete Interview Round',
+    //   requestBody: req.body,
+    //   status: 'success',
+    //   message: 'Round deleted successfully',
+    //   responseBody: { 
+    //     deletedRoundId: roundId, 
+    //     roundTitle: deletedRound.roundTitle,
+    //     sequence: deletedRound.sequence 
+    //   },
+    //   changes: [{
+    //     action: 'delete',
+    //     roundId: roundId,
+    //     roundTitle: deletedRound.roundTitle,
+    //     sequence: deletedRound.sequence
+    //   }],
+    // };
+
+    // Remove the round from the array
+
+
+    position.rounds.splice(roundIndex, 1);
+
+    // Save the updated position
+    await position.save();
+
+
+
+    res.status(200).json({ message: "Round deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting round:", error);
+
+    // Error logging
+    res.locals.logData = {
+      tenantId: req.body.tenantId,
+      ownerId: req.body.ownerId,
+      processName: "Update Ticket",
+      requestBody: req.body,
+      message: error.message,
+      status: "error",
+    };
+
+    res.status(500).json({ message: "Error deleting round" });
+  }
 };
 
-        res.status(500).json({ message: "Error deleting round" });
-      }
-    };
-
-    module.exports = {
-      createPosition,
-      updatePosition,
-      saveInterviewRoundPosition,
-      deleteRound,
-      updateInterviewRound,
-      deletePosition
-    };
+module.exports = {
+  createPosition,
+  updatePosition,
+  saveInterviewRoundPosition,
+  deleteRound,
+  updateInterviewRound,
+  deletePosition
+};

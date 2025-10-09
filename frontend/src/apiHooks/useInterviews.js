@@ -293,6 +293,8 @@ const updateInterviewRound = useMutation({
     }
   });
 
+
+  //  round deletion
   const deleteRoundMutation = useMutation({
     mutationFn: async (roundId) => {
       const response = await axios.delete(
@@ -309,9 +311,44 @@ const updateInterviewRound = useMutation({
     },
   });
 
+  //  interview and round deletion
+// Interview deletion mutation
+const deleteInterviewMutation = useMutation({
+  mutationFn: async (interviewId) => {
+    const response = await axios.delete(
+      `${config.REACT_APP_API_URL}/interview/delete-interview/${interviewId}`,
+      // {
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     Authorization: `Bearer ${Cookies.get("authToken")}`,
+      //   },
+      // }
+    );
+    return response.data;
+  },
+  onSuccess: (data, deletedInterviewId) => {
+    // Optimistically remove from cache
+    queryClient.setQueryData(['interviews', filters], (oldData) => {
+      if (!oldData) return oldData;
+      return oldData.filter(interview => interview._id !== deletedInterviewId);
+    });
+    
+    // Invalidate and refetch
+    queryClient.invalidateQueries(['interviews']);
+    
+  },
+  onError: (error) => {
+    console.error('Interview deletion error:', error);
+    const errorMessage = error.response?.data?.message || 'Failed to delete interview';
+    // toast.error(errorMessage);
+  }
+});
+  
+
   // Calculate loading states
   const isMutationLoading = createInterview.isPending || saveInterviewRound.isPending ||  updateInterviewStatus.isPending || deleteRoundMutation.isPending;
-  const isLoading = isQueryLoading || isMutationLoading;
+  const isLoading = isQueryLoading || isMutationLoading ||
+  deleteInterviewMutation.isPending; 
 
   // Controlled logging
   useEffect(() => {
@@ -336,6 +373,8 @@ const updateInterviewRound = useMutation({
     // updateRoundWithMeetingLinksError: updateRoundWithMeetingLinks.error,
     isUpdateStatusError: updateInterviewStatus.isError,
     updateStatusError: updateInterviewStatus.error,
+    isDeleteInterviewError: deleteInterviewMutation.isError, // Add this
+    deleteInterviewError: deleteInterviewMutation.error, // Add this
     createInterview: createInterview.mutateAsync,
     saveInterviewRound: saveInterviewRound.mutateAsync,
     updateInterviewRound: updateInterviewRound.mutateAsync,
@@ -343,6 +382,7 @@ const updateInterviewRound = useMutation({
     updateInterviewStatus: updateInterviewStatus.mutateAsync,
     // refetchInterviews,
     deleteRoundMutation: deleteRoundMutation.mutateAsync,
+    deleteInterviewMutation: deleteInterviewMutation.mutateAsync,
     refetch,
   };
 };

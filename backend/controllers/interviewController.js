@@ -1356,6 +1356,72 @@ const getDashboardStats = async (req, res) => {
     }
 };
 
+
+
+// Delete interview and related rounds
+const deleteInterview = async (req, res) => {
+    res.locals.loggedByController = true;
+    res.locals.processName = "Delete Interview";
+  
+    const { id } = req.params;
+  
+    try {
+      // ✅ Validate ID
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid interview ID format",
+        });
+      }
+  
+      // ✅ Check if interview exists
+      const interview = await Interview.findById(id);
+      if (!interview) {
+        return res.status(404).json({
+          status: "error",
+          message: "Interview not found",
+        });
+      }
+  
+      // ✅ Check if status is "Draft"
+      if (interview.status !== "Draft") {
+        return res.status(400).json({
+          status: "error",
+          message: `Interview cannot be deleted because its current status is "${interview.status}".`,
+        });
+      }
+  
+      // ✅ Delete related interview rounds first
+      const deletedRounds = await InterviewRounds.deleteMany({ interviewId: id });
+      console.log(`Deleted ${deletedRounds.deletedCount} rounds linked to interview ${id}`);
+  
+      // ✅ Delete the interview itself
+      const deletedInterview = await Interview.findByIdAndDelete(id);
+  
+      if (!deletedInterview) {
+        return res.status(404).json({
+          status: "error",
+          message: "Interview not found or already deleted",
+        });
+      }
+  
+      // ✅ Success response
+      res.status(200).json({
+        status: "success",
+        message: "Interview and its related rounds deleted successfully.",
+      });
+  
+    } catch (error) {
+      console.error("Error deleting interview:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Internal server error while deleting interview",
+        error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  };
+
+//  Delete interview Round
 const deleteRound = async (req, res) => {
     try {
         const { id } = req.params;
@@ -2019,4 +2085,5 @@ module.exports = {
     getInterviews,
     checkInternalInterviewUsage,
     updateInterviewStatus: updateInterviewStatusController,
+    deleteInterview
 };

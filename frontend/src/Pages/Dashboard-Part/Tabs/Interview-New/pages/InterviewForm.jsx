@@ -243,10 +243,10 @@ useEffect(() => {
         console.log("selectedPosition.rounds", selectedPosition);
 
 
-        if (selectedPosition.templateId) {
-          setTemplateId(selectedPosition.templateId);
+        if (selectedPosition?.templateId) {
+          setTemplateId(selectedPosition?.templateId);
 
-          toast.info("Template and rounds are fetched from the position.");
+          // toast.info("Template and rounds are fetched from the position.");
         } else {
           setTemplateId("");
         }
@@ -269,7 +269,7 @@ useEffect(() => {
   const handleTemplateChange = (newTemplateId) => {
     // v1.0.0 ---------------------------->
     if (!positionId) {
-      toast.error("Please select a position first.", { autoClose: 3000 });
+      notify.error("Please select a position first.");
       return;
     }
 

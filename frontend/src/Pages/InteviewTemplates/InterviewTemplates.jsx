@@ -256,6 +256,22 @@ const InterviewTemplates = () => {
         }
       };
 
+    const handleDelete = async (template) => {
+        if (!effectivePermissions.InterviewTemplates?.Delete) {
+            return;
+        }
+        
+        if (window.confirm(`Are you sure you want to delete the interview template "${template.name}"? This action cannot be undone.`)) {
+            try {
+                // deleteInterviewTemplate is already the mutateAsync function
+               let res =  await deleteInterviewTemplate(template._id);
+               console.log("tempalte response", res);
+                
+               // The success toast will be shown by the mutation's onSuccess handler
+            } catch (error) {
+                console.error('Error deleting interview template:', error);
+                // The error toast will be shown by the mutation's onError handler
+            }
       const matchesCreatedDate = () => {
         if (!selectedFilters.createdDate) return true;
         if (!template.createdAt) return false;

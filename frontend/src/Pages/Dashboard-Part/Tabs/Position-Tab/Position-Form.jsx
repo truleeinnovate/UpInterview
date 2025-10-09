@@ -209,6 +209,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     return false;
   };
 
+  console.log("formDataData", formData);
+
   // Mapped options for shared DropdownWithSearchField
   const companyOptionsRS = (companies || [])
     .map((c) => ({ value: c?.CompanyName, label: c?.CompanyName }))
@@ -219,6 +221,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const templateOptions = (templatesData || [])
     .filter((t) => t?.rounds?.length > 0 && t?.status === "active")
     .map((t) => ({ value: t._id, label: t.title }));
+
 
   // Generic change handler for shared form fields + live cross-field validation
   const handleChange = (e) => {
@@ -516,7 +519,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // ...dataToSubmit,
       Location: dataToSubmit.Location,
       title: dataToSubmit.title,
-      NoofPositions: dataToSubmit.NoofPositions,
+      NoofPositions: dataToSubmit?.NoofPositions ? parseInt(dataToSubmit?.NoofPositions) : null,
       companyname: dataToSubmit.companyName,
       ...(dataToSubmit.minexperience && {
         minexperience: parseInt(dataToSubmit.minexperience),
@@ -543,8 +546,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       jobDescription: dataToSubmit.jobDescription.trim(),
       // templateId: dataToSubmit.template,
       // ✅ fix naming mismatch (backend expects selectedTemplete)
-      selectedTemplete: dataToSubmit.template?.title || null,
+      templateId: dataToSubmit.template?._id || null,
       rounds: dataToSubmit?.template?.rounds || [],
+      type:dataToSubmit?.template?.type || ""
     };
     console.log("basicdetails", basicdetails);
 
@@ -1190,12 +1194,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         value={formData.NoofPositions}
                         onChange={handleChange}
                         inputRef={fieldRefs.NoofPositions}
-                        error={errors.NoofPositions}
+                        // error={errors.NoofPositions}
                         min={1}
                         max={100}
                         label="No. of Positions"
                         name="NoofPositions"
-                        required
+                        // required
                       />
 
                       <div>

@@ -32,6 +32,8 @@ import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 import { usePositions } from "../../../../apiHooks/usePositions";
 import { formatDateTime } from "../../../../utils/dateFormatter";
+import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal.jsx";
+import { notify } from "../../../../services/toastService.js";
 
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => (
     <Dialog
@@ -419,12 +421,184 @@ const Assessment = () => {
         }
     };
 
-    const handleEdit = (assessment) => {
-        if (effectivePermissions.AssessmentTemplates?.Edit) {
-            navigate(`/assessments-template/edit/${assessment._id}`);
-        }
-    };
-    // <---------------------- v1.0.1 >
+  const handleEdit = (assessment) => {
+    if (effectivePermissions.AssessmentTemplates?.Edit) {
+      navigate(`/assessments-template/edit/${assessment._id}`);
+    }
+  };
+  // <---------------------- v1.0.1 >
+
+  const handleShareClick = (assessment) => {
+    if ((assessmentSections[assessment._id] ?? 0) > 0) {
+      // <---------------------- v1.0.0
+      setIsShareOpen(assessment);
+    } else if ((assessmentSections[assessment._id] ?? 0) === 0) {
+      notify.error("No questions added to this assessment.");
+    }
+  };
+
+  const handleCloseShare = () => {
+    setIsShareOpen(false);
+  };
+
+  const handleDelete = async (assessment) => {
+    console.log("effectivePermissions.assessment?.Delete",effectivePermissions.assessment?.Delete);
+    
+
+    // if (effectivePermissions.assessment?.Delete) {  // have to check beause this is mandtoary or not ?
+      setDeleteAssessmentTemplate(assessment)
+      setShowDeleteConfirmModal(true);
+      // navigate(`/interviews/${interview._id}/delete`);
+    // }
+
+    // if (window.confirm(`Are you sure you want to delete "${assessment.assessmentName}"? This action cannot be undone.`)) {
+    //   try {
+    //     await deleteAssessment.mutateAsync(assessment._id);
+    //     toast.success('Assessment deleted successfully');
+    //   } catch (error) {
+    //     console.error('Error deleting assessment:', error);
+    //     toast.error('Failed to delete assessment');
+    //   }
+    // }
+  };
+
+    // Your existing handleConfirmDelete function
+  const handleConfirmDelete = async () => {
+   try {
+        await deleteAssessment.mutateAsync(deleteAssessmentTemplate._id);
+        setDeleteAssessmentTemplate(null)
+      setShowDeleteConfirmModal(false);
+        notify.success('Assessment deleted successfully');
+      } catch (error) {
+        setDeleteAssessmentTemplate(null)
+      setShowDeleteConfirmModal(false);
+        console.error('Error deleting assessment:', error);
+        notify.error('Failed to delete assessment');
+      }
+  };
+
+  const tableColumns = [
+    {
+      key: "AssessmentCode",
+      header: "Template ID",
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => handleView(row)}
+        >
+          {value || "Not Provided"}
+        </div>
+      ),
+    },
+    {
+      key: "AssessmentTitle",
+      header: "Template Name",
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => handleView(row)}
+        >
+          {value.charAt(0).toUpperCase() + value.slice(1) || "Not Provided"}
+        </div>
+      ),
+    },
+    {
+      key: "sections",
+      header: "No. of Sections",
+      render: (value, row) => assessmentSections[row._id] ?? 0,
+    },
+    {
+      key: "NumberOfQuestions",
+      header: "No. of Questions",
+      render: (value) => value || "Not Provided",
+    },
+    {
+      key: "DifficultyLevel",
+      header: "Difficulty Level",
+      render: (value) => value || "Not Provided",
+    },
+    {
+      key: "totalScore",
+      header: "Total Score",
+      render: (value) => value || "Not Provided",
+    },
+    {
+      key: "passScore",
+      header: "Pass Criteria",
+      render: (value, row) =>
+        row.passScore
+          ? row.passScoreType === "Percentage"
+            ? `${row.passScore}%`
+            : `${row.passScore} pts` // or "marks"
+          : "Not Provided",
+    },
+    {
+      key: "Duration",
+      header: "Duration",
+      render: (value) => value || "Not Provided",
+    },
+    {
+      key: "createdAt",
+      header: "Created At",
+      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
+    },
+  ];
+  // <---------------------- v1.0.0
+  // <---------------------- v1.0.1
+  const tableActions = [
+    ...(effectivePermissions.AssessmentTemplates?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: handleView,
+          },
+        ]
+      : []),
+    ...(effectivePermissions.AssessmentTemplates?.Edit
+      ? // <---------------------- v1.0.0
+        // <---------------------- v1.0.1
+        [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-custom-blue" />,
+            onClick: handleEdit,
+          },
+        ]
+      : []),
+    ...(effectivePermissions.AssessmentTemplates?.Delete
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: handleDelete,
+          },
+        ]
+      : []),
+    {
+      key: "share",
+      label: "Create Assessment",
+      icon: <Plus className="w-4 h-4 text-custom-blue" />,
+      onClick: handleShareClick,
+      disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
+    },
+  ];
+  // v1.0.5 <------------------------------------------------------------
+  const difficultyOptions = ["Easy", "Medium", "Hard"];
+  // const durationOptions = ["30 minutes", "60 minutes"];
+  const durationOptions = ["30 Minutes", "60 Minutes"];
+  // v1.0.5 ------------------------------------------------------------>
+
+  const handleDifficultyToggle = (option) => {
+    setSelectedDifficulty((prev) =>
+      prev.includes(option)
+        ? prev.filter((item) => item !== option)
+        : [...prev, option]
+    );
+  };
 
     const handleShareClick = (assessment) => {
         if ((assessmentSections[assessment._id] ?? 0) > 0) {
@@ -435,6 +609,138 @@ const Assessment = () => {
         }
     };
 
+  const handlePositionToggle = (positionId) => {
+    setSelectedPositions((prev) =>
+      prev.includes(positionId)
+        ? prev.filter((p) => p !== positionId)
+        : [...prev, positionId]
+    );
+  };
+
+  const handleRangeChange = (e, type, setter) => {
+    const value =
+      e.target.value === "" ? "" : Math.max(0, Number(e.target.value) || "");
+    setter((prev) => ({
+      ...prev,
+      [type]: value,
+    }));
+  };
+
+  const handleApplyFilters = () => {
+    handleFilterChange({
+      difficultyLevel: selectedDifficulty,
+      duration: selectedDuration,
+      position: selectedPositions,
+      sections: sectionsRange,
+      questions: questionsRange,
+      totalScore: totalScoreRange,
+      createdDate: createdDatePreset,
+    });
+  };
+
+  return (
+    <div className="bg-background min-h-screen">
+      <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
+        <main className="px-6">
+          <div className="sm:px-0">
+            <Header
+              title="Assessment Templates"
+              onAddClick={() => navigate("/assessments-template/new")}
+              addButtonText="New Template"
+              // <---------------------- v1.0.1
+              canCreate={effectivePermissions.AssessmentTemplates?.Create}
+              // <---------------------- v1.0.1 >
+            />
+            <Toolbar
+              view={viewMode}
+              setView={setViewMode}
+              searchQuery={searchQuery}
+              onSearch={handleSearchInputChange}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPrevPage={prevPage}
+              onNextPage={nextPage}
+              onFilterClick={handleFilterIconClick}
+              isFilterActive={isFilterActive}
+              isFilterPopupOpen={isFilterPopupOpen}
+              dataLength={assessmentData?.length}
+              searchPlaceholder="Search by Assessments..."
+              filterIconRef={filterIconRef}
+            />
+          </div>
+        </main>
+      </div>
+      {/* v1.0.7 <----------------------------------------------------------------------------------- */}
+      <main className="fixed sm:top-64 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+        <div className="sm:px-0">
+          <motion.div className="bg-white">
+            {viewMode === "table" ? (
+              <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                <TableView
+                  data={currentFilteredRows}
+                  columns={tableColumns}
+                  actions={tableActions}
+                  loading={isLoading}
+                  // <-------------------------------v1.0.4
+                  emptyState="No assessments templates found."
+                  // ------------------------------v1.0.4 >
+                  className="table-fixed w-full"
+                />
+              </div>
+            ) : (
+              <AssessmentKanban
+                assessments={currentFilteredRows}
+                loading={isLoading}
+                onView={handleView}
+                onEdit={handleEdit}
+                onShare={handleShareClick}
+                assessmentSections={assessmentSections}
+                effectivePermissions={effectivePermissions}
+              />
+            )}
+            <FilterPopup
+              isOpen={isFilterPopupOpen}
+              onClose={() => setFilterPopupOpen(false)}
+              onApply={handleApplyFilters}
+              onClearAll={handleClearFilters}
+              filterIconRef={filterIconRef}
+            >
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                {/* Difficulty Level Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsDifficultyOpen(!isDifficultyOpen)}
+                  >
+                    <span className="font-medium text-gray-700">
+                      Difficulty Level
+                    </span>
+                    {isDifficultyOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isDifficultyOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {difficultyOptions.map((option) => (
+                        <label
+                          key={option}
+                          className="flex items-center space-x-2"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedDifficulty.includes(option)}
+                            onChange={() => handleDifficultyToggle(option)}
+                            // v1.0.6 <------------------------------------------------------------
+                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            // v1.0.6 ------------------------------------------------------------>
+                          />
+                          <span className="text-sm">{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
     const handleCloseShare = () => {
         setIsShareOpen(false);
     };
@@ -1020,6 +1326,26 @@ const Assessment = () => {
             />
 
         </div>
+      </main>
+      {/* v1.0.7 -----------------------------------------------------------------------------------> */}
+      {isShareOpen && (
+        <ShareAssessment
+          isOpen={isShareOpen}
+          onCloseshare={handleCloseShare}
+          assessment={isShareOpen}
+        />
+      )}
+
+       {/* Ranjith added deleetd functionality  */}
+            <DeleteConfirmModal
+              isOpen={showDeleteConfirmModal}
+              onClose={() => setShowDeleteConfirmModal(false)}
+              onConfirm={handleConfirmDelete}
+              title="Assessment Template"
+              entityName={deleteAssessmentTemplate?.AssessmentTitle}
+            />
+    </div>
+  );
     );
 };
 
