@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  added auto height when isassesment is true
 // v1.0.1  -  Ashok   -  added loading view for the table itself
+// v1.0.2  -  Ashok   -  added functionality for auto close menu when clicking outside 
 
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -73,6 +74,32 @@ const TableView = ({
       setOpenUpwards(spaceBelow < dropdownHeight);
     }
   };
+
+  // v1.0.2 <------------------------------------------------------------------------
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!openMenuIndex) return;
+
+      const menuEl = menuRefs.current[openMenuIndex];
+      const buttonEl = menuButtonRefs.current[openMenuIndex];
+
+      if (
+        menuEl &&
+        !menuEl.contains(event.target) &&
+        buttonEl &&
+        !buttonEl.contains(event.target)
+      ) {
+        setOpenMenuIndex(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openMenuIndex]);
+  // v1.0.2 ------------------------------------------------------------------------>
 
   const totalColumns = columns.length + (actions.length > 0 ? 1 : 0);
   const columnWidth = totalColumns ? `w-[${100 / totalColumns}%]` : "w-full";
