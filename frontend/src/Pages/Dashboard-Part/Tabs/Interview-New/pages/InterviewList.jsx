@@ -13,6 +13,7 @@ import {
   Eye,
   Pencil,
   ArrowRight,
+  Trash,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Tooltip } from "@mantine/core";
@@ -28,10 +29,12 @@ import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { formatDateTime } from "../../../../../utils/dateFormatter";
+import DeleteConfirmModal from "../../CommonCode-AllTabs/DeleteConfirmModal.jsx";
+import { notify } from "../../../../../services/toastService.js";
 
 function InterviewList() {
   const { effectivePermissions } = usePermissions();
-  const { interviewData, isLoading } = useInterviews();
+  const { interviewData, isLoading,deleteInterviewMutation , } = useInterviews();
   const navigate = useNavigate();
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectPositionView, setSelectPositionView] = useState(false);
@@ -80,7 +83,8 @@ function InterviewList() {
     from: "",
     to: "",
   });
-
+  const [deleteInterview, setDeleteInterview] = useState(null);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   // Sync filter states when popup opens
   useEffect(() => {
     if (isFilterPopupOpen) {
@@ -134,6 +138,36 @@ function InterviewList() {
       navigate(`/interviews/${interview._id}/edit`);
     }
   };
+
+  //  delete functionality
+  const handleDeleteInterview = (interview) => {
+    if (effectivePermissions.Interviews?.Delete) {
+      setDeleteInterview(interview)
+      setShowDeleteConfirmModal(true);
+      // navigate(`/interviews/${interview._id}/delete`);
+    }
+  };
+
+  // Your existing handleConfirmDelete function
+const handleConfirmDelete = async () => {
+  if (deleteInterview?._id) {
+    try {
+      await deleteInterviewMutation(deleteInterview._id);
+      notify.success("Interview deleted successfully");
+      setShowDeleteConfirmModal(false);
+      setDeleteInterview(null);
+      
+    } catch (error) {
+      // Error is already handled in the mutation
+      console.error("Failed to delete interview:", error);
+      setShowDeleteConfirmModal(false);
+      setDeleteInterview(null);
+            const backendMessage =
+              error?.response?.data?.message || "Failed to delete position";
+            notify.error(backendMessage);
+    }
+  }
+};
 
   const handleFilterChange = useCallback((filters) => {
     setSelectedFilters(filters);
@@ -764,6 +798,16 @@ function InterviewList() {
           },
         ]
       : []),
+      ...(effectivePermissions.Interviews?.Delete
+        ? [
+            {
+              key: "delete",
+              label: "Delete",
+              icon: <Trash className="w-4 h-4 text-red-600" />,
+              onClick: handleDeleteInterview,
+            },
+          ]
+        : []),
   ];
 
   return (
@@ -1573,6 +1617,15 @@ function InterviewList() {
           onClose={() => setSelectPositionView(false)}
         />
       )}
+
+          {/* Ranjith added deleetd functionality  */}
+            <DeleteConfirmModal
+              isOpen={showDeleteConfirmModal}
+              onClose={() => setShowDeleteConfirmModal(false)}
+              onConfirm={handleConfirmDelete}
+              title="Interview"
+              entityName={deleteInterview?.title}
+            />
     </div>
   );
 }

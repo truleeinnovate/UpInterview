@@ -31,6 +31,8 @@ import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 import { usePositions } from "../../../../apiHooks/usePositions";
 import { formatDateTime } from "../../../../utils/dateFormatter";
+import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal.jsx";
+import { notify } from "../../../../services/toastService.js";
 
 const Assessment = () => {
   // All hooks at the top
@@ -77,6 +79,12 @@ const Assessment = () => {
   const [totalScoreRange, setTotalScoreRange] = useState({ min: "", max: "" });
   const [createdDatePreset, setCreatedDatePreset] = useState("");
   // <---------------------- v1.0.0
+
+  //  Ranjith added delete Candidate functionality
+    const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+    const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
+
+
   useEffect(() => {
     document.title = "Assessment Template";
     const handleResize = () => {
@@ -379,7 +387,7 @@ const Assessment = () => {
       // <---------------------- v1.0.0
       setIsShareOpen(assessment);
     } else if ((assessmentSections[assessment._id] ?? 0) === 0) {
-      toast.error("No questions added to this assessment.");
+      notify.error("No questions added to this assessment.");
     }
   };
 
@@ -388,15 +396,39 @@ const Assessment = () => {
   };
 
   const handleDelete = async (assessment) => {
-    if (window.confirm(`Are you sure you want to delete "${assessment.assessmentName}"? This action cannot be undone.`)) {
-      try {
-        await deleteAssessment.mutateAsync(assessment._id);
-        toast.success('Assessment deleted successfully');
+    console.log("effectivePermissions.assessment?.Delete",effectivePermissions.assessment?.Delete);
+    
+
+    // if (effectivePermissions.assessment?.Delete) {  // have to check beause this is mandtoary or not ?
+      setDeleteAssessmentTemplate(assessment)
+      setShowDeleteConfirmModal(true);
+      // navigate(`/interviews/${interview._id}/delete`);
+    // }
+
+    // if (window.confirm(`Are you sure you want to delete "${assessment.assessmentName}"? This action cannot be undone.`)) {
+    //   try {
+    //     await deleteAssessment.mutateAsync(assessment._id);
+    //     toast.success('Assessment deleted successfully');
+    //   } catch (error) {
+    //     console.error('Error deleting assessment:', error);
+    //     toast.error('Failed to delete assessment');
+    //   }
+    // }
+  };
+
+    // Your existing handleConfirmDelete function
+  const handleConfirmDelete = async () => {
+   try {
+        await deleteAssessment.mutateAsync(deleteAssessmentTemplate._id);
+        setDeleteAssessmentTemplate(null)
+      setShowDeleteConfirmModal(false);
+        notify.success('Assessment deleted successfully');
       } catch (error) {
+        setDeleteAssessmentTemplate(null)
+      setShowDeleteConfirmModal(false);
         console.error('Error deleting assessment:', error);
-        toast.error('Failed to delete assessment');
+        notify.error('Failed to delete assessment');
       }
-    }
   };
 
   const tableColumns = [
@@ -565,7 +597,7 @@ const Assessment = () => {
         <main className="px-6">
           <div className="sm:px-0">
             <Header
-              title="Assessment Templtes"
+              title="Assessment Templates"
               onAddClick={() => navigate("/assessments-template/new")}
               addButtonText="New Template"
               // <---------------------- v1.0.1
@@ -946,6 +978,15 @@ const Assessment = () => {
           assessment={isShareOpen}
         />
       )}
+
+       {/* Ranjith added deleetd functionality  */}
+            <DeleteConfirmModal
+              isOpen={showDeleteConfirmModal}
+              onClose={() => setShowDeleteConfirmModal(false)}
+              onConfirm={handleConfirmDelete}
+              title="Assessment Template"
+              entityName={deleteAssessmentTemplate?.AssessmentTitle}
+            />
     </div>
   );
 };

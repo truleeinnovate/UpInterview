@@ -64,6 +64,31 @@ export const selectBaseStyles = (hasError) => ({
         : "rgba(33, 121, 137, 0.5)", // custom-blue/50 for click
     },
   }),
+
+
+   // ✅ Added styles for multi-value chips
+   multiValue: (base) => ({
+    ...base,
+    backgroundColor: "transparent",
+    border: "1px solid #d1d5db",
+    borderRadius: 4,
+    padding: "0 4px",
+  }),
+  multiValueLabel: (base) => ({
+    ...base,
+    color: "#000",
+    fontWeight: 500,
+  }),
+  multiValueRemove: (base, state) => ({
+    ...base,
+    color: "#6b7280",
+    cursor: "pointer",
+    ":hover": {
+      backgroundColor: "transparent",
+      color: "#ef4444",
+    },
+  }),
+
 });
 
 // Sticky footer MenuList that keeps a special option fixed at the bottom (e.g. value "__other__")

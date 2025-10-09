@@ -149,10 +149,10 @@ export const validateForm = (formData, entries, rounds) => {
 
 
     // Add No of Positions validation
-    if (!formData.NoofPositions || parseInt(formData.NoofPositions) <= 0) {
-      errors.NoofPositions = "Number of Positions must be greater than 0";
-      formIsValid = false;
-    }
+    // if (!formData.NoofPositions || parseInt(formData.NoofPositions) <= 0) {
+    //   errors.NoofPositions = "Number of Positions must be greater than 0";
+    //   formIsValid = false;
+    // }
     // v1.0.0 <----------------------------------------------------------------------
     // Add location validation
     // if (!formData.Location) {
