@@ -59,14 +59,14 @@ function validateCreateTenantQuestion(payload = {}) {
       difficultyLevel: Joi.string().valid('Easy', 'Medium', 'Hard').required().messages({
         'any.only': 'Difficulty Level must be one of Easy, Medium, or Hard',
       }),
-      minexperience: Joi.number().integer().min(0).required().messages({
-        'number.base': 'Min Experience must be a number',
-        'any.required': 'Min Experience is required',
-      }),
-      maxexperience: Joi.number().integer().min(0).required().messages({
-        'number.base': 'Max Experience must be a number',
-        'any.required': 'Max Experience is required',
-      }),
+      // minexperience: Joi.number().integer().min(0).required().messages({
+      //   'number.base': 'Min Experience must be a number',
+      //   'any.required': 'Min Experience is required',
+      // }),
+      // maxexperience: Joi.number().integer().min(0).required().messages({
+      //   'number.base': 'Max Experience must be a number',
+      //   'any.required': 'Max Experience is required',
+      // }),
       correctAnswer: Joi.string().trim().required().messages({
         'string.empty': 'Answer is required',
       }),
@@ -115,8 +115,8 @@ function validateUpdateTenantQuestion(payload = {}) {
     category: Joi.string().trim().min(1),
     skill: Joi.array().items(Joi.string().trim().min(1)).min(1),
     difficultyLevel: Joi.string().valid('Easy', 'Medium', 'Hard'),
-    minexperience: Joi.number().integer().min(0),
-    maxexperience: Joi.number().integer().min(0),
+    // minexperience: Joi.number().integer().min(0),
+    // maxexperience: Joi.number().integer().min(0),
     correctAnswer: Joi.string().trim(),
     tenantListId: Joi.array().items(objectId).min(1),
     options: Joi.array().items(Joi.string().trim().min(1)).min(1),

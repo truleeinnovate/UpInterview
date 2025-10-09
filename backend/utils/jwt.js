@@ -44,7 +44,7 @@ const verifyToken = (token) => {
 };
 
 
-const generateEmailVerificationToken = (email, userId) => {
+const generateEmailVerificationToken = (email, userId) => { 
   // return jwt.sign(
   //   { email, userId },
   //   process.env.JWT_SECRET,
