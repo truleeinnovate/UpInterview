@@ -323,14 +323,12 @@ const InterviewTemplates = () => {
 
   const handleEdit = (template) => {
     if (effectivePermissions.InterviewTemplates?.Edit) {
-      // Preserve the current tab in the URL when navigating to edit
       const params = new URLSearchParams();
       params.set("tab", activeTab);
-      navigate(
-        `/interview-templates/${template._id}/edit?${params.toString()}`
-      );
+      navigate(`/interview-templates/${template._id}/edit?${params.toString()}`);
     }
   };
+  
 
   const capitalizeFirstLetter = (str) => {
     if (!str) return "";
