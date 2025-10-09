@@ -2,6 +2,8 @@
 /* v1.0.1 - Ashok - changed maleImage (man.png), femaleImage (woman.png) and genderlessImage (transgender.png) 
  path from local to cloud storage url
  */
+// v1.0.2 - Ashok - Improved responsiveness and added common code to popup
+
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -27,6 +29,7 @@ import {
   ArrowsPointingOutIcon,
 } from "@heroicons/react/24/outline";
 // import ConfirmationModal from './ConfirmModel';
+import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 
 //this is already have common code but due to z index i have added here
 const ConfirmationModal = ({
@@ -40,7 +43,9 @@ const ConfirmationModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg max-w-md w-full">
+      {/* v1.0.2 <-------------------------------------------------------- */}
+      <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+        {/* v1.0.2 --------------------------------------------------------> */}
         <h3 className="text-lg font-medium mb-2">Confirm Status Change</h3>
         <p className="mb-2">
           Are you sure you want to change the status of{" "}
@@ -78,10 +83,6 @@ const UserProfileDetails = ({ type }) => {
   const location = useLocation();
   const userData = location.state?.userData;
   const { toggleUserStatus, refetchUsers } = useCustomContext();
-  console.log(
-    "SETTINGS SELECTED USER DATA ============================> : ",
-    userData
-  );
   const [activeTab, setActiveTab] = useState("basic");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -236,57 +237,17 @@ const UserProfileDetails = ({ type }) => {
     );
   };
 
-  const modalClass = classNames(
-    // v1.0.0 <--------------------------------------------------
-    "fixed bg-white shadow-2xl outline-none",
-    // v1.0.0 -------------------------------------------------->
-    {
-      "overflow-y-auto": !isModalOpen,
-      "overflow-hidden": isModalOpen,
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
-
   return (
-    <>
-      <Modal
-        isOpen={true}
-        onRequestClose={handleClose}
-        className={modalClass}
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-      >
+    // v1.0.2 <------------------------------------------------------------------------
+    <SidebarPopup title="User Profile" onClose={handleClose}>
+      <div>
         <div
           className={classNames("h-full", {
             "max-w-7xl mx-auto px-2": isFullScreen,
           })}
         >
           <div>
-            <div className="flex justify-between items-center mb-2 mx-3 mt-3">
-              <h2 className="text-xl font-bold text-custom-blue">
-                User Profile
-              </h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsFullScreen(!isFullScreen)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
-                >
-                  {isFullScreen ? (
-                    <ArrowsPointingInIcon className="h-5 w-5" />
-                  ) : (
-                    <ArrowsPointingOutIcon className="h-5 w-5" />
-                  )}
-                </button>
-                <button
-                  onClick={handleClose}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between mb-2 mx-3">
+            <div className="flex sm:flex-col md:flex-col sm:items-start md:items-start sm:gap-4 md:gap-4 items-center justify-between mb-2 mx-3">
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <img
@@ -309,11 +270,11 @@ const UserProfileDetails = ({ type }) => {
                         "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png";
                     }}
                     // v1.0.1 ------------------------------------------------------------------------------------------------------>
-                    className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                    className="sm:w-20 sm:h-20 w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                   />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">
+                  <h3 className="sm:text-lg md:text-lg lg:text-lg xl:text-xl 2xl:text-xl font-bold text-gray-900">
                     {userData.firstName
                       ? userData.firstName.charAt(0).toUpperCase() +
                         userData.firstName.slice(1)
@@ -328,7 +289,7 @@ const UserProfileDetails = ({ type }) => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center sm:justify-end sm:w-full md:justify-end md:w-full space-x-2">
                 <span
                   className={`text-sm font-medium ${
                     newStatus === "active"
@@ -424,8 +385,9 @@ const UserProfileDetails = ({ type }) => {
             availabilityData={availabilityData}
           />
         )}
-      </Modal>
-    </>
+      </div>
+    </SidebarPopup>
+    // v1.0.2 ------------------------------------------------------------------------>
   );
 };
 

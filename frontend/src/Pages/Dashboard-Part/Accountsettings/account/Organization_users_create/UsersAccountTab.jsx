@@ -4,6 +4,8 @@
 /* v1.0.3 - Ashok - changed maleImage (man.png), femaleImage (woman.png) and genderlessImage (transgender.png) 
  path from local to cloud storage url
  */
+// v1.0.4 - Ashok - Improved responsiveness
+
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -266,13 +268,13 @@ const UsersAccountTab = () => {
                   // v1.0.3 <-----------------------------------------------------------------------------------------------------
                   e.target.src =
                     row.gender === "Male"
-                      // ? maleImage
-                      ? "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
+                      ? // ? maleImage
+                        "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
                       : row.gender === "Female"
-                      // ? femaleImage
-                      ? "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099369/woman_mffxrj.png"
-                      // : genderlessImage;
-                      : "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png";
+                      ? // ? femaleImage
+                        "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099369/woman_mffxrj.png"
+                      : // : genderlessImage;
+                        "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png";
                   // v1.0.3 ----------------------------------------------------------------------------------------------------->
                 }}
               />
@@ -357,11 +359,12 @@ const UsersAccountTab = () => {
   ];
 
   return (
-    <>
+    // v1.0.4 <------------------------------------------------------------------------
+    <div className="sm:mt-6 md:mt-6">
       <div className="h-screen fixed w-full flex">
         <div className="" />
         <div className="flex-1 flex flex-col ml-0 h-full">
-          <div className="fixed top-16 left-64 right-0 bg-background z-10 px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
+          <div className="fixed top-16 left-64 right-0 bg-background z-10 px-4">
             <motion.div
               className="mb-6"
               initial={{ opacity: 0, y: -20 }}
@@ -477,7 +480,7 @@ const UsersAccountTab = () => {
                     />
                   </div>
                 ) : (
-                  <div className="w-full pl-4 pt-4 pr-4 mb-5">
+                  <div className="w-full px-4 pt-4 mb-5">
                     <KanbanView
                       currentFilteredRows={currentFilteredRows}
                       loading={loading}
@@ -619,24 +622,27 @@ const UsersAccountTab = () => {
           </motion.div>
         </div>
       )}
-      <ConfirmationModal
-        show={showConfirmation}
-        userName={`${
-          selectedUser?.firstName
-            ? selectedUser?.firstName.charAt(0).toUpperCase() +
-              selectedUser?.firstName.slice(1)
-            : ""
-        } ${
-          selectedUser?.lastName
-            ? selectedUser?.lastName.charAt(0).toUpperCase() +
-              selectedUser?.lastName.slice(1)
-            : ""
-        }`}
-        newStatus={newStatus}
-        onCancel={cancelStatusChange}
-        onConfirm={confirmStatusChange}
-      />
-    </>
+      <div>
+        <ConfirmationModal
+          show={showConfirmation}
+          userName={`${
+            selectedUser?.firstName
+              ? selectedUser?.firstName.charAt(0).toUpperCase() +
+                selectedUser?.firstName.slice(1)
+              : ""
+          } ${
+            selectedUser?.lastName
+              ? selectedUser?.lastName.charAt(0).toUpperCase() +
+                selectedUser?.lastName.slice(1)
+              : ""
+          }`}
+          newStatus={newStatus}
+          onCancel={cancelStatusChange}
+          onConfirm={confirmStatusChange}
+        />
+      </div>
+    </div>
+    // v1.0.4 ------------------------------------------------------------------------>
   );
 };
 

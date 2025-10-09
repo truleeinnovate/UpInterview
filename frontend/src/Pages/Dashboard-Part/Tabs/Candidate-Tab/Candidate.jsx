@@ -9,11 +9,20 @@
 // v1.0.8  -  Ashok   -  changed kanban UI
 // v1.0.9  -  Ashok   -  table columns modified
 // v2.0.0  -  Ashok   -  changed kanban column names
+// v2.0.1  -  Ashok   -  changed actions in kanban
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, CircleUser, Pencil, Mail, Rotate3d, Trash } from "lucide-react";
+import {
+  Eye,
+  CircleUser,
+  Pencil,
+  Mail,
+  Rotate3d,
+  Trash,
+  MoreVertical,
+} from "lucide-react";
 import { useCustomContext } from "../../../../Context/Contextfetch";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
@@ -43,6 +52,95 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js"
 import { logger } from "../../../../utils/logger.js";
 // v1.0.6 ------------------------------------------------------------------->
 import { formatDateTime } from "../../../../utils/dateFormatter.js";
+
+// v2.0.1 <-----------------------------------------------------------------------
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => (
+        <button
+          key={action.key}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onClick(item, e);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title={action.label}
+        >
+          {action.icon}
+        </button>
+      ))}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+// v2.0.1 ----------------------------------------------------------------------->
+
 function Candidate({
   candidates,
   onResendLink,
@@ -103,6 +201,7 @@ function Candidate({
   const filterIconRef = useRef(null);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deleteCandidate, setDeleteCandidate] = useState(null);
+
   // <---------------------- v1.0.2
   // Helper function to check if a candidate is cancelled (handles all case variations)
 
@@ -1001,7 +1100,9 @@ function Candidate({
         (
           <span>
             {row?.CurrentExperience}
-            <span className="ml-1">{row?.CurrentExperience > 1 ? "Years" : "Year"}</span>
+            <span className="ml-1">
+              {row?.CurrentExperience > 1 ? "Years" : "Year"}
+            </span>
           </span>
         ) || "N/A",
     },
@@ -1117,23 +1218,23 @@ function Candidate({
       : []),
   ];
 
-  const renderKanbanActions = (item) => (
-    <div className="flex items-center gap-2">
-      {kanbanActions.map((action) => (
-        <button
-          key={action.key}
-          onClick={(e) => {
-            e.stopPropagation();
-            action.onClick(item);
-          }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title={action.label}
-        >
-          {action.icon}
-        </button>
-      ))}
-    </div>
-  );
+  // const renderKanbanActions = (item) => (
+  //   <div className="flex items-center gap-2">
+  //     {kanbanActions.map((action) => (
+  //       <button
+  //         key={action.key}
+  //         onClick={(e) => {
+  //           e.stopPropagation();
+  //           action.onClick(item);
+  //         }}
+  //         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+  //         title={action.label}
+  //       >
+  //         {action.icon}
+  //       </button>
+  //     ))}
+  //   </div>
+  // );
   // v1.0.8 ------------------------------------------------------------------------------>
 
   return (
@@ -1265,9 +1366,17 @@ function Candidate({
                         avatar: candidate?.ImageData?.path || null,
                       }))}
                       columns={kanbanColumns}
-                      renderActions={renderKanbanActions}
+                      // v2.0.1 <-------------------------------------------------
+                      // renderActions={renderKanbanActions}
+                      renderActions={(item) => (
+                        <KanbanActionsMenu
+                          item={item}
+                          kanbanActions={kanbanActions}
+                        />
+                      )}
                       emptyState="No candidates found."
                     />
+                    {/* // v2.0.1 -------------------------------------------------> */}
                   </div>
                   // v1.0.8 ------------------------------------------------------------------->
                 )}
