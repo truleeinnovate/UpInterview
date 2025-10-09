@@ -82,7 +82,7 @@ app.use((req, res, next) => {
   }
 
   if (req.method === "OPTIONS") {
-    console.log("Responding to OPTIONS request with headers:", res.getHeaders());
+    // console.log("Responding to OPTIONS request with headers:", res.getHeaders());
     return res.status(200).end();
   }
 

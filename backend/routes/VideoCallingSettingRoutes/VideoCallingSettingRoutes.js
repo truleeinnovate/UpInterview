@@ -1,7 +1,7 @@
 // ✅ Use CommonJS require
 const express = require('express');
 
-console.log('📦 Loading VideoCallingSettingController...');
+// console.log('📦 Loading VideoCallingSettingController...');
 const { 
   VideoCallTestConnection, 
   VideoCallTestCredentials, 
@@ -27,7 +27,7 @@ videoRouter.get('/get-settings', (req, res, next) => {
 // PATCH route to update video settings
 videoRouter.patch('/update-settings', updateVideoCallingSettings);
 
-console.log('✅ Video routes configured');
+// console.log('✅ Video routes configured');
 
 // ✅ Export using CommonJS
 module.exports = videoRouter;

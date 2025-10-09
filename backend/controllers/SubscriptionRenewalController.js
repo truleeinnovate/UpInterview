@@ -18,7 +18,7 @@ const RENEWAL_CRON_SCHEDULE = process.env.RENEWAL_CRON_SCHEDULE || '0 */6 * * *'
 const USE_LOCKS = process.env.RENEWAL_USE_LOCKS === 'true';
 const LOCK_TTL_MS = parseInt(process.env.RENEWAL_LOCK_TTL_MS || '', 10) || (55 * 60 * 1000);
 
-console.log('[SUBSCRIPTION RENEWAL] Controller initialized at', new Date().toISOString());
+// console.log('[SUBSCRIPTION RENEWAL] Controller initialized at', new Date().toISOString());
 
 /**
  * Update tenant limits on renewal (Usage creation removed - handled in RazorpayController)
@@ -26,12 +26,12 @@ console.log('[SUBSCRIPTION RENEWAL] Controller initialized at', new Date().toISO
 const updateTenantLimits = async (subscription) => {
     try {
         const tenantId = subscription.tenantId;
-        console.log(`[RENEWAL] Updating tenant limits for ${tenantId}`);
+        // console.log(`[RENEWAL] Updating tenant limits for ${tenantId}`);
 
         // Get subscription plan to fetch features
         const plan = await SubscriptionPlan.findById(subscription.subscriptionPlanId).lean();
         if (!plan) {
-            console.error(`[RENEWAL] Plan not found: ${subscription.subscriptionPlanId}`);
+            // console.error(`[RENEWAL] Plan not found: ${subscription.subscriptionPlanId}`);
             return;
         }
 
@@ -46,11 +46,11 @@ const updateTenantLimits = async (subscription) => {
             tenant.totalUsers = usersLimit;
             tenant.status = 'active';
             await tenant.save();
-            console.log(`[RENEWAL] Tenant limits updated for ${tenantId}`);
+            // console.log(`[RENEWAL] Tenant limits updated for ${tenantId}`);
         }
 
         // Note: Usage document will be created/updated only after payment verification in RazorpayController
-        console.log(`[RENEWAL] Usage document will be handled by payment verification process`);
+        // console.log(`[RENEWAL] Usage document will be handled by payment verification process`);
     } catch (error) {
         console.error('[RENEWAL] Error updating tenant limits:', error);
     }
@@ -61,7 +61,7 @@ const updateTenantLimits = async (subscription) => {
  */
 const processSubscriptionRenewal = async (subscription) => {
     try {
-        console.log(`[RENEWAL] Processing renewal for subscription ${subscription._id}`);
+        // console.log(`[RENEWAL] Processing renewal for subscription ${subscription._id}`);
         
         const now = new Date();
         const billingCycle = subscription.selectedBillingCycle || 'monthly';
@@ -99,7 +99,7 @@ const processSubscriptionRenewal = async (subscription) => {
                 });
 
                 subscription.invoiceId = invoice._id;
-                console.log(`[RENEWAL] Created invoice ${invoice._id} for subscription ${subscription._id}`);
+                // console.log(`[RENEWAL] Created invoice ${invoice._id} for subscription ${subscription._id}`);
             }
         }
 
@@ -108,7 +108,7 @@ const processSubscriptionRenewal = async (subscription) => {
         // Update tenant limits only (Usage will be created after payment in RazorpayController)
         await updateTenantLimits(subscription);
 
-        console.log(`[RENEWAL] Successfully renewed subscription ${subscription._id} until ${newEndDate}`);
+        // console.log(`[RENEWAL] Successfully renewed subscription ${subscription._id} until ${newEndDate}`);
         return true;
     } catch (error) {
         console.error(`[RENEWAL] Error processing renewal for subscription ${subscription._id}:`, error);
@@ -126,7 +126,7 @@ const runSubscriptionRenewalJob = async () => {
         return;
     }
 
-    console.log('[RENEWAL] Starting subscription renewal check at', new Date().toISOString());
+    // console.log('[RENEWAL] Starting subscription renewal check at', new Date().toISOString());
 
     try {
         const now = new Date();
@@ -142,7 +142,7 @@ const runSubscriptionRenewalJob = async () => {
             ]
         }).populate('subscriptionPlanId');
 
-        console.log(`[RENEWAL] Found ${subscriptions.length} subscriptions needing renewal check`);
+        // console.log(`[RENEWAL] Found ${subscriptions.length} subscriptions needing renewal check`);
 
         for (const subscription of subscriptions) {
             try {
@@ -186,13 +186,13 @@ const runSubscriptionRenewalJob = async () => {
             status: SUBSCRIPTION_STATUSES.ACTIVE
         });
 
-        console.log(`[RENEWAL] Updating tenant limits for ${activeSubscriptions.length} active subscriptions`);
+        // console.log(`[RENEWAL] Updating tenant limits for ${activeSubscriptions.length} active subscriptions`);
 
         for (const sub of activeSubscriptions) {
             await updateTenantLimits(sub);
         }
 
-        console.log('[RENEWAL] Subscription renewal check completed');
+        // console.log('[RENEWAL] Subscription renewal check completed');
 
     } catch (error) {
         console.error('[RENEWAL] Error in renewal job:', error);
@@ -204,7 +204,7 @@ const runSubscriptionRenewalJob = async () => {
  */
 const manualRenewalCheck = async (req, res) => {
     try {
-        console.log('[RENEWAL] Manual renewal check triggered');
+        // console.log('[RENEWAL] Manual renewal check triggered');
         await runSubscriptionRenewalJob();
         res.json({ 
             success: true, 
@@ -278,7 +278,7 @@ function scheduleRenewalCron() {
         }
     });
 
-    console.log(`[RENEWAL] Cron scheduled: ${RENEWAL_CRON_SCHEDULE}`);
+    // console.log(`[RENEWAL] Cron scheduled: ${RENEWAL_CRON_SCHEDULE}`);
 }
 
 // Start cron when DB is connected
