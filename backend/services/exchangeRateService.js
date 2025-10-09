@@ -109,7 +109,7 @@ function scheduleDailyRateUpdate() {
     
     const timeUntilUpdate = nextUpdate - now;
     
-    console.log(`Next exchange rate update scheduled for: ${nextUpdate.toISOString()}`);
+    // console.log(`Next exchange rate update scheduled for: ${nextUpdate.toISOString()}`);
     
     // Schedule the first update
     setTimeout(async () => {
@@ -151,10 +151,10 @@ async function checkAndUpdateRate() {
     });
     
     if (!existingRate) {
-      console.log('No exchange rate found for today, updating now...');
+      // console.log('No exchange rate found for today, updating now...');
       await updateDailyRate();
     } else {
-      console.log(`Today's exchange rate (${existingRate.rate}) already exists, skipping update`);
+      // console.log(`Today's exchange rate (${existingRate.rate}) already exists, skipping update`);
     }
   } catch (error) {
     console.error('Error checking exchange rate:', error);
