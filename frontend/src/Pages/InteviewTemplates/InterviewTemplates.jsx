@@ -216,13 +216,13 @@ const InterviewTemplates = () => {
         template.status,
         template.rounds?.length?.toString(),
       ].filter(Boolean);
-
+ 
       const matchesSearchQuery =
         searchQuery === "" ||
         fieldsToSearch.some((field) =>
           normalizeSpaces(field).includes(normalizedQuery)
         );
-
+ 
       const matchesStatus =
         selectedFilters.status.length === 0 ||
         selectedFilters.status.includes(
@@ -230,14 +230,14 @@ const InterviewTemplates = () => {
             ? template.status.charAt(0).toUpperCase() + template.status.slice(1)
             : "Active"
         );
-
+ 
       const roundsCount = template.rounds?.length || 0;
       const matchesRounds =
         (selectedFilters.rounds.min === "" ||
           roundsCount >= Number(selectedFilters.rounds.min)) &&
         (selectedFilters.rounds.max === "" ||
           roundsCount <= Number(selectedFilters.rounds.max));
-
+ 
       const matchesModifiedDate = () => {
         if (!selectedFilters.modifiedDate) return true;
         if (!template.updatedAt) return false;
@@ -255,23 +255,7 @@ const InterviewTemplates = () => {
             return true;
         }
       };
-
-    const handleDelete = async (template) => {
-        if (!effectivePermissions.InterviewTemplates?.Delete) {
-            return;
-        }
-        
-        if (window.confirm(`Are you sure you want to delete the interview template "${template.name}"? This action cannot be undone.`)) {
-            try {
-                // deleteInterviewTemplate is already the mutateAsync function
-               let res =  await deleteInterviewTemplate(template._id);
-               console.log("tempalte response", res);
-                
-               // The success toast will be shown by the mutation's onSuccess handler
-            } catch (error) {
-                console.error('Error deleting interview template:', error);
-                // The error toast will be shown by the mutation's onError handler
-            }
+ 
       const matchesCreatedDate = () => {
         if (!selectedFilters.createdDate) return true;
         if (!template.createdAt) return false;
@@ -289,11 +273,11 @@ const InterviewTemplates = () => {
             return true;
         }
       };
-
+ 
       const matchesFormat =
         selectedFilters.formats.length === 0 ||
         (template.format && selectedFilters.formats.includes(template.format));
-
+ 
       return (
         matchesSearchQuery &&
         matchesStatus &&
