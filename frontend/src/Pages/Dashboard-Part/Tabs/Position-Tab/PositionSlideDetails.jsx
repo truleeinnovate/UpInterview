@@ -4,6 +4,7 @@
 // v1.0.3 - Ashok - fixed default view and unique key issue
 // v1.0.4 - Ashok - Improved responsiveness
 // v1.0.5 - Ashok - Fixed issues in responsiveness for activity
+// v1.0.6 - Ashok - change placement of edit position button
 
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
@@ -48,9 +49,8 @@ const PositionSlideDetails = () => {
   // const internalInterviewerIds = new Set();
   // const externalInterviewerIds = new Set();
   const [allInterviewerCount, setAllInterviewerCount] = useState(0);
-const [internalInterviewerCount, setInternalInterviewerCount] = useState(0);
-const [externalInterviewerCount, setExternalInterviewerCount] = useState(0);
-
+  const [internalInterviewerCount, setInternalInterviewerCount] = useState(0);
+  const [externalInterviewerCount, setExternalInterviewerCount] = useState(0);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -104,33 +104,31 @@ const [externalInterviewerCount, setExternalInterviewerCount] = useState(0);
             setRoundsViewMode("vertical");
           }
 
+          // ✅ Collect interviewer counts
+          const allSet = new Set();
+          const internalSet = new Set();
+          const externalSet = new Set();
+          console.log("roundsList", roundsList);
 
-           // ✅ Collect interviewer counts
-        const allSet = new Set();
-        const internalSet = new Set();
-        const externalSet = new Set();
-        console.log("roundsList", roundsList);
+          roundsList.forEach((round) => {
+            round?.interviewers?.forEach((interviewer) => {
+              if (interviewer?._id) {
+                allSet.add(interviewer._id);
 
-        roundsList.forEach((round) => {
-          round?.interviewers?.forEach((interviewer) => {
-            if (interviewer?._id) {
-              allSet.add(interviewer._id);
-
-              if (round.interviewerType?.toLowerCase() === "internal") {
-                internalSet.add(interviewer._id);
-              } else if (round.interviewerType?.toLowerCase() === "external") {
-                externalSet.add(interviewer._id);
+                if (round.interviewerType?.toLowerCase() === "internal") {
+                  internalSet.add(interviewer._id);
+                } else if (
+                  round.interviewerType?.toLowerCase() === "external"
+                ) {
+                  externalSet.add(interviewer._id);
+                }
               }
-            }
+            });
           });
-        });
 
-        setAllInterviewerCount(allSet.size);
-        setInternalInterviewerCount(internalSet.size);
-        setExternalInterviewerCount(externalSet.size);
-
-
-
+          setAllInterviewerCount(allSet.size);
+          setInternalInterviewerCount(internalSet.size);
+          setExternalInterviewerCount(externalSet.size);
         }
       } catch (error) {
         console.error("Error fetching template:", error);
@@ -243,9 +241,21 @@ const [externalInterviewerCount, setExternalInterviewerCount] = useState(0);
 
         {/* Tab Content */}
         {activeTab === "Details" && (
-          <div className="flex-1">
+          <div className="flex-1 relative">
+            {/* v1.0.6 <-------------------------------------------------------------------------- */}
+            <Link
+              to={`/position/edit-position/${position?._id}`}
+              state={{ from: location.pathname }}
+              className="absolute top-0 right-0 inline-flex items-center sm:px-2 sm:py-2 px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+            >
+              <Edit className="sm:h-5 sm:w-5 h-4 w-4 sm:mr-0 mr-1" />
+              <span className="sm:hidden inline">Edit Position</span>
+            </Link>
+            {/* v1.0.6 --------------------------------------------------------------------------> */}
             <div className="space-y-6 mt-4">
-              <div className="text-center mb-4">
+              {/* v1.0.6 <--------------------------------------------- */}
+              <div className="sm:text-start text-center mb-4">
+              {/* v1.0.6 ---------------------------------------------> */}
                 <h3 className="sm:text-xl text-2xl font-bold text-gray-900 truncate">
                   {position?.companyname || ""}
                 </h3>
@@ -519,14 +529,6 @@ const [externalInterviewerCount, setExternalInterviewerCount] = useState(0);
                       </button>
                     </>
                   )}
-                  <Link
-                    to={`/position/edit-position/${position?._id}`}
-                    state={{ from: location.pathname }}
-                    className="inline-flex items-center sm:px-2 sm:py-2 px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                  >
-                    <Edit className="sm:h-5 sm:w-5 h-4 w-4 sm:mr-0 mr-1" />
-                    <span className="sm:hidden inline">Edit Position</span>
-                  </Link>
                 </div>
               </div>
 
