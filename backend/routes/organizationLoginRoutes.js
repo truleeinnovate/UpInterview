@@ -18,6 +18,7 @@ const {
   getAllOrganizations, // SUPER ADMIN added by Ashok
   getOrganizationById,
   superAdminLoginAsUser,
+  deleteTenantAndAssociatedData,
 } = require("../controllers/organizationLoginController");
 
 router.post("/Signup", registerOrganization);
@@ -44,6 +45,7 @@ router.get("/verify-user-email", verifyEmailChange);
 // SUPER ADMIN all-organizations added by Ashok ------------------------------->
 router.get("/all-organizations", getAllOrganizations);
 router.get("/:id", getOrganizationById);
+router.delete('/:tenantId', deleteTenantAndAssociatedData);
 
 //ashraf
 
