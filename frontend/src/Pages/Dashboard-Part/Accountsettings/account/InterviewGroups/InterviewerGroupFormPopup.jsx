@@ -1,6 +1,7 @@
 // v.0.0.1  changes made in interviwers getting data and creating groups and editing groups view group data
 // v.0.0.2 - Venkatesh---  add error msg scroll
 // v1.0.2 - Ashok - Removed border left and set outline as none and improved some styles
+// v1.0.3 - Ashok - Improved responsiveness and added common code to popup and added loading view
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -18,9 +19,14 @@ import {
   ArrowsPointingOutIcon,
 } from "@heroicons/react/24/outline";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError";
-import { DescriptionField, DropdownWithSearchField, InputField } from "../../../../../Components/FormFields";
+import {
+  DescriptionField,
+  DropdownWithSearchField,
+  InputField,
+} from "../../../../../Components/FormFields";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect";
-Modal.setAppElement("#root");
+import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+
 const InterviewerGroupFormPopup = () => {
   const { id } = useParams();
   const { groups, interviewers } = useCustomContext();
@@ -41,6 +47,10 @@ const InterviewerGroupFormPopup = () => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload.tenantId;
+
+  // v1.0.3 <-------------------------------------------
+  const [loading, setLoading] = useState(false);
+  // v1.0.3 ------------------------------------------->
 
   // console.log("tenantId InterviewerGroupFormPopup", tenantId);
 
@@ -138,6 +148,9 @@ const InterviewerGroupFormPopup = () => {
       scrollToFirstError(errors, fieldRefs); //<-----v1.0.2------
       return;
     }
+    // v1.0.3 <-------------------------------------------
+    setLoading(true);
+    // v1.0.3 ------------------------------------------->
 
     try {
       // Different API calls for create vs update
@@ -165,6 +178,8 @@ const InterviewerGroupFormPopup = () => {
     } catch (error) {
       console.error("Error saving group:", error);
       alert(`Failed to ${id ? "update" : "create"} group. Please try again.`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -220,140 +235,102 @@ const InterviewerGroupFormPopup = () => {
   //   }))
   // }
 
-  const modalClass = classNames(
-    // v1.0.3 <---------------------------------------------------------------
-    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
-    // v1.0.2 --------------------------------------------------------------->
-    {
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
-
   const title = id ? "Edit Group" : "Create New Group";
 
   return (
-    // onClose={() => navigate(`/account-settings/interviewer-groups`)}
-    <Modal
-      isOpen={true}
-      onRequestClose={() => navigate(`/account-settings/interviewer-groups`)}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-      // className={modalClass}
+    <SidebarPopup
+      title={title}
+      onClose={() => navigate(`/account-settings/interviewer-groups`)}
     >
-      <div
-        className={classNames("h-full", {
-          "max-w-6xl mx-auto px-6": isFullScreen,
-        })}
-      >
-        <div className="p-6 ">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-custom-blue">{title}</h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                {isFullScreen ? (
-                  <ArrowsPointingInIcon className="h-5 w-5" />
-                ) : (
-                  <ArrowsPointingOutIcon className="h-5 w-5" />
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  navigate(`/account-settings/interviewer-groups`);
-                  // setUserData(formData)
-                  // setIsBasicModalOpen(false);
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-          </div>
+      {loading && (
+        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
+        </div>
+      )}
+      <div className="sm:p-0 p-6 mb-10">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <div>
+            <h3 className="text-lg font-medium mb-4">Group Information</h3>
+            <div className="space-y-4">
+              <div>
+                <InputField
+                  label="Group Name"
+                  type="text"
+                  name="GroupName"
+                  id="GroupName"
+                  placeholder="Enter Group Name"
+                  ref={fieldRefs.name} //<-----v1.0.2------
+                  value={formData.name}
+                  error={formErrors.name}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
-            <div>
-              <h3 className="text-lg font-medium mb-4">Group Information</h3>
-              <div className="space-y-4">
-                <div>
-                  <InputField
-                    label="Group Name"
-                    type="text"
-                    name="GroupName"
-                    id="GroupName"
-                    placeholder="Enter Group Name"
-                    ref={fieldRefs.name} //<-----v1.0.2------
-                    value={formData.name}
-                    error={formErrors.name}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, name: e.target.value }))
-                    }
-                    required
-                  />
-                </div>
+              <div>
+                <DescriptionField
+                  label="Description"
+                  name="Description"
+                  id="Description"
+                  placeholder="Write a description of the group"
+                  ref={fieldRefs.description} //<-----v1.0.2------
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  error={formErrors.description}
+                  rows={3}
+                  required
+                />
+              </div>
 
-                <div>
-                  
-                  <DescriptionField
-                    label="Description"
-                    name="Description"
-                    id="Description"
-                    placeholder="Write a description of the group"
-                    ref={fieldRefs.description} //<-----v1.0.2------
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
-                    }
-                    error={formErrors.description}
-                    rows={3}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <DropdownWithSearchField
-                    label="Status"
-                    name="Status"
-                    id="Status"
-                    required
-                    value={formData.status}
-                    ref={fieldRefs.status} //<-----v1.0.2------
-                    placeholder="Select Status"
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        status: e.target.value,
-                      }))
-                    }
+              <div>
+                <DropdownWithSearchField
+                  label="Status"
+                  name="Status"
+                  id="Status"
+                  required
+                  value={formData.status}
+                  ref={fieldRefs.status} //<-----v1.0.2------
+                  placeholder="Select Status"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      status: e.target.value,
+                    }))
+                  }
                   options={[
                     { value: "active", label: "Active" },
                     { value: "inactive", label: "Inactive" },
                   ]}
-                  />
-                </div>
+                />
               </div>
             </div>
+          </div>
 
-            {/* Member Selection */}
-            <div>
-              <h3 className="text-lg font-medium mb-4">
-                Select Members <span className="text-red-500">*</span>
-              </h3>
-              <div className="space-y-2">
-                {formErrors.members && (
-                  <p className="text-red-500 text-sm mt-2">
-                    {formErrors.members}
-                  </p>
-                )}
-                <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
-                  {/* v1.0.3 <-------------------------------------------------------------------- */}
-                  {/* <table className="min-w-full divide-y divide-gray-200">
+          {/* Member Selection */}
+          <div>
+            <h3 className="text-lg font-medium mb-4">
+              Select Members <span className="text-red-500">*</span>
+            </h3>
+            <div className="space-y-2">
+              {formErrors.members && (
+                <p className="text-red-500 text-sm mt-2">
+                  {formErrors.members}
+                </p>
+              )}
+              <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
+                {/* v1.0.3 <-------------------------------------------------------------------- */}
+                {/* <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr className="bg-gray-50">
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -417,92 +394,91 @@ const InterviewerGroupFormPopup = () => {
                       )}
                     </tbody>
                   </table> */}
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Select
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Role
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {users.length > 0 ? (
-                        users.map((member) => (
-                          <tr key={member._id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <input
-                                type="checkbox"
-                                checked={formData.members.includes(
-                                  member?.contact?._id
-                                )}
-                                onChange={() =>
-                                  handleMemberToggle(member?.contact?._id)
-                                }
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                              />
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div>
-                                <div className="font-medium text-gray-900">
-                                  {member?.contact?.firstName ||
-                                  member?.contact?.lastName
-                                    ? `${member?.contact?.firstName || ""} ${
-                                        member?.contact?.lastName || ""
-                                      }`
-                                    : "Not Provided"}
-                                </div>
-                                <div className="text-sm text-gray-500">
-                                  {member?.contact?.email || "Not Provided"}
-                                </div>
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Select
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Role
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {users.length > 0 ? (
+                      users.map((member) => (
+                        <tr key={member._id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={formData.members.includes(
+                                member?.contact?._id
+                              )}
+                              onChange={() =>
+                                handleMemberToggle(member?.contact?._id)
+                              }
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {member?.contact?.firstName ||
+                                member?.contact?.lastName
+                                  ? `${member?.contact?.firstName || ""} ${
+                                      member?.contact?.lastName || ""
+                                    }`
+                                  : "Not Provided"}
                               </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {member?.roleLabel || "Not Provided"}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan="3"
-                            className="px-6 py-4 text-center text-gray-500"
-                          >
-                            No Interviewers Found
+                              <div className="text-sm text-gray-500">
+                                {member?.contact?.email || "Not Provided"}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {member?.roleLabel || "Not Provided"}
                           </td>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                  {/* v1.0.3 --------------------------------------------------------------------> */}
-                </div>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="3"
+                          className="px-6 py-4 text-center text-gray-500"
+                        >
+                          No Interviewers Found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                {/* v1.0.3 --------------------------------------------------------------------> */}
               </div>
             </div>
+          </div>
 
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={() => navigate(`/account-settings/interviewer-groups`)}
-                className="px-4 py-2 text-gray-700 hover:bg-blue-50 border border-custom-blue rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-custom-blue text-white rounded-lg"
-              >
-                {id ? "Save Changes" : "Create Group"}
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="flex justify-end space-x-3 pt-6">
+            <button
+              type="button"
+              onClick={() => navigate(`/account-settings/interviewer-groups`)}
+              className="text-sm font-semibold px-4 py-2 text-gray-700 hover:bg-blue-50 border border-custom-blue rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="text-sm font-semibold px-4 py-2 bg-custom-blue text-white rounded-lg"
+            >
+              {id ? "Save Changes" : "Create Group"}
+            </button>
+          </div>
+        </form>
       </div>
-    </Modal>
+    </SidebarPopup>
   );
 };
 

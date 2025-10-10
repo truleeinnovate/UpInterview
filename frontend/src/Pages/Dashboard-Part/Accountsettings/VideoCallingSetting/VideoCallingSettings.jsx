@@ -1,5 +1,7 @@
 // added by Ranjith
 // v1.0.0 - Ashok - fixed z-index style issue for confirmation popup
+// v1.0.1 - Ashok - fixed responsiveness issues, added shimmer loader, fixed re-rendering issue
+// v1.0.2 - Ashok - Improved loading view
 
 import { useEffect, useState } from "react";
 import {
@@ -109,14 +111,29 @@ export function VideoCallingSettings() {
     },
   ];
 
+  // v1.0.1 <---------------------------------------------------------------------------
+  // useEffect(() => {
+  //   if (settings && isOrganization === false) {
+  //     setSettings((prev) => ({
+  //       ...prev,
+  //       credentialType: "platform",
+  //     }));
+  //   }
+  // }, [settings, isOrganization]);
+
   useEffect(() => {
-    if (settings && isOrganization === false) {
+    if (
+      settings &&
+      isOrganization === false &&
+      settings.credentialType !== "platform"
+    ) {
       setSettings((prev) => ({
         ...prev,
         credentialType: "platform",
       }));
     }
   }, [settings, isOrganization]);
+  // v1.0.1 --------------------------------------------------------------------------->
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -547,15 +564,108 @@ export function VideoCallingSettings() {
     );
   };
 
-  // ✅ FIX: Better loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#217989] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading settings...</p>
+      // v1.0.2 <----------------------------------------------------------------------------
+      <div className="space-y-6 sm:mt-6 md:mt-6">
+        {/* Header */}
+        <div className="flex justify-between items-center px-2">
+          <div className="h-6 w-48 rounded shimmer"></div>
+          <div className="flex items-center space-x-2">
+            <div className="h-8 w-24 rounded shimmer"></div>
+          </div>
+        </div>
+
+        {/* Provider Selection */}
+        <div className="bg-white p-6 rounded-lg shadow space-y-6">
+          <div className="flex sm:flex-col md:flex-col sm:items-start md:items-start items-center justify-between mb-6">
+            <div className="space-y-2">
+              <div className="h-5 w-32 rounded shimmer"></div>
+              <div className="h-3 w-56 rounded shimmer"></div>
+            </div>
+            <div className="flex items-center space-x-2 sm:mt-4 md:mt-4">
+              <div className="w-4 h-4 rounded-full shimmer"></div>
+              <div className="h-3 w-28 rounded shimmer"></div>
+            </div>
+          </div>
+
+          {/* Provider Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+            {[1, 2].map((_, index) => (
+              <div
+                key={index}
+                className="border-2 border-gray-200 rounded-lg p-4 space-y-3"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 rounded-lg h-10 w-10 shimmer"></div>
+                  <div className="space-y-1 flex-1">
+                    <div className="h-4 w-24 rounded shimmer"></div>
+                    <div className="h-3 w-32 rounded shimmer"></div>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-200 space-y-1">
+                  <div className="h-3 w-20 rounded shimmer"></div>
+                  <ul className="space-y-1">
+                    <li className="h-3 w-full rounded shimmer"></li>
+                    <li className="h-3 w-5/6 rounded shimmer"></li>
+                    <li className="h-3 w-3/4 rounded shimmer"></li>
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Provider Comparison */}
+          <div className="mt-6 p-4 bg-gray-100 rounded-lg space-y-3">
+            <div className="h-4 w-48 rounded shimmer"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div className="h-3 w-20 rounded shimmer"></div>
+                <div className="h-3 w-32 rounded shimmer"></div>
+              </div>
+              <div className="space-y-1">
+                <div className="h-3 w-24 rounded shimmer"></div>
+                <div className="h-3 w-28 rounded shimmer"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Credential Configuration */}
+        <div className="bg-white p-6 rounded-lg shadow space-y-4">
+          <div className="h-5 w-40 rounded shimmer"></div>
+          <div className="space-y-3">
+            {[1, 2].map((_, index) => (
+              <div
+                key={index}
+                className="flex items-center p-4 border rounded-lg space-x-3"
+              >
+                <div className="h-4 w-4 rounded-full shimmer"></div>
+                <div className="flex-1 space-y-1">
+                  <div className="h-4 w-32 rounded shimmer"></div>
+                  <div className="h-3 w-48 rounded shimmer"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="h-16 rounded shimmer"></div>
+        </div>
+
+        {/* Usage Instructions */}
+        <div className="bg-white p-6 rounded-lg shadow space-y-4">
+          <div className="h-5 w-36 rounded shimmer"></div>
+          {[1, 2, 3].map((_, index) => (
+            <div key={index} className="flex items-start space-x-3">
+              <div className="flex-shrink-0 h-6 w-6 rounded-full shimmer"></div>
+              <div className="space-y-1 flex-1">
+                <div className="h-4 w-32 rounded shimmer"></div>
+                <div className="h-3 w-full rounded shimmer"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+      // v1.0.2 ----------------------------------------------------------------------------->
     );
   }
 
@@ -583,7 +693,8 @@ export function VideoCallingSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    // v1.0.1 <---------------------------------------------------------------------------
+    <div className="space-y-6 sm:mt-6 md:mt-6">
       {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={showConfirmation}
@@ -595,12 +706,14 @@ export function VideoCallingSettings() {
         }? This may affect your existing video call settings.`}
       />
 
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Video Calling Settings</h2>
+      <div className="flex justify-between items-center px-2">
+        <h2 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl font-bold">
+          Video Calling Settings
+        </h2>
         <button
           onClick={saveSettings}
           disabled={saving}
-          className="px-4 py-2 bg-[#217989] text-white rounded-lg hover:bg-[#1a6b7a] disabled:bg-gray-400 flex items-center space-x-2"
+          className="text-sm px-4 py-2 bg-[#217989] text-white rounded-lg hover:bg-[#1a6b7a] disabled:bg-gray-400 flex items-center space-x-2"
         >
           {saving ? (
             <>
@@ -615,16 +728,16 @@ export function VideoCallingSettings() {
 
       {/* Provider Selection */}
       <div className="bg-white p-6 rounded-lg shadow">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex sm:flex-col md:flex-col sm:items-start md:items-start items-center justify-between mb-6">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h3 className="sm:text-md md:text-md lg:text-md xl:text-xl 2xl:text-xl font-semibold text-gray-900">
               Video Calling Provider
             </h3>
             <p className="text-sm text-gray-600 mt-1">
               Choose your preferred video conferencing solution for interviews
             </p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 sm:mt-4 md:mt-4">
             <div className="w-3 h-3 bg-[#217989] rounded-full"></div>
             <span className="text-sm text-gray-600">
               Current:{" "}
@@ -944,6 +1057,7 @@ export function VideoCallingSettings() {
         </div>
       </div>
     </div>
+    // v1.0.1 --------------------------------------------------------------------------->
   );
 }
 

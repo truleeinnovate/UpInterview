@@ -4,6 +4,7 @@ const {
   registerOrganization,
   loginOrganization,
   resetPassword,
+  getOrganizationRequestStatus,
   organizationUserCreation,
   getRolesByTenant,
   getBasedIdOrganizations,
@@ -18,6 +19,7 @@ const {
   getAllOrganizations, // SUPER ADMIN added by Ashok
   getOrganizationById,
   superAdminLoginAsUser,
+  deleteTenantAndAssociatedData,
 } = require("../controllers/organizationLoginController");
 
 router.post("/Signup", registerOrganization);
@@ -44,11 +46,15 @@ router.get("/verify-user-email", verifyEmailChange);
 // SUPER ADMIN all-organizations added by Ashok ------------------------------->
 router.get("/all-organizations", getAllOrganizations);
 router.get("/:id", getOrganizationById);
+router.delete('/:tenantId', deleteTenantAndAssociatedData);
 
 //ashraf
 
 // Super Admin login as user route
 router.post("/login-as-user", superAdminLoginAsUser);
 // ---------------------------------------------------------------------------->
+
+// Get organization request status
+router.get("/organization-request/:tenantId/:ownerId", getOrganizationRequestStatus);
 
 module.exports = router;

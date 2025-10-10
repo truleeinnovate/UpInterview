@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer"); // import multer
+const { trackUploadBandwidth } = require("../../middleware/bandwidthTracking");
 const {
   createQuestions,
   getQuestionById,
@@ -11,8 +12,8 @@ const {
 // Configure multer for temporary file storage
 const upload = multer({ dest: "uploads/" });
 
-// Create single/bulk or CSV upload
-router.post("/:type", upload.single("file"), createQuestions);
+// Create single/bulk or CSV upload - with bandwidth tracking
+router.post("/:type", upload.single("file"), trackUploadBandwidth, createQuestions);
 
 // Get all
 router.get("/:type", getQuestions);
