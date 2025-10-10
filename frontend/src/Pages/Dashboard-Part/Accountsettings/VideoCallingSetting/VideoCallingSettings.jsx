@@ -1,6 +1,7 @@
 // added by Ranjith
 // v1.0.0 - Ashok - fixed z-index style issue for confirmation popup
 // v1.0.1 - Ashok - fixed responsiveness issues, added shimmer loader, fixed re-rendering issue
+// v1.0.2 - Ashok - Improved loading view
 
 import { useEffect, useState } from "react";
 import {
@@ -563,15 +564,15 @@ export function VideoCallingSettings() {
     );
   };
 
-  // FIX: Better loading state
   if (loading) {
     return (
+      // v1.0.2 <----------------------------------------------------------------------------
       <div className="space-y-6 sm:mt-6 md:mt-6">
         {/* Header */}
         <div className="flex justify-between items-center px-2">
-          <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-6 w-48 rounded shimmer"></div>
           <div className="flex items-center space-x-2">
-            <div className="h-8 w-24 bg-gray-300 rounded animate-pulse"></div>
+            <div className="h-8 w-24 rounded shimmer"></div>
           </div>
         </div>
 
@@ -579,12 +580,12 @@ export function VideoCallingSettings() {
         <div className="bg-white p-6 rounded-lg shadow space-y-6">
           <div className="flex sm:flex-col md:flex-col sm:items-start md:items-start items-center justify-between mb-6">
             <div className="space-y-2">
-              <div className="h-5 w-32 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-3 w-56 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-5 w-32 rounded shimmer"></div>
+              <div className="h-3 w-56 rounded shimmer"></div>
             </div>
             <div className="flex items-center space-x-2 sm:mt-4 md:mt-4">
-              <div className="w-4 h-4 bg-gray-200 rounded-full animate-pulse"></div>
-              <div className="h-3 w-28 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-4 h-4 rounded-full shimmer"></div>
+              <div className="h-3 w-28 rounded shimmer"></div>
             </div>
           </div>
 
@@ -593,21 +594,21 @@ export function VideoCallingSettings() {
             {[1, 2].map((_, index) => (
               <div
                 key={index}
-                className="border-2 border-gray-200 rounded-lg p-4 animate-pulse space-y-3"
+                className="border-2 border-gray-200 rounded-lg p-4 space-y-3"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-gray-200 rounded-lg h-10 w-10"></div>
+                  <div className="p-3 rounded-lg h-10 w-10 shimmer"></div>
                   <div className="space-y-1 flex-1">
-                    <div className="h-4 w-24 bg-gray-200 rounded"></div>
-                    <div className="h-3 w-32 bg-gray-200 rounded"></div>
+                    <div className="h-4 w-24 rounded shimmer"></div>
+                    <div className="h-3 w-32 rounded shimmer"></div>
                   </div>
                 </div>
                 <div className="mt-3 pt-3 border-t border-gray-200 space-y-1">
-                  <div className="h-3 w-20 bg-gray-200 rounded"></div>
+                  <div className="h-3 w-20 rounded shimmer"></div>
                   <ul className="space-y-1">
-                    <li className="h-3 w-full bg-gray-200 rounded"></li>
-                    <li className="h-3 w-5/6 bg-gray-200 rounded"></li>
-                    <li className="h-3 w-3/4 bg-gray-200 rounded"></li>
+                    <li className="h-3 w-full rounded shimmer"></li>
+                    <li className="h-3 w-5/6 rounded shimmer"></li>
+                    <li className="h-3 w-3/4 rounded shimmer"></li>
                   </ul>
                 </div>
               </div>
@@ -616,15 +617,15 @@ export function VideoCallingSettings() {
 
           {/* Provider Comparison */}
           <div className="mt-6 p-4 bg-gray-100 rounded-lg space-y-3">
-            <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 w-48 rounded shimmer"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
-                <div className="h-3 w-32 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-3 w-20 rounded shimmer"></div>
+                <div className="h-3 w-32 rounded shimmer"></div>
               </div>
               <div className="space-y-1">
-                <div className="h-3 w-24 bg-gray-200 rounded animate-pulse"></div>
-                <div className="h-3 w-28 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-3 w-24 rounded shimmer"></div>
+                <div className="h-3 w-28 rounded shimmer"></div>
               </div>
             </div>
           </div>
@@ -632,39 +633,39 @@ export function VideoCallingSettings() {
 
         {/* Credential Configuration */}
         <div className="bg-white p-6 rounded-lg shadow space-y-4">
-          <div className="h-5 w-40 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-5 w-40 rounded shimmer"></div>
           <div className="space-y-3">
             {[1, 2].map((_, index) => (
               <div
                 key={index}
-                className="flex items-center p-4 border rounded-lg space-x-3 animate-pulse"
+                className="flex items-center p-4 border rounded-lg space-x-3"
               >
-                <div className="h-4 w-4 bg-gray-200 rounded-full"></div>
+                <div className="h-4 w-4 rounded-full shimmer"></div>
                 <div className="flex-1 space-y-1">
-                  <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                  <div className="h-3 w-48 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-32 rounded shimmer"></div>
+                  <div className="h-3 w-48 rounded shimmer"></div>
                 </div>
               </div>
             ))}
           </div>
-          <div className="h-16 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-16 rounded shimmer"></div>
         </div>
 
         {/* Usage Instructions */}
         <div className="bg-white p-6 rounded-lg shadow space-y-4">
-          <div className="h-5 w-36 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-5 w-36 rounded shimmer"></div>
           {[1, 2, 3].map((_, index) => (
             <div key={index} className="flex items-start space-x-3">
-              <div className="flex-shrink-0 h-6 w-6 bg-gray-200 rounded-full animate-pulse"></div>
+              <div className="flex-shrink-0 h-6 w-6 rounded-full shimmer"></div>
               <div className="space-y-1 flex-1">
-                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
-                <div className="h-3 w-full bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 w-32 rounded shimmer"></div>
+                <div className="h-3 w-full rounded shimmer"></div>
               </div>
             </div>
           ))}
         </div>
       </div>
-      // v1.0.1 ----------------------------------------------------------------------------->
+      // v1.0.2 ----------------------------------------------------------------------------->
     );
   }
 

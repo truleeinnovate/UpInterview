@@ -224,6 +224,7 @@ const OrganizationLogin = () => {
 
             // Authenticate user
             const loginURL = `${config.REACT_APP_API_URL}/Organization/Login`;
+            console.log('Sending login request to:', loginURL);
             const response = await axios.post(
                 loginURL,
                 {
@@ -232,6 +233,15 @@ const OrganizationLogin = () => {
                 },
                 { withCredentials: true }
             );
+            console.log('Login response received:', {
+                status: response.status,
+                data: {
+                    ...response.data,
+                    // Hide sensitive data in logs
+                    authToken: response.data.authToken ? '***TOKEN_RECEIVED***' : 'NO_TOKEN',
+                    impersonationToken: response.data.impersonationToken ? '***TOKEN_RECEIVED***' : 'NO_TOKEN'
+                }
+            });
 
             const {
                 authToken,
@@ -248,6 +258,15 @@ const OrganizationLogin = () => {
                 subdomain,
                 subdomainStatus,
             } = response.data;
+            console.log('Login successful, processing response...');
+            console.log('Role Type:', roleType);
+            console.log('Is Email Verified:', isEmailVerified);
+
+            console.log('Login successful, processing response...');
+            console.log('Role Type:', roleType);
+            console.log('Is Email Verified:', isEmailVerified);
+            console.log('User Status:', status);
+            console.log('Is Profile Completed:', isProfileCompleted);
 
             // Handle internal users
             if (roleType === "internal") {
@@ -283,12 +302,19 @@ const OrganizationLogin = () => {
                 return;
             }
 
-            // Handle subdomain redirection
-            if (subdomain && subdomainStatus === "active") {
+            console.log('Checking subdomain redirection...');
+            console.log('Subdomain:', subdomain);
+            console.log('Subdomain Status:', subdomainStatus);
+            console.log('User Status for redirection:', status);
+
+            // Handle subdomain redirection if applicable
+            if (subdomain && subdomainStatus === 'active' && status === 'active') {
+                console.log('Subdomain redirection applicable...');
                 const currentDomain = window.location.hostname;
                 const targetDomain = `${subdomain}.${config.REACT_APP_API_URL_FRONTEND}`;
 
                 if (!currentDomain.includes(subdomain)) {
+                    console.log('Redirecting to subdomain...');
                     const protocol = window.location.protocol;
                     let targetPath = "/";
                     if (status === "active" && isProfileCompleted !== false) {
@@ -309,9 +335,33 @@ const OrganizationLogin = () => {
             // Refresh permissions for non-subdomain cases
             await refreshPermissions();
 
-            // Default navigation based on user status
+            // Default navigation based on user status and organization request status
+            console.log('User status:', status);
+
+            // Get user data from the login response
+            const userData = response?.data;
+
             switch (status) {
                 case "submitted":
+                    const requestResponse = await axios.get(`${config.REACT_APP_API_URL}/Organization/organization-request/${userData.tenantId}/${userData.ownerId}`);
+                    const requestStatus = requestResponse.data.data.status;
+                    console.log('requestStatus:- ', requestStatus);
+                    if (requestStatus === 'Requested') {
+                        navigate("/pending-approval");
+                    } else if (requestStatus === 'Contacted' || requestStatus === 'Contacted1' || requestStatus === 'Contacted2') {
+                        navigate("/pending-approval", {
+                            state: {
+                                showContactSupport: true
+                            }
+                        });
+                    } else if (requestStatus === 'Approved') {
+                        if (status === "payment_pending") {
+                            navigate("/subscription-plans");
+                        } else {
+                            navigate("/home");
+                        }
+                    }
+                    break;
                 case "payment_pending":
                     navigate("/subscription-plans");
                     break;
@@ -972,8 +1022,8 @@ const OrganizationLogin = () => {
                                             }}
                                             onBlur={(e) => handleBlur("email", e.target.value)}
                                             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.email
-                                                    ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                                    : "border-gray-300"
+                                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                                                : "border-gray-300"
                                                 }`}
                                             placeholder="your@company.com"
                                             autoComplete="email"
@@ -1015,8 +1065,8 @@ const OrganizationLogin = () => {
                                                 }}
                                                 onBlur={(e) => handleBlur("password", e.target.value)}
                                                 className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.password
-                                                        ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                                        : "border-gray-300"
+                                                    ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                                                    : "border-gray-300"
                                                     }`}
                                                 placeholder="••••••••"
                                                 autoComplete="current-password"
@@ -1076,8 +1126,8 @@ const OrganizationLogin = () => {
                                         type="submit"
                                         disabled={isLoading}
                                         className={`w-full text-lg font-medium rounded-lg py-3 transition-all duration-300 flex items-center justify-center ${isLoading
-                                                ? "bg-gray-400 cursor-not-allowed transform scale-95"
-                                                : "bg-custom-blue hover:bg-custom-blue/90 text-white transform hover:scale-105 shadow-md"
+                                            ? "bg-gray-400 cursor-not-allowed transform scale-95"
+                                            : "bg-custom-blue hover:bg-custom-blue/90 text-white transform hover:scale-105 shadow-md"
                                             }`}
                                     >
                                         {isLoading ? (
@@ -1162,8 +1212,8 @@ const OrganizationLogin = () => {
                                                 onClick={handleResendVerification}
                                                 disabled={isResending || countdown > 0}
                                                 className={`w-full px-4 py-3 rounded-lg font-medium transition-all duration-300 ${isResending || countdown > 0
-                                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                                        : "bg-custom-blue hover:bg-custom-blue/90 text-white transform hover:scale-105 shadow-md"
+                                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                                    : "bg-custom-blue hover:bg-custom-blue/90 text-white transform hover:scale-105 shadow-md"
                                                     }`}
                                             >
                                                 {isResending ? (

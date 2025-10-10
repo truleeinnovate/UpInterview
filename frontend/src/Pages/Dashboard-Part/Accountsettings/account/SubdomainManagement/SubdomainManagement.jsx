@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - Fixed style issues and improved loading view
 
 import { useState, useEffect } from "react";
 import {
@@ -259,26 +260,27 @@ const DomainManagement = () => {
     return null;
   }
   // v1.0.0 <----------------------------------------------------------------------
+  // v1.0.1 <----------------------------------------------------------------------
   const SkeltonLoadingView = ({ activeDomain, isEditing }) => {
     return (
-      <div className="w-full space-y-6 animate-pulse">
+      <div className="w-full space-y-6">
         {/* Add Subdomain (when no active domain) */}
         {!activeDomain && (
           <div className="bg-white sm:p-4 md:p-4 p-6 rounded-lg shadow space-y-4">
-            <div className="h-5 w-48 bg-gray-200 rounded"></div>
+            <div className="h-5 w-48 rounded shimmer"></div>
 
             <div className="space-y-3">
-              <div className="h-4 w-32 bg-gray-200 rounded"></div>
+              <div className="h-4 w-32 rounded shimmer"></div>
 
               <div className="flex sm:flex-col sm:gap-3 sm:items-start items-center sm:space-x-0 space-x-2">
-                <div className="flex sm:flex-col sm:gap-3 sm:items-start items-center sm:w-full">
-                  <div className="h-10 sm:w-full md:w-full lg:w-64 xl:w-64 2xl:w-64 bg-gray-200 rounded-md"></div>
-                  <div className="h-10 w-32 bg-gray-200 rounded-md"></div>
+                <div className="flex sm:flex-col sm:gap-3 gap-2 sm:items-start items-center sm:w-full">
+                  <div className="h-10 sm:w-full md:w-full lg:w-64 xl:w-64 2xl:w-64 rounded-md shimmer"></div>
+                  <div className="h-10 w-32 rounded-md shimmer"></div>
                 </div>
-                <div className="h-10 w-40 bg-gray-200 rounded-lg"></div>
+                <div className="h-10 w-40 rounded-lg shimmer"></div>
               </div>
 
-              <div className="h-3 w-2/3 bg-gray-200 rounded"></div>
+              <div className="h-3 w-2/3 rounded shimmer"></div>
             </div>
           </div>
         )}
@@ -286,18 +288,18 @@ const DomainManagement = () => {
         {/* Active Domain (when domain exists but not editing) */}
         {activeDomain && !isEditing && (
           <div className="bg-white sm:p-4 md:p-4 p-6 rounded-lg shadow space-y-4">
-            <div className="h-5 w-48 bg-gray-200 rounded"></div>
+            <div className="h-5 w-48 rounded shimmer"></div>
             <div className="flex items-center justify-between border-b pb-4">
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <div className="h-5 w-40 bg-gray-200 rounded"></div>
-                  <div className="h-4 w-20 bg-gray-200 rounded-full"></div>
+                  <div className="h-5 w-40 rounded shimmer"></div>
+                  <div className="h-4 w-20 rounded-full shimmer"></div>
                 </div>
-                <div className="h-4 w-60 bg-gray-200 rounded"></div>
+                <div className="h-4 w-60 rounded shimmer"></div>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="h-9 w-24 bg-gray-200 rounded-lg"></div>
-                <div className="h-9 w-28 bg-gray-200 rounded-lg"></div>
+                <div className="h-9 w-24 rounded-lg shimmer"></div>
+                <div className="h-9 w-28 rounded-lg shimmer"></div>
               </div>
             </div>
           </div>
@@ -306,46 +308,46 @@ const DomainManagement = () => {
         {/* Editing Domain (when user is editing active domain) */}
         {activeDomain && isEditing && (
           <div className="bg-white sm:p-4 md:p-4 p-6 rounded-lg shadow space-y-4">
-            <div className="h-5 w-56 bg-gray-200 rounded"></div>
+            <div className="h-5 w-56 rounded shimmer"></div>
             <div className="space-y-3">
-              <div className="h-4 w-40 bg-gray-200 rounded"></div>
+              <div className="h-4 w-40 rounded shimmer"></div>
               <div className="flex items-center space-x-2">
                 <div className="flex-1 flex items-center space-x-2">
-                  <div className="h-10 flex-1 bg-gray-200 rounded-md"></div>
-                  <div className="h-10 w-32 bg-gray-200 rounded-md"></div>
+                  <div className="h-10 flex-1 rounded-md shimmer"></div>
+                  <div className="h-10 w-32 rounded-md shimmer"></div>
                 </div>
-                {/* <div className="h-10 w-40 bg-gray-200 rounded-lg"></div> */}
               </div>
             </div>
             <div className="flex justify-end space-x-3 mt-4">
-              <div className="h-9 w-24 bg-gray-200 rounded-lg"></div>
-              <div className="h-9 w-28 bg-gray-200 rounded-lg"></div>
+              <div className="h-9 w-24 rounded-lg shimmer"></div>
+              <div className="h-9 w-28 rounded-lg shimmer"></div>
             </div>
           </div>
         )}
 
         {/* DNS Configuration Guide (always shown last) */}
         <div className="bg-white sm:p-4 md:p-4 p-6 rounded-lg shadow space-y-4">
-          <div className="h-5 w-56 bg-gray-200 rounded"></div>
+          <div className="h-5 w-56 rounded shimmer"></div>
           <div className="space-y-2">
-            <div className="h-4 w-full bg-gray-200 rounded"></div>
-            <div className="h-4 w-5/6 bg-gray-200 rounded"></div>
+            <div className="h-4 w-full rounded shimmer"></div>
+            <div className="h-4 w-5/6 rounded shimmer"></div>
           </div>
 
           <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-            <div className="h-4 w-40 bg-gray-200 rounded"></div>
-            <div className="h-4 w-56 bg-gray-200 rounded"></div>
-            <div className="h-4 w-40 bg-gray-200 rounded"></div>
+            <div className="h-4 w-40 rounded shimmer"></div>
+            <div className="h-4 w-56 rounded shimmer"></div>
+            <div className="h-4 w-40 rounded shimmer"></div>
           </div>
 
           <div className="bg-blue-50 border-l-4 border-custom-blue p-4 space-y-2">
-            <div className="h-4 w-4/5 bg-blue-100 rounded"></div>
-            <div className="h-4 w-2/3 bg-blue-100 rounded"></div>
+            <div className="h-4 w-4/5 bg-blue-100 rounded shimmer"></div>
+            <div className="h-4 w-2/3 bg-blue-100 rounded shimmer"></div>
           </div>
         </div>
       </div>
     );
   };
+  // v1.0.1 ---------------------------------------------------------------------->
   // v1.0.0 ---------------------------------------------------------------------->
 
   return (
@@ -382,7 +384,9 @@ const DomainManagement = () => {
                     Subdomain Name
                   </label>
                   <div className="flex sm:flex-col sm:items-start items-center sm:space-x-0 md:space-x-0 sm:gap-3 md:gap-3 space-x-2">
-                    <div className="flex sm:flex-col sm:items-start sm:gap-3 items-center sm:w-full">
+                    {/* v1.0.1 <--------------------------------------------------------------- */}
+                    <div className="flex sm:flex-col sm:items-start sm:gap-3 gap-2 items-center sm:w-full">
+                      {/* v1.0.1 ---------------------------------------------------------------> */}
                       <input
                         type="text"
                         value={subdomain}

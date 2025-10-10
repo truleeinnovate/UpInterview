@@ -61,6 +61,9 @@ const getUsageByTenant = async (req, res) => {
       };
     });
 
+    // Find User Bandwidth attribute for backward compatibility
+    const bandwidthAttr = attributes.find(a => a.type === 'User Bandwidth');
+
     return res.json({
       _id: usage._id,
       tenantId: usage.tenantId,
@@ -69,9 +72,16 @@ const getUsageByTenant = async (req, res) => {
         toDate: usage.toDate
       },
       totalUsers: totalUsersLimit,
-      usersBandWidth: usersBandWidth,
+      usersBandWidth: usersBandWidth, // Keep this for backward compatibility
       currentUsers: userCount,
-      attributes
+      attributes,
+      // Add bandwidth usage details for easier frontend consumption
+      bandwidthUsage: bandwidthAttr ? {
+        utilized: bandwidthAttr.utilized,
+        entitled: bandwidthAttr.entitled,
+        remaining: bandwidthAttr.remaining,
+        utilizationRate: bandwidthAttr.utilizationRate
+      } : null
     });
   } catch (error) {
     console.error('getUsageByTenant error:', error);

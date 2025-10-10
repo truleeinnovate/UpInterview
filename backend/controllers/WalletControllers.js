@@ -6,6 +6,7 @@ const Invoice = require("../models/Invoicemodels");
 const Receipt = require("../models/Receiptmodels");
 const BankAccount = require("../models/BankAccount");
 const WithdrawalRequest = require("../models/WithdrawalRequest");
+const PushNotification = require("../models/PushNotifications");
 const crypto = require("crypto");
 const https = require("https");
 
@@ -1059,7 +1060,8 @@ const createWithdrawalRequest = async (req, res) => {
       amount,
       bankAccountId,
       mode,
-      notes
+      notes,
+      walletSnapshot // Added for manual processing
     } = req.body;
 
     // Validate inputs
@@ -1120,20 +1122,37 @@ const createWithdrawalRequest = async (req, res) => {
       });
     }
 
+    // Generate next withdrawalCode like WD-000001
+    const lastWithdrawal = await WithdrawalRequest.findOne({})
+      .sort({ _id: -1 })
+      .select("withdrawalCode")
+      .lean();
+
+    let nextNumber = 1;
+    if (lastWithdrawal?.withdrawalCode) {
+      const match = lastWithdrawal.withdrawalCode.match(/WD-(\d+)/);
+      if (match) {
+        nextNumber = parseInt(match[1], 10) + 1;
+      }
+    }
+
+    const withdrawalCode = `WD-${String(nextNumber).padStart(6, "0")}`;
+
     // Calculate fees (example: 2% or flat ₹10)
     const processingFee = Math.max(amount * 0.02, 10);
     const tax = processingFee * 0.18; // 18% GST
     const netAmount = amount - processingFee - tax;
 
-    // Create withdrawal request
+    // Create withdrawal request with enhanced metadata for manual processing
     const withdrawalRequest = await WithdrawalRequest.create({
+      withdrawalCode, // Add the generated withdrawal code
       tenantId,
       ownerId,
       amount,
       currency: "INR",
       bankAccountId,
       status: "pending",
-      mode: mode || "IMPS",
+      mode: mode || "manual", // Default to manual processing
       processingFee,
       tax,
       netAmount,
@@ -1142,40 +1161,85 @@ const createWithdrawalRequest = async (req, res) => {
       requestIp: req.ip,
       userAgent: req.get("user-agent"),
       notes,
-      createdBy: ownerId
+      createdBy: ownerId,
+      // Store wallet snapshot and bank details for manual processing
+      metadata: {
+        walletSnapshot: walletSnapshot || {
+          currentBalance: wallet.balance,
+          currentHoldAmount: wallet.holdAmount || 0,
+          availableBalance: wallet.balance - (wallet.holdAmount || 0)
+        },
+        bankDetails: {
+          accountHolderName: bankAccount.accountHolderName,
+          bankName: bankAccount.bankName,
+          accountNumber: bankAccount.maskedAccountNumber,
+          accountType: bankAccount.accountType,
+          routingNumber: bankAccount.routingNumber,
+          swiftCode: bankAccount.swiftCode
+        },
+        processingType: "manual",
+        requiresAdminApproval: true
+      }
     });
 
     // Deduct amount from wallet and add to hold
     wallet.balance -= amount;
     wallet.holdAmount = (wallet.holdAmount || 0) + amount;
     
-    // Add transaction record
+    // Add transaction record with enhanced metadata
     wallet.transactions.push({
       type: "debit",
       amount,
-      description: `Withdrawal request ${withdrawalRequest.withdrawalCode}`,
+      description: `Withdrawal request ${withdrawalCode} (Manual Processing)`,
       status: "pending",
       metadata: {
         withdrawalRequestId: withdrawalRequest._id,
-        withdrawalCode: withdrawalRequest.withdrawalCode,
+        withdrawalCode: withdrawalCode,
         bankAccountId,
-        netAmount
+        netAmount,
+        processingType: "manual",
+        requestedAt: new Date()
       },
       createdDate: new Date()
     });
 
     await wallet.save();
 
-    // Process withdrawal immediately if auto-approval is enabled
-    // In production, this might go through an approval process
-    if (amount <= 5000) { // Auto-approve small amounts
-      processWithdrawal(withdrawalRequest._id);
+    // Create push notification for pending withdrawal
+    try {
+      await PushNotification.create({
+        ownerId,
+        tenantId,
+        title: "Withdrawal Request Created",
+        message: `Your withdrawal request ${withdrawalCode} for ₹${amount.toFixed(2)} has been submitted successfully. It will be processed within 24-48 hours.`,
+        type: "wallet",
+        category: "withdrawal_status",
+        unread: true,
+        metadata: {
+          withdrawalRequestId: withdrawalRequest._id.toString(),
+          withdrawalCode,
+          amount,
+          netAmount,
+          status: "pending",
+          bankAccount: bankAccount.maskedAccountNumber,
+          bankName: bankAccount.bankName,
+          createdAt: new Date()
+        }
+      });
+    } catch (notificationError) {
+      console.error("Error creating withdrawal notification:", notificationError);
+      // Don't fail the withdrawal if notification fails
     }
+
+    // Comment out auto-processing for Razorpay - All withdrawals now require manual admin approval
+    // if (amount <= 5000) { // Auto-approve small amounts
+    //   processWithdrawal(withdrawalRequest._id);
+    // }
 
     res.status(201).json({
       success: true,
       withdrawalRequest,
-      message: "Withdrawal request created successfully"
+      message: `Withdrawal request ${withdrawalCode} created successfully. It will be processed within 24-48 hours.`
     });
   } catch (error) {
     console.error("Error creating withdrawal request:", error);
@@ -1186,79 +1250,325 @@ const createWithdrawalRequest = async (req, res) => {
   }
 };
 
-// Process withdrawal (internal function)
-const processWithdrawal = async (withdrawalRequestId) => {
+// Commented out Razorpay automatic processing - will be used in future
+// const processWithdrawal = async (withdrawalRequestId) => {
+//   try {
+//     const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId)
+//       .populate("bankAccountId");
+//     
+//     if (!withdrawalRequest) {
+//       throw new Error("Withdrawal request not found");
+//     }
+//
+//     // Update status to processing
+//     withdrawalRequest.status = "processing";
+//     withdrawalRequest.processedAt = new Date();
+//     await withdrawalRequest.save();
+//
+//     // Create Razorpay payout
+//     try {
+//       const payout = await razorpay.payouts.create({
+//         account_number: process.env.RAZORPAY_ACCOUNT_NUMBER,
+//         fund_account_id: withdrawalRequest.razorpayFundAccountId,
+//         amount: Math.round(withdrawalRequest.netAmount * 100),
+//         currency: "INR",
+//         mode: withdrawalRequest.mode,
+//         purpose: "payout",
+//         queue_if_low_balance: true,
+//         reference_id: withdrawalRequest.withdrawalCode,
+//         narration: `Withdrawal ${withdrawalRequest.withdrawalCode}`,
+//         notes: {
+//           withdrawalRequestId: withdrawalRequest._id.toString(),
+//           ownerId: withdrawalRequest.ownerId
+//         }
+//       });
+//
+//       withdrawalRequest.razorpayPayoutId = payout.id;
+//       withdrawalRequest.status = "initiated";
+//       withdrawalRequest.razorpayUtr = payout.utr;
+//       await withdrawalRequest.save();
+//
+//       console.log("Payout initiated successfully:", payout.id);
+//     } catch (razorpayError) {
+//       console.error("Razorpay payout error:", razorpayError);
+//       
+//       withdrawalRequest.status = "failed";
+//       withdrawalRequest.failedAt = new Date();
+//       withdrawalRequest.failureReason = razorpayError.error?.description || razorpayError.message;
+//       await withdrawalRequest.save();
+//
+//       const wallet = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
+//       if (wallet) {
+//         wallet.balance += withdrawalRequest.amount;
+//         wallet.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
+//         
+//         wallet.transactions.push({
+//           type: "credit",
+//           amount: withdrawalRequest.amount,
+//           description: `Withdrawal failed - Refund for ${withdrawalRequest.withdrawalCode}`,
+//           status: "completed",
+//           metadata: {
+//             withdrawalRequestId: withdrawalRequest._id,
+//             withdrawalCode: withdrawalRequest.withdrawalCode,
+//             failureReason: withdrawalRequest.failureReason
+//           },
+//           createdDate: new Date()
+//         });
+//         
+//         await wallet.save();
+//       }
+//     }
+//   } catch (error) {
+//     console.error("Error processing withdrawal:", error);
+//   }
+// };
+
+// Manual processing functions for superadmin
+// Function to mark a withdrawal as failed and refund the amount
+const failManualWithdrawal = async (req, res) => {
   try {
+    const { withdrawalRequestId } = req.params;
+    const { failureReason, failedBy, adminNotes } = req.body;
+
     const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId)
       .populate("bankAccountId");
     
     if (!withdrawalRequest) {
-      throw new Error("Withdrawal request not found");
+      return res.status(404).json({
+        error: "Withdrawal request not found"
+      });
     }
 
-    // Update status to processing
-    withdrawalRequest.status = "processing";
-    withdrawalRequest.processedAt = new Date();
+    if (!["pending", "processing"].includes(withdrawalRequest.status)) {
+      return res.status(400).json({
+        error: `Cannot fail withdrawal in status: ${withdrawalRequest.status}`
+      });
+    }
+
+    // Update withdrawal request as failed
+    withdrawalRequest.status = "failed";
+    withdrawalRequest.failedAt = new Date();
+    withdrawalRequest.failureReason = failureReason || "Processing error";
+    withdrawalRequest.reviewedBy = failedBy;
+    withdrawalRequest.reviewedAt = new Date();
+    withdrawalRequest.reviewNotes = adminNotes;
+    
+    // Store failure details
+    withdrawalRequest.metadata = {
+      ...withdrawalRequest.metadata,
+      failureDetails: {
+        failedBy,
+        failedAt: new Date(),
+        failureReason,
+        adminNotes
+      }
+    };
+    
     await withdrawalRequest.save();
 
-    // Create Razorpay payout
+    // Refund amount back to wallet
+    const wallet = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
+    if (wallet) {
+      wallet.balance += withdrawalRequest.amount;
+      wallet.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
+      
+      wallet.transactions.push({
+        type: "credit",
+        amount: withdrawalRequest.amount,
+        description: `Withdrawal failed - Refund for ${withdrawalRequest.withdrawalCode}`,
+        status: "completed",
+        metadata: {
+          withdrawalRequestId: withdrawalRequest._id,
+          withdrawalCode: withdrawalRequest.withdrawalCode,
+          failureReason: withdrawalRequest.failureReason
+        },
+        createdDate: new Date()
+      });
+      
+      await wallet.save();
+    }
+
+    // Create push notification for failed withdrawal
     try {
-      const payout = await razorpay.payouts.create({
-        account_number: process.env.RAZORPAY_ACCOUNT_NUMBER, // Your Razorpay account number
-        fund_account_id: withdrawalRequest.razorpayFundAccountId,
-        amount: Math.round(withdrawalRequest.netAmount * 100), // Convert to paise
-        currency: "INR",
-        mode: withdrawalRequest.mode,
-        purpose: "payout",
-        queue_if_low_balance: true,
-        reference_id: withdrawalRequest.withdrawalCode,
-        narration: `Withdrawal ${withdrawalRequest.withdrawalCode}`,
-        notes: {
+      await PushNotification.create({
+        ownerId: withdrawalRequest.ownerId,
+        tenantId: withdrawalRequest.tenantId,
+        title: "Withdrawal Failed",
+        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode} for ₹${withdrawalRequest.amount.toFixed(2)} could not be processed. The amount has been refunded to your wallet. Reason: ${failureReason || 'Processing error'}`,
+        type: "wallet",
+        category: "withdrawal_status",
+        unread: true,
+        metadata: {
           withdrawalRequestId: withdrawalRequest._id.toString(),
-          ownerId: withdrawalRequest.ownerId
+          withdrawalCode: withdrawalRequest.withdrawalCode,
+          amount: withdrawalRequest.amount,
+          status: "failed",
+          failureReason: failureReason || "Processing error",
+          failedAt: new Date()
         }
       });
-
-      // Update withdrawal request with Razorpay payout details
-      withdrawalRequest.razorpayPayoutId = payout.id;
-      withdrawalRequest.status = "initiated";
-      withdrawalRequest.razorpayUtr = payout.utr;
-      await withdrawalRequest.save();
-
-      console.log("Payout initiated successfully:", payout.id);
-    } catch (razorpayError) {
-      console.error("Razorpay payout error:", razorpayError);
-      
-      // Update withdrawal request as failed
-      withdrawalRequest.status = "failed";
-      withdrawalRequest.failedAt = new Date();
-      withdrawalRequest.failureReason = razorpayError.error?.description || razorpayError.message;
-      await withdrawalRequest.save();
-
-      // Refund the amount back to wallet
-      const wallet = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
-      if (wallet) {
-        wallet.balance += withdrawalRequest.amount;
-        wallet.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
-        
-        wallet.transactions.push({
-          type: "credit",
-          amount: withdrawalRequest.amount,
-          description: `Withdrawal failed - Refund for ${withdrawalRequest.withdrawalCode}`,
-          status: "completed",
-          metadata: {
-            withdrawalRequestId: withdrawalRequest._id,
-            withdrawalCode: withdrawalRequest.withdrawalCode,
-            failureReason: withdrawalRequest.failureReason
-          },
-          createdDate: new Date()
-        });
-        
-        await wallet.save();
-      }
+    } catch (notificationError) {
+      console.error("Error creating withdrawal failure notification:", notificationError);
+      // Don't fail the process if notification fails
     }
+
+    res.status(200).json({
+      success: true,
+      withdrawalRequest,
+      message: "Withdrawal marked as failed and amount refunded"
+    });
   } catch (error) {
-    console.error("Error processing withdrawal:", error);
+    console.error("Error failing withdrawal:", error);
+    res.status(500).json({
+      error: "Failed to process withdrawal failure",
+      details: error.message
+    });
+  }
+};
+
+const processManualWithdrawal = async (req, res) => {
+  try {
+    const { withdrawalRequestId } = req.params;
+    const { 
+      transactionReference, 
+      processedBy,
+      adminNotes,
+      actualMode // IMPS, NEFT, UPI, etc.
+    } = req.body;
+
+    const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId)
+      .populate("bankAccountId");
+    
+    if (!withdrawalRequest) {
+      return res.status(404).json({
+        error: "Withdrawal request not found"
+      });
+    }
+
+    if (!["pending", "processing"].includes(withdrawalRequest.status)) {
+      return res.status(400).json({
+        error: `Cannot process withdrawal in status: ${withdrawalRequest.status}`
+      });
+    }
+
+    // Update withdrawal request as completed
+    withdrawalRequest.status = "completed";
+    withdrawalRequest.processedAt = new Date();
+    withdrawalRequest.completedAt = new Date();
+    withdrawalRequest.actualCompletionDate = new Date();
+    withdrawalRequest.reviewedBy = processedBy;
+    withdrawalRequest.reviewedAt = new Date();
+    withdrawalRequest.reviewNotes = adminNotes;
+    
+    // Store manual processing details
+    withdrawalRequest.metadata = {
+      ...withdrawalRequest.metadata,
+      manualProcessing: {
+        processedBy,
+        processedAt: new Date(),
+        transactionReference,
+        actualMode: actualMode || withdrawalRequest.mode,
+        adminNotes
+      }
+    };
+    
+    await withdrawalRequest.save();
+
+    // Update wallet - remove from hold
+    const wallet = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
+    if (wallet) {
+      wallet.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
+      
+      // Update transaction status
+      const transaction = wallet.transactions.find(
+        t => t.metadata?.withdrawalRequestId?.toString() === withdrawalRequest._id.toString()
+      );
+      if (transaction) {
+        transaction.status = "completed";
+        transaction.metadata = {
+          ...transaction.metadata,
+          completedAt: new Date(),
+          transactionReference,
+          processedBy
+        };
+      }
+      
+      await wallet.save();
+    }
+
+    // Create push notification for completed withdrawal
+    try {
+      await PushNotification.create({
+        ownerId: withdrawalRequest.ownerId,
+        tenantId: withdrawalRequest.tenantId,
+        title: "Withdrawal Completed",
+        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode} for ₹${withdrawalRequest.amount.toFixed(2)} has been completed successfully. The amount has been transferred to your bank account ending with ${withdrawalRequest.bankAccountId?.maskedAccountNumber || 'your registered account'}.`,
+        type: "wallet",
+        category: "withdrawal_status",
+        unread: true,
+        metadata: {
+          withdrawalRequestId: withdrawalRequest._id.toString(),
+          withdrawalCode: withdrawalRequest.withdrawalCode,
+          amount: withdrawalRequest.amount,
+          netAmount: withdrawalRequest.netAmount,
+          status: "completed",
+          transactionReference,
+          processedBy,
+          completedAt: new Date()
+        }
+      });
+    } catch (notificationError) {
+      console.error("Error creating withdrawal completion notification:", notificationError);
+      // Don't fail the process if notification fails
+    }
+
+    res.status(200).json({
+      success: true,
+      withdrawalRequest,
+      message: "Withdrawal processed successfully"
+    });
+  } catch (error) {
+    console.error("Error processing manual withdrawal:", error);
+    res.status(500).json({
+      error: "Failed to process withdrawal",
+      details: error.message
+    });
+  }
+};
+
+// Get all withdrawal requests for superadmin
+const getAllWithdrawalRequests = async (req, res) => {
+  try {
+    const { status, limit = 50, skip = 0, tenantId } = req.query;
+
+    const query = {};
+    if (status) {
+      query.status = status;
+    }
+    if (tenantId) {
+      query.tenantId = tenantId;
+    }
+
+    const withdrawalRequests = await WithdrawalRequest.find(query)
+      .populate("bankAccountId", "bankName maskedAccountNumber accountHolderName routingNumber swiftCode")
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(skip));
+
+    const total = await WithdrawalRequest.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      withdrawalRequests,
+      total,
+      hasMore: total > skip + limit
+    });
+  } catch (error) {
+    console.error("Error fetching all withdrawal requests:", error);
+    res.status(500).json({
+      error: "Failed to fetch withdrawal requests",
+      details: error.message
+    });
   }
 };
 
@@ -1268,6 +1578,13 @@ const getWithdrawalRequests = async (req, res) => {
     const { ownerId } = req.params;
     const { status, limit = 50, skip = 0 } = req.query;
 
+    // console.log("Getting withdrawal requests for:", {
+    //   ownerId,
+    //   status,
+    //   limit,
+    //   skip
+    // });
+
     const query = { ownerId };
     if (status) {
       query.status = status;
@@ -1275,11 +1592,13 @@ const getWithdrawalRequests = async (req, res) => {
 
     const withdrawalRequests = await WithdrawalRequest.find(query)
       .populate("bankAccountId", "bankName maskedAccountNumber accountHolderName")
-      .sort({ _id: -1 })
+      .sort({ _id: -1 }) // Using _id for sorting (more reliable in all environments)
       .limit(parseInt(limit))
       .skip(parseInt(skip));
 
     const total = await WithdrawalRequest.countDocuments(query);
+    
+    //console.log(`Found ${withdrawalRequests.length} withdrawal requests for owner ${ownerId}`);
 
     res.status(200).json({
       success: true,
@@ -1342,6 +1661,30 @@ const cancelWithdrawalRequest = async (req, res) => {
       await wallet.save();
     }
 
+    // Create push notification for canceled withdrawal
+    try {
+      await PushNotification.create({
+        ownerId: withdrawalRequest.ownerId,
+        tenantId: withdrawalRequest.tenantId,
+        title: "Withdrawal Canceled",
+        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode} for ₹${withdrawalRequest.amount.toFixed(2)} has been canceled. The amount has been refunded to your wallet.`,
+        type: "wallet",
+        category: "withdrawal_status",
+        unread: true,
+        metadata: {
+          withdrawalRequestId: withdrawalRequest._id.toString(),
+          withdrawalCode: withdrawalRequest.withdrawalCode,
+          amount: withdrawalRequest.amount,
+          status: "canceled",
+          cancellationReason: reason || "User requested cancellation",
+          canceledAt: new Date()
+        }
+      });
+    } catch (notificationError) {
+      console.error("Error creating withdrawal cancellation notification:", notificationError);
+      // Don't fail the cancellation if notification fails
+    }
+
     res.status(200).json({
       success: true,
       withdrawalRequest,
@@ -1356,133 +1699,139 @@ const cancelWithdrawalRequest = async (req, res) => {
   }
 };
 
-// Handle Razorpay payout webhook
+// Commented out Razorpay payout webhook - will be used in future when Razorpay automatic payouts are enabled
 const handlePayoutWebhook = async (req, res) => {
-  try {
-    const webhookBody = req.body;
-    const webhookSignature = req.get("X-Razorpay-Signature");
-
-    // Verify webhook signature for PAYOUT events (RazorpayX)
-    const payoutWebhookSecret = process.env.RAZORPAY_PAYOUT_WEBHOOK_SECRET;
-    if (payoutWebhookSecret && process.env.NODE_ENV === 'production') {
-      const expectedSignature = crypto
-        .createHmac('sha256', payoutWebhookSecret)
-        .update(JSON.stringify(webhookBody))
-        .digest('hex');
-      
-      if (expectedSignature !== webhookSignature) {
-        console.error('Invalid payout webhook signature');
-        return res.status(401).json({ error: "Invalid signature" });
-      }
-    }
-
-    const { event, payload } = webhookBody;
-    const payout = payload.payout?.entity;
-
-    if (!payout) {
-      return res.status(400).json({ error: "Invalid webhook payload" });
-    }
-
-    const withdrawalRequest = await WithdrawalRequest.findOne({
-      razorpayPayoutId: payout.id
-    });
-
-    if (!withdrawalRequest) {
-      console.log("Withdrawal request not found for payout:", payout.id);
-      return res.status(200).json({ received: true });
-    }
-
-    switch (event) {
-      case "payout.processed":
-        withdrawalRequest.status = "completed";
-        withdrawalRequest.completedAt = new Date();
-        withdrawalRequest.actualCompletionDate = new Date();
-        withdrawalRequest.razorpayUtr = payout.utr;
-        
-        // Update wallet transaction status
-        const wallet = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
-        if (wallet) {
-          wallet.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
-          
-          const transaction = wallet.transactions.find(
-            t => t.metadata?.withdrawalRequestId?.toString() === withdrawalRequest._id.toString()
-          );
-          if (transaction) {
-            transaction.status = "completed";
-          }
-          await wallet.save();
-        }
-        break;
-
-      case "payout.failed":
-        withdrawalRequest.status = "failed";
-        withdrawalRequest.failedAt = new Date();
-        withdrawalRequest.failureReason = payout.failure_reason || "Unknown error";
-        
-        // Refund amount back to wallet
-        const walletRefund = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
-        if (walletRefund) {
-          walletRefund.balance += withdrawalRequest.amount;
-          walletRefund.holdAmount = Math.max(0, (walletRefund.holdAmount || 0) - withdrawalRequest.amount);
-          
-          walletRefund.transactions.push({
-            type: "credit",
-            amount: withdrawalRequest.amount,
-            description: `Withdrawal failed - Refund for ${withdrawalRequest.withdrawalCode}`,
-            status: "completed",
-            metadata: {
-              withdrawalRequestId: withdrawalRequest._id,
-              withdrawalCode: withdrawalRequest.withdrawalCode,
-              failureReason: withdrawalRequest.failureReason
-            },
-            createdDate: new Date()
-          });
-          
-          await walletRefund.save();
-        }
-        break;
-
-      case "payout.reversed":
-        withdrawalRequest.status = "reversed";
-        withdrawalRequest.failureReason = payout.status_details?.description || "Payout reversed";
-        
-        // Handle reversal similar to failure
-        const walletReverse = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
-        if (walletReverse) {
-          walletReverse.balance += withdrawalRequest.amount;
-          walletReverse.holdAmount = Math.max(0, (walletReverse.holdAmount || 0) - withdrawalRequest.amount);
-          
-          walletReverse.transactions.push({
-            type: "credit",
-            amount: withdrawalRequest.amount,
-            description: `Withdrawal reversed - Refund for ${withdrawalRequest.withdrawalCode}`,
-            status: "completed",
-            metadata: {
-              withdrawalRequestId: withdrawalRequest._id,
-              withdrawalCode: withdrawalRequest.withdrawalCode
-            },
-            createdDate: new Date()
-          });
-          
-          await walletReverse.save();
-        }
-        break;
-
-      default:
-        console.log("Unhandled payout webhook event:", event);
-    }
-
-    await withdrawalRequest.save();
-
-    res.status(200).json({ received: true });
-  } catch (error) {
-    console.error("Error handling payout webhook:", error);
-    res.status(500).json({
-      error: "Failed to process webhook",
-      details: error.message
-    });
-  }
+  // For now, just acknowledge the webhook since we're doing manual processing
+  return res.status(200).json({ received: true, message: "Manual processing mode active" });
 };
+
+// Original Razorpay webhook handler - kept for future use
+// const handlePayoutWebhook = async (req, res) => {
+//   try {
+//     const webhookBody = req.body;
+//     const webhookSignature = req.get("X-Razorpay-Signature");
+//
+//     // Verify webhook signature for PAYOUT events (RazorpayX)
+//     const payoutWebhookSecret = process.env.RAZORPAY_PAYOUT_WEBHOOK_SECRET;
+//     if (payoutWebhookSecret && process.env.NODE_ENV === 'production') {
+//       const expectedSignature = crypto
+//         .createHmac('sha256', payoutWebhookSecret)
+//         .update(JSON.stringify(webhookBody))
+//         .digest('hex');
+//       
+//       if (expectedSignature !== webhookSignature) {
+//         console.error('Invalid payout webhook signature');
+//         return res.status(401).json({ error: "Invalid signature" });
+//       }
+//     }
+
+//     const { event, payload } = webhookBody;
+//     const payout = payload.payout?.entity;
+//
+//     if (!payout) {
+//       return res.status(400).json({ error: "Invalid webhook payload" });
+//     }
+//
+//     const withdrawalRequest = await WithdrawalRequest.findOne({
+//       razorpayPayoutId: payout.id
+//     });
+//
+//     if (!withdrawalRequest) {
+//       console.log("Withdrawal request not found for payout:", payout.id);
+//       return res.status(200).json({ received: true });
+//     }
+//
+//     switch (event) {
+//       case "payout.processed":
+//         withdrawalRequest.status = "completed";
+//         withdrawalRequest.completedAt = new Date();
+//         withdrawalRequest.actualCompletionDate = new Date();
+//         withdrawalRequest.razorpayUtr = payout.utr;
+//         
+//         // Update wallet transaction status
+//         const wallet = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
+//         if (wallet) {
+//           wallet.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
+//           
+//           const transaction = wallet.transactions.find(
+//             t => t.metadata?.withdrawalRequestId?.toString() === withdrawalRequest._id.toString()
+//           );
+//           if (transaction) {
+//             transaction.status = "completed";
+//           }
+//           await wallet.save();
+//         }
+//         break;
+//
+//       case "payout.failed":
+//         withdrawalRequest.status = "failed";
+//         withdrawalRequest.failedAt = new Date();
+//         withdrawalRequest.failureReason = payout.failure_reason || "Unknown error";
+//         
+//         // Refund amount back to wallet
+//         const walletRefund = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
+//         if (walletRefund) {
+//           walletRefund.balance += withdrawalRequest.amount;
+//           walletRefund.holdAmount = Math.max(0, (walletRefund.holdAmount || 0) - withdrawalRequest.amount);
+//           
+//           walletRefund.transactions.push({
+//             type: "credit",
+//             amount: withdrawalRequest.amount,
+//             description: `Withdrawal failed - Refund for ${withdrawalRequest.withdrawalCode}`,
+//             status: "completed",
+//             metadata: {
+//               withdrawalRequestId: withdrawalRequest._id,
+//               withdrawalCode: withdrawalRequest.withdrawalCode,
+//               failureReason: withdrawalRequest.failureReason
+//             },
+//             createdDate: new Date()
+//           });
+//           
+//           await walletRefund.save();
+//         }
+//         break;
+//
+//       case "payout.reversed":
+//         withdrawalRequest.status = "reversed";
+//         withdrawalRequest.failureReason = payout.status_details?.description || "Payout reversed";
+//         
+//         // Handle reversal similar to failure
+//         const walletReverse = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
+//         if (walletReverse) {
+//           walletReverse.balance += withdrawalRequest.amount;
+//           walletReverse.holdAmount = Math.max(0, (walletReverse.holdAmount || 0) - withdrawalRequest.amount);
+//           
+//           walletReverse.transactions.push({
+//             type: "credit",
+//             amount: withdrawalRequest.amount,
+//             description: `Withdrawal reversed - Refund for ${withdrawalRequest.withdrawalCode}`,
+//             status: "completed",
+//             metadata: {
+//               withdrawalRequestId: withdrawalRequest._id,
+//               withdrawalCode: withdrawalRequest.withdrawalCode
+//             },
+//             createdDate: new Date()
+//           });
+//           
+//           await walletReverse.save();
+//         }
+//         break;
+//
+//       default:
+//         console.log("Unhandled payout webhook event:", event);
+//     }
+//
+//     await withdrawalRequest.save();
+//
+//     res.status(200).json({ received: true });
+//   } catch (error) {
+//     console.error("Error handling payout webhook:", error);
+//     res.status(500).json({
+//       error: "Failed to process webhook",
+//       details: error.message
+//     });
+//   }
+// };
 
 // Utility function to fix existing verified accounts that might not have isActive set
 const fixVerifiedBankAccounts = async (req, res) => {
@@ -1535,5 +1884,9 @@ module.exports = {
   getWithdrawalRequests,
   cancelWithdrawalRequest,
   handlePayoutWebhook,
-  fixVerifiedBankAccounts
+  fixVerifiedBankAccounts,
+  // Manual processing endpoints for superadmin
+  processManualWithdrawal,
+  failManualWithdrawal,
+  getAllWithdrawalRequests
 };

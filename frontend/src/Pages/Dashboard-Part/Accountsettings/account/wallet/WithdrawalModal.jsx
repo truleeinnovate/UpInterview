@@ -5,7 +5,7 @@ import { useBankAccounts } from "../../../../../apiHooks/useBankAccount";
 import { useCreateWithdrawal, calculateWithdrawalFees } from "../../../../../apiHooks/useWithdrawal";
 import { useWallet } from "../../../../../apiHooks/useWallet";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
-import { ChevronDown, AlertCircle, Info, CreditCard, Clock, Shield } from "lucide-react";
+import { ChevronDown, AlertCircle, Info, CreditCard, Clock, Shield, History } from "lucide-react";
 import LoadingButton from "../../../../../Components/LoadingButton";
 
 export function WithdrawalModal({ onClose, onSuccess }) {
@@ -21,10 +21,10 @@ export function WithdrawalModal({ onClose, onSuccess }) {
   // State
   const [amount, setAmount] = useState("");
   const [selectedBankAccount, setSelectedBankAccount] = useState(null);
-  const [withdrawalMode, setWithdrawalMode] = useState("IMPS");
+  // const [withdrawalMode, setWithdrawalMode] = useState("IMPS"); // Commented for manual payout
   const [notes, setNotes] = useState("");
   const [showBankDropdown, setShowBankDropdown] = useState(false);
-  const [showModeDropdown, setShowModeDropdown] = useState(false);
+  // const [showModeDropdown, setShowModeDropdown] = useState(false); // Commented for manual payout
   const [fees, setFees] = useState(null);
   const [errors, setErrors] = useState({});
   
@@ -90,13 +90,20 @@ export function WithdrawalModal({ onClose, onSuccess }) {
       tenantId,
       amount: parseFloat(amount),
       bankAccountId: selectedBankAccount._id,
-      mode: withdrawalMode,
-      notes
+      // mode: withdrawalMode, // Commented for manual payout - default to IMPS
+      mode: "manual", // Manual processing by superadmin
+      notes,
+      // Additional metadata for manual processing
+      walletSnapshot: {
+        currentBalance: walletData?.balance || 0,
+        currentHoldAmount: walletData?.holdAmount || 0,
+        availableBalance: availableBalance
+      }
     };
     
     createWithdrawal(withdrawalData, {
       onSuccess: (data) => {
-        toast.success(`Withdrawal request created successfully!`);
+        toast.success(`Withdrawal request submitted successfully! Your request ID is ${data.withdrawalRequest?.withdrawalCode || ""}. It will be processed by our admin team within 24-48 hours.`);
         if (onSuccess) {
           onSuccess(data);
         }
@@ -108,35 +115,56 @@ export function WithdrawalModal({ onClose, onSuccess }) {
     });
   };
   
-  const withdrawalModes = [
-    { 
-      value: "IMPS", 
-      label: "IMPS", 
-      description: "Instant (24x7)",
-      timeline: "Within 30 minutes"
-    },
-    { 
-      value: "UPI", 
-      label: "UPI", 
-      description: "Instant",
-      timeline: "Within 15 minutes"
-    },
-    { 
-      value: "NEFT", 
-      label: "NEFT", 
-      description: "Standard",
-      timeline: "2-4 hours"
-    },
-    { 
-      value: "RTGS", 
-      label: "RTGS", 
-      description: "For large amounts",
-      timeline: "30-60 minutes"
-    }
-  ];
+  // Commented for manual payout - will be used in future for Razorpay integration
+  // const withdrawalModes = [
+  //   { 
+  //     value: "IMPS", 
+  //     label: "IMPS", 
+  //     description: "Instant (24x7)",
+  //     timeline: "Within 30 minutes"
+  //   },
+  //   { 
+  //     value: "UPI", 
+  //     label: "UPI", 
+  //     description: "Instant",
+  //     timeline: "Within 15 minutes"
+  //   },
+  //   { 
+  //     value: "NEFT", 
+  //     label: "NEFT", 
+  //     description: "Standard",
+  //     timeline: "2-4 hours"
+  //   },
+  //   { 
+  //     value: "RTGS", 
+  //     label: "RTGS", 
+  //     description: "For large amounts",
+  //     timeline: "30-60 minutes"
+  //   }
+  // ];
   
   return (
-    <SidebarPopup title="Withdraw Funds" onClose={onClose}>
+    <SidebarPopup 
+      title="Withdraw Funds" 
+      onClose={onClose}
+      headerAction={
+        <button
+          type="button"
+          onClick={() => {
+            // Navigate to withdrawal history or open a history modal
+            // For now, we'll close this modal and trigger a history view
+            onClose();
+            if (onSuccess) {
+              onSuccess({ showHistory: true });
+            }
+          }}
+          className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm"
+        >
+          <History className="h-4 w-4" />
+          <span className="font-medium">Withdrawal History</span>
+        </button>
+      }
+    >
       <div className="sm:p-0 p-4 flex-1 overflow-y-auto">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Available Balance Card */}
@@ -148,9 +176,24 @@ export function WithdrawalModal({ onClose, onSuccess }) {
                   ₹{availableBalance?.toFixed(2) || "0.00"}
                 </p>
               </div>
-              <CreditCard className="h-8 w-8 text-blue-500" />
+              <CreditCard className="h-8 w-8 text-custom-blue" />
             </div>
           </div>
+          
+          {/* Low Balance Warning */}
+          {availableBalance < 100 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-800">Insufficient Balance</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    You need at least ₹100 to make a withdrawal. Your current available balance is ₹{availableBalance?.toFixed(2) || '0.00'}.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Withdrawal Amount */}
           <div>
@@ -164,19 +207,52 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               <input
                 type="number"
                 min="100"
+                max={availableBalance || 0}
                 step="0.01"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                disabled={availableBalance < 100}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  // Prevent entering amount greater than available balance
+                  if (value > availableBalance) {
+                    setAmount(availableBalance.toString());
+                    setErrors({ ...errors, amount: `Maximum available: ₹${availableBalance.toFixed(2)}` });
+                  } else {
+                    setAmount(e.target.value);
+                    // Clear error if amount is valid
+                    if (value >= 100 && value <= availableBalance) {
+                      const { amount, ...restErrors } = errors;
+                      setErrors(restErrors);
+                    }
+                  }
+                }}
                 className={`w-full pl-8 pr-3 py-2 border ${
                   errors.amount ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-custom-blue`}
-                placeholder="Enter amount"
+                } rounded-lg focus:outline-none ${
+                  availableBalance < 100 ? 'bg-gray-100 cursor-not-allowed' : ''
+                }`}
+                placeholder={`Enter amount (Max: ₹${availableBalance?.toFixed(2) || '0.00'})`}
               />
             </div>
             {errors.amount && (
               <p className="mt-1 text-sm text-red-500">{errors.amount}</p>
             )}
-            <p className="mt-1 text-xs text-gray-500">Minimum withdrawal: ₹100</p>
+            <div className="flex justify-between items-center mt-1">
+              <p className="text-xs text-gray-500">Min: ₹100 | Max: ₹{availableBalance?.toFixed(2) || '0.00'}</p>
+              {availableBalance > 100 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAmount(availableBalance.toString());
+                    const { amount, ...restErrors } = errors;
+                    setErrors(restErrors);
+                  }}
+                  className="text-xs text-custom-blue hover:text-custom-blue/80 font-medium"
+                >
+                  Use Max Amount
+                </button>
+              )}
+            </div>
           </div>
           
           {/* Fee Breakdown */}
@@ -284,8 +360,8 @@ export function WithdrawalModal({ onClose, onSuccess }) {
             )}
           </div>
           
-          {/* Transfer Mode */}
-          <div>
+          {/* Transfer Mode - Commented for Manual Payout */}
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Transfer Mode
             </label>
@@ -337,6 +413,19 @@ export function WithdrawalModal({ onClose, onSuccess }) {
                 </div>
               )}
             </div>
+          </div> */}
+          
+          {/* Processing Time Notice for Manual Payout */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-start space-x-2">
+              <Clock className="h-5 w-5 text-amber-500 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-amber-700">Processing Time</p>
+                <p className="text-xs text-amber-600 mt-1">
+                  Withdrawals are manually processed by our admin team within 24-48 hours during business days.
+                </p>
+              </div>
+            </div>
           </div>
           
           {/* Notes (Optional) */}
@@ -360,8 +449,9 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               <div className="text-sm text-gray-600">
                 <p className="font-medium mb-1">Security & Processing</p>
                 <ul className="space-y-1 text-xs">
-                  <li>• Withdrawals are processed within the selected timeline</li>
-                  <li>• Bank verification may take 1-2 business days</li>
+                  {/* <li>• Withdrawals are processed within the selected timeline</li> */}
+                  <li>• Withdrawals are manually processed by our admin team within 24-48 hours</li>
+                  {/* <li>• Bank verification may take 1-2 business days</li> */}
                   <li>• All transactions are secured with bank-grade encryption</li>
                   <li>• You'll receive SMS/Email updates on withdrawal status</li>
                 </ul>

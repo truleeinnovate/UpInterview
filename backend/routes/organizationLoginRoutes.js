@@ -4,6 +4,7 @@ const {
   registerOrganization,
   loginOrganization,
   resetPassword,
+  getOrganizationRequestStatus,
   organizationUserCreation,
   getRolesByTenant,
   getBasedIdOrganizations,
@@ -52,5 +53,8 @@ router.delete('/:tenantId', deleteTenantAndAssociatedData);
 // Super Admin login as user route
 router.post("/login-as-user", superAdminLoginAsUser);
 // ---------------------------------------------------------------------------->
+
+// Get organization request status
+router.get("/organization-request/:tenantId/:ownerId", getOrganizationRequestStatus);
 
 module.exports = router;
