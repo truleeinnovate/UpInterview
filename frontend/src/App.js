@@ -48,6 +48,7 @@ import UserDataLoader from "./Components/UserDataLoader.jsx";
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
 // import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
 import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
+import PendingApproval from "./Pages/Login-Part/PendingApproval/PendingApproval.jsx";
 import { config } from "./config.js";
 import ToastProvider from "./Components/ToastProvider";
 import { VideoCallingSettings } from "./Pages/Dashboard-Part/Accountsettings/VideoCallingSetting/VideoCallingSettings.jsx";

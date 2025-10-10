@@ -11,6 +11,8 @@ module.exports = {
   REACT_APP_REDIRECT_URI: process.env.REACT_APP_REDIRECT_URI,
   JWT_SECRET: process.env.JWT_SECRET,
 
+  JWT_SECRET: process.env.JWT_SECRET,
+
   // API URLs
   REACT_APP_API_URL_FRONTEND: process.env.REACT_APP_API_URL_FRONTEND
 };
