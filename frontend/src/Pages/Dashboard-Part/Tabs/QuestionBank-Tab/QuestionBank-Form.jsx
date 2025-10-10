@@ -522,6 +522,7 @@ const extractValidationErrors = (axiosError) => {
           isInterviewType && dropdownValue !== "Assessment Questions",
       } //<----v1.0.7------
     );
+    console.log("newErrors", newErrors);
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setIsSubmitting(false);
@@ -769,6 +770,9 @@ const extractValidationErrors = (axiosError) => {
       // Parse backend validation errors and show them in toast
       const { message, fieldErrors, detailedMessages } =
         extractValidationErrors(error);
+
+        console.log("fieldErrors", message, fieldErrors, detailedMessages);
+        
 
       // Merge server-side field errors into local error state for inline display
       if (fieldErrors && Object.keys(fieldErrors).length > 0) {

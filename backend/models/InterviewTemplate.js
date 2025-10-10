@@ -37,7 +37,7 @@ const InterviewTemplateSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: "Assessment",
         },
-        interviewerViewType: { type: String }, // group or individual
+        // interviewerViewType: { type: String }, // group or individual
         duration: { type: String },
         instructions: { type: String },
         interviewMode: { type: String },
@@ -45,8 +45,9 @@ const InterviewTemplateSchema = new mongoose.Schema(
         selectedInterviewers: [{ type: String }],
         interviewerType: { type: String },
         selectedInterviewersType: { type: String }, // user or group
-        interviewerViewType: { type: String },  // 
-        interviewerGroupName: { type: String }, // group name
+        interviewerGroupId: { type: String },
+        // interviewerViewType: { type: String },  // 
+        // interviewerGroupName: { type: String }, // group name
         // interviewerGroupId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewerGroup' },
         //   internalInterviewers: [
         //         mongoose.Schema.Types.ObjectId,

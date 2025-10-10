@@ -934,6 +934,19 @@ const MainAppRoutes = ({
                   />
 
 
+              {/* Interview Templates */}
+              {/* {hasPermission("InterviewTemplates") && (
+                <Route
+                  path="/interview-templates"
+                  element={<InterviewTemplates />}
+                >
+                  <Route index element={null} />
+                  {hasPermission("InterviewTemplates", "Create") && (
+                    <Route
+                      path="new"
+                      element={<InterviewTemplateForm mode="Create" />}
+                    />
+                  )}
                   <Route
                     path="interviewer-group-edit-form/:id"
                     element={<InterviewerGroupFormPopup />}
@@ -984,6 +997,40 @@ const MainAppRoutes = ({
                     element={<SubscriptionCardDetails />}
                   />
                 </>
+              )} */}
+
+
+      {/* Interview Templates - CORRECTED ROUTING STRUCTURE */}
+{hasPermission("InterviewTemplates") && (
+  <Route path="/interview-templates" element={<InterviewTemplates />}>
+    <Route index element={null} />
+    {hasPermission("InterviewTemplates", "Create") && (
+      <Route path="new" element={<InterviewTemplateForm mode="Create" />} />
+    )}
+    {/* REMOVE the nested :id route from here to prevent conflicts */}
+  </Route>
+)}
+
+{/* Separate route for template details to avoid outlet conflicts */}
+{hasPermission("InterviewTemplates") && (
+  <Route path="/interview-templates/:id" element={<TemplateDetail />}>
+    <Route index element={null} />
+    {hasPermission("InterviewTemplates", "Edit") && (
+      <Route path="edit" element={<InterviewTemplateForm mode="Edit" />} />
+    )}
+    {hasPermission("InterviewTemplates", "Clone") && (
+      <Route path="clone" element={<InterviewTemplateForm mode="Clone" />} />
+    )}
+  </Route>
+)}
+
+{/* Keep round routes separate */}
+{hasPermission("InterviewTemplates") && (
+  <>
+    <Route path="/interview-templates/:id/round/new" element={<RoundFormTemplate />} />
+    <Route path="/interview-templates/:id/round" element={<RoundFormTemplate />} />
+  </>
+)}
               )}
               {hasPermission("Security") && (
                 <Route path="security" element={<Security />} />

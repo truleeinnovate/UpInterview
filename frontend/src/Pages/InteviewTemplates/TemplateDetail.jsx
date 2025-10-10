@@ -265,7 +265,12 @@ const TemplateDetail = () => {
                   <h3 className="sm:text-md md:text-md lg:text-xl xl:text-xl 2xl:text-xl mb-4 leading-6 font-medium text-gray-900">
                     Interview Details
                   </h3>
-                  <button className="bg-custom-blue text-white font-semibold text-sm py-2 px-4 rounded-lg">
+                  <button
+                   onClick={() =>  navigate(
+                    `/interview-templates/${template._id}/edit`
+                  )
+                }
+                  className="bg-custom-blue text-white font-semibold text-sm py-2 px-4 rounded-lg">
                     Edit Template
                   </button>
                 </div>

@@ -260,6 +260,7 @@ exports.updateTemplate = async (req, res) => {
                     interviewQuestionsList: round.interviewQuestionsList || [],
                     interviewers: round.interviewers || [],
                     assessmentId: round.assessmentId || null,
+                    interviewerGroupId: round.interviewerGroupId || "",
                     ...round,
                 };
             });
