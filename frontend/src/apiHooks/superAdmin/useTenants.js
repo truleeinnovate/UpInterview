@@ -78,6 +78,8 @@ export const useTenants = () => {
 
 // Individual tenant details by ID
 export const useTenantById = (id) => {
+    const queryClient = useQueryClient();
+  
   // v1.0.0 <-------------------------------------------------------------------
   console.log('2. CURRENT TENANT ID AT USE TENANT HOOK: ', id);
   // v1.0.0 ------------------------------------------------------------------->
@@ -120,12 +122,29 @@ export const useTenantById = (id) => {
     refetchOnMount: false,
     refetchOnReconnect: false,
   });
-
+    // Mutation for deleting a tenant and associated data (super admin only)
+    const deleteTenantData = useMutation({
+      mutationFn: async (tenantId) => {
+        const response = await axios.delete(
+          `${config.REACT_APP_API_URL}/Organization/${tenantId}`
+        );
+        return response.data;
+      },
+      onSuccess: () => {
+        console.log("Tenant deleted successfully, invalidating tenants query");
+        queryClient.invalidateQueries(["tenants"]);
+      },
+      onError: (error) => {
+        console.error("Error deleting tenant:", error);
+        throw error;
+      },
+    });
   return {
     tenant,
     isLoading,
     isError,
     error,
     refetch,
+    deleteTenantData,
   };
 };
