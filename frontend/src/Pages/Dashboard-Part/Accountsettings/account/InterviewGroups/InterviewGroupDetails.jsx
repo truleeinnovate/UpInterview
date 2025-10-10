@@ -1,24 +1,18 @@
 // v1.0.0 - Ashok - changed Minimize and Maximize icons for consistency and removed border left and set outline none
+// v1.0.1 - Ashok - Improved responsiveness and added common code to popup
+
 import React, { useEffect, useState } from "react";
-import { Maximize, Minimize, X } from "lucide-react";
-import classNames from "classnames";
-import Modal from "react-modal";
-import { SidePopup } from "../../common/SidePopup";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
 
 import { useNavigate, useParams } from "react-router-dom";
-// v1.0.0 <---------------------------------------
-import {
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
-} from "@heroicons/react/24/outline";
-// v1.0.0 --------------------------------------->
+// v1.0.1 <--------------------------------------------------------------
+import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+// v1.0.1 <--------------------------------------------------------------
 
 const InterviewGroupDetails = () => {
   const { groups } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
-  const [isFullScreen, setIsFullScreen] = useState(false);
   // console.log("id",id);
 
   // console.log("InterviewGroupDetails", id,groups.find(group => group._id === id));
@@ -45,145 +39,84 @@ const InterviewGroupDetails = () => {
     fetchData();
   }, [id, groups]);
 
-  const modalClass = classNames(
-    // v1.0.0 <------------------------------------------------------------
-    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
-    // v1.0.0 ------------------------------------------------------------>
-    {
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
-
   return (
-    //    <SidePopup
-    //   title="Group Details"
-    //   // onClose={() => setSelectedGroup(null)}
-    //   position="right"
-    //   size="medium"
-    // >
-    <Modal
-      isOpen={true}
-      onRequestClose={() => navigate("/account-settings/interviewer-groups")}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-      // className={modalClass}
+    // v1.0.1 <-----------------------------------------------------------------------
+    <SidebarPopup
+      title="Group Information"
+      onClose={() => navigate("/account-settings/interviewer-groups")}
     >
-      <div
-        className={classNames("h-full", {
-          "max-w-6xl mx-auto px-6": isFullScreen,
-        })}
-      >
-        <div className="p-6 ">
-          <div className="flex justify-between items-center mb-6  ">
-            <h2 className="text-2xl font-bold text-custom-blue">
-              Group Information{" "}
-            </h2>
-            {/* Details */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                {/*  v1.0.0 <-------------------------------------------- */}
-                {isFullScreen ? (
-                  // <Minimize className="w-5 h-5 text-gray-500" />
-                  <ArrowsPointingInIcon className="w-5 h-5" />
-                ) : (
-                  // <Maximize className="w-5 h-5 text-gray-500" />
-                  <ArrowsPointingOutIcon className="w-5 h-5" />
-                )}
-                {/* v1.0.0 ---------------------------------------------> */}
-              </button>
-              <button
-                onClick={() => {
-                  navigate("/account-settings/interviewer-groups");
-                  // setUserData(formData)
-                  // setIsBasicModalOpen(false);
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
+      <div className="sm:p-0 p-6">
+        <div className="space-y-6 border rounded-md  p-4">
+          <div>
+            <div className="space-y-4">
+              <div>
+                <p className="text-base text-gray-500">Name</p>
+                <p className="font-medium">
+                  {selectedGroup.name
+                    ? selectedGroup.name.charAt(0).toUpperCase() +
+                      selectedGroup.name.slice(1)
+                    : "Not Provided"}
+                </p>
+              </div>
+              <div className="break-words">
+                <p className="text-base text-gray-500">Description</p>
+                <p className="font-medium">
+                  {selectedGroup.description
+                    ? selectedGroup.description.charAt(0).toUpperCase() +
+                      selectedGroup.description.slice(1)
+                    : "Not Provided"}
+                </p>
+              </div>
+              <div>
+                <p className="text-base text-gray-500 mb-1">Status</p>
+                <span
+                  className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    selectedGroup.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {selectedGroup.status
+                    ? selectedGroup.status.charAt(0).toUpperCase() +
+                      selectedGroup.status.slice(1)
+                    : "Not Provided"}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-6 border rounded-md  p-4">
-            <div>
-              {/* <h3 className="text-lg font-medium mb-4">Group Information</h3> */}
-              <div className="space-y-4">
-                <div>
-                  <p className="text-base text-gray-500">Name</p>
-                  <p className="font-medium">
-                    {selectedGroup.name
-                      ? selectedGroup.name.charAt(0).toUpperCase() +
-                        selectedGroup.name.slice(1)
-                      : "Not Provided"}
-                  </p>
-                </div>
-                <div className="break-words">
-                  <p className="text-base text-gray-500">Description</p>
-                  <p className="font-medium">
-                    {selectedGroup.description
-                      ? selectedGroup.description.charAt(0).toUpperCase() +
-                        selectedGroup.description.slice(1)
-                      : "Not Provided"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-base text-gray-500 mb-1">Status</p>
-                  <span
-                    className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      selectedGroup.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {selectedGroup.status
-                      ? selectedGroup.status.charAt(0).toUpperCase() +
-                        selectedGroup.status.slice(1)
-                      : "Not Provided"}
+          <div>
+            <h3 className="text-lg text-gray-500 font-base mb-2">
+              {selectedGroup.numberOfUsers > 1 ? "Members" : "Member"} (
+              {selectedGroup.numberOfUsers || 0})
+            </h3>
+            <div className="space-x-4 flex">
+              {(selectedGroup.usersNames || []).map((member, idx) => (
+                <div key={idx} className="flex flex-wrap gap-4">
+                  {/* <div> */}
+                  <span className="font-medium bg-custom-blue/10 text-custom-blue rounded-full text-sm pt-2 pl-3 pr-3 pb-2">
+                    {member || "Not Provided"}
                   </span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg text-gray-500 font-base mb-2">
-                {selectedGroup.numberOfUsers > 1 ? "Members" : "Member"} (
-                {selectedGroup.numberOfUsers || 0})
-              </h3>
-              <div className="space-x-4 flex">
-                {(selectedGroup.usersNames || []).map((member, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between  "
-                  >
-                    {/* <div> */}
-                    <span className="font-medium bg-gray-100 rounded-full text-sm pt-2 pl-3 pr-3 pb-2">
-                      {member || "Not Provided"}
-                    </span>
-                    {/* <p className="text-sm text-gray-500">{member.role}</p> */}
-                    {/* </div> */}
-                    {/* <div className="flex items-center space-x-2"> */}
-                    {/* <span className="text-sm text-gray-500">
+                  {/* <p className="text-sm text-gray-500">{member.role}</p> */}
+                  {/* </div> */}
+                  {/* <div className="flex items-center space-x-2"> */}
+                  {/* <span className="text-sm text-gray-500">
                         Rating: {member.rating || "N/A"}
                       </span> */}
-                    {/* <span className={`px-2 py-1 text-xs rounded-full ${
+                  {/* <span className={`px-2 py-1 text-xs rounded-full ${
                         member.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
                         {member.status || "N/A"}
                       </span> */}
-                    {/* </div> */}
-                  </div>
-                ))}
-              </div>
+                  {/* </div> */}
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
-    </Modal>
-    // </SidePopup>
+    </SidebarPopup>
+    // v1.0.1 ----------------------------------------------------------------------->
   );
 };
 
