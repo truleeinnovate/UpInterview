@@ -32,6 +32,8 @@ import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 import { usePositions } from "../../../../apiHooks/usePositions";
 import { formatDateTime } from "../../../../utils/dateFormatter";
+import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal.jsx";
+import { notify } from "../../../../services/toastService.js";
 
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => (
     <Dialog
@@ -127,7 +129,12 @@ const Assessment = () => {
     const [createdDatePreset, setCreatedDatePreset] = useState("");
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [assessmentToDelete, setAssessmentToDelete] = useState(null);
-    console.log('assessmentToDelete', assessmentToDelete);
+
+const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
+
+
+    // console.log('assessmentToDelete', assessmentToDelete);
     // <---------------------- v1.0.0
     useEffect(() => {
         document.title = "Assessment Template";
@@ -390,6 +397,7 @@ const Assessment = () => {
             );
         });
     };
+    
     // <---------------------- v1.0.0
     const rowsPerPage = 10;
 
@@ -419,30 +427,167 @@ const Assessment = () => {
         }
     };
 
-    const handleEdit = (assessment) => {
-        if (effectivePermissions.AssessmentTemplates?.Edit) {
-            navigate(`/assessments-template/edit/${assessment._id}`);
-        }
-    };
-    // <---------------------- v1.0.1 >
+  const handleEdit = (assessment) => {
+    if (effectivePermissions.AssessmentTemplates?.Edit) {
+      navigate(`/assessments-template/edit/${assessment._id}`);
+    }
+  };
+  // <---------------------- v1.0.1 >
 
-    const handleShareClick = (assessment) => {
-        if ((assessmentSections[assessment._id] ?? 0) > 0) {
-            // <---------------------- v1.0.0
-            setIsShareOpen(assessment);
-        } else if ((assessmentSections[assessment._id] ?? 0) === 0) {
-            toast.error("No questions added to this assessment.");
-        }
-    };
+  const handleShareClick = (assessment) => {
+    if ((assessmentSections[assessment._id] ?? 0) > 0) {
+      // <---------------------- v1.0.0
+      setIsShareOpen(assessment);
+    } else if ((assessmentSections[assessment._id] ?? 0) === 0) {
+      notify.error("No questions added to this assessment.");
+    }
+  };
 
-    const handleCloseShare = () => {
-        setIsShareOpen(false);
-    };
+  const handleCloseShare = () => {
+    setIsShareOpen(false);
+  };
 
-    const handleDeleteClick = (assessment) => {
-        setAssessmentToDelete(assessment);
-        setDeleteDialogOpen(true);
-    };
+  const handleDelete = async (assessment) => {
+    console.log("effectivePermissions.assessment?.Delete",effectivePermissions.assessment?.Delete);
+    
+
+    // if (effectivePermissions.assessment?.Delete) {  // have to check beause this is mandtoary or not ?
+      setDeleteAssessmentTemplate(assessment)
+      setShowDeleteConfirmModal(true);
+      // navigate(`/interviews/${interview._id}/delete`);
+    // }
+
+    // if (window.confirm(`Are you sure you want to delete "${assessment.assessmentName}"? This action cannot be undone.`)) {
+    //   try {
+    //     await deleteAssessment.mutateAsync(assessment._id);
+    //     toast.success('Assessment deleted successfully');
+    //   } catch (error) {
+    //     console.error('Error deleting assessment:', error);
+    //     toast.error('Failed to delete assessment');
+    //   }
+    // }
+  };
+
+    // Your existing handleConfirmDelete function
+  // const handleConfirmDelete = async () => {
+  //  try {
+  //       await deleteAssessment.mutateAsync(deleteAssessmentTemplate._id);
+  //       setDeleteAssessmentTemplate(null)
+  //     setShowDeleteConfirmModal(false);
+  //       notify.success('Assessment deleted successfully');
+  //     } catch (error) {
+  //       setDeleteAssessmentTemplate(null)
+  //     setShowDeleteConfirmModal(false);
+  //       console.error('Error deleting assessment:', error);
+  //       notify.error('Failed to delete assessment');
+  //     }
+  // };
+
+
+  // <---------------------- v1.0.0
+  // <---------------------- v1.0.1
+  const tableActions = [
+    ...(effectivePermissions.AssessmentTemplates?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: handleView,
+          },
+        ]
+      : []),
+    ...(effectivePermissions.AssessmentTemplates?.Edit
+      ? // <---------------------- v1.0.0
+        // <---------------------- v1.0.1
+        [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-custom-blue" />,
+            onClick: handleEdit,
+          },
+        ]
+      : []),
+    ...(effectivePermissions.AssessmentTemplates?.Delete
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: handleDelete,
+          },
+        ]
+      : []),
+    {
+      key: "share",
+      label: "Create Assessment",
+      icon: <Plus className="w-4 h-4 text-custom-blue" />,
+      onClick: handleShareClick,
+      disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
+    },
+  ];
+  // v1.0.5 <------------------------------------------------------------
+  const difficultyOptions = ["Easy", "Medium", "Hard"];
+  // const durationOptions = ["30 minutes", "60 minutes"];
+  const durationOptions = ["30 Minutes", "60 Minutes"];
+  // v1.0.5 ------------------------------------------------------------>
+
+  const handleDifficultyToggle = (option) => {
+    setSelectedDifficulty((prev) =>
+      prev.includes(option)
+        ? prev.filter((item) => item !== option)
+        : [...prev, option]
+    );
+  };
+
+    // const handleShareClick = (assessment) => {
+    //     if ((assessmentSections[assessment._id] ?? 0) > 0) {
+    //         // <---------------------- v1.0.0
+    //         setIsShareOpen(assessment);
+    //     } else if ((assessmentSections[assessment._id] ?? 0) === 0) {
+    //         toast.error("No questions added to this assessment.");
+    //     }
+    // };
+
+  const handlePositionToggle = (positionId) => {
+    setSelectedPositions((prev) =>
+      prev.includes(positionId)
+        ? prev.filter((p) => p !== positionId)
+        : [...prev, positionId]
+    );
+  };
+
+  const handleRangeChange = (e, type, setter) => {
+    const value =
+      e.target.value === "" ? "" : Math.max(0, Number(e.target.value) || "");
+    setter((prev) => ({
+      ...prev,
+      [type]: value,
+    }));
+  };
+
+  const handleApplyFilters = () => {
+    handleFilterChange({
+      difficultyLevel: selectedDifficulty,
+      duration: selectedDuration,
+      position: selectedPositions,
+      sections: sectionsRange,
+      questions: questionsRange,
+      totalScore: totalScoreRange,
+      createdDate: createdDatePreset,
+    });
+  };
+
+ 
+    // const handleCloseShare = () => {
+    //     setIsShareOpen(false);
+    // };
+
+    // const handleDeleteClick = (assessment) => {
+    //     setAssessmentToDelete(assessment);
+    //     setDeleteDialogOpen(true);
+    // };
 
     const handleConfirmDelete = async () => {
         if (assessmentToDelete) {
@@ -531,60 +676,9 @@ const Assessment = () => {
     ];
     // <---------------------- v1.0.0
     // <---------------------- v1.0.1
-    const tableActions = [
-        ...(effectivePermissions.AssessmentTemplates?.View
-            ? [
-                {
-                    key: "view",
-                    label: "View Details",
-                    icon: <Eye className="w-4 h-4 text-custom-blue" />,
-                    onClick: handleView,
-                },
-            ]
-            : []),
-        ...(effectivePermissions.AssessmentTemplates?.Edit
-            ? // <---------------------- v1.0.0
-            // <---------------------- v1.0.1
-            [
-                {
-                    key: "edit",
-                    label: "Edit",
-                    icon: <Pencil className="w-4 h-4 text-custom-blue" />,
-                    onClick: handleEdit,
-                },
-            ]
-            : []),
-        ...(effectivePermissions.AssessmentTemplates?.Delete
-            ? [
-                {
-                    key: "delete",
-                    label: "Delete",
-                    icon: <Trash className="w-4 h-4 text-red-600" />,
-                    onClick: handleDeleteClick,
-                },
-            ]
-            : []),
-        {
-            key: "share",
-            label: "Create Assessment",
-            icon: <Plus className="w-4 h-4 text-custom-blue" />,
-            onClick: handleShareClick,
-            disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
-        },
-    ];
-    // v1.0.5 <------------------------------------------------------------
-    const difficultyOptions = ["Easy", "Medium", "Hard"];
-    // const durationOptions = ["30 minutes", "60 minutes"];
-    const durationOptions = ["30 Minutes", "60 Minutes"];
-    // v1.0.5 ------------------------------------------------------------>
+  
 
-    const handleDifficultyToggle = (option) => {
-        setSelectedDifficulty((prev) =>
-            prev.includes(option)
-                ? prev.filter((item) => item !== option)
-                : [...prev, option]
-        );
-    };
+
 
     const handleDurationToggle = (option) => {
         setSelectedDuration((prev) =>
@@ -594,35 +688,7 @@ const Assessment = () => {
         );
     };
 
-    const handlePositionToggle = (positionId) => {
-        setSelectedPositions((prev) =>
-            prev.includes(positionId)
-                ? prev.filter((p) => p !== positionId)
-                : [...prev, positionId]
-        );
-    };
-
-    const handleRangeChange = (e, type, setter) => {
-        const value =
-            e.target.value === "" ? "" : Math.max(0, Number(e.target.value) || "");
-        setter((prev) => ({
-            ...prev,
-            [type]: value,
-        }));
-    };
-
-    const handleApplyFilters = () => {
-        handleFilterChange({
-            difficultyLevel: selectedDifficulty,
-            duration: selectedDuration,
-            position: selectedPositions,
-            sections: sectionsRange,
-            questions: questionsRange,
-            totalScore: totalScoreRange,
-            createdDate: createdDatePreset,
-        });
-    };
-
+  
     return (
         <div className="bg-background min-h-screen">
             <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
@@ -1019,8 +1085,27 @@ const Assessment = () => {
                 message={`Are you sure you want to delete "${assessmentToDelete?.AssessmentTitle}"? This action cannot be undone.`}
             />
 
-        </div>
-    );
+       
+      {/* v1.0.7 -----------------------------------------------------------------------------------> */}
+      {isShareOpen && (
+        <ShareAssessment
+          isOpen={isShareOpen}
+          onCloseshare={handleCloseShare}
+          assessment={isShareOpen}
+        />
+      )}
+
+       {/* Ranjith added deleetd functionality  */}
+            <DeleteConfirmModal
+              isOpen={showDeleteConfirmModal}
+              onClose={() => setShowDeleteConfirmModal(false)}
+              onConfirm={handleConfirmDelete}
+              title="Assessment Template"
+              entityName={deleteAssessmentTemplate?.AssessmentTitle}
+            />
+    </div>
+  );
+    
 };
 
 export default Assessment;

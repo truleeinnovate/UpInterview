@@ -3,6 +3,7 @@
 // v1.0.2  - Ashok   - fixed style issues
 // v1.0.3  - Ashok   - fixed responsiveness issue at kanban loading view
 // v1.0.4  - Ashok   - changed loading view of both table and kanban views
+// v1.0.5  - Ashok   - changed check box color to brand color in filters
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FileText, ChevronDown, ChevronUp } from "lucide-react";
@@ -427,7 +428,9 @@ const InvoiceTab = () => {
                           type="checkbox"
                           checked={selectedStatus.includes(status)}
                           onChange={() => handleStatusToggle(status)}
-                          className="h-4 w-4 rounded text-blue-600 focus:ring-blue-500"
+                          // v1.0.5 <--------------------------------------------------------------
+                          className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 -------------------------------------------------------------->
                         />
                         <span className="text-sm capitalize">{status}</span>
                       </label>
@@ -457,7 +460,9 @@ const InvoiceTab = () => {
                           type="checkbox"
                           checked={selectedTypes.includes(type)}
                           onChange={() => handleTypeToggle(type)}
-                          className="h-4 w-4 rounded text-blue-600 focus:ring-blue-500"
+                          // v1.0.5 <-----------------------------------------------------------------
+                          className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                          // v1.0.5 ----------------------------------------------------------------->
                         />
                         <span className="text-sm capitalize">{type}</span>
                       </label>

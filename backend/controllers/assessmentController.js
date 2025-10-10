@@ -26,66 +26,144 @@ const {
     validateUpdateAssessment,
     validateAssessmentByTab,
 } = require("../validations/assessmentValidation");
+const selectedAssessmentquestions = require("../models/Assessment/selectedAssessmentquestions.js");
 
 // Delete an assessment
+// exports.deleteAssessment = async (req, res) => {
+//     const session = await mongoose.startSession();
+//     session.startTransaction();
+
+//     try {
+//         const { id } = req.params;
+
+//         // Validate ID
+//         if (!mongoose.Types.ObjectId.isValid(id)) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Invalid assessment ID',
+//             });
+//         }
+
+//         // Check if assessment exists
+//         const assessment = await Assessment.findById(id).session(session);
+//         if (!assessment) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'Assessment not found',
+//             });
+//         }
+
+//         // Check if there are any scheduled assessments using this template
+//         const scheduledAssessments = await ScheduleAssessment.find({ templateId: id }).session(session);
+//         if (scheduledAssessments.length > 0) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Cannot delete assessment template that is being used in scheduled assessments',
+//             });
+//         }
+
+//         // Delete the assessment
+//         await Assessment.findByIdAndDelete(id).session(session);
+
+//         // Delete related candidate assessments
+//         await CandidateAssessment.deleteMany({ assessmentId: id }).session(session);
+
+//         await session.commitTransaction();
+//         session.endSession();
+
+//         res.status(200).json({
+//             success: true,
+//             message: 'Assessment deleted successfully',
+//         });
+//     } catch (error) {
+//         await session.abortTransaction();
+//         session.endSession();
+
+//         console.error('[ASSESSMENT] Error deleting assessment:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Failed to delete assessment',
+//             error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+//         });
+//     }
+// };
+
+
 exports.deleteAssessment = async (req, res) => {
+    // ✅ Start MongoDB session for transaction safety
     const session = await mongoose.startSession();
     session.startTransaction();
-
+  
     try {
-        const { id } = req.params;
-
-        // Validate ID
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid assessment ID',
-            });
-        }
-
-        // Check if assessment exists
-        const assessment = await Assessment.findById(id).session(session);
-        if (!assessment) {
-            return res.status(404).json({
-                success: false,
-                message: 'Assessment not found',
-            });
-        }
-
-        // Check if there are any scheduled assessments using this template
-        const scheduledAssessments = await ScheduleAssessment.find({ templateId: id }).session(session);
-        if (scheduledAssessments.length > 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Cannot delete assessment template that is being used in scheduled assessments',
-            });
-        }
-
-        // Delete the assessment
-        await Assessment.findByIdAndDelete(id).session(session);
-
-        // Delete related candidate assessments
-        await CandidateAssessment.deleteMany({ assessmentId: id }).session(session);
-
-        await session.commitTransaction();
-        session.endSession();
-
-        res.status(200).json({
-            success: true,
-            message: 'Assessment deleted successfully',
+      const { id } = req.params;
+  
+      // ✅ Validate assessment ID format
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid assessment ID',
         });
+      }
+  
+      // ✅ Check if assessment exists
+      const assessment = await Assessment.findById(id).session(session);
+      if (!assessment) {
+        return res.status(404).json({
+          success: false,
+          message: 'Assessment not found',
+        });
+      }
+  
+      // ✅ Check for any scheduled assessments using this template
+      const scheduledAssessments = await ScheduleAssessment.find({ templateId: id }).session(session);
+      if (scheduledAssessments.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Cannot delete assessment template that is being used in scheduled assessments',
+        });
+      }
+  
+      // ✅ 1️⃣ Delete the main assessment
+      await Assessment.findByIdAndDelete(id).session(session);
+  
+      // ✅ 2️⃣ Delete related candidate assessments
+      const deletedCandidateAssessments = await CandidateAssessment.deleteMany({
+        assessmentId: id,
+      }).session(session);
+  
+      console.log(`[ASSESSMENT] Deleted ${deletedCandidateAssessments.deletedCount} candidate assessments for ${id}`);
+  
+      // ✅ 3️⃣ Delete related selected assessment questions (added new)
+      const deletedQuestions = await selectedAssessmentquestions.deleteMany({
+        assessmentId: id,
+      }).session(session);
+  
+      console.log(`[ASSESSMENT] Deleted ${deletedQuestions.deletedCount} question sets for ${id}`);
+  
+      // ✅ Commit transaction if everything succeeded
+      await session.commitTransaction();
+      session.endSession();
+  
+      // ✅ Send success response
+      res.status(200).json({
+        success: true,
+        message: 'Assessment and related data deleted successfully',
+      });
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-
-        console.error('[ASSESSMENT] Error deleting assessment:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to delete assessment',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-        });
+      // ❌ Rollback on any error
+      await session.abortTransaction();
+      session.endSession();
+  
+      console.error('[ASSESSMENT] Error deleting assessment:', error);
+  
+      res.status(500).json({
+        success: false,
+        message: 'Failed to delete assessment',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      });
     }
-};
+  };
 
 // Validate assessment by tab/step (for frontend step-wise validation)
 exports.validateAssessmentStep = async (req, res) => {

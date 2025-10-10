@@ -13,6 +13,7 @@ const {
   updateInterviewRound,
   updateInterviewStatus,
   checkInternalInterviewUsage,
+  deleteInterview,
 } = require("../controllers/interviewController");
 
 // router.get('/', getAllInterviews);
@@ -41,5 +42,7 @@ router.patch('/status/:interviewId/:status', updateInterviewStatus);
 
 // Check internal interview usage
 router.get('/check-usage', checkInternalInterviewUsage);
+
+router.delete('/delete-interview/:id', deleteInterview);
 
 module.exports = router;

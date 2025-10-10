@@ -212,11 +212,11 @@ const AccountSettingsSidebar = () => {
   }, [location.pathname, navigate, organization, userType]);
 
   // Early return for loading or uninitialized states
-  if (!authToken) {
-    // console.log('🎯 Sidebar: No auth token, redirecting to login');
-    navigate('/login');
-    return null;
-  }
+  // if (!authToken) {
+  //   // console.log('🎯 Sidebar: No auth token, redirecting to login');
+  //   navigate('/login');
+  //   return null;
+  // }
 
   if (loading || !isInitialized) {
     // console.log('🎯 Sidebar: Waiting for initialization', { loading, isInitialized });

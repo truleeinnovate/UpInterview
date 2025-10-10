@@ -8,6 +8,7 @@
 // v1.0.7 - Ashok - Fixed loading issue
 // v1.0.8 - Ashok - Fixed responsive issues
 // v1.0.9 - Ashok - Fixed responsive issues at header
+// v2.0.0 - Ashok - changed loading from skelton to shimmer and proper structure
 
 import React, {
   useState,
@@ -88,26 +89,29 @@ function QuestionHeaderBar({
     >
       <div className="flex items-center gap-2 ">
         {/* Interview Type Dropdown (using DropdownSelect) */}
-        {type !== 'assessment' &&  
-        <div className="w-48">
-          <DropdownSelect
-            isSearchable={false}
-            value={
-              dropdownValue
-                ? { value: dropdownValue, label: dropdownValue }
-                : null
-            }
-            onChange={(opt) => setDropdownValue(opt?.value || "")}
-            options={[
-              { value: "Interview Questions", label: "Interview Questions" },
-              { value: "Assessment Questions", label: "Assessment Questions" },
-            ]}
-            placeholder="Select Question Type"
-            menuPortalTarget={document.body}
-            menuPosition="fixed"
-          />
-        </div>
-}
+        {type !== "assessment" && (
+          <div className="w-48">
+            <DropdownSelect
+              isSearchable={false}
+              value={
+                dropdownValue
+                  ? { value: dropdownValue, label: dropdownValue }
+                  : null
+              }
+              onChange={(opt) => setDropdownValue(opt?.value || "")}
+              options={[
+                { value: "Interview Questions", label: "Interview Questions" },
+                {
+                  value: "Assessment Questions",
+                  label: "Assessment Questions",
+                },
+              ]}
+              placeholder="Select Question Type"
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+            />
+          </div>
+        )}
 
         {/* Label Dropdown (using DropdownSelect) */}
         <div className="w-48">
@@ -154,9 +158,9 @@ function QuestionHeaderBar({
 
         {/* Rest of your buttons */}
         <button
-        // v1.0.9 <-------------------------------------------------------------------------------------------------------------------------------------------------------
+          // v1.0.9 <-------------------------------------------------------------------------------------------------------------------------------------------------------
           className="text-md sm:w-[60px] md:w-[60px] lg:w-[60px] xl:w-[60px] 2xl:w-[60px] hover:underline text-custom-blue font-semibold flex items-center gap-2"
-        // v1.0.9 ------------------------------------------------------------------------------------------------------------------------------------------------------->
+          // v1.0.9 ------------------------------------------------------------------------------------------------------------------------------------------------------->
           onClick={() => {
             const meta = Array.isArray(createdLists)
               ? createdLists.find(
@@ -175,21 +179,21 @@ function QuestionHeaderBar({
         </button>
         <strong className="text-md text-gray-400"> | </strong>
         <button
-        // v1.0.9 <---------------------------------------------------------------------------------------------------------------------------------------------------------------
-          className="text-md sm:w-[120px] md:w-[120px] lg:w-[120px] xl:w-[120px] 2xl:w-[120px] hover:underline text-custom-blue font-semibold flex items-center gap-2"
-        // v1.0.9 --------------------------------------------------------------------------------------------------------------------------------------------------------------->
+          // v1.0.9 <---------------------------------------------------------------------------------------------------------------------------------------------------------------
+          className="text-md sm:w-[80px] md:w-[80px] lg:w-[80px] xl:w-[80px] 2xl:w-[80px] hover:underline text-custom-blue font-semibold flex items-center gap-2"
+          // v1.0.9 --------------------------------------------------------------------------------------------------------------------------------------------------------------->
           onClick={openListPopup}
         >
-          Create New List
+          Create List
         </button>
         <strong className="text-md text-gray-400"> | </strong>
         <button
-        // v1.0.9 <----------------------------------------------------------------------------------------------------------------------------------------------
+          // v1.0.9 <----------------------------------------------------------------------------------------------------------------------------------------------
           className="text-md sm:w-[90px] md:w-[90px] lg:w-[90px] xl:w-[90px] 2xl:w-[120px] hover:underline text-red-600 font-semibold flex items-center gap-2"
-        // v1.0.9 ---------------------------------------------------------------------------------------------------------------------------------------------->
+          // v1.0.9 ---------------------------------------------------------------------------------------------------------------------------------------------->
           onClick={() => setShowCheckboxes(true)}
         >
-          <TrashIcon className="w-4 h-4" />
+          {/* <TrashIcon className="w-4 h-4" /> */}
           Delete
         </button>
       </div>
@@ -198,7 +202,7 @@ function QuestionHeaderBar({
       <div className="flex items-center gap-3">
         {/* v1.0.9 <-------------------------------------------------------------------------------------------- */}
         <div className="flex items-center sm:w-[120px] md:w-[120px] lg:w-[120px] xl:w-[120px] 2xl:w-[120px]">
-        {/* v1.0.9 --------------------------------------------------------------------------------------------> */}
+          {/* v1.0.9 --------------------------------------------------------------------------------------------> */}
           <p>{rangeLabel}</p>
         </div>
         <div className="relative flex items-center rounded-md border">
@@ -373,7 +377,9 @@ const MyQuestionsList = ({
 
   const [isOpen, setIsOpen] = useState({});
   const [loading, setLoading] = useState(true);
-  const [dropdownValue, setDropdownValue] = useState(type === 'assessment' ? "Assessment Questions" : "Interview Questions");
+  const [dropdownValue, setDropdownValue] = useState(
+    type === "assessment" ? "Assessment Questions" : "Interview Questions"
+  );
   const [searchInput, setSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -1533,41 +1539,37 @@ const MyQuestionsList = ({
   //----v1.0.4--->
 
   // Skeleton Loader Component
+  // v2.0.0 <--------------------------------------------------------------------------
   const SkeletonLoader = () => (
-    // v1.0.7 <------------------------------------------------------------------------
-    <div className="w-full px-4 py-6">
-      {/* Question List Skeleton */}
-      <div className="space-y-4">
-        {/* // v1.0.7 ------------------------------------------------------------------------> */}
-        <div className="bg-gray-200 h-12 rounded-t-lg skeleton-animation"></div>
-        <div className="p-4 bg-blue-50 rounded-b-lg border border-t-0 border-gray-200">
-          {Array(3)
-            .fill()
-            .map((_, idx) => (
-              <div
-                key={idx}
-                className="border border-gray-200 mb-4 rounded-lg bg-white shadow-sm"
-              >
-                <div className="flex justify-between items-center p-4 border-b border-gray-200">
-                  <div className="flex items-center w-3/4">
-                    <div className="h-6 w-6 bg-gray-200 rounded-full mr-2 skeleton-animation"></div>
-                    <div className="h-6 w-full bg-gray-200 rounded skeleton-animation"></div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-12 bg-gray-200 rounded-full skeleton-animation"></div>
-                    <div className="h-6 w-16 bg-gray-200 rounded-md skeleton-animation"></div>
-                    <div className="h-8 w-16 bg-gray-200 rounded-md skeleton-animation"></div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="h-4 w-1/2 bg-gray-200 rounded skeleton-animation"></div>
+    <div className="flex-1 overflow-y-auto py-4">
+      <ul className="flex flex-col gap-4 pr-2">
+        {Array(4)
+          .fill(0)
+          .map((_, idx) => (
+            <div
+              key={idx}
+              className="border border-gray-200 rounded-lg h-full shadow-sm"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center border-b border-gray-200 px-4 py-2">
+                <div className="h-5 w-3/4 shimmer rounded"></div>
+                <div className="flex items-center gap-3">
+                  <div className="h-7 w-12 shimmer rounded"></div>
+                  <div className="h-7 w-12 shimmer rounded"></div>
                 </div>
               </div>
-            ))}
-        </div>
-      </div>
+
+              {/* Content */}
+              <div className="px-4 py-2">
+                <div className="h-4 w-1/2 shimmer rounded mb-2"></div>
+                <div className="h-4 w-1/3 shimmer rounded"></div>
+              </div>
+            </div>
+          ))}
+      </ul>
     </div>
   );
+  // v2.0.0 -------------------------------------------------------------------------->
 
   return (
     <>

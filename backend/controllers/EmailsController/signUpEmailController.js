@@ -435,11 +435,22 @@ cron.schedule('0 0 * * *', async () => {
 
 
 // First, define the sendVerificationEmail function (can be at the top of the file)
-const sendVerificationEmail = async (email, userId, firstName, lastName) => {
+const sendVerificationEmail = async ({ type, to, data }) => {
   try {
-    // Generate verification token
-    const verificationToken = generateEmailVerificationToken(email, userId);
-    const verificationLink = `${config.REACT_APP_API_URL_FRONTEND}/verify-email?token=${verificationToken}`;
+    const { email, userId, firstName, lastName, actionLink } = data;
+
+    // Validate email
+    if (!email || typeof email !== 'string') {
+      throw new Error('Invalid email address');
+    }
+
+    // Generate verification token (if not using the provided actionLink)
+    const verificationToken = jwt.sign(
+      { userId, email },
+      config.JWT_SECRET,
+      { expiresIn: '72h' }
+    );
+    const verificationLink = actionLink || `${config.REACT_APP_API_URL_FRONTEND}/verify-email?token=${verificationToken}`;
 
     // Get email template
     const emailTemplate = await emailTemplateModel.findOne({
@@ -451,15 +462,21 @@ const sendVerificationEmail = async (email, userId, firstName, lastName) => {
       throw new Error('Email template not found');
     }
 
+    // Replace placeholders in email body
     const emailBody = emailTemplate.body
       .replace(/{{verificationLink}}/g, verificationLink)
       .replace(/{{firstName}}/g, firstName || '')
       .replace(/{{lastName}}/g, lastName || '');
 
-    // Send email
-    await sendEmail(email, emailTemplate.subject, emailBody);
-    // console.log(`Verification email sent to ${email}`);
-    return { success: true, message: 'Verification email sent' };
+    // Call sendEmail with correct parameters
+    const emailResult = await sendEmail(
+      email, // toEmail: string
+      emailTemplate.subject, // subject
+      emailBody, // messageBody
+      undefined // ccEmail: optional, set to undefined as not used
+    );
+
+    return emailResult; // Return the result from sendEmail
   } catch (error) {
     console.error('Error sending verification email:', error);
     return { success: false, message: 'Failed to send verification email', error: error.message };
@@ -470,47 +487,50 @@ const sendVerificationEmail = async (email, userId, firstName, lastName) => {
 exports.sendVerificationEmail = sendVerificationEmail;
 
 // Then define the resendVerification function that uses it
-exports.resendVerification = async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
-    }
+// exports.resendVerification = async (req, res) => {
+//   console.log("Email jwt:", process.env.JWT_SECRET);
 
-    const user = await Users.findOne({ email });
-    // console.log('user', user);
+//   try {
+//     const { email } = req.body;
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
+//     if (!email) {
+//       return res.status(400).json({ success: false, message: 'Email is required' });
+//     }
 
-    const organization = await Tenant.findOne({ ownerId: user._id });
-    // console.log('organization', organization);
+//     const user = await Users.findOne({ email });
+//     // console.log('user', user);
 
-    if (!organization) {
-      return res.status(404).json({ success: false, message: 'Organization not found' });
-    }
+//     if (!user) {
+//       return res.status(404).json({ success: false, message: 'User not found' });
+//     }
 
-    if (organization.isEmailVerified) {
-      return res.status(400).json({ success: false, message: 'Email already verified' });
-    }
+//     const organization = await Tenant.findOne({ ownerId: user._id });
+//     // console.log('organization', organization);
 
-    // Use the sendVerificationEmail function we defined above
-    const emailResult = await sendVerificationEmail(email, user._id, user.firstName, user.lastName);
-    if (!emailResult.success) {
-      return res.status(500).json({ success: false, message: emailResult.message });
-    }
+//     if (!organization) {
+//       return res.status(404).json({ success: false, message: 'Organization not found' });
+//     }
 
-    return res.json({ success: true, message: 'Verification email resent' });
-  } catch (error) {
-    console.error('Error in resendVerification:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error resending verification',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-};
+//     if (organization.isEmailVerified) {
+//       return res.status(400).json({ success: false, message: 'Email already verified' });
+//     }
+
+//     // Use the sendVerificationEmail function we defined above
+//     const emailResult = await sendVerificationEmail(email, user._id, user.firstName, user.lastName);
+//     if (!emailResult.success) {
+//       return res.status(500).json({ success: false, message: emailResult.message });
+//     }
+
+//     return res.json({ success: true, message: 'Verification email resent' });
+//   } catch (error) {
+//     console.error('Error in resendVerification:', error);
+//     return res.status(500).json({
+//       success: false,
+//       message: 'Error resending verification',
+//       error: process.env.NODE_ENV === 'development' ? error.message : undefined
+//     });
+//   }
+// };
 
 
 //users tab emails 
@@ -780,9 +800,11 @@ exports.resendVerification = async (req, res) => {
       type: 'initial_email_verification',
       to: email,
       data: {
+        email,
+        userId: user._id,
         firstName: user.firstName || '',
         lastName: user.lastName || '',
-        actionLink: `${config.REACT_APP_API_URL}/auth/verify-email?token=${verificationToken}`
+        actionLink: `${config.REACT_APP_API_URL_FRONTEND}/auth/verify-email?token=${verificationToken}`
       }
     });
 

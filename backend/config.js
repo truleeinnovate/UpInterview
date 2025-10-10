@@ -9,6 +9,7 @@ module.exports = {
   REACT_APP_CLIENT_ID: process.env.REACT_APP_CLIENT_ID,
   REACT_APP_CLIENT_SECRET: process.env.REACT_APP_CLIENT_SECRET,
   REACT_APP_REDIRECT_URI: process.env.REACT_APP_REDIRECT_URI,
+  JWT_SECRET: process.env.JWT_SECRET,
 
   JWT_SECRET: process.env.JWT_SECRET,
 

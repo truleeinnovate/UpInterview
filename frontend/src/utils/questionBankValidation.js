@@ -31,13 +31,13 @@ export const validateQuestionBankData = (formData, mcqOptions, section, options 
     }
 
     // Validate experience range
-    if (formData.minexperience && formData.maxexperience) {
-        const minExp = parseInt(formData.minexperience, 10);
-        const maxExp = parseInt(formData.maxexperience, 10);
-        if (!isNaN(minExp) && !isNaN(maxExp) && maxExp <= minExp) {
-            errors.maxexperience = "Max Experience must be greater than Min Experience";
-        }
-    }
+    // if (formData.minexperience && formData.maxexperience) {
+    //     const minExp = parseInt(formData.minexperience, 10);
+    //     const maxExp = parseInt(formData.maxexperience, 10);
+    //     if (!isNaN(minExp) && !isNaN(maxExp) && maxExp <= minExp) {
+    //         errors.maxexperience = "Max Experience must be greater than Min Experience";
+    //     }
+    // }
 
     // Validate tenantListId shape (mirror backend: array of string ObjectIds)
     if (formData.tenantListId) {

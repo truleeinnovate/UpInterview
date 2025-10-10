@@ -8,11 +8,21 @@
 // v1.0.7  -  Ashok   -  Added table view for mobiles (small devices)
 // v1.0.8  -  Ashok   -  changed kanban UI
 // v1.0.9  -  Ashok   -  table columns modified
+// v2.0.0  -  Ashok   -  changed kanban column names
+// v2.0.1  -  Ashok   -  changed actions in kanban
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, CircleUser, Pencil, Mail, Rotate3d, Trash } from "lucide-react";
+import {
+  Eye,
+  CircleUser,
+  Pencil,
+  Mail,
+  Rotate3d,
+  Trash,
+  MoreVertical,
+} from "lucide-react";
 import { useCustomContext } from "../../../../Context/Contextfetch";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
@@ -42,6 +52,95 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js"
 import { logger } from "../../../../utils/logger.js";
 // v1.0.6 ------------------------------------------------------------------->
 import { formatDateTime } from "../../../../utils/dateFormatter.js";
+
+// v2.0.1 <-----------------------------------------------------------------------
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => (
+        <button
+          key={action.key}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onClick(item, e);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title={action.label}
+        >
+          {action.icon}
+        </button>
+      ))}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+// v2.0.1 ----------------------------------------------------------------------->
+
 function Candidate({
   candidates,
   onResendLink,
@@ -102,6 +201,7 @@ function Candidate({
   const filterIconRef = useRef(null);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deleteCandidate, setDeleteCandidate] = useState(null);
+
   // <---------------------- v1.0.2
   // Helper function to check if a candidate is cancelled (handles all case variations)
 
@@ -134,14 +234,35 @@ function Candidate({
       let res = await deleteCandidateData(
         deleteCandidate?._id || deleteCandidate?.id || "N/A"
       );
+
+      console.log("res", res);
+
+
       // await deleteRoundMutation(round._id);
-      if (res.status === "success") {
+      // if (res.status === "success") {
+      //   setShowDeleteConfirmModal(false);
+      //   notify.success("Candidate Deleted successfully");
+      // }
+
+      // ✅ If API returns success
+      if (res?.status === "success") {
         setShowDeleteConfirmModal(false);
-        notify.success("Candidate Deleted successfully");
+        notify.success(res?.message || "Candidate deleted successfully");
+      } else {
+        setShowDeleteConfirmModal(false);
+        notify.warning(res?.data?.message || "Unable to delete candidate");
       }
+
+
+
     } catch (error) {
-      console.error("Error Deleting Round:", error);
-      notify.error("Failed to Delete Round");
+      // console.error("Error deleting candidate:", error);
+      setShowDeleteConfirmModal(false);
+      // ✅ Extract backend message if available
+      const backendMessage =
+      error?.response?.data?.message || "Failed to delete candidate";
+
+      notify.error(backendMessage);
     }
   };
 
@@ -357,15 +478,15 @@ function Candidate({
     setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        //<-----v1.0.4--------
-        filters.experience.max ||
-        filters.roles.length > 0 ||
-        filters.universities.length > 0 ||
-        filters.relevantExperience.min ||
-        filters.relevantExperience.max ||
-        !!filters.createdDate
+      filters.tech.length > 0 ||
+      filters.experience.min ||
+      //<-----v1.0.4--------
+      filters.experience.max ||
+      filters.roles.length > 0 ||
+      filters.universities.length > 0 ||
+      filters.relevantExperience.min ||
+      filters.relevantExperience.max ||
+      !!filters.createdDate
       //-----v1.0.4-------->
     );
     setFilterPopupOpen(false);
@@ -532,14 +653,14 @@ function Candidate({
                     isAssessmentView
                       ? `/assessment/${row?.assessmentId}/view-details/${row?._id}`
                       : // `/assessments/candidate-details/${row._id}`
-                        effectivePermissions.Candidates?.View &&
-                          `view-details/${row._id}`,
+                      effectivePermissions.Candidates?.View &&
+                      `view-details/${row._id}`,
                     {
                       state: isAssessmentView
                         ? {
-                            from: `/assessment-details/${row?.assessmentId}`,
-                            assessmentId: row?.assessmentId,
-                          }
+                          from: `/assessment-details/${row?.assessmentId}`,
+                          assessmentId: row?.assessmentId,
+                        }
                         : { from: "/candidate" },
                     }
                   )
@@ -626,76 +747,75 @@ function Candidate({
     // Add status column only for assessment view
     ...(isAssessmentView
       ? [
-          {
-            key: "status",
-            header: "Status",
-            render: (value, row) => {
-              const status = row.status || "pending";
+        {
+          key: "status",
+          header: "Status",
+          render: (value, row) => {
+            const status = row.status || "pending";
+            return (
+              <span
+                className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                  status
+                )}`}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </span>
+            );
+          },
+        },
+        {
+          key: "expiryAt",
+          header: "Expiry Date",
+          render: (value, row) => {
+            if (!row.expiryAt) return "N/A";
+
+            const now = new Date();
+            const expiry = new Date(row.expiryAt);
+            const timeDiff = expiry.getTime() - now.getTime();
+
+            if (timeDiff <= 0) {
               return (
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                    status
-                  )}`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                <span className="text-red-600 text-sm font-medium">
+                  Expired
                 </span>
               );
-            },
-          },
-          {
-            key: "expiryAt",
-            header: "Expiry Date",
-            render: (value, row) => {
-              if (!row.expiryAt) return "N/A";
+            }
 
-              const now = new Date();
-              const expiry = new Date(row.expiryAt);
-              const timeDiff = expiry.getTime() - now.getTime();
+            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor(
+              (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+            );
 
-              if (timeDiff <= 0) {
-                return (
-                  <span className="text-red-600 text-sm font-medium">
-                    Expired
-                  </span>
-                );
-              }
-
-              const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-              const hours = Math.floor(
-                (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+            let timeText = "";
+            if (days > 0) {
+              timeText = `${days}d ${hours}h`;
+            } else if (hours > 0) {
+              timeText = `${hours}h`;
+            } else {
+              const minutes = Math.floor(
+                (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
               );
+              timeText = `${minutes}m`;
+            }
 
-              let timeText = "";
-              if (days > 0) {
-                timeText = `${days}d ${hours}h`;
-              } else if (hours > 0) {
-                timeText = `${hours}h`;
-              } else {
-                const minutes = Math.floor(
-                  (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
-                );
-                timeText = `${minutes}m`;
-              }
-
-              return (
-                <div className="text-sm">
-                  <div className="font-medium text-gray-900">
-                    {expiry.toLocaleDateString()}
-                  </div>
-                  <div
-                    className={`text-xs ${
-                      timeDiff < 24 * 60 * 60 * 1000
-                        ? "text-red-600"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {timeText} remaining
-                  </div>
+            return (
+              <div className="text-sm">
+                <div className="font-medium text-gray-900">
+                  {expiry.toLocaleDateString()}
                 </div>
-              );
-            },
+                <div
+                  className={`text-xs ${timeDiff < 24 * 60 * 60 * 1000
+                      ? "text-red-600"
+                      : "text-gray-500"
+                    }`}
+                >
+                  {timeText} remaining
+                </div>
+              </div>
+            );
           },
-        ]
+        },
+      ]
       : []),
     // ------------------------------ v1.0.2 >
   ];
@@ -704,123 +824,123 @@ function Candidate({
   const tableActions = [
     ...(effectivePermissions.Candidates?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) =>
-              navigate(
-                isAssessmentView
-                  ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
-                  : // `/assessments/candidate-details/${row._id}`
-                    `view-details/${row._id}`,
-                {
-                  state: isAssessmentView
-                    ? {
-                        from: `/assessment-details/${row?.assessmentId}`,
-                        assessmentId: row?.assessmentId,
-                      }
-                    : { from: "/candidate" },
-                }
-              ),
-            // navigate(
-            //   isAssessmentView
-            //     ? `candidate-details/${row._id}`
-            //     : `view-details/${row._id}`,
-            //   {
-            //     state: isAssessmentView
-            //       ? {
-            //           from: `/assessment-details/${row?.assessmentId}`,
-            //           assessmentId: row?.assessmentId,
-            //         }
-            //       : { from: "/candidate" },
-            //   }
-            // ),
-          },
-        ]
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (row) =>
+            navigate(
+              isAssessmentView
+                ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
+                : // `/assessments/candidate-details/${row._id}`
+                `view-details/${row._id}`,
+              {
+                state: isAssessmentView
+                  ? {
+                    from: `/assessment-details/${row?.assessmentId}`,
+                    assessmentId: row?.assessmentId,
+                  }
+                  : { from: "/candidate" },
+              }
+            ),
+          // navigate(
+          //   isAssessmentView
+          //     ? `candidate-details/${row._id}`
+          //     : `view-details/${row._id}`,
+          //   {
+          //     state: isAssessmentView
+          //       ? {
+          //           from: `/assessment-details/${row?.assessmentId}`,
+          //           assessmentId: row?.assessmentId,
+          //         }
+          //       : { from: "/candidate" },
+          //   }
+          // ),
+        },
+      ]
       : []),
     ...(!isAssessmentView
       ? [
-          {
-            key: "360-view",
-            label: "360° View",
-            icon: <Rotate3d size={24} className="text-custom-blue" />,
-            onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
-          },
-          ...(effectivePermissions.Candidates?.Edit
-            ? [
-                {
-                  key: "edit",
-                  label: "Edit",
-                  icon: <Pencil className="w-4 h-4 text-green-600" />,
-                  onClick: (row) => navigate(`edit/${row._id}`),
-                },
-              ]
-            : []),
-          ...(effectivePermissions.Candidates?.Delete
-            ? [
-                {
-                  key: "delete",
-                  label: "Delete",
-                  icon: <Trash className="w-4 h-4 text-red-600" />,
-                  // onClick: (row) => navigate(`delete/${row._id}`),
-                  onClick: (row) => {
-                    setShowDeleteConfirmModal(true);
-                    setDeleteCandidate(row);
-                  },
-                },
-              ]
-            : []),
-        ]
+        {
+          key: "360-view",
+          label: "360° View",
+          icon: <Rotate3d size={24} className="text-custom-blue" />,
+          onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+        },
+        ...(effectivePermissions.Candidates?.Edit
+          ? [
+            {
+              key: "edit",
+              label: "Edit",
+              icon: <Pencil className="w-4 h-4 text-green-600" />,
+              onClick: (row) => navigate(`edit/${row._id}`),
+            },
+          ]
+          : []),
+        ...(effectivePermissions.Candidates?.Delete
+          ? [
+            {
+              key: "delete",
+              label: "Delete",
+              icon: <Trash className="w-4 h-4 text-red-600" />,
+              // onClick: (row) => navigate(`delete/${row._id}`),
+              onClick: (row) => {
+                setShowDeleteConfirmModal(true);
+                setDeleteCandidate(row);
+              },
+            },
+          ]
+          : []),
+      ]
       : []),
     ...(isAssessmentView
       ? [
-          // <-------------------------------v1.0.1
-          // Only show resend link for candidates that can be resent
-          {
-            key: "resend-link",
-            label: "Resend Link",
-            icon: (row) => {
-              const isLoading = resendLoading[row.id];
-              return isLoading ? (
-                <div className="w-4 h-4 flex items-center justify-center">
-                  <svg
-                    className="animate-spin h-4 w-4 text-custom-blue"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                </div>
-              ) : (
-                <Mail className="w-4 h-4 text-custom-blue" />
-              );
-            },
-            onClick: (row) => {
-              if (!resendLoading[row.id]) {
-                onResendLink(row.id);
-              }
-            },
-            show: (row) => {
-              const result = shouldShowButton(row, "resend");
-              return result;
-            },
-            disabled: (row) => resendLoading[row.id],
+        // <-------------------------------v1.0.1
+        // Only show resend link for candidates that can be resent
+        {
+          key: "resend-link",
+          label: "Resend Link",
+          icon: (row) => {
+            const isLoading = resendLoading[row.id];
+            return isLoading ? (
+              <div className="w-4 h-4 flex items-center justify-center">
+                <svg
+                  className="animate-spin h-4 w-4 text-custom-blue"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+            ) : (
+              <Mail className="w-4 h-4 text-custom-blue" />
+            );
           },
-        ]
+          onClick: (row) => {
+            if (!resendLoading[row.id]) {
+              onResendLink(row.id);
+            }
+          },
+          show: (row) => {
+            const result = shouldShowButton(row, "resend");
+            return result;
+          },
+          disabled: (row) => resendLoading[row.id],
+        },
+      ]
       : []),
     // ------------------------------v1.0.1 >
   ];
@@ -985,12 +1105,28 @@ function Candidate({
     {
       key: "email",
       header: "Email",
-      render: (value, row) => <span>{row.Email}</span> || "N/A",
+      render: (value, row) => <span>{row?.Email}</span> || "N/A",
+    },
+    // v2.0.0 <-------------------------------------------------------------
+    {
+      key: "phone",
+      header: "Phone",
+      render: (value, row) => <span>{row?.Phone}</span> || "N/A",
     },
     {
-      key: "currentRole",
-      header: "Current Role",
+      key: "currentExperience",
+      header: "Experience",
+      render: (value, row) =>
+        (
+          <span>
+            {row?.CurrentExperience}
+            <span className="ml-1">
+              {row?.CurrentExperience > 1 ? "Years" : "Year"}
+            </span>
+          </span>
+        ) || "N/A",
     },
+    // v2.0.0 ------------------------------------------------------------->
     {
       key: "skills",
       header: "Skills",
@@ -1026,99 +1162,99 @@ function Candidate({
     // View Details
     ...(effectivePermissions.Candidates?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (item, e) => {
-              isAssessmentView
-                ? navigate(`/${item?.assessmentId}/view-details/${item._id}`)
-                : navigate(`view-details/${item._id}`);
-            },
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (item, e) => {
+            isAssessmentView
+              ? navigate(`/${item?.assessmentId}/view-details/${item._id}`)
+              : navigate(`view-details/${item._id}`);
           },
-        ]
+        },
+      ]
       : []),
 
     // 360° View (only if not in assessment view)
     ...(!isAssessmentView
       ? [
-          {
-            key: "360view",
-            label: "360° View",
-            icon: <CircleUser className="w-4 h-4 text-purple-600" />,
-            onClick: (item, e) => {
-              item?._id && navigate(`/candidate/${item._id}`);
-            },
+        {
+          key: "360view",
+          label: "360° View",
+          icon: <CircleUser className="w-4 h-4 text-purple-600" />,
+          onClick: (item, e) => {
+            item?._id && navigate(`/candidate/${item._id}`);
           },
-        ]
+        },
+      ]
       : []),
 
     // Edit (only if not in assessment view)
     ...(!isAssessmentView && effectivePermissions.Candidates?.Edit
       ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (item, e) => {
-              navigate(`edit/${item._id}`);
-            },
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (item, e) => {
+            navigate(`edit/${item._id}`);
           },
-        ]
+        },
+      ]
       : []),
 
     // Resend Link (only if in assessment view)
     ...(isAssessmentView
       ? [
-          {
-            key: "resend",
-            label: "Resend Link",
-            icon: <Mail className="w-4 h-4 text-custom-blue" />,
-            isVisible: (item) => shouldShowButton(item, "resend"),
-            onClick: (item, e) => {
-              if (!resendLoading[item.id]) {
-                onResendLink(item.id);
-              }
-            },
-            loading: (item) => resendLoading[item.id],
-            disabled: (item) => resendLoading[item.id],
+        {
+          key: "resend",
+          label: "Resend Link",
+          icon: <Mail className="w-4 h-4 text-custom-blue" />,
+          isVisible: (item) => shouldShowButton(item, "resend"),
+          onClick: (item, e) => {
+            if (!resendLoading[item.id]) {
+              onResendLink(item.id);
+            }
           },
-        ]
+          loading: (item) => resendLoading[item.id],
+          disabled: (item) => resendLoading[item.id],
+        },
+      ]
       : []),
 
     // Delete
     ...(effectivePermissions.Candidates?.Delete
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (item) => {
-              setShowDeleteConfirmModal(true);
-              setDeleteCandidate(item);
-            },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: (item) => {
+            setShowDeleteConfirmModal(true);
+            setDeleteCandidate(item);
           },
-        ]
+        },
+      ]
       : []),
   ];
 
-  const renderKanbanActions = (item) => (
-    <div className="flex items-center gap-1">
-      {kanbanActions.map((action) => (
-        <button
-          key={action.key}
-          onClick={(e) => {
-            e.stopPropagation();
-            action.onClick(item);
-          }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title={action.label}
-        >
-          {action.icon}
-        </button>
-      ))}
-    </div>
-  );
+  // const renderKanbanActions = (item) => (
+  //   <div className="flex items-center gap-2">
+  //     {kanbanActions.map((action) => (
+  //       <button
+  //         key={action.key}
+  //         onClick={(e) => {
+  //           e.stopPropagation();
+  //           action.onClick(item);
+  //         }}
+  //         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+  //         title={action.label}
+  //       >
+  //         {action.icon}
+  //       </button>
+  //     ))}
+  //   </div>
+  // );
   // v1.0.8 ------------------------------------------------------------------------------>
 
   return (
@@ -1168,7 +1304,7 @@ function Candidate({
               ? ""
               : "fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background"
           }
-          // v1.0.7 ---------------------------------------------------------->
+        // v1.0.7 ---------------------------------------------------------->
         >
           <div className="sm:px-0">
             <motion.div className="bg-white">
@@ -1233,16 +1369,13 @@ function Candidate({
                       data={currentFilteredRows.map((candidate) => ({
                         ...candidate,
                         id: candidate._id,
-                        title: `${candidate?.FirstName || ""} ${
-                          candidate?.LastName || ""
-                        }`.trim(),
-                        firstName: `${
-                          candidate?.FirstName.charAt(0).toUpperCase() +
-                            candidate?.FirstName.slice(1) || ""
-                        } ${
-                          candidate?.LastName.charAt(0).toUpperCase() +
-                            candidate?.LastName.slice(1) || ""
-                        }`.trim(),
+                        title: `${candidate?.FirstName || ""} ${candidate?.LastName || ""
+                          }`.trim(),
+                        firstName: `${candidate?.FirstName.charAt(0).toUpperCase() +
+                          candidate?.FirstName.slice(1) || ""
+                          } ${candidate?.LastName.charAt(0).toUpperCase() +
+                          candidate?.LastName.slice(1) || ""
+                          }`.trim(),
                         currentRole:
                           candidate?.CurrentRole ||
                           candidate?.CurrentExperience ||
@@ -1250,9 +1383,17 @@ function Candidate({
                         avatar: candidate?.ImageData?.path || null,
                       }))}
                       columns={kanbanColumns}
-                      renderActions={renderKanbanActions}
+                      // v2.0.1 <-------------------------------------------------
+                      // renderActions={renderKanbanActions}
+                      renderActions={(item) => (
+                        <KanbanActionsMenu
+                          item={item}
+                          kanbanActions={kanbanActions}
+                        />
+                      )}
                       emptyState="No candidates found."
                     />
+                    {/* // v2.0.1 -------------------------------------------------> */}
                   </div>
                   // v1.0.8 ------------------------------------------------------------------->
                 )}
@@ -1298,7 +1439,7 @@ function Candidate({
                                   }
                                   // v1.0.3 <--------------------------------------------------------------
                                   className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                  // v1.0.3 -------------------------------------------------------------->
+                                // v1.0.3 -------------------------------------------------------------->
                                 />
                                 <span className="text-sm">
                                   {q.QualificationName}
@@ -1345,7 +1486,7 @@ function Candidate({
                                   }
                                   // v1.0.3 <--------------------------------------------------------------
                                   className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                  // v1.0.3 -------------------------------------------------------------->
+                                // v1.0.3 -------------------------------------------------------------->
                                 />
                                 <span className="text-sm">
                                   {skill.SkillName}
