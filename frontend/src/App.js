@@ -48,6 +48,7 @@ import UserDataLoader from "./Components/UserDataLoader.jsx";
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
 // import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
 import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
+import PendingApproval from "./Pages/Login-Part/PendingApproval/PendingApproval.jsx";
 import { config } from "./config.js";
 import ToastProvider from "./Components/ToastProvider";
 import { VideoCallingSettings } from "./Pages/Dashboard-Part/Accountsettings/VideoCallingSetting/VideoCallingSettings.jsx";
@@ -582,6 +583,7 @@ const MainAppRoutes = ({
             <Route path="/resetPassword" element={<ResetPassword />} />
             <Route path="/forgot-password" element={<ForgetPassword />} />
             <Route path="/assessmenttest" element={<AssessmentTest />} />
+            <Route path="/pending-approval" element={<PendingApproval />} />
 
             {/* <------------------------------- v1.0.5 */}
             {/* Video Call Public Routes */}
@@ -971,7 +973,7 @@ const MainAppRoutes = ({
                     />
                   </Route>
                 )}
-                
+
 
 
 
