@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUserProfile } from "../../../../../apiHooks/useUsers";
 import { useWithdrawalRequests, useCancelWithdrawal, getWithdrawalStatusColor, formatWithdrawalMode } from "../../../../../apiHooks/useWithdrawal";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
@@ -7,7 +7,13 @@ import LoadingButton from "../../../../../Components/LoadingButton";
 
 export function WithdrawalHistory({ onClose }) {
   const { userProfile } = useUserProfile();
-  const ownerId = userProfile?.id;
+  const ownerId = userProfile?.id || userProfile?._id; // Fixed: Check both id and _id
+  
+  // Debug logging to check if ownerId is correct
+  // console.log("WithdrawalHistory Debug:", {
+  //   ownerId,
+  //   userProfile
+  // });
   
   // State
   const [selectedStatus, setSelectedStatus] = useState(null);
@@ -19,6 +25,20 @@ export function WithdrawalHistory({ onClose }) {
   const { mutate: cancelWithdrawal, isLoading: cancelling } = useCancelWithdrawal();
   
   const withdrawalRequests = data?.withdrawalRequests || [];
+  
+  // Debug logging for withdrawal data
+  // console.log("Withdrawal requests data:", {
+  //   data,
+  //   withdrawalRequests,
+  //   isLoading
+  // });
+  
+  // Refetch data when component mounts
+  useEffect(() => {
+    if (ownerId) {
+      refetch();
+    }
+  }, [ownerId]); // eslint-disable-line react-hooks/exhaustive-deps
   
   const statusFilters = [
     { value: null, label: "All", icon: Filter },
@@ -161,7 +181,20 @@ export function WithdrawalHistory({ onClose }) {
   
   return (
     <>
-      <SidebarPopup title="Withdrawal History" onClose={onClose}>
+      <SidebarPopup 
+        title="Withdrawal History" 
+        onClose={onClose}
+        // headerAction={
+        //   <button
+        //     onClick={() => refetch()}
+        //     className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm"
+        //     title="Refresh withdrawal history"
+        //   >
+        //     <RefreshCw className="h-4 w-4" />
+        //     <span className="font-medium">Refresh</span>
+        //   </button>
+        // }
+      >
         <div className="sm:p-0 p-4 flex-1 overflow-y-auto">
           {/* Filter Bar */}
           <div className="bg-white border-b sticky top-0 z-10 pb-4">

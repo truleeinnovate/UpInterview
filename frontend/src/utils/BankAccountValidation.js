@@ -37,11 +37,11 @@ export const validateBankAccount = (formData) => {
     errors.accountType = 'Account type is required';
   }
 
-  if (!formData.swiftCode || formData.swiftCode.trim() === '') {
-    errors.swiftCode = 'SWIFT code is required';
-  } else if (!/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/i.test(formData.swiftCode.toUpperCase())) {
-    errors.swiftCode = 'Invalid SWIFT code format (8-11 characters: BANKCCLL or BANKCCLLXXX)';
-  }
+  // if (!formData.swiftCode || formData.swiftCode.trim() === '') {
+  //   errors.swiftCode = 'SWIFT code is required';
+  // } else if (!/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/i.test(formData.swiftCode.toUpperCase())) {
+  //   errors.swiftCode = 'Invalid SWIFT code format (8-11 characters: BANKCCLL or BANKCCLLXXX)';
+  // }
 
   return errors;
 };

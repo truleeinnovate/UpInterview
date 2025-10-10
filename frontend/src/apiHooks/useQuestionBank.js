@@ -125,15 +125,18 @@ export const useQuestions = (filters = {}) => {
 
   // 3️⃣ Fetch Suggested Questions
   const {
-    data: suggestedQuestions = [],
+    data: suggestedQuestionsData = { questions: [], usageLimit: null },
     isLoading: isSuggestedQuestionsLoading,
     isError: isSuggestedQuestionsError,
     error: suggestedQuestionsError,
     refetch: refetchSuggestedQuestions,
   } = useQuery({
-    queryKey: ['suggestedQuestions', filters],
+    queryKey: ['suggestedQuestions', filters, tenantId, ownerId],
     queryFn: async () => {
-      const params = {};
+      const params = {
+        tenantId,
+        ownerId
+      };
       if (filters?.questionType) {
         params.questionType = filters.questionType;
       }
@@ -142,9 +145,16 @@ export const useQuestions = (filters = {}) => {
         { params }
       );
       if (response.data.success) {
-        return response.data.questions.map((q) => ({ ...q, isAdded: false }));
+        return {
+          questions: response.data.questions.map((q) => ({ ...q, isAdded: false })),
+          usageLimit: response.data.usageLimit,
+          totalQuestions: response.data.totalQuestions,
+          accessibleQuestions: response.data.accessibleQuestions,
+          lockedQuestions: response.data.lockedQuestions,
+          questionTypeFilter: response.data.questionTypeFilter
+        };
       }
-      return [];
+      return { questions: [], usageLimit: null, totalQuestions: null, accessibleQuestions: null, lockedQuestions: null, questionTypeFilter: null };
     },
     retry: 1,
     staleTime: 1000 * 60 * 10, // 10 minutes
@@ -153,6 +163,13 @@ export const useQuestions = (filters = {}) => {
     refetchOnMount: false,
     refetchOnReconnect: false,
   });
+  
+  const suggestedQuestions = suggestedQuestionsData.questions || [];
+  const questionBankUsageLimit = suggestedQuestionsData.usageLimit;
+  const totalQuestions = suggestedQuestionsData.totalQuestions;
+  const accessibleQuestions = suggestedQuestionsData.accessibleQuestions;
+  const lockedQuestions = suggestedQuestionsData.lockedQuestions;
+  const questionTypeFilter = suggestedQuestionsData.questionTypeFilter;
 
   // 4️⃣ Custom Hook: Fetch Question by Suggested ID
   const useQuestionBySuggestedId = (suggestedQuestionId) =>
@@ -435,12 +452,16 @@ export const useQuestions = (filters = {}) => {
     myQuestionsList,
     createdLists,
     suggestedQuestions,
+    questionBankUsageLimit,
+    totalQuestions,
+    accessibleQuestions,
+    lockedQuestions,
+    questionTypeFilter,
     isLoading,
     isMyQuestionsLoading,
     isListsLoading,
     isSuggestedQuestionsLoading,
     isMutationLoading,
-    // Expose specific mutation loading states for finer UI control
     saveOrUpdateQuestionLoading: saveOrUpdateQuestionMutation.isPending,
     saveOrUpdateListLoading: saveOrUpdateListMutation.isPending,
     addQuestionToListLoading: addQuestionToListMutation.isPending,

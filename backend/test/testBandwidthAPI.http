@@ -1,0 +1,81 @@
+### Test Bandwidth Usage API Endpoints
+### You can use this file with REST Client extension in VS Code or import into Postman
+
+@baseUrl = http://localhost:5000
+@tenantId = 65a1234567890abcdef12345
+@ownerId = 65a1234567890abcdef12346
+
+### 1. Check Current Bandwidth Usage
+GET {{baseUrl}}/bandwidth/check?tenantId={{tenantId}}&ownerId={{ownerId}}
+Content-Type: application/json
+
+### 2. Get Bandwidth Statistics
+GET {{baseUrl}}/bandwidth/stats?tenantId={{tenantId}}&ownerId={{ownerId}}
+Content-Type: application/json
+
+### 3. Track Upload (100MB)
+POST {{baseUrl}}/bandwidth/track
+Content-Type: application/json
+
+{
+  "tenantId": "{{tenantId}}",
+  "ownerId": "{{ownerId}}",
+  "sizeInBytes": 104857600,
+  "operation": "upload"
+}
+
+### 4. Track Download (50MB)  
+POST {{baseUrl}}/bandwidth/track
+Content-Type: application/json
+
+{
+  "tenantId": "{{tenantId}}",
+  "ownerId": "{{ownerId}}",
+  "sizeInBytes": 52428800,
+  "operation": "download"
+}
+
+### 5. Track Small File Upload (1MB)
+POST {{baseUrl}}/bandwidth/track
+Content-Type: application/json
+
+{
+  "tenantId": "{{tenantId}}",
+  "ownerId": "{{ownerId}}",
+  "sizeInBytes": 1048576,
+  "operation": "upload"
+}
+
+### 6. Test Bandwidth Limit Exceeded (10GB)
+POST {{baseUrl}}/bandwidth/track
+Content-Type: application/json
+
+{
+  "tenantId": "{{tenantId}}",
+  "ownerId": "{{ownerId}}",
+  "sizeInBytes": 10737418240,
+  "operation": "upload"
+}
+
+### 7. Get Usage Data (includes bandwidth)
+GET {{baseUrl}}/usage/{{tenantId}}
+Content-Type: application/json
+
+### 8. Test File Upload with Bandwidth Tracking
+POST {{baseUrl}}/upload
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="test.txt"
+Content-Type: text/plain
+
+This is a test file content for bandwidth tracking
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="tenantId"
+
+{{tenantId}}
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="ownerId"
+
+{{ownerId}}
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
