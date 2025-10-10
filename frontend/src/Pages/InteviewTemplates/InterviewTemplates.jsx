@@ -516,7 +516,8 @@ const InterviewTemplates = () => {
         return (
           <div
             className="text-sm font-medium text-custom-blue cursor-pointer"
-            onClick={() => handleView(row)}
+            onClick={() =>
+               handleView(row)}
           >
             {formattedValue}
           </div>
@@ -630,6 +631,8 @@ const InterviewTemplates = () => {
         ]
       : []),
   ];
+
+  
 
   return (
     <div className="bg-background min-h-screen">

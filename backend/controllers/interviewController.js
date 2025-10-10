@@ -906,12 +906,12 @@ async function processInterviewers(interviewers) {
 const saveInterviewRound = async (req, res) => {
     try {
         const { interviewId, round, roundId, questions } = req.body;
-        console.log("=== saveInterviewRound START ===");
-        console.log("Request body:", JSON.stringify(req.body, null, 2));
-        console.log("interviewId:", interviewId);
-        console.log("roundId:", roundId);
-        console.log("round keys:", Object.keys(round || {}));
-        console.log("meetLink field:", round?.meetLink);
+        // console.log("=== saveInterviewRound START ===");
+        // console.log("Request body:", JSON.stringify(req.body, null, 2));
+        // console.log("interviewId:", interviewId);
+        // console.log("roundId:", roundId);
+        // console.log("round keys:", Object.keys(round || {}));
+        // console.log("meetLink field:", round?.meetLink);
 
         //  // Validate the request data
         //  const validationResult = validateInterviewRound(req.body, !!roundId);
@@ -998,7 +998,7 @@ const saveInterviewRound = async (req, res) => {
 
         // Set meetLink directly if it exists
         if (meetLink && Array.isArray(meetLink)) {
-            console.log("Setting meetLink for new round:", meetLink);
+            // console.log("Setting meetLink for new round:", meetLink);
             // console.log(
             //   "meetLink structure:",
             //   meetLink?.map((item) => ({
@@ -1080,10 +1080,7 @@ const updateInterviewRound = async (req, res) => {
     try {
         let roundIdParam = req.params.roundId;
         const { interviewId, round, questions } = req.body;
-        console.log("=== updateInterviewRound START ===");
-        console.log("Request body:", JSON.stringify(req.body, null, 2));
-        console.log("interviewId:", interviewId);
-
+      
 
 
         if (!mongoose.Types.ObjectId.isValid(roundIdParam)) {
@@ -1092,7 +1089,7 @@ const updateInterviewRound = async (req, res) => {
 
         const roundId = new mongoose.Types.ObjectId(roundIdParam);
 
-        console.log("roundId:", roundId);
+    
 
         if (!interviewId || !roundId || !round) {
             return res.status(400).json({
@@ -1109,8 +1106,6 @@ const updateInterviewRound = async (req, res) => {
             console.log("Round not found with ID:", roundId);
             return res.status(404).json({ message: "Round not found." });
         }
-
-        console.log("Found existing round:", existingRound._id);
 
         // Check usage limit if changing status to Scheduled for internal interview
         if (round.status === 'Scheduled' && 
@@ -1146,14 +1141,13 @@ const updateInterviewRound = async (req, res) => {
         Object.assign(existingRound, otherRoundData);
 
         if (meetLink && Array.isArray(meetLink)) {
-            console.log("Updating meetLink directly:", meetLink);
+            // console.log("Updating meetLink directly:", meetLink);
             existingRound.meetLink = meetLink;
         }
 
         // Save updated round
         const savedRound = await existingRound.save();
-        console.log("Round updated successfully:", savedRound._id);
-
+      
         // Reorder rounds just in case sequence was changed
         await reorderInterviewRounds(interviewId);
 

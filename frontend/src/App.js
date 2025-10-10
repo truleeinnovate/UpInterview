@@ -1031,7 +1031,7 @@ const MainAppRoutes = ({
               </Route>
 
               {/* Interview Templates */}
-              {hasPermission("InterviewTemplates") && (
+              {/* {hasPermission("InterviewTemplates") && (
                 <Route
                   path="/interview-templates"
                   element={<InterviewTemplates />}
@@ -1076,7 +1076,40 @@ const MainAppRoutes = ({
                     element={<RoundFormTemplate />}
                   />
                 </>
-              )}
+              )} */}
+
+
+      {/* Interview Templates - CORRECTED ROUTING STRUCTURE */}
+{hasPermission("InterviewTemplates") && (
+  <Route path="/interview-templates" element={<InterviewTemplates />}>
+    <Route index element={null} />
+    {hasPermission("InterviewTemplates", "Create") && (
+      <Route path="new" element={<InterviewTemplateForm mode="Create" />} />
+    )}
+    {/* REMOVE the nested :id route from here to prevent conflicts */}
+  </Route>
+)}
+
+{/* Separate route for template details to avoid outlet conflicts */}
+{hasPermission("InterviewTemplates") && (
+  <Route path="/interview-templates/:id" element={<TemplateDetail />}>
+    <Route index element={null} />
+    {hasPermission("InterviewTemplates", "Edit") && (
+      <Route path="edit" element={<InterviewTemplateForm mode="Edit" />} />
+    )}
+    {hasPermission("InterviewTemplates", "Clone") && (
+      <Route path="clone" element={<InterviewTemplateForm mode="Clone" />} />
+    )}
+  </Route>
+)}
+
+{/* Keep round routes separate */}
+{hasPermission("InterviewTemplates") && (
+  <>
+    <Route path="/interview-templates/:id/round/new" element={<RoundFormTemplate />} />
+    <Route path="/interview-templates/:id/round" element={<RoundFormTemplate />} />
+  </>
+)}
 
               {/* Feedbacks */}
               {hasPermission("Feedback") && (

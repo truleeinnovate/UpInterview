@@ -418,15 +418,17 @@ const InterviewSlideover = ({ mode }) => {
         const tab = searchParams.get("tab") || "standard";
 
         if (mode === "Edit" || mode === "Create" || isCloneMode) {
-            navigate({
-                pathname: "/interview-templates",
-                search: `?tab=${tab}`,
-            });
+            // navigate({
+            //     pathname: "/interview-templates",
+            //     search: `?tab=${tab}`,
+            // });
+            navigate(-1);
         } else if (mode === "Template Edit") {
-            navigate({
-                pathname: `/interview-templates/${id}`,
-                search: `?tab=${tab}`,
-            });
+            // navigate({
+            //     pathname: `/interview-templates/${id}`,
+            //     search: `?tab=${tab}`,
+            // });
+            navigate(-1);
         }
     };
 

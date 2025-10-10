@@ -138,7 +138,8 @@ const interviewRoundSchema = new mongoose.Schema({
   dateTime: String,
 
   interviewerViewType: String,
-  interviewerGroupName: String,
+  // interviewerGroupName: String,
+  interviewerGroupId: String,
   interviewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }],
 
   // Candidate (always one per round, included in participants too if needed)
