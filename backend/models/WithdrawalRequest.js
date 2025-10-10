@@ -82,8 +82,8 @@ const WithdrawalRequestSchema = new mongoose.Schema(
     // Processing mode
     mode: {
       type: String,
-      enum: ["IMPS", "NEFT", "RTGS", "UPI", "card"],
-      default: "IMPS"
+      enum: ["IMPS", "NEFT", "RTGS", "UPI", "card", "manual"],
+      default: "manual" // Changed default to manual for superadmin processing
     },
     
     // Expected timeline
@@ -133,8 +133,9 @@ WithdrawalRequestSchema.index({ razorpayPayoutId: 1 });
 WithdrawalRequestSchema.index({ status: 1, createdAt: -1 });
 WithdrawalRequestSchema.index({ ownerId: 1, createdAt: -1 });
 
-// Pre-save hook to generate withdrawal code
+// Pre-save hook to generate withdrawal code (as fallback) and set other defaults
 WithdrawalRequestSchema.pre("save", async function(next) {
+  // Only generate if not already provided (fallback mechanism)
   if (!this.withdrawalCode) {
     const lastWithdrawal = await this.constructor.findOne({})
       .sort({ _id: -1 })
@@ -171,6 +172,9 @@ WithdrawalRequestSchema.pre("save", async function(next) {
         break;
       case "RTGS":
         this.expectedCompletionDate = new Date(now.getTime() + 1 * 3600000); // 1 hour
+        break;
+      case "manual":
+        this.expectedCompletionDate = new Date(now.getTime() + 48 * 3600000); // 48 hours for manual processing
         break;
       default:
         this.expectedCompletionDate = new Date(now.getTime() + 24 * 3600000); // 24 hours

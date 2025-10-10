@@ -49,10 +49,14 @@ export const useCreateWithdrawal = () => {
       );
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       // Invalidate wallet and withdrawal queries
       queryClient.invalidateQueries(["wallet"]);
       queryClient.invalidateQueries(["withdrawalRequests"]);
+      // Also invalidate specific owner's withdrawal requests
+      if (variables?.ownerId) {
+        queryClient.invalidateQueries(["withdrawalRequests", variables.ownerId]);
+      }
       
       toast.success(
         `Withdrawal request created successfully! ${

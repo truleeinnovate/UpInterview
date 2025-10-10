@@ -23,6 +23,7 @@ function SidebarPopup({
   showExternal = false,
   setIsFullscreen, // v1.0.1 <--------------------------->
   icon = null, // v1.0.2 <--------------------------->
+  headerAction = null, // Custom header action button/component
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
@@ -82,6 +83,9 @@ function SidebarPopup({
 
             {/* Action buttons */}
             <div className="flex items-center gap-2">
+              {/* Custom header action */}
+              {headerAction && headerAction}
+              
               {showEdit && id && (
                 <button
                   onClick={() => navigate(`/candidate/edit/${id}`)}

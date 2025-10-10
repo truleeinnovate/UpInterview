@@ -10,7 +10,11 @@ const {
   getWithdrawalRequests,
   cancelWithdrawalRequest,
   handlePayoutWebhook,
-  fixVerifiedBankAccounts
+  fixVerifiedBankAccounts,
+  // Manual processing endpoints
+  processManualWithdrawal,
+  failManualWithdrawal,
+  getAllWithdrawalRequests
 } = require('../controllers/WalletControllers');
 
 const WalletRouter = express.Router();
@@ -53,5 +57,15 @@ WalletRouter.post('/payout-webhook', handlePayoutWebhook);
 // Utility Routes
 // POST /wallet/fix-verified-accounts - Fix verified bank accounts that are not marked as active
 WalletRouter.post('/fix-verified-accounts', fixVerifiedBankAccounts);
+
+// Manual Processing Routes (for Superadmin)
+// POST /wallet/withdrawals/:withdrawalRequestId/process - Manually process a withdrawal
+WalletRouter.post('/withdrawals/:withdrawalRequestId/process', processManualWithdrawal);
+
+// POST /wallet/withdrawals/:withdrawalRequestId/fail - Manually mark a withdrawal as failed
+WalletRouter.post('/withdrawals/:withdrawalRequestId/fail', failManualWithdrawal);
+
+// GET /wallet/withdrawals/all - Get all withdrawal requests (superadmin)
+WalletRouter.get('/withdrawals/all', getAllWithdrawalRequests);
 
 module.exports = WalletRouter;

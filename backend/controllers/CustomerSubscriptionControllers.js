@@ -136,14 +136,15 @@ const createSubscriptionControllers = async (req, res) => {
           const Usage = require('../models/Usage.js');
           const features = plan.features || [];
           
-          const usageAttributes = features
-            .filter(f => ['Assessments', 'Internal_Interviews'].includes(f?.name))
-            .map(f => ({
-              entitled: Number(f?.limit) || 0,
-              type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' : f?.name,
-              utilized: 0,
-              remaining: Number(f?.limit) || 0,
-            }));
+          const usageAttributes = features.filter(f => ['Assessments', 'Internal_Interviews', 'Question_Bank_Access', 'Bandwidth'].includes(f?.name))
+                                    .map(f => ({
+                                        entitled: Number(f?.limit) || 0,
+                                        type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' : 
+                                              f?.name === 'Question_Bank_Access' ? 'Question Bank Access' :
+                                              f?.name === 'Bandwidth' ? 'User Bandwidth' : f?.name,
+                                        utilized: 0,
+                                        remaining: Number(f?.limit) || 0,
+                                    }));
 
           // const endDate = new Date();
           // if (userDetails.membershipType === 'annual') {

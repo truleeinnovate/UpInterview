@@ -2,7 +2,7 @@
 // v1.0.1 - Ashok - Improved responsiveness
 
 import { useState, useEffect, useRef } from "react";
-import { ViewDetailsButton, EditButton } from "../../common/Buttons";
+import { ViewDetailsButton } from "../../common/Buttons";
 
 import { Outlet } from "react-router-dom";
 import WalletBalancePopup from "./WalletBalancePopup";
@@ -243,10 +243,6 @@ const Wallet = () => {
             >
               Top Up
             </button>
-            {/* <EditButton
-              onClick={() => alert("Edit wallet settings")}
-              className="sm:px-2 sm:py-1 bg-gray-100 rounded-lg"
-            /> */}
           </div>
         </div>
 
@@ -444,9 +440,16 @@ const Wallet = () => {
       {isWithdrawalOpen && (
         <WithdrawalModal
           onClose={() => setIsWithdrawalOpen(false)}
-          onSuccess={() => {
-            refetch();
-            setIsWithdrawalHistoryOpen(true);
+          onSuccess={(data) => {
+            // If just showing history (from history button click)
+            if (data?.showHistory) {
+              setIsWithdrawalOpen(false);
+              setIsWithdrawalHistoryOpen(true);
+            } else {
+              // Normal withdrawal success flow
+              refetch();
+              setIsWithdrawalHistoryOpen(true);
+            }
           }}
         />
       )}
@@ -456,6 +459,7 @@ const Wallet = () => {
           onClose={() => setIsWithdrawalHistoryOpen(false)}
         />
       )}
+      
       <Outlet />
     </>
   );
