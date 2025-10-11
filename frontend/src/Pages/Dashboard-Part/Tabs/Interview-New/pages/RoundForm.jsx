@@ -2528,12 +2528,12 @@ const RoundFormInterviews = () => {
                       {/* v1.0.5 --------------------------------------------------------> */}
 
                       {/* Internal Interview Usage Display */}
-                      {isInternalSelected && (
+                      {/* {isInternalSelected && (
                         <InternalInterviewUsageDisplay
                           className="mt-3 mb-3"
                           showOnlyWarning={false}
                         />
-                      )}
+                      )} */}
 
                       {/* Selected Interviewers Summary */}
                       {/* v1.0.5 <------------------------------------------------------------ */}
