@@ -397,7 +397,7 @@ const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
             );
         });
     };
-    
+
     // <---------------------- v1.0.0
     const rowsPerPage = 10;
 
@@ -449,7 +449,7 @@ const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
 
   const handleDelete = async (assessment) => {
     console.log("effectivePermissions.assessment?.Delete",effectivePermissions.assessment?.Delete);
-    
+
 
     // if (effectivePermissions.assessment?.Delete) {  // have to check beause this is mandtoary or not ?
       setDeleteAssessmentTemplate(assessment)
@@ -579,7 +579,7 @@ const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
     });
   };
 
- 
+
     // const handleCloseShare = () => {
     //     setIsShareOpen(false);
     // };
@@ -676,7 +676,7 @@ const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
     ];
     // <---------------------- v1.0.0
     // <---------------------- v1.0.1
-  
+
 
 
 
@@ -688,14 +688,14 @@ const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
         );
     };
 
-  
+
     return (
         <div className="bg-background min-h-screen">
             <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
                 <main className="px-6">
                     <div className="sm:px-0">
                         <Header
-                            title="Assessment Templtes"
+                            title="Assessment Templates"
                             onAddClick={() => navigate("/assessments-template/new")}
                             addButtonText="New Template"
                             // <---------------------- v1.0.1
@@ -1085,7 +1085,7 @@ const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
                 message={`Are you sure you want to delete "${assessmentToDelete?.AssessmentTitle}"? This action cannot be undone.`}
             />
 
-       
+
       {/* v1.0.7 -----------------------------------------------------------------------------------> */}
       {isShareOpen && (
         <ShareAssessment
@@ -1105,7 +1105,7 @@ const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
             />
     </div>
   );
-    
+
 };
 
 export default Assessment;

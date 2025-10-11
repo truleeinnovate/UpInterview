@@ -1422,7 +1422,7 @@ const App = () => {
       // "/individual-login",
       // "/select-user-type",
       // "/select-profession",
-      "/create-profile",
+    //   "/create-profile",
       // "/subscription-plans",
       // "/payment-details",
       // "/verify-email",
