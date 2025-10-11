@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Changed cards for small screens and adjusted height of Kanban
 // v1.0.1 - Ashok - fixed padding issues at cards
+// v1.0.2 - Ashok - Improved loading view
 
 import { motion } from "framer-motion";
 import { Calendar, Layers, Trash, Files } from "lucide-react";
@@ -16,13 +17,10 @@ const KanbanView = ({
   onEdit,
   // handleClone,
 }) => {
-
-
   const navigate = useNavigate();
   const handleCloneClick = (template) => {
     navigate(`/interview-templates/${template._id}/clone`);
   };
-
 
   // Format options for UI labels
   const formatOptions = [
@@ -51,63 +49,90 @@ const KanbanView = ({
 
   if (loading) {
     return (
+      // v1.0.2 <-----------------------------------------------------------------
       <motion.div
-        className="w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
+        className="w-full h-[calc(100vh-15.6rem)] rounded-xl p-6 overflow-y-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="flex items-center justify-between mb-6">
-          <div className="h-8 w-1/3 bg-gray-200 skeleton-animation rounded"></div>
-          <div className="h-8 w-24 bg-gray-200 skeleton-animation rounded"></div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[...Array(3)].map((_, colIndex) => (
-            <div key={colIndex}>
-              <div className="h-6 w-1/2 bg-gray-200 skeleton-animation rounded mb-4"></div>
-              {[...Array(2)].map((_, index) => (
-                <motion.div
-                  key={index}
-                  className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 flex flex-col h-full mb-5"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                >
-                  <div className="flex justify-between items-start mb-4 gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="h-6 w-3/4 bg-gray-200 skeleton-animation rounded mb-2"></div>
-                      <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
-                      <div className="h-4 w-2/3 bg-gray-200 skeleton-animation rounded mt-1"></div>
-                    </div>
-                    <div className="flex gap-1 flex-shrink-0">
-                      <div className="h-8 w-8 bg-gray-200 skeleton-animation rounded-lg"></div>
-                      <div className="h-8 w-8 bg-gray-200 skeleton-animation rounded-lg"></div>
-                    </div>
-                  </div>
-                  <div className="mt-auto space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
-                          <div className="h-4 w-12 bg-gray-200 skeleton-animation rounded"></div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
-                          <div className="h-4 w-16 bg-gray-200 skeleton-animation rounded"></div>
-                        </div>
+        {/* Header shimmer */}
+        <motion.div
+          className="flex items-center justify-between mb-6"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="h-6 w-56 shimmer rounded-md"></div>
+          <div className="h-6 w-24 shimmer rounded-md"></div>
+        </motion.div>
+
+        {/* Format grid shimmer */}
+        <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-5 pb-20">
+          {formatOptions.map((format, index) => (
+            <motion.div
+              key={format.value}
+              className="bg-gray-200/40 flex flex-col p-4 rounded-lg"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              {/* Format header shimmer */}
+              <div className="h-5 w-3/4 shimmer rounded-md mb-4"></div>
+
+              {/* Template card placeholders */}
+              {Array(3)
+                .fill(null)
+                .map((_, idx) => (
+                  <motion.div
+                    key={idx}
+                    className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 mb-5 flex flex-col"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: idx * 0.05 }}
+                  >
+                    {/* Title + buttons */}
+                    <div className="flex justify-between items-start gap-2 mb-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="h-5 w-40 shimmer rounded-md mb-2"></div>
+                        <div className="h-4 w-56 shimmer rounded-md"></div>
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        {Array(3)
+                          .fill(null)
+                          .map((_, bIndex) => (
+                            <div
+                              key={bIndex}
+                              className="w-8 h-8 shimmer rounded-lg"
+                            ></div>
+                          ))}
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="h-8 bg-gray-200 skeleton-animation rounded-lg"></div>
-                      <div className="h-8 bg-gray-200 skeleton-animation rounded-lg"></div>
+
+                    {/* Round count + Date shimmer */}
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 shimmer rounded-full"></div>
+                        <div className="w-24 h-4 shimmer rounded-md"></div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 shimmer rounded-full"></div>
+                        <div className="w-20 h-4 shimmer rounded-md"></div>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+
+                    {/* Rounds shimmer list */}
+                    <div className="space-y-2">
+                      <div className="h-8 w-full shimmer rounded-lg"></div>
+                      <div className="h-8 w-3/4 shimmer rounded-lg"></div>
+                    </div>
+                  </motion.div>
+                ))}
+            </motion.div>
           ))}
         </div>
       </motion.div>
+      // v1.0.2 ----------------------------------------------------------------->
     );
   }
 
@@ -141,7 +166,10 @@ const KanbanView = ({
           {/* v1.0.0 <-----------------------------------------------------------------------------------------------------------> */}
           {["online", "hybrid", "offline"].map((format) => (
             // v1.0.1 <--------------------------------------------------------------------
-            <div key={format} className="bg-gray-200/40 flex flex-col p-4 rounded-lg">
+            <div
+              key={format}
+              className="bg-gray-200/40 flex flex-col p-4 rounded-lg"
+            >
               {/* v1.0.1 <-------------------------------------------------------------------- */}
               <h4 className="text-lg font-semibold text-gray-700 mb-4">
                 {formatLabelMap[format]} Templates (

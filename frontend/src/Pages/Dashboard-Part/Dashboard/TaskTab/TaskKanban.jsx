@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Improved responsiveness
+
 // src/Components/Shared/Kanban/KanbanView.jsx
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -95,6 +97,7 @@ const TaskKanban = ({
     : { all: data };
 
   return (
+    // v1.0.0 <----------------------------------------------------------------------------------
     <DndContext collisionDetection={closestCenter}>
       <motion.div
         className={`w-full bg-gray-50 rounded-xl p-6 overflow-y-auto transition-all duration-300 ${
@@ -163,31 +166,31 @@ const TaskKanban = ({
                     </div>
                   </div>
                   <div className="space-y-2 text-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div key={`${item.id}-assigned`} className="flex items-center gap-1.5 text-gray-600 truncate">
-                        <span className="truncate text-gray-600 font-medium">Assigned To:</span>
-                        <span className="truncate">{item.Email || 'N/A'}</span>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div key={`${item.id}-assigned`} className="grid grid-cols-2 text-gray-500 truncate">
+                        <span className="truncate text-gray-500 font-medium">Assigned To:</span>
+                        <span className="truncate text-gray-800 font-medium">{item.Email || 'N/A'}</span>
                       </div>
-                      <div key={`${item.id}-related`} className="flex items-center gap-1.5 text-gray-600 truncate">
-                        <span className="truncate text-gray-600 font-medium">Related To:</span>
-                        <span className="truncate">{item.Phone || 'N/A'}</span>
+                      <div key={`${item.id}-related`} className="grid grid-cols-2 text-gray-500 truncate">
+                        <span className="truncate text-gray-500 font-medium">Related To:</span>
+                        <span className="truncate text-gray-800 font-medium">{item.Phone || 'N/A'}</span>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div key={`${item.id}-priority`} className="flex items-center gap-1.5 text-gray-600 truncate">
-                        <span className="truncate text-gray-600 font-medium">Priority:</span>
-                        <span className="truncate">{item.HigherQualification || 'N/A'}</span>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div key={`${item.id}-priority`} className="grid grid-cols-2 text-gray-500 truncate">
+                        <span className="truncate text-gray-500 font-medium">Priority:</span>
+                        <span className="truncate text-gray-800 font-medium">{item.HigherQualification || 'N/A'}</span>
                       </div>
-                      <div key={`${item.id}-status`} className="flex items-center gap-1.5 text-gray-600 truncate">
-                        <span className="truncate text-gray-600 font-medium">Status:</span>
-                        <span className="truncate">{item.UniversityCollege || 'N/A'}</span>
+                      <div key={`${item.id}-status`} className="grid grid-cols-2 text-gray-500 truncate">
+                        <span className="truncate text-gray-500 font-medium">Status:</span>
+                        <span className="truncate text-gray-800 font-medium">{item.UniversityCollege || 'N/A'}</span>
                       </div>
                     </div>
                   </div>
                   {!item.isAssessmentView && (
                     <div className="mt-4 pt-4 border-t border-gray-100">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Due Date:</span>
+                        <span className="text-gray-500">Due Date:</span>
                         <span className="font-medium text-gray-800 truncate">
                           {(item.interviews || 'Not Provided')}
                         </span>
@@ -201,6 +204,7 @@ const TaskKanban = ({
         ))}
       </motion.div>
     </DndContext>
+    // v1.0.0 ---------------------------------------------------------------------------------->
   );
 };
 

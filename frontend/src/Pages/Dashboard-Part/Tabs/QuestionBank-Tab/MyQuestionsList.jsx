@@ -9,6 +9,7 @@
 // v1.0.8 - Ashok - Fixed responsive issues
 // v1.0.9 - Ashok - Fixed responsive issues at header
 // v2.0.0 - Ashok - changed loading from skelton to shimmer and proper structure
+// v2.0.1 - Ashok - added question text at rangeLabel
 
 import React, {
   useState,
@@ -87,7 +88,7 @@ function QuestionHeaderBar({
           : ""
       }`}
     >
-      <div className="flex items-center gap-2 ">
+      <div className="flex items-center gap-2">
         {/* Interview Type Dropdown (using DropdownSelect) */}
         {type !== "assessment" && (
           <div className="w-48">
@@ -159,7 +160,9 @@ function QuestionHeaderBar({
         {/* Rest of your buttons */}
         <button
           // v1.0.9 <-------------------------------------------------------------------------------------------------------------------------------------------------------
-          className="text-md sm:w-[60px] md:w-[60px] lg:w-[60px] xl:w-[60px] 2xl:w-[60px] hover:underline text-custom-blue font-semibold flex items-center gap-2"
+          // v2.0.1 <-------------------------------------------------------------------------------------------------------------------------------------------------------
+          className="flex flex-nowrap whitespace-nowrap items-center justify-center text-md sm:w-[80px] md:w-[80px] lg:w-[80px] xl:w-[80px] 2xl:w-[80px] hover:underline text-custom-blue font-semibold"
+          // v2.0.1 ------------------------------------------------------------------------------------------------------------------------------------------------------->
           // v1.0.9 ------------------------------------------------------------------------------------------------------------------------------------------------------->
           onClick={() => {
             const meta = Array.isArray(createdLists)
@@ -180,8 +183,10 @@ function QuestionHeaderBar({
         <strong className="text-md text-gray-400"> | </strong>
         <button
           // v1.0.9 <---------------------------------------------------------------------------------------------------------------------------------------------------------------
-          className="text-md sm:w-[80px] md:w-[80px] lg:w-[80px] xl:w-[80px] 2xl:w-[80px] hover:underline text-custom-blue font-semibold flex items-center gap-2"
+          // v2.0.1 <---------------------------------------------------------------------------------------------------------------------------------------------------------------
+          className="flex flex-nowrap whitespace-nowrap items-center justify-center text-md sm:w-[90px] md:w-[90px] lg:w-[90px] xl:w-[90px] 2xl:w-[90px] hover:underline text-custom-blue font-semibold"
           // v1.0.9 --------------------------------------------------------------------------------------------------------------------------------------------------------------->
+          // v2.0.1 --------------------------------------------------------------------------------------------------------------------------------------------------------------->
           onClick={openListPopup}
         >
           Create List
@@ -201,7 +206,9 @@ function QuestionHeaderBar({
       {/* Search & Pagination Section */}
       <div className="flex items-center gap-3">
         {/* v1.0.9 <-------------------------------------------------------------------------------------------- */}
-        <div className="flex items-center sm:w-[120px] md:w-[120px] lg:w-[120px] xl:w-[120px] 2xl:w-[120px]">
+        {/* v2.0.1 <-------------------------------------------------------------------------------------------- */}
+        <div className="flex items-center flex-nowrap whitespace-nowrap sm:w-[120px] md:w-[120px] lg:w-[120px] xl:w-[120px] 2xl:w-[120px]">
+          {/* v2.0.1 --------------------------------------------------------------------------------------------> */}
           {/* v1.0.9 --------------------------------------------------------------------------------------------> */}
           <p>{rangeLabel}</p>
         </div>
@@ -1509,14 +1516,16 @@ const MyQuestionsList = ({
   const startIndex =
     totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+  // v2.0.1 <--------------------------------------------------------------------
   const rangeLabel =
     totalItems === 0
-      ? "0/0"
+      ? "0/0 Questions"
       : startIndex === endIndex
       ? `${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`
       : `${startIndex}-${endIndex}/${totalItems} ${
           totalItems > 1 ? "Questions" : "Question"
         }`;
+  // v2.0.1 -------------------------------------------------------------------->
 
   // Reset/clamp page on changes
   useEffect(() => {
