@@ -3,6 +3,7 @@
 // v1.0.3 changes done by Venkatesh related to error msg scroll into view
 // v1.0.4 - Ashok - Improved scroll to first error functionality
 // v1.0.5 - Ashok - Removed border left and set outline as none
+// v1.0.6 - Ashok - Improved responsiveness and added common code to popup
 
 // import { companyProfile, companySizes, industries } from '../mockData/companyData'
 // import { useCustomContext } from '../../../../../Context/Contextfetch';
@@ -22,6 +23,7 @@ import InputField from "../../../../../Components/FormFields/InputField";
 import { uploadFile } from "../../../../../apiHooks/imageApis";
 import { validateFile } from "../../../../../utils/FileValidation/FileValidation";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError";
+import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 
 Modal.setAppElement("#root");
 
@@ -326,168 +328,280 @@ const CompanyEditProfile = () => {
       console.error("Error updating company profile:", error);
     }
   };
-  const modalClass = classNames(
-    // v1.0.5 <---------------------------------------------------------------------
-    // "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
-    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
-    // v1.0.5 <---------------------------------------------------------------------
-    {
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
 
   return (
-    <Modal
-      isOpen={true}
-      onRequestClose={
-        () => navigate("/account-settings/profile")
-        // setIsEditing(false)
-      }
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+    // v1.0.6 <-----------------------------------------------------------------------
+    <SidebarPopup
+      title="Update Company Profile"
+      onClose={() => navigate("/account-settings/profile")}
     >
-      <div
-        className={classNames("h-full", {
-          "max-w-6xl mx-auto px-6": isFullScreen,
-        })}
-      >
-        <div className="p-6 ">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-custom-blue">
-              Update Company Profile
-            </h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+      <div className="sm:p-4 p-6">
+        <form className="space-y-6">
+          <div className="space-y-6">
+            <div className="flex flex-col items-center">
+              <div
+                onClick={() => imageInputRef.current?.click()}
+                className="relative group cursor-pointer"
               >
-                {isFullScreen ? (
-                  <Minimize className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <Expand className="w-5 h-5 text-gray-500" />
-                )}
-              </button>
-              <button
-                onClick={() => navigate("/account-settings/profile")}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-          </div>
-
-          <form className="space-y-6">
-            <div className="space-y-6">
-              <div className="flex flex-col items-center">
-                <div
-                  onClick={() => imageInputRef.current?.click()}
-                  className="relative group cursor-pointer"
-                >
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden transition-all duration-200 hover:border-blue-400 hover:shadow-lg">
-                    {logoPreview ? (
-                      <img
-                        src={logoPreview}
-                        alt="Company Logo"
-                        className="w-full h-full bg-cover object-contain"
-                      />
-                    ) : (
-                      <>
-                        <Camera className="w-8 h-8 text-gray-300 mb-1" />
-                        <p className="text-xs text-gray-400">Upload Logo</p>
-                      </>
-                    )}
-                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
-                      <Camera className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleLogoChange}
-                  />
-                  {logoPreview && (
-                    <button
-                      title="Remove Logo"
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeLogo();
-                      }}
-                      className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                    >
-                      <Trash className="w-3 h-3" />
-                    </button>
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden transition-all duration-200 hover:border-blue-400 hover:shadow-lg">
+                  {logoPreview ? (
+                    <img
+                      src={logoPreview}
+                      alt="Company Logo"
+                      className="w-full h-full bg-cover object-contain"
+                    />
+                  ) : (
+                    <>
+                      <Camera className="w-8 h-8 text-gray-300 mb-1" />
+                      <p className="text-xs text-gray-400">Upload Logo</p>
+                    </>
                   )}
+                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
+                    <Camera className="w-6 h-6 text-white" />
+                  </div>
                 </div>
-                <p className="mt-2 text-sm font-medium text-gray-700">
-                  Company Logo
-                </p>
-                <p className="text-xs text-gray-500">
-                  Click to upload (200x200px recommended)
-                </p>
-                <p className="text-xs text-red-500 font-medium mt-1">
-                  {fileError}
-                </p>
-              </div>
 
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoChange}
+                />
+                {logoPreview && (
+                  <button
+                    title="Remove Logo"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeLogo();
+                    }}
+                    className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                  >
+                    <Trash className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+              <p className="mt-2 text-sm font-medium text-gray-700">
+                Company Logo
+              </p>
+              <p className="text-xs text-gray-500">
+                Click to upload (200x200px recommended)
+              </p>
+              <p className="text-xs text-red-500 font-medium mt-1">
+                {fileError}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                <div>
+                  <InputField
+                    value={formData.company}
+                    onChange={handleInputChange}
+                    name="company"
+                    inputRef={fieldRefs.company}
+                    error={errors.company}
+                    label="Company Name"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <DropdownWithSearchField
+                    value={formData.industry}
+                    options={industryOptionsRS}
+                    onChange={(e) => handleInputChange(e)}
+                    error={errors.industry}
+                    containerRef={fieldRefs.industry}
+                    label="Industry"
+                    name="industry"
+                    required
+                    onMenuOpen={loadIndustries}
+                    loading={isIndustriesFetching}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+              <div>
+                <DropdownWithSearchField
+                  value={formData.employees}
+                  options={companySizeOptionsRS}
+                  onChange={(e) => handleInputChange(e)}
+                  error={errors.employees}
+                  containerRef={fieldRefs.employees}
+                  label="Company Size"
+                  name="employees"
+                  required
+                />
+              </div>
+              <div>
+                <InputField
+                  value={formData.website}
+                  placeholder="Website URL"
+                  onChange={handleInputChange}
+                  name="website"
+                  inputRef={fieldRefs.website}
+                  error={errors.website}
+                  label="Website"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+              <div>
+                <InputField
+                  value={formData.country}
+                  onChange={handleInputChange}
+                  name="country"
+                  label="Country"
+                />
+              </div>
+              <div>
+                <DropdownWithSearchField
+                  value={formData.location}
+                  options={locationOptionsRS}
+                  onChange={(e) => handleInputChange(e)}
+                  containerRef={fieldRefs.location}
+                  label="Location"
+                  name="location"
+                  onMenuOpen={loadLocations}
+                  loading={isLocationsFetching}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+              <div>
+                <InputField
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  name="firstName"
+                  inputRef={fieldRefs.firstName}
+                  error={errors.firstName}
+                  label="First Name"
+                  required
+                />
+              </div>
+              <div>
+                <InputField
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  name="lastName"
+                  inputRef={fieldRefs.lastName}
+                  error={errors.lastName}
+                  label="Last Name"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+              <div>
+                <InputField
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  name="email"
+                  type="email"
+                  inputRef={fieldRefs.email}
+                  error={errors.email}
+                  label="Email"
+                  required
+                />
+              </div>
+              <div>
+                <InputField
+                  value={formData.phone}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    if (value.length <= 10) {
+                      handleInputChange({
+                        target: { name: "phone", value },
+                      });
+                    }
+                  }}
+                  name="phone"
+                  inputRef={fieldRefs.phone}
+                  error={errors.phone}
+                  label="Phone"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+              <div>
+                <InputField
+                  value={formData.jobTitle}
+                  onChange={handleInputChange}
+                  name="jobTitle"
+                  inputRef={fieldRefs.jobTitle}
+                  error={errors.jobTitle}
+                  label="Job Title"
+                  required
+                />
+              </div>
+              <div>
+                <InputField
+                  value={formData.socialMedia.linkedin}
+                  onChange={handleInputChange}
+                  name="socialMedia.linkedin"
+                  label="LinkedIn"
+                  placeholder="LinkedIn URL"
+                />
+              </div>
+            </div>
+
+            {/* Social Media Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+              <div>
+                <InputField
+                  value={formData.socialMedia.twitter}
+                  onChange={handleInputChange}
+                  name="socialMedia.twitter"
+                  label="Twitter"
+                  placeholder="Twitter URL"
+                />
+              </div>
+              <div>
+                <InputField
+                  value={formData.socialMedia.facebook}
+                  onChange={handleInputChange}
+                  name="socialMedia.facebook"
+                  label="Facebook"
+                  placeholder="Facebook URL"
+                />
+              </div>
+            </div>
+
+            {/* <h3 className="text-lg font-semibold text-gray-800 mb-4">Locations</h3> */}
+
+            {/* <div className='className="grid grid-cols-1 md:grid-cols-2 gap-4"'> */}
+
+            {/* Headquarters Section */}
+            <div className="pt-6">
+              <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
+                Headquarters
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                   <div>
                     <InputField
-                      value={formData.company}
+                      value={formData.headquarters.address}
                       onChange={handleInputChange}
-                      name="company"
-                      inputRef={fieldRefs.company}
-                      error={errors.company}
-                      label="Company Name"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <DropdownWithSearchField
-                      value={formData.industry}
-                      options={industryOptionsRS}
-                      onChange={(e) => handleInputChange(e)}
-                      error={errors.industry}
-                      containerRef={fieldRefs.industry}
-                      label="Industry"
-                      name="industry"
-                      required
-                      onMenuOpen={loadIndustries}
-                      loading={isIndustriesFetching}
-                    />
-                  </div>
-                </div>
-              </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                  <div>
-                    <DropdownWithSearchField
-                      value={formData.employees}
-                      options={companySizeOptionsRS}
-                      onChange={(e) => handleInputChange(e)}
-                      error={errors.employees}
-                      containerRef={fieldRefs.employees}
-                      label="Company Size"
-                      name="employees"
-                      required
+                      name="headquarters.address"
+                      label="Address"
                     />
                   </div>
                   <div>
                     <InputField
-                      value={formData.website}
-                      placeholder="Website URL"
+                      value={formData.headquarters.city}
                       onChange={handleInputChange}
-                      name="website"
-                      inputRef={fieldRefs.website}
-                      error={errors.website}
-                      label="Website"
-                      required
+                      name="headquarters.city"
+                      label="City"
                     />
                   </div>
                 </div>
@@ -495,297 +609,147 @@ const CompanyEditProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                   <div>
                     <InputField
-                      value={formData.country}
+                      value={formData.headquarters.state}
                       onChange={handleInputChange}
-                      name="country"
+                      name="headquarters.state"
+                      label="State"
+                    />
+                  </div>
+                  <div>
+                    <InputField
+                      value={formData.headquarters.zip}
+                      onChange={handleInputChange}
+                      name="headquarters.zip"
+                      label="Zip Code"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                  <div>
+                    <InputField
+                      value={formData.headquarters.country}
+                      onChange={handleInputChange}
+                      name="headquarters.country"
                       label="Country"
                     />
                   </div>
                   <div>
-                    <DropdownWithSearchField
-                      value={formData.location}
-                      options={locationOptionsRS}
-                      onChange={(e) => handleInputChange(e)}
-                      containerRef={fieldRefs.location}
-                      label="Location"
-                      name="location"
-                      onMenuOpen={loadLocations}
-                      loading={isLocationsFetching}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                  <div>
                     <InputField
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      name="firstName"
-                      inputRef={fieldRefs.firstName}
-                      error={errors.firstName}
-                      label="First Name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <InputField
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      name="lastName"
-                      inputRef={fieldRefs.lastName}
-                      error={errors.lastName}
-                      label="Last Name"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                  <div>
-                    <InputField
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      name="email"
-                      type="email"
-                      inputRef={fieldRefs.email}
-                      error={errors.email}
-                      label="Email"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <InputField
-                      value={formData.phone}
+                      value={formData.headquarters.phone}
                       onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, "");
                         if (value.length <= 10) {
-                          handleInputChange({ target: { name: "phone", value } });
+                          handleInputChange({
+                            target: { name: "headquarters.phone", value },
+                          });
                         }
                       }}
-                      name="phone"
-                      inputRef={fieldRefs.phone}
-                      error={errors.phone}
+                      name="headquarters.phone"
                       label="Phone"
-                      required
+                      error={errors.headquarters?.phone}
                     />
                   </div>
                 </div>
+              </div>
+            </div>
 
+            {/* Regional Office Section */}
+            <div className=" pt-6">
+              <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
+                Regional Office
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                   <div>
                     <InputField
-                      value={formData.jobTitle}
+                      value={formData.regionalOffice.address}
                       onChange={handleInputChange}
-                      name="jobTitle"
-                      inputRef={fieldRefs.jobTitle}
-                      error={errors.jobTitle}
-                      label="Job Title"
-                      required
+                      name="regionalOffice.address"
+                      label="Address"
                     />
                   </div>
                   <div>
                     <InputField
-                      value={formData.socialMedia.linkedin}
+                      value={formData.regionalOffice.city}
                       onChange={handleInputChange}
-                      name="socialMedia.linkedin"
-                      label="LinkedIn"
-                      placeholder="LinkedIn URL"
+                      name="regionalOffice.city"
+                      label="City"
                     />
                   </div>
                 </div>
-
-                {/* Social Media Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                   <div>
                     <InputField
-                      value={formData.socialMedia.twitter}
+                      value={formData.regionalOffice.state}
                       onChange={handleInputChange}
-                      name="socialMedia.twitter"
-                      label="Twitter"
-                      placeholder="Twitter URL"
+                      name="regionalOffice.state"
+                      label="State"
                     />
                   </div>
                   <div>
                     <InputField
-                      value={formData.socialMedia.facebook}
+                      value={formData.regionalOffice.zip}
                       onChange={handleInputChange}
-                      name="socialMedia.facebook"
-                      label="Facebook"
-                      placeholder="Facebook URL"
+                      name="regionalOffice.zip"
+                      label="Zip Code"
                     />
                   </div>
                 </div>
-
-                {/* <h3 className="text-lg font-semibold text-gray-800 mb-4">Locations</h3> */}
-
-                {/* <div className='className="grid grid-cols-1 md:grid-cols-2 gap-4"'> */}
-
-                {/* Headquarters Section */}
-                <div className=" pt-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Headquarters
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                      <div>
-                        <InputField
-                          value={formData.headquarters.address}
-                          onChange={handleInputChange}
-                          name="headquarters.address"
-                          label="Address"
-                        />
-                      </div>
-                      <div>
-                        <InputField
-                          value={formData.headquarters.city}
-                          onChange={handleInputChange}
-                          name="headquarters.city"
-                          label="City"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                      <div>
-                        <InputField
-                          value={formData.headquarters.state}
-                          onChange={handleInputChange}
-                          name="headquarters.state"
-                          label="State"
-                        />
-                      </div>
-                      <div>
-                        <InputField
-                          value={formData.headquarters.zip}
-                          onChange={handleInputChange}
-                          name="headquarters.zip"
-                          label="Zip Code"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                      <div>
-                        <InputField
-                          value={formData.headquarters.country}
-                          onChange={handleInputChange}
-                          name="headquarters.country"
-                          label="Country"
-                        />
-                      </div>
-                      <div>
-                        <InputField
-                          value={formData.headquarters.phone}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, "");
-                            if (value.length <= 10) {
-                              handleInputChange({ target: { name: "headquarters.phone", value } });
-                            }
-                          }}
-                          name="headquarters.phone"
-                          label="Phone"
-                          error={errors.headquarters?.phone}
-                        />
-                      </div>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                  <div>
+                    <InputField
+                      value={formData.regionalOffice.country}
+                      onChange={handleInputChange}
+                      name="regionalOffice.country"
+                      label="Country"
+                    />
+                  </div>
+                  <div>
+                    <InputField
+                      value={formData.regionalOffice.phone}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        if (value.length <= 10) {
+                          handleInputChange({
+                            target: { name: "regionalOffice.phone", value },
+                          });
+                        }
+                      }}
+                      name="regionalOffice.phone"
+                      label="Phone"
+                      error={errors.regionalOffice?.phone}
+                    />
                   </div>
                 </div>
-
-                {/* Regional Office Section */}
-                <div className=" pt-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Regional Office
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                      <div>
-                        <InputField
-                          value={formData.regionalOffice.address}
-                          onChange={handleInputChange}
-                          name="regionalOffice.address"
-                          label="Address"
-                        />
-                      </div>
-                      <div>
-                        <InputField
-                          value={formData.regionalOffice.city}
-                          onChange={handleInputChange}
-                          name="regionalOffice.city"
-                          label="City"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                      <div>
-                        <InputField
-                          value={formData.regionalOffice.state}
-                          onChange={handleInputChange}
-                          name="regionalOffice.state"
-                          label="State"
-                        />
-                      </div>
-                      <div>
-                        <InputField
-                          value={formData.regionalOffice.zip}
-                          onChange={handleInputChange}
-                          name="regionalOffice.zip"
-                          label="Zip Code"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                      <div>
-                        <InputField
-                          value={formData.regionalOffice.country}
-                          onChange={handleInputChange}
-                          name="regionalOffice.country"
-                          label="Country"
-                        />
-                      </div>
-                      <div>
-                        <InputField
-                          value={formData.regionalOffice.phone}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, "");
-                            if (value.length <= 10) {
-                              handleInputChange({ target: { name: "regionalOffice.phone", value } });
-                            }
-                          }}
-                          name="regionalOffice.phone"
-                          label="Phone"
-                          error={errors.regionalOffice?.phone}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* </div> */}
-             
+              </div>
             </div>
+            {/* </div> */}
+          </div>
 
-            <div className="flex justify-end gap-3 pt-6">
-              <button
-                type="button"
-                onClick={
-                  () => navigate("/account-settings/profile")
-                  // setIsEditing(false)
-                }
-                className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg hover:bg-blue-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="px-4 py-2 bg-custom-blue text-white rounded-lg  transition-colors"
-              >
-                Save
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="flex justify-end gap-3 pt-6">
+            <button
+              type="button"
+              onClick={
+                () => navigate("/account-settings/profile")
+                // setIsEditing(false)
+              }
+              className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="px-4 py-2 bg-custom-blue text-white rounded-lg  transition-colors"
+            >
+              Save
+            </button>
+          </div>
+        </form>
       </div>
-    </Modal>
+    </SidebarPopup>
+    // v1.0.6 ----------------------------------------------------------------------->
   );
 };
 

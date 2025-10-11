@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Improved responsiveness
+
 import { useState } from "react";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 
@@ -28,7 +30,12 @@ const BrandingSectionSkeleton = () => {
   );
 };
 
-export function BrandingSection({ branding, onUpdate, readOnly = false, isLoading = false }) {
+export function BrandingSection({
+  branding,
+  onUpdate,
+  readOnly = false,
+  isLoading = false,
+}) {
   const [dragActive, setDragActive] = useState(false);
 
   // Show loading skeleton if data is loading
@@ -40,10 +47,16 @@ export function BrandingSection({ branding, onUpdate, readOnly = false, isLoadin
   if (!branding || Object.keys(branding).length === 0) {
     return (
       <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-medium mb-4">Company Branding</h3>
+        {/* v1.0.0 <----------------------------------------------------------------------------- */}
+        <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium mb-4">
+          Company Branding
+        </h3>
+        {/* v1.0.0 -----------------------------------------------------------------------------> */}
         <div className="text-center py-8">
           <PhotoIcon className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-          <p className="text-gray-500 text-sm">No branding information available</p>
+          <p className="text-gray-500 text-sm">
+            No branding information available
+          </p>
         </div>
       </div>
     );
@@ -90,7 +103,11 @@ export function BrandingSection({ branding, onUpdate, readOnly = false, isLoadin
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-medium mb-4">Company Branding</h3>
+      {/* v1.0.0 <----------------------------------------------------------------------------- */}
+      <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium mb-4">
+        Company Branding
+      </h3>
+      {/* v1.0.0 -----------------------------------------------------------------------------> */}
 
       {/* Logo Display - Only show if logo exists in backend data */}
       <div className="space-y-4">
@@ -99,8 +116,9 @@ export function BrandingSection({ branding, onUpdate, readOnly = false, isLoadin
             Company Logo
           </label>
           <div
-            className={`border-2 border-dashed rounded-lg p-6 ${dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
-              }`}
+            className={`border-2 border-dashed rounded-lg p-6 ${
+              dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
+            }`}
             onDragEnter={!readOnly ? handleDrag : undefined}
             onDragLeave={!readOnly ? handleDrag : undefined}
             onDragOver={!readOnly ? handleDrag : undefined}
@@ -113,13 +131,15 @@ export function BrandingSection({ branding, onUpdate, readOnly = false, isLoadin
                   alt="Company Logo"
                   className="max-h-32 max-w-full object-contain"
                   onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'block';
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "block";
                   }}
                 />
                 <div className="hidden text-center">
                   <PhotoIcon className="mx-auto h-24 w-24 text-gray-400" />
-                  <p className="text-sm text-gray-500 mt-2">Logo not available</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Logo not available
+                  </p>
                 </div>
               </div>
             ) : (
@@ -142,7 +162,9 @@ export function BrandingSection({ branding, onUpdate, readOnly = false, isLoadin
                 className="h-8 w-8 rounded-full border border-gray-300"
                 style={{ backgroundColor: branding.primaryColor }}
               ></div>
-              <span className="ml-2 text-sm text-gray-600">{branding.primaryColor}</span>
+              <span className="ml-2 text-sm text-gray-600">
+                {branding.primaryColor}
+              </span>
             </div>
           </div>
         )}
@@ -157,7 +179,9 @@ export function BrandingSection({ branding, onUpdate, readOnly = false, isLoadin
                 className="h-8 w-8 rounded-full border border-gray-300"
                 style={{ backgroundColor: branding.secondaryColor }}
               ></div>
-              <span className="ml-2 text-sm text-gray-600">{branding.secondaryColor}</span>
+              <span className="ml-2 text-sm text-gray-600">
+                {branding.secondaryColor}
+              </span>
             </div>
           </div>
         )}
