@@ -991,18 +991,20 @@ const MultiStepForm = () => {
       {/* Removed loading overlay and spinner */}
       <form>
         <div className="min-h-screen bg-gray-50">
-          <div className="max-w-6xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-            <p className="text-2xl font-bold text-gray-900 mb-4">
-              Create Profile
-            </p>
-            <div className="bg-white rounded-xl shadow-lg">
-              <div className="p-6 sm:p-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold text-gray-900">Create Profile</h1>
+              <div className="flex-shrink-0 mt-5">
                 <StepIndicator
                   currentStep={currentStep}
                   showLimitedSteps={showLimitedSteps}
                   isInternalInterviewer={isInternalInterviewer}
                   completed={completionStatus}
                 />
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg">
+              <div className="p-6 sm:p-8">
 
                 {currentStep === 0 && (
                   <BasicDetails

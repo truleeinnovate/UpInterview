@@ -336,7 +336,7 @@ const createPosition = async (req, res) => {
         interviewerType: round.interviewerType || "",
         duration: round.duration ? Number(round.duration) : 0,
         instructions: round?.instructions || "",
-        interviewerGroupName: round?.interviewerGroupName || "",
+        interviewerGroupId: round?.interviewerGroupId || "",
         interviewerViewType: round?.interviewerViewType || "",
         selectedInterviewersType: round?.selectedInterviewersType || "",
         // interviewers: round?.interviewers?.map((interviewer) => interviewer._id) || [],
@@ -1471,7 +1471,7 @@ const updateInterviewRound = async (req, res) => {
       console.log("📝 Before clearing - interviewerType:", round.interviewerType);
 
       updates.interviewerType = '';
-      updates.interviewerGroupName = '';
+      updates.interviewerGroupId = '';
       updates.interviewerViewType = '';
       updates.selectedInterviewersType = '';
       updates.interviewers = [];
@@ -1495,7 +1495,7 @@ const updateInterviewRound = async (req, res) => {
           updates.selectedInterviewersType = '';
         } else if (updates.interviewerType === 'External') {
           console.log("🌐 External interviewer type - clearing group and interviewers");
-          updates.interviewerGroupName = '';
+          updates.interviewerGroupId = '';
           updates.interviewers = [];
         }
       } else {
