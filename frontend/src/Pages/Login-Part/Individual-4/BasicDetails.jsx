@@ -215,21 +215,21 @@ const BasicDetails = ({
             setErrors((prevErrors) => ({ ...prevErrors, dateOfBirth: "" }));
             return;
         }
-        
+
         // Format the date for the API (YYYY-MM-DD)
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const apiFormattedDate = `${year}-${month}-${day}`;
-        
+
         setBasicDetailsData((prevData) => ({
             ...prevData,
             dateOfBirth: apiFormattedDate, // Store in API format (YYYY-MM-DD)
         }));
-        
+
         // Keep the display date in state for the date picker
         setStartDate(date);
-        
+
         // Clear any previous errors
         setErrors((prevErrors) => ({ ...prevErrors, dateOfBirth: "" }));
     };
@@ -431,6 +431,23 @@ const BasicDetails = ({
                     </div>
                 </div>
 
+                {/* Phone Number */}
+                <div className="sm:col-span-6 w-full">
+                    <PhoneField
+                        countryCodeOptions={countryCodeOptions}
+                        countryCodeValue={basicDetailsData.countryCode}
+                        onCountryCodeChange={(e) => handleInputChange(e, "countryCode")}
+                        countryCodeError={errors.phone}
+                        countryCodeRef={null}
+                        phoneValue={basicDetailsData.phone}
+                        onPhoneChange={(e) => handleInputChange(e, "phone")}
+                        phoneError={errors.phone}
+                        phoneRef={null}
+                        label="Phone Number"
+                        required
+                    />
+                </div>
+
                 {/* Date of Birth */}
                 <div className="sm:col-span-6">
                     <DateOfBirthField
@@ -454,25 +471,8 @@ const BasicDetails = ({
                     />
                 </div>
 
-                {/* Phone Number */}
-                <div className="sm:col-span-6 w-full">
-                    <PhoneField
-                        countryCodeOptions={countryCodeOptions}
-                        countryCodeValue={basicDetailsData.countryCode}
-                        onCountryCodeChange={(e) => handleInputChange(e, "countryCode")}
-                        countryCodeError={errors.phone}
-                        countryCodeRef={null}
-                        phoneValue={basicDetailsData.phone}
-                        onPhoneChange={(e) => handleInputChange(e, "phone")}
-                        phoneError={errors.phone}
-                        phoneRef={null}
-                        label="Phone Number"
-                        required
-                    />
-                </div>
-
                 {/* LinkedIn URL */}
-                <div className="sm:col-span-6 col-span-2 mt-6">
+                <div className="sm:col-span-6 col-span-2">
                     <InputField
                         name="linkedinUrl"
                         value={basicDetailsData.linkedinUrl || ""}
@@ -501,7 +501,7 @@ const BasicDetails = ({
                 </div>
 
                 {/* Portfolio URL */}
-                <div className="sm:col-span-6 col-span-2 mt-6">
+                <div className="sm:col-span-6 col-span-2">
                     <InputField
                         name="portfolioUrl"
                         value={basicDetailsData.portfolioUrl || ""}

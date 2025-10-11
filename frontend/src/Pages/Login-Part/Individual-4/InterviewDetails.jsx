@@ -47,7 +47,7 @@ const InterviewDetails = ({
     // Initialize form data when component mounts or interviewDetailsData changes
     useEffect(() => {
         console.log('Initializing InterviewDetails with data:', interviewDetailsData);
-        
+
         // Initialize rates if they don't exist
         if (!interviewDetailsData.rates) {
             setInterviewDetailsData(prev => ({
@@ -511,17 +511,13 @@ const InterviewDetails = ({
                 }
             };
 
-            // If USD is being updated, automatically update INR
+            // Only update INR when USD is changed
             if (currency === 'usd' && numericValue) {
                 const inrValue = Math.round(parseInt(numericValue, 10) * exchangeRate);
                 updatedRates[level].inr = inrValue;
             }
-
-            // If INR is being updated, automatically update USD
-            if (currency === 'inr' && numericValue) {
-                const usdValue = Math.round(parseInt(numericValue, 10) / exchangeRate);
-                updatedRates[level].usd = usdValue;
-            }
+            // Remove the auto-update for USD when INR is changed
+            // This allows manual entry of INR without affecting USD
 
             return {
                 ...prev,
@@ -734,14 +730,14 @@ const InterviewDetails = ({
                             }}
                             onKeyDown={(e) => {
                                 console.log('Key pressed:', e.key, 'Value:', e.target?.value);
-                                
+
                                 // Handle the create action from the dropdown
                                 if (e.key === 'Enter' && e.target?.action === 'create') {
                                     const newSkill = e.target.value?.trim();
                                     if (newSkill) {
                                         console.log('Adding new skill:', newSkill);
                                         addSkill(newSkill);
-                                        
+
                                         // Clear the input field and close the dropdown
                                         setTimeout(() => {
                                             console.log('Attempting to close dropdown');
@@ -749,7 +745,7 @@ const InterviewDetails = ({
                                             if (document.activeElement) {
                                                 document.activeElement.blur();
                                             }
-                                            
+
                                             // Clear the input field
                                             if (skillsInputRef.current) {
                                                 // Clear react-select value
@@ -757,7 +753,7 @@ const InterviewDetails = ({
                                                     skillsInputRef.current.select.clearValue();
                                                     console.log('React-select value cleared');
                                                 }
-                                                
+
                                                 // Find and clear the input
                                                 const selectInput = skillsInputRef.current.querySelector('input');
                                                 if (selectInput) {
@@ -900,20 +896,19 @@ const InterviewDetails = ({
                 )}
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Hourly Rates by Experience Level <span className="text-red-500">*</span>
-                    </label>
-                    {/* Exchange Rate Info - Simplified */}
-                    <div className="text-xs text-gray-600 mb-4">
-                        {isRateLoading ? (
-                            <span>Loading exchange rate...</span>
-                        ) : (
-                            <span>1 USD = {Number(exchangeRate).toFixed(2)} INR
-                            </span>
-                        )}
-                        <p className="text-xs text-gray-500 mt-1">
-                            Changing USD will automatically update INR, and vice versa
-                        </p>
+                    <div className='flex items-center justify-between'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Hourly Rates by Experience Level <span className="text-red-500">*</span>
+                        </label>
+                        {/* Exchange Rate Info - Simplified */}
+                        <div className="text-xs text-gray-600 mb-4">
+                            {isRateLoading ? (
+                                <span>Loading exchange rate...</span>
+                            ) : (
+                                <span>Approximately 1 USD = {Number(exchangeRate).toFixed(2)} INR
+                                </span>
+                            )}
+                        </div>
                     </div>
                     <div className="space-y-4">
                         {showJuniorLevel && (
@@ -1109,14 +1104,14 @@ const InterviewDetails = ({
                         )}
                     </div>
                     <p className="mt-2 text-xs text-gray-500">
-                        {showJuniorLevel && (
-                            `With your ${expYears} year${expYears > 1 ? 's' : ''} of experience, we'll match you with junior-level candidates.`
+                        {expYears < 3 && (
+                            `You can set rates for junior-level candidates based on your experience.`
                         )}
-                        {showMidLevel && (
+                        {expYears >= 3 && expYears <= 6 && (
                             'You can set rates for both junior and mid-level candidates based on your experience.'
                         )}
-                        {showSeniorLevel && (
-                            'Your extensive experience qualifies you to interview candidates at all levels: junior, mid-level, and senior.'
+                        {expYears >= 7 && (
+                            'You can set rates for junior, mid and senior-level candidates based on your experience.'
                         )}
                     </p>
                 </div>
