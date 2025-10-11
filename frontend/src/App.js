@@ -368,6 +368,9 @@ const SupportViewPage = lazy(() =>
 const InterviewRequest = lazy(() =>
   import("./Pages/Interview-Request/InterviewRequest.jsx")
 );
+const WithdrawalRequests = lazy(() =>
+  import("./Pages/Withdrawal-Request/WithdrawalRequests.jsx")
+);
 const Task = lazy(() =>
   import("./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx")
 );
@@ -1246,6 +1249,13 @@ const MainAppRoutes = ({
                   )}
                 </Route>
               )}
+              {/* Withdrawal Requests */}
+              {hasPermission("WithdrawalRequest") && (
+              <Route
+                path="/withdrawal-request"
+                element={<WithdrawalRequests />}
+              />
+            )}
               {hasPermission("Tenants") && (
                 <Route
                   path="/tenants/:id"

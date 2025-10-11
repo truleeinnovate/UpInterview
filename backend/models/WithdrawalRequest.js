@@ -122,7 +122,8 @@ const WithdrawalRequestSchema = new mongoose.Schema(
     updatedBy: { type: String }
   },
   { 
-    timestamps: true 
+    timestamps: true,
+    collection: 'withdrawalrequests' // Explicitly set to match your MongoDB collection
   }
 );
 

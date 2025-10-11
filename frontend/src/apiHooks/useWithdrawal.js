@@ -155,8 +155,25 @@ export const formatWithdrawalMode = (mode) => {
     NEFT: "NEFT (2-4 hours)",
     RTGS: "RTGS (30 mins)",
     UPI: "UPI (Instant)",
-    card: "Card Transfer"
+    card: "Card Transfer",
+    manual: "Manual Processing"
   };
   
   return modeNames[mode] || mode;
+};
+
+// Hook to get all withdrawal requests (for superadmin)
+export const useAllWithdrawalRequests = (enabled = true) => {
+  return useQuery({
+    queryKey: ["allWithdrawalRequests"],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${API_BASE_URL}/wallet/get-all-withdrawals-requests`,
+        getAuthHeaders()
+      );
+      return response.data;
+    },
+    enabled: enabled,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
 };

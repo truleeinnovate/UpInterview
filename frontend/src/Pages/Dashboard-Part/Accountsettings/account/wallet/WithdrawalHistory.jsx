@@ -4,8 +4,10 @@ import { useWithdrawalRequests, useCancelWithdrawal, getWithdrawalStatusColor, f
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, Filter } from "lucide-react";
 import LoadingButton from "../../../../../Components/LoadingButton";
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 
 export function WithdrawalHistory({ onClose }) {
+  useScrollLock(true);
   const { userProfile } = useUserProfile();
   const ownerId = userProfile?.id || userProfile?._id; // Fixed: Check both id and _id
   
@@ -195,9 +197,9 @@ export function WithdrawalHistory({ onClose }) {
         //   </button>
         // }
       >
-        <div className="sm:p-0 p-4 flex-1 overflow-y-auto">
+        <div className="flex flex-col h-full relative">
           {/* Filter Bar */}
-          <div className="bg-white border-b sticky top-0 z-10 pb-4">
+          <div className="bg-white pb-4">
             <div className="flex justify-between items-center">
               <div className="relative">
                 <button
@@ -211,7 +213,7 @@ export function WithdrawalHistory({ onClose }) {
                 </button>
                 
                 {showStatusFilter && (
-                  <div className="absolute mt-1 w-48 bg-white border border-gray-300 rounded-lg shadow-lg">
+                  <div className="absolute mt-1 w-48 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
                     {statusFilters.map((filter) => (
                       <button
                         key={filter.value || 'all'}
@@ -241,8 +243,8 @@ export function WithdrawalHistory({ onClose }) {
             </div>
           </div>
           
-          {/* Withdrawals List */}
-          <div className="space-y-4 mt-4">
+          {/* Withdrawals List - scrollable area with calculated height */}
+          <div className="flex-1 overflow-y-auto space-y-4 mt-4" style={{ paddingBottom: withdrawalRequests.length > 0 ? '100px' : '16px' }}>
             {isLoading ? (
               <div className="text-center py-8">
                 <div className="text-gray-500">Loading withdrawal history...</div>
@@ -320,9 +322,9 @@ export function WithdrawalHistory({ onClose }) {
             )}
           </div>
           
-          {/* Summary Stats */}
+          {/* Summary Stats - Fixed at bottom */}
           {withdrawalRequests.length > 0 && (
-            <div className="mt-6 pt-4 border-t">
+            <div className="absolute bottom-0 left-0 right-0 bg-white border-t p-4 z-10">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-sm text-gray-500">Total Withdrawn</p>
