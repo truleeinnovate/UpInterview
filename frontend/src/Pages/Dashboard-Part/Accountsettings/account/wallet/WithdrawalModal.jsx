@@ -7,8 +7,10 @@ import { useWallet } from "../../../../../apiHooks/useWallet";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { ChevronDown, AlertCircle, Info, CreditCard, Clock, Shield, History } from "lucide-react";
 import LoadingButton from "../../../../../Components/LoadingButton";
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 
 export function WithdrawalModal({ onClose, onSuccess }) {
+  useScrollLock(true);
   const { userProfile } = useUserProfile();
   const ownerId = userProfile?.id || userProfile?._id;
   const tenantId = userProfile?.tenantId;
@@ -173,7 +175,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Available Balance</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ₹{availableBalance?.toFixed(2) || "0.00"}
+                  ₹{availableBalance?.toFixed(2)}
                 </p>
               </div>
               <CreditCard className="h-8 w-8 text-custom-blue" />
@@ -188,7 +190,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
                 <div>
                   <p className="text-sm font-medium text-red-800">Insufficient Balance</p>
                   <p className="text-xs text-red-600 mt-1">
-                    You need at least ₹100 to make a withdrawal. Your current available balance is ₹{availableBalance?.toFixed(2) || '0.00'}.
+                    You need at least ₹100 to make a withdrawal. Your current available balance is ₹{availableBalance?.toFixed(2)}.
                   </p>
                 </div>
               </div>

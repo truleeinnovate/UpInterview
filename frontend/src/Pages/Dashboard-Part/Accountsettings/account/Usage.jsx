@@ -166,12 +166,12 @@ const Usage = () => {
   const assessmentsEntitled = Number(assessmentAttr?.entitled || 0);
   const assessmentsUtilized = Number(assessmentAttr?.utilized || 0);
 
-  // Question Bank Access metrics
+  // Question Bank Access metrics - only showing limit, not tracking usage
   const questionBankAttr = usage?.attributes?.find(
     (a) => (a.type || "") === "Question Bank Access"
   );
   const questionBankEntitled = Number(questionBankAttr?.entitled || 0);
-  const questionBankUtilized = Number(questionBankAttr?.utilized || 0);
+  // const questionBankUtilized = Number(questionBankAttr?.utilized || 0); // Not tracking usage
 
   // User Bandwidth metrics
   const bandwidthAttr = usage?.attributes?.find(
@@ -256,32 +256,17 @@ const Usage = () => {
           </div>
         </div>
 
-        {/* Question Bank Access */}
-        <div className="bg-white p-6 rounded-lg shadow">
+        {/* Question Bank Access - Only showing limit */}
+        <div className="flex justify-between bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium">Question Bank Access</h3>
-          <div className="mt-2">
+          
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Used: {questionBankUtilized}</span>
               <span className="text-gray-600">
-                Limit: {questionBankEntitled === 0 ? "Unlimited" : questionBankEntitled}
+                Limit: {questionBankEntitled === 0 ? "Unlimited" : `${questionBankEntitled} Questions`}
               </span>
             </div>
-            <div className="mt-2 h-2 bg-gray-200 rounded-full">
-              <div
-                className="h-full bg-purple-600 rounded-full"
-                style={{
-                  width: `${
-                    questionBankEntitled > 0
-                      ? Math.min(
-                          (questionBankUtilized / questionBankEntitled) * 100,
-                          100
-                        )
-                      : 0
-                  }%`,
-                }}
-              />
-            </div>
-          </div>
+            {/* No progress bar since we're not tracking usage */}
+         
         </div>
 
         {/* User Bandwidth */}

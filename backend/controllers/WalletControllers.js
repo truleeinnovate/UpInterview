@@ -1196,7 +1196,7 @@ const createWithdrawalRequest = async (req, res) => {
         withdrawalRequestId: withdrawalRequest._id,
         withdrawalCode: withdrawalCode,
         bankAccountId,
-        netAmount,
+        amount,
         processingType: "manual",
         requestedAt: new Date()
       },
@@ -1211,7 +1211,7 @@ const createWithdrawalRequest = async (req, res) => {
         ownerId,
         tenantId,
         title: "Withdrawal Request Created",
-        message: `Your withdrawal request ${withdrawalCode} for ₹${amount.toFixed(2)} has been submitted successfully. It will be processed within 24-48 hours.`,
+        message: `Your withdrawal request ${withdrawalCode} for ₹${netAmount.toFixed(2)} has been submitted successfully. It will be processed within 24-48 hours.`,
         type: "wallet",
         category: "withdrawal_status",
         unread: true,
@@ -1388,6 +1388,30 @@ const failManualWithdrawal = async (req, res) => {
       await wallet.save();
     }
 
+        // Update wallet - remove from pending to failed
+    const walletUpdate = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
+    if (walletUpdate) {
+      //walletUpdate.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
+      
+      // Update transaction status
+      const transaction = walletUpdate.transactions.find(
+        t => t.metadata?.withdrawalRequestId?.toString() === withdrawalRequest._id.toString()
+      );
+      if (transaction) {
+        transaction.status = "failed";
+        transaction.metadata = {
+          //...transaction.metadata,
+          failedAt: new Date(),
+          withdrawalRequestId: withdrawalRequest._id,
+          withdrawalCode: withdrawalRequest.withdrawalCode,
+          failureReason: withdrawalRequest.failureReason
+          
+        };
+      }
+      
+      await walletUpdate.save();
+    }
+
     // Create push notification for failed withdrawal
     try {
       await PushNotification.create({
@@ -1502,7 +1526,7 @@ const processManualWithdrawal = async (req, res) => {
         ownerId: withdrawalRequest.ownerId,
         tenantId: withdrawalRequest.tenantId,
         title: "Withdrawal Completed",
-        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode} for ₹${withdrawalRequest.amount.toFixed(2)} has been completed successfully. The amount has been transferred to your bank account ending with ${withdrawalRequest.bankAccountId?.maskedAccountNumber || 'your registered account'}.`,
+        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode} for ₹${withdrawalRequest.netAmount.toFixed(2)} has been completed successfully. The amount has been transferred to your bank account ending with ${withdrawalRequest.bankAccountId?.maskedAccountNumber || 'your registered account'}.`,
         type: "wallet",
         category: "withdrawal_status",
         unread: true,
@@ -1536,37 +1560,62 @@ const processManualWithdrawal = async (req, res) => {
   }
 };
 
-// Get all withdrawal requests for superadmin
+// Get all withdrawal requests for superadmin - SIMPLE VERSION
 const getAllWithdrawalRequests = async (req, res) => {
   try {
-    const { status, limit = 50, skip = 0, tenantId } = req.query;
-
-    const query = {};
-    if (status) {
-      query.status = status;
-    }
-    if (tenantId) {
-      query.tenantId = tenantId;
-    }
-
-    const withdrawalRequests = await WithdrawalRequest.find(query)
-      .populate("bankAccountId", "bankName maskedAccountNumber accountHolderName routingNumber swiftCode")
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .skip(parseInt(skip));
-
-    const total = await WithdrawalRequest.countDocuments(query);
-
+    const withdrawalRequests = await WithdrawalRequest.find({})
+      .populate("bankAccountId")
+      .sort({ _id: -1 }) // Using _id for sorting (more reliable in all environments)
+    
+    const totalWithdrawalRequests = await WithdrawalRequest.countDocuments({});
+    
     res.status(200).json({
       success: true,
-      withdrawalRequests,
-      total,
-      hasMore: total > skip + limit
+      withdrawalRequests: withdrawalRequests,
+      total: totalWithdrawalRequests,
+      hasMore: false
     });
   } catch (error) {
     console.error("Error fetching all withdrawal requests:", error);
     res.status(500).json({
       error: "Failed to fetch withdrawal requests",
+      details: error.message
+    });
+  }
+};
+
+// Get single withdrawal request by ID for superadmin
+const getWithdrawalRequestById = async (req, res) => {
+  try {
+    const { withdrawalRequestId } = req.params;
+    
+    if (!withdrawalRequestId) {
+      return res.status(400).json({
+        success: false,
+        error: "Withdrawal request ID is required"
+      });
+    }
+
+    const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId)
+      .populate("bankAccountId")
+      .populate("ownerId", "email firstName lastName"); // Populate owner details if needed
+
+    if (!withdrawalRequest) {
+      return res.status(404).json({
+        success: false,
+        error: "Withdrawal request not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      withdrawalRequest: withdrawalRequest
+    });
+  } catch (error) {
+    console.error("Error fetching withdrawal request by ID:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch withdrawal request",
       details: error.message
     });
   }
@@ -1882,6 +1931,7 @@ module.exports = {
   verifyBankAccount,
   createWithdrawalRequest,
   getWithdrawalRequests,
+  getWithdrawalRequestById,
   cancelWithdrawalRequest,
   handlePayoutWebhook,
   fixVerifiedBankAccounts,

@@ -23,7 +23,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
   // Debug logging
   console.log("UserProfile:", userProfile);
   console.log("OwnerId:", ownerId);
-  console.log("TenantId:", tenantId);
+  console.log("TenantId:--------------------", tenantId);
   
   // API hooks
   const { data: bankAccounts = [], isLoading: loadingAccounts, refetch } = useBankAccounts(ownerId);
