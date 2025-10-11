@@ -989,7 +989,7 @@ const saveInterviewRound = async (req, res) => {
         );
 
         // Handle meetLink field separately for new rounds too
-        const { meetLink, ...otherRoundData } = round;
+        const {meetPlatform, meetLink, ...otherRoundData } = round;
         const newInterviewRound = new InterviewRounds({
             interviewId,
             ...otherRoundData,
@@ -1007,6 +1007,7 @@ const saveInterviewRound = async (req, res) => {
             //   }))
             // );
             newInterviewRound.meetLink = meetLink;
+            newInterviewRound.meetPlatform = meetPlatform;
         }
 
         savedRound = await newInterviewRound.save();
@@ -1081,7 +1082,8 @@ const updateInterviewRound = async (req, res) => {
         let roundIdParam = req.params.roundId;
         const { interviewId, round, questions } = req.body;
       
-
+    console.log("req.body",req.body);
+    
 
         if (!mongoose.Types.ObjectId.isValid(roundIdParam)) {
             return res.status(400).json({ message: "Invalid roundId" });
@@ -1137,16 +1139,21 @@ const updateInterviewRound = async (req, res) => {
         existingRound._original_status = existingRound.status;
 
         // Handle meetLink field separately to prevent conversion issues
-        const { meetLink, ...otherRoundData } = round;
+        const {meetPlatform, meetLink, ...otherRoundData } = round;
         Object.assign(existingRound, otherRoundData);
+
+        if (meetPlatform) existingRound.meetPlatform = meetPlatform;
 
         if (meetLink && Array.isArray(meetLink)) {
             // console.log("Updating meetLink directly:", meetLink);
             existingRound.meetLink = meetLink;
+            // existingRound.meetPlatform = meetPlatform;
         }
 
         // Save updated round
         const savedRound = await existingRound.save();
+
+        console.log("savedRound", savedRound);
       
         // Reorder rounds just in case sequence was changed
         await reorderInterviewRounds(interviewId);
