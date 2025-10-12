@@ -11,6 +11,11 @@ const organizationRequestSchema = new mongoose.Schema({
     ref: 'Users',
     required: true
   },
+  contactId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Contacts',  // Changed from 'Contact' to 'Contacts' to match the model name
+    required: true
+  },
   status: {
     type: String,
     enum: ['Requested', 'Contacted', 'Contacted1', 'Contacted2', 'Approved'],
