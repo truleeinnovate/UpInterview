@@ -804,7 +804,7 @@ exports.resendVerification = async (req, res) => {
         userId: user._id,
         firstName: user.firstName || '',
         lastName: user.lastName || '',
-        actionLink: `${config.REACT_APP_API_URL_FRONTEND}/auth/verify-email?token=${verificationToken}`
+        // actionLink: `${config.REACT_APP_API_URL_FRONTEND}/auth/verify-email?token=${verificationToken}`
       }
     });
 
