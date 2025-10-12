@@ -166,6 +166,20 @@ const Usage = () => {
   const assessmentsEntitled = Number(assessmentAttr?.entitled || 0);
   const assessmentsUtilized = Number(assessmentAttr?.utilized || 0);
 
+  // Question Bank Access metrics - only showing limit, not tracking usage
+  const questionBankAttr = usage?.attributes?.find(
+    (a) => (a.type || "") === "Question Bank Access"
+  );
+  const questionBankEntitled = Number(questionBankAttr?.entitled || 0);
+  // const questionBankUtilized = Number(questionBankAttr?.utilized || 0); // Not tracking usage
+
+  // User Bandwidth metrics
+  const bandwidthAttr = usage?.attributes?.find(
+    (a) => (a.type || "") === "User Bandwidth"
+  );
+  const bandwidthEntitled = Number(bandwidthAttr?.entitled || usage?.usersBandWidth || 0);
+  const bandwidthUtilized = Number(bandwidthAttr?.utilized || 0);
+
   return (
     <div className="sm:mx-2 sm:mt-8 space-y-6">
       {/* v1.0.2 <------------------------------------------------------- */}
@@ -185,7 +199,7 @@ const Usage = () => {
       {/* v1.0.0 -------------------------------------------------------------------------> */}
 
       {/* Usage Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Interviewers (Internal + Outsource) */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium">Internal Interviews</h3>
@@ -242,15 +256,45 @@ const Usage = () => {
           </div>
         </div>
 
+        {/* Question Bank Access - Only showing limit */}
+        <div className="flex justify-between bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium">Question Bank Access</h3>
+          
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">
+                Limit: {questionBankEntitled === 0 ? "Unlimited" : `${questionBankEntitled} Questions`}
+              </span>
+            </div>
+            {/* No progress bar since we're not tracking usage */}
+         
+        </div>
+
         {/* User Bandwidth */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium">User Bandwidth</h3>
           <div className="mt-2">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">GB:</span>
               <span className="text-gray-600">
-                {usage?.usersBandWidth ?? "—"}
+                Used: {bandwidthUtilized.toFixed(2)} GB
               </span>
+              <span className="text-gray-600">
+                Limit: {bandwidthEntitled === 0 ? "Unlimited" : `${bandwidthEntitled} GB`}
+              </span>
+            </div>
+            <div className="mt-2 h-2 bg-gray-200 rounded-full">
+              <div
+                className="h-full bg-orange-600 rounded-full"
+                style={{
+                  width: `${
+                    bandwidthEntitled > 0
+                      ? Math.min(
+                          (bandwidthUtilized / bandwidthEntitled) * 100,
+                          100
+                        )
+                      : 0
+                  }%`,
+                }}
+              />
             </div>
           </div>
         </div>

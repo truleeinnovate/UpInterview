@@ -11,8 +11,8 @@ export const validateQuestionBankData = (formData, mcqOptions, section, options 
         ...(skipQuestionType ? {} : { questionType: "Question Type is required" }),//-----v1.0.0----->
         skill: "Skill is required",
         difficultyLevel: "Difficulty Level is required",
-        minexperience: "Min Experience is required",
-        maxexperience: "Max Experience is required",
+        // minexperience: "Min Experience is required",
+        // maxexperience: "Max Experience is required",
         // score: "Score is required",
         ...(section === "assessment" && { score: "Score is required" }),
         correctAnswer: "Answer is required",

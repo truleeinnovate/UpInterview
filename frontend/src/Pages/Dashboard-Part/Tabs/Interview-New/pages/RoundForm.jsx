@@ -25,7 +25,7 @@ import axios from "axios";
 import InternalInterviews from "./Internal-Or-Outsource/InternalInterviewers.jsx";
 import OutsourceOption from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import Cookies from "js-cookie";
-// import { useCustomContext } from "../../../../../Context/Contextfetch.js";
+import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from "../../../../../utils/interviewRoundValidation.js";
 import { Search } from "lucide-react";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
@@ -92,6 +92,7 @@ const RoundFormInterviews = () => {
     updateRoundWithMeetingLinks,
   } = useInterviews();
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  const { groups } = useCustomContext();
   const { checkInternalInterviewUsage, isChecking } = useInternalInterviewUsage();
   // v1.0.2 <-----------------------------------------
 
@@ -103,7 +104,7 @@ const RoundFormInterviews = () => {
     useState("zoommeet"); // Default to Google Meet googlemeet
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
   // v1.0.2 <-----------------------------------------
-
+ 
   const { interviewId, roundId } = useParams();
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -181,6 +182,7 @@ const RoundFormInterviews = () => {
   const [combinedDateTime, setCombinedDateTime] = useState("");
   const [interviewerViewType, setInterviewerViewType] = useState("individuals"); // group or individuals
   const [interviewerGroupName, setInterviewerGroupName] = useState("");
+  const [interviewerGroupId, setInterviewerGroupId] = useState("");
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
   const [showDropdown, setShowDropdown] = useState(false);
@@ -250,7 +252,7 @@ const RoundFormInterviews = () => {
         // Convert to UTC
         const localTimeStr = moment(now)?.format("YYYY-MM-DD HH:mm");
         start = moment
-          .tz(
+          ?.tz(
             localTimeStr,
             "YYYY-MM-DD HH:mm",
             Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -267,7 +269,7 @@ const RoundFormInterviews = () => {
         // Convert scheduled date from local timezone to UTC
         const localTimeStr = moment(scheduledDate).format("YYYY-MM-DD HH:mm");
         start = moment
-          .tz(
+          ?.tz(
             localTimeStr,
             "YYYY-MM-DD HH:mm",
             Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -476,67 +478,69 @@ const RoundFormInterviews = () => {
 
     // If already in custom mode, treat changes as typing the custom title
     if (isCustomRoundTitle) {
-        setCustomRoundTitle(value);
-        setErrors((prev) => ({ ...prev, roundTitle: "" }));
-        return;
+      setCustomRoundTitle(value);
+      setErrors((prev) => ({ ...prev, roundTitle: "" }));
+      return;
     }
 
     // DropdownWithSearchField sends an empty string when "Other" is chosen.
     // Enter custom mode and keep roundTitle as "Other" for submission mapping.
     if (value === "") {
-        setIsCustomRoundTitle(true);
-        setRoundTitle("Other");
-        setCustomRoundTitle("");
-        setInstructions(""); // Clear instructions when selecting "Other"
-        setErrors((prev) => ({ ...prev, roundTitle: "" }));
-        return;
+      setIsCustomRoundTitle(true);
+      setRoundTitle("Other");
+      setCustomRoundTitle("");
+      setInstructions(""); // Clear instructions when selecting "Other"
+      setErrors((prev) => ({ ...prev, roundTitle: "" }));
+      return;
     }
 
     // Normal predefined selection
     setRoundTitle(value);
     setCustomRoundTitle("");
-    
+
     // Clear instructions whenever round title changes
     setInstructions("");
-    
-    if (value === "Assessment") {
-        setInterviewMode("Virtual");
-        setInterviewQuestionsList([]);
-        setInstructions(""); // Ensure instructions are cleared for Assessment
-        
-        setInterviewerGroupName("");
-        setInterviewerViewType("");
-        setInterviewType("instant");
-        setScheduledDate("");
-        setDuration(60);
-        setStartTime("");
-        setEndTime("");
-        setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-        setSelectedAssessmentData(null);
-        setCombinedDateTime("");
-    } else {
-        setInterviewMode("");
-        setInstructions(""); // Clear instructions for non-Assessment rounds
-        setInterviewType("instant");
-        setScheduledDate("");
-        setDuration(60);
-        setStartTime("");
-        setEndTime("");
-        setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-        setSelectedAssessmentData(null);
-        setCombinedDateTime("");
 
-        setInterviewerGroupName("");
-        setInterviewerViewType("");
+    if (value === "Assessment") {
+      setInterviewMode("Virtual");
+      setInterviewQuestionsList([]);
+      setInstructions(""); // Ensure instructions are cleared for Assessment
+
+      setInterviewerGroupName("");
+      setInterviewerGroupId("");
+      setInterviewerViewType("");
+      setInterviewType("instant");
+      setScheduledDate("");
+      setDuration(60);
+      setStartTime("");
+      setEndTime("");
+      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+      setSelectedAssessmentData(null);
+      setCombinedDateTime("");
+    } else {
+      setInterviewMode("");
+      setInstructions(""); // Clear instructions for non-Assessment rounds
+      setInterviewType("instant");
+      setScheduledDate("");
+      setDuration(60);
+      setStartTime("");
+      setEndTime("");
+      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+      setSelectedAssessmentData(null);
+      setCombinedDateTime("");
+
+      setInterviewerGroupName("");
+      setInterviewerGroupId("");
+      setInterviewerViewType("");
     }
 
-    setErrors((prev) => ({ 
-        ...prev, 
-        roundTitle: "", 
-        interviewMode: "",
-        instructions: "" // Clear instructions validation error
+    setErrors((prev) => ({
+      ...prev,
+      roundTitle: "",
+      interviewMode: "",
+      instructions: "" // Clear instructions validation error
     }));
-};
+  };
 
   const handleRoundTitleChange = (e) => {
     const selectedTitle = e.target.value;
@@ -547,7 +551,7 @@ const RoundFormInterviews = () => {
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
       setSelectedAssessmentData(null);
       setCombinedDateTime("");
-      
+
     } else {
       setRoundTitle(selectedTitle);
       setCustomRoundTitle("");
@@ -561,6 +565,8 @@ const RoundFormInterviews = () => {
       setEndTime("");
 
       setInterviewerGroupName("");
+
+      setInterviewerGroupId("")
       setInterviewerViewType("");
       setCombinedDateTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
@@ -576,6 +582,7 @@ const RoundFormInterviews = () => {
       setInstructions("");
 
       setInterviewerGroupName("");
+      setInterviewerGroupId("")
       setInterviewerViewType("");
       // setStatus("Pending");
       setInterviewType("instant");
@@ -602,6 +609,7 @@ const RoundFormInterviews = () => {
       setCombinedDateTime("");
 
       setInterviewerGroupName("");
+      setInterviewerGroupId("");
       setInterviewerViewType("");
     }
   };
@@ -621,6 +629,7 @@ const RoundFormInterviews = () => {
       setInternalInterviewers([]);
       setExternalInterviewers([]);
       setInterviewerGroupName("");
+      setInterviewerGroupId("");
       setInterviewerViewType("individuals");
       setSelectedInterviewType(null);
     };
@@ -634,6 +643,7 @@ const RoundFormInterviews = () => {
     ) {
       setInternalInterviewers([]);
       setInterviewerGroupName("");
+      setInterviewerGroupId("");
       setInterviewerViewType("individuals");
     }
   }, [selectedInterviewType]);
@@ -645,6 +655,9 @@ const RoundFormInterviews = () => {
   useEffect(() => {
     if (isEditing && roundEditData) {
       // Update assessmentTemplate only if different
+
+      const foundGroup = groups?.find((g) => g?._id === roundEditData?.interviewerGroupId);
+      console.log("foundGroup groups", foundGroup);
 
       // Find full assessment object
       const fullAssessment =
@@ -697,9 +710,12 @@ const RoundFormInterviews = () => {
       if (duration !== (roundEditData.duration || 60))
         setDuration(Number(roundEditData.duration) || 60);
       if (
-        interviewerGroupName !== (roundEditData?.interviewerGroupName || "")
+        interviewerGroupName !== (foundGroup?.name || "")
       ) {
-        setInterviewerGroupName(roundEditData?.interviewerGroupName || "");
+        setInterviewerGroupName(foundGroup?.name || "");
+        // setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
+      } if (interviewerGroupId !== (roundEditData?.interviewerGroupId || "")) {
+        setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
       }
       if (interviewerViewType !== (roundEditData?.interviewerViewType || "")) {
         setInterviewerViewType(roundEditData?.interviewerViewType || "");
@@ -768,12 +784,13 @@ const RoundFormInterviews = () => {
         setSequence(maxSequence + 1);
       }
     }
-  }, [rounds, roundId, isEditing, assessmentData, interviewData]);
+  }, [rounds, roundId, isEditing, assessmentData, interviewData,groups]);
 
   const handleInternalInterviewerSelect = (
     interviewers,
     viewType,
-    groupName
+    groupName,
+    groupId
   ) => {
     // console.log("Interviewers passed to parent:", interviewers); // Debugging
 
@@ -791,10 +808,12 @@ const RoundFormInterviews = () => {
     if (viewType && viewType !== interviewerViewType) {
       setInternalInterviewers([]);
       setInterviewerGroupName("");
+      setInterviewerGroupId("");
     }
 
     setInterviewerViewType(viewType);
     setInterviewerGroupName(groupName);
+    setInterviewerGroupId(groupId);
     setSelectedInterviewType("Internal");
 
     // For groups, replace existing selection (only one group can be selected)
@@ -851,6 +870,7 @@ const RoundFormInterviews = () => {
         setSelectedInterviewType(null);
         // setInternalInterviewers("")
         setInterviewerGroupName("");
+        setInterviewerGroupId("");
         setInterviewerViewType("individuals");
 
         // Only reset selectedInterviewType if no external interviewers either
@@ -886,6 +906,7 @@ const RoundFormInterviews = () => {
     setExternalInterviewers([]);
     setSelectedInterviewType(null);
     setInterviewerGroupName("");
+    setInterviewerGroupId("");
     setInterviewerViewType("individuals");
   };
 
@@ -1014,21 +1035,6 @@ const RoundFormInterviews = () => {
 
     setIsSubmitting(true);
 
-    // console.log("roundEditData", roundEditData);
-    // console.log("interviewId", interviewId);
-    // console.log("roundId", roundId);
-    // console.log("roundTitle", roundTitle);
-    // console.log("interviewMode", interviewMode);
-    // console.log("sequence", sequence);
-    // console.log("assessmentTemplate", assessmentTemplate);
-    // console.log("instructions", instructions);
-    // console.log("status", status);
-    // console.log("duration", duration);
-    // console.log("combinedDateTime", combinedDateTime);
-    // console.log("interviewType", interviewType);
-    // console.log("selectedInterviewType", selectedInterviewType);
-    // // console.log("selectedInterviewersData", selectedInterviewersData);
-    // console.log("interviewQuestionsList", interviewQuestionsList);
 
     try {
       // console.log("Preparing round data for validation");
@@ -1055,27 +1061,7 @@ const RoundFormInterviews = () => {
         );
       }
       // v1.0.1 <---------------------------------------------------------------------------------
-      // const roundData = {
-      //   roundTitle,
-      //   interviewMode,
-      //   interviewerGroupName,
-      //   interviewerViewType,
-      //   sequence,
-      //   ...(roundTitle === "Assessment" && assessmentTemplate.assessmentId
-      //     ? { assessmentId: assessmentTemplate.assessmentId }
-      //     : {}),
-      //   instructions,
-      //   status,
-      //   ...(roundTitle !== "Assessment" && {
-      //     duration,
-      //     interviewerType: selectedInterviewType,
-      //     dateTime: combinedDateTime,
-      //     interviewType,
-      //   }),
-      //   ...(selectedInterviewType !== "external" && {
-      //     interviewers: formattedInterviewers || [],
-      //   }), // cleanedInterviewers
-      // };
+
 
       // If editing and rescheduling, increment rescheduleCount
       let updatedRescheduleCount = roundEditData?.rescheduleCount || 0;
@@ -1088,8 +1074,13 @@ const RoundFormInterviews = () => {
       const roundData = {
         roundTitle: roundTitle === "Other" ? customRoundTitle : roundTitle,
         interviewMode,
-        interviewerGroupName,
-        interviewerViewType,
+        // interviewerGroupName,
+        interviewerGroupId:
+          interviewerViewType === "groups" &&
+            roundTitle !== "Assessment"
+            ? interviewerGroupId
+            : "", // added newly
+        // interviewerViewType,
         rescheduleCount: updatedRescheduleCount,
         sequence,
         ...(roundTitle === "Assessment" && assessmentTemplate.assessmentId
@@ -1148,11 +1139,11 @@ const RoundFormInterviews = () => {
       if (selectedInterviewType === 'internal' && status === 'Scheduled') {
         // Check if this is a new scheduling (not already scheduled)
         const isNewScheduling = !isEditing || (isEditing && roundEditData?.status !== 'Scheduled');
-        
+
         if (isNewScheduling) {
           console.log("Checking internal interview usage limits...");
           const usageCheck = await checkInternalInterviewUsage(orgId, !organization ? userId : null);
-          
+
           if (!usageCheck.canSchedule) {
             // Show detailed error with usage stats
             const usageInfo = usageCheck.usageStats || usageCheck.usage || {};
@@ -1176,18 +1167,6 @@ const RoundFormInterviews = () => {
         response = await saveInterviewRound(payload);
       }
 
-      // const response = await saveInterviewRound(payload);
-      // console.log("Round saved successfully:", response);
-      // console.log("Saved round ID:", response.savedRound._id);
-
-      // Show success toast for round creation
-      // notify.success("Interview round created successfully!");
-
-      // console.log("Response from selectedInterviewers:", selectedInterviewers);
-      // console.log(
-      //   "Response from selectedInterviewType:",
-      //   selectedInterviewType
-      // );
 
       // ✅ Collect success messages instead of showing immediately
       const successMessages = [];
@@ -1314,7 +1293,7 @@ const RoundFormInterviews = () => {
                     candidateId: candidate?._id,
                     positionId: position?._id,
                     dateTime: combinedDateTime,
-                    type:"interview",
+                    type: "interview",
                     // duration: duration,
                     // roundTitle: roundTitle,
                   },
@@ -1377,12 +1356,12 @@ const RoundFormInterviews = () => {
         if (response.status === "ok") {
           // console.log("Generating meeting link for the interview");
           const shouldGenerateMeeting =
-          !isEditing &&                                   // 🧩 Skip in edit mode
-          payload?.round?.interviewMode !== "Face to Face" &&
-          Array.isArray(selectedInterviewers) &&
-          selectedInterviewers.length > 0;  
-          console.log(shouldGenerateMeeting,"shouldGenerateMeeting");
-          
+            !isEditing &&                                   // 🧩 Skip in edit mode
+            payload?.round?.interviewMode !== "Face to Face" &&
+            Array.isArray(selectedInterviewers) &&
+            selectedInterviewers.length > 0;
+          console.log(shouldGenerateMeeting, "shouldGenerateMeeting");
+
           if (shouldGenerateMeeting) {
             try {
               setIsMeetingCreationLoading(true);
@@ -1394,7 +1373,7 @@ const RoundFormInterviews = () => {
                 "../../../../../utils/meetingPlatforms.js"
               );
 
-            
+
 
               let meetingLink;
 
@@ -1512,7 +1491,7 @@ const RoundFormInterviews = () => {
               try {
                 console.log("=== Starting meeting URL processing ===");
 
-            
+
 
                 // console.log("Meeting URL processing completed successfully:", result);
                 const isInternal = selectedInterviewType === "Internal";
@@ -2103,8 +2082,8 @@ const RoundFormInterviews = () => {
                                                   </span>
                                                   <ChevronUp
                                                     className={`transform transition-transform ${expandedSections[sectionId]
-                                                        ? ""
-                                                        : "rotate-180"
+                                                      ? ""
+                                                      : "rotate-180"
                                                       }`}
                                                   />
                                                 </button>
@@ -2149,10 +2128,10 @@ const RoundFormInterviews = () => {
                                                               </div>
                                                               <ChevronDown
                                                                 className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
-                                                                    question._id
-                                                                  ]
-                                                                    ? "transform rotate-180"
-                                                                    : ""
+                                                                  question._id
+                                                                ]
+                                                                  ? "transform rotate-180"
+                                                                  : ""
                                                                   }`}
                                                               />
                                                             </div>
@@ -2206,11 +2185,11 @@ const RoundFormInterviews = () => {
                                                                                 }
                                                                                 //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
                                                                                 className={`text-sm p-2 rounded border ${option ===
-                                                                                    question
-                                                                                      .snapshot
-                                                                                      .correctAnswer
-                                                                                    ? "bg-green-50 border-green-200 text-green-800"
-                                                                                    : "bg-gray-50 border-gray-200"
+                                                                                  question
+                                                                                    .snapshot
+                                                                                    .correctAnswer
+                                                                                  ? "bg-green-50 border-green-200 text-green-800"
+                                                                                  : "bg-gray-50 border-gray-200"
                                                                                   }`}
                                                                               >
                                                                                 {
@@ -2308,20 +2287,20 @@ const RoundFormInterviews = () => {
                             type="button"
                             onClick={() => setInterviewType("instant")}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
                               }`}
                           >
                             <Clock
                               className={`h-6 w-6 ${interviewType === "instant"
-                                  ? "text-custom-blue/70"
-                                  : "text-gray-400"
+                                ? "text-custom-blue/70"
+                                : "text-gray-400"
                                 }`}
                             />
                             <span
                               className={`mt-2 font-medium ${interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
                                 }`}
                             >
                               Instant Interview
@@ -2335,20 +2314,20 @@ const RoundFormInterviews = () => {
                             type="button"
                             onClick={() => setInterviewType("scheduled")}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
                               }`}
                           >
                             <Calendar
                               className={`h-6 w-6 ${interviewType === "scheduled"
-                                  ? "text-custom-blue/70"
-                                  : "text-gray-400"
+                                ? "text-custom-blue/70"
+                                : "text-gray-400"
                                 }`}
                             />
                             <span
                               className={`mt-2 font-medium ${interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
                                 }`}
                             >
                               Schedule for Later
@@ -2481,8 +2460,8 @@ const RoundFormInterviews = () => {
                               variant="outline"
                               size="sm"
                               className={`${isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
                                 }`}
                               disabled={isExternalSelected}
                               title={
@@ -2503,8 +2482,8 @@ const RoundFormInterviews = () => {
                               variant="outline"
                               size="sm"
                               className={`${isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
                                 }`}
                               disabled={isExternalSelected}
                               title={
@@ -2526,8 +2505,8 @@ const RoundFormInterviews = () => {
                             variant="outline"
                             size="sm"
                             className={`${isInternalSelected
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
                               }`}
                             disabled={
                               isInternalSelected ||
@@ -2549,12 +2528,12 @@ const RoundFormInterviews = () => {
                       {/* v1.0.5 --------------------------------------------------------> */}
 
                       {/* Internal Interview Usage Display */}
-                      {isInternalSelected && (
-                        <InternalInterviewUsageDisplay 
+                      {/* {isInternalSelected && (
+                        <InternalInterviewUsageDisplay
                           className="mt-3 mb-3"
                           showOnlyWarning={false}
                         />
-                      )}
+                      )} */}
 
                       {/* Selected Interviewers Summary */}
                       {/* v1.0.5 <------------------------------------------------------------ */}
@@ -2605,116 +2584,91 @@ const RoundFormInterviews = () => {
 
                             {/* Internal Interviewers */}
                             {isInternalSelected && (
-                              <section className="mb-4 w-full">
+                              <section className="mb-4 mt-2 w-full">
                                 <h4 className="text-sm font-semibold text-gray-600 mb-3">
-                                  {interviewerViewType === "groups"
+                                  {interviewerViewType === "groups" || interviewerGroupId
                                     ? "Interviewer Groups "
                                     : "Internal Interviewers "}
                                   <span className="text-xs text-custom-blue">
-                                    (
-                                    {internalInterviewers.length ||
-                                      "Not Provided"}
-                                    {internalInterviewers.length > 1
-                                      ? " members"
-                                      : " member"}
-                                    )
+                                    ({selectedInterviewers.length || "Not Provided"}{" "}
+                                    {selectedInterviewers.length > 1 ? "Members" : "Member"})
                                   </span>
-                                  {/* {formData.interviewerViewType === 'groups' && formData.interviewerGroupName && (
-                                                    <span className="ml-2 text-sm font-normal">(Group: {formData.interviewerGroupName})</span>
-                                                                  )} */}
                                 </h4>
                                 <div className="grid grid-cols-4 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 w-full gap-4">
-                                  {internalInterviewers.map(
-                                    (interviewer, index) => {
-                                      // Render group card
-                                      if (
-                                        interviewerViewType === "groups" &&
-                                        interviewerGroupName
-                                      ) {
-                                        return (
-                                          <div
-                                            key={`group-${index}`}
-                                            className="rounded-xl border w-[80%] md:w-[30%] border-blue-200 bg-blue-50 p-3 shadow-sm flex flex-col justify-between"
-                                          >
-                                            <div className="flex justify-between items-start mb-2">
-                                              <div>
-                                                <span className="font-medium text-custom-blue block">
-                                                  {interviewerGroupName ||
-                                                    "Not Provided"}
-                                                </span>
-                                              </div>
-                                              <button
-                                                onClick={() =>
-                                                  handleRemoveInternalInterviewer(
-                                                    interviewer._id
-                                                  )
-                                                }
-                                                className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
-                                              >
-                                                <X className="h-4 w-4" />
-                                              </button>
-                                            </div>
-                                            <div>
-                                              {/* <p className="text-xs text-gray-600 mb-2">{interviewer.description}</p> */}
-                                              <ul className="list-disc list-inside text-xs text-custom-blue ml-1">
-                                                {interviewer.usersNames &&
-                                                  interviewer.usersNames.length >
-                                                  0
-                                                  ? interviewer.usersNames.map(
-                                                    (name, i) => (
-                                                      <li
-                                                        key={`${interviewer._id}-user-${i}`}
-                                                      >
-                                                        {name}
-                                                      </li>
-                                                    )
-                                                  )
-                                                  : `${interviewer.firstName ||
-                                                    ""
-                                                    } ${interviewer.lastName || ""
-                                                    }`.trim() ||
-                                                  interviewer.email}
-
-                                                {/* {interviewer.usersNames.map((name, i) => (
-                                                                                <li key={`${interviewer._id}-user-${i}`}>{name}</li>
-                                                                              ))} */}
-                                              </ul>
-                                            </div>
-                                          </div>
-                                        );
-                                      }
-
-                                      // Render individual interviewer card
-                                      return (
-                                        <div
-                                          key={`${interviewer._id}-${index}`}
-                                          className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 p-3 shadow-sm w-full md:w-auto"
-                                        >
-                                          <div className="flex items-center">
-                                            <User className="h-4 w-4 text-custom-blue mr-2" />
-                                            <span className="text-sm font-medium text-custom-blue truncate">
-                                              {`${interviewer.firstName || ""
-                                                } ${interviewer.lastName || ""
-                                                }`.trim() || interviewer.email}
-                                            </span>
-                                          </div>
-
-                                          <button
-                                            type="button"
-                                            onClick={() =>
-                                              handleRemoveInternalInterviewer(
-                                                interviewer._id
-                                              )
-                                            }
-                                            className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
-                                            title="Remove interviewer"
-                                          >
-                                            <X className="h-4 w-4" />
-                                          </button>
+                                  {/* Render group card if group exists */}
+                                  {interviewerGroupId && (
+                                    <div
+                                      key={`group-${interviewerGroupId}`}
+                                      className="rounded-xl border w-[80%] border-blue-200 bg-blue-50 p-3 shadow-sm flex flex-col justify-between"
+                                    >
+                                      <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                          <span className="font-medium text-blue-900 block">
+                                            {interviewerGroupName || "Not Provided"}
+                                          </span>
+                                          <span className="text-xs text-blue-700">(Group)</span>
                                         </div>
-                                      );
-                                    }
+                                        <button
+                                          onClick={handleClearAllInterviewers}
+                                          className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                      <div>
+                                        <ul className="list-disc list-inside text-xs text-blue-800 ml-1">
+                                          {/* Check if we have a group with usersNames */}
+                                          {interviewerGroupId && selectedInterviewers[0]?.usersNames ? (
+                                            // Render group members from usersNames
+                                            selectedInterviewers[0].usersNames.map((name, i) => (
+                                              <li key={`${selectedInterviewers[0]._id}-user-${i}`}>
+                                                {name}
+                                              </li>
+                                            ))
+                                          ) : interviewerGroupId && selectedInterviewers[0]?.userIds ? (
+                                            // Fallback: if we have group but no usersNames, show placeholder
+                                            selectedInterviewers[0].userIds.map((userId, i) => (
+                                              <li key={`${selectedInterviewers[0]._id}-user-${i}`}>
+                                                User ID: {userId}
+                                              </li>
+                                            ))
+                                          ) : (
+                                            // Render individual interviewers
+                                            selectedInterviewers.map((interviewer, index) => (
+                                              <li key={`${interviewer._id}-${index}`}>
+                                                {`${interviewer.firstName || ""} ${interviewer.lastName || ""}`.trim() ||
+                                                  interviewer.email}
+                                              </li>
+                                            ))
+                                          )}
+                                        </ul>
+                                      </div>
+                                    </div>
                                   )}
+
+                                  {/* Render individual interviewers if no group */}
+                                  {!interviewerGroupId && selectedInterviewers.map((interviewer, index) => (
+                                    <div
+                                      key={`${interviewer._id}-${index}`}
+                                      className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 p-3 shadow-sm w-full md:w-auto"
+                                    >
+                                      <div className="flex items-center">
+                                        <User className="h-4 w-4 text-blue-600 mr-2" />
+                                        <span className="text-sm font-medium text-blue-900 truncate">
+                                          {`${interviewer.firstName || ""} ${interviewer.lastName || ""}`.trim() ||
+                                            interviewer.email}
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveInternalInterviewer(interviewer._id)}
+                                        className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
+                                        title="Remove interviewer"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  ))}
                                 </div>
                               </section>
                               // <div className="mb-3">
@@ -2812,8 +2766,8 @@ const RoundFormInterviews = () => {
                                       <li
                                         key={qIndex}
                                         className={`flex justify-between items-center p-3 border rounded-md ${isMandatory
-                                            ? "border-red-500"
-                                            : "border-gray-300"
+                                          ? "border-red-500"
+                                          : "border-gray-300"
                                           }`}
                                       >
                                         <span className="text-gray-900 font-medium">
@@ -2977,8 +2931,9 @@ const RoundFormInterviews = () => {
           }}
           onSelectCandidates={handleInternalInterviewerSelect}
           selectedInterviewers={internalInterviewers}
-          defaultViewType={interviewerViewType}
+          // defaultViewType={interviewerViewType}
           selectedGroupName={interviewerGroupName}
+          selectedGroupId={interviewerGroupId}
         //  clearOnViewTypeChange={true}
         />
       )}

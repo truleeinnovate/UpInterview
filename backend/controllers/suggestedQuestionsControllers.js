@@ -2,6 +2,7 @@
 
 const { AssessmentQuestion } = require('../models/QuestionBank/assessmentQuestions');
 const { InterviewQuestion } = require('../models/QuestionBank/interviewQuestions');
+const { checkQuestionBankUsageLimit } = require('../services/questionBankUsageService');
 
 const createQuestion = async (req, res) => {
   try {
@@ -76,12 +77,36 @@ const createQuestion = async (req, res) => {
 const getQuestions = async (req, res) => {
   try {
     const questionType = req.query?.questionType;
+    const tenantId = req.query?.tenantId || req.headers['x-tenant-id'];
+    const ownerId = req.query?.ownerId || req.headers['x-owner-id'];
 
-    const toUnified = (doc) => ({
+    // Check Question Bank Access usage limits
+    let usageLimit = null;
+    let canAccessAll = true;
+    let accessibleCount = Infinity;
+    
+    if (tenantId) {
+      const usageCheck = await checkQuestionBankUsageLimit(tenantId, ownerId);
+      usageLimit = {
+        canAccess: usageCheck.canAccess,
+        utilized: usageCheck.utilized,
+        entitled: usageCheck.entitled,
+        remaining: usageCheck.remaining,
+        message: usageCheck.message
+      };
+      
+      // Calculate how many questions user can access
+      if (usageCheck.entitled !== Infinity) {
+        accessibleCount = usageCheck.entitled;
+        canAccessAll = usageCheck.remaining > 500; // Assume max 500 questions in bank
+      }
+    }
+
+    const toUnified = (doc, index, isLocked = false) => ({
       _id: doc._id,
       questionOrderId: doc.questionOrderId,
       questionNo: doc.questionOrderId,
-      questionText: doc.questionText,
+      questionText: doc.questionText, // Keep original text, frontend will handle masking
       questionType: doc.questionType,
       category: Array.isArray(doc.category) ? doc.category : doc.category ? [doc.category].flat() : [],
       technology: Array.isArray(doc.technology) ? doc.technology : doc.technology ? [doc.technology].flat() : [],
@@ -109,44 +134,77 @@ const getQuestions = async (req, res) => {
       charLimits: doc.charLimits,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
+      isLocked: isLocked,
+      lockReason: isLocked ? 'Upgrade your plan to access more questions' : null
     });
 
-    // When explicitly requesting by type, only fetch from the respective collection
-    if (questionType === 'Interview') {
-      const interviews = await InterviewQuestion.find().lean();
-      const unifiedQuestions = interviews.map((d) => toUnified(d));
-      return res.status(200).send({
-        success: true,
-        message: 'Questions retrieved',
-        questions: unifiedQuestions,
-      });
-    }
-
-    if (questionType !== 'Interview') {
-      const assessments = await AssessmentQuestion.find().lean();
-      const unifiedQuestions = assessments.map((d) => toUnified(d));
-      return res.status(200).send({
-        success: true,
-        message: 'Questions retrieved',
-        questions: unifiedQuestions,
-      });
-    }
-
-    // Default: fetch both
+    // Fetch both collections to get total count for combined limit
     const [assessments, interviews] = await Promise.all([
       AssessmentQuestion.find().lean(),
       InterviewQuestion.find().lean(),
     ]);
 
-    const unifiedQuestions = [
-      ...assessments.map((d) => toUnified(d)),
-      ...interviews.map((d) => toUnified(d)),
-    ];
+    // Combine and sort all questions for consistent ordering
+    const allDocs = [...interviews, ...assessments].sort((a, b) => {
+      // Sort by creation date or ID for consistent ordering
+      const dateA = new Date(a.createdAt || 0);
+      const dateB = new Date(b.createdAt || 0);
+      return dateB - dateA; // Newest first
+    });
+
+    // Calculate total questions and apply global limit
+    const totalQuestionsCount = allDocs.length;
+    
+    // When filtering by type, filter from the combined list but maintain global index for locking
+    let questionsToReturn = [];
+    let filteredQuestions = [];
+
+    if (questionType === 'Interview') {
+      // Filter only interview questions but keep track of their position in combined list
+      allDocs.forEach((doc, globalIndex) => {
+        // Check if this is an interview question (you may need to adjust this check)
+        const isInterview = interviews.some(i => i._id.toString() === doc._id.toString());
+        if (isInterview) {
+          const isLocked = accessibleCount !== Infinity && globalIndex >= accessibleCount;
+          filteredQuestions.push({ doc, globalIndex, isLocked });
+        }
+      });
+    } else if (questionType === 'Assessment' || questionType === 'Assignment') {
+      // Filter only assessment questions but keep track of their position in combined list
+      allDocs.forEach((doc, globalIndex) => {
+        const isAssessment = assessments.some(a => a._id.toString() === doc._id.toString());
+        if (isAssessment) {
+          const isLocked = accessibleCount !== Infinity && globalIndex >= accessibleCount;
+          filteredQuestions.push({ doc, globalIndex, isLocked });
+        }
+      });
+    } else {
+      // Return all questions with combined limit
+      allDocs.forEach((doc, globalIndex) => {
+        const isLocked = accessibleCount !== Infinity && globalIndex >= accessibleCount;
+        filteredQuestions.push({ doc, globalIndex, isLocked });
+      });
+    }
+
+    // Map to unified format
+    questionsToReturn = filteredQuestions.map(({ doc, globalIndex, isLocked }) => 
+      toUnified(doc, globalIndex, isLocked)
+    );
+
+    // Calculate locked questions based on total, not filtered
+    const totalLockedQuestions = accessibleCount !== Infinity 
+      ? Math.max(0, totalQuestionsCount - accessibleCount) 
+      : 0;
 
     return res.status(200).send({
       success: true,
       message: 'Questions retrieved',
-      questions: unifiedQuestions,
+      questions: questionsToReturn,
+      usageLimit,
+      totalQuestions: totalQuestionsCount, // Total across both types
+      accessibleQuestions: accessibleCount !== Infinity ? accessibleCount : totalQuestionsCount,
+      lockedQuestions: totalLockedQuestions,
+      questionTypeFilter: questionType || 'all'
     });
   } catch (error) {
     console.log('error in getting questions', error);
@@ -158,5 +216,41 @@ const getQuestions = async (req, res) => {
   }
 };
 
-module.exports = { createQuestion, getQuestions }
+// Check Question Bank Usage Status
+const checkQuestionBankUsage = async (req, res) => {
+  try {
+    const tenantId = req.query?.tenantId || req.headers['x-tenant-id'];
+    const ownerId = req.query?.ownerId || req.headers['x-owner-id'];
+    
+    if (!tenantId) {
+      return res.status(400).send({
+        success: false,
+        message: 'Tenant ID is required'
+      });
+    }
+    
+    const usageCheck = await checkQuestionBankUsageLimit(tenantId, ownerId);
+    
+    return res.status(200).send({
+      success: true,
+      canAccess: usageCheck.canAccess,
+      utilized: usageCheck.utilized,
+      entitled: usageCheck.entitled,
+      remaining: usageCheck.remaining,
+      message: usageCheck.message,
+      percentage: usageCheck.entitled !== Infinity 
+        ? Math.round((usageCheck.utilized / usageCheck.entitled) * 100)
+        : 0
+    });
+  } catch (error) {
+    console.error('Error checking question bank usage:', error);
+    return res.status(500).send({
+      success: false,
+      message: 'Failed to check usage',
+      error: error.message
+    });
+  }
+};
+
+module.exports = { createQuestion, getQuestions, checkQuestionBankUsage }
 //-----v1.0.0--------------------------------->

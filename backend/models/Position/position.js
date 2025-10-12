@@ -9,7 +9,8 @@ const roundSchema = new mongoose.Schema(
     interviewerType: String, // internal or external
     duration: Number,
     instructions: String,
-    interviewerGroupName: { type: String },
+    // interviewerGroupName: { type: String },
+    interviewerGroupId: { type: String },
 
 
     interviewerViewType: { type: String },

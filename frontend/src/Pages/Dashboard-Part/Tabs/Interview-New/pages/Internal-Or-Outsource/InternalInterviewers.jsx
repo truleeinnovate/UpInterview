@@ -25,6 +25,7 @@ const InternalInterviews = ({
   selectedInterviewers: selectedInterviewersProp = [],
   defaultViewType = "individuals",
   selectedGroupName = "",
+  selectedGroupId
 }) => {
   const { interviewers, groups } = useCustomContext();
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,7 +33,16 @@ const InternalInterviews = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const modalRef = useRef(null);
   // const [viewType, setViewType] = useState(defaultViewType);
-  const [viewType, setViewType] = useState(defaultViewType);
+  // const [viewType, setViewType] = useState(defaultViewType);
+    // CHANGED: Auto-detect view type based on groupName or groupId
+    const [viewType, setViewType] = useState(() => {
+      // If groupName or groupId is provided, default to groups view
+      if (selectedGroupName || selectedGroupId) {
+        return "groups";
+      }
+      return defaultViewType;
+    });
+    
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   // const [selectedInterviewers, setSelectedInterviewers] = useState(selectedInterviewersProp);
@@ -47,15 +57,38 @@ const InternalInterviews = ({
   ];
 
   const [selectedInterviewers, setSelectedInterviewers] = useState(() => {
-    // If we're editing a group, find the matching group in the groups list
-    if (defaultViewType === "groups" && selectedGroupName) {
-      const matchingGroup = groups?.find(
-        (group) => group.name === selectedGroupName
+    // CHANGED: Enhanced group detection logic
+    if ((selectedGroupName || selectedGroupId) && groups) {
+      const matchingGroup = groups.find(
+        (group) => 
+          group.name === selectedGroupName || 
+          group._id === selectedGroupId
       );
       return matchingGroup ? [matchingGroup] : [];
     }
     return selectedInterviewersProp;
   });
+
+  // CHANGED: Added useEffect to handle view type changes when group props change
+  useEffect(() => {
+    if (selectedGroupName || selectedGroupId) {
+      setViewType("groups");
+    }
+  }, [selectedGroupName, selectedGroupId]);
+
+  // CHANGED: Enhanced useEffect to auto-select group when groups data loads
+  useEffect(() => {
+    if ((selectedGroupName || selectedGroupId) && groups && groups.length > 0) {
+      const matchingGroup = groups.find(
+        (group) => 
+          group.name === selectedGroupName || 
+          group._id === selectedGroupId
+      );
+      if (matchingGroup) {
+        setSelectedInterviewers([matchingGroup]);
+      }
+    }
+  }, [groups, selectedGroupName, selectedGroupId]);
 
   //   useEffect(() => {
   //   setSelectedInterviewers([]);
@@ -157,11 +190,14 @@ const InternalInterviews = ({
     viewType,
     selectedRole,
     selectedGroupName,
+    selectedGroupId
   ]); // Added selectedRole to dependencies
 
   useEffect(() => {
     setFilteredData(FilteredData);
   }, [FilteredData]);
+
+  
 
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
@@ -200,9 +236,11 @@ const InternalInterviews = ({
 
   const handleScheduleClick = () => {
     if (viewType === "groups" && selectedInterviewers.length > 0) {
-      // For groups, pass the group name along with the selected group
-      const groupName = selectedInterviewers[0]?.name || "";
-      onSelectCandidates(selectedInterviewers, viewType, groupName);
+          // For groups, pass the group name AND group ID
+    const groupName = selectedInterviewers[0]?.name || "";
+    const groupId = selectedInterviewers[0]?._id || "";
+
+      onSelectCandidates(selectedInterviewers, viewType, groupName, groupId);
     } else {
       // For individuals, just pass the selected interviewers and view type
       onSelectCandidates(selectedInterviewers, viewType);

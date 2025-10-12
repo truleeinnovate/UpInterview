@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Improved responsiveness
+
 import { useEffect, useState } from "react";
 import { GlobeAltIcon } from "@heroicons/react/24/outline";
 import { MapPin, Globe } from "lucide-react";
@@ -80,25 +82,39 @@ const BasicInfoSection = ({ companyProfile, isLoading }) => {
   if (!companyProfile || Object.keys(companyProfile).length === 0) {
     return (
       <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-medium mb-4">Basic Information</h3>
+        {/* v1.0.0 <------------------------------------------------------------------------------ */}
+        <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium mb-4">
+          Basic Information
+        </h3>
+        {/* v1.0.0 ------------------------------------------------------------------------------> */}
         <div className="text-center py-8">
-          <p className="text-gray-500 text-sm">No company information available</p>
+          <p className="text-gray-500 text-sm">
+            No company information available
+          </p>
         </div>
       </div>
     );
   }
 
   return (
+    // v1.0.0 <----------------------------------------------------------------------------------
     <div className="bg-white p-6 rounded-lg shadow">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2  gap-6">
         <div>
-          <h3 className="text-lg font-medium mb-4">Basic Information</h3>
+          <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium mb-4">
+            Basic Information
+          </h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Company Name
               </label>
-              <p>{companyProfile?.company ? companyProfile?.company.charAt(0).toUpperCase() + companyProfile?.company.slice(1) : "Not Provided"}</p>
+              <p className="text-sm">
+                {companyProfile?.company
+                  ? companyProfile?.company.charAt(0).toUpperCase() +
+                    companyProfile?.company.slice(1)
+                  : "Not Provided"}
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -115,7 +131,9 @@ const BasicInfoSection = ({ companyProfile, isLoading }) => {
           </div>
         </div>
         <div>
-          <h3 className="text-lg font-medium mb-4">Contact Information</h3>
+          <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium mb-4">
+            Contact Information
+          </h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -148,6 +166,7 @@ const BasicInfoSection = ({ companyProfile, isLoading }) => {
         </div>
       </div>
     </div>
+    // v1.0.0 ---------------------------------------------------------------------------------->
   );
 };
 
@@ -159,19 +178,22 @@ const OfficeLocationsSection = ({ companyProfile, isLoading }) => {
 
   const validOffices = Array.isArray(companyProfile?.offices)
     ? companyProfile.offices.filter(
-      (office) =>
-        office.address?.trim() &&
-        office.city?.trim() &&
-        office.state?.trim() &&
-        office.country?.trim() &&
-        office.phone?.trim() &&
-        office.zip?.trim()
-    )
+        (office) =>
+          office.address?.trim() &&
+          office.city?.trim() &&
+          office.state?.trim() &&
+          office.country?.trim() &&
+          office.phone?.trim() &&
+          office.zip?.trim()
+      )
     : [];
 
   return (
+    // v1.0.0 <------------------------------------------------------------------
     <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-medium mb-4">Office Locations</h3>
+      <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium mb-4">
+        Office Locations
+      </h3>
       {validOffices.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
           {validOffices.map((office) => (
@@ -192,10 +214,13 @@ const OfficeLocationsSection = ({ companyProfile, isLoading }) => {
         </div>
       ) : (
         <div className="text-center py-8">
-          <p className="text-gray-500 text-sm italic">No valid office locations found.</p>
+          <p className="text-gray-500 text-sm italic">
+            No valid office locations found.
+          </p>
         </div>
       )}
     </div>
+    // v1.0.0 ------------------------------------------------------------------>
   );
 };
 
@@ -219,16 +244,19 @@ const CompanyProfile = () => {
 
   return (
     <>
-      <div className="space-y-6 md:mt-4  sm:mt-4">
+      {/* v1.0.0 <-------------------------------------------------------------------------- */}
+      <div className="space-y-6 sm:mt-6 md:mt-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Company Profile</h2>
+          <h2 className="sm:text-lg md:text-lg lg:text-lg xl:text-xl 2xl:text-2xl font-bold">
+            Company Profile
+          </h2>
           <button
             onClick={() =>
               navigate(
                 `/account-settings/profile/company-profile-edit/${organizationId}`
               )
             }
-            className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
+            className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg"
           >
             Edit
           </button>
@@ -253,6 +281,7 @@ const CompanyProfile = () => {
           isLoading={organizationsLoading}
         />
       </div>
+      {/* v1.0.0 --------------------------------------------------------------------------> */}
       <Outlet />
     </>
   );

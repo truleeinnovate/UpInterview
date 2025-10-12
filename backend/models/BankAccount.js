@@ -14,7 +14,7 @@ const BankAccountSchema = new mongoose.Schema(
     accountType: {
       type: String,
       enum: ["savings", "checking", "current"],
-      default: "checking"
+      default: "savings"
     },
     accountNumber: { type: String, required: true },
     routingNumber: { type: String }, // For US banks (ACH)

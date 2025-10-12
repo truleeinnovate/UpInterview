@@ -82,7 +82,7 @@ const validateRoundData = Joi.object({
     }),
   }),
 
-  interviewerGroupName: Joi.string().allow(""),
+  interviewerGroupId: Joi.string().allow(""),
 
   interviewerViewType: Joi.string().allow(""),
 
@@ -203,7 +203,7 @@ const validateRoundDataStandard = Joi.object({
   instructions: Joi.string().allow("").optional(),
   interviewerType: Joi.string().allow("").optional(),
   interviewers: Joi.array().optional(),
-  interviewerGroupName: Joi.string().allow("").optional(),
+  interviewerGroupId: Joi.string().allow("").optional(),
   interviewerViewType: Joi.string().allow("").optional(),
   selectedInterviewersType: Joi.string().allow("").optional(),
   assessmentId: Joi.string().allow(null, "").optional(),
@@ -231,7 +231,7 @@ const validateRoundPatchData = Joi.object({
     Joi.string().valid('Internal', 'External').allow(''),
     Joi.valid(null)
   ).optional(),
-  interviewerGroupName: Joi.when('assessmentId', {
+  interviewerGroupId: Joi.when('assessmentId', {
     is: Joi.exist(),
     then: Joi.string().allow("").optional(),
     otherwise: Joi.when('interviewerType', {

@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - add first letter capital function
 // v1.0.1 - Ashok - improved responsiveness
+// v1.0.2 - Ashok - changed placement of edit mock interview button
 
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
@@ -270,7 +271,8 @@ const MockInterviewDetails = () => {
             <Breadcrumb items={breadcrumbItems} />
 
             <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
-              <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              {/* v1.0.2 <------------------------------------------------------------------------- */}
+              <div className="flex flex-row justify-between items-start sm:items-center px-4 py-5 sm:px-6 gap-4">
                 <div>
                   {/* v1.0.1 <----------------------------------------------------------------------------- */}
                   <h3 className="flex items-center text-lg leading-6 font-medium text-gray-900 gap-3">
@@ -291,7 +293,18 @@ const MockInterviewDetails = () => {
                   </p>
                   {/* v1.0.0 ---------------------------------------------------------------> */}
                 </div>
+                <div className="flex space-x-2">
+                  <Link
+                    to={`/mock-interview/${id}/edit`}
+                    // onClick={() =>  navigate(`/mock-interview/${mockinterview._id}/edit`, { state: { from: location.pathname }})}
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <Edit className="h-4 w-4 sm:mr-0 mr-1" />
+                    <span className="sm:hidden inline">Edit Interview</span>
+                  </Link>
+                </div>
               </div>
+              {/* v1.0.2 -------------------------------------------------------------------------> */}
               {/* v1.0.1 <------------------------------------------------------ */}
               <div className="border-t border-gray-200 px-4 py-5">
                 {/* v1.0.1 ------------------------------------------------------> */}
@@ -402,16 +415,6 @@ const MockInterviewDetails = () => {
                     <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg leading-6 font-medium text-gray-900">
                       Mock Interview Round
                     </h3>
-                    <div className="flex space-x-2">
-                      <Link
-                        to={`/mock-interview/${id}/edit`}
-                        // onClick={() =>  navigate(`/mock-interview/${mockinterview._id}/edit`, { state: { from: location.pathname }})}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        <Edit className="h-4 w-4 sm:mr-0 mr-1" />
-                        <span className="sm:hidden inline">Edit Interview</span>
-                      </Link>
-                    </div>
                   </div>
                   {/* <InterviewProgress
                     rounds={normalizedRounds}
@@ -442,7 +445,7 @@ const MockInterviewDetails = () => {
                                 <div>
                                   {/* v1.0.1 <------------------------------------------------------------------------------------------------------- */}
                                   <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
-                                  {/* v1.0.1 -------------------------------------------------------------------------------------------------------> */}
+                                    {/* v1.0.1 -------------------------------------------------------------------------------------------------------> */}
                                     {round.roundTitle}
                                   </h3>
                                   {/* v1.0.0 <-------------------------------------------------------------------------- */}
@@ -474,9 +477,9 @@ const MockInterviewDetails = () => {
                             {isExpanded(round._id) && (
                               // v1.0.1 <----------------------------------------
                               <div className="sm:px-0 px-4 pb-4">
-                              {/* v1.0.1 ----------------------------------------> */}
+                                {/* v1.0.1 ----------------------------------------> */}
                                 <MoockRoundCard
-                                mockinterview={mockinterview}
+                                  mockinterview={mockinterview}
                                   round={round}
                                   // canEdit={canEditRound(round)}
                                   // onEdit={() => onEditRound(round)}

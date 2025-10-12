@@ -128,6 +128,7 @@ const agoraRoomRoute = require("./routes/agoraRoomRoute.js");
 const feedbackRoute = require("./routes/feedbackRoute.js");
 const usageRoutes = require("./routes/usageRoutes.js");
 const organizationRequestRoutes = require("./routes/organizationRequestRoutes.js");
+const bandwidthRoutes = require("./routes/bandwidthRoutes.js");
 
 // CORS is now handled by our custom middleware above
 // <---------------------- v1.0.3
@@ -481,6 +482,7 @@ app.use("/users", usersRoutes);
 app.use("/feedback", feedbackRoute);
 app.use("/usage", usageRoutes);
 app.use("/organization-requests", organizationRequestRoutes);
+app.use("/bandwidth", bandwidthRoutes);
 
 const port = process.env.PORT || 5000;
 
