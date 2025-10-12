@@ -1736,12 +1736,23 @@
       console.log("Contact saved successfully with ID:", savedContact._id);
 
       // Send email verification
-      const emailResult = await sendVerificationEmail(
-        email,
-        savedUser._id,
-        firstName,
-        lastName
-      );
+      // const emailResult = await sendVerificationEmail(
+      //   email,
+      //   savedUser._id,
+      //   firstName,
+      //   lastName
+      // );
+          const emailResult = await sendVerificationEmail({
+            type: 'initial_email_verification',
+            to: email,
+            data: {
+              email,
+              userId: savedUser._id,
+              firstName: firstName || '',
+              lastName: lastName || '',
+              // actionLink: `${config.REACT_APP_API_URL_FRONTEND}/auth/verify-email?token=${verificationToken}`
+            }
+          });
       if (!emailResult.success) {
         throw new Error(emailResult.message);
       }
