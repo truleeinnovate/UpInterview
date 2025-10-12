@@ -5,10 +5,62 @@ import axios from 'axios';
 
 const fetchOrganizationRequests = async () => {
   try {
-    const response = await axios.get(`${config.REACT_APP_API_URL}/organization-requests`);
-    return response.data;
+    console.log('[FRONTEND] Fetching organization requests...');
+    const response = await axios.get(`${config.REACT_APP_API_URL}/organization-requests`, {
+      withCredentials: true
+    });
+    
+    console.log('[FRONTEND] Raw API response:', response);
+    
+    if (!Array.isArray(response.data)) {
+      console.error('[FRONTEND] Unexpected response format:', response.data);
+      return [];
+    }
+
+    console.log(`[FRONTEND] Received ${response.data.length} organization requests`);
+    
+    // The backend now returns the contact data directly in the response
+    const processedData = response.data.map((request, index) => {
+      const processed = {
+        ...request,
+        // The contact data is now available in request.contact
+        contact: request.contact || {
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          countryCode: ''
+        },
+        // Keep tenant data if available
+        tenant: request.tenant || {},
+        _debug: {
+          hasContact: !!request.contact,
+          contactKeys: request.contact ? Object.keys(request.contact) : []
+        }
+      };
+      
+      console.log(`[FRONTEND] Processed request ${index}:`, {
+        id: request._id,
+        ownerId: request.ownerId,
+        hasContact: !!request.contact,
+        contact: request.contact || {},
+        _debug: processed._debug
+      });
+      
+      return processed;
+    });
+    
+    return processedData;
   } catch (error) {
     console.error('Error fetching organization requests:', error);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Status code:', error.response.status);
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+    } else {
+      console.error('Error setting up request:', error.message);
+    }
     throw error;
   }
 };

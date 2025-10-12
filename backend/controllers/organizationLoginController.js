@@ -394,24 +394,20 @@
 
       // Create or update OrganizationRequest with contact ID (profileId)
       await OrganizationRequest.findOneAndUpdate(
-        { tenantId: user.tenantId, ownerId: user._id },
-        { 
-          $setOnInsert: { 
-            tenantId: user.tenantId, 
-            ownerId: user._id,
-            contactId: user.profileId, // Add the contact ID (profileId)
-            status: 'Requested'
-          },
-          $set: {
-            contactId: user.profileId // Ensure contactId is updated if it changes
-          }
+      { tenantId: user.tenantId, ownerId: user._id },
+      {
+        $setOnInsert: {
+          tenantId: user.tenantId,
+          ownerId: user._id,
+          status: 'Requested'
         },
-        { 
-          upsert: true, 
-          new: true,
-          setDefaultsOnInsert: true
-        }
-      );
+      },
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true
+      }
+    );
 
       const responseData = {
         success: true,
@@ -1764,26 +1760,26 @@
   const getOrganizationRequestStatus = async (req, res) => {
     try {
       const { tenantId, ownerId } = req.params;
-      
+
       if (!mongoose.Types.ObjectId.isValid(tenantId) || !mongoose.Types.ObjectId.isValid(ownerId)) {
         return res.status(400).json({ success: false, message: 'Invalid tenant or owner ID' });
       }
 
       const request = await OrganizationRequest.findOne({ tenantId, ownerId });
-      
+
       if (!request) {
-        return res.status(200).json({ 
-          success: true, 
-          data: { status: 'NotRequested' } 
+        return res.status(200).json({
+          success: true,
+          data: { status: 'NotRequested' }
         });
       }
 
-      res.status(200).json({ 
-        success: true, 
-        data: { 
+      res.status(200).json({
+        success: true,
+        data: {
           status: request.status,
           updatedAt: request.updatedAt
-        } 
+        }
       });
     } catch (error) {
       console.error('Error getting organization request status:', error);
