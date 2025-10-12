@@ -392,17 +392,25 @@
       };
       const authToken = generateToken(payload, { expiresIn: "7h" });
 
-      // Create or update OrganizationRequest
+      // Create or update OrganizationRequest with contact ID (profileId)
       await OrganizationRequest.findOneAndUpdate(
         { tenantId: user.tenantId, ownerId: user._id },
         { 
           $setOnInsert: { 
             tenantId: user.tenantId, 
             ownerId: user._id,
+            contactId: user.profileId, // Add the contact ID (profileId)
             status: 'Requested'
+          },
+          $set: {
+            contactId: user.profileId // Ensure contactId is updated if it changes
           }
         },
-        { upsert: true, new: true }
+        { 
+          upsert: true, 
+          new: true,
+          setDefaultsOnInsert: true
+        }
       );
 
       const responseData = {

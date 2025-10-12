@@ -101,6 +101,9 @@ const Home = lazy(() =>
 const OutsourceInterviewerRequest = lazy(() =>
   import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
 );
+const OrganizationRequest = lazy(() =>
+  import("./Pages/SuperAdmin-Part/OrganizationRequest/OrganizationRequest.jsx")
+);
 const CandidateTab = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate")
 );
@@ -1182,6 +1185,14 @@ const MainAppRoutes = ({
               <Route
                 path="/outsource-interviewers-request"
                 element={<OutsourceInterviewerRequest />}
+              />
+            )}
+
+            {/* Organization Request */}
+            {hasPermission("OrganizationRequest") && (
+              <Route
+                path="/organization-request"
+                element={<OrganizationRequest />}
               />
             )}
 
