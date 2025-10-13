@@ -15,15 +15,20 @@ import InputField from "../../../../../Components/FormFields/InputField.jsx";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect.jsx";
 import LoadingButton from "../../../../../Components/LoadingButton.jsx";
 
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
+
 export function BankAccountsPopup({ onClose, onSelectAccount }) {
   const { userProfile, isLoading: profileLoading } = useUserProfile();
-  const ownerId = userProfile?.id || userProfile?._id;
-  const tenantId = userProfile?.tenantId;
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const ownerId = tokenPayload?.userId || userProfile?._id;
+  const tenantId = tokenPayload?.tenantId;
+
   
   // Debug logging
-  console.log("UserProfile:", userProfile);
-  console.log("OwnerId:", ownerId);
-  console.log("TenantId:--------------------", tenantId);
+  // console.log("UserProfile:", userProfile);
+  // console.log("OwnerId:", ownerId);
+  // console.log("TenantId:--------------------", tenantId);
   
   // API hooks
   const { data: bankAccounts = [], isLoading: loadingAccounts, refetch } = useBankAccounts(ownerId);
