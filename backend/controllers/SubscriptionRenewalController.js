@@ -173,6 +173,7 @@ const runSubscriptionRenewalJob = async () => {
                     }
                 }
 
+                
                 // Update tenant limits if needed
                 await updateTenantLimits(subscription);
 
