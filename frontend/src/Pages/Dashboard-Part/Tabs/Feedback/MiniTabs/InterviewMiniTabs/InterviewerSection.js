@@ -45,6 +45,7 @@ const InterviewerSectionComponent = ({
   // Interview data from parent
   interviewData,
   decodedData,
+  handlePreselectedQuestionResponse
 }) => {
   // Get all questions from interviewData and filter for interviewer-added questions
   const location = useLocation();
@@ -251,6 +252,40 @@ const InterviewerSectionComponent = ({
     useState(true);
   //----v1.0.1--->
 
+
+  // Add this function inside the InterviewerSectionComponent, after the state declarations
+// const syncQuestionChanges = useCallback((questionId, updates) => {
+//   // Update local state
+//   setInterviewerSectionData(prev =>
+//     prev.map(question =>
+//       (question.questionId || question.id) === questionId
+//         ? { ...question, ...updates }
+//         : question
+//     )
+//   );
+
+// }, []);
+
+// Add this sync function inside InterviewerSectionComponent after state declarations
+const syncQuestionChanges = useCallback((questionId, updates) => {
+  console.log("🔄 Interviewer syncQuestionChanges called:", { questionId, updates });
+  
+  // Update local state
+  setInterviewerSectionData(prev =>
+    prev.map(question =>
+      (question.questionId || question.id) === questionId
+        ? { ...question, ...updates }
+        : question
+    )
+  );
+
+  // Also sync with parent component if the handler is provided
+  if (handlePreselectedQuestionResponse) {
+    handlePreselectedQuestionResponse(questionId, updates);
+  }
+}, [setInterviewerSectionData, handlePreselectedQuestionResponse]);
+
+
   useEffect(() => {
     if (interviewerSection.length > 0 && selectedQuestion === null) {
       setSelectedQuestion(interviewerSection[0].id);
@@ -276,15 +311,19 @@ const InterviewerSectionComponent = ({
     };
   }, [isQuestionBankOpen]);
 
-  const onChangeInterviewQuestionNotes = (questionId, notes) => {
-    setInterviewerSectionData((prev) =>
-      prev.map((question) =>
-        (question.questionId || question.id) === questionId
-          ? { ...question, note: notes }
-          : question
-      )
-    );
-  };
+  // const onChangeInterviewQuestionNotes = (questionId, notes) => {
+  //   setInterviewerSectionData((prev) =>
+  //     prev.map((question) =>
+  //       (question.questionId || question.id) === questionId
+  //         ? { ...question, note: notes }
+  //         : question
+  //     )
+  //   );
+  // };
+
+  // const onChangeInterviewQuestionNotes = (questionId, notes) => {
+  //   syncQuestionChanges(questionId, { note: notes, notesBool: true });
+  // };
 
   const onClickAddNote = (id) => {
     setInterviewerSectionData((prev) =>
@@ -295,6 +334,49 @@ const InterviewerSectionComponent = ({
       )
     );
   };
+
+ // Update all handler functions to use the sync function
+const onChangeInterviewQuestionNotes = (questionId, notes) => {
+  console.log("📝 Notes changed:", { questionId, notes });
+  syncQuestionChanges(questionId, { note: notes, notesBool: true });
+};
+
+const onChangeRadioInput = (questionId, value) => {
+  console.log("📻 Radio input changed:", { questionId, value });
+  syncQuestionChanges(questionId, { isAnswered: value });
+};
+
+const onChangeDislikeRadioInput = (questionId, value) => {
+  console.log("👎 Dislike radio changed:", { questionId, value });
+  syncQuestionChanges(questionId, { whyDislike: value, isLiked: "disliked" });
+};
+
+const handleDislikeToggle = (id) => {
+  if (isViewMode) return;
+  
+  console.log("👎 Dislike toggle:", id);
+  
+  if (dislikeQuestionId === id) setDislikeQuestionId(null);
+  else setDislikeQuestionId(id);
+  
+  syncQuestionChanges(id, { 
+    isLiked: "disliked",
+    // Don't clear whyDislike here, let the radio buttons handle it
+  });
+};
+
+const handleLikeToggle = (id) => {
+  if (isViewMode) return;
+  
+  console.log("👍 Like toggle:", id);
+  
+  syncQuestionChanges(id, { 
+    isLiked: "liked",
+    whyDislike: "" // Clear dislike reason when liking
+  });
+  
+  if (dislikeQuestionId === id) setDislikeQuestionId(null);
+};
 
   const openQuestionBank = () => {
     setIsQuestionBankOpen(true);
@@ -389,70 +471,114 @@ const InterviewerSectionComponent = ({
   const questionRef = useRef(); // For future use, e.g., scrolling to a specific question
 
   // Function to handle radio input changes if needed
-  const onChangeRadioInput = (questionId, value) => {
-    setInterviewerSectionData((prev) =>
-      prev.map((question) =>
-        (question.questionId || question.id) === questionId
-          ? { ...question, isAnswered: value }
-          : question
-      )
-    );
-  };
+  // const onChangeRadioInput = (questionId, value) => {
+  //   setInterviewerSectionData((prev) =>
+  //     prev.map((question) =>
+  //       (question.questionId || question.id) === questionId
+  //         ? { ...question, isAnswered: value }
+  //         : question
+  //     )
+  //   );
+  // };
 
-  const onChangeDislikeRadioInput = (questionId, value) => {
-    setInterviewerSectionData((prev) =>
-      prev.map((question) => {
-        if ((question.questionId || question.id) === questionId) {
-          return { ...question, whyDislike: value, isLiked: "disliked" };
-        }
-        return question;
-      })
-    );
-  };
+  // const onChangeDislikeRadioInput = (questionId, value) => {
+  //   setInterviewerSectionData((prev) =>
+  //     prev.map((question) => {
+  //       if ((question.questionId || question.id) === questionId) {
+  //         return { ...question, whyDislike: value, isLiked: "disliked" };
+  //       }
+  //       return question;
+  //     })
+  //   );
+  // };
 
-  const handleDislikeToggle = (id) => {
-    if (isViewMode) return; //<----v1.0.3-----
-    if (dislikeQuestionId === id) setDislikeQuestionId(null);
-    else setDislikeQuestionId(id);
-    setInterviewerSectionData(
-      (prev) =>
-        prev.map((q) =>
-          q._id === id
-            ? {
-                ...q,
-                isLiked: q.isLiked === "disliked" ? "" : "disliked",
-                // Clear dislike reason when toggling off dislike
-                whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike,
-              }
-            : q
-        )
-      // prev.map((q) =>
-      //   (q.questionId || q.id) === id ? { ...q, isLiked: q.isLiked === "disliked" ? "" : "disliked" } : q
-      // )
-    );
-  };
+  
+// const onChangeRadioInput = (questionId, value) => {
+//   syncQuestionChanges(questionId, { isAnswered: value });
+// };
 
-  const handleLikeToggle = (id) => {
-    if (isViewMode) return; //<----v1.0.3-----
-    setInterviewerSectionData(
-      (prev) =>
-        prev.map((q) =>
-          q._id === id
-            ? {
-                ...q,
-                isLiked: q.isLiked === "liked" ? "" : "liked",
-                // Clear dislike reason when liking
-                whyDislike: q.isLiked === "liked" ? q.whyDislike : "",
-              }
-            : q
-        )
+// const onChangeDislikeRadioInput = (questionId, value) => {
+//   syncQuestionChanges(questionId, { whyDislike: value, isLiked: "disliked" });
+// };
 
-      // prev.map((q) =>
-      //   (q.questionId || q.id) === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q
-      // )
-    );
-    if (dislikeQuestionId === id) setDislikeQuestionId(null);
-  };
+  // const handleDislikeToggle = (id) => {
+  //   if (isViewMode) return; //<----v1.0.3-----
+  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
+  //   else setDislikeQuestionId(id);
+  //   setInterviewerSectionData(
+  //     (prev) =>
+  //       prev.map((q) =>
+  //         q._id === id
+  //           ? {
+  //               ...q,
+  //               isLiked: q.isLiked === "disliked" ? "" : "disliked",
+  //               // Clear dislike reason when toggling off dislike
+  //               whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike,
+  //             }
+  //           : q
+  //       )
+  //     // prev.map((q) =>
+  //     //   (q.questionId || q.id) === id ? { ...q, isLiked: q.isLiked === "disliked" ? "" : "disliked" } : q
+  //     // )
+  //   );
+  // };
+
+  // const handleLikeToggle = (id) => {
+  //   if (isViewMode) return; //<----v1.0.3-----
+  //   setInterviewerSectionData(
+  //     (prev) =>
+  //       prev.map((q) =>
+  //         q._id === id
+  //           ? {
+  //               ...q,
+  //               isLiked: q.isLiked === "liked" ? "" : "liked",
+  //               // Clear dislike reason when liking
+  //               whyDislike: q.isLiked === "liked" ? q.whyDislike : "",
+  //             }
+  //           : q
+  //       )
+
+  //     // prev.map((q) =>
+  //     //   (q.questionId || q.id) === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q
+  //     // )
+  //   );
+  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
+  // };
+
+
+  // const handleDislikeToggle = (id) => {
+  //   if (isViewMode) return;
+  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
+  //   else setDislikeQuestionId(id);
+    
+  //   setInterviewerSectionData(prev =>
+  //     prev.map(q =>
+  //       (q.questionId || q.id) === id
+  //         ? { 
+  //             ...q, 
+  //             isLiked: q.isLiked === "disliked" ? "" : "disliked",
+  //             whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike
+  //           }
+  //         : q
+  //     )
+  //   );
+  // };
+  
+  // const handleLikeToggle = (id) => {
+  //   if (isViewMode) return;
+  //   setInterviewerSectionData(prev =>
+  //     prev.map(q =>
+  //       (q.questionId || q.id) === id
+  //         ? { 
+  //             ...q, 
+  //             isLiked: q.isLiked === "liked" ? "" : "liked",
+  //             whyDislike: q.isLiked === "liked" ? q.whyDislike : ""
+  //           }
+  //         : q
+  //     )
+  //   );
+  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
+  // };
 
   const DisLikeSection = React.memo(({ each }) => {
     return (

@@ -29,7 +29,7 @@ function JoinMeeting() {
   const [candidateDetails, setCandidateDetails] = useState(null);
   const [candidateLoading, setCandidateLoading] = useState(false);
   const [candidateError, setCandidateError] = useState(null);
-  console.log("candidateDetails currentRole", currentRole);
+
 
   const fetchCandidateDetails = async (roundId, retryCount = 0) => {
     if (!roundId) {
@@ -55,7 +55,7 @@ function JoinMeeting() {
 
       if (res.data && res.data.success) {
         if (res.data.candidate) {
-          console.log("✅ Setting candidate details:", res.data);
+ 
           setCandidateDetails({
             ...res.data.candidate,
             position: res.data.position,
@@ -450,8 +450,6 @@ export default JoinMeeting;
 
 
 
-
-// import React, { useState, useEffect } from 'react';
 // import { useLocation, useNavigate } from 'react-router-dom';
 // import axios from 'axios';
 // import Cookies from 'js-cookie';

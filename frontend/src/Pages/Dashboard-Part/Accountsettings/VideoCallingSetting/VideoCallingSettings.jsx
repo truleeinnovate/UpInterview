@@ -20,6 +20,7 @@ import { config } from "../../../../config";
 import { notify } from "../../../../services/toastService";
 // v1.0.0 <---------------------------------------------------------------
 import { createPortal } from "react-dom";
+import { useVideoSettingsQuery } from "../../../../apiHooks/VideoDetail";
 // v1.0.0 --------------------------------------------------------------->
 
 // Confirmation Modal Component
@@ -58,6 +59,18 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, title, message }) => {
 };
 
 export function VideoCallingSettings() {
+  const {
+    data,
+    isLoading,
+    isError,
+    // error,
+    refetch,
+    // isOrganization,
+  } = useVideoSettingsQuery();
+
+    // Add this line to fix all setSettings errors:
+    // const [settings, setSettings] = useState(data?.data || null);
+
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -66,13 +79,22 @@ export function VideoCallingSettings() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingProvider, setPendingProvider] = useState(null);
 
+  // ✅ FIX: Properly handle data updates
+  useEffect(() => {
+    if (data?.data) {
+      setSettings(data.data);
+    }
+  }, [data]);
+
+  console.log("settings", settings);
+  console.log("isLoading", data?.data?.defaultProvider);
+
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const isOrganization = tokenPayload?.organization;
 
-  console.log("isOrganization", isOrganization);
   const [showCredentials, setShowCredentials] = useState({
     googleMeet: false,
     zoom: false,
@@ -112,14 +134,14 @@ export function VideoCallingSettings() {
   ];
 
   // v1.0.1 <---------------------------------------------------------------------------
-  // useEffect(() => {
-  //   if (settings && isOrganization === false) {
-  //     setSettings((prev) => ({
-  //       ...prev,
-  //       credentialType: "platform",
-  //     }));
-  //   }
-  // }, [settings, isOrganization]);
+  useEffect(() => {
+    if (settings && isOrganization === false) {
+      setSettings((prev) => ({
+        ...prev,
+        credentialType: "platform",
+      }));
+    }
+  }, [settings, isOrganization]);
 
   useEffect(() => {
     if (
@@ -135,99 +157,99 @@ export function VideoCallingSettings() {
   }, [settings, isOrganization]);
   // v1.0.1 --------------------------------------------------------------------------->
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // useEffect(() => {
+  //   const fetchSettings = async () => {
+  //     try {
+  //       setLoading(true);
+  //       setError(null);
 
-        const { data } = await axios.get(
-          `${config.REACT_APP_API_URL}/video-details/get-settings`,
-          {
-            params: {
-              tenantId: tenantId,
-              ownerId: ownerId,
-            },
-          }
-        );
+  //       const { data } = await axios.get(
+  //         `${config.REACT_APP_API_URL}/video-details/get-settings`,
+  //         {
+  //           params: {
+  //             tenantId: tenantId,
+  //             ownerId: ownerId,
+  //           },
+  //         }
+  //       );
 
-        console.log("✅ API Response:", data);
+  //       console.log("✅ API Response:", data);
 
-        if (data.success && data.data) {
-          setSettings(data.data);
-        } else {
-          // If no settings, set default
-          setSettings({
-            defaultProvider: "zoom",
-            credentialType: "platform",
-            credentials: {
-              googleMeet: {
-                clientId: "",
-                clientSecret: "",
-                refreshToken: "",
-                isConfigured: false,
-              },
-              zoom: {
-                apiKey: "",
-                apiSecret: "",
-                accountId: "",
-                isConfigured: false,
-              },
-              teams: {
-                tenantId: "",
-                clientId: "",
-                clientSecret: "",
-                isConfigured: false,
-              },
-            },
-            testConnection: {
-              status: null,
-              message: "",
-            },
-          });
-        }
-      } catch (err) {
-        console.error("❌ Error loading settings:", err);
-        setError(err.message);
+  //       if (data.success && data.data) {
+  //         setSettings(data.data);
+  //       } else {
+  //         // If no settings, set default
+  //         setSettings({
+  //           defaultProvider: "zoom",
+  //           credentialType: "platform",
+  //           credentials: {
+  //             googleMeet: {
+  //               clientId: "",
+  //               clientSecret: "",
+  //               refreshToken: "",
+  //               isConfigured: false,
+  //             },
+  //             zoom: {
+  //               apiKey: "",
+  //               apiSecret: "",
+  //               accountId: "",
+  //               isConfigured: false,
+  //             },
+  //             teams: {
+  //               tenantId: "",
+  //               clientId: "",
+  //               clientSecret: "",
+  //               isConfigured: false,
+  //             },
+  //           },
+  //           testConnection: {
+  //             status: null,
+  //             message: "",
+  //           },
+  //         });
+  //       }
+  //     } catch (err) {
+  //       console.error("❌ Error loading settings:", err);
+  //       setError(err.message);
 
-        // Set default settings on error
-        setSettings({
-          defaultProvider: "zoom",
-          credentialType: "platform",
-          credentials: {
-            googleMeet: {
-              clientId: "",
-              clientSecret: "",
-              refreshToken: "",
-              isConfigured: false,
-            },
-            zoom: {
-              apiKey: "",
-              apiSecret: "",
-              accountId: "",
-              isConfigured: false,
-            },
-            teams: {
-              tenantId: "",
-              clientId: "",
-              clientSecret: "",
-              isConfigured: false,
-            },
-          },
-          testConnection: {
-            status: null,
-            message: "",
-          },
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       // Set default settings on error
+  //       setSettings({
+  //         defaultProvider: "zoom",
+  //         credentialType: "platform",
+  //         credentials: {
+  //           googleMeet: {
+  //             clientId: "",
+  //             clientSecret: "",
+  //             refreshToken: "",
+  //             isConfigured: false,
+  //           },
+  //           zoom: {
+  //             apiKey: "",
+  //             apiSecret: "",
+  //             accountId: "",
+  //             isConfigured: false,
+  //           },
+  //           teams: {
+  //             tenantId: "",
+  //             clientId: "",
+  //             clientSecret: "",
+  //             isConfigured: false,
+  //           },
+  //         },
+  //         testConnection: {
+  //           status: null,
+  //           message: "",
+  //         },
+  //       });
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    if (tenantId && ownerId) {
-      fetchSettings();
-    }
-  }, [tenantId, ownerId]);
+  //   if (tenantId && ownerId) {
+  //     fetchSettings();
+  //   }
+  // }, [tenantId, ownerId]);
 
   // Handle provider change with confirmation
   const handleProviderChange = (providerId) => {
@@ -360,7 +382,7 @@ export function VideoCallingSettings() {
         ownerId: ownerId,
       };
 
-      console.log("Saving settings:", updateData);
+    
 
       // Make PATCH request to update settings
       const response = await axios.patch(
@@ -564,7 +586,7 @@ export function VideoCallingSettings() {
     );
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       // v1.0.2 <----------------------------------------------------------------------------
       <div className="space-y-6 sm:mt-6 md:mt-6">

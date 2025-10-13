@@ -2,7 +2,7 @@
 // v1.0.1 - Ashok - Improved responsiveness
 
 /* eslint-disable no-lone-blocks */
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { FaAngleDown, FaAngleUp, FaTrash } from "react-icons/fa";
 import Popup from "reactjs-popup";
@@ -41,7 +41,10 @@ const SchedulerSectionComponent = ({
   const allQuestions = interviewdata?.interviewQuestions
     ? interviewdata?.interviewQuestions || interviewdata?.questionFeedback
     : feedbackData.preSelectedQuestions || [];
-  console.log("allQuestions", allQuestions);
+  // console.log("allQuestions", allQuestions);
+
+
+
 
   // Use preselected questions from API if available, otherwise fallback to old logic
   // const schedulerQuestions = preselectedQuestionsFromAPI.length > 0
@@ -73,23 +76,25 @@ const SchedulerSectionComponent = ({
         })
       : [];
 
+      
+
   const questionsfeedback =
     feedbackData.questionFeedback || interviewdata?.questionFeedback || [];
-  console.log("All questions:", allQuestions.length);
-  console.log(
-    "Preselected questions from API:",
-    preselectedQuestionsFromAPI.length
-  );
-  console.log(
-    "Scheduler questions (not added by interviewer):",
-    schedulerQuestions.length
-  );
-  console.log("Scheduler questions data:", schedulerQuestions);
-  console.log(
-    "Preselected questions responses:",
-    preselectedQuestionsResponses
-  );
-  console.log("questionsfeedback", questionsfeedback);
+  // console.log("All questions:", allQuestions.length);
+  // console.log(
+  //   "Preselected questions from API:",
+  //   preselectedQuestionsFromAPI.length
+  // );
+  // console.log(
+  //   "Scheduler questions (not added by interviewer):",
+  //   schedulerQuestions.length
+  // );
+  // console.log("Scheduler questions data:", schedulerQuestions);
+  // console.log(
+  //   "Preselected questions responses:",
+  //   preselectedQuestionsResponses
+  // );
+  // console.log("questionsfeedback", questionsfeedback);
 
   // Initialize state variables
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");
@@ -163,222 +168,90 @@ const SchedulerSectionComponent = ({
     });
   });
 
-  // Initialize questionRef
-  const questionRef = useRef(); // For future use, e.g., scrolling to a specific question
+// Add this sync function inside SchedulerSectionComponent after state declarations
+const syncQuestionChanges = useCallback((questionId, updates) => {
+  console.log("🔄 Scheduler syncQuestionChanges called:", { questionId, updates });
+  
+  // Update local state
+  setSchedulerQuestionsData(prev =>
+    prev.map(question =>
+      question._id === questionId ? { ...question, ...updates } : question
+    )
+  );
 
-  // Function to handle radio input changes if needed
-  const onChangeRadioInput = (id, value) => {
-    setSchedulerQuestionsData((prev) =>
-      prev.map((question) =>
-        question._id === id ? { ...question, isAnswered: value } : question
-      )
-    );
+  // Update preselected questions responses for parent synchronization
+  if (handlePreselectedQuestionResponse) {
+    const question = schedulerQuestionsData.find(q => q._id === questionId);
+    const bankQuestionId = question?.questionId || questionId;
+    
+    console.log("📤 Sending update to parent:", { bankQuestionId, updates });
+    handlePreselectedQuestionResponse(bankQuestionId, updates);
+  } else {
+    console.warn("❌ handlePreselectedQuestionResponse is not available");
+  }
+}, [schedulerQuestionsData, handlePreselectedQuestionResponse]);
 
-    // Update preselected questions responses using the underlying bank questionId
-    if (handlePreselectedQuestionResponse) {
-      const q = schedulerQuestionsData.find((qq) => qq._id === id);
-      const bankQuestionId = q?.questionId || id;
-      handlePreselectedQuestionResponse(bankQuestionId, { isAnswered: value });
-    }
-  };
+// Update the radio input handler
+const onChangeRadioInput = (id, value) => {
+  console.log("📻 Radio input changed:", { id, value });
+  syncQuestionChanges(id, { isAnswered: value });
+};
 
-  // Function to handle dislike radio input changes
-  const onChangeDislikeRadioInput = (questionId, value) => {
-    setSchedulerQuestionsData((prev) =>
-      prev.map((question) => {
-        if (question._id === questionId) {
-          return { ...question, whyDislike: value, isLiked: "disliked" };
-        }
-        return question;
-      })
-    );
+// Update the dislike radio handler
+const onChangeDislikeRadioInput = (questionId, value) => {
+  console.log("👎 Dislike radio changed:", { questionId, value });
+  syncQuestionChanges(questionId, { whyDislike: value, isLiked: "disliked" });
+};
 
-    // Update preselected questions responses
-    if (handlePreselectedQuestionResponse) {
-      const q = schedulerQuestionsData.find((qq) => qq._id === questionId);
-      const bankQuestionId = q?.questionId || questionId;
-      handlePreselectedQuestionResponse(bankQuestionId, {
-        whyDislike: value,
-        isLiked: "disliked",
-      });
-    }
-  };
+// Update the dislike toggle handler
+const handleDislikeToggle = (id) => {
+  if (isViewMode) return;
+  
+  console.log("👎 Dislike toggle:", id);
+  
+  syncQuestionChanges(id, { 
+    isLiked: "disliked",
+    whyDislike: "" // Clear dislike reason when toggling
+  });
+  
+  if (dislikeQuestionId === id) setDislikeQuestionId(null);
+  else setDislikeQuestionId(id);
+};
 
-  // Function to handle dislike toggle
-  // const handleDislikeToggle = (id) => {
-  //   if (isViewMode) return;//<----v1.0.0---
-  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
-  //   else setDislikeQuestionId(id);
-  //   setSchedulerQuestionsData((prev) =>
-  //     prev.map((q) =>
-  //       q._id === id ? { ...q, isLiked: q.isLiked === "disliked" ? "" : "disliked" } : q
-  //     )
-  //   );
+// Update the like toggle handler
+const handleLikeToggle = (id) => {
+  if (isViewMode) return;
 
-  //   // Update preselected questions responses
-  //   if (handlePreselectedQuestionResponse) {
-  //     const question = schedulerQuestionsData.find(q => q._id === id);
-  //     const newIsLiked = question?.isLiked === "disliked" ? "" : "disliked";
-  //     const bankQuestionId = question?.questionId || id;
-  //     handlePreselectedQuestionResponse(bankQuestionId, { isLiked: newIsLiked });
-  //   }
-  // };
+  console.log("👍 Like toggle:", id);
 
-  // Function to handle dislike toggle
-  const handleDislikeToggle = (id) => {
-    if (isViewMode) return; //<----v1.0.0---
+  syncQuestionChanges(id, { 
+    isLiked: "liked",
+    whyDislike: "" // Clear dislike reason when liking
+  });
 
-    setSchedulerQuestionsData((prev) =>
-      prev.map((q) =>
-        q._id === id
-          ? {
-              ...q,
-              isLiked: q.isLiked === "disliked" ? "" : "disliked",
-              // Clear dislike reason when toggling off dislike
-              whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike,
-            }
-          : q
-      )
-    );
+  if (dislikeQuestionId === id) setDislikeQuestionId(null);
+};
 
-    // Show/hide the "Tell us more" section
-    if (dislikeQuestionId === id) {
-      setDislikeQuestionId(null);
-    } else {
-      setDislikeQuestionId(id);
-    }
+// Function to handle add note
+const onClickAddNote = (id) => {
+  syncQuestionChanges(id, { notesBool: true });
+};
 
-    // Update preselected questions responses
-    if (handlePreselectedQuestionResponse) {
-      const question = schedulerQuestionsData.find((q) => q._id === id);
-      const newIsLiked = question?.isLiked === "disliked" ? "" : "disliked";
-      const bankQuestionId = question?.questionId || id;
-      handlePreselectedQuestionResponse(bankQuestionId, {
-        isLiked: newIsLiked,
-        // Clear dislike reason when toggling off dislike
-        whyDislike: newIsLiked === "disliked" ? question.whyDislike : "",
-      });
-    }
-  };
+// Function to handle delete note
+const onClickDeleteNote = (id) => {
+  syncQuestionChanges(id, { 
+    notesBool: false, 
+    note: "" 
+  });
+};
 
-  // Function to handle like toggle
-  // const handleLikeToggle = (id) => {
-  //   if (isViewMode) return;//<----v1.0.0---
-  //   setSchedulerQuestionsData((prev) =>
-  //     prev.map((q) =>
-  //       q._id === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q
-  //     )
-  //   );
-  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
-
-  //   // Update preselected questions responses
-  //   if (handlePreselectedQuestionResponse) {
-  //     const question = schedulerQuestionsData?.find(q => q?._id === id);
-  //     const newIsLiked = question?.isLiked === "liked" ? "" : "liked";
-  //     const bankQuestionId = question?.questionId || id;
-  //     handlePreselectedQuestionResponse(bankQuestionId, { isLiked: newIsLiked });
-  //   }
-  // };
-
-  // Function to handle like toggle
-  const handleLikeToggle = (id) => {
-    if (isViewMode) return; //<----v1.0.0---
-
-    setSchedulerQuestionsData((prev) =>
-      prev.map((q) =>
-        q._id === id
-          ? {
-              ...q,
-              isLiked: q.isLiked === "liked" ? "" : "liked",
-              // Clear dislike reason when liking
-              whyDislike: q.isLiked === "liked" ? q.whyDislike : "",
-            }
-          : q
-      )
-    );
-
-    // Hide the "Tell us more" section when liking
-    if (dislikeQuestionId === id) {
-      setDislikeQuestionId(null);
-    }
-
-    // Update preselected questions responses
-    if (handlePreselectedQuestionResponse) {
-      const question = schedulerQuestionsData?.find((q) => q?._id === id);
-      const newIsLiked = question?.isLiked === "liked" ? "" : "liked";
-      const bankQuestionId = question?.questionId || id;
-      handlePreselectedQuestionResponse(bankQuestionId, {
-        isLiked: newIsLiked,
-        // Clear dislike reason when liking
-        whyDislike: newIsLiked === "liked" ? "" : question.whyDislike,
-      });
-    }
-  };
-
-  // Function to handle add note
-  const onClickAddNote = (id) => {
-    setSchedulerQuestionsData((prev) =>
-      prev.map((q) => (q._id === id ? { ...q, notesBool: !q.notesBool } : q))
-    );
-
-    // Update preselected questions responses
-    if (handlePreselectedQuestionResponse) {
-      const question = schedulerQuestionsData.find((q) => q._id === id);
-      const newNotesBool = !question?.notesBool;
-      const bankQuestionId = question?.questionId || id;
-      handlePreselectedQuestionResponse(bankQuestionId, {
-        notesBool: newNotesBool,
-      });
-    }
-  };
-
-  // // Function to handle delete note
-  // const onClickDeleteNote = (id) => {
-  //   setSchedulerQuestionsData((prev) =>
-  //     prev.map((q) => (q._id === id ? { ...q, notesBool: false, note: "" } : q))
-  //   );
-
-  //   // Update preselected questions responses
-  //   if (handlePreselectedQuestionResponse) {
-  //     const question = schedulerQuestionsData.find(q => q._id === id);
-  //     const bankQuestionId = question?.questionId || id;
-  //     handlePreselectedQuestionResponse(bankQuestionId, { notesBool: false, note: "" });
-  //   }
-  // };
-
-  // Function to handle delete note
-  const onClickDeleteNote = (id) => {
-    setSchedulerQuestionsData((prev) =>
-      prev.map((q) => (q._id === id ? { ...q, notesBool: false, note: "" } : q))
-    );
-
-    // Update preselected questions responses
-    if (handlePreselectedQuestionResponse) {
-      const question = schedulerQuestionsData.find((q) => q._id === id);
-      const bankQuestionId = question?.questionId || id;
-      handlePreselectedQuestionResponse(bankQuestionId, {
-        notesBool: false,
-        note: "",
-      });
-    }
-  };
-
-  // Function to handle interview question notes
-  const onChangeInterviewQuestionNotes = (questionId, notes) => {
-    setSchedulerQuestionsData((prev) =>
-      prev.map((question) =>
-        question._id === questionId ? { ...question, note: notes } : question
-      )
-    );
-
-    // Update preselected questions responses
-    if (handlePreselectedQuestionResponse) {
-      const q = schedulerQuestionsData.find((qq) => qq._id === questionId);
-      const bankQuestionId = q?.questionId || questionId;
-      handlePreselectedQuestionResponse(bankQuestionId, { note: notes });
-    }
-  };
-
+// Function to handle interview question notes
+const onChangeInterviewQuestionNotes = (questionId, notes) => {
+  syncQuestionChanges(questionId, { 
+    note: notes,
+    notesBool: notes.length > 0 // Auto-set notesBool based on content
+  });
+};
   // Define DisLikeSection component
   const DisLikeSection = React.memo(({ each }) => {
     return (

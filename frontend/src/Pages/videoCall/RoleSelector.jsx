@@ -213,8 +213,6 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
   const showInterviewerSection = !roleInfo?.hasRolePreference || roleInfo?.isInterviewer;
   const isSingleRole = roleInfo?.hasRolePreference && (roleInfo?.isCandidate || roleInfo?.isInterviewer);
 
-
-  console.log("feedbackData",feedbackData);
   return (
     <div className=" bg-gradient-to-br from-[#217989] to-[#1a616e] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl">
