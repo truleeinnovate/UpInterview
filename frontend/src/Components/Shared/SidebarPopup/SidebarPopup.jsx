@@ -175,6 +175,7 @@ function SidebarPopup({
   icon = null,
   onEdit, // optional callback for edit
   editPath, // optional route prefix for edit
+  headerAction, // custom header action buttons
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
@@ -237,6 +238,13 @@ function SidebarPopup({
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Custom header action */}
+              {headerAction && (
+                <div className="mr-2">
+                  {headerAction}
+                </div>
+              )}
+              
               {/* Fully safe Edit button */}
               {showEdit && id && (onEdit || editPath) && (
                 <button

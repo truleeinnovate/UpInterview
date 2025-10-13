@@ -34,6 +34,13 @@ const createSubscriptionControllers = async (req, res) => {
       return res.status(404).json({ message: 'Subscription plan not found.' });
     }
 
+    // Debug logging to verify correct plan is found
+    // console.log("Found plan details:", {
+    //   id: plan._id,
+    //   name: plan.name,
+    //   subscriptionPlanId: subscriptionPlanId
+    // });
+
     let wallet = await Wallet.findOne({ ownerId: userDetails.ownerId });
 
     if (!wallet) {
@@ -86,6 +93,7 @@ const createSubscriptionControllers = async (req, res) => {
       const existingInvoice = await Invoicemodels.findOne({ ownerId: userDetails.ownerId });
       if (existingInvoice) {
         existingInvoice.subscriptionId = subscriptionPlanId;
+        existingInvoice.planName = plan.name || "Unknown Plan";  // Update plan name to match the current plan
         existingInvoice.totalAmount = calculatedTotalAmount;
         existingInvoice.startDate = new Date();
         existingInvoice.status = "pending",
@@ -94,6 +102,7 @@ const createSubscriptionControllers = async (req, res) => {
             amount: calculatedTotalAmount,
           };
         await existingInvoice.save();
+        //console.log("Updated existing invoice with plan name:", existingInvoice.planName);
       }
 
       return res.status(200).json({
@@ -109,11 +118,15 @@ const createSubscriptionControllers = async (req, res) => {
 
       // For active status (free plans), set invoice status to paid
       const invoiceStatus = status === "active" ? "paid" : status;
+      
+      // Use plan.name directly since planName field doesn't exist in SubscriptionPlan model
+      const planNameForInvoice = plan.name || "Unknown Plan";
+      //console.log("Creating invoice with plan name:", planNameForInvoice);
 
       const invoice = await createInvoice(
         userDetails.tenantId,
         userDetails.ownerId,
-        plan.planName || plan.name,
+        planNameForInvoice,
         planDetails.subscriptionPlanId,
         numericTotalAmount,
         userDetails,

@@ -39,6 +39,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
     accountNumber: "",
     confirmAccountNumber: "",
     routingNumber: "",
+    ifscCode:"",
     bankName: "",
     accountType: "savings",
     swiftCode: "",
@@ -50,6 +51,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
     accountNumber: useRef(null),
     confirmAccountNumber: useRef(null),
     routingNumber: useRef(null),
+    ifscCode: useRef(null),
     bankName: useRef(null),
     accountType: useRef(null),
     swiftCode: useRef(null),
@@ -78,6 +80,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
     //-----v1.0.0----->
 
     // Prepare data for backend
+    // Use routing number field value conditionally based on account type
     const bankAccountData = {
       ownerId: ownerId,
       tenantId: tenantId || null,
@@ -85,8 +88,10 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
       bankName: newAccount.bankName,
       accountType: newAccount.accountType,
       accountNumber: newAccount.accountNumber,
-      routingNumber: newAccount.routingNumber,
-      ifscCode: newAccount.swiftCode, // Using SWIFT code field for IFSC in Indian context
+      // For Checking accounts, send as routingNumber; for Savings/Current, send as ifscCode
+      routingNumber: newAccount.accountType.toLowerCase() === "checking" ? newAccount.routingNumber : undefined,
+      ifscCode: (newAccount.accountType.toLowerCase() === "savings" || newAccount.accountType.toLowerCase() === "current") 
+        ? newAccount.routingNumber : undefined,
       swiftCode: newAccount.swiftCode,
       isDefault: newAccount.isDefault,
     };
@@ -103,6 +108,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
           accountNumber: "",
           confirmAccountNumber: "",
           routingNumber: "",
+          ifscCode:"",
           bankName: "",
           accountType: "checking",
           swiftCode: "",
