@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - added loading view for the kanban itself
 // v1.0.1 - Ashok - fixed responsiveness issue
+// v1.0.2 - Ashok - changed fields structure and loading view
 
 import React from "react";
 import { motion } from "framer-motion";
@@ -20,47 +21,42 @@ const InvoiceKanban = ({
   const navigate = useNavigate();
   return (
     <>
-     {/* v1.0.1 <------------------------------------------------------------------------------------------------- */}
-      <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto mx-6">
-     {/* v1.0.1 -------------------------------------------------------------------------------------------------> */}
+      {/* v1.0.2 <-------------------------------------------------------------------------------- */}
+      <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 overflow-y-auto mx-6">
         {loading ? (
           // shimmer cards
-          // v1.0.1 <-----------------------------------------------------------
-          <div className="w-full col-span-full">
-          {/* v1.0.1 -----------------------------------------------------------> */}
-            <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((card) => (
-                <div
-                  key={card}
-                  className="rounded-xl p-4 shadow-sm border border-gray-200"
-                >
-                  {/* Card header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center">
-                      <div className="shimmer h-8 w-8 bg-gray-200 rounded-full mr-3"></div>
-                      <div>
-                        <div className="shimmer h-3 bg-gray-200 rounded w-16 mb-1"></div>
-                        <div className="shimmer h-4 bg-gray-200 rounded w-24"></div>
-                      </div>
-                    </div>
-                    <div className="shimmer h-6 w-6 bg-gray-200 rounded"></div>
-                  </div>
+          <motion.div
+            className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 flex flex-col h-full animate-pulse"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center">
+                <div className="relative"></div>
+                <div className="ml-1">
+                  <div className="h-3 w-16 bg-gray-200 rounded shimmer"></div>
+                  <div className="h-4 w-28 mt-2 bg-gray-200 rounded shimmer"></div>
+                </div>
+              </div>
 
-                  {/* Card content shimmer */}
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      {[1, 2, 3, 4].map((item) => (
-                        <div key={item}>
-                          <div className="shimmer h-3 bg-gray-200 rounded w-16 mb-1"></div>
-                          <div className="shimmer h-4 bg-gray-200 rounded w-20"></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+              {/* Action button placeholder */}
+              <div className="flex items-center gap-1">
+                <div className="p-1.5 w-7 h-7 bg-gray-200 rounded-lg shimmer"></div>
+              </div>
+            </div>
+
+            {/* Info Grid */}
+            <div className="grid grid-cols-1 gap-2 text-sm">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="grid grid-cols-2 items-center gap-2">
+                  <div className="h-3 w-20 bg-gray-200 rounded shimmer"></div>
+                  <div className="h-3 w-28 bg-gray-200 rounded shimmer"></div>
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         ) : currentFilteredRows.length === 0 ? (
           // 🔹 Empty state
           <div className="col-span-full py-10 text-center">
@@ -109,44 +105,43 @@ const InvoiceKanban = ({
               </div>
 
               {/* Contact information */}
-              <div className="space-y-2 text-sm">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col text-gray-600">
-                    <span>Invoice Id</span>
-                    <span className="text-black font-medium">
-                      {invoice?.invoiceNumber || ""}
-                    </span>
-                  </div>
-                  <div className="flex flex-col text-gray-600">
-                    <span>Payment Service</span>
-                    <span className="text-black font-medium">
-                      {invoice?.type
-                        ? invoice?.type.charAt(0).toUpperCase() +
-                          invoice?.type.slice(1)
-                        : ""}
-                    </span>
-                  </div>
-                  <div className="flex flex-col text-gray-600">
-                    <span>Total Amount</span>
-                    <span className="text-black font-medium">
-                      $ {invoice?.amount?.paid || 0}
-                    </span>
-                  </div>
-                  <div className="flex flex-col text-gray-600">
-                    <span>Status</span>
-                    <span className="text-black font-medium">
-                      {invoice?.status
-                        ? invoice?.status.charAt(0).toUpperCase() +
-                          invoice?.status.slice(1)
-                        : ""}
-                    </span>
-                  </div>
+              <div className="grid grid-cols-1 gap-2 text-sm">
+                <div className="grid grid-cols-2 items-center">
+                  <span className="text-gray-500">Invoice Id</span>
+                  <span className="text-gray-800 font-medium">
+                    {invoice?.invoiceNumber || ""}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 items-center">
+                  <span className="text-gray-500">Payment Service</span>
+                  <span className="text-gray-800 font-medium">
+                    {invoice?.type
+                      ? invoice?.type.charAt(0).toUpperCase() +
+                        invoice?.type.slice(1)
+                      : ""}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 items-center">
+                  <span className="text-gray-500">Total Amount</span>
+                  <span className="text-gray-800 font-medium">
+                    $ {invoice?.amount?.paid || 0}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 items-center">
+                  <span className="text-gray-500">Status</span>
+                  <span className="text-gray-800 font-medium">
+                    {invoice?.status
+                      ? invoice?.status.charAt(0).toUpperCase() +
+                        invoice?.status.slice(1)
+                      : ""}
+                  </span>
                 </div>
               </div>
             </motion.div>
           ))
         )}
       </div>
+      {/* v1.0.2 --------------------------------------------------------------------------------> */}
     </>
   );
 };

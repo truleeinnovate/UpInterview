@@ -1,6 +1,7 @@
 // // v1.0.0 - Ashok - changed grid for xl screens
 // v2.0.0 - Ashok - Redesigned Kanban layout with modern visuals, consistent spacing, and improved card styling
 // v2.0.1 - Ashok - Improved kanban styles
+// v2.0.2 - Ashok - Added one row from 3 to 4 at loading view
 
 import { motion } from "framer-motion";
 // v1.0.1 <------------------------------------------------------------------------------------
@@ -55,7 +56,7 @@ const CandidateKanban = ({
 
                   {/* Body shimmer */}
                   <div className="mt-auto space-y-3">
-                    {Array.from({ length: 3 }).map((_, i) => (
+                    {Array.from({ length: 4 }).map((_, i) => (
                       <div key={i} className="grid grid-cols-2 gap-2">
                         <div className="h-3 w-16 shimmer rounded"></div>
                         <div className="h-3 w-24 shimmer rounded"></div>
