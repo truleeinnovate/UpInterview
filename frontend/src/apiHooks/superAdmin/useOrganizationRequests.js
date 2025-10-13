@@ -115,19 +115,19 @@ export const useOrganizationRequests = () => {
   };
 
   // Update status of a request
-  const updateRequestStatus = async (requestId, newStatus) => {
-    try {
-      await axios.patch(`${config.REACT_APP_API_URL}/organization-requests/${requestId}/status`, {
-        status: newStatus,
-      });
-      // Refetch data to update the UI
-      await refetch();
-      return true;
-    } catch (error) {
-      console.error('Error updating request status:', error);
-      throw error;
-    }
-  };
+  // const updateRequestStatus = async (requestId, newStatus) => {
+  //   try {
+  //     await axios.patch(`${config.REACT_APP_API_URL}/organization-requests/${requestId}/status`, {
+  //       status: newStatus,
+  //     });
+  //     // Refetch data to update the UI
+  //     await refetch();
+  //     return true;
+  //   } catch (error) {
+  //     console.error('Error updating request status:', error);
+  //     throw error;
+  //   }
+  // };
 
   const updateOrganizationStatus = async (id, updateData) => {
     try {
@@ -157,7 +157,7 @@ export const useOrganizationRequests = () => {
     filters,
     handleSearch,
     updateFilters,
-    updateRequestStatus,
+    // updateRequestStatus,
     updateOrganizationStatus, // Add this line
     refetch,
   };
