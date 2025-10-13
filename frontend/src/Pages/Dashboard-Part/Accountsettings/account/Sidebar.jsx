@@ -1,7 +1,7 @@
 // v1.0.0 - Ashok - Improved responsiveness and fixed sliding sidebar
 // v1.1.0 - Ashraf  - Optimized permission checks and added debug logs for initialization
 import React from "react";
-import { UserIcon, UsersIcon } from "@heroicons/react/24/outline";
+import { UserIcon, UsersIcon, BellIcon } from "@heroicons/react/24/outline";
 import { usePermissionCheck } from "../../../../utils/permissionUtils";
 import AuthCookieManager from "../../../../utils/AuthCookieManager/AuthCookieManager";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -30,6 +30,7 @@ const SidebarProfile = ({
     },
     { name: "Roles", icon: UserIcon, id: "roles", permissionKey: "Roles" },
     { name: "Users", icon: UsersIcon, id: "users", permissionKey: "Users" },
+    { name: "Notifications", icon: BellIcon, id: "email-settings", permissionKey: "Notifications"},
   ];
 
   return (

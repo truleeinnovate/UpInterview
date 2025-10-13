@@ -39,6 +39,7 @@ const OrganizationRequest = () => {
     const filterIconRef = useRef(null);
     const [selectedOrganizationId, setSelectedOrganizationId] = useState(null);
     const [selectedOrganization, setSelectedOrganization] = useState(null);
+    console.log("selectedOrganization", selectedOrganization);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     // Handle status filter change
@@ -484,7 +485,7 @@ const OrganizationRequest = () => {
 
             {isPopupOpen && selectedOrganization && (
                 <SidebarPopup
-                    title="Organization Details"
+                    title="Organization Request Details"
                     onClose={() => setIsPopupOpen(false)}
                     isExpanded={true}
                 >

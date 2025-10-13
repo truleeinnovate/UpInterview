@@ -399,7 +399,7 @@
         $setOnInsert: {
           tenantId: user.tenantId,
           ownerId: user._id,
-          status: 'Requested'
+          status: 'pending_review'
         },
       },
       {

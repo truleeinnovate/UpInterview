@@ -346,19 +346,19 @@ const OrganizationLogin = () => {
                     const requestResponse = await axios.get(`${config.REACT_APP_API_URL}/Organization/organization-request/${userData.tenantId}/${userData.ownerId}`);
                     const requestStatus = requestResponse.data.data.status;
                     console.log('requestStatus:- ', requestStatus);
-                    if (requestStatus === 'Requested') {
+                    if (requestStatus === 'pending_review') {
                         navigate("/pending-approval");
-                    } else if (requestStatus === 'Contacted' || requestStatus === 'Contacted1' || requestStatus === 'Contacted2') {
+                    } else if (requestStatus === 'in_contact') {
                         navigate("/pending-approval", {
                             state: {
                                 showContactSupport: true
                             }
                         });
-                    } else if (requestStatus === 'Approved') {
-                        if (status === "payment_pending") {
+                    } else if (requestStatus === 'approved') {
+                        if (status === "payment_pending" || status === "submitted") {
                             navigate("/subscription-plans");
                         } else {
-                            navigate("/home");
+                            navigate("/organization-login");
                         }
                     }
                     break;

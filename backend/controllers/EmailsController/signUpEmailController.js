@@ -11,52 +11,6 @@ const moment = require('moment');
 const Tenant = require('../../models/Tenant.js');
 const { generateEmailVerificationToken } = require('../../utils/jwt');
 
-
-// exports.sendSignUpEmail = async (req, res) => {
-//     try {
-//         const { email, tenantId, ownerId, lastName, firstName } = req.body;
-//         if (!email) {
-//             return res.status(401).json({ success: false, message: "email not found" });
-//         }
-
-//         // Send welcome email
-//         const subject = "Welcome to Our Application!";
-//         const emailBody = `
-//         <h2>Welcome ${firstName}${lastName}!</h2>
-//         <p>We're excited to have you on board.</p>
-//         <p>You can now explore all features of our platform.</p>
-//         <br>
-//         <p>Best Regards,</p>
-//         <p>The Team</p>
-//       `;
-
-//         const emailResponse = await sendEmail(email, subject, emailBody);
-
-//         // Save notification
-//         req.notificationData = [{
-//             toAddress: email,
-//             fromAddress: process.env.EMAIL_FROM,
-//             title: "Welcome Email Sent",
-//             body: `welcome ${firstName}${lastName}.`,
-//             notificationType: "email",
-//             object: { objectName: "login", objectId: ownerId },
-//             status: emailResponse.success ? "Success" : "Failed",
-//             tenantId,
-//             recipientId: ownerId,
-//             createdBy: ownerId,
-//             modifiedBy: ownerId,
-//         }];
-
-//         await notificationMiddleware(req, res, () => { });
-
-//         return res.json({ success: true, message: "Login successful" });
-
-//     } catch (error) {
-//         console.error("Login Error:", error);
-//         return res.status(500).json({ success: false, message: "Login failed", error: error.message });
-//     }
-// };
-
 exports.sendSignUpEmail = async (req, res) => {
   try {
     const { tenantId, ownerId } = req.body;
@@ -131,49 +85,6 @@ exports.sendSignUpEmail = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to send signup email", error: error.message });
   }
 };
-
-
-
-
-// this code will send email for forgot password and also organization new user creation then user can create there password from mail
-// exports.forgotPasswordSendEmail = async (req, res) => {
-//     try {
-//         const { email, type } = req.body;
-//         if (!email) {
-//             return res.status(400).json({ success: false, message: "Email is required" });
-//         }
-
-//         const user = await Users.findOne({ email });
-//         console.log('user', user)
-//         if (!user) {
-//             return res.status(404).json({ success: false, message: "user not found" });
-//         }
-
-//         // Generate a secure token
-//         const resetToken = jwt.sign({ id: user._id, type }, process.env.JWT_SECRET, { expiresIn: "15m" });
-//         const actionLink = `http://localhost:3000/resetPassword?token=${encodeURIComponent(resetToken)}&type=${type}`;
-
-//         // Define email content dynamically
-//         const subject = type === "usercreatepass" ? "Create Your Password" : "Reset Your Password";
-//         const emailBody = `
-//         <h2>${type === "usercreatepass" ? "Create Your Password" : "Password Reset Request"}</h2>
-//         <p>Click the button below to ${type === "usercreatepass" ? "set up your password" : "reset your password"}.</p>
-//         <a href="${actionLink}" style="padding:10px 15px; background-color:#28a745; color:white; text-decoration:none; border-radius:5px;">
-//           ${type === "usercreatepass" ? "Create Password" : "Reset Password"}
-//         </a>
-//         <p>If you did not request this, please ignore this email.</p>
-//       `;
-
-//         await sendEmail(email, subject, emailBody);
-
-//         return res.json({ success: true, message: `${type === "usercreatepass" ? "Create password" : "Reset password"} email sent`, actionLink });
-//     } catch (error) {
-//         console.error("Password Email Error:", error);
-//         return res.status(500).json({ success: false, message: "Something went wrong" });
-//     }
-// };
-
-
 
 exports.forgotPasswordSendEmail = async (req, res) => {
   try {
@@ -368,72 +279,6 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 
-
-
-//email verification
-// exports.resendVerification = async (req, res) => {
-//   try {
-//     const { email } = req.body;
-
-//     if (!email) {
-//       return res.status(400).json({ success: false, message: 'Email is required' });
-//     }
-
-//     const user = await Users.findOne({ email });
-//     if (!user) {
-//       return res.status(404).json({ success: false, message: 'User not found' });
-//     }
-
-//     const organization = await Organization.findOne({ ownerId: user._id });
-//     if (!organization) {
-//       return res.status(404).json({ success: false, message: 'Organization not found' });
-//     }
-
-//     if (organization.isEmailVerified) {
-//       return res.status(400).json({ success: false, message: 'Email already verified' });
-//     }
-
-//     // Generate new token
-//     const verificationToken = generateEmailVerificationToken(email, user._id);
-//     const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-
-//     // Get email template
-//     const emailTemplate = await emailTemplateModel.findOne({ 
-//       category: 'email_verification',
-//       isActive: true 
-//     });
-
-//     if (!emailTemplate) {
-//       console.error('Email template not found');
-//       return res.status(500).json({ success: false, message: 'Email template not configured' });
-//     }
-
-//     const emailBody = emailTemplate.body
-//       .replace(/{{verificationLink}}/g, verificationLink)
-//       .replace(/{{firstName}}/g, user.firstName || '')
-//       .replace(/{{lastName}}/g, user.lastName || '');
-
-//     // Send email
-//     try {
-//       await sendEmail(email, emailTemplate.subject, emailBody);
-//       console.log(`Verification email sent to ${email}`);
-//       return res.json({ success: true, message: 'Verification email resent' });
-//     } catch (emailError) {
-//       console.error('Failed to send email:', emailError);
-//       return res.status(500).json({ success: false, message: 'Failed to send verification email' });
-//     }
-
-//   } catch (error) {
-//     console.error('Error in resendVerification:', error);
-//     return res.status(500).json({ 
-//       success: false, 
-//       message: 'Error resending verification',
-//       error: process.env.NODE_ENV === 'development' ? error.message : undefined
-//     });
-//   }
-// };
-
-
 // First, define the sendVerificationEmail function (can be at the top of the file)
 const sendVerificationEmail = async ({ type, to, data }) => {
   try {
@@ -485,52 +330,6 @@ const sendVerificationEmail = async ({ type, to, data }) => {
 
 // Then export it so it can be used elsewhere
 exports.sendVerificationEmail = sendVerificationEmail;
-
-// Then define the resendVerification function that uses it
-// exports.resendVerification = async (req, res) => {
-//   console.log("Email jwt:", process.env.JWT_SECRET);
-
-//   try {
-//     const { email } = req.body;
-
-//     if (!email) {
-//       return res.status(400).json({ success: false, message: 'Email is required' });
-//     }
-
-//     const user = await Users.findOne({ email });
-//     // console.log('user', user);
-
-//     if (!user) {
-//       return res.status(404).json({ success: false, message: 'User not found' });
-//     }
-
-//     const organization = await Tenant.findOne({ ownerId: user._id });
-//     // console.log('organization', organization);
-
-//     if (!organization) {
-//       return res.status(404).json({ success: false, message: 'Organization not found' });
-//     }
-
-//     if (organization.isEmailVerified) {
-//       return res.status(400).json({ success: false, message: 'Email already verified' });
-//     }
-
-//     // Use the sendVerificationEmail function we defined above
-//     const emailResult = await sendVerificationEmail(email, user._id, user.firstName, user.lastName);
-//     if (!emailResult.success) {
-//       return res.status(500).json({ success: false, message: emailResult.message });
-//     }
-
-//     return res.json({ success: true, message: 'Verification email resent' });
-//   } catch (error) {
-//     console.error('Error in resendVerification:', error);
-//     return res.status(500).json({
-//       success: false,
-//       message: 'Error resending verification',
-//       error: process.env.NODE_ENV === 'development' ? error.message : undefined
-//     });
-//   }
-// };
 
 
 //users tab emails 
@@ -644,84 +443,6 @@ exports.requestEmailChangeVerification = async (req, res) => {
   }
 };
 
-
-
-// exports.requestEmailChangeVerification = async (req, res) => {
-//   try {
-//     const { oldEmail, newEmail, userId } = req.body;
-
-//     if (!oldEmail || !newEmail || !userId) {
-//       return res.status(400).json({ success: false, message: 'Old email, new email, and user ID are required' });
-//     }
-
-//     // Validate new email format
-//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//     if (!emailRegex.test(newEmail)) {
-//       return res.status(400).json({ success: false, message: 'Invalid new email format' });
-//     }
-
-//     // Check if newEmail is already used
-//     const existingUser = await Users.findOne({ $or: [{ email: newEmail }, { newEmail: newEmail }] });
-//     if (existingUser) {
-//       return res.status(400).json({ success: false, message: 'New email is already in use' });
-//     }
-
-//     const user = await Users.findById(userId);
-//     if (!user) {
-//       return res.status(404).json({ success: false, message: 'User not found' });
-//     }
-
-//     if (user.email !== oldEmail) {
-//       return res.status(400).json({ success: false, message: 'Old email does not match current email' });
-//     }
-
-//     console.log("user._id",user._id);
-    
-
-//     // const organization = await Tenant.findOne({ tenantId: user._id });
-//     // if (!organization) {
-//     //   return res.status(404).json({ success: false, message: 'Organization not found' });
-//     // }
-
-//     // Store newEmail
-//     user.newEmail = newEmail;
-//     await user.save();
-
-//     // Generate verification token
-//     const verificationToken = jwt.sign(
-//       { userId: user._id, newEmail },
-//       config.JWT_SECRET,
-//       { expiresIn: '72h' }
-//     );
-
-//     // Send verification email
-//     const emailResult = await sendVerificationEmail({
-//       type: 'email_change_verification',
-//       to: newEmail,
-//       data: {
-//         firstName: user.firstName || '',
-//         lastName: user.lastName || '',
-//         oldEmail,
-//         newEmail,
-//         actionLink: `${config.REACT_APP_API_URL}/auth/verify-email-change?token=${verificationToken}`
-//       }
-//     });
-
-//     if (!emailResult.success) {
-//       return res.status(500).json({ success: false, message: emailResult.message });
-//     }
-
-//     return res.json({ success: true, message: 'Verification email sent for email change' });
-//   } catch (error) {
-//     console.error('Error in requestEmailChangeVerification:', error);
-//     return res.status(500).json({
-//       success: false,
-//       message: 'Error sending email change verification',
-//       error: process.env.NODE_ENV === 'development' ? error.message : undefined
-//     });
-//   }
-// };
-
 exports.verifyEmailChange = async (req, res) => {
   try {
     const { token } = req.query;
@@ -820,5 +541,107 @@ exports.resendVerification = async (req, res) => {
       message: 'Error resending verification',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
+  }
+};
+
+// when organization request is approved
+exports.sendApprovalEmail = async ({ to, data }) => {
+  try {
+    const { email, userId, firstName, lastName, actionLink } = data;
+
+    // Validate email
+    if (!email || typeof email !== 'string') {
+      throw new Error('Invalid email address');
+    }
+
+    // Get email template
+    const emailTemplate = await emailTemplateModel.findOne({
+      category: 'organization_approval',
+      isActive: true,
+      isSystemTemplate: true,
+    });
+
+    if (!emailTemplate) {
+      throw new Error('Email template for organization approval not found');
+    }
+
+    // Replace placeholders in email subject and body
+    const emailSubject = emailTemplate.subject
+      .replace('{{companyName}}', process.env.COMPANY_NAME);
+
+    const emailBody = emailTemplate.body
+      .replace(/{{firstName}}/g, firstName || '')
+      .replace(/{{lastName}}/g, lastName || '')
+      .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+      .replace(/{{actionLink}}/g, actionLink)
+      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
+
+    // Send email
+    const emailResult = await sendEmail(
+      email,
+      emailSubject,
+      emailBody
+    );
+
+    return emailResult;
+  } catch (error) {
+    console.error('Error sending approval email:', error);
+    return { success: false, message: 'Failed to send approval email', error: error.message };
+  }
+};
+
+//cancel subscription send email
+exports.sendEmailNotification = async ({ to, category, data }) => {
+  try {
+    // Validate inputs
+    if (!to || typeof to !== 'string') {
+      throw new Error('Invalid email address');
+    }
+    if (!category || typeof category !== 'string') {
+      throw new Error('Invalid template category');
+    }
+
+    // Fetch email template
+    const emailTemplate = await emailTemplateModel.findOne({
+      category,
+      isActive: true,
+      isSystemTemplate: true,
+    });
+
+    if (!emailTemplate) {
+      throw new Error(`Email template for category "${category}" not found`);
+    }
+
+    // Replace placeholders in subject and body
+    let emailSubject = emailTemplate.subject
+      .replace('{{companyName}}', process.env.COMPANY_NAME || 'Your Company');
+
+    let emailBody = emailTemplate.body;
+    for (const [key, value] of Object.entries(data)) {
+      const placeholder = `{{${key}}}`;
+      emailBody = emailBody.replace(new RegExp(placeholder, 'g'), value || '');
+      emailSubject = emailSubject.replace(new RegExp(placeholder, 'g'), value || '');
+    }
+
+    // Send email
+    const emailResult = await sendEmail(
+      to,
+      emailSubject,
+      emailBody,
+      undefined // ccEmail, if needed
+    );
+
+    return {
+      success: emailResult.success,
+      message: emailResult.success ? 'Email sent successfully' : 'Failed to send email',
+      error: emailResult.error || null,
+    };
+  } catch (error) {
+    console.error(`Error sending email for category "${category}":`, error);
+    return {
+      success: false,
+      message: 'Failed to send email',
+      error: error.message,
+    };
   }
 };

@@ -12,7 +12,7 @@ router.post('/', organizationRequestController.createOrganizationRequest);
 router.get('/:id', organizationRequestController.getOrganizationRequestById);
 
 // Update organization request status
-router.patch('/:id/status', organizationRequestController.updateOrganizationRequestStatus);
+// router.patch('/:id/status', organizationRequestController.updateOrganizationRequestStatus);
 
 router.put('/:id/status', organizationRequestController.updateStatus);
 
