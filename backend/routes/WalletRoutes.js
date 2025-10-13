@@ -5,6 +5,7 @@ const {
   walletVerifyPayment,
   addBankAccount,
   getBankAccounts,
+  deleteBankAccount,
   verifyBankAccount,
   createWithdrawalRequest,
   getWithdrawalRequests,
@@ -30,6 +31,9 @@ WalletRouter.post('/verify-payment', walletVerifyPayment);
 // Bank Account Routes
 // POST /wallet/bank-accounts - Add a new bank account
 WalletRouter.post('/bank-accounts', addBankAccount);
+
+// DELETE /wallet/bank-accounts/:bankAccountId - Delete a bank account
+WalletRouter.delete('/bank-accounts/:bankAccountId', deleteBankAccount);
 
 // Withdrawal Routes
 // POST /wallet/withdrawals - Create a new withdrawal request

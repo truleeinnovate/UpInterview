@@ -1753,6 +1753,20 @@ const handleSubscriptionCharged = async (subscription) => {
         } else {
            console.log('No existing invoice found, creating new one');
 
+            // Generate invoice code like INV-00001
+            const lastInvoice = await Invoicemodels.findOne({})
+                .sort({ _id: -1 })
+                .select("invoiceCode")
+                .lean();
+            let nextNumber = 1;
+            if (lastInvoice?.invoiceCode) {
+                const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
+                if (match) {
+                    nextNumber = parseInt(match[1], 10) + 1;
+                }
+            }
+            const invoiceCode = `INV-${String(nextNumber).padStart(5, '0')}`;
+
             // Create a simple invoice directly without complex calculations
             invoice = new Invoicemodels({
                 tenantId: customerSubscription.tenantId,
@@ -1768,12 +1782,19 @@ const handleSubscriptionCharged = async (subscription) => {
                 startDate: new Date(),
                 endDate: billingEndDate, // This fixes the validation error
                 dueDate: billingEndDate,
+                invoiceCode: invoiceCode, // Add the generated invoice code
                 lineItems: [{
                     description: `${customerSubscription.selectedBillingCycle} - Subscription Payment`,
                     amount: amount,
                     quantity: 1,
                     tax: 0
-                }]
+                }],
+                metadata: {
+                    autoRenew: true,
+                    renewalDate: new Date(),
+                    subscriptionId: customerSubscription._id,
+                    razorpaySubscriptionId: subscriptionId
+                }
             });
 
             await invoice.save();

@@ -705,10 +705,20 @@ const getBankAccounts = async (req, res) => {
   try {
     const { ownerId } = req.params;
 
+    // Fetch without sorting (Azure Cosmos DB compatibility)
     const bankAccounts = await BankAccount.find({
       ownerId,
       isActive: true
-    }).sort({ isDefault: -1, _id: -1 });
+    }).sort({ _id: -1 }); // Only sort by _id for Azure compatibility
+    
+    // Sort in JavaScript to ensure default accounts appear first
+    bankAccounts.sort((a, b) => {
+      // First sort by isDefault (true comes before false)
+      if (a.isDefault && !b.isDefault) return -1;
+      if (!a.isDefault && b.isDefault) return 1;
+      // Then sort by _id (newest first)
+      return b._id.toString().localeCompare(a._id.toString());
+    });
 
     res.status(200).json({
       success: true,
@@ -718,6 +728,70 @@ const getBankAccounts = async (req, res) => {
     console.error("Error fetching bank accounts:", error);
     res.status(500).json({
       error: "Failed to fetch bank accounts",
+      details: error.message
+    });
+  }
+};
+
+// Delete bank account
+const deleteBankAccount = async (req, res) => {
+  try {
+    const { bankAccountId } = req.params;
+    const { ownerId } = req.body || req.query; // Accept ownerId from body or query
+
+    // Validate bankAccountId
+    if (!bankAccountId) {
+      return res.status(400).json({
+        error: "Bank account ID is required"
+      });
+    }
+
+    // Find the bank account
+    const bankAccount = await BankAccount.findById(bankAccountId);
+    
+    if (!bankAccount) {
+      return res.status(404).json({
+        error: "Bank account not found"
+      });
+    }
+
+    // Verify ownership if ownerId is provided
+    if (ownerId && bankAccount.ownerId !== ownerId) {
+      return res.status(403).json({
+        error: "You don't have permission to delete this bank account"
+      });
+    }
+
+    // Check if this account has been used for withdrawals
+    const WithdrawalRequest = require("../models/WithdrawalRequest");
+    const withdrawalCount = await WithdrawalRequest.countDocuments({
+      bankAccountId: bankAccountId
+    });
+
+    if (withdrawalCount > 0) {
+      // Soft delete - just mark as inactive
+      bankAccount.isActive = false;
+      bankAccount.updatedBy = ownerId || "system";
+      await bankAccount.save();
+      
+      return res.status(200).json({
+        success: true,
+        message: "Bank account deactivated (has withdrawal history)",
+        bankAccount
+      });
+    }
+
+    // Hard delete if no withdrawal history
+    await BankAccount.findByIdAndDelete(bankAccountId);
+
+    res.status(200).json({
+      success: true,
+      message: "Bank account removed successfully"
+    });
+  } catch (error) {
+    console.error("Error deleting bank account:", error);
+    res.status(500).json({
+      error: "Failed to delete bank account",
       details: error.message
     });
   }
@@ -1928,6 +2002,7 @@ module.exports = {
   walletVerifyPayment,
   addBankAccount,
   getBankAccounts,
+  deleteBankAccount,
   verifyBankAccount,
   createWithdrawalRequest,
   getWithdrawalRequests,

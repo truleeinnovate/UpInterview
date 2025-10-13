@@ -1,10 +1,25 @@
+// ============================================
+// DEPRECATED TEST FILE
+// 
+// This test file is no longer functional as all
+// subscription renewal is now handled exclusively
+// by Razorpay webhooks.
+//
+// The processSubscriptionRenewal and checkAndResetUsagePeriod
+// functions have been removed.
+//
+// For testing subscription renewals, use Razorpay's
+// test mode and trigger test webhooks.
+// ============================================
+
 const mongoose = require('mongoose');
 const moment = require('moment');
 const CustomerSubscription = require('../models/CustomerSubscriptionmodels');
 const SubscriptionPlan = require('../models/Subscriptionmodels');
 const Usage = require('../models/Usage');
 const Tenant = require('../models/Tenant');
-const { processSubscriptionRenewal, checkAndResetUsagePeriod } = require('../controllers/SubscriptionRenewalController');
+// REMOVED: Manual renewal functions no longer exist
+// const { processSubscriptionRenewal, checkAndResetUsagePeriod } = require('../controllers/SubscriptionRenewalController');
 
 // Test configuration
 const TEST_DB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/upinterview';

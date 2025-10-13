@@ -100,7 +100,7 @@ export const useDeleteBankAccount = () => {
   return useMutation({
     mutationFn: async ({ bankAccountId, ownerId }) => {
       const response = await axios.delete(
-        `${API_BASE_URL}/wallet/bank-accounts/${bankAccountId}`,
+        `${API_BASE_URL}/wallet/bank-accounts/${bankAccountId}?ownerId=${ownerId}`,
         getAuthHeaders()
       );
       return response.data;
