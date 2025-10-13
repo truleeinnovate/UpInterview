@@ -1,7 +1,9 @@
 // v1.0.0  -  Ashraf  -  assessments to assessment templates
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+// v1.0.1  -  Ashok   -  updated loading view
+
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import {
   EyeIcon,
   PencilSquareIcon,
@@ -11,42 +13,42 @@ import {
   DocumentTextIcon,
   CalendarIcon,
   ShareIcon,
-} from '@heroicons/react/24/outline';
-import { format } from 'date-fns';
-import PropTypes from 'prop-types';
-import Tooltip from '@mui/material/Tooltip';
-import { formatDateTime } from '../../../../utils/dateFormatter';
+} from "@heroicons/react/24/outline";
+import { format } from "date-fns";
+import PropTypes from "prop-types";
+import Tooltip from "@mui/material/Tooltip";
+import { formatDateTime } from "../../../../utils/dateFormatter";
 
-const AssessmentKanban = ({ 
-  assessments, 
-  onView, 
-  onEdit, 
-  onShare, 
+const AssessmentKanban = ({
+  assessments,
+  onView,
+  onEdit,
+  onShare,
   assessmentSections,
-  loading = false 
+  loading = false,
 }) => {
-  console.log("assessments----",assessments);
+  console.log("assessments----", assessments);
   const [columns, setColumns] = useState({
     active: {
-      title: 'Active',
-      items: []
+      title: "Active",
+      items: [],
     },
     inactive: {
-      title: 'Inactive',
-      items: []
-    }
+      title: "Inactive",
+      items: [],
+    },
   });
 
   useEffect(() => {
     setColumns({
       active: {
-        title: 'Active',
-        items: assessments.filter((a) => a.status === 'Active')
+        title: "Active",
+        items: assessments.filter((a) => a.status === "Active"),
       },
       inactive: {
-        title: 'Inactive',
-        items: assessments.filter((a) => a.status === 'Inactive')
-      }
+        title: "Inactive",
+        items: assessments.filter((a) => a.status === "Inactive"),
+      },
     });
   }, [assessments]);
 
@@ -66,7 +68,7 @@ const AssessmentKanban = ({
       setColumns({
         ...columns,
         [source.droppableId]: { ...sourceColumn, items: sourceItems },
-        [destination.droppableId]: { ...destColumn, items: destItems }
+        [destination.droppableId]: { ...destColumn, items: destItems },
       });
     } else {
       const column = columns[source.droppableId];
@@ -76,83 +78,101 @@ const AssessmentKanban = ({
 
       setColumns({
         ...columns,
-        [source.droppableId]: { ...column, items: copiedItems }
+        [source.droppableId]: { ...column, items: copiedItems },
       });
     }
   };
 
   const getStatusColor = (status) => {
-    return status === 'Active'
-      ? 'bg-green-100 text-green-800'
-      : 'bg-red-100 text-red-800';
+    return status === "Active"
+      ? "bg-green-100 text-green-800"
+      : "bg-red-100 text-red-800";
   };
 
   if (loading) {
     return (
-      <motion.div 
+      // v1.0.1 <----------------------------------------------------------------------------
+      <motion.div
         className="w-full h-[calc(100vh-12rem)] rounded-xl p-6 overflow-x-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="flex items-center justify-end mb-4">
-          <div className="h-8 w-32 bg-gray-200 skeleton-animation rounded-lg"></div>
-        </div>
+        {/* Header */}
+        <motion.div
+          className="flex items-center justify-end mb-4"
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="h-6 w-40 bg-gray-200 rounded shimmer"></div>
+        </motion.div>
 
+        {/* Columns Skeleton */}
         <div className="flex sm:flex-col flex-row gap-6 pb-6">
-          {['active', 'inactive'].map((columnId, colIndex) => (
+          {[...Array(2)].map((_, colIndex) => (
             <motion.div
-              key={columnId}
-              className="sm:w-full w-1/2 bg-gray-50 rounded-xl p-4 shadow"
+              key={colIndex}
+              className="sm:w-full w-1/2 bg-gray-50 rounded-xl p-4 shadow animate-pulse"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: colIndex * 0.1 }}
             >
-              <div className="h-8 w-1/3 bg-gray-200 skeleton-animation rounded mb-4"></div>
+              {/* Column header */}
+              <div className="h-6 w-3/4 bg-gray-200 rounded shimmer mb-4"></div>
+
+              {/* Draggable cards skeleton */}
               <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4">
-                {[...Array(4)].map((_, index) => (
-                  <motion.div
+                {[...Array(3)].map((_, index) => (
+                  <div
                     key={index}
-                    className="bg-white rounded-lg shadow p-4 space-y-3 border border-gray-200"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + index * 0.05 }}
+                    className="bg-white rounded-lg shadow p-4 space-y-3 relative border border-gray-200"
                   >
+                    {/* Action buttons placeholder */}
                     <div className="absolute top-2 right-2 flex space-x-1">
-                      <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
-                      <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
-                      <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
+                      {[...Array(3)].map((__, i) => (
+                        <div
+                          key={i}
+                          className="w-5 h-5 bg-gray-200 rounded shimmer"
+                        ></div>
+                      ))}
                     </div>
-                    <div className="h-6 w-3/4 bg-gray-200 skeleton-animation rounded"></div>
-                    <div className="space-y-2">
-                      <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
+
+                    {/* Title placeholder */}
+                    <div className="h-5 w-3/4 bg-gray-200 rounded shimmer mb-2"></div>
+
+                    {/* Info rows placeholders */}
+                    {[...Array(5)].map((__, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-gray-200 rounded shimmer"></div>
+                        <div className="h-3 w-20 bg-gray-200 rounded shimmer"></div>
+                      </div>
+                    ))}
+
+                    {/* Status & sections placeholder */}
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="h-4 w-16 bg-gray-200 rounded-full shimmer"></div>
+                      <div className="h-3 w-10 bg-gray-200 rounded shimmer"></div>
                     </div>
-                    <div className="flex justify-between pt-2">
-                      <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
-                      <div className="h-4 w-12 bg-gray-200 skeleton-animation rounded"></div>
-                    </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </motion.div>
           ))}
         </div>
       </motion.div>
+      // v1.0.1 ---------------------------------------------------------------------------->
     );
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="w-full h-[calc(100vh-12rem)] rounded-xl p-6 overflow-x-auto"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <motion.div 
+      <motion.div
         className="flex items-center justify-end mb-4"
         initial={{ x: 20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -160,7 +180,10 @@ const AssessmentKanban = ({
       >
         <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
           {/* <-------------------------------v1.0.0 */}
-          {assessments.length} {assessments.length <= 1 ? 'Assessment template' : 'Assessment templates'}
+          {assessments.length}{" "}
+          {assessments.length <= 1
+            ? "Assessment template"
+            : "Assessment templates"}
           {/* ------------------------------v1.0.0 > */}
         </span>
       </motion.div>
@@ -202,7 +225,7 @@ const AssessmentKanban = ({
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.2, delay: index * 0.05 }}
                           >
-                            <motion.div 
+                            <motion.div
                               className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity"
                               whileHover={{ scale: 1.05 }}
                             >
@@ -226,25 +249,28 @@ const AssessmentKanban = ({
                               </motion.button>
                               <Tooltip
                                 title={
-                                  (assessmentSections[assessment._id] ?? 0) === 0
-                                    ? 'No questions added'
-                                    : 'Share'
+                                  (assessmentSections[assessment._id] ?? 0) ===
+                                  0
+                                    ? "No questions added"
+                                    : "Share"
                                 }
                                 enterDelay={300}
                                 leaveDelay={100}
                                 arrow
                               >
-                                <motion.span
-                                  whileHover={{ scale: 1.05 }}
-                                >
+                                <motion.span whileHover={{ scale: 1.05 }}>
                                   <button
                                     onClick={() => onShare(assessment)}
                                     className={`p-1 text-gray-500 rounded ${
-                                      (assessmentSections[assessment._id] ?? 0) === 0
-                                        ? 'cursor-not-allowed opacity-50'
-                                        : 'hover:text-green-600 hover:bg-green-50'
+                                      (assessmentSections[assessment._id] ??
+                                        0) === 0
+                                        ? "cursor-not-allowed opacity-50"
+                                        : "hover:text-green-600 hover:bg-green-50"
                                     }`}
-                                    disabled={(assessmentSections[assessment._id] ?? 0) === 0}
+                                    disabled={
+                                      (assessmentSections[assessment._id] ??
+                                        0) === 0
+                                    }
                                   >
                                     <ShareIcon className="w-5 h-5" />
                                   </button>
@@ -252,21 +278,24 @@ const AssessmentKanban = ({
                               </Tooltip>
                             </motion.div>
 
-                            <motion.div 
+                            <motion.div
                               className="flex items-start"
                               whileHover={{ x: 2 }}
                             >
-                              <h3 
+                              <h3
                                 className="font-medium text-lg text-custom-blue pr-20 cursor-pointer"
                                 onClick={() => onView(assessment)}
                               >
-                                {assessment.AssessmentTitle.charAt(0).toUpperCase() + assessment.AssessmentTitle.slice(1)}
+                                {assessment.AssessmentTitle.charAt(
+                                  0
+                                ).toUpperCase() +
+                                  assessment.AssessmentTitle.slice(1)}
                               </h3>
                             </motion.div>
 
                             <div className="space-y-2 text-sm text-gray-600">
                               {assessment.AssessmentCode && (
-                                <motion.div 
+                                <motion.div
                                   className="flex items-center gap-2"
                                   whileHover={{ x: 2 }}
                                 >
@@ -274,28 +303,28 @@ const AssessmentKanban = ({
                                   {assessment.AssessmentCode}
                                 </motion.div>
                               )}
-                              <motion.div 
+                              <motion.div
                                 className="flex items-center gap-2"
                                 whileHover={{ x: 2 }}
                               >
                                 <ClockIcon className="w-4 h-4" />
                                 {assessment.Duration}
                               </motion.div>
-                              <motion.div 
+                              <motion.div
                                 className="flex items-center gap-2"
                                 whileHover={{ x: 2 }}
                               >
                                 <AcademicCapIcon className="w-4 h-4" />
                                 {assessment.DifficultyLevel}
                               </motion.div>
-                              <motion.div 
+                              <motion.div
                                 className="flex items-center gap-2"
                                 whileHover={{ x: 2 }}
                               >
                                 <DocumentTextIcon className="w-4 h-4" />
                                 {assessment.NumberOfQuestions} Questions
                               </motion.div>
-                              <motion.div 
+                              <motion.div
                                 className="flex items-center gap-2"
                                 whileHover={{ x: 2 }}
                               >
@@ -315,14 +344,17 @@ const AssessmentKanban = ({
                                 {assessment.status}
                               </motion.span>
                               <span className="text-xs text-gray-500">
-                                {assessmentSections[assessment._id] ?? 0} {assessmentSections[assessment._id] <= 1 ? 'Section' : 'Sections'}
+                                {assessmentSections[assessment._id] ?? 0}{" "}
+                                {assessmentSections[assessment._id] <= 1
+                                  ? "Section"
+                                  : "Sections"}
                               </span>
                             </div>
                           </motion.div>
                         )}
                       </Draggable>
                     ))}
-                    
+
                     {column.items.length === 0 && (
                       <div className="col-span-full flex flex-col items-center justify-center py-8 text-gray-500">
                         <DocumentTextIcon className="w-12 h-12 text-gray-300 mb-3" />
@@ -331,14 +363,14 @@ const AssessmentKanban = ({
                           No {column.title} Assessments Templates Found
                         </h3>
                         <p className="text-gray-500 text-center max-w-md text-sm">
-                          {column.title === 'Active' 
-                            ? 'There are no active assessments templates to display.'
-                            : 'There are no inactive assessments templates at the moment.'}
-                            {/* ------------------------------v1.0.0 > */}
+                          {column.title === "Active"
+                            ? "There are no active assessments templates to display."
+                            : "There are no inactive assessments templates at the moment."}
+                          {/* ------------------------------v1.0.0 > */}
                         </p>
                       </div>
                     )}
-                    
+
                     {provided.placeholder}
                   </div>
                 )}
@@ -356,23 +388,23 @@ AssessmentKanban.propTypes = {
     PropTypes.shape({
       _id: PropTypes.string.isRequired,
       AssessmentTitle: PropTypes.string.isRequired,
-      status: PropTypes.oneOf(['Active', 'Inactive']).isRequired,
+      status: PropTypes.oneOf(["Active", "Inactive"]).isRequired,
       Position: PropTypes.string,
       Duration: PropTypes.string,
       DifficultyLevel: PropTypes.string,
       NumberOfQuestions: PropTypes.number,
-      ExpiryDate: PropTypes.string
+      ExpiryDate: PropTypes.string,
     })
   ).isRequired,
   onView: PropTypes.func.isRequired,
   onEdit: PropTypes.func.isRequired,
   onShare: PropTypes.func.isRequired,
   assessmentSections: PropTypes.object.isRequired,
-  loading: PropTypes.bool
+  loading: PropTypes.bool,
 };
 
 AssessmentKanban.defaultProps = {
-  loading: false
+  loading: false,
 };
 
 export default AssessmentKanban;
