@@ -113,23 +113,35 @@ const AvailabilityDetails = ({
             <TimezoneSelect
               value={selectedTimezone}
               onChange={handleTimezoneChange}
-              className="mt-1 text-sm border-custom-blue hover:border-custom-blue focus:border-custom-blue focus:ring-custom-blue"
+              className="mt-1 text-sm border-custom-blue hover:border-custom-blue focus:border-custom-blue focus:ring-custom-blue focus:ring-1"
               isDisabled={isAutoDetecting}
               menuPortalTarget={document.body}
               styles={{
+                control: (provided, state) => ({
+                  ...provided,
+                  borderColor: state.isFocused ? '#217989' : '#217989',
+                  boxShadow: state.isFocused ? '0 0 0 1px #217989' : 'none',
+                  '&:hover': {
+                    borderColor: '#217989',
+                  },
+                }),
                 menu: (provided) => ({
                   ...provided,
-                  border: '1px solid #0F4A7F',
-                  boxShadow: '0px 4px 12px rgba(15, 74, 127, 0.2)',
+                  border: '1px solid #217989',
+                  boxShadow: '0px 4px 12px rgba(33, 121, 137, 0.2)',
                 }),
                 option: (provided, state) => ({
                   ...provided,
-                  backgroundColor: state.isSelected ? '#0F4A7F' : 'white',
-                  color: state.isSelected ? 'white' : '#0F4A7F',
+                  backgroundColor: state.isSelected ? '#217989' : 'white',
+                  color: state.isSelected ? 'white' : '#000000',
                   ':hover': {
-                    backgroundColor: '#0F4A7F',
+                    backgroundColor: '#217989',
                     color: 'white',
                   },
+                }),
+                singleValue: (provided) => ({
+                  ...provided,
+                  color: '#000000',
                 }),
               }}
             />

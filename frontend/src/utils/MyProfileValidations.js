@@ -298,6 +298,7 @@ export const validateInterviewForm = (formData, isReady) => {
     errors.professionalTitle = "Professional Title must be at least 50 characters";
   } else if (formData.professionalTitle.length > 100) {
     errors.professionalTitle = "Professional Title cannot exceed 100 characters";
+    formData.professionalTitle = formData.professionalTitle.substring(0, 100);
   }
 
   // Professional Bio validation - Made optional with length constraints

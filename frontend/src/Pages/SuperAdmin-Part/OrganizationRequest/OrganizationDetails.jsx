@@ -9,18 +9,18 @@ const OrganizationDetails = ({ organization, onClose, onStatusChange }) => {
     const [isSaving, setIsSaving] = useState(false);
 
     const statusOptions = [
-        'Requested', 
-        'Contacted', 
-        'Contacted1', 
-        'Contacted2', 
-        'Approved'
+        'requested',
+        'contacted',
+        'contacted1',
+        'contacted2',
+        'approved'
     ];
 
     const handleStatusChange = async (newStatus) => {
         setCurrentStatus(newStatus);
         setShowStatusDropdown(false);
         setIsSaving(true);
-        
+
         try {
             await onStatusChange(newStatus);
         } catch (error) {
@@ -109,9 +109,9 @@ const OrganizationDetails = ({ organization, onClose, onStatusChange }) => {
                                 </div>
                                 <div className="ml-3">
                                     <p className="text-sm font-medium text-gray-500">Website</p>
-                                    <a 
-                                        href={organization.website?.startsWith('http') ? organization.website : `https://${organization.website}`} 
-                                        target="_blank" 
+                                    <a
+                                        href={organization.website?.startsWith('http') ? organization.website : `https://${organization.website}`}
+                                        target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-sm text-blue-600 hover:text-blue-800"
                                     >
@@ -141,7 +141,7 @@ const OrganizationDetails = ({ organization, onClose, onStatusChange }) => {
                                 <div className="ml-3">
                                     <p className="text-sm font-medium text-gray-500">Requested On</p>
                                     <p className="text-sm text-gray-900">
-                                        {organization.createdAt 
+                                        {organization.createdAt
                                             ? format(new Date(organization.createdAt), 'MMM dd, yyyy')
                                             : 'N/A'}
                                     </p>

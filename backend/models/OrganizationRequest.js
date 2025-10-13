@@ -13,8 +13,8 @@ const organizationRequestSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Requested', 'Contacted', 'Contacted1', 'Contacted2', 'Approved'],
-    default: 'Requested'
+    enum: ['requested', 'contacted', 'contacted1', 'contacted2', 'approved'],
+    default: 'requested'
   },
 }, {
   timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' }

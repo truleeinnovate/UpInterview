@@ -1891,30 +1891,33 @@ const EditInterviewDetails = ({
                   //   }))
                   // }
                   onChange={(e) => {
-                    setFormData((prevData) => ({
-                      ...prevData,
-                      professionalTitle: e.target.value,
-                    }));
-                    // Clear error when user starts typing
-                    if (e.target.value.length >= 50) {
-                      setErrors((prev) => ({ ...prev, professionalTitle: "" }));
+                    const newValue = e.target.value;
+                    if (newValue.length <= 100) {
+                      setFormData(prevData => ({
+                        ...prevData,
+                        professionalTitle: newValue
+                      }));
+                      // Clear error when user types enough characters
+                      if (newValue.length >= 50) {
+                        setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                      }
                     }
                   }}
-                  // onBlur={(e) => {
-                  //   const value = e.target.value.trim();
-                  //   if (!value) {
-                  //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title is required' }));
-                  //   } else if (value.length < 50) {
-                  //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title must be at least 50 characters' }));
-                  //   } else if (value.length > 100) {
-                  //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title cannot exceed 100 characters' }));
-                  //   } else {
-                  //     setErrors(prev => ({ ...prev, professionalTitle: '' }));
-                  //   }
-                  // }}
-
+                  onBlur={(e) => {
+                    const value = e.target.value.trim();
+                    if (!value) {
+                      setErrors(prev => ({ ...prev, professionalTitle: 'Professional title is required' }));
+                    } else if (value.length < 50) {
+                      setErrors(prev => ({ ...prev, professionalTitle: 'Professional title must be at least 50 characters' }));
+                    } else if (value.length > 100) {
+                      setErrors(prev => ({ ...prev, professionalTitle: 'Professional title cannot exceed 100 characters' }));
+                    } else {
+                      setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                    }
+                  }}
                   error={errors.professionalTitle}
-                  placeholder="Senior Software Engineer"
+                  placeholder="Senior Software Engineer with 5+ years of experience in full-stack development"
+                  required
                 />
                 <div className="flex justify-between ">
                   <p className="text-xs text-gray-500">Min 50 characters</p>
