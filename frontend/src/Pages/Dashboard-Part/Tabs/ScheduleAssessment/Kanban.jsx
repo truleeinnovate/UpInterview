@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - improved responsiveness
 // v1.0.1 - Ashok - Added loading view
+// v1.0.2 - Ashok - Fixed issue at while loading
 
 import { motion } from "framer-motion";
 
@@ -34,13 +35,15 @@ const KanbanView = ({
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
             {[...Array(8)].map((_, index) => (
+              // v1.0.2 <---------------------------------------------------------------
               <motion.div
                 key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
                 className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 flex flex-col h-full animate-pulse"
               >
+                {/* v1.0.2 ---------------------------------------------------------------> */}
                 {/* Header skeleton */}
                 <div className="flex justify-between items-start mb-4 gap-2">
                   <div className="flex items-start gap-3 w-full">
@@ -80,13 +83,15 @@ const KanbanView = ({
               {/* v1.0.1 ------------------------------------------------------------------------------------> */}
               {/* v1.0.0 ------------------------------------------------------------------------------------> */}
               {data.map((item, index) => (
+                // v1.0.2 <-------------------------------------------------------------------
                 <motion.div
                   key={item.id || item._id || index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
                   className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full"
                 >
+                  {/* v1.0.2 ------------------------------------------------------------------- */}
                   {/* Card content */}
                   <div className="flex justify-between items-start mb-4 gap-2">
                     <div className="flex items-start gap-3">

@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Changed cards for small screens and adjusted height of Kanban
 // v1.0.1 - Ashok - fixed padding issues at cards
 // v1.0.2 - Ashok - Improved loading view
+// v1.0.3 - Ashok - Fixed issue in loading view
 
 import { motion } from "framer-motion";
 import { Calendar, Layers, Trash, Files } from "lucide-react";
@@ -50,6 +51,7 @@ const KanbanView = ({
   if (loading) {
     return (
       // v1.0.2 <-----------------------------------------------------------------
+      // v1.0.3 <-----------------------------------------------------------------
       <motion.div
         className="w-full h-[calc(100vh-15.6rem)] rounded-xl p-6 overflow-y-auto"
         initial={{ opacity: 0 }}
@@ -73,9 +75,9 @@ const KanbanView = ({
             <motion.div
               key={format.value}
               className="bg-gray-200/40 flex flex-col p-4 rounded-lg"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
             >
               {/* Format header shimmer */}
               <div className="h-5 w-3/4 shimmer rounded-md mb-4"></div>
@@ -132,6 +134,7 @@ const KanbanView = ({
           ))}
         </div>
       </motion.div>
+      // v1.0.3 ----------------------------------------------------------------->
       // v1.0.2 ----------------------------------------------------------------->
     );
   }

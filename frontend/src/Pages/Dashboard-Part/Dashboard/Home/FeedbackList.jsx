@@ -1,6 +1,7 @@
 //<-------v1.0.0--------Venkatesh-------feedback data fetching and display dynamically
 // v1.0.1 - Ashok - Improved Loading from animate-pulse to shimmer effect
 // v1.0.2 - Ashok - Improved responsiveness
+// v1.0.3 - Ashok - Fixed responsiveness issues
 
 import React from "react";
 import {
@@ -166,37 +167,43 @@ const FeedbackList = () => {
             const statusBadge = getStatusBadgeClasses(item?.status);
 
             return (
+              // v1.0.3 <--------------------------------------------------------------------
               <div
                 key={item?._id}
                 className="border border-gray-100 rounded-xl p-6 hover:border-indigo-100 hover:bg-indigo-50/5 transition-all duration-300"
               >
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex sm:flex-col sm:items-start items-start justify-between mb-4">
                   <div>
                     <div className="flex items-center space-x-3 mb-2">
-                      <h4 className="text-lg font-semibold text-gray-900">
+                      <h4 className="text-sm font-semibold text-gray-900">
                         {candidateName}
                       </h4>
-                      {recommendation && (
+                      <div className="flex gap-2">
+                        {recommendation && (
+                          <span
+                            className={`px-2.5 py-1 rounded-lg text-xs font-medium ${badgeClasses}`}
+                          >
+                            {String(recommendation).charAt(0).toUpperCase() +
+                              String(recommendation).slice(1)}
+                          </span>
+                        )}
                         <span
-                          className={`px-2.5 py-1 rounded-lg text-xs font-medium ${badgeClasses}`}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium ${statusBadge}`}
                         >
-                          {String(recommendation).charAt(0).toUpperCase() +
-                            String(recommendation).slice(1)}
+                          {statusLabel}
                         </span>
-                      )}
-                      <span
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium ${statusBadge}`}
-                      >
-                        {statusLabel}
-                      </span>
+                      </div>
                     </div>
                     <p className="text-sm text-gray-600">{positionTitle}</p>
                   </div>
                   <span
-                    className={`text-sm font-medium ${renderRatingColorClass(
+                    className={`sm:mt-2 text-sm font-medium ${renderRatingColorClass(
                       ratingLabel
                     )}`}
                   >
+                    <span className="text-gray-500 sm:inline hidden mr-1">
+                      Rating:
+                    </span>
                     {ratingLabel}
                   </span>
                 </div>
@@ -261,6 +268,7 @@ const FeedbackList = () => {
                   </div>
                 </div>
               </div>
+              // v1.0.3 -------------------------------------------------------------------->
             );
           })
         )}
