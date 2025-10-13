@@ -9,16 +9,16 @@ const fetchOrganizationRequests = async () => {
     const response = await axios.get(`${config.REACT_APP_API_URL}/organization-requests`, {
       withCredentials: true
     });
-    
+
     console.log('[FRONTEND] Raw API response:', response);
-    
+
     if (!Array.isArray(response.data)) {
       console.error('[FRONTEND] Unexpected response format:', response.data);
       return [];
     }
 
     console.log(`[FRONTEND] Received ${response.data.length} organization requests`);
-    
+
     // The backend now returns the contact data directly in the response
     const processedData = response.data.map((request, index) => {
       const processed = {
@@ -38,7 +38,7 @@ const fetchOrganizationRequests = async () => {
           contactKeys: request.contact ? Object.keys(request.contact) : []
         }
       };
-      
+
       console.log(`[FRONTEND] Processed request ${index}:`, {
         id: request._id,
         ownerId: request.ownerId,
@@ -46,10 +46,10 @@ const fetchOrganizationRequests = async () => {
         contact: request.contact || {},
         _debug: processed._debug
       });
-      
+
       return processed;
     });
-    
+
     return processedData;
   } catch (error) {
     console.error('Error fetching organization requests:', error);
@@ -129,6 +129,26 @@ export const useOrganizationRequests = () => {
     }
   };
 
+  const updateOrganizationStatus = async (id, updateData) => {
+    try {
+        console.log(`[API] Updating status for request ${id} with data:`, updateData);
+        const response = await axios.put(
+            `${config.REACT_APP_API_URL}/organization-requests/${id}/status`, 
+            updateData,
+            { withCredentials: true }
+        );
+        console.log(`[API] Status update successful for request ${id}`, response.data);
+        return response.data;
+    } catch (error) {
+        console.error(`[API] Failed to update status for request ${id}:`, {
+            error: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        });
+        throw error;
+    }
+  };
+
   return {
     organizationRequests: filteredData,
     isLoading,
@@ -138,6 +158,7 @@ export const useOrganizationRequests = () => {
     handleSearch,
     updateFilters,
     updateRequestStatus,
+    updateOrganizationStatus, // Add this line
     refetch,
   };
 };

@@ -187,3 +187,38 @@ exports.getOrganizationRequestById = async (req, res) => {
         });
     }
 };
+
+exports.updateStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, comments } = req.body;
+
+        const updatedRequest = await OrganizationRequest.findByIdAndUpdate(
+            id,
+            {
+                $set: {
+                    status,
+                    comments,
+                    updatedAt: new Date()
+                },
+                $push: {
+                    statusHistory: {
+                        status,
+                        comments,
+                        changedAt: new Date()
+                    }
+                }
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedRequest) {
+            return res.status(404).json({ message: 'Organization request not found' });
+        }
+
+        res.json(updatedRequest);
+    } catch (error) {
+        console.error('Error updating status:', error);
+        res.status(500).json({ message: 'Error updating status', error: error.message });
+    }
+};

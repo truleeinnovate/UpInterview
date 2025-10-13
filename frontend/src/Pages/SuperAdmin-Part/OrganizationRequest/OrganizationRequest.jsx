@@ -1,5 +1,5 @@
 // v1.0.0 - Initial version
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import Toolbar from "../../../Components/Shared/Toolbar/Toolbar";
 import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup";
@@ -16,8 +16,16 @@ import SidebarPopup from "../../../Components/SuperAdminComponents/SidebarPopup/
 
 const OrganizationRequest = () => {
     const { superAdminPermissions } = usePermissions();
-    const { organizationRequests, isLoading } = useOrganizationRequests();
-    console.log("organizationRequests", organizationRequests)
+    const { 
+        organizationRequests = [], 
+        isLoading, 
+        updateOrganizationStatus,
+        refetch 
+    } = useOrganizationRequests();
+    
+    // Debug log to verify the function is available
+    console.log('updateOrganizationStatus function available:', typeof updateOrganizationStatus === 'function');
+    
     const [view, setView] = useState("table");
     const [searchQuery, setSearchQuery] = useState("");
     const [isFilterActive, setIsFilterActive] = useState(false);
@@ -44,6 +52,59 @@ const OrganizationRequest = () => {
         setCurrentPage(0);
     };
 
+    const handleStatusUpdate = async (updateData) => {
+        try {
+            // Ensure we have the latest organization data
+            const orgId = selectedOrganization?._id;
+            
+            if (!orgId) {
+                const error = new Error('No organization selected for status update');
+                console.error(error.message);
+                throw error;
+            }
+
+            console.log('Initiating status update for organization:', {
+                orgId,
+                updateData
+            });
+
+            // Call the update function from the hook
+            const response = await updateOrganizationStatus(orgId, {
+                ...updateData,
+                updatedAt: new Date().toISOString()
+            });
+
+            console.log('Status update successful:', response);
+
+            // Refresh the data
+            await refetch();
+
+            // Update the selected organization in the UI
+            setSelectedOrganization(prev => ({
+                ...prev,
+                ...updateData,
+                updatedAt: new Date().toISOString()
+            }));
+
+            return response;
+        } catch (error) {
+            console.error('Error in handleStatusUpdate:', {
+                error: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                updateData,
+                selectedOrganizationId,
+                selectedOrganization
+            });
+            
+            // Show error to user
+            alert(`Failed to update status: ${error.message}`);
+            
+            // Re-throw to allow the caller to handle the error if needed
+            throw error;
+        }
+    };
+
     // Table columns configuration
     // const columns = [
     //     {
@@ -67,30 +128,6 @@ const OrganizationRequest = () => {
     //     {
     //         Header: "Organization",
     //         accessor: "tenantId",
-    //         Cell: ({ value }) => {
-    //             if (!value) return "N/A";
-    //             return (
-    //                 <div className="flex flex-col">
-    //                     <span className="font-medium">{value.companyName}</span>
-    //                     <span className="text-sm text-gray-500">{value.domain}</span>
-    //                 </div>
-    //             );
-    //         },
-    //     },
-    //     {
-    //         Header: "Status",
-    //         accessor: "status",
-    //         Cell: ({ value }) => (
-    //             <StatusBadge status={value?.toLowerCase()}>
-    //                 {value || "N/A"}
-    //             </StatusBadge>
-    //         ),
-    //     },
-    //     {
-    //         Header: "Requested On",
-    //         accessor: "createdAt",
-    //         Cell: ({ value }) =>
-    //             value ? new Date(value).toLocaleDateString() : "N/A",
     //     },
     //     {
     //         Header: "Last Updated",
@@ -136,81 +173,23 @@ const OrganizationRequest = () => {
 
     // Handle view details
     const handleViewDetails = (organization) => {
-        setSelectedOrganization(organization);
-        setSelectedOrganizationId(organization._id);
-        setIsPopupOpen(true);
+        if (organization?._id) {
+            console.log('Setting selected organization ID:', organization._id);
+            setSelectedOrganizationId(organization._id);
+            setSelectedOrganization(organization);
+            setIsPopupOpen(true);
+        } else {
+            console.error('Cannot view details: Organization ID is missing', organization);
+        }
     };
 
     const renderOrganizationDetails = (organization) => {
         if (!organization) return null;
-
-        const contact = organization.contactId || {};
-        const tenant = organization.tenantId || {};
-        const fullName = [contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'N/A';
-
-        return (
-            <div className="space-y-4 p-4">
-                <div className="flex items-center space-x-4">
-                    <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-lg font-medium">
-                        {fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-medium text-gray-900">{tenant.company || 'No Company'}</h3>
-                        <p className="text-sm text-gray-500">{fullName}</p>
-                    </div>
-                </div>
-
-                <div className="space-y-3">
-                    <div>
-                        <h4 className="text-sm font-medium text-gray-500">Contact Information</h4>
-                        <div className="mt-1 space-y-1">
-                            <p className="text-sm text-gray-900">{contact.email || 'No email'}</p>
-                            {contact.phone && (
-                                <p className="text-sm text-gray-900">
-                                    {contact.countryCode ? `${contact.countryCode} ` : ''}
-                                    {contact.phone}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 className="text-sm font-medium text-gray-500">Company Details</h4>
-                        <div className="mt-1 space-y-1">
-                            <p className="text-sm text-gray-900">
-                                <span className="font-medium">Domain: </span>
-                                {tenant.domain || 'N/A'}
-                            </p>
-                            <p className="text-sm text-gray-900">
-                                <span className="font-medium">Website: </span>
-                                {tenant.website || 'N/A'}
-                            </p>
-                            <p className="text-sm text-gray-900">
-                                <span className="font-medium">Industry: </span>
-                                {tenant.industry || 'N/A'}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 className="text-sm font-medium text-gray-500">Status</h4>
-                        <div className="mt-1">
-                            <StatusBadge status={organization.status?.toLowerCase()}>
-                                {organization.status || 'N/A'}
-                            </StatusBadge>
-                        </div>
-                    </div>
-
-                    {organization.createdAt && (
-                        <div>
-                            <p className="text-xs text-gray-500">
-                                Requested on {new Date(organization.createdAt).toLocaleDateString()}
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
+        return <OrganizationDetails
+            organization={selectedOrganization}
+            onClose={() => setIsPopupOpen(false)}
+            onStatusUpdate={handleStatusUpdate}
+        />;
     };
 
     // Handle edit
@@ -231,18 +210,22 @@ const OrganizationRequest = () => {
     // };
 
     // Apply filters to data
-    const filteredData = organizationRequests?.filter(item => {
-        const matchesSearch = Object.values(item).some(
-            value =>
-                value &&
-                value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-        );
+    const filteredData = useMemo(() => {
+        return (organizationRequests || [])
+            .filter(org => {
+                const matchesSearch = searchQuery === '' || 
+                    org.contact?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    org.contact?.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    org.contact?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    org.tenant?.company?.toLowerCase().includes(searchQuery.toLowerCase());
 
-        const matchesStatus = selectedFilters.status.length === 0 ||
-            selectedFilters.status.includes(item.status);
+                const matchesStatus = selectedFilters.status.length === 0 || 
+                    selectedFilters.status.includes(org.status?.toLowerCase());
 
-        return matchesSearch && matchesStatus;
-    }) || [];
+                return matchesSearch && matchesStatus;
+            })
+            .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+    }, [organizationRequests, searchQuery, selectedFilters.status]);
 
     // Toolbar actions
     // const toolbarActions = [
@@ -340,11 +323,15 @@ const OrganizationRequest = () => {
         {
             key: "status",
             header: "Status",
-            render: (value, row) => (
-                <StatusBadge status={row?.status?.toLowerCase() || ''}>
-                    {row?.status || 'N/A'}
-                </StatusBadge>
-            ),
+            render: (value, row) => {
+                const status = row?.status || '';
+                const formattedStatus = status ?
+                    status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() :
+                    'N/A';
+                return (
+                    <StatusBadge status={status.toLowerCase()} text={formattedStatus} />
+                );
+            },
             width: 120,
         },
         {
