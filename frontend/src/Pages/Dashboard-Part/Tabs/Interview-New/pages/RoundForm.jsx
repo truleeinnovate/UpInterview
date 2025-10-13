@@ -51,6 +51,7 @@ import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
 import { notify } from "../../../../../services/toastService.js";
 import { ROUND_TITLES } from "../../CommonCode-AllTabs/roundTitlesConfig.js";
 import InternalInterviewUsageDisplay from "../../../../../Components/InternalInterviewUsageDisplay.jsx";
+import { useVideoSettingsQuery } from "../../../../../apiHooks/VideoDetail.js";
 
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
@@ -96,12 +97,22 @@ const RoundFormInterviews = () => {
   const { checkInternalInterviewUsage, isChecking } = useInternalInterviewUsage();
   // v1.0.2 <-----------------------------------------
 
+   const {
+      data,
+      isLoading,
+      isError,
+      // error,
+      refetch,
+      // isOrganization,
+    } = useVideoSettingsQuery();
+
+
   // State for meeting creation loading
   const [isMeetingCreationLoading, setIsMeetingCreationLoading] =
     useState(false);
   const [meetingCreationProgress, setMeetingCreationProgress] = useState("");
   const [selectedMeetingPlatform, setSelectedMeetingPlatform] =
-    useState("zoommeet"); // Default to Google Meet googlemeet
+    useState("zoom"); // Default to Google Meet googlemeet
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
   // v1.0.2 <-----------------------------------------
  
@@ -142,6 +153,7 @@ const RoundFormInterviews = () => {
           const response = await axios.get(
             `${config.REACT_APP_API_URL}/users/owner/${userId}`
           );
+        
           setOwnerData(response.data);
         } catch (error) {
           console.error("Error fetching owner data:", error);
@@ -149,16 +161,18 @@ const RoundFormInterviews = () => {
       }
     };
     fetchOwnerData();
-  }, [organization, userId]);
+  }, [organization, userId,]);
 
   useEffect(() => {
     if (interviewData) {
       setCandidate(interview?.candidateId || null);
       setPosition(interview?.positionId || null);
       setRounds(interview?.rounds || []);
+      setSelectedMeetingPlatform(data?.data?.defaultProvider);
       // setTemplate(interview?.templateId || null)
     }
-  }, [interviewData, interview]);
+  }, [interviewData, interview,data]);
+  console.log("selectedMeetingPlatform",selectedMeetingPlatform);
 
   const navigate = useNavigate();
   const [roundTitle, setRoundTitle] = useState("");
@@ -1398,7 +1412,7 @@ const RoundFormInterviews = () => {
                 // ========================================
                 // Zoom meeting creation
                 // ========================================
-              } else if (selectedMeetingPlatform === "zoommeet") {
+              } else if (selectedMeetingPlatform === "zoom") {
                 // Format helper
                 function formatStartTimeToUTC(startTimeStr) {
                   if (!startTimeStr) return undefined;
@@ -1470,6 +1484,7 @@ const RoundFormInterviews = () => {
                 const updatedRoundData = {
                   ...roundData,
                   meetingId: data?.start_url || meetingLink,
+                  meetPlatform: selectedMeetingPlatform,
                 };
                 const targetRoundId = response?.savedRound?._id || roundId;
                 const updatePayload = {

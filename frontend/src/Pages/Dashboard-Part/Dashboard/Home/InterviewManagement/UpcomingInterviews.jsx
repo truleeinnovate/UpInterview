@@ -251,6 +251,9 @@ const InterviewerSchedule = () => {
                       <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
                         {round.interviewMode}
                       </span>
+                      <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
+                        {round?.meetPlatform}
+                      </span>
                     </div>
                     {/* status */}
                     <div className="flex items-center gap-2">
