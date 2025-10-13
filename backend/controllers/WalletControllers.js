@@ -3,6 +3,7 @@ const WalletTopup = require("../models/WalletTopup");
 const Razorpay = require("razorpay");
 const Payment = require("../models/Payments");
 const Invoice = require("../models/Invoicemodels");
+const { generateUniqueInvoiceCode } = require("../utils/invoiceCodeGenerator");
 const Receipt = require("../models/Receiptmodels");
 const BankAccount = require("../models/BankAccount");
 const WithdrawalRequest = require("../models/WithdrawalRequest");
@@ -322,19 +323,8 @@ const walletVerifyPayment = async (req, res) => {
          ------------------------------------------------------------------ */
       
       try {
-        // Generate a unique invoice code like INVC-00001
-        const lastInvoice = await Invoice.findOne({})
-          .sort({ _id: -1 })
-          .select("invoiceCode")
-          .lean();
-        let nextInvNumber = 1;
-        if (lastInvoice?.invoiceCode) {
-          const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
-          if (match) {
-            nextInvNumber = parseInt(match[1], 10) + 1;
-          }
-        }
-        const invoiceCode = `INVC-${String(nextInvNumber).padStart(5, "0")}`;
+        // Generate unique invoice code using centralized utility
+        const invoiceCode = await generateUniqueInvoiceCode();
 
         // 1. Invoice
         invoice = await Invoice.create({
