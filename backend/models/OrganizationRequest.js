@@ -16,19 +16,10 @@ const organizationRequestSchema = new mongoose.Schema({
     enum: ['Requested', 'Contacted', 'Contacted1', 'Contacted2', 'Approved'],
     default: 'Requested'
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
 }, {
-  timestamps: true
+  timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' }
 });
 
-// Create a compound index to ensure one request per tenant and owner
 organizationRequestSchema.index({ tenantId: 1, ownerId: 1 }, { unique: true });
 
 module.exports = mongoose.model('OrganizationRequest', organizationRequestSchema);

@@ -392,18 +392,22 @@
       };
       const authToken = generateToken(payload, { expiresIn: "7h" });
 
-      // Create or update OrganizationRequest
+      // Create or update OrganizationRequest with contact ID (profileId)
       await OrganizationRequest.findOneAndUpdate(
-        { tenantId: user.tenantId, ownerId: user._id },
-        { 
-          $setOnInsert: { 
-            tenantId: user.tenantId, 
-            ownerId: user._id,
-            status: 'Requested'
-          }
+      { tenantId: user.tenantId, ownerId: user._id },
+      {
+        $setOnInsert: {
+          tenantId: user.tenantId,
+          ownerId: user._id,
+          status: 'Requested'
         },
-        { upsert: true, new: true }
-      );
+      },
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true
+      }
+    );
 
       const responseData = {
         success: true,
@@ -1728,12 +1732,23 @@
       console.log("Contact saved successfully with ID:", savedContact._id);
 
       // Send email verification
-      const emailResult = await sendVerificationEmail(
-        email,
-        savedUser._id,
-        firstName,
-        lastName
-      );
+      // const emailResult = await sendVerificationEmail(
+      //   email,
+      //   savedUser._id,
+      //   firstName,
+      //   lastName
+      // );
+          const emailResult = await sendVerificationEmail({
+            type: 'initial_email_verification',
+            to: email,
+            data: {
+              email,
+              userId: savedUser._id,
+              firstName: firstName || '',
+              lastName: lastName || '',
+              // actionLink: `${config.REACT_APP_API_URL_FRONTEND}/auth/verify-email?token=${verificationToken}`
+            }
+          });
       if (!emailResult.success) {
         throw new Error(emailResult.message);
       }
@@ -1790,26 +1805,26 @@
   const getOrganizationRequestStatus = async (req, res) => {
     try {
       const { tenantId, ownerId } = req.params;
-      
+
       if (!mongoose.Types.ObjectId.isValid(tenantId) || !mongoose.Types.ObjectId.isValid(ownerId)) {
         return res.status(400).json({ success: false, message: 'Invalid tenant or owner ID' });
       }
 
       const request = await OrganizationRequest.findOne({ tenantId, ownerId });
-      
+
       if (!request) {
-        return res.status(200).json({ 
-          success: true, 
-          data: { status: 'NotRequested' } 
+        return res.status(200).json({
+          success: true,
+          data: { status: 'NotRequested' }
         });
       }
 
-      res.status(200).json({ 
-        success: true, 
-        data: { 
+      res.status(200).json({
+        success: true,
+        data: {
           status: request.status,
           updatedAt: request.updatedAt
-        } 
+        }
       });
     } catch (error) {
       console.error('Error getting organization request status:', error);

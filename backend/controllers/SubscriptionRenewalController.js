@@ -57,9 +57,10 @@ const updateTenantLimits = async (subscription) => {
         // Note: Usage document will be created/updated only after payment verification in RazorpayController
         // console.log(`[RENEWAL] Usage document will be handled by payment verification process`);
     } catch (error) {
-        console.error('[RENEWAL] Error updating tenant limits:', error);
+        // console.error('[RENEWAL] Error updating tenant limits:', error);
     }
 };
+
 
 // REMOVED: processSubscriptionRenewal function 
 // All subscription renewal is now handled exclusively by Razorpay webhook
@@ -72,6 +73,7 @@ const updateTenantLimits = async (subscription) => {
 // REMOVED: manualRenewalCheck function
 // No manual renewal checks needed - Razorpay handles everything
 
+
 /**
  * Get renewal status for a subscription
  * This is a read-only endpoint to check subscription status
@@ -80,16 +82,16 @@ const updateTenantLimits = async (subscription) => {
 const getSubscriptionRenewalStatus = async (req, res) => {
     try {
         const { subscriptionId } = req.params;
-        
+
         const subscription = await CustomerSubscription.findById(subscriptionId)
             .populate('subscriptionPlanId');
-        
+
         if (!subscription) {
             return res.status(404).json({ error: 'Subscription not found' });
         }
 
         const now = new Date();
-        const daysUntilRenewal = subscription.nextBillingDate ? 
+        const daysUntilRenewal = subscription.nextBillingDate ?
             Math.ceil((subscription.nextBillingDate - now) / (1000 * 60 * 60 * 24)) : null;
 
         res.json({
@@ -107,12 +109,15 @@ const getSubscriptionRenewalStatus = async (req, res) => {
             message: 'Subscription renewal is handled automatically by Razorpay'
         });
     } catch (error) {
+
         console.error('[SUBSCRIPTION] Status check error:', error);
         res.status(500).json({ error: error.message });
     }
 };
 
+
 // NO CRON JOBS - ALL RENEWAL HANDLED BY RAZORPAY WEBHOOKS
+
 
 module.exports = {
     updateTenantLimits,

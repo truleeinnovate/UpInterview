@@ -134,11 +134,6 @@ const CombinedNavbar = React.memo(() => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [closeAllDropdowns, userType]);
 
-    // Add this useEffect to debug the dropdown state
-    useEffect(() => {
-        console.log('🔄 Dropdown state updated:', dropdownState);
-    }, [dropdownState]);
-
     // Show loading state while permissions are being fetched
     if (loading) {
         return (
@@ -711,7 +706,6 @@ const CombinedNavbar = React.memo(() => {
     ];
 
     const getRequestsDropdownItems = () => {
-        console.log('userType', userType);
         if (userType === "superAdmin") {
             const items = [
                 {
@@ -735,11 +729,6 @@ const CombinedNavbar = React.memo(() => {
                     permissionKey: "WithdrawalRequest", // Remove .ViewTab
                 },
             ];
-
-            // Debug: Check permissions for each item
-            items.forEach(item => {
-                console.log(`Permission check for ${item.permissionKey}:`, enhancedCheckPermission(item.permissionKey));
-            });
 
             return items;
         }
@@ -829,111 +818,6 @@ const CombinedNavbar = React.memo(() => {
                                                 )}
                                             </NavLink>
                                         )}
-
-                                        {/* {enhancedCheckPermission("InterviewRequest") && (
-                                            <NavLink
-                                                to="/interviewer-requests"
-                                                className={`${userType === "superAdmin"
-                                                    ? "h-[52px] flex items-center relative"
-                                                    : "h-full flex items-center relative px-1"
-                                                    } ${isActive("/interviewer-requests")
-                                                        ? "text-custom-blue font-bold"
-                                                        : "text-gray-600 hover:text-custom-blue"
-                                                    }`}
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    closeAllDropdowns();
-                                                    navigate("/interviewer-requests");
-                                                }}
-                                            >
-                                                Interviewer Requests
-                                                {isActive("/interviewer-requests") && (
-                                                    <div
-                                                        className={`absolute ${userType === "superAdmin"
-                                                            ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
-                                                            : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
-                                                            }`}
-                                                    ></div>
-                                                )}
-                                            </NavLink>
-                                        )}
-
-                                        {enhancedCheckPermission("OutsourceInterviewerRequest") && (
-                                            <NavLink
-                                                to="/outsource-interviewers"
-                                                className={`${userType === "superAdmin"
-                                                    ? "h-[52px] flex items-center relative"
-                                                    : "h-full flex items-center relative px-1"
-                                                    } ${isActive("/outsource-interviewers")
-                                                        ? "text-custom-blue font-bold"
-                                                        : "text-gray-600 hover:text-custom-blue"
-                                                    }`}
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    closeAllDropdowns();
-                                                    navigate("/outsource-interviewers");
-                                                }}
-                                            >
-                                                Outsource Interviewers
-                                                {isActive("/outsource-interviewers") && (
-                                                    <div
-                                                        className={`absolute ${userType === "superAdmin"
-                                                            ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
-                                                            : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
-                                                            }`}
-                                                    ></div>
-                                                )}
-                                            </NavLink>
-                                        )} */}
-
-                                        {/* {(enhancedCheckPermission("InterviewRequest") ||
-                                            enhancedCheckPermission("OutsourceInterviewerRequest") ||
-                                            enhancedCheckPermission("OrganizationRequest") ||
-                                            enhancedCheckPermission("WithdrawalRequest")) && (
-                                                <div className="relative flex items-center" ref={requestsRef}>
-                                                    <button
-                                                        className={`h-[52px] flex items-center relative transition-colors duration-300 ${getRequestsDropdownItems().some((item) => isActive(item.path))
-                                                            ? "text-custom-blue font-bold"
-                                                            : "text-gray-600 hover:text-custom-blue"
-                                                            }`}
-                                                        onClick={toggleRequestsDropdown}
-                                                    >
-                                                        Requests
-                                                        <IoIosArrowDown
-                                                            className={`ml-1 transition-transform duration-300 ease-in-out ${dropdownState.requestsDropdown ? "rotate-180" : ""}`}
-                                                        />
-                                                        {getRequestsDropdownItems().some((item) => isActive(item.path)) && (
-                                                            <div className="absolute bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"></div>
-                                                        )}
-                                                    </button>
-                                                    {console.log('dropdownState.requestsDropdown', dropdownState.requestsDropdown)}
-                                                    {dropdownState.requestsDropdown && (
-                                                        <div className="absolute left-0 top-10 z-50 w-56 bg-white rounded-md shadow-lg border ring-black transform transition-all duration-300 ease-in-out origin-top p-2 pr-6">
-                                                            <div className="flex flex-col min-w-[150px]">
-                                                                {getRequestsDropdownItems().map(({ path, label, permissionKey }) => (
-                                                                    enhancedCheckPermission(permissionKey) && (
-                                                                        <NavLink
-                                                                            key={path}
-                                                                            to={path}
-                                                                            className={`h-[42px] flex items-center px-4 relative ${isActive(path)
-                                                                                ? "text-custom-blue font-bold"
-                                                                                : "text-gray-700 hover:text-custom-blue"
-                                                                                }`}
-                                                                            onClick={(e) => {
-                                                                                e.preventDefault();
-                                                                                closeAllDropdowns();
-                                                                                navigate(path);
-                                                                            }}
-                                                                        >
-                                                                            {label}
-                                                                        </NavLink>
-                                                                    )
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )} */}
 
                                         {enhancedCheckPermission("OutsourceInterviewerRequest") && (
                                             <div className="relative flex items-center" ref={requestsRef}>

@@ -2,12 +2,12 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  createRateCard,
-  getAllRateCards,
-  getRateCardById,
-  updateRateCard,
-  deleteRateCard,
-  getRateCardsByTechnology,
+    createRateCard,
+    getAllRateCards,
+    getRateCardById,
+    updateRateCard,
+    deleteRateCard,
+    getRateCardsByTechnology,
 } = require("../../controllers/RateCardsController/rateCardsController");
 
 // Create

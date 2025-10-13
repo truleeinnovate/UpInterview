@@ -141,27 +141,27 @@ const OutsourceInterviewers = () => {
         }
     };
 
-    const FilteredData = () => {
-        if (!Array.isArray(dataToUse)) return [];
-        return dataToUse.filter((interviewer) => {
-            const fieldsToSearch = [
-                interviewer?.status,
-                interviewer?.interviewerNo,
-                interviewer?.contactId?.firstName,
-                interviewer?.contactId?.lastName,
-            ].filter((field) => field !== null && field !== undefined);
+        const FilteredData = () => {
+            if (!Array.isArray(dataToUse)) return [];
+            return dataToUse.filter((interviewer) => {
+                const fieldsToSearch = [
+                    interviewer?.status,
+                    interviewer?.interviewerNo,
+                    interviewer?.contactId?.firstName,
+                    interviewer?.contactId?.lastName,
+                ].filter((field) => field !== null && field !== undefined);
 
-            const matchesStatus =
-                selectedFilters?.status.length === 0 ||
-                selectedFilters.status.includes(interviewer?.status);
+                const matchesStatus =
+                    selectedFilters?.status.length === 0 ||
+                    selectedFilters.status.includes(interviewer?.status);
 
-            const matchesSearchQuery = fieldsToSearch.some((field) =>
-                field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-            );
+                const matchesSearchQuery = fieldsToSearch.some((field) =>
+                    field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+                );
 
-            return matchesSearchQuery && matchesStatus;
-        });
-    };
+                return matchesSearchQuery && matchesStatus;
+            });
+        };
 
     // Pagination
     const rowsPerPage = 10;
@@ -298,8 +298,8 @@ const OutsourceInterviewers = () => {
             header: "Price/Hour",
             render: (value, row) => (
                 <span>
-                    {row?.requestedRate?.hourlyRate !== undefined 
-                        ? `$${row.requestedRate.hourlyRate}` 
+                    {row?.requestedRate?.hourlyRate !== undefined
+                        ? `$${row.requestedRate.hourlyRate}`
                         : "Not set"}
                 </span>
             ),
@@ -360,8 +360,8 @@ const OutsourceInterviewers = () => {
             header: "Price per hour",
             render: (value, row) => (
                 <div className="font-medium">
-                    {row?.requestedRate?.hourlyRate !== undefined 
-                        ? `$${row.requestedRate.hourlyRate}` 
+                    {row?.requestedRate?.hourlyRate !== undefined
+                        ? `$${row.requestedRate.hourlyRate}`
                         : "Not set"}
                 </div>
             ),
@@ -533,7 +533,7 @@ const OutsourceInterviewers = () => {
                     isFilterActive={isFilterActive}
                     dataLength={dataToUse?.length}
                     searchPlaceholder="Search interviewers..."
-                    filterIconRef={filterIconRef} // Pass ref to Toolbar
+                    filterIconRef={filterIconRef}
                 />
             </div>
 
