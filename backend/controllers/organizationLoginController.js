@@ -1352,6 +1352,40 @@
     }
   };
 
+  const deleteTenantAndAssociatedData = async (req, res) => {
+    const { tenantId } = req.params;
+  
+    // Validate tenantId
+    if (!mongoose.Types.ObjectId.isValid(tenantId)) {
+      return res.status(400).json({ error: 'Invalid tenantId' });
+    }
+  
+    try {
+      // Delete Tenant
+      const tenant = await Tenant.findByIdAndDelete(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ error: 'Tenant not found' });
+      }
+  
+      // Delete associated Users
+      const usersResult = await Users.deleteMany({ tenantId });
+  
+      // Delete associated Contacts
+      const contactsResult = await Contacts.deleteMany({ tenantId });
+  
+      res.status(200).json({
+        message: 'Tenant and associated data deleted successfully',
+        deletedTenant: tenant,
+        deletedUsersCount: usersResult.deletedCount,
+        deletedContactsCount: contactsResult.deletedCount,
+      });
+    } catch (error) {
+      console.error('Error deleting tenant and associated data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+  
+  
   // const getOrganizationById = async (req, res) => {
   //   try {
   //     const { id } = req.params;
@@ -1698,12 +1732,23 @@
       console.log("Contact saved successfully with ID:", savedContact._id);
 
       // Send email verification
-      const emailResult = await sendVerificationEmail(
-        email,
-        savedUser._id,
-        firstName,
-        lastName
-      );
+      // const emailResult = await sendVerificationEmail(
+      //   email,
+      //   savedUser._id,
+      //   firstName,
+      //   lastName
+      // );
+          const emailResult = await sendVerificationEmail({
+            type: 'initial_email_verification',
+            to: email,
+            data: {
+              email,
+              userId: savedUser._id,
+              firstName: firstName || '',
+              lastName: lastName || '',
+              // actionLink: `${config.REACT_APP_API_URL_FRONTEND}/auth/verify-email?token=${verificationToken}`
+            }
+          });
       if (!emailResult.success) {
         throw new Error(emailResult.message);
       }
@@ -1804,6 +1849,7 @@
     verifyEmail,
     verifyEmailChange,
     getAllOrganizations, // SUPER ADMIN added by Ashok
+    deleteTenantAndAssociatedData,
     getOrganizationById,
     superAdminLoginAsUser,
   };

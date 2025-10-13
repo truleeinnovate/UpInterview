@@ -23,7 +23,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
   // Debug logging
   console.log("UserProfile:", userProfile);
   console.log("OwnerId:", ownerId);
-  console.log("TenantId:", tenantId);
+  console.log("TenantId:--------------------", tenantId);
   
   // API hooks
   const { data: bankAccounts = [], isLoading: loadingAccounts, refetch } = useBankAccounts(ownerId);
@@ -40,7 +40,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
     confirmAccountNumber: "",
     routingNumber: "",
     bankName: "",
-    accountType: "checking",
+    accountType: "savings",
     swiftCode: "",
     isDefault: false,
   });
@@ -205,11 +205,12 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
               isSearchable={false}
               value={newAccount.accountType ? { value: newAccount.accountType, label: newAccount.accountType.charAt(0).toUpperCase() + newAccount.accountType.slice(1) } : null}
               onChange={(opt) =>
-                setNewAccount({ ...newAccount, accountType: opt?.value || "checking" })
+                setNewAccount({ ...newAccount, accountType: opt?.value || "savings" })
               }
               options={[
                 { value: "checking", label: "Checking" },
                 { value: "savings", label: "Savings" },
+                { value: "current", label: "Current" },
               ]}
               placeholder="Select Account Type"
               menuPortalTarget={document.body}
@@ -273,8 +274,8 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
 
         <div>
           <InputField
-            label="SWIFT/BIC Code"
-            required
+            label="SWIFT/BIC Code (Optional)"
+            required={false}
             name="swiftCode"
             placeholder="e.g., CHASUS33XXX (US) or HDFCINBBXXX (India)"
             inputRef={fieldRefs.swiftCode}

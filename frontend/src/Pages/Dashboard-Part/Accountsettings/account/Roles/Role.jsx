@@ -332,31 +332,38 @@
 // v1.0.1  -  Ashraf  -  create new role path fixed
 // v1.0.2  -  Ashok   -  added font semibold for view more button
 // v1.0.3  -  [Your Name]  -  moved override fetching to useRolesQuery, removed unnecessary reloads
+// v1.0.4 - Ashok - Improved responsiveness
 
-import { useState, useMemo } from 'react';
-import Cookies from 'js-cookie';
-import { EditButton } from './Buttons';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
-import { useRolesQuery } from '../../../../../apiHooks/useRoles.js';
-import { usePermissions } from '../../../../../Context/PermissionsContext.js';
-import PermissionDisplay from './PermissionDisplay';
-import { formatWithSpaces } from '../../../../../utils/RoleUtils';
-import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
-import ErrorState from '../../../../../Components/LoadingStates/ErrorState';
-import EmptyState from '../../../../../Components/LoadingStates/EmptyState';
+import { useState, useMemo } from "react";
+import Cookies from "js-cookie";
+import { EditButton } from "./Buttons";
+import { Outlet, useNavigate } from "react-router-dom";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import { useRolesQuery } from "../../../../../apiHooks/useRoles.js";
+import { usePermissions } from "../../../../../Context/PermissionsContext.js";
+import PermissionDisplay from "./PermissionDisplay";
+import { formatWithSpaces } from "../../../../../utils/RoleUtils";
+import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
+import ErrorState from "../../../../../Components/LoadingStates/ErrorState";
+import EmptyState from "../../../../../Components/LoadingStates/EmptyState";
 
 const Role = () => {
-  const authToken = Cookies.get('authToken');
+  const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const tenantId = useMemo(() => tokenPayload.tenantId, [authToken]);
   const userType = useMemo(() => AuthCookieManager.getUserType(), [authToken]);
 
   const { effectivePermissions, superAdminPermissions } = usePermissions();
-  const permissions = userType === 'superAdmin' ? superAdminPermissions : effectivePermissions;
-  const permissionKey = 'Roles';
+  const permissions =
+    userType === "superAdmin" ? superAdminPermissions : effectivePermissions;
+  const permissionKey = "Roles";
 
-  const { data: roles, isLoading, isError, error } = useRolesQuery({
+  const {
+    data: roles,
+    isLoading,
+    isError,
+    error,
+  } = useRolesQuery({
     fetchAllRoles: true,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -426,7 +433,7 @@ const Role = () => {
     return (
       <ErrorState
         title="Failed to load roles"
-        message={error?.message || 'Something went wrong while loading roles'}
+        message={error?.message || "Something went wrong while loading roles"}
         onRetry={() => window.location.reload()}
         retryText="Try Again"
       />
@@ -438,43 +445,63 @@ const Role = () => {
       <EmptyState
         title="No roles found"
         message="There are no roles configured for your organization."
-        actionText={permissions?.Roles?.Create ? "Create First Role" : undefined}
-        onAction={permissions?.Roles?.Create ? () => navigate('/account-settings/roles/create') : undefined}
+        actionText={
+          permissions?.Roles?.Create ? "Create First Role" : undefined
+        }
+        onAction={
+          permissions?.Roles?.Create
+            ? () => navigate("/account-settings/roles/create")
+            : undefined
+        }
         icon="📋"
       />
     );
   }
 
   const renderRoleCard = (role) => {
-    const isAdmin = permissions?.[permissionKey]?.RoleName === 'Admin' && role.roleName === 'Admin';
-    const isAdminRole = role.roleName === 'Admin';
+    const isAdmin =
+      permissions?.[permissionKey]?.RoleName === "Admin" &&
+      role.roleName === "Admin";
+    const isAdminRole = role.roleName === "Admin";
     const maxRows = 2;
     const visibleObjects = role.objects
-      ? role.objects.filter((obj) =>
-          userType === 'superAdmin' ? true : obj.visibility === 'view_all'
-        ).slice(0, maxRows)
+      ? role.objects
+          .filter((obj) =>
+            userType === "superAdmin" ? true : obj.visibility === "view_all"
+          )
+          .slice(0, maxRows)
       : [];
 
     return (
       <div key={role._id} className="mb-6">
-        <div className="bg-white p-5 rounded-lg shadow">
+        {/* v1.0.4 <-------------------------------------------------------------------- */}
+        <div className="bg-white sm:p-4 p-5 rounded-lg shadow">
           <div className="flex justify-between items-start mb-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-lg font-medium">{role.label}</h3>
-                <span className="text-xs bg-custom-blue text-white px-2 py-1 rounded-full">
+                <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium">
+                  {role.label}
+                </h3>
+                <span className="flex items-center justify-center text-xs bg-custom-blue text-white px-2 py-1 rounded-full">
                   Level {role.level ?? 0}
                 </span>
               </div>
-              <p className="text-gray-600 text-sm">{role.description || 'No description available'}</p>
+              <p className="text-gray-600 text-sm">
+                {role.description || "No description available"}
+              </p>
             </div>
-            {(userType === 'superAdmin' ? permissions?.Roles?.Edit : permissions?.Roles?.Edit && !isAdminRole) && !isAdmin && (
-              <EditButton
-                onClick={() => {
-                  navigate(`/account-settings/roles/role-edit/${role._id}`, { state: { role, roles } });
-                }}
-              />
-            )}
+            {(userType === "superAdmin"
+              ? permissions?.Roles?.Edit
+              : permissions?.Roles?.Edit && !isAdminRole) &&
+              !isAdmin && (
+                <EditButton
+                  onClick={() => {
+                    navigate(`/account-settings/roles/role-edit/${role._id}`, {
+                      state: { role, roles },
+                    });
+                  }}
+                />
+              )}
           </div>
 
           <div className="mt-4">
@@ -492,14 +519,13 @@ const Role = () => {
             </div>
             {role.objects &&
               role.objects.filter((obj) =>
-                userType === 'superAdmin' ? true : obj.visibility === 'view_all'
+                userType === "superAdmin" ? true : obj.visibility === "view_all"
               ).length > maxRows && (
                 <button
                   onClick={() =>
-                    navigate(
-                      `/account-settings/roles/view/${role._id}`,
-                      { state: { role, roles } }
-                    )
+                    navigate(`/account-settings/roles/view/${role._id}`, {
+                      state: { role, roles },
+                    })
                   }
                   className="mt-4 font-semibold text-custom-blue hover:underline text-sm"
                 >
@@ -508,36 +534,51 @@ const Role = () => {
               )}
           </div>
 
-          {userType !== 'superAdmin' && role.inherits && role.inherits.length > 0 && !isAdmin && (
-            <div className="mt-4">
-              <h4 className="font-medium mb-2">Inherits From</h4>
-              <div className="flex flex-wrap gap-2">
-                {role.inherits.map((inheritedRole) => {
-                  const inheritedRoleId = typeof inheritedRole === 'string' ? inheritedRole : inheritedRole._id;
-                  const foundRole = roles.find((r) => r._id === inheritedRoleId);
-                  const label = foundRole ? foundRole.label : inheritedRoleId;
-                  return (
-                    <span key={inheritedRoleId} className="px-3 py-1 bg-gray-100 rounded-full text-sm">
-                      {label}
-                    </span>
-                  );
-                })}
+          {userType !== "superAdmin" &&
+            role.inherits &&
+            role.inherits.length > 0 &&
+            !isAdmin && (
+              <div className="mt-4">
+                <h4 className="font-medium mb-2">Inherits From</h4>
+                <div className="flex flex-wrap gap-2">
+                  {role.inherits.map((inheritedRole) => {
+                    const inheritedRoleId =
+                      typeof inheritedRole === "string"
+                        ? inheritedRole
+                        : inheritedRole._id;
+                    const foundRole = roles.find(
+                      (r) => r._id === inheritedRoleId
+                    );
+                    const label = foundRole ? foundRole.label : inheritedRoleId;
+                    return (
+                      <span
+                        key={inheritedRoleId}
+                        className="px-3 py-1 bg-gray-100 rounded-full text-sm"
+                      >
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
+        {/* v1.0.4 --------------------------------------------------------------------> */}
       </div>
     );
   };
 
   return (
     <>
-      <div className="space-y-6 mb-4">
-        <div className="flex justify-between items-center mt-3 px-3">
-          <h2 className="text-lg text-custom-blue font-semibold">Roles & Permissions</h2>
-          {(userType === 'superAdmin' && permissions?.Roles?.Create) && (
+      {/* v1.0.4 <------------------------------------------------------------------ */}
+      <div className="space-y-6 h-[calc(100vh-84px)] flex flex-col sm:mt-6 sm:px-2">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg text-custom-blue font-semibold">
+            Roles & Permissions
+          </h2>
+          {userType === "superAdmin" && permissions?.Roles?.Create && (
             <button
-              onClick={() => navigate('/account-settings/roles/create')}
+              onClick={() => navigate("/account-settings/roles/create")}
               className="px-4 py-1 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90"
             >
               Create Role
@@ -545,11 +586,15 @@ const Role = () => {
           )}
         </div>
 
-        <div className="bg-white px-3 rounded-lg shadow py-3 mx-3">
+        <div className="bg-white px-3 rounded-lg shadow-xl py-3 overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">Role Hierarchy</h3>
+            <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium">
+              Role Hierarchy
+            </h3>
             <div className="text-sm text-gray-600">
-              {roles.length} roles • Levels {Math.min(...roles.map(r => r.level ?? 0))} - {Math.max(...roles.map(r => r.level ?? 0))}
+              {roles.length} roles • Levels{" "}
+              {Math.min(...roles.map((r) => r.level ?? 0))} -{" "}
+              {Math.max(...roles.map((r) => r.level ?? 0))}
             </div>
           </div>
           <div className="space-y-2">
@@ -563,6 +608,7 @@ const Role = () => {
           </div>
         </div>
       </div>
+      {/* v1.0.4 ------------------------------------------------------------------> */}
       <Outlet />
     </>
   );

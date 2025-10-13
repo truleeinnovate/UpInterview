@@ -39,9 +39,22 @@ const updateTenantLimits = async (subscription) => {
         const features = plan.features || [];
         const tenant = await Tenant.findById(tenantId);
         if (tenant) {
-            const bandwidthLimit = features.find(f => f?.name === 'Bandwidth')?.limit || tenant.usersBandWidth || 0;
-            const usersLimit = features.find(f => f?.name === 'Users')?.limit || tenant.totalUsers || 0;
-
+            // Get bandwidth limit - handle "unlimited" string
+            const bandwidthFeature = features.find(f => f?.name === 'Bandwidth');
+            let bandwidthLimit = bandwidthFeature?.limit || tenant.usersBandWidth || 0;
+            if (bandwidthLimit === "unlimited" || bandwidthLimit === "Unlimited") {
+                bandwidthLimit = 999999999; // Set to a very large number for unlimited
+            }
+            bandwidthLimit = Number(bandwidthLimit) || 0; // Ensure it's a number
+            
+            // Get users limit - handle "unlimited" string
+            const usersFeature = features.find(f => f?.name === 'Users');
+            let usersLimit = usersFeature?.limit || tenant.totalUsers || 0;
+            if (usersLimit === "unlimited" || usersLimit === "Unlimited") {
+                usersLimit = 999999; // Set to a very large number for unlimited users
+            }
+            usersLimit = Number(usersLimit) || 0; // Ensure it's a number
+            
             tenant.usersBandWidth = bandwidthLimit;
             tenant.totalUsers = usersLimit;
             tenant.status = 'active';

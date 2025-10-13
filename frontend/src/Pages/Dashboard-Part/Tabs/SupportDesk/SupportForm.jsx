@@ -5,6 +5,7 @@
 // v1.0.2 - Ashok - Implemented scroll lock hook for conditionally disable outer scrollbar
 // v1.0.3 - Ashraf - Added subject field,changed description length to 1000,modified issues types added more types
 // v1.0.4 - Ashok - Improved responsiveness and added common code for popup
+// v1.0.5 - Ashok - Fixed style issues
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
@@ -78,7 +79,7 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
   // v1.0.2 <-------------------------------------------------------------------------
   useScrollLock(true); // This will lock the outer scrollbar when the form is open
   // v1.0.2 ------------------------------------------------------------------------->
-  
+
   const { isMutationLoading, submitTicket } = useSupportTickets();
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const ownerId = tokenPayload?.userId;
@@ -99,8 +100,6 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
   const [attachmentFileError, setAttachmentFileError] = useState("");
   const [isAttachmentFileRemoved, setIsAttachmentRemoved] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-
-  
 
   // v1.0.3 <-------------------------------------------------------------------------
   const issuesData = useMemo(
@@ -164,7 +163,11 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
   const subjectRef = useRef(null);
   const descriptionRef = useRef(null);
   const fieldRefsMap = useMemo(
-    () => ({ issueType: issueTypeRef, subject: subjectRef, description: descriptionRef }),
+    () => ({
+      issueType: issueTypeRef,
+      subject: subjectRef,
+      description: descriptionRef,
+    }),
     []
   );
 
@@ -239,27 +242,30 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
     setIsFullWidth(!isFullWidth);
   };
 
-  const onChangeIssue = useCallback((e) => {
-    const value = e.target.value;
-    // Handle both dropdown selection and custom input
-    if (otherIssueFlag) {
-      // For custom input, limit to 100 characters
-      const limitedValue = value.slice(0, 100);
-      setFormState((prev) => ({
-        ...prev,
-        otherIssue: limitedValue,
-        selectedIssue: "",
-      }));
-    } else {
-      // For dropdown selection
-      setFormState((prev) => ({
-        ...prev,
-        selectedIssue: value,
-        otherIssue: "",
-      }));
-    }
-    setErrors((prev) => ({ ...prev, issueType: "" }));
-  }, [otherIssueFlag]);
+  const onChangeIssue = useCallback(
+    (e) => {
+      const value = e.target.value;
+      // Handle both dropdown selection and custom input
+      if (otherIssueFlag) {
+        // For custom input, limit to 100 characters
+        const limitedValue = value.slice(0, 100);
+        setFormState((prev) => ({
+          ...prev,
+          otherIssue: limitedValue,
+          selectedIssue: "",
+        }));
+      } else {
+        // For dropdown selection
+        setFormState((prev) => ({
+          ...prev,
+          selectedIssue: value,
+          otherIssue: "",
+        }));
+      }
+      setErrors((prev) => ({ ...prev, issueType: "" }));
+    },
+    [otherIssueFlag]
+  );
 
   const onChangeFileInput = async (e) => {
     const file = e.target.files[0];
@@ -465,7 +471,20 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
         notify.error(error?.response?.data?.message || error.message);
       }
     },
-    [validateForm, createFormData, editMode, initialTicketData?._id, attachmentFile, isAttachmentFileRemoved, tenantId, ownerId, submitTicket, initialFormState, onClose, navigate]
+    [
+      validateForm,
+      createFormData,
+      editMode,
+      initialTicketData?._id,
+      attachmentFile,
+      isAttachmentFileRemoved,
+      tenantId,
+      ownerId,
+      submitTicket,
+      initialFormState,
+      onClose,
+      navigate,
+    ]
   );
 
   //  <------------------ added by ranjith
@@ -615,12 +634,12 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
                     error={errors.issueType}
                     isCustomName={otherIssueFlag}
                     setIsCustomName={(flag) => {
-                      setFormState((prev) => ({ 
-                        ...prev, 
+                      setFormState((prev) => ({
+                        ...prev,
                         otherIssueFlag: flag,
                         // Clear values when switching modes
                         selectedIssue: flag ? "" : prev.selectedIssue,
-                        otherIssue: flag ? prev.otherIssue : ""
+                        otherIssue: flag ? prev.otherIssue : "",
                       }));
                     }}
                     placeholder="Enter issue type"
@@ -681,43 +700,39 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
                       </div>
                     </div>
                   </label>
-                  <div className="flex items-center">
+                  {/* v1.0.5 <-------------------------------------------------------------- */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Choose File Button */}
                     <button
                       type="button"
                       onClick={() => fileRef.current.click()}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors duration-200 text-sm font-medium flex-shrink-0"
                     >
                       Choose File
                     </button>
 
+                    {/* Filename */}
                     {attachmentFileName && (
-                      <span className="ml-3 text-sm text-gray-500">
-                        {attachmentFileName}
-                      </span>
+                      <div className="flex-1 min-w-0 bg-gray-50 p-1 rounded max-w-full">
+                        <span className="block text-gray-700 truncate">
+                          {attachmentFileName}
+                        </span>
+                      </div>
                     )}
+
+                    {/* Remove File */}
                     {attachmentFileName && (
                       <button
                         title="Remove Attachment"
                         type="button"
-                        className="text-red-500 ml-4"
+                        className="text-red-500 flex-shrink-0"
                         onClick={handleRemoveFile}
                       >
                         <X className="size-4" />
                       </button>
                     )}
-                    {/* {attachmentFile && (
-                      <button
-                        title="View Attachment"
-                        type="button"
-                        onClick={() => {
-                          const fileURL = URL.createObjectURL(attachmentFile);
-                          window.open(fileURL, "_blank");
-                        }}
-                        className="ml-4 text-custom-blue"
-                      >
-                        <Eye className="size-4" />
-                      </button>
-                    )} */}
+
+                    {/* View File */}
                     {attachmentFile && (
                       <button
                         title="View Attachment"
@@ -729,12 +744,13 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
                               : URL.createObjectURL(attachmentFile); // if it's a File object
                           window.open(fileURL, "_blank");
                         }}
-                        className="ml-4 text-custom-blue"
+                        className="ml-2 text-custom-blue flex-shrink-0"
                       >
                         <Eye className="size-4" />
                       </button>
                     )}
                   </div>
+                  {/* v1.0.5 --------------------------------------------------------------> */}
                   <input
                     id="file"
                     ref={fileRef}

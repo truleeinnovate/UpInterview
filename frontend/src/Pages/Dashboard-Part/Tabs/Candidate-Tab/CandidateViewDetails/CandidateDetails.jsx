@@ -6,6 +6,7 @@
 // v1.0.5  - Ashok - Fixed issues regarding responsiveness
 // v1.0.6  - Ashok - Fixed responsiveness issues
 // v1.0.7  - Ashok - Fixed scrollbar issue
+// v1.0.8  - Ashok - modified edit path
 
 import Modal from "react-modal";
 import {
@@ -461,15 +462,18 @@ const CandidateDetails = ({ mode, candidateId }) => {
 
   return (
     <>
+    {/* v1.0.8 <----------------------------------------------------------- */}
       <SidebarPopup
         title="Candidate"
         onClose={() => navigate(-1)}
         id={candidate._id}
         showEdit
+        onEdit={() => navigate(`/candidate/edit/${candidate._id}`)}
         showExternal
       >
         {content}
       </SidebarPopup>
+    {/* v1.0.8 -----------------------------------------------------------> */}
     </>
   );
 };

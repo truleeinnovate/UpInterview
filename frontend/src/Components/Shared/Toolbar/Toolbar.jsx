@@ -79,7 +79,7 @@ const Toolbar = ({
                 placeholder={searchPlaceholder}
                 value={searchQuery}
                 onChange={onSearch}
-                className="block w-full pl-10 pr-3 py-2 border border-input rounded-md bg-background placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-input rounded-md bg-background placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue sm:text-sm"
               />
             </div>
           </div>

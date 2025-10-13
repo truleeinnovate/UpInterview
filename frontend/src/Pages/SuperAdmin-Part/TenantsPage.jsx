@@ -19,18 +19,22 @@ import {
   // Import,
   ChevronUp,
   ChevronDown,
+  Trash,
 } from "lucide-react";
 // import axios from "axios";
 // import { config } from "../../config.js";
 import { usePermissions } from "../../Context/PermissionsContext";
 // import { useQuery } from "@tanstack/react-query";
-import { useTenants } from "../../apiHooks/superAdmin/useTenants.js";
+import { useTenants,useTenantById } from "../../apiHooks/superAdmin/useTenants.js";
+import DeleteConfirmModal from "../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
+import { notify } from "../../services/toastService.js"; 
 
 function TenantsPage() {
+  const [deleteTenant, setDeleteTenant] = useState(null);
   const { superAdminPermissions, isInitialized } = usePermissions();
   const { tenants, isLoading } = useTenants();
-  console.log("ALL TENANTS =============> ", tenants);
-
+  const { deleteTenantData } = useTenantById(deleteTenant?._id);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [view, setView] = useState("table");
   // const [selectedTenant, setSelectedTenant] = useState(null);
   // const [selectTenantView, setSelectTenantView] = useState(false);
@@ -218,6 +222,19 @@ function TenantsPage() {
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
+  const handleDeleteTenant = async () => {
+    try {
+      if (!deleteTenant?._id) throw new Error("No tenant ID provided");
+
+      const res = await deleteTenantData.mutateAsync(deleteTenant._id);
+
+      setShowDeleteConfirmModal(false);
+      notify.success(res?.message || "Tenant deleted successfully");
+    } catch (error) {
+      setShowDeleteConfirmModal(false);
+      notify.error(error?.response?.data?.message || "Failed to delete tenant");
+    }
+  };
   // Table Columns
   const tableColumns = [
     {
@@ -327,6 +344,20 @@ function TenantsPage() {
           },
         ]
       : []),
+      ...(superAdminPermissions?.Tenants?.Delete
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            // onClick: (row) => navigate(`delete/${row._id}`),
+            onClick: (row) => {
+              setDeleteTenant(row);
+              setShowDeleteConfirmModal(true);
+            }
+          },
+        ]
+      : []),
     // {
     //   key: "resend-link",
     //   label: "Resend Link",
@@ -370,7 +401,7 @@ function TenantsPage() {
 
       {!isLoading && superAdminPermissions?.Tenants?.View ? (
         <>
-          <button
+          {/* <button
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/tenants/${item._id}`);
@@ -379,7 +410,7 @@ function TenantsPage() {
             title="360° View"
           >
             <UserCircle className="w-4 h-4" />
-          </button>
+          </button> */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -390,6 +421,18 @@ function TenantsPage() {
           >
             <Pencil className="w-4 h-4" />
           </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteConfirmModal(true);
+              setDeleteTenant(item);
+            }}
+            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete"
+          >
+            <Trash className="w-4 h-4" />
+          </button>
+          
         </>
       ) : (
         superAdminPermissions?.Tenants?.Edit && (
@@ -643,6 +686,16 @@ function TenantsPage() {
         </main>
       </div>
       <Outlet />
+            {/* Ranjith added deleted functionality  */}
+            <DeleteConfirmModal
+              isOpen={showDeleteConfirmModal}
+              onClose={() => setShowDeleteConfirmModal(false)}
+              onConfirm={handleDeleteTenant }
+              title="Tenant"
+              // entityName={
+              //   deleteTenant?.FirstName + " " + deleteTenant?.LastName
+              // }
+            />
     </div>
   );
 }

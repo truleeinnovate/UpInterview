@@ -597,10 +597,12 @@ const verifyPayment = async (req, res) => {
                             // Only create Usage if it doesn't exist for current billing period
                             if (!existingUsage || !isInSameBillingPeriod(existingUsage)) {
                                 const usageAttributes = features
-                                    .filter(f => ['Assessments', 'Internal_Interviews'].includes(f?.name))
+                                    .filter(f => ['Assessments', 'Internal_Interviews', 'Question_Bank_Access', 'Bandwidth'].includes(f?.name))
                                     .map(f => ({
                                         entitled: Number(f?.limit) || 0,
-                                        type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' : f?.name,
+                                        type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' : 
+                                              f?.name === 'Question_Bank_Access' ? 'Question Bank Access' :
+                                              f?.name === 'Bandwidth' ? 'User Bandwidth' : f?.name,
                                         utilized: 0,
                                         remaining: Number(f?.limit) || 0,
                                     }));
@@ -2004,10 +2006,12 @@ const handleSubscriptionCharged = async (subscription) => {
         // Only create/update Usage if we're in a new billing period
         if (!activeUsage || !isInSameBillingPeriod(activeUsage)) {
             const usageAttributes = features
-                .filter(f => ['Assessments', 'Internal_Interviews'].includes(f?.name))
+                .filter(f => ['Assessments', 'Internal_Interviews', 'Question_Bank_Access', 'Bandwidth'].includes(f?.name))
                 .map(f => ({
                     entitled: Number(f?.limit) || 0,
-                    type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' : f?.name,
+                    type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' : 
+                          f?.name === 'Question_Bank_Access' ? 'Question Bank Access' :
+                          f?.name === 'Bandwidth' ? 'User Bandwidth' : f?.name,
                     utilized: 0,
                     remaining: Number(f?.limit) || 0,
                 }));
