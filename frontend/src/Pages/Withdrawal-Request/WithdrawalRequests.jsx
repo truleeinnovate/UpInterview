@@ -426,18 +426,33 @@ const WithdrawalRequests = () => {
   return (
     <>
       {/* Statistics Cards */}
-      <div className="grid grid-cols-5 sm:grid-cols-1 md:grid-cols-4 gap-4 p-4">
+      <div className="grid grid-cols-4 sm:grid-cols-1 md:grid-cols-4 gap-4 p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-lg shadow p-4"
+          className="bg-white rounded-lg shadow-md p-4 border-l-4 border-yellow-500"
         >
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-yellow-600">{statistics.pending}</p>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <Clock className="h-5 w-5 text-yellow-500" />
+              </div>
+              <p className="text-3xl font-bold text-yellow-600 mb-1">{statistics.pending}</p>
+              <div className="flex justify-between border-t pt-2 mt-2">
+                <p className="text-xs text-gray-500">Requested Amount:</p>
+                <p className="text-lg font-semibold text-gray-800">₹{statistics.pendingAmount.toFixed(2)}</p>
+              </div>
+                <div className="flex justify-between">
+                  <p className="text-xs text-gray-500">Total Fees:</p>
+                  <p className="text-sm font-semibold text-gray-800">₹{(statistics.pendingAmount - statistics.pendingNetAmount).toFixed(2)}</p>
+                </div>
+              <div className="flex justify-between">
+                <p className="text-xs text-gray-500 mt-1">Net Paid:</p>
+                <p className="text-lg font-semibold text-yellow-600">₹{statistics.pendingNetAmount.toFixed(2)}</p>
+              </div>
+              
             </div>
-            <Clock className="h-8 w-8 text-yellow-600 opacity-20" />
           </div>
         </motion.div>
 
@@ -445,14 +460,21 @@ const WithdrawalRequests = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-lg shadow p-4"
+          className="bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-500"
         >
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Processing</p>
-              <p className="text-2xl font-bold text-blue-600">{statistics.processing}</p>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-gray-600">Processing</p>
+                <AlertCircle className="h-5 w-5 text-blue-500" />
+              </div>
+              <p className="text-3xl font-bold text-blue-600 mb-1">{statistics.processing}</p>
+              <div className="border-t pt-2 mt-2">
+                <p className="text-xs text-gray-500 mb-1">Requested Amount</p>
+                <p className="text-lg font-semibold text-gray-800">₹{statistics.processingAmount.toFixed(2)}</p>
+                <p className="text-xs text-gray-500 mt-1">Net: ₹{statistics.processingNetAmount.toFixed(2)}</p>
+              </div>
             </div>
-            <AlertCircle className="h-8 w-8 text-blue-600 opacity-20" />
           </div>
         </motion.div> */}
 
@@ -460,14 +482,28 @@ const WithdrawalRequests = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-lg shadow p-4"
+          className="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500"
         >
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-green-600">{statistics.completed}</p>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              </div>
+              <p className="text-3xl font-bold text-green-600 mb-1">{statistics.completed}</p>
+              <div className="flex justify-between border-t pt-2 mt-2">
+                <p className="text-xs text-gray-500">Paid Amount:</p>
+                <p className="text-lg font-semibold text-gray-800">₹{statistics.completedAmount.toFixed(2)}</p>
+              </div>
+                <div className="flex justify-between">
+                  <p className="text-xs text-gray-500">Total Fees:</p>
+                  <p className="text-sm font-semibold text-gray-800">₹{(statistics.completedAmount - statistics.completedNetAmount).toFixed(2)}</p>
+                </div>
+              <div className="flex justify-between">
+                <p className="text-xs text-gray-500 mt-1">Net Paid:</p>
+                <p className="text-lg font-semibold text-green-600">₹{statistics.completedNetAmount.toFixed(2)}</p>
+              </div>
             </div>
-            <CheckCircle className="h-8 w-8 text-green-600 opacity-20" />
           </div>
         </motion.div>
 
@@ -475,14 +511,29 @@ const WithdrawalRequests = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-lg shadow p-4"
+          className="bg-white rounded-lg shadow-md p-4 border-l-4 border-red-500"
         >
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Failed</p>
-              <p className="text-2xl font-bold text-red-600">{statistics.failed}</p>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm font-medium text-gray-600">Failed</p>
+                <XCircle className="h-5 w-5 text-red-500" />
+              </div>
+              <p className="text-3xl font-bold text-red-600 mb-1">{statistics.failed}</p>
+               <div className="flex justify-between border-t pt-2 mt-2">
+                <p className="text-xs text-gray-500">Failed Amount:</p>
+                <p className="text-lg font-semibold text-gray-800">₹{statistics.failedAmount.toFixed(2)}</p>
+              </div>
+                <div className="flex justify-between">
+                  <p className="text-xs text-gray-500">Total Fees:</p>
+                  <p className="text-sm font-semibold text-gray-800">₹{(statistics.failedAmount - statistics.failedNetAmount).toFixed(2)}</p>
+                </div>
+              <div className="flex justify-between">
+                <p className="text-xs text-gray-500 mt-1">Net Paid:</p>
+                <p className="text-lg font-semibold text-red-600">₹{statistics.failedNetAmount.toFixed(2)}</p>
+              </div>
+
             </div>
-            <XCircle className="h-8 w-8 text-red-600 opacity-20" />
           </div>
         </motion.div>
 
@@ -490,14 +541,21 @@ const WithdrawalRequests = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-lg shadow p-4"
+          className="bg-white rounded-lg shadow-md p-4 border-l-4 border-gray-500"
         >
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Cancelled</p>
-              <p className="text-2xl font-bold text-gray-600">{statistics.cancelled}</p>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-gray-600">Cancelled</p>
+                <AlertCircle className="h-5 w-5 text-gray-500" />
+              </div>
+              <p className="text-3xl font-bold text-gray-600 mb-1">{statistics.cancelled}</p>
+              <div className="border-t pt-2 mt-2">
+                <p className="text-xs text-gray-500 mb-1">Cancelled Amount</p>
+                <p className="text-lg font-semibold text-gray-800">₹{statistics.cancelledAmount.toFixed(2)}</p>
+                <p className="text-xs text-gray-500 mt-1">Net: ₹{statistics.cancelledNetAmount.toFixed(2)}</p>
+              </div>
             </div>
-            <AlertCircle className="h-8 w-8 text-gray-600 opacity-20" />
           </div>
         </motion.div> */}
 
@@ -505,55 +563,32 @@ const WithdrawalRequests = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white rounded-lg shadow p-4"
+          className="bg-white rounded-lg shadow-md p-4 border-l-4 border-custom-blue"
         >
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-sm text-gray-600">Total Requested</p>
-              <p className="text-xl font-bold text-custom-blue">₹{statistics.totalAmount.toFixed(2)}</p>
-              <div className="mt-2 space-y-1">
-                <p className="text-xs text-gray-500">From {withdrawalRequests?.length || 0} withdrawals</p>
-                {statistics.completedAmount > 0 && (
-                  <p className="text-xs text-green-600">Completed: ₹{statistics.completedAmount.toFixed(2)}</p>
-                )}
-                {statistics.pendingAmount > 0 && (
-                  <p className="text-xs text-yellow-600">Pending: ₹{statistics.pendingAmount.toFixed(2)}</p>
-                )}
-                {statistics.processingAmount > 0 && (
-                  <p className="text-xs text-custom-blue">Processing: ₹{statistics.processingAmount.toFixed(2)}</p>
-                )}
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm font-medium text-gray-600">Total Requests</p>
+                <CreditCard className="h-5 w-5 text-custom-blue" />
+              </div>
+              <p className="text-3xl font-bold text-custom-blue mb-1">{withdrawalRequests?.length || 0}</p>
+
+              <div className="flex justify-between border-t pt-2 mt-2">
+                <p className="text-xs text-gray-500">Total Requested:</p>
+                <p className="text-lg font-semibold text-gray-800">₹{statistics.totalAmount.toFixed(2)}</p>
+              </div>
+                <div className="flex justify-between">
+                  <p className="text-xs text-gray-500">Total Fees:</p>
+                  <p className="text-sm font-semibold text-gray-800">₹{(statistics.totalAmount - statistics.totalNetAmount).toFixed(2)}</p>
+                </div>
+              <div className="flex justify-between">
+                <p className="text-xs text-gray-500 mt-1">Net Paid:</p>
+                <p className="text-lg font-semibold text-custom-blue">₹{statistics.totalNetAmount.toFixed(2)}</p>
               </div>
             </div>
-            <CreditCard className="h-8 w-8 text-custom-blue opacity-20" />
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-white rounded-lg shadow p-4"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm text-gray-600">Total Net Amount</p>
-              <p className="text-xl font-bold text-purple-600">₹{statistics.totalNetAmount.toFixed(2)}</p>
-              <div className="mt-2 space-y-1">
-                <p className="text-xs text-gray-500">From {withdrawalRequests?.length || 0} withdrawals</p>
-                {statistics.completedNetAmount > 0 && (
-                  <p className="text-xs text-green-600">Completed: ₹{statistics.completedNetAmount.toFixed(2)}</p>
-                )}
-                {statistics.pendingNetAmount > 0 && (
-                  <p className="text-xs text-yellow-600">Pending: ₹{statistics.pendingNetAmount.toFixed(2)}</p>
-                )}
-                {statistics.processingNetAmount > 0 && (
-                  <p className="text-xs text-custom-blue">Processing: ₹{statistics.processingNetAmount.toFixed(2)}</p>
-                )}
-              </div>
-            </div>
-            <Wallet className="h-8 w-8 text-purple-600 opacity-20" />
-          </div>
-        </motion.div>
       </div>
 
       {/* Toolbar */}

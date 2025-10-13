@@ -1316,7 +1316,7 @@ const SuggestedQuestionsComponent = ({
                           {/* item.isLocked ? (
                             <button
                               type="button"
-                              className="flex items-center gap-1 px-3 py-1 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors text-sm"
+                              className="flex items-center gap-1 px-3 py-1 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition-colors text-sm"
                               onClick={() => navigate('/account-settings/subscription')}
                             >
                               <Lock className="w-4 h-4" />

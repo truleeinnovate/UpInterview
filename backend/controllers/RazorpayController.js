@@ -6,7 +6,8 @@ const SUBSCRIPTION_STATUSES = require('../constants/subscriptionStatuses');
 const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js');
 const PaymentCard = require('../models/Carddetails.js');
 const SubscriptionPlan = require('../models/Subscriptionmodels.js');
-const Invoicemodels = require('../models/Invoicemodels.js');
+const Invoicemodels = require("../models/Invoicemodels");
+const { generateUniqueInvoiceCode } = require("../utils/invoiceCodeGenerator");
 const Receipt = require('../models/Receiptmodels.js');
 const Tenant = require('../models/Tenant');
 
@@ -1747,25 +1748,14 @@ const handleSubscriptionCharged = async (subscription) => {
             invoice.startDate = new Date();
             invoice.endDate = billingEndDate;
             invoice.dueDate = billingEndDate;
-
+            
             await invoice.save();
-           console.log('Updated existing invoice:', invoice._id);
+            console.log('Updated existing invoice:', invoice._id);
         } else {
-           console.log('No existing invoice found, creating new one');
+            console.log('No existing invoice found, creating new one');
 
-            // Generate invoice code like INV-00001
-            const lastInvoice = await Invoicemodels.findOne({})
-                .sort({ _id: -1 })
-                .select("invoiceCode")
-                .lean();
-            let nextNumber = 1;
-            if (lastInvoice?.invoiceCode) {
-                const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
-                if (match) {
-                    nextNumber = parseInt(match[1], 10) + 1;
-                }
-            }
-            const invoiceCode = `INV-${String(nextNumber).padStart(5, '0')}`;
+            // Generate unique invoice code using centralized utility
+            const invoiceCode = await generateUniqueInvoiceCode();
 
             // Create a simple invoice directly without complex calculations
             invoice = new Invoicemodels({
@@ -1798,7 +1788,7 @@ const handleSubscriptionCharged = async (subscription) => {
             });
 
             await invoice.save();
-           console.log('Created new invoice as fallback:', invoice._id);
+            console.log('Created new invoice as fallback:', invoice._id);
         }
 
        console.log('Creating receipt with amount:', amount);

@@ -3,6 +3,7 @@ const Receipt = require('../models/Receiptmodels.js');
 const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js'); 
 const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const Tenant = require('../models/Tenant');
+const { generateUniqueInvoiceCode } = require("../utils/invoiceCodeGenerator");
 
 const createSubscriptionRecord = async (userDetails, planDetails, pricing, discount, totalAmount,invoiceId,status,receiptId) => {
   console.log("userDetails ----", userDetails.ownerId);
@@ -89,19 +90,8 @@ const  createInvoice = async (
     ? calculateEndDate(membershipType === 'annual' ? 'annual' : 'monthly')
     : null;
 
-  // Generate invoice code like INVC-00001
-  const lastInvoice = await Invoicemodels.findOne({tenantId: tenantId })
-    .sort({ _id: -1 })
-    .select("invoiceCode")
-    .lean();
-  let nextNumber = 1;
-  if (lastInvoice?.invoiceCode) {
-    const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
-    if (match) {
-      nextNumber = parseInt(match[1], 10) + 1;
-    }
-  }
-  const invoiceCode = `INVC-${String(nextNumber).padStart(5, '0')}`;
+  // Generate unique invoice code using centralized utility
+  const invoiceCode = await generateUniqueInvoiceCode();
 
   // // Generate custom Code like INVC-00001
   //     const lastInvoice = await Invoicemodels.findOne({ tenantId: tenantId })
