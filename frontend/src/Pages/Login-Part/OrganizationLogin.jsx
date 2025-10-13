@@ -4,7 +4,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
 import Slideshow from "./Slideshow";
+// import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 // <------------------- v1.0.0
 import {
     setAuthCookies,
@@ -15,9 +17,8 @@ import { config } from "../../config";
 import { validateWorkEmail } from "../../utils/workEmailValidation.js";
 import toast from "react-hot-toast";
 import { usePermissions } from "../../Context/PermissionsContext";
+
 import { Link } from "react-router-dom";
-import EmailField from "../../Components/FormFields/EmailField";
-import PasswordField from "../../Components/FormFields/PasswordField";
 // import Layout from './Layout.jsx';
 
 const OrganizationLogin = () => {
@@ -25,6 +26,7 @@ const OrganizationLogin = () => {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({ email: "", password: "" });
     const [isLoading, setIsLoading] = useState(false);
     const [isEmailVerified, setIsEmailVerified] = useState(true);
@@ -43,19 +45,36 @@ const OrganizationLogin = () => {
         }
     }, [location, navigate]);
 
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const validateEmail = (email) => {
+        if (!email) return "Email is required";
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) return "Please enter a valid email address";
+        return "";
+    };
+
+    const validatePassword = (password) => {
+        if (!password) return "Password is required";
+        if (password.length < 6)
+            return "Password must be at least 6 characters long";
+        return "";
+    };
 
     const validateLogin = () => {
         const emailError = validateWorkEmail(email);
-        const passwordError = password ? "" : "Password is required";
+        const passwordError = validatePassword(password);
         setErrors({ email: emailError, password: passwordError });
         return !emailError && !passwordError;
     };
 
     const handleBlur = (field, value) => {
         if (field === "email" && value) {
-            setErrors((prev) => ({ ...prev, email: validateWorkEmail(value) }));
-        } else if (field === "password" && !value) {
-            setErrors((prev) => ({ ...prev, password: "Password is required" }));
+            setErrors((prev) => ({ ...prev, email: validateEmail(value) }));
+        } else if (field === "password" && value) {
+            setErrors((prev) => ({ ...prev, password: validatePassword(value) }));
         }
     };
 
@@ -327,22 +346,19 @@ const OrganizationLogin = () => {
                     const requestResponse = await axios.get(`${config.REACT_APP_API_URL}/Organization/organization-request/${userData.tenantId}/${userData.ownerId}`);
                     const requestStatus = requestResponse.data.data.status;
                     console.log('requestStatus:- ', requestStatus);
-                    if (requestStatus === 'requested') {
+                    if (requestStatus === 'Requested') {
                         navigate("/pending-approval");
-                    } else if (requestStatus === 'contacted' || requestStatus === 'contacted1' || requestStatus === 'contacted2') {
+                    } else if (requestStatus === 'Contacted' || requestStatus === 'Contacted1' || requestStatus === 'Contacted2') {
                         navigate("/pending-approval", {
                             state: {
                                 showContactSupport: true
                             }
                         });
-                    } else if (requestStatus === 'approved') {
-                        console.log('requestStatus:::- approved ', requestStatus);
+                    } else if (requestStatus === 'Approved') {
                         if (status === "payment_pending") {
-                            console.log('status:::- payment_pending ', status);
                             navigate("/subscription-plans");
                         } else {
-                            console.log('status:::- active ', status);
-                            navigate("/organization-login");
+                            navigate("/home");
                         }
                     }
                     break;
@@ -989,25 +1005,100 @@ const OrganizationLogin = () => {
                             {isEmailVerified ? (
                                 <form onSubmit={handleLogin} className="space-y-6">
                                     <div>
-                                        <EmailField
+                                        <label
+                                            htmlFor="email"
+                                            className="block text-sm font-medium text-gray-700 mb-2"
+                                        >
+                                            Work Email Address 📧
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="email"
+                                            name="email"
                                             value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
+                                            onChange={(e) => {
+                                                setEmail(e.target.value);
+                                                setErrors((prev) => ({ ...prev, email: "" }));
+                                            }}
                                             onBlur={(e) => handleBlur("email", e.target.value)}
-                                            error={errors.email}
-                                            label="Work Email Address 📧"
-                                            required={true}
+                                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.email
+                                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                                                : "border-gray-300"
+                                                }`}
+                                            placeholder="your@company.com"
+                                            autoComplete="email"
                                         />
+                                        {errors.email && (
+                                            <p className="text-red-500 text-sm mt-1 flex items-center">
+                                                <svg
+                                                    className="w-4 h-4 mr-1"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                                {errors.email}
+                                            </p>
+                                        )}
+                                    </div>
 
-                                        <div className="mt-4">
-                                            <PasswordField
+                                    <div>
+                                        <label
+                                            htmlFor="password"
+                                            className="block text-sm font-medium text-gray-700 mb-2"
+                                        >
+                                            Password 🔐
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                id="password"
+                                                name="password"
                                                 value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
+                                                onChange={(e) => {
+                                                    setPassword(e.target.value);
+                                                    setErrors((prev) => ({ ...prev, password: "" }));
+                                                }}
                                                 onBlur={(e) => handleBlur("password", e.target.value)}
-                                                error={errors.password}
-                                                label="Password"
-                                                required
+                                                className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.password
+                                                    ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                                                    : "border-gray-300"
+                                                    }`}
+                                                placeholder="••••••••"
+                                                autoComplete="current-password"
                                             />
+                                            <button
+                                                type="button"
+                                                onClick={togglePasswordVisibility}
+                                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                                            >
+                                                {showPassword ? (
+                                                    <EyeOff size={20} />
+                                                ) : (
+                                                    <Eye size={20} />
+                                                )}
+                                            </button>
                                         </div>
+                                        {errors.password && (
+                                            <p className="text-red-500 text-sm mt-1 flex items-center">
+                                                <svg
+                                                    className="w-4 h-4 mr-1"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                                {errors.password}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center justify-between">
