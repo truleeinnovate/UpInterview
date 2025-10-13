@@ -1350,12 +1350,15 @@ const InterviewDetails = ({
                     <InputField
                         value={interviewDetailsData.professionalTitle || ''}
                         onChange={(e) => {
-                            setInterviewDetailsData(prev => ({
-                                ...prev,
-                                professionalTitle: e.target.value
-                            }));
-                            if (e.target.value.length >= 50) {
-                                setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                            const newValue = e.target.value;
+                            if (newValue.length <= 100) {
+                                setInterviewDetailsData(prev => ({
+                                    ...prev,
+                                    professionalTitle: newValue
+                                }));
+                                if (newValue.length >= 50) {
+                                    setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                                }
                             }
                         }}
                         onBlur={(e) => {
@@ -1388,14 +1391,18 @@ const InterviewDetails = ({
                         placeholder="Senior Software Engineer with 5+ years of experience in full-stack development"
                     />
                     <div className="flex justify-between mt-1">
-                        {!errors.professionalTitle && (
-                            <p className="text-xs text-gray-500">Min 50 characters</p>
-                        )}
+                        <p className="text-xs text-gray-500">
+                            {errors.professionalTitle ? 
+                                <span className="text-red-500">Min 50 characters</span> : 
+                                'Min 50 characters'
+                            }
+                        </p>
                         {interviewDetailsData.professionalTitle?.length > 0 && (
-                            <p className={`text-xs ${interviewDetailsData.professionalTitle.length < 50 || errors.professionalTitle
-                                ? 'text-red-500'
-                                : 'text-gray-500'
-                                }`}>
+                            <p className={`text-xs ${
+                                interviewDetailsData.professionalTitle.length < 50 || errors.professionalTitle 
+                                    ? 'text-red-500' 
+                                    : 'text-gray-500'
+                            }`}>
                                 {interviewDetailsData.professionalTitle.length}/100
                             </p>
                         )}
@@ -1435,15 +1442,23 @@ const InterviewDetails = ({
                         placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer. Please provide detailed information about your experience, skills, and any specific areas of expertise you have in conducting interviews..."
                     />
                     <div className="flex justify-between mt-1">
-                        {!errors.bio && (
-                            <p className="text-xs text-gray-500">Min 150 characters</p>
-                        )}
+                        <p className="text-xs text-gray-500">
+                            {errors.bio ? (
+                                <span className="text-red-500">
+                                    {errors.bio}
+                                </span>
+                            ) : (
+                                'Min 150 characters'
+                            )}
+                        </p>
                         {interviewDetailsData.bio?.length > 0 && (
-                            <p className={`text-xs ${interviewDetailsData.bio.length < 150 || errors.bio
-                                ? 'text-red-500'
-                                : interviewDetailsData.bio.length > 450
-                                    ? 'text-yellow-500'
-                                    : 'text-gray-500'}`}>
+                            <p className={`text-xs ${
+                                interviewDetailsData.bio.length < 150 || errors.bio
+                                    ? 'text-red-500'
+                                    : interviewDetailsData.bio.length > 450
+                                        ? 'text-yellow-500'
+                                        : 'text-gray-500'
+                            }`}>
                                 {interviewDetailsData.bio.length}/500
                             </p>
                         )}
