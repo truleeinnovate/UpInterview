@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - improved responsiveness
+// v1.0.1 - Ashok - Added loading view
 
 import { motion } from "framer-motion";
 
@@ -31,14 +32,53 @@ const KanbanView = ({
         </div>
 
         {loading ? (
-          <div className="text-center py-10 text-gray-500">Loading...</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+            {[...Array(8)].map((_, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 flex flex-col h-full animate-pulse"
+              >
+                {/* Header skeleton */}
+                <div className="flex justify-between items-start mb-4 gap-2">
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="flex-1 min-w-0">
+                      <div className="h-4 w-32 bg-gray-200 rounded shimmer mb-2"></div>
+                      <div className="h-3 w-24 bg-gray-200 rounded shimmer"></div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <div className="w-6 h-6 bg-gray-200 rounded-lg shimmer"></div>
+                    <div className="w-6 h-6 bg-gray-200 rounded-lg shimmer"></div>
+                  </div>
+                </div>
+
+                {/* Content skeleton */}
+                <div className="mt-auto space-y-2 text-sm">
+                  {[...Array(4)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="grid grid-cols-2 items-center text-gray-600"
+                    >
+                      <div className="h-3 w-20 bg-gray-200 rounded shimmer"></div>
+                      <div className="h-3 w-28 bg-gray-200 rounded shimmer justify-self-start"></div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
         ) : assessments?.length === 0 ? (
           <div className="text-center py-10 text-gray-500">{emptyState}</div>
         ) : (
           <div className="overflow-y-auto max-h-[calc(100vh-260px)] pb-8 pr-1">
             {/* v1.0.0 <------------------------------------------------------------------------------------ */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
-            {/* v1.0.0 ------------------------------------------------------------------------------------> */}
+            {/* v1.0.1 <------------------------------------------------------------------------------------ */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+              {/* v1.0.1 ------------------------------------------------------------------------------------> */}
+              {/* v1.0.0 ------------------------------------------------------------------------------------> */}
               {data.map((item, index) => (
                 <motion.div
                   key={item.id || item._id || index}
