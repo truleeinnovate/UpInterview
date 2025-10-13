@@ -2,6 +2,7 @@
 // v1.0.1 - Ashok - improved searching by full name
 // v1.0.2  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.3  -  Ashok   -  improved responsiveness
+// v1.0.4  -  Ashok   -  made first leter capital
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -34,7 +35,7 @@ import { notify } from "../../../../../services/toastService.js";
 
 function InterviewList() {
   const { effectivePermissions } = usePermissions();
-  const { interviewData, isLoading,deleteInterviewMutation , } = useInterviews();
+  const { interviewData, isLoading, deleteInterviewMutation } = useInterviews();
   const navigate = useNavigate();
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectPositionView, setSelectPositionView] = useState(false);
@@ -142,32 +143,31 @@ function InterviewList() {
   //  delete functionality
   const handleDeleteInterview = (interview) => {
     if (effectivePermissions.Interviews?.Delete) {
-      setDeleteInterview(interview)
+      setDeleteInterview(interview);
       setShowDeleteConfirmModal(true);
       // navigate(`/interviews/${interview._id}/delete`);
     }
   };
 
   // Your existing handleConfirmDelete function
-const handleConfirmDelete = async () => {
-  if (deleteInterview?._id) {
-    try {
-      await deleteInterviewMutation(deleteInterview._id);
-      notify.success("Interview deleted successfully");
-      setShowDeleteConfirmModal(false);
-      setDeleteInterview(null);
-      
-    } catch (error) {
-      // Error is already handled in the mutation
-      console.error("Failed to delete interview:", error);
-      setShowDeleteConfirmModal(false);
-      setDeleteInterview(null);
-            const backendMessage =
-              error?.response?.data?.message || "Failed to delete position";
-            notify.error(backendMessage);
+  const handleConfirmDelete = async () => {
+    if (deleteInterview?._id) {
+      try {
+        await deleteInterviewMutation(deleteInterview._id);
+        notify.success("Interview deleted successfully");
+        setShowDeleteConfirmModal(false);
+        setDeleteInterview(null);
+      } catch (error) {
+        // Error is already handled in the mutation
+        console.error("Failed to delete interview:", error);
+        setShowDeleteConfirmModal(false);
+        setDeleteInterview(null);
+        const backendMessage =
+          error?.response?.data?.message || "Failed to delete position";
+        notify.error(backendMessage);
+      }
     }
-  }
-};
+  };
 
   const handleFilterChange = useCallback((filters) => {
     setSelectedFilters(filters);
@@ -508,6 +508,11 @@ const handleConfirmDelete = async () => {
   const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
   const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
+  // v1.0.3 <------------------------------------------------------
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  // v1.0.3 ------------------------------------------------------>
+
   // Table Columns Configuration
   const tableColumns = [
     {
@@ -578,6 +583,7 @@ const handleConfirmDelete = async () => {
         );
       },
     },
+    // v1.0.3 <-----------------------------------------------------------
     {
       key: "position",
       header: "Position",
@@ -600,14 +606,15 @@ const handleConfirmDelete = async () => {
                   : "Unknown"}
               </div>
               <div className="text-sm text-gray-500 truncate">
-                {position?.companyname || "No Company"} •{" "}
-                {position?.Location || "No location"}
+                {capitalizeFirstLetter(position?.companyname) || "No Company"} •{" "}
+                {capitalizeFirstLetter(position?.Location) || "No location"}
               </div>
             </div>
           </Tooltip>
         );
       },
     },
+    // v1.0.3 ----------------------------------------------------------->
     {
       key: "interviewers",
       header: "Interviewers",
@@ -680,6 +687,7 @@ const handleConfirmDelete = async () => {
       },
     },
     //<-------v1.0.1---------
+    // v1.0.3 <------------------------------------------------------------------
     {
       key: "currentRound",
       header: "Current Round",
@@ -696,7 +704,8 @@ const handleConfirmDelete = async () => {
             {currentRound ? (
               <div>
                 <div className="text-sm font-medium text-gray-700">
-                  {currentRound.roundTitle} • {currentRound.interviewType}
+                  {capitalizeFirstLetter(currentRound.roundTitle)} •{" "}
+                  {capitalizeFirstLetter(currentRound.interviewType)}
                 </div>
                 <div className="flex items-center justify-between mt-1">
                   <StatusBadge status={currentRound.status} size="sm" />
@@ -716,6 +725,7 @@ const handleConfirmDelete = async () => {
         );
       },
     },
+    // v1.0.3 ------------------------------------------------------------------>
     //-------v1.0.1--------->
     {
       key: "nextRound",
@@ -798,16 +808,16 @@ const handleConfirmDelete = async () => {
           },
         ]
       : []),
-      ...(effectivePermissions.Interviews?.Delete
-        ? [
-            {
-              key: "delete",
-              label: "Delete",
-              icon: <Trash className="w-4 h-4 text-red-600" />,
-              onClick: handleDeleteInterview,
-            },
-          ]
-        : []),
+    ...(effectivePermissions.Interviews?.Delete
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: handleDeleteInterview,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -943,7 +953,7 @@ const handleConfirmDelete = async () => {
                           return (
                             <motion.div
                               key={interview._id}
-                              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+                              className="bg-red-500 rounded-lg shadow-sm border border-gray-200 p-4"
                               initial={false}
                               animate={{ height: isExpanded ? "auto" : "auto" }}
                               transition={{ duration: 0.3 }}
@@ -965,11 +975,17 @@ const handleConfirmDelete = async () => {
                                   </div>
                                   <div className="ml-3">
                                     <div className="flex items-center">
+                                      {/* v1.0.3 <----------------------------------------------- */}
                                       <div className="text-base font-medium text-gray-700">
-                                        {(candidate?.FirstName || "") +
+                                        {(capitalizeFirstLetter(
+                                          candidate?.FirstName
+                                        ) || "") +
                                           " " +
-                                          (candidate?.LastName || "")}
+                                          (capitalizeFirstLetter(
+                                            candidate?.LastName
+                                          ) || "")}
                                       </div>
+                                      {/* v1.0.3 -----------------------------------------------> */}
                                       {effectivePermissions.Candidates
                                         ?.View && (
                                         <button
@@ -1017,10 +1033,17 @@ const handleConfirmDelete = async () => {
                                         : "N/A"}
                                     </div>
                                   </div>
+                                  {/* v1.0.3 <----------------------------------------------- */}
                                   <div className="text-sm text-gray-500">
-                                    {position?.companyname || "No Company"} •{" "}
-                                    {position?.Location || "No location"}
+                                    {capitalizeFirstLetter(
+                                      position?.companyname
+                                    ) || "No Company"}{" "}
+                                    •{" "}
+                                    {capitalizeFirstLetter(
+                                      position?.Location
+                                    ) || "No location"}
                                   </div>
+                                  {/* v1.0.3 -----------------------------------------------> */}
                                 </div>
 
                                 <div>
@@ -1071,9 +1094,13 @@ const handleConfirmDelete = async () => {
                                 <div className="mt-4 pt-4 border-t border-gray-200">
                                   {nextRound ? (
                                     <div className="space-y-3">
+                                      {/* v1.0.3 <-------------------------------------------- */}
                                       <div>
                                         <div className="text-sm font-medium text-gray-700 mb-2">
-                                          Next Round: {nextRound.roundTitle}
+                                          Next Round:{" "}
+                                          {capitalizeFirstLetter(
+                                            nextRound.roundTitle
+                                          )}
                                         </div>
                                         <div className="flex items-center">
                                           <StatusBadge
@@ -1081,10 +1108,13 @@ const handleConfirmDelete = async () => {
                                             size="sm"
                                           />
                                           <span className="ml-2 text-xs text-gray-500">
-                                            {nextRound.interviewType}
+                                            {capitalizeFirstLetter(
+                                              nextRound.interviewType
+                                            )}
                                           </span>
                                         </div>
                                       </div>
+                                      {/* v1.0.3 <--------------------------------------------> */}
                                       {nextRoundInterviewers.length > 0 && (
                                         <div>
                                           <div className="text-sm font-medium text-gray-700 mb-2">
@@ -1618,14 +1648,14 @@ const handleConfirmDelete = async () => {
         />
       )}
 
-          {/* Ranjith added deleetd functionality  */}
-            <DeleteConfirmModal
-              isOpen={showDeleteConfirmModal}
-              onClose={() => setShowDeleteConfirmModal(false)}
-              onConfirm={handleConfirmDelete}
-              title="Interview"
-              entityName={deleteInterview?.title}
-            />
+      {/* Ranjith added deleetd functionality  */}
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={() => setShowDeleteConfirmModal(false)}
+        onConfirm={handleConfirmDelete}
+        title="Interview"
+        entityName={deleteInterview?.title}
+      />
     </div>
   );
 }

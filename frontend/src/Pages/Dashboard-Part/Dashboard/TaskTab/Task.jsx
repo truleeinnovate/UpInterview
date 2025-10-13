@@ -5,6 +5,7 @@
 // v1.0.4 - Ashok - Fixed style issue
 // v1.0.5 - Ashok - Fixed table view in small screens and added delete button for kanban
 // v1.0.6 - Ashok - changed check box colors to brand color
+// v1.0.7 - Ashok - Added status badge
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
@@ -35,6 +36,9 @@ import { useMediaQuery } from "react-responsive";
 import DeleteConfirmModal from "../../Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
 import { notify } from "../../../../services/toastService.js";
 // v1.0.3 --------------------------------------------------------->
+// v1.0.7 <------------------------------------------------------------
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
+// v1.0.7 ------------------------------------------------------------>
 
 const Task = () => {
   const { effectivePermissions } = usePermissions();
@@ -421,10 +425,10 @@ const Task = () => {
     refetch();
   };
 
-  // Kanban Columns Configuration
-  // const kanbanColumns = [
-
-  // ];
+  // v1.0.7 <------------------------------------------------------
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  // v1.0.7 ------------------------------------------------------>
 
   // Render actions for Kanban cards
   const renderKanbanActions = (task) => (
@@ -493,7 +497,14 @@ const Task = () => {
       render: (value) => value?.objectName || "N/A",
     },
     { key: "priority", header: "Priority", render: (value) => value || "N/A" },
-    { key: "status", header: "Status", render: (value) => value || "N/A" },
+    // v1.0.7 <---------------------------------------------------------------
+    {
+      key: "status",
+      header: "Status",
+      render: (value) =>
+        <StatusBadge status={capitalizeFirstLetter(value)} /> || "N/A",
+    },
+    // v1.0.7 --------------------------------------------------------------->
     {
       key: "dueDate",
       header: "Due Date",

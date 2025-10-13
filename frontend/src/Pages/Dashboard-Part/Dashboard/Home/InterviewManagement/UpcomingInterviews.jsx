@@ -1,5 +1,6 @@
 // v1.0.0----------Venkatesh----------changes in candidate name and position first letter capital
 // v1.0.1 - Ashok - Improved responsiveness
+// v1.0.2 - Ashok - Fixed responsiveness issues
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -153,7 +154,9 @@ const InterviewerSchedule = () => {
       </div>
       {/* v1.0.1 -------------------------------------------------------------------> */}
 
-      <div className="relative h-[220px] overflow-hidden">
+      {/* v1.0.2 <---------------------------------------------------------------- */}
+      {/* <div className="relative h-[220px] overflow-hidden"> */}
+      <div className="relative h-[300px] overflow-hidden">
         {upcomingRounds.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="text-gray-500">No upcoming interview rounds found.</p>
@@ -196,29 +199,29 @@ const InterviewerSchedule = () => {
                       : "translate-x-full opacity-0"
                   }`}
               >
-                <div className="space-y-4">
-                  <div className="flex items-center">
+                <div className="space-y-4 w-full">
+                  <div className="grid grid-cols-1 items-center gap-2">
                     {/* date and time */}
-                    <div className="flex items-center gap-2 w-56">
+                    <div className="flex items-center gap-2 w-full">
                       <Calendar size={18} className="text-gray-400" />
-                      <p className="font-medium text-gray-800">
+                      <p className="text-sm font-medium text-gray-800">
                         {displayDateTime(round.dateTime)}
                       </p>
                     </div>
                     {/* interview code */}
                     <div className="flex items-center gap-2">
                       <Hash size={18} className="text-gray-400" />
-                      <span className="font-medium text-custom-blue">
+                      <span className="text-xs font-medium text-custom-blue">
                         {interviewCode}
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center">
+                  <div className="grid grid-cols-1 items-center gap-2">
                     {/* candidate name and email */}
                     <div className="flex items-center gap-2 w-56">
                       <User size={18} className="text-gray-400" />
                       <div>
-                        <p className="font-medium text-gray-800">
+                        <p className="text-sm font-medium text-gray-800">
                           {candidateName}
                         </p>
                         <p className="text-sm text-gray-600">
@@ -230,7 +233,7 @@ const InterviewerSchedule = () => {
                     <div className="flex items-center gap-2">
                       <Briefcase size={18} className="text-gray-400" />
                       <div>
-                        <p className="font-medium text-gray-800">
+                        <p className="text-sm font-medium text-gray-800">
                           {positionTitle}
                         </p>
                         {companyName && (
@@ -239,9 +242,9 @@ const InterviewerSchedule = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center">
+                  <div className="grid grid-cols-1 items-center gap-3">
                     {/* roundTitle, interviewMode */}
-                    <div className="flex flex-wrap gap-2 w-56">
+                    <div className="flex flex-wrap gap-2">
                       <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
                         {round.roundTitle}
                       </span>
@@ -265,6 +268,7 @@ const InterviewerSchedule = () => {
           })
         )}
       </div>
+      {/* v1.0.2 ----------------------------------------------------------------> */}
 
       {/* Navigation dots */}
       {upcomingRounds.length > 1 && (

@@ -1,20 +1,37 @@
-
 //<-----v1.0.0-------Venkatesh---------add current round column
+// v1.0.1 - Ashok - made first letter capital
 
-
-import React, { useState, useEffect } from 'react';
-import { Calendar, User, Briefcase, Clock, ArrowRight, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
-import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
-import { Card, CardContent, CardFooter } from '../../CommonCode-AllTabs/ui/card';
-import { Button } from '../../CommonCode-AllTabs/ui/button';
-import { motion } from 'framer-motion';
-import { formatDate } from '../lib/utils';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import {
+  Calendar,
+  User,
+  Briefcase,
+  Clock,
+  ArrowRight,
+  ExternalLink,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import StatusBadge from "../../CommonCode-AllTabs/StatusBadge";
+import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+} from "../../CommonCode-AllTabs/ui/card";
+import { Button } from "../../CommonCode-AllTabs/ui/button";
+import { motion } from "framer-motion";
+import { formatDate } from "../lib/utils";
+import { useNavigate } from "react-router-dom";
 import { formatDateTime } from "../../../../../utils/dateFormatter";
 
-function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onEditInterview, effectivePermissions }) {
+function InterviewCard({
+  interview,
+  onView,
+  onViewPosition,
+  onViewInterview,
+  onEditInterview,
+  effectivePermissions,
+}) {
   const navigate = useNavigate();
 
   const [candidate, setCandidate] = useState(null);
@@ -26,7 +43,7 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
       setCandidate(interview?.candidateId || null);
       setPosition(interview?.positionId || null);
       // setInterview(interviewData?.interviewRounds || []);
-      setTemplate(interview?.templateId || null)
+      setTemplate(interview?.templateId || null);
     }
   }, [interview]);
   // const { getCandidateById, getPositionById, getInterviewerById } = useInterviewContext();
@@ -63,19 +80,28 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
   //     setEntityDetailsSidebar(null);
   //   }
   // };
-//<-----v1.0.0-------
+  //<-----v1.0.0-------
   const rounds = interview.rounds || [];
-  const currentRound = rounds
-    .filter((round) => [ 'Scheduled', 'RequestSent'].includes(round.status))
-    .sort((a, b) => a.sequence - b.sequence)[0] || null;
+  const currentRound =
+    rounds
+      .filter((round) => ["Scheduled", "RequestSent"].includes(round.status))
+      .sort((a, b) => a.sequence - b.sequence)[0] || null;
   const currentRoundInterviewers = currentRound?.interviewers || [];
-  const nextRound = rounds
-    .filter((round) => [ 'Scheduled', 'RequestSent'].includes(round.status))
-    .sort((a, b) => a.sequence - b.sequence)[1] || null;
+  const nextRound =
+    rounds
+      .filter((round) => ["Scheduled", "RequestSent"].includes(round.status))
+      .sort((a, b) => a.sequence - b.sequence)[1] || null;
   const nextRoundInterviewers = nextRound?.interviewers || [];
   const totalRounds = rounds.length;
-  const completedRounds = rounds.filter(round => round.status === 'Completed').length;
-//-----v1.0.0------->
+  const completedRounds = rounds.filter(
+    (round) => round.status === "Completed"
+  ).length;
+  //-----v1.0.0------->
+
+  // v1.0.1 <-----------------------------------------------------
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  // v1.0.1 ----------------------------------------------------->
 
   return (
     <>
@@ -105,20 +131,24 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center mt-1 text-sm text-muted-foreground">
                     <div className="flex items-center truncate">
-                      <p className='text-sm font-medium text-custom-blue cursor-pointer'
+                      <p
+                        className="text-sm font-medium text-custom-blue cursor-pointer"
                         onClick={() => navigate(`/interviews/${interview._id}`)}
-                      >{interview?.interviewCode || ''}</p>
+                      >
+                        {interview?.interviewCode || ""}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-
                     <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
-                      {candidate?.LastName ? candidate?.LastName.charAt(0).toUpperCase() + candidate?.LastName.slice(1) : 'Unknown Candidate'}
+                      {candidate?.LastName
+                        ? candidate?.LastName.charAt(0).toUpperCase() +
+                          candidate?.LastName.slice(1)
+                        : "Unknown Candidate"}
                     </h3>
                     {candidate && (
                       <button
                         onClick={() => onView(candidate)}
-
                         className="text-primary hover:text-primary/80"
                         title="View details"
                       >
@@ -129,7 +159,10 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
                   <div className="flex items-center mt-1 text-sm text-muted-foreground">
                     <Briefcase className="h-4 w-4 mr-1 flex-shrink-0" />
                     <div className="flex items-center truncate">
-                      <span className="truncate">{position?.title.charAt(0).toUpperCase() + position?.title.slice(1) || 'Unknown Position'}</span>
+                      <span className="truncate">
+                        {position?.title.charAt(0).toUpperCase() +
+                          position?.title.slice(1) || "Unknown Position"}
+                      </span>
                       {position && (
                         <button
                           // onClick={() => handleViewEntityDetails(position, 'position', 'sidebar')}
@@ -144,7 +177,11 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
                   </div>
                 </div>
               </div>
-              <StatusBadge status={interview.status} size="md" className="flex-shrink-0" />
+              <StatusBadge
+                status={interview.status}
+                size="md"
+                className="flex-shrink-0"
+              />
             </div>
 
             <div className="mt-4 space-y-2">
@@ -155,7 +192,9 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
 
               <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
-                <span>Progress: {completedRounds} of {totalRounds} Rounds Completed</span>
+                <span>
+                  Progress: {completedRounds} of {totalRounds} Rounds Completed
+                </span>
               </div>
             </div>
             {/*<-----v1.0.0------- */}
@@ -163,28 +202,40 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
               <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-md">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h4 className="text-sm font-medium text-green-700 dark:text-green-300">Current: {currentRound.roundName}</h4>
+                    <h4 className="text-sm font-medium text-green-700 dark:text-green-300">
+                      Current: {currentRound.roundName}
+                    </h4>
+                    {/* v1.0.1 <-------------------------------------------------------- */}
                     <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                      {currentRound.roundTitle} • {currentRound.interviewType}
+                      {capitalizeFirstLetter(currentRound.roundTitle)} •{" "}
+                      {capitalizeFirstLetter(currentRound.interviewType)}
                     </p>
+                    {/* v1.0.1 --------------------------------------------------------> */}
                   </div>
                   <StatusBadge status={currentRound.status} size="sm" />
                 </div>
 
                 {currentRoundInterviewers.length > 0 && (
                   <div className="mt-2 flex items-center">
-                    <span className="text-xs text-green-600 dark:text-green-400 mr-2">Interviewers:</span>
+                    <span className="text-xs text-green-600 dark:text-green-400 mr-2">
+                      Interviewers:
+                    </span>
                     <div className="flex flex-wrap gap-1">
                       {currentRoundInterviewers.map((interviewer, index) => (
-                        <div key={interviewer?.id || index} className="flex items-center bg-white/50 dark:bg-black/10 rounded-full px-2 py-1">
-                          <InterviewerAvatar 
-                            interviewer={interviewer} 
-                            size="sm" 
+                        <div
+                          key={interviewer?.id || index}
+                          className="flex items-center bg-white/50 dark:bg-black/10 rounded-full px-2 py-1"
+                        >
+                          <InterviewerAvatar
+                            interviewer={interviewer}
+                            size="sm"
                           />
                           <span className="ml-1 text-xs text-green-600 dark:text-green-400 truncate max-w-[120px]">
                             {interviewer?.name}
                             {interviewer?.isExternal && (
-                              <span className="text-xs text-orange-600 dark:text-orange-400 ml-1">(Outsourced)</span>
+                              <span className="text-xs text-orange-600 dark:text-orange-400 ml-1">
+                                (Outsourced)
+                              </span>
                             )}
                           </span>
                         </div>
@@ -200,10 +251,15 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
               <div className="mt-4 p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
                 <div className="flex justify-between items-start flex-wrap gap-2">
                   <div>
-                    <h4 className="text-xs sm:text-sm font-medium text-custom-blue dark:text-blue-300">Next: {nextRound.roundName}</h4>
+                    <h4 className="text-xs sm:text-sm font-medium text-custom-blue dark:text-blue-300">
+                      Next: {nextRound.roundName}
+                    </h4>
+                    {/* v1.0.1 <--------------------------------------------------------- */}
                     <p className="text-xs text-custom-blue dark:text-blue-400 mt-1">
-                      {nextRound.roundTitle} • {nextRound.interviewType}
+                      {capitalizeFirstLetter(nextRound.roundTitle)} •{" "}
+                      {capitalizeFirstLetter(nextRound.interviewType)}
                     </p>
+                    {/* v1.0.1 ---------------------------------------------------------> */}
                   </div>
                   <StatusBadge status={nextRound.status} size="sm" />
                 </div>
@@ -211,18 +267,25 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
                 {nextRoundInterviewers.length > 0 && (
                   <div className="mt-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-custom-blue dark:text-blue-400">Interviewers:</span>
+                      <span className="text-xs text-custom-blue dark:text-blue-400">
+                        Interviewers:
+                      </span>
                       <div className="flex flex-wrap gap-2">
                         {nextRoundInterviewers.map((interviewer, index) => (
-                          <div key={interviewer?.id || index} className="flex items-center bg-white/50 dark:bg-black/10 rounded-full px-2 py-1">
-                            <InterviewerAvatar 
-                              interviewer={interviewer} 
-                              size="sm" 
+                          <div
+                            key={interviewer?.id || index}
+                            className="flex items-center bg-white/50 dark:bg-black/10 rounded-full px-2 py-1"
+                          >
+                            <InterviewerAvatar
+                              interviewer={interviewer}
+                              size="sm"
                             />
                             <span className="ml-1 text-xs text-custom-blue dark:text-blue-400 truncate max-w-[120px]">
                               {interviewer?.name}
                               {interviewer?.isExternal && (
-                                <span className="text-xs text-orange-600 dark:text-orange-400 ml-1">(Outsourced)</span>
+                                <span className="text-xs text-orange-600 dark:text-orange-400 ml-1">
+                                  (Outsourced)
+                                </span>
                               )}
                             </span>
                           </div>
@@ -236,8 +299,15 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
           </CardContent>
 
           <CardFooter className="p-3 sm:p-4 pt-0 flex justify-end">
-            <Link to={`/interviews/${interview._id}`} className="w-full sm:w-auto">
-              <Button variant="default" size="sm" className="w-full sm:w-auto bg-custom-blue hover:bg-custom-blue/90">
+            <Link
+              to={`/interviews/${interview._id}`}
+              className="w-full sm:w-auto"
+            >
+              <Button
+                variant="default"
+                size="sm"
+                className="w-full sm:w-auto bg-custom-blue hover:bg-custom-blue/90"
+              >
                 View Details
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>

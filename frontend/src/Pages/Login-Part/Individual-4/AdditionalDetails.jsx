@@ -1,6 +1,7 @@
 // v1.0.0 - mansoor - change resume and cover letter buttons color to custom blue
 // v1.0.1 - Ashok   - fixed style issue
 // v1.0.2 - Ashok   - fixed resume and cover letter issue
+// v1.0.3 - Ashok   - made resume mandatory for freelancer true only
 
 import React, { useEffect, useRef, useState } from "react";
 import InfoBox from "./InfoBox.jsx";
@@ -19,6 +20,9 @@ const AdditionalDetails = ({
   setCoverLetterFile,
   setIsCoverLetterRemoved,
   isProfileCompleteStateOrg,
+  // v1.0.3 <----------------------------
+  requiresResume,
+  // v1.0.3 ---------------------------->
 }) => {
   const {
     locations,
@@ -101,7 +105,15 @@ const AdditionalDetails = ({
       resume: null,
     }));
 
-    setErrors((prev) => ({ ...prev, resume: "Resume is required" }));
+    // v1.0.3 <------------------------------------------------------------------
+    // setErrors((prev) => ({ ...prev, resume: "Resume is required" }));
+    if (requiresResume) {
+      setErrors((prev) => ({ ...prev, resume: "Resume is required" }));
+    } else {
+      setErrors((prev) => ({ ...prev, resume: "" }));
+    }
+    // v1.0.3 ------------------------------------------------------------------>
+
     setResumeName("");
   };
   // v1.0.2 ------------------------------------------------------------------->
@@ -333,12 +345,17 @@ const AdditionalDetails = ({
             <div className="sm:col-span-2 col-span-2">
               <div>
                 {/* v1.0.1 <----------------------------------------------------- */}
+                {/* v1.0.3 <----------------------------------------------------- */}
                 <label
                   htmlFor="resume"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Resume<span className="text-red-500 ml-1">*</span>
+                  Resume
+                  {requiresResume && (
+                    <span className="text-red-500 ml-1">*</span>
+                  )}
                 </label>
+                {/* v1.0.3 <----------------------------------------------------- */}
                 {/* v1.0.1 <----------------------------------------------------- */}
                 <div className="relative flex">
                   <input
