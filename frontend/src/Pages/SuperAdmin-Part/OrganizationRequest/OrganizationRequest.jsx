@@ -302,43 +302,57 @@ const OrganizationRequest = () => {
             key: "requestId",
             header: "Request ID",
             render: (value, row) => row?._id ? row._id.substring(0, 8) + '...' : 'N/A',
+            width: 120,
         },
         {
             key: "name",
             header: "Name",
             render: (value, row) => {
-                const contact = row?.contactId || {};
-                return (
-                    <span>
-                        {[contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'N/A'}
-                    </span>
-                );
-            }
+                const contact = row.contact || {};
+                const fullName = [contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'N/A';
+                return <span className="font-medium">{fullName}</span>;
+            },
+            width: 200,
         },
         {
             key: "email",
             header: "Email",
-            render: (value, row) => row?.contactId?.email || 'N/A'
+            render: (value, row) => {
+                const contact = row.contact || {};
+                return contact.email || 'N/A';
+            },
+            width: 200,
         },
         {
             key: "phone",
             header: "Phone",
             render: (value, row) => {
-                const contact = row?.contactId || {};
-                return contact.phone ? `${contact.countryCode || ''} ${contact.phone}` : 'N/A';
-            }
-        },
-        {
-            key: "company",
-            header: "Company",
-            render: (value, row) => row?.tenantId?.company || 'N/A'
+                const contact = row.contact || {};
+                return (
+                    <span>
+                        {contact.countryCode ? `${contact.countryCode} ` : ''}
+                        {contact.phone || 'N/A'}
+                    </span>
+                );
+            },
+            width: 150,
         },
         {
             key: "status",
             header: "Status",
             render: (value, row) => (
-                <StatusBadge status={capitalizeFirstLetter(row?.status || '')} />
-            )
+                <StatusBadge status={row?.status?.toLowerCase() || ''}>
+                    {row?.status || 'N/A'}
+                </StatusBadge>
+            ),
+            width: 120,
+        },
+        {
+            key: "createdAt",
+            header: "Requested On",
+            render: (value, row) =>
+                row?.createdAt ? new Date(row.createdAt).toLocaleDateString() : 'N/A',
+            width: 120,
         },
         // {
         //     key: "actions",
@@ -388,16 +402,6 @@ const OrganizationRequest = () => {
         //   onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
         // },
 
-        ...(superAdminPermissions?.OutsourceInterviewerRequest?.Edit
-            ? [
-                {
-                    key: "edit",
-                    label: "Edit",
-                    icon: <Pencil className="w-4 h-4 text-green-600" />,
-                    onClick: (row) => navigate(`edit/${row._id}`),
-                },
-            ]
-            : []),
         // {
         //   key: "resend-link",
         //   label: "Resend Link",
@@ -495,6 +499,7 @@ const OrganizationRequest = () => {
                 <SidebarPopup
                     title="Organization Details"
                     onClose={() => setIsPopupOpen(false)}
+                    isExpanded={true}
                 >
                     {renderOrganizationDetails(selectedOrganization)}
                 </SidebarPopup>

@@ -65,7 +65,7 @@ const updateTenantLimits = async (subscription) => {
         // Note: Usage document will be created/updated only after payment verification in RazorpayController
         // console.log(`[RENEWAL] Usage document will be handled by payment verification process`);
     } catch (error) {
-        console.error('[RENEWAL] Error updating tenant limits:', error);
+        // console.error('[RENEWAL] Error updating tenant limits:', error);
     }
 };
 
@@ -75,7 +75,7 @@ const updateTenantLimits = async (subscription) => {
 const processSubscriptionRenewal = async (subscription) => {
     try {
         // console.log(`[RENEWAL] Processing renewal for subscription ${subscription._id}`);
-        
+
         const now = new Date();
         const billingCycle = subscription.selectedBillingCycle || 'monthly';
         const newEndDate = calculateEndDate(billingCycle, now);
@@ -124,7 +124,7 @@ const processSubscriptionRenewal = async (subscription) => {
         // console.log(`[RENEWAL] Successfully renewed subscription ${subscription._id} until ${newEndDate}`);
         return true;
     } catch (error) {
-        console.error(`[RENEWAL] Error processing renewal for subscription ${subscription._id}:`, error);
+        // console.error(`[RENEWAL] Error processing renewal for subscription ${subscription._id}:`, error);
         return false;
     }
 };
@@ -135,7 +135,7 @@ const processSubscriptionRenewal = async (subscription) => {
 const runSubscriptionRenewalJob = async () => {
     // Ensure DB connection is ready
     if (mongoose.connection.readyState !== 1) {
-        console.log('[RENEWAL] Skipping - DB not connected');
+        // console.log('[RENEWAL] Skipping - DB not connected');
         return;
     }
 
@@ -162,9 +162,9 @@ const runSubscriptionRenewalJob = async () => {
                 // Check if Razorpay already handled it
                 const lastRenewalCheck = subscription.lastRenewalCheck || new Date(0);
                 const hoursSinceLastCheck = (now - lastRenewalCheck) / (1000 * 60 * 60);
-                
+
                 if (hoursSinceLastCheck < 6) {
-                    console.log(`[RENEWAL] Skipping ${subscription._id} - checked ${hoursSinceLastCheck.toFixed(1)} hours ago`);
+                    // console.log(`[RENEWAL] Skipping ${subscription._id} - checked ${hoursSinceLastCheck.toFixed(1)} hours ago`);
                     continue;
                 }
 
@@ -173,11 +173,11 @@ const runSubscriptionRenewalJob = async () => {
                 const isDue = subscription.nextBillingDate && subscription.nextBillingDate <= now;
 
                 if (isExpired || isDue) {
-                    console.log(`[RENEWAL] Subscription ${subscription._id} needs renewal (expired: ${isExpired}, due: ${isDue})`);
-                    
+                    // console.log(`[RENEWAL] Subscription ${subscription._id} needs renewal (expired: ${isExpired}, due: ${isDue})`);
+
                     // Process the renewal
                     const renewed = await processSubscriptionRenewal(subscription);
-                    
+
                     if (!renewed) {
                         // If renewal failed, mark subscription appropriately
                         subscription.status = SUBSCRIPTION_STATUSES.EXPIRED;
@@ -190,7 +190,7 @@ const runSubscriptionRenewalJob = async () => {
                 await updateTenantLimits(subscription);
 
             } catch (subError) {
-                console.error(`[RENEWAL] Error processing subscription ${subscription._id}:`, subError);
+                // console.error(`[RENEWAL] Error processing subscription ${subscription._id}:`, subError);
             }
         }
 
@@ -208,7 +208,7 @@ const runSubscriptionRenewalJob = async () => {
         // console.log('[RENEWAL] Subscription renewal check completed');
 
     } catch (error) {
-        console.error('[RENEWAL] Error in renewal job:', error);
+        // console.error('[RENEWAL] Error in renewal job:', error);
     }
 };
 
@@ -219,16 +219,16 @@ const manualRenewalCheck = async (req, res) => {
     try {
         // console.log('[RENEWAL] Manual renewal check triggered');
         await runSubscriptionRenewalJob();
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Renewal check completed',
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        console.error('[RENEWAL] Manual check error:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        // console.error('[RENEWAL] Manual check error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 };
@@ -239,16 +239,16 @@ const manualRenewalCheck = async (req, res) => {
 const getSubscriptionRenewalStatus = async (req, res) => {
     try {
         const { subscriptionId } = req.params;
-        
+
         const subscription = await CustomerSubscription.findById(subscriptionId)
             .populate('subscriptionPlanId');
-        
+
         if (!subscription) {
             return res.status(404).json({ error: 'Subscription not found' });
         }
 
         const now = new Date();
-        const daysUntilRenewal = subscription.nextBillingDate ? 
+        const daysUntilRenewal = subscription.nextBillingDate ?
             Math.ceil((subscription.nextBillingDate - now) / (1000 * 60 * 60 * 24)) : null;
 
         // Usage information removed - now managed only in RazorpayController
@@ -273,7 +273,7 @@ const getSubscriptionRenewalStatus = async (req, res) => {
             // Usage information removed - now fetched separately from Usage endpoints
         });
     } catch (error) {
-        console.error('[RENEWAL] Status check error:', error);
+        // console.error('[RENEWAL] Status check error:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -287,7 +287,7 @@ function scheduleRenewalCron() {
         try {
             await runSubscriptionRenewalJob();
         } catch (err) {
-            console.error('[RENEWAL] Cron error:', err);
+            // console.error('[RENEWAL] Cron error:', err);
         }
     });
 

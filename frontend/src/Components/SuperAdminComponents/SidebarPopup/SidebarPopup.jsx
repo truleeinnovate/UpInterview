@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { Minimize, Expand, X } from "lucide-react";
 
-function SidebarPopup({ title, children, onClose }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+function SidebarPopup({ title, children, onClose, isExpanded: isExpandedProp = false,  }) {
+  const [isExpanded, setIsExpanded] = useState(isExpandedProp);
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -66,4 +66,3 @@ function SidebarPopup({ title, children, onClose }) {
 }
 
 export default SidebarPopup;
-
