@@ -133,7 +133,7 @@ export const useOrganizationRequests = () => {
     try {
         console.log(`[API] Updating status for request ${id} with data:`, updateData);
         const response = await axios.put(
-            `${config.REACT_APP_API_URL}/organization-requests/${id}/status`, 
+            `${config.REACT_APP_API_URL}/organization-requests/${id}/status`,
             updateData,
             { withCredentials: true }
         );
@@ -161,6 +161,38 @@ export const useOrganizationRequests = () => {
     updateOrganizationStatus, // Add this line
     refetch,
   };
+};
+
+  // ✅ Add this new fetcher inside the same file
+const fetchAllReqForPaymentPendingPage = async () => {
+  try {
+    console.log('[FRONTEND] Fetching all requests for payment pending page...');
+    const response = await axios.get(
+      `${config.REACT_APP_API_URL}/organization-requests/all-req-for-payment-pending-page`,
+      { withCredentials: true }
+    );
+
+    if (!response.data?.success) {
+      console.error('[FRONTEND] Unexpected response:', response.data);
+      return [];
+    }
+
+    const requests = response.data.data || [];
+    console.log(`[FRONTEND] Received ${requests.length} total organization requests`);
+    return requests;
+  } catch (error) {
+    console.error('Error fetching requests for payment pending page:', error);
+    throw error;
+  }
+};
+
+// ✅ Export a dedicated hook for this page
+export const useAllReqForPaymentPendingPage = () => {
+  return useQuery({
+    queryKey: ['allOrganizationRequestsForPaymentPendingPage'],
+    queryFn: fetchAllReqForPaymentPendingPage,
+    refetchOnWindowFocus: false,
+  });
 };
 
 export default useOrganizationRequests;

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Pencil, Building, User, Mail, Phone, Globe, Users, MapPin, Calendar, Clock, CheckCircle, XCircle, AlertCircle, Eye, ChevronDown, ChevronUp, MessageCircle, Shield, BadgeCheck } from 'lucide-react';
 import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge";
+import DropdownWithSearchField from '../../../Components/FormFields/DropdownWithSearchField';
+import DescriptionField from '../../../Components/FormFields/DescriptionField';
 
 const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
     const [activeTab, setActiveTab] = useState('details');
@@ -14,50 +16,50 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
     });
 
     const statusOptions = [
-        { 
-            value: 'pending_review', 
-            label: 'Pending Review', 
-            color: 'orange', 
+        {
+            value: 'pending_review',
+            label: 'Pending Review',
+            color: 'orange',
             icon: Clock,
             bgColor: 'bg-orange-50',
             iconColor: 'text-orange-600',
             borderColor: 'border-orange-200',
             dotColor: 'bg-orange-500'
         },
-        { 
-            value: 'in_contact', 
-            label: 'In Contact', 
-            color: 'blue', 
+        {
+            value: 'in_contact',
+            label: 'In Contact',
+            color: 'blue',
             icon: User,
             bgColor: 'bg-blue-50',
             iconColor: 'text-blue-600',
             borderColor: 'border-blue-200',
             dotColor: 'bg-blue-500'
         },
-        { 
-            value: 'under_verification', 
-            label: 'Under Verification', 
-            color: 'purple', 
+        {
+            value: 'under_verification',
+            label: 'Under Verification',
+            color: 'purple',
             icon: Shield,
             bgColor: 'bg-purple-50',
             iconColor: 'text-purple-600',
             borderColor: 'border-purple-200',
             dotColor: 'bg-purple-500'
         },
-        { 
-            value: 'approved', 
-            label: 'Approved', 
-            color: 'green', 
+        {
+            value: 'approved',
+            label: 'Approved',
+            color: 'green',
             icon: BadgeCheck,
             bgColor: 'bg-green-50',
             iconColor: 'text-green-600',
             borderColor: 'border-green-200',
             dotColor: 'bg-green-500'
         },
-        { 
-            value: 'rejected', 
-            label: 'Rejected', 
-            color: 'red', 
+        {
+            value: 'rejected',
+            label: 'Rejected',
+            color: 'red',
             icon: XCircle,
             bgColor: 'bg-red-50',
             iconColor: 'text-red-600',
@@ -72,7 +74,7 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
 
     const formatStatus = (status) => {
         if (!status) return 'N/A';
-        return status.split('_').map(word => 
+        return status.split('_').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
         ).join(' ');
     };
@@ -131,15 +133,15 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
     const DetailsTab = () => (
         <div className="space-y-8">
             {/* Header Summary Card */}
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 text-white shadow-2xl">
+            <div className="bg-custom-blue rounded-2xl p-8 text-white shadow-2xl">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-6">
-                        <div className="h-24 w-24 rounded-full bg-white/20 flex items-center justify-center text-white border-4 border-white/30">
-                            <Building className="h-12 w-12" />
+                        <div className="h-20 w-20 rounded-full bg-white/20 flex items-center justify-center text-white border-4 border-white/30">
+                            <Building className="h-10 w-10" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-bold mb-2">{tenant.company || 'No Company'}</h1>
-                            <p className="text-blue-100 text-lg mb-1">Requested by {fullName}</p>
+                            <h1 className="text-2xl font-bold mb-2">{tenant.company || 'No Company'}</h1>
+                            <p className="text-blue-100 text-md mb-1">Requested by {fullName}</p>
                             <div className="flex items-center space-x-4 text-blue-100">
                                 <div className="flex items-center space-x-2">
                                     <Calendar className="h-5 w-5" />
@@ -167,22 +169,22 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
             {/* Contact Information Card */}
             <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-xl">
                 <div className="flex items-center space-x-4 mb-8">
-                    <div className="p-4 bg-blue-100 rounded-2xl">
-                        <User className="h-8 w-8 text-blue-600" />
+                    <div className="p-3 bg-custom-blue/10 rounded-2xl">
+                        <User className="h-6 w-6 text-custom-blue" />
                     </div>
                     <div>
-                        <h3 className="text-2xl font-bold text-gray-900">Contact Information</h3>
-                        <p className="text-gray-500 text-lg">Primary contact details</p>
+                        <h3 className="text-lg font-bold text-gray-900">Contact Information</h3>
+                        <p className="text-gray-500 text-md">Primary contact details</p>
                     </div>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="flex items-center space-x-5 p-5 bg-blue-50 rounded-xl border border-blue-100 hover:shadow-md transition-shadow">
                         <div className="p-3 bg-white rounded-xl shadow-sm">
-                            <Mail className="h-7 w-7 text-blue-500" />
+                            <Mail className="h-7 w-7 text-custom-blue" />
                         </div>
                         <div>
                             <p className="text-base font-semibold text-gray-500 mb-1">Email Address</p>
-                            <p className="text-xl text-gray-900 font-bold">{contact.email || 'No email'}</p>
+                            <p className="text-lg text-gray-900 font-bold">{contact.email || 'No email'}</p>
                         </div>
                     </div>
                     <div className="flex items-center space-x-5 p-5 bg-green-50 rounded-xl border border-green-100 hover:shadow-md transition-shadow">
@@ -191,7 +193,7 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                         </div>
                         <div>
                             <p className="text-base font-semibold text-gray-500 mb-1">Phone Number</p>
-                            <p className="text-xl text-gray-900 font-bold">
+                            <p className="text-lg text-gray-900 font-bold">
                                 {contact.countryCode ? `${contact.countryCode} ` : ''}
                                 {contact.phone || 'No phone'}
                             </p>
@@ -203,12 +205,12 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
             {/* Company Details Card */}
             <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-xl">
                 <div className="flex items-center space-x-4 mb-8">
-                    <div className="p-4 bg-green-100 rounded-2xl">
-                        <Building className="h-8 w-8 text-green-600" />
+                    <div className="p-3 bg-green-100 rounded-2xl">
+                        <Building className="h-6 w-6 text-green-600" />
                     </div>
                     <div>
-                        <h3 className="text-2xl font-bold text-gray-900">Company Details</h3>
-                        <p className="text-gray-500 text-lg">Organization information</p>
+                        <h3 className="text-lg font-bold text-gray-900">Company Details</h3>
+                        <p className="text-gray-500 text-md">Organization information</p>
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -222,10 +224,10 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                     ].map((item, index) => (
                         <div key={index} className="p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
                             <div className={`p-3 bg-${item.color}-100 rounded-lg w-fit mb-3`}>
-                                <item.icon className={`h-6 w-6 text-${item.color}-600`} />
+                                <item.icon className={`h-5 w-5 text-${item.color}-600`} />
                             </div>
                             <p className="text-base font-semibold text-gray-500 mb-1">{item.label}</p>
-                            <p className="text-lg text-gray-900 font-bold">{item.value || 'N/A'}</p>
+                            <p className="text-md text-gray-900 font-bold">{item.value || 'N/A'}</p>
                         </div>
                     ))}
                 </div>
@@ -247,17 +249,22 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
             <div className="p-8 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-5">
-                        <div className={`p-4 rounded-2xl ${currentStatusConfig.bgColor} ${currentStatusConfig.borderColor} border-2`}>
-                            {React.createElement(currentStatusConfig.icon, { className: `h-8 w-8 ${currentStatusConfig.iconColor}` })}
+                        <div className={`p-3 rounded-2xl ${currentStatusConfig.bgColor} ${currentStatusConfig.borderColor} border-2`}>
+                            {React.createElement(currentStatusConfig.icon, { className: `h-6 w-6 ${currentStatusConfig.iconColor}` })}
                         </div>
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-900">Status History</h3>
-                            <p className="text-gray-500 text-lg">Track the progress of this organization request</p>
+                            <h3 className="text-xl font-bold text-gray-900">Status History</h3>
+                            <p className="text-gray-500 text-md">Track the progress of this organization request</p>
                         </div>
                     </div>
                     <button
                         onClick={() => setShowStatusModal(true)}
-                        className="inline-flex items-center px-6 py-4 border border-transparent shadow-lg text-base font-bold rounded-xl text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-200 transform hover:scale-105"
+                        className="
+                                    inline-flex items-center px-6 py-4 border border-transparent shadow-lg
+                                    text-base font-bold rounded-xl text-white bg-custom-blue
+                                    focus:outline-none
+                                    transition-all transform
+                                "
                     >
                         <Pencil className="h-5 w-5 mr-3" />
                         Update Status
@@ -270,15 +277,15 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                 <div className={`mb-10 p-7 rounded-2xl border-3 ${currentStatusConfig.borderColor} ${currentStatusConfig.bgColor} shadow-lg`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-5">
-                            <div className={`p-4 rounded-xl ${currentStatusConfig.bgColor.replace('50', '100')}`}>
-                                {React.createElement(currentStatusConfig.icon, { className: `h-8 w-8 ${currentStatusConfig.iconColor}` })}
+                            <div className={`p-3 rounded-xl ${currentStatusConfig.bgColor.replace('50', '100')}`}>
+                                {React.createElement(currentStatusConfig.icon, { className: `h-6 w-6 ${currentStatusConfig.iconColor}` })}
                             </div>
                             <div>
                                 <p className="text-base font-semibold text-gray-500">Current Status</p>
-                                <p className="text-2xl font-bold text-gray-900 mb-1">
+                                <p className="text-xl font-bold text-gray-900 mb-1">
                                     {formatStatus(organization.status)}
                                 </p>
-                                <p className="text-gray-600 text-lg">
+                                <p className="text-gray-600 text-md">
                                     Last updated {organization.modifiedAt ? formatDate(organization.modifiedAt) : 'N/A'}
                                 </p>
                             </div>
@@ -293,41 +300,39 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                 {sortedStatusHistory.length > 0 ? (
                     <div className="space-y-8">
                         <div className="flex items-center space-x-4 mb-6">
-                            <MessageCircle className="h-7 w-7 text-gray-400" />
-                            <h4 className="text-xl font-bold text-gray-900">Status Timeline</h4>
+                            <MessageCircle className="h-6 w-6 text-gray-400" />
+                            <h4 className="text-lg font-bold text-gray-900">Status Timeline</h4>
                         </div>
-                        
+
                         <div className="relative">
                             {/* Timeline line */}
-                            <div className="absolute left-10 top-4 bottom-4 w-1 bg-gradient-to-b from-blue-300 via-purple-300 to-gray-300 rounded-full"></div>
-                            
+                            <div className="absolute left-8 top-4 bottom-4 w-1 bg-gradient-to-b from-blue-300 via-purple-300 to-gray-300 rounded-full"></div>
+
                             {sortedStatusHistory.map((history, index) => {
                                 const statusConfig = getStatusConfig(history.status);
                                 const isCurrent = index === 0;
                                 const isExpanded = expandedComments[index];
                                 const StatusIcon = statusConfig.icon;
-                                
+
                                 return (
                                     <div key={index} className="relative flex items-start space-x-8 group">
                                         {/* Timeline dot */}
-                                        <div className={`relative z-10 flex-shrink-0 ${statusConfig.dotColor} w-20 h-20 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 group-hover:scale-110 ${
-                                            isCurrent ? 'ring-4 ring-opacity-50 ring-' + statusConfig.color + '-300' : ''
-                                        }`}>
-                                            <StatusIcon className="h-8 w-8 text-white" />
+                                        <div className={`relative z-10 flex-shrink-0 ${statusConfig.dotColor} w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 group-hover:scale-110 ${isCurrent ? 'ring-4 ring-opacity-50 ring-' + statusConfig.color + '-300' : ''
+                                            }`}>
+                                            <StatusIcon className="h-6 w-6 text-white" />
                                         </div>
 
                                         {/* Content */}
-                                        <div className={`flex-1 min-w-0 bg-white rounded-2xl border-2 p-6 transition-all duration-300 group-hover:shadow-xl ${
-                                            isCurrent 
-                                                ? `${statusConfig.borderColor} shadow-md border-l-4 border-l-${statusConfig.color}-500` 
-                                                : 'border-gray-200 hover:border-gray-300'
-                                        }`}>
+                                        <div className={`flex-1 min-w-0 bg-white rounded-2xl border-2 p-6 transition-all duration-300 group-hover:shadow-xl ${isCurrent
+                                            ? `${statusConfig.borderColor} shadow-md border-l-4 border-l-${statusConfig.color}-500`
+                                            : 'border-gray-200 hover:border-gray-300'
+                                            }`}>
                                             <div className="flex items-center justify-between mb-4">
                                                 <div className="flex items-center space-x-4">
-                                                    <span className={`inline-flex items-center px-4 py-2 rounded-full text-base font-bold ${statusConfig.bgColor} ${statusConfig.iconColor} border ${statusConfig.borderColor}`}>
+                                                    <span className={`inline-flex items-center px-4 py-2 rounded-full text-md font-bold ${statusConfig.bgColor} ${statusConfig.iconColor} border ${statusConfig.borderColor}`}>
                                                         {formatStatus(history.status)}
                                                     </span>
-                                                    <span className="text-lg text-gray-500 font-semibold">
+                                                    <span className="text-md text-gray-500 font-semibold">
                                                         {formatDate(history.changedAt)}
                                                     </span>
                                                 </div>
@@ -342,21 +347,21 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                                                 <div className="mt-4">
                                                     <button
                                                         onClick={() => toggleComments(index)}
-                                                        className="flex items-center space-x-3 text-base font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                                                        className="flex items-center space-x-3 text-base font-semibold text-custom-blue hover:text-custom-blue/80 transition-colors"
                                                     >
                                                         <MessageCircle className="h-5 w-5" />
                                                         <span>
                                                             {isExpanded ? 'Hide' : 'Show'} Comments
                                                         </span>
-                                                        {isExpanded ? 
-                                                            <ChevronUp className="h-5 w-5" /> : 
+                                                        {isExpanded ?
+                                                            <ChevronUp className="h-5 w-5" /> :
                                                             <ChevronDown className="h-5 w-5" />
                                                         }
                                                     </button>
-                                                    
+
                                                     {isExpanded && (
                                                         <div className="mt-4 p-5 bg-blue-50 rounded-xl border border-blue-200">
-                                                            <p className="text-lg text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                                            <p className="text-md text-gray-700 whitespace-pre-wrap leading-relaxed">
                                                                 {history.comments}
                                                             </p>
                                                         </div>
@@ -367,7 +372,7 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                                             {!history.comments && (
                                                 <div className="flex items-center space-x-3 text-gray-400">
                                                     <MessageCircle className="h-5 w-5" />
-                                                    <p className="text-lg italic">
+                                                    <p className="text-md italic">
                                                         No comments provided
                                                     </p>
                                                 </div>
@@ -385,7 +390,7 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                         </div>
                         <h4 className="text-2xl font-bold text-gray-900 mb-3">No Status History</h4>
                         <p className="text-gray-500 text-lg mb-8 max-w-md mx-auto">
-                            This organization request doesn't have any status history yet. 
+                            This organization request doesn't have any status history yet.
                             Update the status to start tracking progress.
                         </p>
                         <button
@@ -412,11 +417,10 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`py-5 px-2 border-b-2 font-bold text-lg transition-all duration-200 ${
-                                    activeTab === tab
-                                        ? 'border-custom-blue text-custom-blue'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-400'
-                                }`}
+                                className={`py-5 px-2 border-b-2 font-bold text-md transition-all duration-200 ${activeTab === tab
+                                    ? 'border-custom-blue text-custom-blue'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-400'
+                                    }`}
                             >
                                 {tab === 'details' ? 'Organization Details' : 'Status History'}
                             </button>
@@ -439,43 +443,40 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
                         <div className="inline-block align-bottom bg-white rounded-3xl px-6 pt-6 pb-6 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-8">
                             <div className="sm:flex sm:items-start">
-                                <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-16 w-16 rounded-2xl ${currentStatusConfig.bgColor} sm:mx-0 sm:h-14 sm:w-14`}>
-                                    <Pencil className={`h-8 w-8 ${currentStatusConfig.iconColor}`} />
+                                <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-2xl ${currentStatusConfig.bgColor} sm:mx-0 sm:h-14 sm:w-14`}>
+                                    <Pencil className={`h-6 w-6 ${currentStatusConfig.iconColor}`} />
                                 </div>
                                 <div className="mt-4 text-center sm:mt-0 sm:ml-6 sm:text-left w-full">
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">
                                         Update Organization Request Status
                                     </h3>
                                     <div className="mt-6 space-y-6">
                                         <div>
-                                            <label className="block text-lg font-semibold text-gray-700 mb-3">
-                                                Select Status
-                                            </label>
-                                            <select
+                                            <DropdownWithSearchField
+                                                label="Select Status"
+                                                name="status"
                                                 value={statusUpdate.status}
                                                 onChange={handleStatusChange}
-                                                className="block w-full pl-4 pr-10 py-4 text-lg border-2 border-gray-300 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 rounded-xl shadow-sm"
-                                            >
-                                                {statusOptions.map(option => (
-                                                    <option key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                options={statusOptions.map(option => ({
+                                                    value: option.value,
+                                                    label: option.label
+                                                }))}
+                                                required
+                                                className="text-base"
+                                            />
                                         </div>
                                         <div>
-                                            <label htmlFor="comments" className="block text-lg font-semibold text-gray-700 mb-3">
-                                                Comments
-                                            </label>
-                                            <textarea
-                                                id="comments"
-                                                rows={5}
+                                            <DescriptionField
+                                                label="Comments"
+                                                name="comments"
                                                 value={statusUpdate.comments}
                                                 onChange={handleCommentsChange}
-                                                className="block w-full border-2 border-gray-300 rounded-xl shadow-sm py-4 px-4 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 sm:text-lg resize-none text-lg"
                                                 placeholder="Add any comments about this status change..."
+                                                rows={5}
+                                                showCounter={false}
+                                                className="text-base"
                                             />
-                                            <p className="mt-3 text-base text-gray-500">
+                                            <p className="mt-1 text-sm text-gray-500">
                                                 Comments will be visible in the status history timeline.
                                             </p>
                                         </div>
@@ -485,7 +486,12 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                             <div className="mt-8 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-4 sm:grid-flow-row-dense">
                                 <button
                                     type="button"
-                                    className="w-full inline-flex justify-center items-center rounded-xl border border-transparent shadow-lg px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-lg font-bold text-white hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 sm:col-start-2 transition-all duration-200 transform hover:scale-105"
+                                    className="
+                                    py-3 border border-transparent shadow-lg
+                                    text-base font-bold rounded-xl text-white bg-custom-blue
+                                    focus:outline-none w-full inline-flex justify-center items-center
+                                    transition-all transform
+                                    "
                                     onClick={handleSubmitStatusUpdate}
                                     disabled={isSaving}
                                 >
@@ -503,7 +509,7 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                                 </button>
                                 <button
                                     type="button"
-                                    className="mt-4 w-full inline-flex justify-center items-center rounded-xl border-2 border-gray-300 shadow-sm px-6 py-4 bg-white text-lg font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-200 sm:mt-0 sm:col-start-1 transition-all duration-200"
+                                    className="mt-4 w-full inline-flex justify-center items-center rounded-xl border-2 border-gray-300 shadow-sm py-2 bg-white text-lg font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-200 sm:mt-0 sm:col-start-1 transition-all duration-200"
                                     onClick={() => setShowStatusModal(false)}
                                     disabled={isSaving}
                                 >

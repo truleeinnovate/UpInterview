@@ -1,35 +1,68 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Clock, AlertCircle, MessageCircle, Mail, Phone } from 'lucide-react';
+import { Clock, AlertCircle, MessageCircle, CheckCircle, Mail } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useAllReqForPaymentPendingPage } from '../../../apiHooks/superAdmin/useOrganizationRequests.js';
+import Cookies from 'js-cookie';
+import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 
 const OrganizationSubmissionStatus = () => {
+
+    const { data: allRequests = [], isLoading } = useAllReqForPaymentPendingPage();
+    console.log("allRequests", allRequests);
+
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+    const userId = tokenPayload?.userId;
+    const organizationId = tokenPayload?.tenantId;
+
+    // Find the request that matches either the user's ID or organization ID
+    const userRequest = allRequests.find(request =>
+        request.ownerId === userId ||
+        request.tenantId === organizationId
+    );
+
+    console.log('Matching request:', userRequest);
+
     const location = useLocation();
-    const { status = 'pending', organizationName, rejectionReason } = location.state || {};
+    const { status: statusFromLocation, organizationName, rejectionReason } = location.state || {};
+
+    // Get status from user request or location, default to 'pending_review' if not found
+    const status = userRequest?.status === 'rejected' ? 'rejected' : 'pending_review';
 
     const statusConfig = {
-        pending: {
+        'pending_review': {
             icon: Clock,
             iconColor: 'text-custom-blue',
             bgColor: 'bg-white',
             title: 'Submission Under Review',
             description: 'Your organization registration has been successfully submitted and is currently under review.',
-            message: 'Our verification team will carefully review your submission. This process typically takes 24-48 hours. You will receive an email notification once your organization has been approved.',
             showSupport: false
         },
-        rejected: {
+        'rejected': {
             icon: AlertCircle,
             iconColor: 'text-red-500',
             bgColor: 'bg-red-50',
-            title: 'Additional Information Required',
-            description: 'We need some additional details to complete your registration.',
-            message: rejectionReason || 'Our team has reviewed your submission and requires some clarification or additional documentation to proceed with the verification.',
+            title: 'Submission Rejected',
+            description: rejectionReason || 'Your organization registration could not be approved at this time.',
+            message: 'Our verification team has reviewed your submission. If you believe this is an error, please raise a ticket for further assistance.',
+            actionButton: {
+                text: 'Raise Ticket',
+                onClick: () => {
+                    // Handle raise ticket action
+                    console.log('Raise ticket clicked');
+                    // You can add your ticket raising logic here
+                    // For example, open a support form or redirect to a support page
+                },
+                className: 'mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors'
+            },
             showSupport: true
-        },
+        }
     };
 
-    const currentStatus = statusConfig[status] || statusConfig.submitted;
-    const IconComponent = currentStatus.icon;
+    // Always ensure we have a valid status config, default to pending_review if not found
+    const currentStatus = statusConfig[status] || statusConfig.pending_review;
+    const IconComponent = currentStatus?.icon || Clock;
 
     const handleContactSupport = () => {
         // Support contact options
@@ -85,6 +118,18 @@ const OrganizationSubmissionStatus = () => {
                             {currentStatus.message}
                         </p>
 
+                        {/* Raise Ticket Button */}
+                        {currentStatus.actionButton && (
+                            <div className="flex justify-center mt-4">
+                                <button
+                                    onClick={currentStatus.actionButton.onClick}
+                                    className={currentStatus.actionButton.className}
+                                >
+                                    {currentStatus.actionButton.text}
+                                </button>
+                            </div>
+                        )}
+
                         {/* Support Section for Rejected Status */}
                         {currentStatus.showSupport && (
                             <motion.div
@@ -100,7 +145,7 @@ const OrganizationSubmissionStatus = () => {
                                 <p className="text-gray-600 text-sm mb-4">
                                     Our support team is here to help you resolve any issues with your registration.
                                 </p>
-                                
+
                                 <div className="space-y-3">
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
@@ -111,9 +156,9 @@ const OrganizationSubmissionStatus = () => {
                                         <Mail className="h-4 w-4" />
                                         Email Support Team
                                     </motion.button>
-                                
+
                                 </div>
-                                
+
                                 <div className="mt-4 text-xs text-gray-500 text-center">
                                     Response time: Typically within 2 business hours
                                 </div>

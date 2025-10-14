@@ -961,25 +961,25 @@
 
   const deleteTenantAndAssociatedData = async (req, res) => {
     const { tenantId } = req.params;
-  
+
     // Validate tenantId
     if (!mongoose.Types.ObjectId.isValid(tenantId)) {
       return res.status(400).json({ error: 'Invalid tenantId' });
     }
-  
+
     try {
       // Delete Tenant
       const tenant = await Tenant.findByIdAndDelete(tenantId);
       if (!tenant) {
         return res.status(404).json({ error: 'Tenant not found' });
       }
-  
+
       // Delete associated Users
       const usersResult = await Users.deleteMany({ tenantId });
-  
+
       // Delete associated Contacts
       const contactsResult = await Contacts.deleteMany({ tenantId });
-  
+
       res.status(200).json({
         message: 'Tenant and associated data deleted successfully',
         deletedTenant: tenant,
@@ -991,8 +991,8 @@
       res.status(500).json({ error: 'Internal server error' });
     }
   };
-  
-  
+
+
   // const getOrganizationById = async (req, res) => {
   //   try {
   //     const { id } = req.params;
