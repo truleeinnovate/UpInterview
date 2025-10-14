@@ -18,6 +18,7 @@ const { inflateRaw } = require('zlib');
 const { Contacts } = require('../models/Contacts.js');
 const WalletTopup = require('../models/WalletTopup.js');
 const { Users } = require('../models/Users.js');
+const { CreateOrGetVideoCallingSettings } = require('./VideoCallingSettingControllers/VideoCallingSettingController.js');
 const createInvoice = helpers.createInvoice;
 const createReceipt = helpers.createReceipt;
 const calculateEndDate = helpers.calculateEndDate;
@@ -570,8 +571,9 @@ const verifyPayment = async (req, res) => {
                         await user.save();
                     }
 
-                    // for 
-                    
+                    // 2️⃣ Call function to create or get default Zoom settings
+                    const videoSettingsResponse = await CreateOrGetVideoCallingSettings(customerSubscription.tenantId, ownerId); 
+                    console.log(videoSettingsResponse);
 
                         // Create Usage document only once per billing period after payment verification
                         try {

@@ -277,10 +277,152 @@ async function testVideoProviderConnection(provider, credentials) {
   }
 };
 
+// ✅ Create default Zoom settings
+
+
+ 
+/**
+
+* Create or get default Zoom video calling settings
+
+* @param {String} tenantId - The tenant ID
+
+* @param {String} ownerId - The owner/contact ID
+
+* @returns {Promise<Object>} - The found or newly created settings document
+
+*/
+
+const CreateOrGetVideoCallingSettings = async (tenantId, ownerId) => {
+
+  try {
+
+    if (!tenantId || !ownerId) {
+
+      throw new Error("tenantId and ownerId are required");
+
+    }
+ 
+    // ✅ Check if it already exists
+
+    const existing = await VideoCallingDetails.findOne({ tenantId, ownerId });
+
+    if (existing) {
+
+      return {
+
+        created: false,
+
+        message: "✅ Video calling settings already exist for this tenant.",
+
+        data: existing
+
+      };
+
+    }
+ 
+    // ✅ Create default Zoom settings
+
+    const newSettings = new VideoCallingDetails({
+
+      tenantId,
+
+      ownerId,
+
+      defaultProvider: "zoom",
+
+      credentialType: "platform",
+
+      credentials: {
+
+        zoom: {
+
+          apiKey: "",
+
+          apiSecret: "",
+
+          accountId: "",
+
+          isConfigured: false
+
+        },
+
+        googleMeet: {
+
+          clientId: "",
+
+          clientSecret: "",
+
+          refreshToken: "",
+
+          isConfigured: false
+
+        },
+
+        teams: {
+
+          tenantId: "",
+
+          clientId: "",
+
+          clientSecret: "",
+
+          isConfigured: false
+
+        }
+
+      },
+
+      testConnection: {
+
+        status: null,
+
+        message: "",
+
+        lastTested: null
+
+      },
+
+      uiState: {
+
+        lastConfiguredProvider: "zoom",
+
+        showCredentialHelp: true,
+
+        credentialPopupsDismissed: 0
+
+      }
+
+    });
+ 
+    const saved = await newSettings.save();
+ 
+    return {
+
+      created: true,
+
+      message: "✅ Default Zoom video calling settings created successfully.",
+
+      data: saved
+
+    };
+
+  } catch (error) {
+
+    console.error("❌ Error in createOrGetVideoCallingSettings:", error);
+
+    throw new Error(error.message || "Error creating or fetching video calling settings");
+
+  }
+
+}
+ 
+
 // ✅ Export using CommonJS
 module.exports = {
   getVideoCallingSettings,
   VideoCallTestConnection,
   VideoCallTestCredentials,
-  updateVideoCallingSettings
+  updateVideoCallingSettings,
+  CreateOrGetVideoCallingSettings
 };
