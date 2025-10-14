@@ -260,7 +260,7 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                     <button
                         onClick={() => setShowStatusModal(true)}
                         className="
-                                    inline-flex items-center px-6 py-4 border border-transparent shadow-lg
+                                    inline-flex items-center px-5 py-3 border border-transparent shadow-lg
                                     text-base font-bold rounded-xl text-white bg-custom-blue
                                     focus:outline-none
                                     transition-all transform
