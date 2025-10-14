@@ -30,7 +30,7 @@ const SidebarProfile = ({
     },
     { name: "Roles", icon: UserIcon, id: "roles", permissionKey: "Roles" },
     { name: "Users", icon: UsersIcon, id: "users", permissionKey: "Users" },
-    { name: "Notifications", icon: BellIcon, id: "email-settings", permissionKey: "Notifications"},
+    { name: "Notifications", icon: BellIcon, id: "email-settings", permissionKey: "Notification"},
   ];
 
   return (

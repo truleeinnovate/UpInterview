@@ -118,6 +118,7 @@ router.post("/check-user", async (req, res) => {
       email: userInfoResponse.data.email?.trim().toLowerCase(),
       pictureUrl: userInfoResponse.data.picture || null,
       profileUrl: `https://www.linkedin.com/in/${userInfoResponse.data.sub}`,
+      isEmailVerified: true,
     };
 
     // Check for existing user

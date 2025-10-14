@@ -70,32 +70,32 @@ const SubscriptionPlan = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 1. Log lifecycle/auth token changes
-  useEffect(() => {
-    console.log("🚀 SubscriptionPlan mounted / auth change");
-    console.log("Current authToken ----", authToken);
-  }, [authToken]);
+  // useEffect(() => {
+  //   console.log("🚀 SubscriptionPlan mounted / auth change");
+  //   console.log("Current authToken ----", authToken);
+  // }, [authToken]);
 
   // 2. Whenever authToken changes, decode and save payload
   useEffect(() => {
     if (!authToken) {
-      console.warn("⚠️ No authToken in cookies yet");
+      // console.warn("⚠️ No authToken in cookies yet");
       setTokenPayload({});
     } else {
       const decoded = decodeJwt(authToken);
-      console.log("🔎 Decoded Token ----", decoded);
+      // console.log("🔎 Decoded Token ----", decoded);
       setTokenPayload(decoded || {});
     }
   }, [authToken]);
 
-  console.log('authToken ----', authToken);
-  console.log('tokenPayload ----', tokenPayload);
+  // console.log('authToken ----', authToken);
+  // console.log('tokenPayload ----', tokenPayload);
 
   const ownerId = tokenPayload?.userId;
-  console.log('ownerId 1----', ownerId);
+  // console.log('ownerId 1----', ownerId);
   const organization = tokenPayload?.organization;
-  console.log('organization 1----', organization);
+  // console.log('organization 1----', organization);
   const tenantId = tokenPayload?.tenantId;
-  console.log('tenantId 1----', tenantId);
+  // console.log('tenantId 1----', tenantId);
 
   const [user] = useState({
     userType: organization === true ? "organization" : "individual",
