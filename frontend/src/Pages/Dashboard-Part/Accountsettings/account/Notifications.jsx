@@ -1,7 +1,15 @@
-import { BellIcon, CheckIcon, CreditCardIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
-import { recentNotifications,notificationPreferences } from '../mockData/notificationsData'
-import { usePermissions } from '../../../../Context/PermissionsContext';
-import { usePermissionCheck } from '../../../../utils/permissionUtils';
+import {
+  BellIcon,
+  CheckIcon,
+  CreditCardIcon,
+  ShieldCheckIcon,
+} from "@heroicons/react/24/outline";
+import {
+  recentNotifications,
+  notificationPreferences,
+} from "../mockData/notificationsData";
+import { usePermissions } from "../../../../Context/PermissionsContext";
+import { usePermissionCheck } from "../../../../utils/permissionUtils";
 
 const NotificationsDetails = () => {
   const { checkPermission, isInitialized } = usePermissionCheck();
@@ -20,29 +28,38 @@ const NotificationsDetails = () => {
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium mb-4">Notification Preferences</h3>
         <div className="space-y-6">
-          {Object.entries(notificationPreferences).map(([channel, preferences]) => (
-            <div key={channel} className="border-b pb-6 last:border-b-0">
-              <h4 className="font-medium mb-4 capitalize">{channel} Notifications</h4>
-              <div className="space-y-4">
-                {Object.entries(preferences).map(([type, enabled]) => (
-                  <div key={type} className="flex items-center justify-between">
-                    <span className="capitalize">{type.split(/(?=[A-Z])/).join(' ')}</span>
-                    <button
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                        enabled ? 'bg-custom-blue' : 'bg-gray-200'
-                      }`}
+          {Object.entries(notificationPreferences).map(
+            ([channel, preferences]) => (
+              <div key={channel} className="border-b pb-6 last:border-b-0">
+                <h4 className="font-medium mb-4 capitalize">
+                  {channel} Notifications
+                </h4>
+                <div className="space-y-4">
+                  {Object.entries(preferences).map(([type, enabled]) => (
+                    <div
+                      key={type}
+                      className="flex items-center justify-between"
                     >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                          enabled ? 'translate-x-6' : 'translate-x-1'
+                      <span className="capitalize">
+                        {type.split(/(?=[A-Z])/).join(" ")}
+                      </span>
+                      <button
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                          enabled ? "bg-custom-blue" : "bg-gray-200"
                         }`}
-                      />
-                    </button>
-                  </div>
-                ))}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                            enabled ? "translate-x-6" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       </div>
 
@@ -50,12 +67,23 @@ const NotificationsDetails = () => {
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium mb-4">Recent Notifications</h3>
         <div className="space-y-4">
-          {recentNotifications.map(notification => (
-            <div key={notification.id} className="flex items-start space-x-4 border-b pb-4 last:border-b-0">
-              {notification.type === 'interview' && <BellIcon className="h-6 w-6 text-custom-blue" />}
-              {notification.type === 'assessment' && <CheckIcon className="h-6 w-6 text-green-500" />}
-              {notification.type === 'billing' && <CreditCardIcon className="h-6 w-6 text-purple-500" />}
-              {notification.type === 'security' && <ShieldCheckIcon className="h-6 w-6 text-red-500" />}
+          {recentNotifications.map((notification) => (
+            <div
+              key={notification.id}
+              className="flex items-start space-x-4 border-b pb-4 last:border-b-0"
+            >
+              {notification.type === "interview" && (
+                <BellIcon className="h-6 w-6 text-custom-blue" />
+              )}
+              {notification.type === "assessment" && (
+                <CheckIcon className="h-6 w-6 text-green-500" />
+              )}
+              {notification.type === "billing" && (
+                <CreditCardIcon className="h-6 w-6 text-purple-500" />
+              )}
+              {notification.type === "security" && (
+                <ShieldCheckIcon className="h-6 w-6 text-red-500" />
+              )}
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium">{notification.title}</h4>
@@ -75,7 +103,7 @@ const NotificationsDetails = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default NotificationsDetails
+export default NotificationsDetails;
