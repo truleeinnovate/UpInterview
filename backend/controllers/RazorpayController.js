@@ -569,6 +569,10 @@ const verifyPayment = async (req, res) => {
                         user.status ='active'
                         await user.save();
                     }
+
+                    // for 
+                    
+
                         // Create Usage document only once per billing period after payment verification
                         try {
                             const now = new Date();

@@ -28,16 +28,22 @@ const createSubscriptionRecord = async (userDetails, planDetails, pricing, disco
 
   }
   
+  // Calculate endDate and nextBillingDate for all plans including free plans
+  const startDate = new Date();
+  const endDate = calculateEndDate(userDetails.membershipType);
+  const nextBillingDate = new Date(endDate); // Next billing date is same as end date
+  
   return await CustomerSubscription.create({
     tenantId: userDetails.tenantId,
     ownerId: userDetails.ownerId,
     subscriptionPlanId: planDetails.subscriptionPlanId,
     selectedBillingCycle: userDetails.membershipType,
-    startDate: new Date(),
+    startDate: startDate,
     status: status === 'active' ? "active" : "created",
     price: totalAmount,
     discount: discount,
-    endDate: null,
+    endDate: status === 'active' ? endDate : null, // Set endDate for active (including free) plans
+    nextBillingDate: status === 'active' ? nextBillingDate : null, // Set nextBillingDate for active plans
     totalAmount: pricing - parseFloat(discount),
     invoiceId: invoiceId,
     receiptId: receiptId || null ,

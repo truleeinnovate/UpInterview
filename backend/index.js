@@ -1091,6 +1091,19 @@ require("./controllers/PushNotificationControllers/pushNotificationAssessmentCon
 // Start Subscription Renewal system and cron jobs
 require("./controllers/SubscriptionRenewalController");
 
+// Start Automatic Free Plan Renewal System
+// This runs automatically every hour to renew expired free plans
+// No manual intervention needed - completely automatic
+const { startFreePlanRenewalCron } = require("./controllers/FreePlanRenewalController");
+dbConnection.then(() => {
+  if (process.env.NODE_ENV !== 'test') {
+    startFreePlanRenewalCron();
+    console.log('[FREE PLAN RENEWAL] Automatic renewal system initialized - runs hourly');
+  }
+}).catch(err => {
+  console.error('[FREE PLAN RENEWAL] Failed to initialize automatic renewal system:', err);
+});
+
 // in contextfetch for fetchUserProfile
 app.get("/auth/users/:id", async (req, res) => {
   try {
@@ -1362,6 +1375,8 @@ app.use("/candidateposition", candidatePositionRoutes);
 // Subscription update routes
 const subscriptionUpdateRoutes = require("./routes/subscriptionUpdateRoutes.js");
 app.use("/subscription-update", subscriptionUpdateRoutes);
+
+// Free plan renewal runs automatically via cron job - no manual routes needed
 
 // Subscription renewal routes
 const subscriptionRenewalRoutes = require("./routes/subscriptionRenewalRoutes.js");

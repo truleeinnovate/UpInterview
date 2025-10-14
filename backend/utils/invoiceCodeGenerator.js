@@ -44,10 +44,10 @@ const generateUniqueInvoiceCode = async () => {
   }
   
   // If we've exhausted retries, generate a timestamp-based fallback
-  const timestamp = Date.now();
-  const fallbackCode = `INVC-${timestamp}`;
-  console.error(`Failed to generate unique invoice code after ${MAX_RETRIES} attempts. Using fallback: ${fallbackCode}`);
-  return fallbackCode;
+  // const timestamp = Date.now();
+  // const fallbackCode = `INVC-${timestamp}`;
+  // console.error(`Failed to generate unique invoice code after ${MAX_RETRIES} attempts. Using fallback: ${fallbackCode}`);
+  // return fallbackCode;
 };
 
 module.exports = {

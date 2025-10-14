@@ -1,16 +1,25 @@
 // v1.0.0 - Ashok - Improved responsiveness
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../config.js";
 import { X } from "lucide-react";
+// Common Form Field Components
+import InputField from "../../../../Components/FormFields/InputField";
+import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 
 const ReschedulePopup = ({ onClose, MockEditData }) => {
   const { fetchMockInterviewData } = useCustomContext();
+  
+  // Field refs for form field components
+  const fieldRefs = {
+    dateTime: useRef(null),
+    duration: useRef(null),
+    interviewer: useRef(null),
+  };
 
   console.log("MockEditData", MockEditData);
 
@@ -23,125 +32,92 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
     return `${year}-${month}-${day}`;
   };
 
-  const getCurrentTime = () => {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    return `${hours}:${minutes}`;
-  };
 
-  const calculateEndTime = (startTime, duration) => {
-    const [startHour, startMinute] = startTime.split(":").map(Number); // Ensure parsing works with HH:mm format
-    const durationMinutes = parseInt(duration.split(" ")[0]);
-
-    let endHour = startHour + Math.floor(durationMinutes / 60);
-    let endMinute = startMinute + (durationMinutes % 60);
-
-    if (endMinute >= 60) {
-      endHour += Math.floor(endMinute / 60);
-      endMinute %= 60;
-    }
-
-    if (endHour >= 24) {
-      endHour %= 24;
-    }
-
-    const formattedEndHour = endHour % 12 || 12;
-    const ampm = endHour >= 12 ? "PM" : "AM";
-    const formattedEndMinute = endMinute.toString().padStart(2, "0");
-
-    return `${formattedEndHour}:${formattedEndMinute} ${ampm}`;
-  };
-
-  const [selectedDate, setSelectedDate] = useState(getTodayDate());
-  const [startTime, setStartTime] = useState(getCurrentTime());
-  const [endTime, setEndTime] = useState(
-    calculateEndTime(getCurrentTime(), "60 minutes")
-  );
   const [dateTime, setDateTime] = useState("");
+  const [dateTimeLocal, setDateTimeLocal] = useState("");
   const [duration, setDuration] = useState("60 minutes");
-  const [showPopup, setShowPopup] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const formatDate = (dateString) => {
-    const [year, month, day] = dateString.split("-");
-    return `${day}-${month}-${year}`;
+  const [errors, setErrors] = useState({});
+  const [interviewer, setInterviewer] = useState("");
+
+  // Convert datetime-local value to display format (DD-MM-YYYY HH:mm)
+  const formatDateTimeForDisplay = (datetimeLocalValue) => {
+    if (!datetimeLocalValue) return "";
+    const date = new Date(datetimeLocalValue);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${day}-${month}-${year} ${hours}:${minutes}`;
   };
 
-  const toggleDropdown = () => {
-    setShowDropdown((prev) => !prev);
+  // Convert display format to datetime-local format (YYYY-MM-DDTHH:mm)
+  const formatForDatetimeLocal = (displayDateTime) => {
+    if (!displayDateTime) {
+      // Return current datetime in datetime-local format as default
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+    
+    // Parse DD-MM-YYYY HH:mm format
+    const parts = displayDateTime.split(" ");
+    if (parts.length >= 2) {
+      const datePart = parts[0];
+      const timePart = parts[1];
+      
+      if (datePart && datePart.includes("-")) {
+        const [day, month, year] = datePart.split("-");
+        const time = timePart || "00:00";
+        return `${year}-${month}-${day}T${time}`;
+      }
+    }
+    
+    return "";
   };
 
   const durationOptions = [
-    "30 minutes",
-    "60 minutes",
-    "90 minutes",
-    "120 minutes",
+    { value: "30 minutes", label: "30 minutes" },
+    { value: "60 minutes", label: "60 minutes" },
+    { value: "90 minutes", label: "90 minutes" },
+    { value: "120 minutes", label: "120 minutes" },
   ];
 
-  useEffect(() => {
-    // Update end time and display default combined date and time
-    const calculatedEndTime = calculateEndTime(startTime, duration);
-    setEndTime(calculatedEndTime);
-    setDateTime(
-      `${formatDate(selectedDate)} ${formatTime(
-        startTime
-      )} - ${calculatedEndTime}`
-    );
-  }, [startTime, duration, selectedDate]);
-
-  const handleDateClick = () => {
-    setShowPopup(true);
-  };
-
-  const formatTime = (time) => {
-    const [hour, minute] = time.split(":");
-    const hourInt = parseInt(hour);
-    const ampm = hourInt >= 12 ? "PM" : "AM";
-    const formattedHour = hourInt % 12 || 12;
-    return `${formattedHour}:${minute} ${ampm}`;
-  };
-
-  const handleStartTimeChange = (e) => {
-    const selectedStartTime = e.target.value;
-    setStartTime(selectedStartTime);
-    const calculatedEndTime = calculateEndTime(selectedStartTime, duration);
-    setEndTime(calculatedEndTime);
-  };
-
-  const handleConfirm = () => {
-    const calculatedEndTime = calculateEndTime(startTime, duration);
-    setEndTime(calculatedEndTime);
-    setDateTime(
-      `${formatDate(selectedDate)} ${formatTime(
-        startTime
-      )} - ${calculatedEndTime}`
-    );
-    setShowPopup(false);
-  };
-
-  const handleDurationSelect = (selectedDuration) => {
+  const handleDurationChange = (e) => {
+    const selectedDuration = e.target.value;
     setDuration(selectedDuration);
-    const calculatedEndTime = calculateEndTime(startTime, selectedDuration);
-    setEndTime(calculatedEndTime);
-    setDateTime(
-      `${formatDate(selectedDate)} ${formatTime(
-        startTime
-      )} - ${calculatedEndTime}`
-    );
-    setShowDropdown(false);
-  };
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
   };
 
   useEffect(() => {
     if (MockEditData) {
-      setDateTime(MockEditData.rounds.dateTime || "");
-      setDuration(MockEditData.rounds.duration || "");
-      setSelectedDate(MockEditData.rounds.dateTime?.split(" ")[0] || "");
-      setStartTime(MockEditData.rounds.dateTime?.split(" ")[1] || "");
+      console.log("MockEditData in useEffect:", MockEditData);
+      
+      // Handle rounds as array or single object
+      const roundData = Array.isArray(MockEditData.rounds) 
+        ? MockEditData.rounds[0] 
+        : MockEditData.rounds;
+      
+      if (roundData && roundData.dateTime) {
+        setDateTime(roundData.dateTime);
+        setDuration(roundData.duration || "60 minutes");
+        
+        // Convert the dateTime to datetime-local format
+        const datetimeLocalValue = formatForDatetimeLocal(roundData.dateTime);
+        setDateTimeLocal(datetimeLocalValue);
+        
+        setInterviewer(roundData.interviewer || MockEditData.interviewer || "");
+      } else {
+        // Set default values if no round data
+        const defaultDateTimeLocal = formatForDatetimeLocal("");
+        setDateTimeLocal(defaultDateTimeLocal);
+        setDateTime(formatDateTimeForDisplay(defaultDateTimeLocal));
+        setDuration("60 minutes");
+        setInterviewer("");
+      }
     }
   }, [MockEditData]);
 
@@ -152,31 +128,48 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Clear previous errors
+    setErrors({});
+    
+    // Validate required fields
+    const newErrors = {};
+    if (!dateTime) newErrors.dateTime = "Date & Time is required";
+    if (!duration) newErrors.duration = "Duration is required";
+    if (!interviewer) newErrors.interviewer = "Interviewer is required";
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
     try {
       // Prepare the payload
       const payload = {
-        interviewer: "",
+        interviewer: interviewer,
         dateTime: dateTime,
         duration: duration,
         status: "Reschedule",
-        ownerId: ownerId, // Ensure these are assigned properly
+        ownerId: ownerId,
         tenantId: organizationId,
       };
 
-      // Create a new mock interview
+      // Update the mock interview
       const response = await axios.patch(
         `${config.REACT_APP_API_URL}/updateMockInterview/${MockEditData._id}`,
         payload
       );
+      
       if (response?.data) {
         onClose?.();
         await fetchMockInterviewData();
       }
-      // Handle the response if needed
-      console.log("Mock interview created:", response.data);
+      
+      console.log("Mock interview updated:", response.data);
     } catch (error) {
-      console.error("Error creating/updating mock interview:", error);
+      console.error("Error updating mock interview:", error);
+      // Set error message if needed
+      setErrors({ general: "Failed to update mock interview. Please try again." });
     }
   };
 
@@ -200,77 +193,57 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
             </div>
           </div>
           <form>
-            <div className="mb-5 mt-3 p-3 text-xs">
-              <div>
+            <div className="mb-5 mt-3 p-3">
+              <div className="space-y-4">
                 {/* Date & Time */}
-                <div className="mb-3">
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-black w-32">
-                      Date & Time <span className="text-red-500">*</span>
-                    </label>
-                  </div>
-                  <div className="flex-grow">
-                    <input
-                      type="text"
-                      readOnly
-                      value={dateTime || ""}
-                      onClick={handleDateClick}
-                      className="border rounded-md w-full focus:outline-none cursor-pointer px-3 py-2"
-                    />
-                  </div>
-                </div>
-                {/* Duration */}
-                <div className="mb-3">
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-black w-32">
-                      Duration <span className="text-red-500">*</span>
-                    </label>
-                  </div>
-                  <div className="flex-grow relative">
-                    <input
-                      type="text"
-                      value={duration}
-                      readOnly
-                      className="border rounded-md w-full focus:outline-none cursor-pointer px-3 py-2"
-                      onClick={toggleDropdown}
-                    />
-                    <div
-                      className="absolute right-0 top-0"
-                      onClick={toggleDropdown}
-                    >
-                      <MdArrowDropDown className="text-lg text-gray-500 mt-1 cursor-pointer" />
-                    </div>
-
-                    {showDropdown && (
-                      <div className="absolute z-50 border border-gray-200 mb-5 w-full rounded-md bg-white shadow-lg">
-                        {durationOptions.map((option) => (
-                          <div
-                            key={option}
-                            className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleDurationSelect(option)}
-                          >
-                            {option}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Add Interviews */}
                 <div>
-                  <label
-                    htmlFor="Interviewer"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-black w-32"
-                  >
-                    Interviewer <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Scheduled Date & Time <span className="text-red-500">*</span>
                   </label>
-                  <div className="relative flex-grow">
-                    <div
-                      className="border rounded-md w-full focus:outline-none cursor-pointer px-3 py-2"
-                      onClick={toggleSidebar}
-                    ></div>
-                  </div>
+                  <input
+                    type="datetime-local"
+                    ref={fieldRefs.dateTime}
+                    value={dateTimeLocal}
+                    onChange={(e) => {
+                      setDateTimeLocal(e.target.value);
+                      setDateTime(formatDateTimeForDisplay(e.target.value));
+                    }}
+                    min={`${getTodayDate()}T00:00`}
+                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                      border ${errors.dateTime ? "border-red-500 focus:ring-red-500 focus:outline-red-300" : "border-gray-300 focus:ring-blue-500 focus:outline-blue-300"}
+                      focus:outline-gray-300`}
+                  />
+                  {errors.dateTime && <p className="text-red-500 text-xs pt-1">{errors.dateTime}</p>}
+                </div>
+
+                {/* Duration */}
+                <div>
+                  <DropdownWithSearchField
+                    label="Duration"
+                    value={duration}
+                    options={durationOptions}
+                    onChange={handleDurationChange}
+                    name="duration"
+                    error={errors.duration}
+                    containerRef={fieldRefs.duration}
+                    required={true}
+                    placeholder="Select duration"
+                    disabled={false}
+                  />
+                </div>
+
+                {/* Interviewer */}
+                <div>
+                  <InputField
+                    label="Interviewer"
+                    value={interviewer || ""}
+                    onChange={(e) => setInterviewer(e.target.value)}
+                    inputRef={fieldRefs.interviewer}
+                    name="interviewer"
+                    error={errors.interviewer}
+                    required={true}
+                    placeholder="Enter interviewer name"
+                  />
                 </div>
               </div>
             </div>
@@ -286,40 +259,6 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
           </form>
         </div>
       </div>
-      {/* showing date and time */}
-      {showPopup && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-white p-3 rounded-lg shadow-lg w-1/5 relative">
-            <div className="mb-4">
-              <label className="block mb-2 font-bold">Select Date</label>
-              <input
-                type="date"
-                className="border rounded-md p-1 w-full"
-                min={getTodayDate()}
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-2 font-bold">Start Time</label>
-              <input
-                type="time"
-                className="border rounded-md p-1 w-full"
-                onChange={handleStartTimeChange}
-                value={startTime}
-              />
-            </div>
-            {selectedDate && startTime && endTime && (
-              <button
-                onClick={handleConfirm}
-                className="px-3 py-1 bg-custom-blue text-white rounded float-right"
-              >
-                Confirm
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </>
   );
 };

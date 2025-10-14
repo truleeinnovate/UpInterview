@@ -12,10 +12,16 @@ import {
   Building,
   RefreshCw,
   Eye,
-  Edit,
 } from "lucide-react";
 
-const WithdrawalKanban = ({ withdrawalRequests = [], onCardClick, isLoading, refetch }) => {
+const WithdrawalKanban = ({ 
+  withdrawalRequests = [], 
+  onCardClick, 
+  isLoading, 
+  refetch,
+  currentPage = 0,
+  itemsPerPage = 10 
+}) => {
   const [hoveredCard, setHoveredCard] = useState(null);
 
   const columns = [
@@ -57,9 +63,17 @@ const WithdrawalKanban = ({ withdrawalRequests = [], onCardClick, isLoading, ref
   ];
 
   const getRequestsByStatus = (status) => {
-    return withdrawalRequests.filter(
+    const allRequests = withdrawalRequests.filter(
       (request) => request.status?.toLowerCase() === status
     );
+    
+    // Apply pagination - get only the items for current page
+    const startIndex = currentPage * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return {
+      paginatedRequests: allRequests.slice(startIndex, endIndex),
+      totalRequests: allRequests.length
+    };
   };
 
   const formatDate = (date) => {
@@ -88,10 +102,44 @@ const WithdrawalKanban = ({ withdrawalRequests = [], onCardClick, isLoading, ref
     );
   }
 
+  // Calculate the actual number of pages needed
+  const getTotalPages = () => {
+    const statusCounts = columns.map(col => {
+      const requests = withdrawalRequests.filter(
+        (request) => request.status?.toLowerCase() === col.id
+      );
+      return requests.length;
+    });
+    const maxItems = Math.max(...statusCounts, 0);
+    return maxItems > 0 ? Math.ceil(maxItems / itemsPerPage) : 1;
+  };
+
+  const totalPages = getTotalPages();
+
   return (
     <div className="bg-gray-50 min-h-screen p-4">
-      {/* Refresh Button */}
-      <div className="flex justify-end mb-4">
+      {/* Header with Refresh and Pagination Info */}
+      <div className="flex justify-between items-center mb-4">
+        {/* Page Info - Only show if there are items */}
+        {totalPages > 1 && (
+          <div className="bg-white px-4 py-2 rounded-lg border border-gray-200">
+            <span className="text-sm text-gray-600">
+              Page {currentPage + 1} of {totalPages} 
+              <span className="ml-2 text-gray-400">
+                (Showing up to {itemsPerPage} items per status)
+              </span>
+            </span>
+          </div>
+        )}
+        {totalPages <= 1 && (
+          <div className="bg-white px-4 py-2 rounded-lg border border-gray-200">
+            <span className="text-sm text-gray-600">
+              All items displayed
+            </span>
+          </div>
+        )}
+
+        {/* Refresh Button */}
         <button
           onClick={refetch}
           className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -115,17 +163,22 @@ const WithdrawalKanban = ({ withdrawalRequests = [], onCardClick, isLoading, ref
                 <h3 className="font-semibold text-sm">{column.title}</h3>
               </div>
               <span className="bg-white/90 px-2 py-0.5 rounded-full text-xs font-semibold ml-2">
-                {getRequestsByStatus(column.id).length}
+                {getRequestsByStatus(column.id).totalRequests}
               </span>
-
             </div>
 
             {/* Column Content */}
             <div className="p-3 space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
-              {getRequestsByStatus(column.id).length === 0 ? (
-                <p className="text-center text-gray-500 py-8">No requests</p>
-              ) : (
-                getRequestsByStatus(column.id).map((request) => (
+              {(() => {
+                const { paginatedRequests, totalRequests } = getRequestsByStatus(column.id);
+                if (paginatedRequests.length === 0) {
+                  return (
+                    <p className="text-center text-gray-500 py-8">
+                      {totalRequests === 0 ? "No requests" : `No requests on page ${currentPage + 1}`}
+                    </p>
+                  );
+                }
+                return paginatedRequests.map((request) => (
                   <motion.div
                     key={request._id}
                     initial={{ opacity: 0, y: 20 }}
@@ -256,8 +309,8 @@ const WithdrawalKanban = ({ withdrawalRequests = [], onCardClick, isLoading, ref
                       </div>
                     )}
                   </motion.div>
-                ))
-              )}
+                ));
+              })()}
             </div>
           </div>
         ))}
