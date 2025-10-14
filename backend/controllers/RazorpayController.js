@@ -17,6 +17,7 @@ const Usage = require('../models/Usage.js');
 const { inflateRaw } = require('zlib');
 const { Contacts } = require('../models/Contacts.js');
 const WalletTopup = require('../models/WalletTopup.js');
+const { Users } = require('../models/Users.js');
 const createInvoice = helpers.createInvoice;
 const createReceipt = helpers.createReceipt;
 const calculateEndDate = helpers.calculateEndDate;
@@ -552,6 +553,7 @@ const verifyPayment = async (req, res) => {
 
                     const features = Array.isArray(planDoc?.features) ? planDoc.features : [];
 
+                    // active tenant
                     const tenant = await Tenant.findById(customerSubscription.tenantId);
                     if (tenant) {
                         tenant.status = 'active';
@@ -560,6 +562,13 @@ const verifyPayment = async (req, res) => {
                         tenant.usersBandWidth = bandwidthLimit;
                         tenant.totalUsers = usersLimit;
                         await tenant.save();
+
+                    const user = await Users.findById(customerSubscription.ownerId);
+                    // active user
+                    if (user) {
+                        user.status ='active'
+                        await user.save();
+                    }
                         // Create Usage document only once per billing period after payment verification
                         try {
                             const now = new Date();

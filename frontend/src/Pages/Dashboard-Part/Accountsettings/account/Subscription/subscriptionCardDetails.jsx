@@ -460,15 +460,15 @@ const SubscriptionCardDetails = () => {
                     toast.success("Payment successfully completed!");
                     setProcessing(false);
 
-                    axios
-                      .post(
-                        `${process.env.REACT_APP_API_URL}/emails/send-signup-email`,
-                        {
-                          tenantId: tenantId,
-                          ownerId: ownerId,
-                        }
-                      )
-                      .catch((err) => console.error("Email error:", err));
+                    // axios
+                    //   .post(
+                    //     `${process.env.REACT_APP_API_URL}/emails/send-signup-email`,
+                    //     {
+                    //       tenantId: tenantId,
+                    //       ownerId: ownerId,
+                    //     }
+                    //   )
+                    //   .catch((err) => console.error("Email error:", err));
                     await axios.post(
                       `${process.env.REACT_APP_API_URL}/emails/subscription/paid`,
                       {
