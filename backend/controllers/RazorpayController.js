@@ -558,10 +558,23 @@ const verifyPayment = async (req, res) => {
                     const tenant = await Tenant.findById(customerSubscription.tenantId);
                     if (tenant) {
                         tenant.status = 'active';
-                        const bandwidthLimit = features.find(feature => feature?.name === 'Bandwidth')?.limit ?? tenant.usersBandWidth ?? 0;
-                        const usersLimit = features.find(feature => feature?.name === 'Users')?.limit ?? tenant.totalUsers ?? 0;
-                        tenant.usersBandWidth = bandwidthLimit;
-                        tenant.totalUsers = usersLimit;
+                        
+                        // Handle bandwidth limit - convert "unlimited" to 0 (which represents unlimited in the system)
+                        const bandwidthFeature = features.find(feature => feature?.name === 'Bandwidth');
+                        let bandwidthLimit = bandwidthFeature?.limit ?? tenant.usersBandWidth ?? 0;
+                        if (bandwidthLimit === 'unlimited' || bandwidthLimit === 'Unlimited') {
+                            bandwidthLimit = 0; // 0 represents unlimited bandwidth
+                        }
+                        tenant.usersBandWidth = Number(bandwidthLimit) || 0;
+                        
+                        // Handle users limit - convert "unlimited" to 0 (which represents unlimited in the system)
+                        const usersFeature = features.find(feature => feature?.name === 'Users');
+                        let usersLimit = usersFeature?.limit ?? tenant.totalUsers ?? 0;
+                        if (usersLimit === 'unlimited' || usersLimit === 'Unlimited') {
+                            usersLimit = 0; // 0 represents unlimited users
+                        }
+                        tenant.totalUsers = Number(usersLimit) || 0;
+                        
                         await tenant.save();
 
                     const user = await Users.findById(customerSubscription.ownerId);
@@ -1988,8 +2001,23 @@ const handleSubscriptionCharged = async (subscription) => {
 
         const tenant = await Tenant.findById(customerSubscription.tenantId);
             tenant.status = 'active';
-            tenant.usersBandWidth = features.find(feature => feature.name === 'Bandwidth').limit;
-            tenant.totalUsers = features.find(feature => feature.name === 'Users').limit;
+            
+            // Handle bandwidth limit - convert "unlimited" to 0 (which represents unlimited in the system)
+            const bandwidthFeature = features.find(feature => feature.name === 'Bandwidth');
+            let bandwidthLimit = bandwidthFeature?.limit ?? tenant.usersBandWidth ?? 0;
+            if (bandwidthLimit === 'unlimited' || bandwidthLimit === 'Unlimited') {
+                bandwidthLimit = 0; // 0 represents unlimited bandwidth
+            }
+            tenant.usersBandWidth = Number(bandwidthLimit) || 0;
+            
+            // Handle users limit - convert "unlimited" to 0 (which represents unlimited in the system)
+            const usersFeature = features.find(feature => feature.name === 'Users');
+            let usersLimit = usersFeature?.limit ?? tenant.totalUsers ?? 0;
+            if (usersLimit === 'unlimited' || usersLimit === 'Unlimited') {
+                usersLimit = 0; // 0 represents unlimited users
+            }
+            tenant.totalUsers = Number(usersLimit) || 0;
+            
         await tenant.save();
 
         // Create or update Usage document only once per billing period

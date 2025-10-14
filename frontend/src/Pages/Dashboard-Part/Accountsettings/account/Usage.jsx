@@ -309,7 +309,7 @@ const Usage = () => {
             Current: {usage?.currentUsers ?? "—"}
           </span>
           <span className="text-gray-600">
-            Limit: {usage?.totalUsers ?? "—"}
+            Limit: {usage?.totalUsers === 0 ? "Unlimited" : usage?.totalUsers ?? "—"}
           </span>
         </div>
         <div className="h-2 bg-gray-200 rounded-full">
