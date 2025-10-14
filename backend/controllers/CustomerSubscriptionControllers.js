@@ -4,6 +4,9 @@ const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js');
 const Invoicemodels = require('../models/Invoicemodels.js');
 const Wallet = require('../models/WalletTopup.js');
 const { createInvoice, createSubscriptionRecord, createReceipt, calculateEndDate } = require('./CustomerSubscriptionInvoiceContollers.js');
+const { Users } = require('../models/Users.js');
+const Tenant = require('../models/Tenant.js');
+const { CreateOrGetVideoCallingSettings } = require('./VideoCallingSettingControllers/VideoCallingSettingController.js');
 
 
 // Function to handle subscription creation
@@ -164,6 +167,44 @@ const createSubscriptionControllers = async (req, res) => {
         try {
           const Usage = require('../models/Usage.js');
           const features = plan.features || [];
+
+          // active tenant
+          const tenant = await Tenant.findById(userDetails.tenantId);
+            if (tenant) {
+                tenant.status = 'active';
+                                  
+                // Handle bandwidth limit - convert "unlimited" to 0 (which represents unlimited in the system)
+                const bandwidthFeature = features.find(feature => feature?.name === 'Bandwidth');
+                let bandwidthLimit = bandwidthFeature?.limit ?? tenant.usersBandWidth ?? 0;
+                if (bandwidthLimit === 'unlimited' || bandwidthLimit === 'Unlimited') {
+                    bandwidthLimit = 0; // 0 represents unlimited bandwidth
+                }
+                  tenant.usersBandWidth = Number(bandwidthLimit) || 0;
+                                  
+                // Handle users limit - convert "unlimited" to 0 (which represents unlimited in the system)
+                  const usersFeature = features.find(feature => feature?.name === 'Users');
+                  let usersLimit = usersFeature?.limit ?? tenant.totalUsers ?? 0;
+                  if (usersLimit === 'unlimited' || usersLimit === 'Unlimited') {
+                        usersLimit = 0; // 0 represents unlimited users
+                                  }
+                  tenant.totalUsers = Number(usersLimit) || 0;
+                                  
+                      await tenant.save();
+          
+                  const user = await Users.findById(userDetails.ownerId);
+                  // active user
+                  if (user) {
+                        user.status ='active'
+                        await user.save();
+                  }
+          
+                  // 2️⃣ Call function to create or get default Zoom settings
+                  const videoSettingsResponse = await CreateOrGetVideoCallingSettings(userDetails.tenantId, userDetails.ownerId); 
+                  console.log(videoSettingsResponse);
+          }
+
+
+          
           
           const usageAttributes = features.filter(f => ['Assessments', 'Internal_Interviews', 'Question_Bank_Access', 'Bandwidth'].includes(f?.name))
                                     .map(f => ({
