@@ -6,10 +6,18 @@
 // v1.0.5 - Ashok - Fixed table view in small screens and added delete button for kanban
 // v1.0.6 - Ashok - changed check box colors to brand color
 // v1.0.7 - Ashok - Added status badge
+// v1.0.8 - Ashok - Added common code kanban
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Eye, Pencil, ChevronUp, ChevronDown, Trash } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  ChevronUp,
+  ChevronDown,
+  Trash,
+  MoreVertical,
+} from "lucide-react";
 
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
@@ -28,7 +36,10 @@ import { useCustomContext } from "../../../../Context/Contextfetch.js";
 // v1.0.1 --------------------------------------------------->
 import TaskForm from "./Task_form.jsx";
 import TaskProfileDetails from "./TaskProfileDetails.jsx";
-import TaskKanban from "./TaskKanban.jsx";
+// v1.0.8 <----------------------------------------------------------------------------
+// import TaskKanban from "./TaskKanban.jsx";
+import TaskKanban from "../../../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
+// v1.0.8 ---------------------------------------------------------------------------->
 import { usePermissions } from "../../../../Context/PermissionsContext";
 import { useDeleteTask, useTasks } from "../../../../apiHooks/useTasks";
 // v1.0.3 <---------------------------------------------------------
@@ -39,6 +50,94 @@ import { notify } from "../../../../services/toastService.js";
 // v1.0.7 <------------------------------------------------------------
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 // v1.0.7 ------------------------------------------------------------>
+
+// v1.0.8 <-----------------------------------------------------------------------
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => (
+        <button
+          key={action.key}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onClick(item, e);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title={action.label}
+        >
+          {action.icon}
+        </button>
+      ))}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+// v1.0.8 ----------------------------------------------------------------------->
 
 const Task = () => {
   const { effectivePermissions } = usePermissions();
@@ -430,28 +529,22 @@ const Task = () => {
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
   // v1.0.7 ------------------------------------------------------>
 
-  // Render actions for Kanban cards
-  const renderKanbanActions = (task) => (
-    // v1.0.5 <-------------------------------------------------------------
-    <div className="flex items-center gap-4">
-      <button onClick={() => handleTaskClick(task)}>
-        <Eye className="w-4 h-4 text-custom-blue" />
-      </button>
-      <button onClick={() => handleEditTask(task._id)}>
-        <Pencil className="w-4 h-4 text-green-600" />
-      </button>
-      <button
-        onClick={() => {
-          setShowDeleteConfirmModal(true);
-          setDeleteTask(task);
-        }}
-      >
-        <Trash className="w-4 h-4 text-red-600" />
-      </button>
-    </div>
-    // v1.0.5 ------------------------------------------------------------->
-  );
+  // v1.0.8 <----------------------------------------------------
+  const formatDate = (isoString) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    return date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+  // v1.0.8 ---------------------------------------------------->
 
+  // Render actions for Kanban cards
   // Table Columns Configuration
   const tableColumns = [
     // v1.0.3 <-------------------------------------------------
@@ -537,6 +630,59 @@ const Task = () => {
     },
   ];
 
+  // v1.0.8 <----------------------------------------------------------------------------------
+  const kanbanColumns = [
+    {
+      key: "assignedTo",
+      header: "Assigned To",
+      render: (value, row) => <span>{row?.assignedTo}</span>,
+    },
+    {
+      key: "relatedTo",
+      header: "Related To",
+      render: (value, row) => <span>{row?.relatedTo?.objectName}</span>,
+    },
+    {
+      key: "priority",
+      header: "Priority",
+      render: (value, row) => (
+        <span>{<StatusBadge status={row?.priority} />}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <span>{<StatusBadge status={row?.status} />}</span>
+      ),
+    },
+  ];
+
+  const kanbanActions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) => handleTaskClick(row),
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) => handleEditTask(row._id),
+    },
+    {
+      key: "delete",
+      label: "Delete",
+      icon: <Trash className="w-4 h-4 text-red-600" />,
+      onClick: (row) => {
+        setShowDeleteConfirmModal(true);
+        setDeleteTask(row);
+      },
+    },
+  ];
+  // v1.0.8 ---------------------------------------------------------------------------------->
+
   const handleEditTask = (taskId) => {
     setEditingTaskId(taskId);
     setIsTaskFormOpen(true);
@@ -595,28 +741,29 @@ const Task = () => {
               </div>
             ) : (
               // v1.0.4 <--------------------------------
+              // v1.0.8 <----------------------------------------------------
               <div className="w-full sm:mt-8">
                 {/* v1.0.4 <-------------------------------- */}
                 <TaskKanban
+                  loading={isLoading}
                   data={currentFilteredRows.map((task) => ({
                     ...task,
                     id: task._id || task.id,
-                    title:
-                      task.title.charAt(0).toUpperCase() + task.title.slice(1),
-                    Email:
-                      task.assignedTo.charAt(0).toUpperCase() +
-                        task.assignedTo.slice(1) || "None",
-                    Phone: task.relatedTo?.objectName || "N/A",
-                    HigherQualification: task.priority || "N/A",
-                    UniversityCollege: task.status || "N/A",
-                    interviews: new Date(task.dueDate).toLocaleString(),
+                    title: task?.taskCode,
+                    subTitle: formatDate(task?.dueDate),
                   }))}
-                  //columns={kanbanColumns}
-                  loading={isLoading}
-                  renderActions={renderKanbanActions}
+                  columns={kanbanColumns}
+                  renderActions={(item) => (
+                    <KanbanActionsMenu
+                      item={item}
+                      kanbanActions={kanbanActions}
+                    />
+                  )}
                   emptyState="No Tasks Found."
+                  kanbanTitle="Task"
                 />
               </div>
+              // v1.0.8 ---------------------------------------------------->
             )}
             <FilterPopup
               isOpen={isFilterPopupOpen}

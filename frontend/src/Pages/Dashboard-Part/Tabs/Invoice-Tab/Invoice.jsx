@@ -4,9 +4,16 @@
 // v1.0.3  - Ashok   - fixed responsiveness issue at kanban loading view
 // v1.0.4  - Ashok   - changed loading view of both table and kanban views
 // v1.0.5  - Ashok   - changed check box color to brand color in filters
+// v1.0.6  - Ashok   - added common code for kanban
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { FileText, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  MoreVertical,
+  Eye,
+} from "lucide-react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { useNavigate, Outlet } from "react-router-dom";
@@ -16,9 +23,95 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../config";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../Components/Shared/Table/TableView";
-import InvoiceKanban from "./InvoiceKanban";
+// import InvoiceKanban from "./InvoiceKanban";
+import InvoiceKanban from "../../../../Components/Shared/KanbanCommon/KanbanCommon";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import { formatDateTime } from "../../../../utils/dateFormatter";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
+
+// v1.0.6 <----------------------------------------------------------------------------
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Call the function to get actions array for this item
+  const actions = kanbanActions(item);
+  const mainActions = actions.filter((a) => ["view", "edit"].includes(a.key));
+  const overflowActions = actions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {mainActions.map((action) => (
+        <button
+          key={action.key}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onClick(item, e);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title={action.label}
+        >
+          {action.icon}
+        </button>
+      ))}
+
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+// v1.0.6 ---------------------------------------------------------------------------->
 
 const InvoiceTab = () => {
   const navigate = useNavigate();
@@ -331,6 +424,84 @@ const InvoiceTab = () => {
       return dateB - dateA;
     });
 
+  // v1.0.6 <----------------------------------------------------------------------------------
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return "";
+    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  };
+
+  const formatDate = (isoString) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    return date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const kanbanColumns = [
+    {
+      key: "invoiceNumber",
+      header: "Invoice ID",
+      render: (value, row) => (
+        <span>{capitalizeFirstLetter(row?.invoiceNumber)}</span>
+      ),
+    },
+    {
+      key: "paymentService",
+      header: "Payment Service",
+      render: (value, row) => (
+        <span className="text-gray-800 font-medium">
+          {row?.type
+            ? row?.type.charAt(0).toUpperCase() + row?.type.slice(1)
+            : ""}
+        </span>
+      ),
+    },
+    {
+      key: "endDate",
+      header: "End Date",
+      render: (value, row) => (
+        <span className="text-gray-800 font-medium">
+          {row?.dates?.endDate ? formatDate(row?.dates?.endDate) : "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "duration",
+      header: "Total Amount",
+      render: (value, row) => (
+        <span className="text-gray-800 font-medium truncate">
+          {value && value.total ? `₹${value.total}` : `0`}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <span className="text-gray-800 font-medium truncate">
+          <StatusBadge status={capitalizeFirstLetter(row?.status)} />
+        </span>
+      ),
+    },
+  ];
+
+  const kanbanActions = () => [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) =>
+        navigate(`details/${row.id}`, { state: { invoiceData: row } }),
+    },
+  ];
+  // v1.0.6 ---------------------------------------------------------------------------------->
+
   return (
     // v1.0.4 <-------------------------------------------------------------------------------
     <div className="w-full min-h-screen border-0">
@@ -385,11 +556,22 @@ const InvoiceTab = () => {
               ) : (
                 <div className="w-full">
                   <InvoiceKanban
-                    currentFilteredRows={currentFilteredRows || []}
                     loading={loading}
-                    handleUserClick={() => {}}
-                    handleEditClick={() => {}}
-                    toggleSidebar={() => {}}
+                    data={currentFilteredRows.map((invoice) => ({
+                      ...invoice,
+                      id: invoice?._id,
+                      title: invoice?.paymentId,
+                      subTitle: formatDate(invoice?.dates?.createdAt),
+                    }))}
+                    columns={kanbanColumns}
+                    renderActions={(item) => (
+                      <KanbanActionsMenu
+                        item={item}
+                        kanbanActions={kanbanActions}
+                      />
+                    )}
+                    emptyState="No invoices found."
+                    kanbanTitle="Invoice"
                   />
                 </div>
               )}

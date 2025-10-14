@@ -6,6 +6,7 @@
 // v1.0.5  -  Ashok   -  changed kanban and Added delete and change status buttons for Kanban
 // v1.0.6  -  Fixed   - Fixed alignment style issues at table
 // v1.0.7  -  Ashok   - fixed style issue
+// v1.0.8  -  Ashok   - added common code for kanban
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -17,11 +18,13 @@ import {
   ChevronDown,
   Trash,
   Repeat,
+  MoreVertical,
 } from "lucide-react";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../Components/Shared/Table/TableView";
-import PositionKanban from "./PositionKanban";
+// import PositionKanban from "./PositionKanban";
+import PositionKanban from "../../../../Components/Shared/KanbanCommon/KanbanCommon";
 import PositionSlideDetails from "./PositionSlideDetails";
 import PositionForm from "./Position-Form";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
@@ -39,10 +42,100 @@ import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal";
 import { format } from "date-fns";
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
 import { formatDateTime } from "../../../../utils/dateFormatter";
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+
 const capitalizeFirstLetter = (string) => {
   if (!string) return "";
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
+
+// v1.0.8 <---------------------------------------------------------------------
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => (
+        <button
+          key={action.key}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onClick(item, e);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title={action.label}
+        >
+          {action.icon}
+        </button>
+      ))}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+// v1.0.8 --------------------------------------------------------------------->
 
 const PositionTab = () => {
   // <---------------------- v1.0.0
@@ -110,20 +203,23 @@ const PositionTab = () => {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deletePosition, setDeletePosition] = useState(null);
 
+  // v1.0.8 <------------------------------------------
+  useScrollLock(view === "kanban");
+  // v1.0.8 ------------------------------------------>
+
   const handleDeletePosition = async () => {
     try {
       // console.log("deletePosition", deletePosition);
       let res = await deletePositionMutation(
         deletePosition?._id || deletePosition?.id || "N/A"
       );
-   
+
       if (res?.status === "success") {
         setShowDeleteConfirmModal(false);
         notify.success(res?.message || "Position deleted successfully");
       } else {
         notify.warning(res?.message || "Unable to delete position");
       }
-
     } catch (error) {
       // console.error("Error deleting position:", error);
       setShowDeleteConfirmModal(false);
@@ -346,13 +442,13 @@ const PositionTab = () => {
     setCurrentPage(0);
     setIsFilterActive(
       filters.location.length > 0 ||
-      filters.tech.length > 0 ||
-      filters.experience.min ||
-      //<-----v1.03-----
-      filters.experience.max ||
-      filters.company.length > 0 ||
-      (filters.salaryMin && filters.salaryMin > 0) ||
-      !!filters.createdDate
+        filters.tech.length > 0 ||
+        filters.experience.min ||
+        //<-----v1.03-----
+        filters.experience.max ||
+        filters.company.length > 0 ||
+        (filters.salaryMin && filters.salaryMin > 0) ||
+        !!filters.createdDate
       //-----v1.03----->
     );
     setFilterPopupOpen(false);
@@ -527,7 +623,6 @@ const PositionTab = () => {
           )}
         </div>
         // v1.0. <----------------------------------------------------------------------------
-
       ),
     },
     {
@@ -547,47 +642,48 @@ const PositionTab = () => {
   const tableActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-        {
-          key: "view",
-          label: "View Details",
-          icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: (row) => handleView(row),
-        },
-      ]
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: (row) => handleView(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-        //<----v1.02-----
-        {
-          key: "change_status",
-          label: "Change Status",
-          icon: <Repeat className="w-4 h-4 text-green-600" />,
-          onClick: (row) => openStatusModal(row),
-        },
-        //----v1.02----->
-        {
-          key: "edit",
-          label: "Edit",
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: (row) => handleEdit(row),
-        },
-      ]
+          //<----v1.02-----
+          {
+            key: "change_status",
+            label: "Change Status",
+            icon: <Repeat className="w-4 h-4 text-green-600" />,
+            onClick: (row) => openStatusModal(row),
+          },
+          //----v1.02----->
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => handleEdit(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-        {
-          key: "delete",
-          label: "Delete",
-          icon: <Trash className="w-4 h-4 text-red-600" />,
-          onClick: (row) => {
-            setShowDeleteConfirmModal(true);
-            setDeletePosition(row);
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (row) => {
+              setShowDeleteConfirmModal(true);
+              setDeletePosition(row);
+            },
           },
-        },
-      ]
+        ]
       : []),
   ];
   // v1.0.5 <----------------------------------------------------------------------------------
+  // v1.0.8 <----------------------------------------------------------------------------------
   const kanbanColumns = [
     {
       key: "companyname",
@@ -607,6 +703,11 @@ const PositionTab = () => {
       key: "Location",
       header: "Location",
       render: (value) => value || "N/A",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value) => <StatusBadge status={capitalizeFirstLetter(value)} />,
     },
     {
       key: "skills",
@@ -639,71 +740,53 @@ const PositionTab = () => {
     },
   ];
 
-  const actions = [
+  const kanbanActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-        {
-          key: "view",
-          label: "View Details",
-          icon: <Eye className="w-4 h-4 text-blue-600" />,
-          onClick: (row) => handleView(row),
-        },
-      ]
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => handleView(row),
+          },
+        ]
       : []),
 
     ...(effectivePermissions.Positions?.Edit
       ? [
-        {
-          key: "change_status",
-          label: "Change Status",
-          icon: <Repeat className="w-4 h-4 text-green-600" />,
-          onClick: (row) => openStatusModal(row),
-        },
-      ]
+          {
+            key: "change_status",
+            label: "Change Status",
+            icon: <Repeat className="w-4 h-4 text-green-600" />,
+            onClick: (row) => openStatusModal(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-        {
-          key: "edit",
-          label: "Edit",
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: (row) => handleEdit(row),
-        },
-      ]
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => handleEdit(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-        {
-          key: "delete",
-          label: "Delete",
-          icon: <Trash className="w-4 h-4 text-red-600" />,
-          onClick: (row) => {
-            setShowDeleteConfirmModal(true);
-            setDeletePosition(row);
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (row) => {
+              setShowDeleteConfirmModal(true);
+              setDeletePosition(row);
+            },
           },
-        },
-      ]
+        ]
       : []),
   ];
-
-  // Render Actions for Kanban
-  const renderKanbanActions = (item) => (
-    <div className="flex items-center gap-1">
-      {actions.map((action) => (
-        <button
-          key={action.key}
-          onClick={(e) => {
-            e.stopPropagation();
-            action.onClick(item);
-          }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title={action.label}
-        >
-          {action.icon}
-        </button>
-      ))}
-    </div>
-  );
+  // v1.0.8 ---------------------------------------------------------------------------------->
   // v1.0.5 ---------------------------------------------------------------------------------->
 
   if (showAddForm) {
@@ -772,18 +855,26 @@ const PositionTab = () => {
               ) : (
                 <div className="w-full">
                   {/* v1.0.5 <------------------------------------------------------------ */}
+                  {/* v1.0.8 <------------------------------------------------------------ */}
                   <PositionKanban
                     loading={isLoading}
                     data={currentFilteredRows.map((position) => ({
                       ...position,
                       id: position?._id,
                       title: position?.positionCode || "N/A",
-                      subtitle: position?.title || "N/A",
+                      subTitle: position?.title || "N/A",
                     }))}
                     columns={kanbanColumns}
-                    renderActions={renderKanbanActions}
+                    renderActions={(item) => (
+                      <KanbanActionsMenu
+                        item={item}
+                        kanbanActions={kanbanActions}
+                      />
+                    )}
                     emptyState="No positions found."
+                    kanbanTitle="Position"
                   />
+                  {/* v1.0.8 ------------------------------------------------------------> */}
                   {/* v1.0.5 ------------------------------------------------------------> */}
                 </div>
               )}
@@ -862,7 +953,7 @@ const PositionTab = () => {
                                 onChange={() => handleLocationToggle(location)}
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                              // v1.0.1 --------------------------------------------------------------->
+                                // v1.0.1 --------------------------------------------------------------->
                               />
                               <span className="text-sm">{location}</span>
                             </label>
@@ -903,7 +994,7 @@ const PositionTab = () => {
                                 }
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                              // v1.0.1 <---------------------------------------------------------------
+                                // v1.0.1 <---------------------------------------------------------------
                               />
                               <span className="text-sm">{skill.SkillName}</span>
                             </label>

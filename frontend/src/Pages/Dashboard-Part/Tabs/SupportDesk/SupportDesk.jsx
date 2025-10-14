@@ -5,10 +5,11 @@
 // v1.0.3 - Venkatesh --- added new filters issue types,priority and created date
 // v1.0.4 - Ashok - Improved responsiveness
 // v1.0.5 - Ashok - Fixed issues in responsiveness
+// v1.0.6 - Ashok - Added common code to kanban
 
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Eye, Pencil, Plus } from "lucide-react";
+import { Eye, MoreVertical, Pencil, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
@@ -17,7 +18,8 @@ import Header from "../../../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar.jsx";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import TableView from "../../../../Components/Shared/Table/TableView.jsx";
-import KanbanView from "./KanbanView.jsx";
+// import KanbanView from "./KanbanView.jsx";
+import KanbanView from "../../../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { useCustomContext } from "../../../../Context/Contextfetch";
@@ -30,6 +32,94 @@ import { useMediaQuery } from "react-responsive";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.4 ----------------------------------------------------------->
 import { formatDateTime } from "../../../../utils/dateFormatter";
+import { FaEye, FaPencilAlt } from "react-icons/fa";
+
+// v1.0.6 <---------------------------------------------------------------------
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Call function to get actions for this item
+  const actions = kanbanActions(item);
+  const mainActions = actions.filter((a) => ["view", "edit"].includes(a.key));
+  const overflowActions = actions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => (
+        <button
+          key={action.key}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onClick(item, e);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title={action.label}
+        >
+          {action.icon}
+        </button>
+      ))}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+// v1.0.6 --------------------------------------------------------------------->
 
 function SupportDesk() {
   const { checkPermission, isInitialized } = usePermissionCheck();
@@ -219,10 +309,17 @@ function SupportDesk() {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = parseISO(dateString);
-    return isValid(date) ? format(date, "dd MMM yyyy") : "N/A";
+  const formatDate = (isoString) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    return date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   // const hasActionAccess = (ticket) => {
@@ -440,6 +537,118 @@ function SupportDesk() {
     //-------v1.0.3-------->
   };
 
+  // v1.0.6 <----------------------------------------------------------------------
+
+  const kanbanColumns = [
+    {
+      key: "contact",
+      header: "Contact",
+      render: (value) => value || "N/A",
+    },
+    {
+      key: "issueType",
+      header: "Issue Type",
+      render: (value) => value || "N/A",
+    },
+    {
+      key: "subject",
+      header: "Subject",
+      render: (value) => value || "N/A",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <StatusBadge
+          status={value}
+          text={
+            value
+              ? value.charAt(0).toUpperCase() + value.slice(1)
+              : "Not Provided"
+          }
+        />
+      ),
+    },
+    {
+      key: "priority",
+      header: "Priority",
+      render: (value) => (
+        <span
+          className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(
+            value
+          )}`}
+        >
+          {value || "N/A"}
+        </span>
+      ),
+    },
+    ...(impersonatedUser_roleName === "Super_Admin"
+      ? [
+          {
+            key: "assignedTo",
+            header: "Assigned To",
+            render: (value) => value || "N/A",
+          },
+        ]
+      : []),
+  ];
+
+  const hasActionAccess = (ticket) => {
+    if (impersonatedUser_roleName === "Super_Admin") {
+      return true;
+    } else if (impersonatedUser_roleName === "Support_Team") {
+      return (
+        ticket.assignedToId === currentUserId || ticket.owner === currentUserId
+      );
+    } else if (
+      effectivePermissions_RoleName === "Admin" ||
+      effectivePermissions_RoleName === "Individual_Freelancer" ||
+      effectivePermissions_RoleName === "Individual"
+    ) {
+      return true;
+    } else {
+      return ticket.assignedToId === currentUserId;
+    }
+  };
+
+  const kanbanActions = (ticket) => {
+    if (!hasActionAccess(ticket)) return [];
+
+    return [
+      {
+        key: "view",
+        label: "View Details",
+        icon: <FaEye className="w-4 h-4 text-blue-600" />,
+        onClick: () =>
+          navigate(
+            effectivePermissions_RoleName === "Admin" ||
+              effectivePermissions_RoleName === "Individual_Freelancer" ||
+              effectivePermissions_RoleName === "Individual"
+              ? `/support-desk/${ticket._id}`
+              : `/support-desk/view/${ticket._id}`,
+            { state: { ticketData: ticket } }
+          ),
+      },
+      ...(effectivePermissions_RoleName === "Admin" ||
+      effectivePermissions_RoleName === "Individual_Freelancer" ||
+      effectivePermissions_RoleName === "Individual"
+        ? [
+            {
+              key: "edit",
+              label: "Edit Ticket",
+              icon: <FaPencilAlt className="w-4 h-4 text-green-600" />,
+              onClick: () =>
+                navigate(`/support-desk/edit-ticket/${ticket._id}`, {
+                  state: { ticketData: ticket },
+                }),
+            },
+          ]
+        : []),
+    ];
+  };
+
+  // v1.0.6 ---------------------------------------------------------------------->
+
   return (
     <div className="bg-background h-screen">
       <div className="fixed md:mt-6 sm:mt-4 top-12 left-0 right-0 bg-background">
@@ -479,33 +688,42 @@ function SupportDesk() {
       {/* <main className="fixed top-48 left-0 right-0 bg-background"> */}
       {/* v1.0.5 <------------------------------------------------------------------------------------ */}
       <main className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
-      {/* v1.0.5 ------------------------------------------------------------------------------------> */}
+        {/* v1.0.5 ------------------------------------------------------------------------------------> */}
         {/* v1.0.4 ------------------------------------------------------------------------------> */}
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {viewMode === "table" ? (
               <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
-              <TableView
-                data={currentFilteredRows}
-                columns={tableColumns}
-                actions={tableActions}
-                loading={isLoading}
-                emptyState="No tickets found."
-                className="table-fixed w-full"
-              />
+                <TableView
+                  data={currentFilteredRows}
+                  columns={tableColumns}
+                  actions={tableActions}
+                  loading={isLoading}
+                  emptyState="No tickets found."
+                  className="table-fixed w-full"
+                />
               </div>
             ) : (
+              // v1.0.6 <----------------------------------------------------------------
               <KanbanView
-                currentTickets={currentFilteredRows}
-                tickets={tickets}
-                effectivePermissions_RoleName={effectivePermissions_RoleName}
-                impersonatedUser_roleName={impersonatedUser_roleName}
-                impersonationPayloadID={
-                  impersonationPayload?.impersonatedUserId
-                }
+                data={currentFilteredRows.map((ticket) => ({
+                  ...ticket,
+                  id: ticket._id,
+                  title: ticket?.ticketCode,
+                  subTitle: formatDate(ticket?.createdAt),
+                }))}
                 loading={isLoading}
-                currentUserId={currentUserId}
+                columns={kanbanColumns}
+                renderActions={(item) => (
+                  <KanbanActionsMenu
+                    item={item}
+                    kanbanActions={kanbanActions}
+                  />
+                )}
+                emptyState="No tickets found."
+                kanbanTitle="Ticket"
               />
+              // v1.0.6 ---------------------------------------------------------------->
             )}
             <FilterPopup
               isOpen={isFilterPopupOpen}
