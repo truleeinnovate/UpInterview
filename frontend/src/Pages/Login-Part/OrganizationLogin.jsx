@@ -348,7 +348,7 @@ const OrganizationLogin = () => {
                     console.log('requestStatus:- ', requestStatus);
                     if (requestStatus === 'pending_review') {
                         navigate("/pending-approval");
-                    } else if (requestStatus === 'in_contact') {
+                    } else if (requestStatus === 'in_contact' || requestStatus === 'rejected') {
                         navigate("/pending-approval");
                     } else if (requestStatus === 'approved') {
                         if (status === "payment_pending" || status === "submitted") {
