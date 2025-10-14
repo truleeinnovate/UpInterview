@@ -69,19 +69,35 @@ const createSubscriptionControllers = async (req, res) => {
     const existingSubscription = await CustomerSubscription.findOne({ ownerId: userDetails.ownerId });
 
     if (existingSubscription) {
+      // Calculate dates for all plans including free
+      const startDate = new Date();
+      let endDate = null;
+      let nextBillingDate = null;
+      
+      // For free plans with active status, set endDate and nextBillingDate
+      if (status === 'active') {
+        endDate = new Date();
+        if (userDetails.membershipType === 'annual') {
+          endDate.setFullYear(endDate.getFullYear() + 1);
+        } else {
+          endDate.setMonth(endDate.getMonth() + 1);
+        }
+        nextBillingDate = new Date(endDate);
+      }
+      
       // Update subscription details
       existingSubscription.subscriptionPlanId = subscriptionPlanId;
       existingSubscription.selectedBillingCycle = userDetails.membershipType;
       existingSubscription.price = pricing;
       existingSubscription.discount = discount;
-      existingSubscription.startDate = new Date();
+      existingSubscription.startDate = startDate;
       existingSubscription.totalAmount = calculatedTotalAmount;
-      existingSubscription.endDate = null;
+      existingSubscription.endDate = endDate;
+      existingSubscription.nextBillingDate = nextBillingDate;
       existingSubscription.features = [];
       //existingSubscription.razorpayCustomerId = null;
       //existingSubscription.razorpaySubscriptionId = null;
       existingSubscription.receiptId = null;
-      existingSubscription.nextBillingDate = null;
       
       
       // Use the provided status instead of hardcoding to 'active'
@@ -159,12 +175,12 @@ const createSubscriptionControllers = async (req, res) => {
                                         remaining: Number(f?.limit) || 0,
                                     }));
 
-          // const endDate = new Date();
-          // if (userDetails.membershipType === 'annual') {
-          //   endDate.setFullYear(endDate.getFullYear() + 1);
-          // } else {
-          //   endDate.setMonth(endDate.getMonth() + 1);
-          // }
+          const endDate = new Date();
+          if (userDetails.membershipType === 'annual') {
+            endDate.setFullYear(endDate.getFullYear() + 1);
+          } else {
+            endDate.setMonth(endDate.getMonth() + 1);
+          }
 
           await Usage.findOneAndUpdate(
             { tenantId: userDetails.tenantId, ownerId: userDetails.ownerId },
@@ -174,7 +190,7 @@ const createSubscriptionControllers = async (req, res) => {
                 ownerId: userDetails.ownerId,
                 usageAttributes,
                 fromDate: new Date(),
-                toDate: null,
+                toDate: endDate,
               }
             },
             { new: true, upsert: true, setDefaultsOnInsert: true }

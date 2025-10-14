@@ -423,6 +423,32 @@ const WithdrawalRequests = () => {
     return true;
   });
 
+  // Calculate total pages based on view type
+  const getTotalPages = () => {
+    if (view === "table") {
+      return Math.ceil(filteredRequests.length / ITEMS_PER_PAGE) || 1;
+    } else {
+      // For Kanban view, calculate based on the status with most items
+      const statusCounts = {
+        pending: filteredRequests.filter(r => r.status === "pending").length,
+        completed: filteredRequests.filter(r => r.status === "completed").length,
+        failed: filteredRequests.filter(r => r.status === "failed").length,
+      };
+      const maxCount = Math.max(statusCounts.pending, statusCounts.completed, statusCounts.failed, 0);
+      return maxCount > 0 ? Math.ceil(maxCount / ITEMS_PER_PAGE) : 1;
+    }
+  };
+
+  const totalPages = getTotalPages();
+
+  // Reset page if current page exceeds total pages
+  useEffect(() => {
+    if (currentPage >= totalPages && totalPages > 0) {
+      setCurrentPage(Math.max(0, totalPages - 1));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalPages, view]); // Reset when totalPages changes or view changes - currentPage intentionally excluded
+
   return (
     <>
       {/* Statistics Cards */}
@@ -600,9 +626,9 @@ const WithdrawalRequests = () => {
         searchQuery={searchQuery}
         onSearch={(e) => handleSearch(e.target.value)}
         currentPage={currentPage}
-        totalPages={Math.ceil(filteredRequests.length / ITEMS_PER_PAGE) || 1}
+        totalPages={totalPages}
         onPrevPage={() => setCurrentPage(Math.max(0, currentPage - 1))}
-        onNextPage={() => setCurrentPage(Math.min(Math.ceil(filteredRequests.length / ITEMS_PER_PAGE) - 1, currentPage + 1))}
+        onNextPage={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
         onFilterClick={() => setFilterPopupOpen(!isFilterPopupOpen)}
         isFilterActive={isFilterActive}
         isFilterPopupOpen={isFilterPopupOpen}
@@ -616,7 +642,10 @@ const WithdrawalRequests = () => {
       
         {view === "table" ? (
           <TableView
-            data={filteredRequests}
+            data={filteredRequests.slice(
+              currentPage * ITEMS_PER_PAGE,
+              (currentPage + 1) * ITEMS_PER_PAGE
+            )}
             columns={columns}
             onRowClick={handleRowClick}
             currentPage={currentPage}
@@ -633,6 +662,8 @@ const WithdrawalRequests = () => {
             }}
             isLoading={isLoading}
             refetch={refetch}
+            currentPage={currentPage}
+            itemsPerPage={ITEMS_PER_PAGE}
           />
         )}
       

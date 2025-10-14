@@ -77,21 +77,50 @@ const createTopupOrder = async (req, res) => {
     const existingWallet = await WalletTopup.findOne({ ownerId })
       .select("walletCode")
       .lean();
+    
     if (existingWallet?.walletCode) {
       walletCode = existingWallet.walletCode;
     } else {
-      const lastWallet = await WalletTopup.findOne({})
-        .sort({ _id: -1 })
-        .select("walletCode")
-        .lean();
-      let nextWalletNumber = 1;
-      if (lastWallet?.walletCode) {
-        const match = lastWallet.walletCode.match(/WLT-(\d+)/);
-        if (match) {
-          nextWalletNumber = parseInt(match[1], 10) + 1;
+      // Generate unique walletCode with retry logic for concurrent safety
+      let attempts = 0;
+      const maxAttempts = 5;
+      
+      while (attempts < maxAttempts) {
+        const lastWallet = await WalletTopup.findOne({})
+          .sort({ _id: -1 })
+          .select("walletCode")
+          .lean();
+        
+        let nextWalletNumber = 1;
+        if (lastWallet?.walletCode) {
+          const match = lastWallet.walletCode.match(/WLT-(\d+)/);
+          if (match) {
+            nextWalletNumber = parseInt(match[1], 10) + 1;
+          }
+        }
+        
+        // Add attempts offset to reduce collision probability
+        walletCode = `WLT-${String(nextWalletNumber + attempts).padStart(5, "0")}`;
+        
+        // Check if this walletCode already exists
+        const existingCode = await WalletTopup.findOne({ walletCode })
+          .select("walletCode")
+          .lean();
+        
+        if (!existingCode) {
+          // Code is unique, we can use it
+          break;
+        }
+        
+        attempts++;
+        console.log(`[CreateOrder] WalletCode ${walletCode} already exists, attempt ${attempts}/${maxAttempts}`);
+        
+        if (attempts >= maxAttempts) {
+          return res.status(500).json({
+            error: "Unable to generate unique wallet code. Please try again."
+          });
         }
       }
-      walletCode = `WLT-${String(nextWalletNumber).padStart(5, "0")}`;
     }
 
     // Convert amount to smallest currency unit (cents)
@@ -228,45 +257,73 @@ const walletVerifyPayment = async (req, res) => {
 
     // Find or create wallet and ensure it has a walletCode
     let wallet;
-    try {
-      wallet = await WalletTopup.findOne({ ownerId });
+    wallet = await WalletTopup.findOne({ ownerId });
 
-      // Determine effective wallet code
-      let effectiveWalletCode = (wallet && wallet.walletCode) || walletCodeFromNotes;
+    // If wallet doesn't exist or doesn't have a walletCode, we need to create/update it
+    if (!wallet || !wallet.walletCode) {
+      let attempts = 0;
+      const maxAttempts = 5;
+      
+      while (attempts < maxAttempts) {
+        try {
+          // Determine effective wallet code
+          let effectiveWalletCode = (wallet && wallet.walletCode) || walletCodeFromNotes;
 
-      if (!effectiveWalletCode) {
-        const lastWallet = await WalletTopup.findOne({})
-          .sort({ _id: -1 })
-          .select("walletCode")
-          .lean();
-        let nextWalletNumber = 1;
-        if (lastWallet?.walletCode) {
-          const match = lastWallet.walletCode.match(/WLT-(\d+)/);
-          if (match) {
-            nextWalletNumber = parseInt(match[1], 10) + 1;
+          if (!effectiveWalletCode) {
+            const lastWallet = await WalletTopup.findOne({})
+              .sort({ _id: -1 })
+              .select("walletCode")
+              .lean();
+            let nextWalletNumber = 1;
+            if (lastWallet?.walletCode) {
+              const match = lastWallet.walletCode.match(/WLT-(\d+)/);
+              if (match) {
+                nextWalletNumber = parseInt(match[1], 10) + 1;
+              }
+            }
+            // Add attempts to ensure uniqueness in concurrent scenarios
+            effectiveWalletCode = `WLT-${String(nextWalletNumber + attempts).padStart(5, "0")}`;
           }
-        }
-        effectiveWalletCode = `WLT-${String(nextWalletNumber).padStart(5, "0")}`;
-      }
 
-      if (!wallet) {
-        console.log("Creating new wallet for owner:", ownerId);
-        wallet = await WalletTopup.create({
-          ownerId,
-          walletCode: effectiveWalletCode,
-          tenantId: tenantId || "default",
-          balance: 0,
-          transactions: [],
-        });
-      } else if (!wallet.walletCode) {
-        wallet.walletCode = effectiveWalletCode;
-        await wallet.save();
+          if (!wallet) {
+            console.log("Creating new wallet for owner:", ownerId);
+            wallet = await WalletTopup.create({
+              ownerId,
+              walletCode: effectiveWalletCode,
+              tenantId: tenantId || "default",
+              balance: 0,
+              transactions: [],
+            });
+            break; // Success, exit loop
+          } else if (!wallet.walletCode) {
+            wallet.walletCode = effectiveWalletCode;
+            await wallet.save();
+            break; // Success, exit loop
+          }
+        } catch (dbError) {
+          attempts++;
+          
+          // Check if it's a duplicate key error for walletCode
+          if (dbError.code === 11000 && dbError.keyPattern?.walletCode) {
+            console.log(`[Wallet] Duplicate walletCode detected, attempt ${attempts}/${maxAttempts}`);
+            
+            if (attempts >= maxAttempts) {
+              console.error("Failed to generate unique wallet code after", maxAttempts, "attempts");
+              return res.status(500).json({ 
+                error: "Unable to generate unique wallet code. Please try again." 
+              });
+            }
+            // Continue to next iteration
+            continue;
+          }
+          
+          // For other errors, log and return
+          console.error("Database error when finding/creating wallet:", dbError);
+          return res.status(500).json({ 
+            error: "Database error when accessing wallet" 
+          });
+        }
       }
-    } catch (dbError) {
-      console.error("Database error when finding/creating wallet:", dbError);
-      return res
-        .status(500)
-        .json({ error: "Database error when accessing wallet" });
     }
 
     // Parse amount as number and validate
@@ -1186,47 +1243,55 @@ const createWithdrawalRequest = async (req, res) => {
       });
     }
 
-    // Generate next withdrawalCode like WD-000001
-    const lastWithdrawal = await WithdrawalRequest.findOne({})
-      .sort({ _id: -1 })
-      .select("withdrawalCode")
-      .lean();
+    // Generate unique withdrawalCode with retry logic
+    let withdrawalRequest;
+    let attempts = 0;
+    const maxAttempts = 5;
+    
+    while (attempts < maxAttempts) {
+      try {
+        // Generate next withdrawalCode like WD-000001
+        const lastWithdrawal = await WithdrawalRequest.findOne({})
+          .sort({ _id: -1 })
+          .select("withdrawalCode")
+          .lean();
 
-    let nextNumber = 1;
-    if (lastWithdrawal?.withdrawalCode) {
-      const match = lastWithdrawal.withdrawalCode.match(/WD-(\d+)/);
-      if (match) {
-        nextNumber = parseInt(match[1], 10) + 1;
-      }
-    }
+        let nextNumber = 1;
+        if (lastWithdrawal?.withdrawalCode) {
+          const match = lastWithdrawal.withdrawalCode.match(/WD-(\d+)/);
+          if (match) {
+            nextNumber = parseInt(match[1], 10) + 1;
+          }
+        }
+        
+        // Add random component for extra safety in high-concurrency scenarios
+        const withdrawalCode = `WD-${String(nextNumber + attempts).padStart(6, "0")}`;
 
-    const withdrawalCode = `WD-${String(nextNumber).padStart(6, "0")}`;
+        // Calculate fees (example: 2% or flat ₹10)
+        const processingFee = Math.max(amount * 0.02, 10);
+        const tax = processingFee * 0.18; // 18% GST
+        const netAmount = amount - processingFee - tax;
 
-    // Calculate fees (example: 2% or flat ₹10)
-    const processingFee = Math.max(amount * 0.02, 10);
-    const tax = processingFee * 0.18; // 18% GST
-    const netAmount = amount - processingFee - tax;
-
-    // Create withdrawal request with enhanced metadata for manual processing
-    const withdrawalRequest = await WithdrawalRequest.create({
-      withdrawalCode, // Add the generated withdrawal code
-      tenantId,
-      ownerId,
-      amount,
-      currency: "INR",
-      bankAccountId,
-      status: "pending",
-      mode: mode || "manual", // Default to manual processing
-      processingFee,
-      tax,
-      netAmount,
-      razorpayFundAccountId: bankAccount.razorpayFundAccountId,
-      razorpayContactId: bankAccount.razorpayContactId,
-      requestIp: req.ip,
-      userAgent: req.get("user-agent"),
-      notes,
-      createdBy: ownerId,
-      // Store wallet snapshot and bank details for manual processing
+        // Create withdrawal request with enhanced metadata for manual processing
+        withdrawalRequest = await WithdrawalRequest.create({
+          withdrawalCode, // Add the generated withdrawal code
+          tenantId,
+          ownerId,
+          amount,
+          currency: "INR",
+          bankAccountId,
+          status: "pending",
+          mode: mode || "manual", // Default to manual processing
+          processingFee,
+          tax,
+          netAmount,
+          razorpayFundAccountId: bankAccount.razorpayFundAccountId,
+          razorpayContactId: bankAccount.razorpayContactId,
+          requestIp: req.ip,
+          userAgent: req.get("user-agent"),
+          notes,
+          createdBy: ownerId,
+          // Store wallet snapshot and bank details for manual processing
       metadata: {
         walletSnapshot: walletSnapshot || {
           currentBalance: wallet.balance,
@@ -1243,8 +1308,40 @@ const createWithdrawalRequest = async (req, res) => {
         },
         processingType: "manual",
         requiresAdminApproval: true
+          }
+        });
+        
+        // Successfully created, break out of loop
+        break;
+        
+      } catch (error) {
+        attempts++;
+        
+        // Check if it's a duplicate key error
+        if (error.code === 11000 && error.keyPattern?.withdrawalCode) {
+          console.log(`[Withdrawal] Duplicate withdrawalCode detected, attempt ${attempts}/${maxAttempts}`);
+          
+          if (attempts >= maxAttempts) {
+            return res.status(500).json({
+              error: "Unable to generate unique withdrawal code. Please try again."
+            });
+          }
+          
+          // Continue to next iteration to try again
+          continue;
+        }
+        
+        // If it's not a duplicate key error, throw it
+        throw error;
       }
-    });
+    }
+
+    // Check if withdrawal was created
+    if (!withdrawalRequest) {
+      return res.status(500).json({
+        error: "Failed to create withdrawal request after multiple attempts."
+      });
+    }
 
     // Deduct amount from wallet and add to hold
     wallet.balance -= amount;
@@ -1254,11 +1351,11 @@ const createWithdrawalRequest = async (req, res) => {
     wallet.transactions.push({
       type: "debit",
       amount,
-      description: `Withdrawal request ${withdrawalCode} (Manual Processing)`,
+      description: `Withdrawal request ${withdrawalRequest.withdrawalCode}`,
       status: "pending",
       metadata: {
         withdrawalRequestId: withdrawalRequest._id,
-        withdrawalCode: withdrawalCode,
+        withdrawalCode: withdrawalRequest.withdrawalCode,
         bankAccountId,
         amount,
         processingType: "manual",
@@ -1275,15 +1372,15 @@ const createWithdrawalRequest = async (req, res) => {
         ownerId,
         tenantId,
         title: "Withdrawal Request Created",
-        message: `Your withdrawal request ${withdrawalCode} for ₹${netAmount.toFixed(2)} has been submitted successfully. It will be processed within 24-48 hours.`,
+        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode} for ₹${withdrawalRequest.netAmount.toFixed(2)} has been submitted successfully. It will be processed within 24-48 hours.`,
         type: "wallet",
         category: "withdrawal_status",
         unread: true,
         metadata: {
           withdrawalRequestId: withdrawalRequest._id.toString(),
-          withdrawalCode,
-          amount,
-          netAmount,
+          withdrawalCode: withdrawalRequest.withdrawalCode,
+          amount: withdrawalRequest.amount,
+          netAmount: withdrawalRequest.netAmount,
           status: "pending",
           bankAccount: bankAccount.maskedAccountNumber,
           bankName: bankAccount.bankName,
@@ -1303,7 +1400,7 @@ const createWithdrawalRequest = async (req, res) => {
     res.status(201).json({
       success: true,
       withdrawalRequest,
-      message: `Withdrawal request ${withdrawalCode} created successfully. It will be processed within 24-48 hours.`
+      message: `Withdrawal request ${withdrawalRequest.withdrawalCode} created successfully. It will be processed within 24-48 hours.`
     });
   } catch (error) {
     console.error("Error creating withdrawal request:", error);
