@@ -22,7 +22,7 @@ const organizationRequestSchema = new mongoose.Schema({
     enum: [
       'pending_review',    // Submitted, waiting for review
       'in_contact',        // Currently in contact or multiple follow-ups happening
-      'under_verification',// Verification documents / details being checked
+      'under_verification', // Verification documents / details being checked
       'approved',          // Successfully verified
       'rejected'           // (optional) If the org is not approved
     ],

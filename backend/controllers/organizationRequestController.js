@@ -6,7 +6,6 @@ const { Users } = require("../models/Users");
 const config = require("../config");
 const { sendApprovalEmail } = require("./EmailsController/signUpEmailController");
 
-
 // Get all organization requests with related contact + tenant data
 exports.getOrganizationRequests = async (req, res) => {
   try {
@@ -295,3 +294,13 @@ exports.updateStatus = async (req, res) => {
     res.status(500).json({ message: 'Error updating status', error: error.message });
   }
 };
+
+exports.getAllReqForPaymentPendingPage = async (req, res) => {
+    try {
+      const requests = await OrganizationRequest.find({});
+      res.status(200).json({ success: true, data: requests });
+    } catch (error) {
+      console.error('Error getting organization requests:', error);
+      res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  };

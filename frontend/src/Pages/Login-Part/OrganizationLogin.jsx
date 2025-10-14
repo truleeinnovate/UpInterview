@@ -349,11 +349,7 @@ const OrganizationLogin = () => {
                     if (requestStatus === 'pending_review') {
                         navigate("/pending-approval");
                     } else if (requestStatus === 'in_contact') {
-                        navigate("/pending-approval", {
-                            state: {
-                                showContactSupport: true
-                            }
-                        });
+                        navigate("/pending-approval");
                     } else if (requestStatus === 'approved') {
                         if (status === "payment_pending" || status === "submitted") {
                             navigate("/subscription-plans");
