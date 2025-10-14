@@ -109,7 +109,6 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
         try {
             if (onStatusUpdate) {
                 await onStatusUpdate(statusUpdate);
-                alert('Status updated successfully!');
                 setTimeout(() => setShowStatusModal(false), 500);
             }
         } catch (error) {
