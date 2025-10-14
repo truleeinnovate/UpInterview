@@ -3,6 +3,7 @@
 // v1.0.2  -  Ashok   -  Disabled outer scrollbar when popups (reschedule and cancel schedule) open
 // v1.0.3  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.4  -  Ashok   -  Improved responsiveness
+// v1.0.5  -  Ashok   -  added common code for kanban
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -10,14 +11,15 @@ import "../styles/tabs.scss";
 import MockProfileDetails from "./MockProfileDetails";
 import ReschedulePopup from "./ReschedulePopup.jsx";
 import { motion } from "framer-motion";
-import { Eye, Pencil, Timer, XCircle } from "lucide-react";
+import { Eye, MoreVertical, Pencil, Timer, XCircle } from "lucide-react";
 import CancelPopup from "./ScheduleCancelPopup.jsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import Header from "../../../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar.jsx";
 import TableView from "../../../../Components/Shared/Table/TableView.jsx";
-import MockInterviewKanban from "./MockInterviewKanban.jsx";
+// import MockInterviewKanban from "./MockInterviewKanban.jsx";
+import MockInterviewKanban from "../../../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
@@ -29,11 +31,96 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.2 ----------------------------------------------------------------------------------->
 
+// v1.0.5 <----------------------------------------------------------------------------
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Call the function to get actions array for this item
+  const actions = kanbanActions(item);
+  const mainActions = actions.filter((a) => ["view", "edit"].includes(a.key));
+  const overflowActions = actions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {mainActions.map((action) => (
+        <button
+          key={action.key}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onClick(item, e);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title={action.label}
+        >
+          {action.icon}
+        </button>
+      ))}
+
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+// v1.0.5 ---------------------------------------------------------------------------->
+
 const MockInterview = () => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const { mockinterviewData, isLoading } = useMockInterviews();
   console.log("mockinterviewData", mockinterviewData);
   const navigate = useNavigate();
+  const location = useLocation();
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
@@ -62,7 +149,9 @@ const MockInterview = () => {
   const filterIconRef = useRef(null);
 
   // v1.0.2 <--------------------------------------------
-  useScrollLock(reschedule || cancelSchedule);
+  // v1.0.5 <---------------------------------------------------------------
+  useScrollLock(reschedule || cancelSchedule || viewMode === "kanban");
+  // v1.0.5 --------------------------------------------------------------->
   // v1.0.2 -------------------------------------------->
 
   useEffect(() => {
@@ -314,6 +403,21 @@ const MockInterview = () => {
   };
   // v1.0.1 ------------------------------------------------------>
 
+  // v1.0.5 <-------------------------------------------------------------
+  const formatDate = (isoString) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    return date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+  // v1.0.5 ------------------------------------------------------------->
+
   const tableColumns = [
     {
       key: "mockInterviewCode",
@@ -348,11 +452,17 @@ const MockInterview = () => {
       key: "status",
       // v1.0.0 <--------------------------------------------------------------------
       header: "Status",
-      
+
       // render: (value, row) => row?.rounds?.[0]?.status || "Not Provided",
       render: (value, row) => {
         return row?.rounds?.[0]?.status ? (
-          <StatusBadge status={row.rounds[0].status === "RequestSent" ? "Request Sent" : row?.rounds[0]?.status} />
+          <StatusBadge
+            status={
+              row.rounds[0].status === "RequestSent"
+                ? "Request Sent"
+                : row?.rounds[0]?.status
+            }
+          />
         ) : (
           <span className="text-gray-400 text-sm">Not Provided</span>
         );
@@ -447,6 +557,85 @@ const MockInterview = () => {
     },
   ];
 
+  // v1.0.5 <----------------------------------------------------------------------------------
+  const kanbanColumns = [
+    {
+      key: "technology",
+      header: "Technology",
+      render: (value, row) => (
+        <span>{capitalizeFirstLetter(row?.technology)}</span>
+      ),
+    },
+    {
+      key: "interviewer",
+      header: "Interviewer",
+      render: (value, row) => (
+        <span className="text-gray-800 font-medium truncate">
+          {row?.interviewer || row?.rounds?.[0]?.interviewer || "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "duration",
+      header: "Duration",
+      render: (value, row) => (
+        <span className="text-gray-800 font-medium truncate">
+          {row?.duration || row?.rounds?.[0]?.duration || "N/A"}{" "}
+          {row?.duration || row?.rounds?.[0]?.duration ? "mins" : ""}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <span className="text-gray-800 font-medium truncate">
+          {row?.rounds?.[0]?.status === "RequestSent"
+            ? "Request Sent"
+            : (
+                <StatusBadge
+                  status={capitalizeFirstLetter(row?.rounds?.[0]?.status)}
+                />
+              ) || "N/A"}
+        </span>
+      ),
+    },
+  ];
+
+  const kanbanActions = () => [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      onClick: (row) =>
+        navigate(`/mockinterview-details/${row._id}`, {
+          state: { from: location.pathname },
+        }),
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil className="w-4 h-4 text-green-600" />,
+      onClick: (row) =>
+        navigate(`/mock-interview/${row._id}/edit`, {
+          state: { from: location.pathname },
+        }),
+    },
+    {
+      key: "reschedule",
+      label: "Reschedule",
+      icon: <Timer className="w-4 h-4 text-custom-blue" />,
+      onClick: (row) => onRescheduleClick(row),
+    },
+    {
+      key: "cancel",
+      label: "Cancel",
+      icon: <XCircle className="w-4 h-4 text-red-500" />,
+      onClick: (row) => onCancelClick(),
+    },
+  ];
+  // v1.0.5 ---------------------------------------------------------------------------------->
+
   return (
     <div className="bg-background min-h-screen">
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
@@ -484,15 +673,27 @@ const MockInterview = () => {
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {viewMode === "kanban" ? (
+              // v1.0.5 <-----------------------------------------------------------
               <MockInterviewKanban
-                mockinterviews={currentFilteredRows}
                 loading={isLoading}
-                onRescheduleClick={(mockinterview) =>
-                  onRescheduleClick(mockinterview)
-                }
-                onCancel={() => onCancelClick()}
+                data={currentFilteredRows.map((interview) => ({
+                  ...interview,
+                  id: interview?._id,
+                  title: interview?.mockInterviewCode,
+                  subTitle: formatDate(interview.createdAt),
+                }))}
+                columns={kanbanColumns}
+                renderActions={(item) => (
+                  <KanbanActionsMenu
+                    item={item}
+                    kanbanActions={kanbanActions}
+                  />
+                )}
+                emptyState="No mock interviews found."
+                kanbanTitle="Mock Interview"
               />
             ) : (
+              // v1.0.5 ----------------------------------------------------------->
               // v1.0.4 <-----------------------------------------------------------------------------
               <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                 <TableView

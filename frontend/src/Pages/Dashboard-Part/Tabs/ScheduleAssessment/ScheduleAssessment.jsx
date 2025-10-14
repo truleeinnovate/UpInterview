@@ -6,6 +6,7 @@
 // v1.0.5  -  Ashok   -  Added new Kanban view
 // v1.0.6  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.7  -  Ashok   -  Improved responsiveness
+// v1.0.8  -  Ashok   -  Added common code to kanban
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -28,6 +29,7 @@ import {
   RefreshCw,
   Share2,
   Mail,
+  MoreVertical,
 } from "lucide-react";
 // ------------------------------v1.0.3 >
 import ScheduleAssessmentKanban from "./ScheduleAssessmentKanban.jsx";
@@ -46,8 +48,94 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 // <---------------------- v1.0.1 >
 
 // v1.0.5 <-------------------------------------------------------------------------------------
-import KanbanView from "./Kanban.jsx";
+// import KanbanView from "./Kanban.jsx";
+import KanbanView from "../../../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.5 ------------------------------------------------------------------------------------->
+
+// v1.0.8 <--------------------------------------------------------------------------
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Call the function to get actions array for this item
+  const actions = kanbanActions(item);
+  const mainActions = actions.filter((a) => ["view", "edit"].includes(a.key));
+  const overflowActions = actions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {mainActions.map((action) => (
+        <button
+          key={action.key}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onClick(item, e);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title={action.label}
+        >
+          {action.icon}
+        </button>
+      ))}
+
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+// v1.0.8 -------------------------------------------------------------------------->
 
 const ScheduleAssessment = () => {
   const { effectivePermissions } = usePermissions();
@@ -113,6 +201,10 @@ const ScheduleAssessment = () => {
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [isExpiryDateOpen, setIsExpiryDateOpen] = useState(false);
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
+
+  // v1.0.8 <-------------------------------------------------------------
+  useScrollLock(viewMode === "kanban");
+  // v1.0.8 ------------------------------------------------------------->
 
   // Derived pagination
   const rowsPerPage = 10;
@@ -447,6 +539,24 @@ const ScheduleAssessment = () => {
       console.error("Error checking expired assessments:", error);
     }
   };
+
+  //  v1.0.8 <-----------------------------------------------------------
+  // v1.0.5 <-------------------------------------------------------------
+  const formatDate = (isoString) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    return date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+  // v1.0.5 ------------------------------------------------------------->
+  //  v1.0.8 ----------------------------------------------------------->
+
   // <-------------------------------v1.0.3
   const tableColumns = [
     // Assessment Template ID
@@ -573,7 +683,7 @@ const ScheduleAssessment = () => {
     if (!str) return "";
     return str?.charAt(0)?.toUpperCase() + str?.slice(1);
   };
-
+  // v1.0.8 <---------------------------------------------------------------------------------------
   // Kanban Columns Configuration
   const kanbanColumns = [
     {
@@ -581,6 +691,19 @@ const ScheduleAssessment = () => {
       header: "Order",
       render: (value, row) => (
         <div className="font-medium">{row?.order || "N/A"}</div>
+      ),
+    },
+    {
+      key: "isActive",
+      header: "Is Active",
+      render: (value, row) => (
+        <span>
+          {row?.isActive ? (
+            <StatusBadge status={"Active"} />
+          ) : (
+            <StatusBadge status={"Inactive"} />
+          )}
+        </span>
       ),
     },
     {
@@ -592,8 +715,8 @@ const ScheduleAssessment = () => {
     },
   ];
 
-  // Shared Actions Configuration for Table and Kanban
-  const actions = [
+  // Shared Actions Configuration for Kanban
+  const kanbanActions = () => [
     {
       key: "view",
       label: "View Details",
@@ -616,26 +739,16 @@ const ScheduleAssessment = () => {
       onClick: (schedule) => handleActionClick(schedule, "cancel"),
       show: shouldShowActionButtons,
     },
+    {
+      key: "resend",
+      label: "Resend Link",
+      icon: <Mail className="w-4 h-4 text-green-600" />,
+      onClick: (schedule) => handleResendClick(schedule),
+      show: shouldShowActionButtons,
+    },
   ];
 
-  // Render Actions for Kanban
-  const renderKanbanActions = (item) => (
-    <div className="flex items-center gap-1">
-      {actions.map((action) => (
-        <button
-          key={action.key}
-          onClick={(e) => {
-            e.stopPropagation();
-            action.onClick(item);
-          }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title={action.label}
-        >
-          {action.icon}
-        </button>
-      ))}
-    </div>
-  );
+  // v1.0.8 --------------------------------------------------------------------------------------->
   // v1.0.5 --------------------------------------------------------------------------------------->
   return (
     <div className="bg-background min-h-screen">
@@ -702,30 +815,27 @@ const ScheduleAssessment = () => {
               </div>
             ) : (
               //  v1.0.7 ------------------------------------------------------------------------------>
-              // <ScheduleAssessmentKanban
-              //   schedules={currentRows}
-              //   assessments={assessmentData}
-              //   loading={isLoading}
-              //   onView={handleView}
-              //   // <-------------------------------v1.0.3
-              //   onAction={handleActionClick}
-              //   //onEdit={handleEdit}
-              // />
-              // // ------------------------------v1.0.3 >
+              //  v1.0.8 ------------------------------------------------------------------------------>
               // v1.0.5 <-----------------------------------------------------------------------
               <KanbanView
+                loading={isLoading}
                 data={currentRows.map((assessment) => ({
                   ...assessment,
                   id: assessment._id,
                   title: assessment?.scheduledAssessmentCode || "N/A",
-                  subtitle: assessment?.isActive ? "Active" : "Inactive",
+                  subTitle: formatDate(assessment?.createdAt),
                 }))}
-                assessments={currentRows}
                 columns={kanbanColumns}
-                loading={isLoading}
-                renderActions={renderKanbanActions}
+                renderActions={(item) => (
+                  <KanbanActionsMenu
+                    item={item}
+                    kanbanActions={kanbanActions}
+                  />
+                )}
                 emptyState="No Assessments found."
+                kanbanTitle="Assessment"
               />
+              // v1.0.8 ------------------------------------------------------------------------>
               // v1.0.5 ------------------------------------------------------------------------>
             )}
             <FilterPopup
