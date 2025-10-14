@@ -35,7 +35,7 @@ const StepIndicator = ({ currentStep, showLimitedSteps, isInternalInterviewer, c
                         ? 'bg-orange-500 text-white scale-110 ring-2 ring-orange-100'
                         : completed[index]
                         ? 'bg-custom-blue text-white' // Custom blue for completed steps
-                        : 'bg-gray-100 text-gray-400'
+                        : 'bg-white text-gray-400 ring-2 ring-gray-100'
                     }
                   `}
                 >
