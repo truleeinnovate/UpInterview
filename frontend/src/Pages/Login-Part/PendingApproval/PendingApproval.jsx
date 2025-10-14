@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, AlertCircle, MessageCircle, CheckCircle, Mail } from 'lucide-react';
+import { Clock, AlertCircle, MessageCircle, CheckCircle, Mail, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useAllReqForPaymentPendingPage } from '../../../apiHooks/superAdmin/useOrganizationRequests.js';
 import Cookies from 'js-cookie';
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
+import SupportForm from '../../Dashboard-Part/Tabs/SupportDesk/SupportForm';
 
 const OrganizationSubmissionStatus = () => {
 
@@ -46,16 +47,6 @@ const OrganizationSubmissionStatus = () => {
             title: 'Submission Rejected',
             description: rejectionReason || 'Your organization registration could not be approved at this time.',
             message: 'Our verification team has reviewed your submission. If you believe this is an error, please raise a ticket for further assistance.',
-            actionButton: {
-                text: 'Raise Ticket',
-                onClick: () => {
-                    // Handle raise ticket action
-                    console.log('Raise ticket clicked');
-                    // You can add your ticket raising logic here
-                    // For example, open a support form or redirect to a support page
-                },
-                className: 'mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors'
-            },
             showSupport: true
         }
     };
@@ -71,6 +62,16 @@ const OrganizationSubmissionStatus = () => {
 
     const handleCallSupport = () => {
         window.location.href = 'tel:+1-555-0123';
+    };
+
+    const [showSupportForm, setShowSupportForm] = useState(false);
+
+    const handleRaiseTicket = () => {
+        setShowSupportForm(true);
+    };
+
+    const handleCloseSupportForm = () => {
+        setShowSupportForm(false);
     };
 
     return (
@@ -119,7 +120,7 @@ const OrganizationSubmissionStatus = () => {
                         </p>
 
                         {/* Raise Ticket Button */}
-                        {currentStatus.actionButton && (
+                        {/* {currentStatus.actionButton && (
                             <div className="flex justify-center mt-4">
                                 <button
                                     onClick={currentStatus.actionButton.onClick}
@@ -128,7 +129,7 @@ const OrganizationSubmissionStatus = () => {
                                     {currentStatus.actionButton.text}
                                 </button>
                             </div>
-                        )}
+                        )} */}
 
                         {/* Support Section for Rejected Status */}
                         {currentStatus.showSupport && (
@@ -146,8 +147,8 @@ const OrganizationSubmissionStatus = () => {
                                     Our support team is here to help you resolve any issues with your registration.
                                 </p>
 
-                                <div className="space-y-3">
-                                    <motion.button
+                                <div className="space-y-3 flex justify-center">
+                                    {/* <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={handleContactSupport}
@@ -155,7 +156,12 @@ const OrganizationSubmissionStatus = () => {
                                     >
                                         <Mail className="h-4 w-4" />
                                         Email Support Team
-                                    </motion.button>
+                                    </motion.button> */}
+
+                                    <button
+                                        className='px-4 py-2 bg-custom-blue text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-custom-blue/80 transition-colors'
+                                        onClick={handleRaiseTicket}
+                                    >Raise Ticket</button>
 
                                 </div>
 
@@ -201,6 +207,24 @@ const OrganizationSubmissionStatus = () => {
                         </div>
                     </div>
                 </motion.div>
+
+                {/* Support Form Popup */}
+                {showSupportForm && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+                        onClick={(e) => {
+                            if (e.target === e.currentTarget) {
+                                handleCloseSupportForm();
+                            }
+                        }}
+                    >
+                        <SupportForm onClose={handleCloseSupportForm} />
+                    </motion.div>
+                )}
             </AnimatePresence>
         </div>
     );
