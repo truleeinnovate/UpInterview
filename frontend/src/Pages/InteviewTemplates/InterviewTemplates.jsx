@@ -23,6 +23,7 @@ import { formatDateTime } from "../../utils/dateFormatter.js";
 import StandardTemplates from "./StandardTemplates/StandardTemplates.jsx";
 import { notify } from "../../services/toastService.js";
 import StandardTemplatesToolbar from "./StandardTemplates/StandardTemplatesHeader.jsx";
+import DeleteConfirmModal from "../Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
 
 const InterviewTemplates = () => {
   const { templatesData, isLoading, saveTemplate, deleteInterviewTemplate } =
@@ -48,6 +49,10 @@ const InterviewTemplates = () => {
   const [isModifiedDateOpen] = useState(false);
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
   const [isFormatOpen, setIsFormatOpen] = useState(false);
+
+    //  Ranjith added delete Candidate functionality
+    const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+    const [deleteInterviewTemplates, setDeleteInterviewTemplates] = useState(null);
 
   // Template cloning states
   // const [templateToClone, setTemplateToClone] = useState(null);
@@ -340,23 +345,33 @@ const InterviewTemplates = () => {
       return;
     }
 
-    if (
-      window.confirm(
-        `Are you sure you want to delete the interview template "${template.name}"? This action cannot be undone.`
-      )
-    ) {
-      try {
-        // deleteInterviewTemplate is already the mutateAsync function
-        let res = await deleteInterviewTemplate(template._id);
-        console.log("tempalte response", res);
+    setDeleteInterviewTemplates(template);
+    setShowDeleteConfirmModal(true);
 
-        // The success toast will be shown by the mutation's onSuccess handler
-      } catch (error) {
-        console.error("Error deleting interview template:", error);
-        // The error toast will be shown by the mutation's onError handler
-      }
-    }
+    
   };
+
+   // Your existing handleConfirmDelete function
+    const handleConfirmDelete = async () => {
+    
+      if (deleteInterviewTemplates?._id) {
+        try {
+          let res = await deleteInterviewTemplate(deleteInterviewTemplates?._id);
+    //     console.log("tempalte response", res);
+          // notify.success("Interview template deleted successfully");
+          setShowDeleteConfirmModal(false);
+          setDeleteInterviewTemplates(null);
+        } catch (error) {
+          // Error is already handled in the mutation
+          console.error("Failed to delete interview:", error);
+          setShowDeleteConfirmModal(false);
+          setDeleteInterviewTemplates(null);
+          const backendMessage =
+            error?.response?.data?.message || "Failed to delete position";
+          notify.error(backendMessage);
+        }
+      }
+    };
 
   const formatOptionsfortable = [
     { label: "Online / Virtual", value: "online" },
@@ -883,6 +898,15 @@ const InterviewTemplates = () => {
                     </div>
                   </div>
                 </FilterPopup>
+
+                 {/* Ranjith added deleted functionality  */}
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={() => setShowDeleteConfirmModal(false)}
+        onConfirm={handleConfirmDelete}
+        title="interview Template"
+        entityName={deleteInterviewTemplates?.title}
+      />
               </motion.div>
             </div>
           </div>

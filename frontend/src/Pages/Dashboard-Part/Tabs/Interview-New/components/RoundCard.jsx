@@ -106,7 +106,7 @@ const RoundCard = ({
   //  const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
   const [showAssessmentCard, setShowAssessmentCard] = useState(false);
 
-  
+
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
@@ -460,15 +460,15 @@ const RoundCard = ({
     }
   };
 
-// result showing
+  // result showing
   const shouldShowResultButton = () => {
     if (round.roundTitle !== "Assessment") return false;
-    
+
     if (candidateAssessment?.status) {
       const showStatuses = ['completed', 'failed', 'pass'];
       return showStatuses.includes(candidateAssessment.status.toLowerCase());
     }
-    
+
     return false;
   };
 
@@ -503,7 +503,7 @@ const RoundCard = ({
 
 
 
-  
+
 
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [assessment, setAssessment] = useState(null);
@@ -581,13 +581,13 @@ const RoundCard = ({
             email: candidateAssessment?.candidateId?.Email,
             answeredQuestions: candidateAssessment?.answeredQuestions || 0,
             totalScore: candidateAssessment?.totalScore || 0,
-            result: candidateAssessment?.status ,
+            result: candidateAssessment?.status,
             // status: candidateAssessment.status,
             completionDate: candidateAssessment?.completionDate,
             expiryAt: candidateAssessment?.expiryAt,
             remainingTime: candidateAssessment?.remainingTime,
             sections: candidateAssessment?.sections || [],
-            experience:candidateAssessment?.candidateId?.CurrentExperience,
+            experience: candidateAssessment?.candidateId?.CurrentExperience,
             // Include the full candidate assessment data for reference
             candidateAssessment: candidateAssessment
           };
@@ -964,8 +964,8 @@ const RoundCard = ({
                 <button
                   onClick={() => setActiveTab("details")}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "details"
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                 >
                   Round Details
@@ -973,8 +973,8 @@ const RoundCard = ({
                 <button
                   onClick={() => setActiveTab("feedback")}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "feedback"
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                 >
                   Feedback
@@ -1056,6 +1056,9 @@ const RoundCard = ({
                     </div>
                   )}
 
+                  {(internalInterviewers || externalInterviewers).length === 0 && <span className="text-sm text-gray-500">No interviewers assigned</span>
+                  }
+
                   {
                     <div className="space-y-2">
                       {internalInterviewers.length > 0 && (
@@ -1083,21 +1086,24 @@ const RoundCard = ({
                             )}
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {internalInterviewers.map((interviewer) => (
-                              <div
-                                key={interviewer._id}
-                                className="flex items-center"
-                              >
-                                <InterviewerAvatar
-                                  interviewer={interviewer}
-                                  size="sm"
-                                />
-                                <span className="ml-1 text-xs text-gray-600">
-                                  {interviewer?.firstName ||
-                                    "" + interviewer.lastName ||
-                                    ""}
-                                </span>
-                                {/* {isRoundActive && canEdit && (
+
+                            {
+                              internalInterviewers.length > 0 &&
+                              internalInterviewers.map((interviewer) => (
+                                <div
+                                  key={interviewer._id}
+                                  className="flex items-center"
+                                >
+                                  <InterviewerAvatar
+                                    interviewer={interviewer}
+                                    size="sm"
+                                  />
+                                  <span className="ml-1 text-xs text-gray-600">
+                                    {interviewer?.firstName ||
+                                      "" + interviewer.lastName ||
+                                      ""}
+                                  </span>
+                                  {/* {isRoundActive && canEdit && (
                                   <button
                                     onClick={() => handleRemoveInterviewer(interviewer._id)}
                                     className="ml-1 text-gray-400 hover:text-red-500"
@@ -1105,8 +1111,11 @@ const RoundCard = ({
                                     <XCircle className="h-4 w-4" />
                                   </button>
                                 )} */}
-                              </div>
-                            ))}
+                                </div>
+                              ))
+
+
+                            }
                           </div>
                         </div>
                       )}
@@ -1288,8 +1297,8 @@ const RoundCard = ({
                                       <ChevronUp
                                         // v1.0.5 <----------------------------------------------
                                         className={`h-4 w-4 transform transition-transform ${expandedSections[sectionId]
-                                            ? ""
-                                            : "rotate-180"
+                                          ? ""
+                                          : "rotate-180"
                                           }`}
                                       // v1.0.5 ---------------------------------------------->
                                       />
@@ -1329,10 +1338,10 @@ const RoundCard = ({
                                                   </div>
                                                   <ChevronDown
                                                     className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
-                                                        question._id
-                                                      ]
-                                                        ? "transform rotate-180"
-                                                        : ""
+                                                      question._id
+                                                    ]
+                                                      ? "transform rotate-180"
+                                                      : ""
                                                       }`}
                                                   />
                                                 </div>
@@ -1381,11 +1390,11 @@ const RoundCard = ({
                                                                     key={optIdx}
                                                                     //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
                                                                     className={`text-sm p-2 rounded border ${option ===
-                                                                        question
-                                                                          .snapshot
-                                                                          .correctAnswer
-                                                                        ? "bg-green-50 border-green-200 text-green-800"
-                                                                        : "bg-gray-50 border-gray-200"
+                                                                      question
+                                                                        .snapshot
+                                                                        .correctAnswer
+                                                                      ? "bg-green-50 border-green-200 text-green-800"
+                                                                      : "bg-gray-50 border-gray-200"
                                                                       }`}
                                                                   >
                                                                     {option}
@@ -1673,18 +1682,18 @@ const RoundCard = ({
                   )}
 
                   {/* Share (always for Assessment) */}
-                  {permissions.canResendLink && round.roundTitle === "Assessment" 
-                  && round?.scheduleAssessmentId 
-                  // && shouldShowResultButton()
-                   && (
-                    <button
-                      onClick={() => handleResendClick(round)}
-                      // onClick={ handleShareClick}
-                      className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
-                    >
-                      <Share2 className="h-4 w-4 mr-1" />Resend Link
-                    </button>
-                  )}
+                  {permissions.canResendLink && round.roundTitle === "Assessment"
+                    && round?.scheduleAssessmentId
+                    // && shouldShowResultButton()
+                    && (
+                      <button
+                        onClick={() => handleResendClick(round)}
+                        // onClick={ handleShareClick}
+                        className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                      >
+                        <Share2 className="h-4 w-4 mr-1" />Resend Link
+                      </button>
+                    )}
 
 
                   {/* Share (always for Assessment) */}
@@ -1699,17 +1708,17 @@ const RoundCard = ({
                   )}
 
                   {/* Share (always for Assessment) */}
-                  { round.roundTitle === "Assessment" &&  !round?.scheduleAssessmentId 
-                  && shouldShowResultButton()
-                  && (
-                  <button
-                    onClick={() => handleResultClick(round)}
-                    // onClick={ handleShareClick}
-                    className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-custom-blue-700 bg-blue-50 hover:bg-blue-100 "
-                  >
-                    <BarChart3 className="h-4 w-4 mr-1" />Result
-                  </button>
-                   )} 
+                  {round.roundTitle === "Assessment" && !round?.scheduleAssessmentId
+                    && shouldShowResultButton()
+                    && (
+                      <button
+                        onClick={() => handleResultClick(round)}
+                        // onClick={ handleShareClick}
+                        className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-custom-blue-700 bg-blue-50 hover:bg-blue-100 "
+                      >
+                        <BarChart3 className="h-4 w-4 mr-1" />Result
+                      </button>
+                    )}
                 </div>
               </div>
               {/* v1.0.5 -----------------------------------------------------------------> */}

@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Added sort when fetching all interview templates
+const { default: mongoose } = require("mongoose");
 const { Interview } = require("../models/Interview/Interview");
 const InterviewTemplate = require("../models/InterviewTemplate");
 const { Position } = require("../models/Position/position");

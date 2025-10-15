@@ -405,6 +405,9 @@ const MoockRoundCard = ({
                   </button> */}
                 </div>
 
+                {(externalInterviewers).length === 0 && <span className="text-sm text-gray-500">No interviewers assigned</span>
+                  }
+
                 {
                   <div className="space-y-2">
                     {/* v1.0.0 ------------------------------------------------------------------ */}
