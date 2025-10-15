@@ -49,6 +49,7 @@ const allowedOrigins = [
   // "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
   "https://dev.upinterview.io",
   "https://app.upinterview.io",
+  "https://upinterview-dpdgchhbafekdhca.canadacentral-01.azurewebsites.net",
 ];
 
 // const allowedOrigins = [
@@ -1750,7 +1751,9 @@ app.post('/api/create-meeting', async (req, res) => {
   }
 });
 
-
+// upinterview contact us page routes
+const upinterviewContactUsPageRoutes = require("./routes/upinterviewContactUsPageRoutes");
+app.use("/api/contact", upinterviewContactUsPageRoutes);
 
 
 
