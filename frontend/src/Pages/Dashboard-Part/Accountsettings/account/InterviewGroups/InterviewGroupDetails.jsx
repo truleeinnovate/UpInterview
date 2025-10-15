@@ -7,10 +7,16 @@ import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { useNavigate, useParams } from "react-router-dom";
 // v1.0.1 <--------------------------------------------------------------
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+import { useGroupsQuery } from "../../../../../apiHooks/useInterviewerGroups.js";
 // v1.0.1 <--------------------------------------------------------------
 
 const InterviewGroupDetails = () => {
-  const { groups } = useCustomContext();
+  // const { groups } = useCustomContext();
+    const { data: groups = [],
+       isLoading: groupsLoading, 
+      error: groupError
+     } = useGroupsQuery();
+
   const { id } = useParams();
   const navigate = useNavigate();
   // console.log("id",id);

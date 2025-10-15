@@ -81,7 +81,9 @@ const EditAdvacedDetails = ({
     isLoading: isUserLoading,
     //  isError,
     //  error
-  } = useUserProfile(from === "my-profile" ? resolvedId : null);
+  } = useUserProfile(resolvedId
+    // from === "my-profile" ? resolvedId : null
+  );
 
   // Fetch outsource interviewers for "outsource-interviewer" context
   const { outsourceInterviewers } = useOutsourceInterviewers();

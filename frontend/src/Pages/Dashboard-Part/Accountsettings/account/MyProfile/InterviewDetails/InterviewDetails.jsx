@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
+import AuthCookieManager from "../../../../../../utils/AuthCookieManager/AuthCookieManager";
 
 // Format skill name with proper capitalization
 const formatSkill = (skill) => {
@@ -72,14 +73,16 @@ const InterviewUserDetails = ({
   //     console.log('contactData.previousExperienceConductingInterviews:', contactData?.previousExperienceConductingInterviews);
   // }, [contactData]);
 
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
+  // const authToken = Cookies.get("authToken");
+  // const tokenPayload = decodeJwt(authToken);
+    // const userId = tokenPayload?.userId;
+  // const ownerId = usersId || userId;
+  
+    const ownerId = AuthCookieManager.getCurrentUserId();
 
-  const userId = tokenPayload?.userId;
-  const ownerId = usersId || userId;
 
   // Always call the hook to comply with React rules
-  const { userProfile } = useUserProfile(ownerId);
+  const { userProfile } = useUserProfile(usersId ? usersId :"");
 
   // useEffect(() => {
   //   const fetchData = async () => {

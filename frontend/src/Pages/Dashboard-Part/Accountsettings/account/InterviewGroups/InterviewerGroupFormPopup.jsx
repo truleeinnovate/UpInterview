@@ -26,10 +26,11 @@ import {
 } from "../../../../../Components/FormFields";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { useCreateGroup, useGroupById, useGroupsQuery, useUpdateGroup } from "../../../../../apiHooks/useInterviewerGroups";
 
 const InterviewerGroupFormPopup = () => {
   const { id } = useParams();
-  const { groups, interviewers } = useCustomContext();
+  const {  interviewers } = useCustomContext();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -37,7 +38,11 @@ const InterviewerGroupFormPopup = () => {
     members: [],
   });
 
-  console.log("InterviewerGroupFormPopup id", id);
+  // Get groups data and mutations from TanStack Query
+  const { data: groups = [] } = useGroupsQuery();
+  const { data: existingGroup } = useGroupById(id);
+  const createGroup = useCreateGroup();
+  const updateGroup = useUpdateGroup();
 
   const [users, setUsers] = useState([]);
   const [formErrors, setFormErrors] = useState({});
@@ -154,25 +159,45 @@ const InterviewerGroupFormPopup = () => {
 
     try {
       // Different API calls for create vs update
+      // if (id) {
+      //   // Update existing group
+      //   await axios.patch(`${config.REACT_APP_API_URL}/groups/update/${id}`, {
+      //     name: formData.name,
+      //     description: formData.description,
+      //     status: formData.status,
+      //     users: formData.members,
+      //     tenantId: tenantId,
+      //   });
+      // } else {
+      //   // Create new group
+      //   await axios.post(`${config.REACT_APP_API_URL}/groups`, {
+      //     name: formData.name,
+      //     description: formData.description,
+      //     status: formData.status,
+      //     users: formData.members,
+      //     tenantId: tenantId,
+      //   });
+      // }
+
+        const groupPayload = {
+        name: formData.name,
+        description: formData.description,
+        status: formData.status,
+        users: formData.members,
+        tenantId: tenantId,
+      };
+      
       if (id) {
         // Update existing group
-        await axios.patch(`${config.REACT_APP_API_URL}/groups/update/${id}`, {
-          name: formData.name,
-          description: formData.description,
-          status: formData.status,
-          users: formData.members,
-          tenantId: tenantId,
+        await updateGroup.mutateAsync({
+          groupId: id,
+          groupData: groupPayload
         });
       } else {
         // Create new group
-        await axios.post(`${config.REACT_APP_API_URL}/groups`, {
-          name: formData.name,
-          description: formData.description,
-          status: formData.status,
-          users: formData.members,
-          tenantId: tenantId,
-        });
+        await createGroup.mutateAsync(groupPayload);
       }
+
 
       navigate("/account-settings/interviewer-groups");
     } catch (error) {

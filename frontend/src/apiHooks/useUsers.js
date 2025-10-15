@@ -4,8 +4,8 @@ import { config } from "../config"; // assuming similar structure
 import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
 
 // ✅ Custom hook to fetch user profile with optimized caching
-export const useUserProfile = () => {
-  const currentUser = AuthCookieManager.getCurrentUserId();
+export const useUserProfile = (usersId) => {
+  const currentUser = usersId ? usersId : AuthCookieManager.getCurrentUserId();
   const {
     data: userProfile = null,
     isLoading,

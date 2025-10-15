@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { config } from '../config';
 import AuthCookieManager from '../utils/AuthCookieManager/AuthCookieManager';
@@ -104,5 +104,68 @@ export const useRolesQuery = ({ filters = {}, fetchAllRoles = false } = {}) => {
     refetchOnWindowFocus: false, // Prevent refetch on focus
     refetchOnMount: false, // Prevent refetch on mount if cached
     refetchOnReconnect: false, // Prevent refetch on reconnect
+     refetchInterval: 1000, // Refetch every 30 seconds
+    refetchIntervalInBackground: true, // Continue polling when tab is not active
+  });
+};
+
+
+// Create role mutation
+export const useCreateRole = () => {
+  const queryClient = useQueryClient();
+  const userType = AuthCookieManager.getUserType();
+
+  return useMutation({
+    mutationFn: async (roleData) => {
+      if (userType === 'superAdmin') {
+        const response = await axios.post(`${config.REACT_APP_API_URL}/roles`, roleData);
+        return response.data;
+      } else {
+        const response = await axios.post(`${config.REACT_APP_API_URL}/role-overrides`, roleData);
+        return response.data;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['roles']);
+    },
+  });
+};
+
+
+// Update role mutation
+export const useUpdateRole = () => {
+  const queryClient = useQueryClient();
+  const userType = AuthCookieManager.getUserType();
+
+  return useMutation({
+    mutationFn: async ({ roleId, roleData }) => {
+      if (userType === 'superAdmin') {
+        const response = await axios.patch(`${config.REACT_APP_API_URL}/roles/${roleId}`, roleData);
+        return response.data;
+      } else {
+        const authToken = AuthCookieManager.getAuthToken();
+        const tenantId = authToken ? JSON.parse(atob(authToken.split('.')[1])).tenantId : null;
+        
+        // First check if override exists
+        const overrideResponse = await axios.get(
+          `${config.REACT_APP_API_URL}/role-overrides?tenantId=${tenantId}&roleName=${roleData.roleName}`
+        );
+        const existingOverride = overrideResponse.data;
+
+        if (existingOverride) {
+          const response = await axios.patch(
+            `${config.REACT_APP_API_URL}/role-overrides/${existingOverride._id}`,
+            roleData
+          );
+          return response.data;
+        } else {
+          const response = await axios.post(`${config.REACT_APP_API_URL}/role-overrides`, roleData);
+          return response.data;
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['roles']);
+    },
   });
 };
