@@ -2,6 +2,7 @@
 // v1.0.1 - Ashok   - fixed style issue
 // v1.0.2 - Ashok   - fixed resume and cover letter issue
 // v1.0.3 - Ashok   - made resume mandatory for freelancer true only
+// v1.0.4 - Ashok   - fixed opening input popup clicking on right side
 
 import React, { useEffect, useRef, useState } from "react";
 import InfoBox from "./InfoBox.jsx";
@@ -357,13 +358,14 @@ const AdditionalDetails = ({
                 </label>
                 {/* v1.0.3 <----------------------------------------------------- */}
                 {/* v1.0.1 <----------------------------------------------------- */}
+                {/* v1.0.4 <----------------------------------------------------------------- */}
                 <div className="relative flex">
                   <input
                     ref={resumeInputRef}
                     type="file"
                     name="resume"
                     id="resume"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    className="hidden"
                     onChange={(e) => handleFileUpload(e, "resume")}
                   />
                   <div
@@ -378,6 +380,7 @@ const AdditionalDetails = ({
                     Upload PDF only. 4 MB max
                   </p>
                 </div>
+                {/* v1.0.4 -----------------------------------------------------------------> */}
               </div>
               {resumeName && (
                 // v1.0.1 <-------------------------------------------------------------
@@ -417,13 +420,14 @@ const AdditionalDetails = ({
                 >
                   Cover Letter
                 </label>
+                {/* v1.0.4 <------------------------------------------------------------ */}
                 <div className="relative flex">
                   <input
                     ref={coverLetterInputRef}
                     type="file"
                     name="coverLetter"
                     id="coverLetter"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    className="hidden"
                     onChange={(e) => handleCoverLetterUpload(e, "coverLetter")}
                   />
                   <div
@@ -438,6 +442,7 @@ const AdditionalDetails = ({
                     Upload PDF only. 4 MB max
                   </p>
                 </div>
+                {/* v1.0.4 ------------------------------------------------------------> */}
               </div>
               {coverLetterName && (
                 // v1.0.1 <------------------------------------------------------------------

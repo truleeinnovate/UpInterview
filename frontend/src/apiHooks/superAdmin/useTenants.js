@@ -28,7 +28,7 @@ export const useTenants = () => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/Organization/all-organizations`
       );
-      return response.data.organizations || [];
+      return response.data.organizations.reverse() || [];
     },
     enabled: isEnabled,
     staleTime: 1000 * 60 * 5,

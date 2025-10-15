@@ -12,6 +12,8 @@ import { config } from "../../../../../../config";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 
 import { toast } from "react-hot-toast";
+import { notify } from "../../../../../../services/toastService";
+import AuthCookieManager from "../../../../../../utils/AuthCookieManager/AuthCookieManager";
 
 export const formatDateOfBirth = (dateString) => {
     if (!dateString) return "Not Provided";
@@ -33,18 +35,11 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = nu
 
     const navigate = useNavigate();
     const location = useLocation();
-
+    const ownerId = AuthCookieManager.getCurrentUserId();
     const authToken = Cookies.get("authToken");
-    const impersonationToken = Cookies.get("impersonationToken");
+
     const tokenPayload = decodeJwt(authToken);
-    const impersonatedTokenPayload = decodeJwt(impersonationToken);
-    let ownerId;
-    if (type === "superAdmin") {
-        ownerId = impersonatedTokenPayload?.impersonatedUserId;
-    } else {
-        ownerId = tokenPayload?.userId;
-        ownerId = usersId;
-    }
+
 
     const organization = tokenPayload.organization;
 
@@ -76,13 +71,13 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = nu
             );
 
             if (response.data.success) {
-                toast.success("Verification email resent successfully!");
+                notify.success("Verification email resent successfully!");
             } else {
-                toast.error(response.data.message);
+                notify.error(response.data.message);
             }
         } catch (error) {
             console.error("Error resending verification email:", error);
-            toast.error("Failed to resend verification email");
+            notify.error("Failed to resend verification email");
         }
     };
 
@@ -96,13 +91,13 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = nu
                 }
             );
             if (response.status === 200) {
-                toast.success("Password reset email sent successfully");
+                notify.success("Password reset email sent successfully");
             } else {
-                toast.error("Failed to send password reset email");
+                notify.error("Failed to send password reset email");
             }
         } catch (error) {
             console.error("Error sending password reset email:", error);
-            toast.error("Failed to send password reset email");
+            notify.error("Failed to send password reset email");
         }
     };
     // console.log("contactData handleResendPasswordChange", contactData);
@@ -147,7 +142,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = nu
                             console.error("No ID available for editing");
                             return;
                         }
-                        
+
                         if (mode === "users") {
                             setBasicEditOpen(true);
                         } else if (externalData) {

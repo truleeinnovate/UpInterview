@@ -1,6 +1,8 @@
 // v1.0.0 - Ashok - Fixed z-index issue using createPortal
+// v1.0.1 - Ashok - Fixed scroll issues
+
 import { useState, useEffect } from "react";
-import DOMPurify from 'dompurify';
+import DOMPurify from "dompurify";
 
 import axios from "axios";
 //import { nextPage, prevPage } from "../../../../../utils/SubscriptionValidations.js";
@@ -176,18 +178,20 @@ const EmailTemplate = () => {
                       {currentPage}/{totalPages}
                     </span>
                     <button
-                      className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-                        } `}
+                      className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${
+                        currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                      } `}
                       onClick={prevPage}
                       disabled={currentPage === 1}
                     >
                       <ArrowLeft className="text-custom-blue text-xl" />
                     </button>
                     <button
-                      className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${currentPage === totalPages
+                      className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${
+                        currentPage === totalPages
                           ? "opacity-50 cursor-not-allowed"
                           : ""
-                        } `}
+                      } `}
                       onClick={nextPage}
                       disabled={currentPage === totalPages}
                     >
@@ -232,87 +236,100 @@ const EmailTemplate = () => {
 
       {/* Preview Modal */}
       {/* v1.0.0 <------------------------------------------------------------------------------------------- */}
+      {/* v1.0.1 <------------------------------------------------------------------------------------------- */}
       {showPreviewModal &&
-  selectedTemplate &&
-  createPortal(
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-hidden">
-        {showConfirmation && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-semibold mb-4">Confirm Inactivation</h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to inactivate this email template?
-              </p>
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => setShowConfirmation(false)}
-                  className="px-4 py-2 text-gray-600 border border-gray-400 hover:bg-gray-100 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmDeactivate}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                  Inactivate
-                </button>
+        selectedTemplate &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+              {showConfirmation && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
+                  <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                    <h3 className="text-lg font-semibold mb-4">
+                      Confirm Inactivation
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Are you sure you want to inactivate this email template?
+                    </p>
+                    <div className="flex justify-end space-x-4">
+                      <button
+                        onClick={() => setShowConfirmation(false)}
+                        className="px-4 py-2 text-gray-600 border border-gray-400 hover:bg-gray-100 rounded-lg"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleConfirmDeactivate}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                      >
+                        Inactivate
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="border-b px-6 sm:px-4 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-semibold">
+                        {selectedTemplate.name}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {selectedTemplate.category}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleStatusToggle}
+                      className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm ${
+                        selectedTemplate.isActive
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {selectedTemplate.isActive ? (
+                        <>
+                          <ToggleRight className="h-4 w-4" />
+                          <span>Active</span>
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft className="h-4 w-4" />
+                          <span>Inactive</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => setShowPreviewModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                    aria-label="Close preview modal"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-        <div className="border-b px-6 sm:px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div>
-                <h3 className="text-lg sm:text-xl font-semibold">{selectedTemplate.name}</h3>
-                <p className="text-sm text-gray-500">{selectedTemplate.category}</p>
-              </div>
-              <button
-                onClick={handleStatusToggle}
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm ${
-                  selectedTemplate.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                }`}
-              >
-                {selectedTemplate.isActive ? (
-                  <>
-                    <ToggleRight className="h-4 w-4" />
-                    <span>Active</span>
-                  </>
-                ) : (
-                  <>
-                    <ToggleLeft className="h-4 w-4" />
-                    <span>Inactive</span>
-                  </>
-                )}
-              </button>
-            </div>
-            <button
-              onClick={() => setShowPreviewModal(false)}
-              className="text-gray-400 hover:text-gray-600"
-              aria-label="Close preview modal"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-        <div className="p-4 sm:p-6 overflow-y-auto">
-          <div className="rounded-lg p-4 sm:p-6 mb-6">
-            <div className="mb-4 pb-4">
-              <div className="text-sm text-gray-500">Subject:</div>
-              <div className="font-medium">{selectedTemplate.subject}</div>
-            </div>
-            <div
-              className="prose max-w-none whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(selectedTemplate.body || '<p>No content available</p>'),
-              }}
-            />
-            {/* {selectedTemplate.type === 'email' ? (
+              <div className="p-4 sm:p-6 overflow-y-auto">
+                <div className="rounded-lg p-4 sm:p-6 mb-6">
+                  <div className="mb-4 pb-4">
+                    <div className="text-sm text-gray-500">Subject:</div>
+                    <div className="font-medium">
+                      {selectedTemplate.subject}
+                    </div>
+                  </div>
+                  <div
+                    className="prose max-w-none whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(
+                        selectedTemplate.body || "<p>No content available</p>"
+                      ),
+                    }}
+                  />
+                  {/* {selectedTemplate.type === 'email' ? (
               <>
                 <div className="mb-4 pb-4 border-b">
                   <div className="text-sm text-gray-500">Subject:</div>
@@ -332,14 +349,14 @@ const EmailTemplate = () => {
                 {selectedTemplate.content.plainText}
               </pre>
             )} */}
-          </div>
-        </div>
-      </div>
-    </div>,
-    document.body
-  )}
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
       {/* v1.0.0 <------------------------------------------------------------------------------------------- */}
-
+      {/* v1.0.1 <------------------------------------------------------------------------------------------- */}
       {/* Settings Modal */}
       {/* v1.0.0 <-------------------------------------------------------------------------------------------- */}
       {/* {showSettingsModal && (
