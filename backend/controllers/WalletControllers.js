@@ -890,9 +890,9 @@ const verifyBankAccount = async (req, res) => {
     }
 
     // Basic validation for IFSC/Account number (Indian banks). Adjust as needed per region
-    if (!bankAccount.ifscCode || !bankAccount.accountNumber) {
+    if ((bankAccount.ifscCode ? !bankAccount.ifscCode : !bankAccount.routingNumber) || !bankAccount.accountNumber) {
       return res.status(400).json({
-        error: "IFSC code and account number are required for verification",
+        error: `${bankAccount.routingNumber ? "Routing Number": "IFSC code"} and account number are required for verification`,
       });
     }
 
