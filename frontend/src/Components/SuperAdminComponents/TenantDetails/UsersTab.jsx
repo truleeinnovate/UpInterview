@@ -44,6 +44,7 @@ import AuthCookieManager, {
 import { toast } from "react-toastify";
 import { usePermissions } from "../../../Context/PermissionsContext";
 import KanbanView from "./Users/Kanban.jsx";
+import { notify } from "../../../services/toastService.js";
 
 function UsersTab({ users, viewMode }) {
   const { refreshPermissions } = usePermissions();
@@ -175,7 +176,7 @@ function UsersTab({ users, viewMode }) {
       const impersonationToken = getImpersonationToken();
       if (!impersonationToken) {
         console.error("❌ No impersonation token found");
-        toast.error("Super admin session expired. Please log in again.");
+        notify.error("Super admin session expired. Please log in again.");
         navigate("/organization-login");
         return;
       }
@@ -228,11 +229,11 @@ function UsersTab({ users, viewMode }) {
         setTimeout(() => window.location.reload(), 500);
       } else {
         console.error("❌ Login failed:", data.message);
-        toast.error(data.message || "Login failed");
+        notify.error(data.message || "Login failed");
       }
     } catch (error) {
       console.error("💥 Error during login as user:", error);
-      toast.error("An error occurred during login");
+      notify.error("An error occurred during login");
     } finally {
       setIsLoading(false);
     }

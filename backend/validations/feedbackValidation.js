@@ -3,7 +3,7 @@ const Joi = require('joi');
 // Validation schema for candidate answer
 const candidateAnswerSchema = Joi.object({
   answerType: Joi.string()
-    .valid('partial', 'correct', 'wrong', 'not answered')
+    // .valid('partial', 'correct', 'wrong', 'not answered')
     .default('not answered'),
   submittedAnswer: Joi.string().allow('', null)
 });

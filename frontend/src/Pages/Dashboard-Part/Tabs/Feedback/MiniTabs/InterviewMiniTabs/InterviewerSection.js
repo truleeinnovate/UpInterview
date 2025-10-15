@@ -45,7 +45,6 @@ const InterviewerSectionComponent = ({
   // Interview data from parent
   interviewData,
   decodedData,
-  handlePreselectedQuestionResponse
 }) => {
   // Get all questions from interviewData and filter for interviewer-added questions
   const location = useLocation();
@@ -54,6 +53,7 @@ const InterviewerSectionComponent = ({
   const feedbackData = React.useMemo(() => {
     return rawFeedbackData || interviewData || {};
   }, [rawFeedbackData, interviewData]);
+  console.log("isEditMode",isEditMode);
 
   // console.log("feedbackData",interviewData?.questionFeedback);
 
@@ -235,9 +235,26 @@ const InterviewerSectionComponent = ({
 
   //   ]
   // );
-  const [interviewerSection, setInterviewerSection] = useState(() => {
-    return isAddMode || isEditMode ? questionsWithFeedback : [];
-  });
+
+// Fixed version:
+const [interviewerSection, setInterviewerSection] = useState(() => {
+  if (isEditMode) {
+    // In edit mode, use the questions with feedback data
+    return questionsWithFeedback || [];
+  } else if (isAddMode) {
+    // In add mode, start with empty array or existing data
+    return interviewerSectionData || [];
+  } else {
+    // View mode or other cases
+    return questionsWithFeedback || [];
+  }
+});
+
+  // const [interviewerSection, setInterviewerSection] = useState(() => {
+  //   return isAddMode || isEditMode ? questionsWithFeedback : [];
+  // });
+
+  
 
   //<----v1.0.0---
   const [selectedQuestion, setSelectedQuestion] = useState(
@@ -252,39 +269,16 @@ const InterviewerSectionComponent = ({
     useState(true);
   //----v1.0.1--->
 
-
-  // Add this function inside the InterviewerSectionComponent, after the state declarations
-// const syncQuestionChanges = useCallback((questionId, updates) => {
-//   // Update local state
-//   setInterviewerSectionData(prev =>
-//     prev.map(question =>
-//       (question.questionId || question.id) === questionId
-//         ? { ...question, ...updates }
-//         : question
-//     )
-//   );
-
-// }, []);
-
-// Add this sync function inside InterviewerSectionComponent after state declarations
-const syncQuestionChanges = useCallback((questionId, updates) => {
-  console.log("🔄 Interviewer syncQuestionChanges called:", { questionId, updates });
-  
-  // Update local state
-  setInterviewerSectionData(prev =>
-    prev.map(question =>
-      (question.questionId || question.id) === questionId
-        ? { ...question, ...updates }
-        : question
-    )
-  );
-
-  // Also sync with parent component if the handler is provided
-  if (handlePreselectedQuestionResponse) {
-    handlePreselectedQuestionResponse(questionId, updates);
+// Add this useEffect to sync data
+useEffect(() => {
+  if (isEditMode && questionsWithFeedback) {
+    setInterviewerSection(questionsWithFeedback);
+    // Also update the parent data if needed
+    if (setInterviewerSectionData) {
+      setInterviewerSectionData(questionsWithFeedback);
+    }
   }
-}, [setInterviewerSectionData, handlePreselectedQuestionResponse]);
-
+}, [questionsWithFeedback, isEditMode, setInterviewerSectionData]);
 
   useEffect(() => {
     if (interviewerSection.length > 0 && selectedQuestion === null) {
@@ -321,62 +315,96 @@ const syncQuestionChanges = useCallback((questionId, updates) => {
   //   );
   // };
 
-  // const onChangeInterviewQuestionNotes = (questionId, notes) => {
-  //   syncQuestionChanges(questionId, { note: notes, notesBool: true });
+  // const onClickAddNote = (id) => {
+  //   setInterviewerSectionData((prev) =>
+  //     prev.map((question) =>
+  //       (question.questionId || question.id) === id
+  //         ? { ...question, notesBool: !question.notesBool }
+  //         : question
+  //     )
+  //   );
   // };
 
-  const onClickAddNote = (id) => {
-    setInterviewerSectionData((prev) =>
-      prev.map((question) =>
-        (question.questionId || question.id) === id
-          ? { ...question, notesBool: !question.notesBool }
-          : question
-      )
-    );
-  };
 
- // Update all handler functions to use the sync function
 const onChangeInterviewQuestionNotes = (questionId, notes) => {
-  console.log("📝 Notes changed:", { questionId, notes });
-  syncQuestionChanges(questionId, { note: notes, notesBool: true });
-};
-
-const onChangeRadioInput = (questionId, value) => {
-  console.log("📻 Radio input changed:", { questionId, value });
-  syncQuestionChanges(questionId, { isAnswered: value });
-};
-
-const onChangeDislikeRadioInput = (questionId, value) => {
-  console.log("👎 Dislike radio changed:", { questionId, value });
-  syncQuestionChanges(questionId, { whyDislike: value, isLiked: "disliked" });
-};
-
-const handleDislikeToggle = (id) => {
-  if (isViewMode) return;
-  
-  console.log("👎 Dislike toggle:", id);
-  
-  if (dislikeQuestionId === id) setDislikeQuestionId(null);
-  else setDislikeQuestionId(id);
-  
-  syncQuestionChanges(id, { 
-    isLiked: "disliked",
-    // Don't clear whyDislike here, let the radio buttons handle it
+  setInterviewerSectionData((prev) => {
+    const questionExists = prev.some(q => (q.questionId || q.id) === questionId);
+    
+    if (questionExists) {
+      return prev.map((q) =>
+        (q.questionId || q.id) === questionId
+          ? { ...q, note: notes, notesBool: true }
+          : q
+      );
+    } else {
+      const originalQuestion = feedbackData?.questionFeedback?.find(
+        f => (f.questionId || f._id) === questionId
+      );
+      
+      if (originalQuestion) {
+        return [
+          ...prev,
+          {
+            ...originalQuestion,
+            questionId: questionId,
+            note: notes,
+            notesBool: true
+          }
+        ];
+      }
+      
+      return prev;
+    }
   });
 };
 
-const handleLikeToggle = (id) => {
-  if (isViewMode) return;
-  
-  console.log("👍 Like toggle:", id);
-  
-  syncQuestionChanges(id, { 
-    isLiked: "liked",
-    whyDislike: "" // Clear dislike reason when liking
+const onClickAddNote = (id) => {
+  setInterviewerSectionData((prev) => {
+    const questionExists = prev.some(q => (q.questionId || q.id) === id);
+    
+    if (questionExists) {
+      return prev.map((q) =>
+        (q.questionId || q.id) === id 
+          ? { ...q, notesBool: !q.notesBool }
+          : q
+      );
+    } else {
+      const originalQuestion = feedbackData?.questionFeedback?.find(
+        f => (f.questionId || f._id) === id
+      );
+      
+      if (originalQuestion) {
+        return [
+          ...prev,
+          {
+            ...originalQuestion,
+            questionId: id,
+            notesBool: true,
+            note: originalQuestion.interviewerFeedback?.note || ""
+          }
+        ];
+      }
+      
+      return prev;
+    }
   });
-  
-  if (dislikeQuestionId === id) setDislikeQuestionId(null);
 };
+
+const onClickDeleteNote = (id) => {
+  setInterviewerSectionData((prev) => {
+    const questionExists = prev.some(q => (q.questionId || q.id) === id);
+    
+    if (questionExists) {
+      return prev.map((q) =>
+        (q.questionId || q.id) === id
+          ? { ...q, notesBool: false, note: "" }
+          : q
+      );
+    }
+    return prev;
+  });
+};
+
 
   const openQuestionBank = () => {
     setIsQuestionBankOpen(true);
@@ -407,43 +435,43 @@ const handleLikeToggle = (id) => {
     [isQuestionBankOpen]
   );
 
-  const updateQuestionsInAddedSectionFromQuestionBank = (questions) => {
-    console.log("Updating questions from question bank:", questions);
+  // const updateQuestionsInAddedSectionFromQuestionBank = (questions) => {
+  //   console.log("Updating questions from question bank:", questions);
 
-    if (questions && questions.length > 0) {
-      // Transform questions to match the interviewer section format
-      const newQuestions = questions.map((question, index) => ({
-        id: Date.now() + index, // Generate unique ID
-        question: question.question || question.title || "N/A",
-        expectedAnswer: question.expectedAnswer || question.answer || "N/A",
-        category: question.category || "N/A",
-        difficulty: question.difficulty || "N/A",
-        //addedBy: 'interviewer',
-        mandatory: question.mandatory || false,
-        isAnswered: "Not Answered",
-        notesBool: false,
-        note: "",
-      }));
+  //   if (questions && questions.length > 0) {
+  //     // Transform questions to match the interviewer section format
+  //     const newQuestions = questions.map((question, index) => ({
+  //       id: Date.now() + index, // Generate unique ID
+  //       question: question.question || question.title || "N/A",
+  //       expectedAnswer: question.expectedAnswer || question.answer || "N/A",
+  //       category: question.category || "N/A",
+  //       difficulty: question.difficulty || "N/A",
+  //       //addedBy: 'interviewer',
+  //       mandatory: question.mandatory || false,
+  //       isAnswered: "Not Answered",
+  //       notesBool: false,
+  //       note: "",
+  //     }));
 
-      // Add new questions to the existing interviewer section
-      setInterviewerSection((prev) => [...prev, ...newQuestions]);
+  //     // Add new questions to the existing interviewer section
+  //     setInterviewerSection((prev) => [...prev, ...newQuestions]);
 
-      // Update interviewerSectionData as well
-      const newQuestionsData = newQuestions.map((q) => ({
-        ...q,
-        isAnswered: "Not Answered",
-        isLiked: "",
-        whyDislike: "",
-        notesBool: false,
-        note: "",
-        //addedBy: 'interviewer',
-      }));
-      setInterviewerSectionData((prev) => [...prev, ...newQuestionsData]);
+  //     // Update interviewerSectionData as well
+  //     const newQuestionsData = newQuestions.map((q) => ({
+  //       ...q,
+  //       isAnswered: "Not Answered",
+  //       isLiked: "",
+  //       whyDislike: "",
+  //       notesBool: false,
+  //       note: "",
+  //       //addedBy: 'interviewer',
+  //     }));
+  //     setInterviewerSectionData((prev) => [...prev, ...newQuestionsData]);
 
-      // Close the question bank after adding questions
-      setIsQuestionBankOpen(false);
-    }
-  };
+  //     // Close the question bank after adding questions
+  //     setIsQuestionBankOpen(false);
+  //   }
+  // };
 
   // const onClickDeleteNote = (id) => {
   //   setInterviewerSectionData((prev) =>
@@ -454,131 +482,224 @@ const handleLikeToggle = (id) => {
   // };
 
   // Function to handle delete note
-  const onClickDeleteNote = (id) => {
-    setInterviewerSectionData((prev) =>
-      prev.map((q) => (q._id === id ? { ...q, notesBool: false, note: "" } : q))
-    );
+  
+  
+const updateQuestionsInAddedSectionFromQuestionBank = (questions) => {
+  console.log("Updating questions from question bank:", questions);
 
-    // Update preselected questions responses
-    // if (handlePreselectedQuestionResponse) {
-    //   const question = schedulerQuestionsData.find(q => q._id === id);
-    //   const bankQuestionId = question?.questionId || id;
-    //   handlePreselectedQuestionResponse(bankQuestionId, { notesBool: false, note: "" });
-    // }
-  };
+  if (questions && questions.length > 0) {
+    const newQuestions = questions.map((question, index) => ({
+      id: Date.now() + index,
+      question: question.question || question.title || "N/A",
+      expectedAnswer: question.expectedAnswer || question.answer || "N/A",
+      category: question.category || "N/A",
+      difficulty: question.difficulty || "N/A",
+      mandatory: question.mandatory || false,
+      isAnswered: "Not Answered",
+      notesBool: false,
+      note: "",
+      // Add edit mode specific fields
+      ...(isEditMode && { 
+        isEdited: true, // Flag to track edited questions
+        originalData: question // Keep original data for reference
+      })
+    }));
+
+    if (isEditMode) {
+      // In edit mode, append to existing questions
+      setInterviewerSection(prev => [...prev, ...newQuestions]);
+    } else {
+      // In add mode, replace or append based on your requirement
+      setInterviewerSection(prev => [...prev, ...newQuestions]);
+    }
+
+    // Update parent data
+    const newQuestionsData = newQuestions.map(q => ({
+      ...q,
+      isAnswered: "Not Answered",
+      isLiked: "",
+      whyDislike: "",
+      notesBool: false,
+      note: "",
+    }));
+    
+    setInterviewerSectionData(prev => [...prev, ...newQuestionsData]);
+    setIsQuestionBankOpen(false);
+  }
+};
+  
+  // const onClickDeleteNote = (id) => {
+  //   setInterviewerSectionData((prev) =>
+  //     prev.map((q) => (q._id === id ? { ...q, notesBool: false, note: "" } : q))
+  //   );
+
+  //   // Update preselected questions responses
+  //   // if (handlePreselectedQuestionResponse) {
+  //   //   const question = schedulerQuestionsData.find(q => q._id === id);
+  //   //   const bankQuestionId = question?.questionId || id;
+  //   //   handlePreselectedQuestionResponse(bankQuestionId, { notesBool: false, note: "" });
+  //   // }
+  // };
 
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");
   const questionRef = useRef(); // For future use, e.g., scrolling to a specific question
 
-  // Function to handle radio input changes if needed
-  // const onChangeRadioInput = (questionId, value) => {
-  //   setInterviewerSectionData((prev) =>
-  //     prev.map((question) =>
-  //       (question.questionId || question.id) === questionId
-  //         ? { ...question, isAnswered: value }
-  //         : question
-  //     )
-  //   );
-  // };
-
-  // const onChangeDislikeRadioInput = (questionId, value) => {
-  //   setInterviewerSectionData((prev) =>
-  //     prev.map((question) => {
-  //       if ((question.questionId || question.id) === questionId) {
-  //         return { ...question, whyDislike: value, isLiked: "disliked" };
-  //       }
-  //       return question;
-  //     })
-  //   );
-  // };
-
-  
-// const onChangeRadioInput = (questionId, value) => {
-//   syncQuestionChanges(questionId, { isAnswered: value });
-// };
-
-// const onChangeDislikeRadioInput = (questionId, value) => {
-//   syncQuestionChanges(questionId, { whyDislike: value, isLiked: "disliked" });
-// };
-
-  // const handleDislikeToggle = (id) => {
-  //   if (isViewMode) return; //<----v1.0.3-----
-  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
-  //   else setDislikeQuestionId(id);
-  //   setInterviewerSectionData(
-  //     (prev) =>
-  //       prev.map((q) =>
-  //         q._id === id
-  //           ? {
-  //               ...q,
-  //               isLiked: q.isLiked === "disliked" ? "" : "disliked",
-  //               // Clear dislike reason when toggling off dislike
-  //               whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike,
-  //             }
-  //           : q
-  //       )
-  //     // prev.map((q) =>
-  //     //   (q.questionId || q.id) === id ? { ...q, isLiked: q.isLiked === "disliked" ? "" : "disliked" } : q
-  //     // )
-  //   );
-  // };
-
-  // const handleLikeToggle = (id) => {
-  //   if (isViewMode) return; //<----v1.0.3-----
-  //   setInterviewerSectionData(
-  //     (prev) =>
-  //       prev.map((q) =>
-  //         q._id === id
-  //           ? {
-  //               ...q,
-  //               isLiked: q.isLiked === "liked" ? "" : "liked",
-  //               // Clear dislike reason when liking
-  //               whyDislike: q.isLiked === "liked" ? q.whyDislike : "",
-  //             }
-  //           : q
-  //       )
-
-  //     // prev.map((q) =>
-  //     //   (q.questionId || q.id) === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q
-  //     // )
-  //   );
-  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
-  // };
-
-
-  // const handleDislikeToggle = (id) => {
-  //   if (isViewMode) return;
-  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
-  //   else setDislikeQuestionId(id);
+// Fixed radio input handler
+const onChangeRadioInput = (questionId, value) => {
+  setInterviewerSectionData((prev) => {
+    const questionExists = prev.some(q => (q.questionId || q.id) === questionId);
     
-  //   setInterviewerSectionData(prev =>
-  //     prev.map(q =>
-  //       (q.questionId || q.id) === id
-  //         ? { 
-  //             ...q, 
-  //             isLiked: q.isLiked === "disliked" ? "" : "disliked",
-  //             whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike
-  //           }
-  //         : q
-  //     )
-  //   );
-  // };
+    if (questionExists) {
+      return prev.map((q) =>
+        (q.questionId || q.id) === questionId
+          ? { ...q, isAnswered: value }
+          : q
+      );
+    } else {
+      // Find the question in original feedback data and create new entry
+      const originalQuestion = feedbackData?.questionFeedback?.find(
+        f => (f.questionId || f._id) === questionId
+      );
+      
+      if (originalQuestion) {
+        return [
+          ...prev,
+          {
+            ...originalQuestion,
+            questionId: questionId,
+            isAnswered: value,
+            isLiked: originalQuestion.interviewerFeedback?.liked || "",
+            whyDislike: originalQuestion.interviewerFeedback?.dislikeReason || "",
+            note: originalQuestion.interviewerFeedback?.note || "",
+            notesBool: !!originalQuestion.interviewerFeedback?.note
+          }
+        ];
+      }
+      
+      return prev;
+    }
+  });
+};
+
+// Fixed dislike radio input handler
+const onChangeDislikeRadioInput = (questionId, value) => {
+  setInterviewerSectionData((prev) => {
+    const questionExists = prev.some(q => (q.questionId || q.id) === questionId);
+    
+    if (questionExists) {
+      return prev.map((q) =>
+        (q.questionId || q.id) === questionId
+          ? { ...q, whyDislike: value, isLiked: "disliked" }
+          : q
+      );
+    } else {
+      const originalQuestion = feedbackData?.questionFeedback?.find(
+        f => (f.questionId || f._id) === questionId
+      );
+      
+      if (originalQuestion) {
+        return [
+          ...prev,
+          {
+            ...originalQuestion,
+            questionId: questionId,
+            whyDislike: value,
+            isLiked: "disliked",
+            note: originalQuestion.interviewerFeedback?.note || "",
+            notesBool: !!originalQuestion.interviewerFeedback?.note
+          }
+        ];
+      }
+      
+      return prev;
+    }
+  });
+};
+
+// Fixed like/dislike toggle handlers
+const handleLikeToggle = (id) => {
+  if (isViewMode) return;
   
-  // const handleLikeToggle = (id) => {
-  //   if (isViewMode) return;
-  //   setInterviewerSectionData(prev =>
-  //     prev.map(q =>
-  //       (q.questionId || q.id) === id
-  //         ? { 
-  //             ...q, 
-  //             isLiked: q.isLiked === "liked" ? "" : "liked",
-  //             whyDislike: q.isLiked === "liked" ? q.whyDislike : ""
-  //           }
-  //         : q
-  //     )
-  //   );
-  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
-  // };
+  setInterviewerSectionData((prev) => {
+    const questionExists = prev.some(q => (q.questionId || q.id) === id);
+    
+    if (questionExists) {
+      return prev.map((q) =>
+        (q.questionId || q.id) === id
+          ? { 
+              ...q, 
+              isLiked: q.isLiked === "liked" ? "" : "liked",
+              whyDislike: q.isLiked === "liked" ? "" : q.whyDislike // Clear dislike reason when liking
+            }
+          : q
+      );
+    } else {
+      const originalQuestion = feedbackData?.questionFeedback?.find(
+        f => (f.questionId || f._id) === id
+      );
+      
+      if (originalQuestion) {
+        return [
+          ...prev,
+          {
+            ...originalQuestion,
+            questionId: id,
+            isLiked: "liked",
+            whyDislike: "", // Clear dislike reason
+            note: originalQuestion.interviewerFeedback?.note || "",
+            notesBool: !!originalQuestion.interviewerFeedback?.note
+          }
+        ];
+      }
+      
+      return prev;
+    }
+  });
+  
+  if (dislikeQuestionId === id) setDislikeQuestionId(null);
+};
+
+const handleDislikeToggle = (id) => {
+  if (isViewMode) return;
+  
+  setInterviewerSectionData((prev) => {
+    const questionExists = prev.some(q => (q.questionId || q.id) === id);
+    
+    if (questionExists) {
+      return prev.map((q) =>
+        (q.questionId || q.id) === id
+          ? { 
+              ...q, 
+              isLiked: q.isLiked === "disliked" ? "" : "disliked" 
+            }
+          : q
+      );
+    } else {
+      const originalQuestion = feedbackData?.questionFeedback?.find(
+        f => (f.questionId || f._id) === id
+      );
+      
+      if (originalQuestion) {
+        return [
+          ...prev,
+          {
+            ...originalQuestion,
+            questionId: id,
+            isLiked: "disliked",
+            note: originalQuestion.interviewerFeedback?.note || "",
+            notesBool: !!originalQuestion.interviewerFeedback?.note
+          }
+        ];
+      }
+      
+      return prev;
+    }
+  });
+  
+  if (dislikeQuestionId === id) setDislikeQuestionId(null);
+  else setDislikeQuestionId(id);
+};
+
 
   const DisLikeSection = React.memo(({ each }) => {
     return (
@@ -647,55 +768,47 @@ const handleLikeToggle = (id) => {
     );
   };
 
-  const RadioGroupInput = React.memo(({ each }) => {
-    return (
-      <div className="flex rounded-md mt-2">
-        <p className="w-[200px] font-bold text-gray-700">
-          Response Type{" "}
-          {(each.mandatory === "true" ||
-            each.snapshot?.mandatory === "true") && (
-            <span className="text-[red]">*</span>
-          )}
-        </p>
-        {isEditMode || isAddMode ? (
-          <div className={`w-full flex gap-x-8 gap-y-2 `}>
-            {["Not Answered", "Partially Answered", "Fully Answered"].map(
-              (option) => (
-                <span key={option} className="flex items-center gap-2">
-                  <input
-                    checked={each.isAnswered === option}
-                    value={option}
-                    name={`isAnswered-${each.questionId || each.id}`}
-                    type="radio"
-                    id={`isAnswered-${each.questionId || each.id}-${option}`}
-                    onChange={(e) =>
-                      onChangeRadioInput(
-                        each.questionId || each.id,
-                        e.target.value
-                      )
-                    }
-                    className="whitespace-nowrap"
-                  />
-                  <label
-                    htmlFor={`isAnswered-${
-                      each.questionId || each.id
-                    }-${option}`}
-                    className="cursor-pointer"
-                  >
-                    {option}
-                  </label>
-                </span>
-              )
-            )}
-          </div>
-        ) : (
-          <p className="w-full flex gap-x-8 gap-y-2 ">
-            {each.isAnswered || "Not Answered"}
-          </p>
+const RadioGroupInput = React.memo(({ each }) => {
+  return (
+    <div className="flex rounded-md mt-2">
+      <p className="w-[200px] font-bold text-gray-700">
+        Response Type{" "}
+        {(each.mandatory === "true" || each.snapshot?.mandatory === "true") && (
+          <span className="text-[red]">*</span>
+        )}
+      </p>
+      <div className={`w-full flex gap-x-8 gap-y-2`}>
+        {["Not Answered", "Partially Answered", "Fully Answered"].map(
+          (option) => (
+            <span key={option} className="flex items-center gap-2">
+              <input
+                checked={each.isAnswered === option}
+                value={option}
+                name={`isAnswered-${each.questionId || each.id}`}
+                type="radio"
+                id={`isAnswered-${each.questionId || each.id}-${option}`}
+                onChange={(e) =>
+                  onChangeRadioInput(
+                    each.questionId || each.id,
+                    e.target.value
+                  )
+                }
+                className="whitespace-nowrap"
+                disabled={isViewMode}
+              />
+              <label
+                htmlFor={`isAnswered-${each.questionId || each.id}-${option}`}
+                className="cursor-pointer"
+              >
+                {option}
+              </label>
+            </span>
+          )
         )}
       </div>
-    );
-  });
+    </div>
+  );
+});
 
   return (
     <>

@@ -1,7 +1,7 @@
 //<----v1.0.0---Venkatesh-----add isEditMode prop
 // v1.0.1 - Ashok - Improved responsiveness
 
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import SchedulerSectionComponent from "./InterviewMiniTabs/SchedulerSection";
 import InterviewerSectionComponent from "./InterviewMiniTabs/InterviewerSection";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
@@ -76,40 +76,7 @@ const InterviewsMiniTabComponent = ({
   };
   //----v1.0.0--->
 
-// Enhanced handler for preselected question responses
-const enhancedHandlePreselectedQuestionResponse = useCallback((questionId, updates) => {
-  console.log("🔄 Enhanced handler called:", { questionId, updates });
-  
-  setPreselectedQuestionsResponses(prev => {
-    const existingIndex = prev.findIndex(response => 
-      response.questionId === questionId || response.id === questionId || response._id === questionId
-    );
-    
-    let newResponses;
-    if (existingIndex >= 0) {
-      // Update existing response
-      newResponses = prev.map((response, index) => 
-        index === existingIndex 
-          ? { ...response, ...updates }
-          : response
-      );
-    } else {
-      // Add new response
-      newResponses = [...prev, { questionId, ...updates }];
-    }
-    
-    console.log("📝 Updated preselectedQuestionsResponses:", newResponses);
-    return newResponses;
-  });
-  
-  // Also call the original handler if it exists
-  if (handlePreselectedQuestionResponse) {
-    handlePreselectedQuestionResponse(questionId, updates);
-  }
-}, [setPreselectedQuestionsResponses, handlePreselectedQuestionResponse]);
-  
-
-const InterviewDisplayData = () => {
+  const InterviewDisplayData = () => {
     switch (interviewMiniTab) {
       case 1:
         return (
@@ -120,10 +87,9 @@ const InterviewDisplayData = () => {
             isViewMode={isViewMode}
             preselectedQuestionsResponses={preselectedQuestionsResponses}
             setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
-            handlePreselectedQuestionResponse={enhancedHandlePreselectedQuestionResponse}
-            // handlePreselectedQuestionResponse={
-            //   handlePreselectedQuestionResponse
-            // }
+            handlePreselectedQuestionResponse={
+              handlePreselectedQuestionResponse
+            }
           />
         ); //<----v1.0.0---
       case 2:

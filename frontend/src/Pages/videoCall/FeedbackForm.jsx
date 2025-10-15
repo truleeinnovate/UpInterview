@@ -32,6 +32,7 @@ import toast from "react-hot-toast";
 import { SchedulerViewMode } from "./SchedulerViewMode.jsx";
 import DescriptionField from "../../Components/FormFields/DescriptionField.jsx";
 import DropdownSelect from "../../Components/Dropdowns/DropdownSelect.jsx";
+import { notify } from "../../services/toastService.js";
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -86,7 +87,7 @@ const FeedbackForm = ({
   isScheduler,
   schedulerFeedbackData,
 }) => {
-  // console.log("feedbackCandidate", feedbackCandidate);
+  console.log("feedbackCandidate", feedbackCandidate);
   useScrollLock(true);
   const location = useLocation();
   const locationFeedback = location.state?.feedback;
@@ -126,7 +127,7 @@ const FeedbackForm = ({
       ? overallImpressionTabData?.communicationRating
       : 0
   );
-  // console.log("skillsData", overallImpressionTabData);
+  console.log("skillsData", overallImpressionTabData);
 
   // Fixed: Proper initialization for skill ratings with proper conditional checks
   const initialSkillRatings =
@@ -200,7 +201,7 @@ const FeedbackForm = ({
       ? all.filter((q) => q.addedBy === "interviewer")
       : [];
   }, [isEditMode, isViewMode, isAddMode, feedbackData, interviewerSectionData]);
-  console.log("filteredInterviewerQuestions",filteredInterviewerQuestions)
+  // console.log("filteredInterviewerQuestions",filteredInterviewerQuestions)
 
   // const questionsWithFeedback = React.useMemo(() => {
 
@@ -270,108 +271,67 @@ const FeedbackForm = ({
   //       return merged;
   //     });
   //   }, [isEditMode, isViewMode, feedbackData, interviewerSectionData, filteredInterviewerQuestions]);
-//<---v1.0.4-----Venkatesh----Fixed question data synchronization
 
-//<---v1.0.4-----Venkatesh----Fixed question data synchronization
-const questionsWithFeedback = React.useMemo(() => {
-  // Start with all questions from all sources
-  const allQuestions = [
-    ...(filteredInterviewerQuestions || []),
-    ...(interviewerSectionData || [])
-  ];
+  const questionsWithFeedback = React.useMemo(() => {
+    // Start with all questions from all sources
+    const allQuestions = [
+      ...(filteredInterviewerQuestions || []),
+      // ...(interviewerSectionData || [])
+    ];
 
-  console.log("All questions before processing:", allQuestions);
+    console.log("allQuestions", allQuestions);
 
-  // Create a map by question ID for quick lookup
-  const questionsMap = new Map();
-  
-  // First, add all questions from filteredInterviewerQuestions
-  (filteredInterviewerQuestions || []).forEach((q) => {
-    const id = q.questionId || q._id || q.id;
-    if (id) {
-      questionsMap.set(id, { 
-        ...q,
-        // Ensure these fields exist with proper defaults
-        isAnswered: q.isAnswered || "Not Answered",
-        isLiked: q.isLiked || "",
-        whyDislike: q.whyDislike || "",
-        note: q.note || "",
-        notesBool: q.notesBool || false
-      });
-    }
-  });
-
-  // Then, overlay current UI state from interviewerSectionData
-  (interviewerSectionData || []).forEach((q) => {
-    const id = q.questionId || q._id || q.id;
-    if (id) {
-      const existing = questionsMap.get(id);
-      if (existing) {
-        // Merge with existing question, prioritizing current UI state
-        questionsMap.set(id, {
-          ...existing,
-          ...q,
-          // Ensure isAnswered is properly set
-          isAnswered: q.isAnswered || existing.isAnswered || "Not Answered"
-        });
-      } else {
-        // Add new question from interviewerSectionData
-        questionsMap.set(id, {
-          ...q,
-          isAnswered: q.isAnswered || "Not Answered"
-        });
-      }
-    }
-  });
-
-  // Apply feedback data if available
-  if (
-    (isEditMode || isViewMode || isAddMode) &&
-    feedbackData?.questionFeedback
-  ) {
-    feedbackData.questionFeedback.forEach((feedback) => {
-      const id = feedback.questionId || feedback._id;
-      if (id && questionsMap.has(id)) {
-        const question = questionsMap.get(id);
-        
-        // Merge answer data - only if not already set by UI
-        if (feedback.candidateAnswer) {
-          const backendAnswerType = fromBackendAnswerType(
-            feedback.candidateAnswer.answerType
-          );
-          questionsMap.set(id, {
-            ...question,
-            isAnswered: question.isAnswered || backendAnswerType || "Not Answered",
-            answer: question.answer || feedback.candidateAnswer.submittedAnswer || ""
-          });
-        }
-
-        // Merge feedback data - only if not already set by UI
-        if (feedback.interviewerFeedback) {
-          questionsMap.set(id, {
-            ...question,
-            isLiked: question.isLiked || feedback.interviewerFeedback.liked || "",
-            whyDislike: question.whyDislike || feedback.interviewerFeedback.dislikeReason || "",
-            note: question.note || feedback.interviewerFeedback.note || "",
-            notesBool: question.notesBool || !!feedback.interviewerFeedback.note
-          });
-        }
+    // Create a map by question ID for quick lookup
+    const questionsMap = new Map();
+    allQuestions.forEach((q) => {
+      const id = q.questionId || q._id || q.id;
+      if (id) {
+        questionsMap.set(id, { ...q });
       }
     });
-  }
 
-  const result = Array.from(questionsMap.values());
-  console.log("Final questionsWithFeedback:", result);
-  return result;
-}, [
-  isEditMode,
-  isViewMode,
-  feedbackData,
-  interviewerSectionData,
-  filteredInterviewerQuestions,
-]);
+    // Apply feedback data if available
+    if (
+      (isEditMode || isViewMode || isAddMode) &&
+      feedbackData?.questionFeedback
+    ) {
+      feedbackData.questionFeedback.forEach((feedback) => {
+        const id = feedback.questionId || feedback._id;
+        if (id && questionsMap.has(id)) {
+          const question = questionsMap.get(id);
 
-  console.log("questionsWithFeedback",questionsWithFeedback);
+          // Merge answer data
+          if (feedback.candidateAnswer) {
+            question.isAnswered = fromBackendAnswerType(
+              feedback.candidateAnswer.answerType
+            );
+            question.answer =
+              feedback.candidateAnswer.submittedAnswer || question.answer;
+          }
+
+          // Merge feedback data
+          if (feedback.interviewerFeedback) {
+            question.isLiked =
+              feedback.interviewerFeedback.liked || question.isLiked;
+            question.whyDislike =
+              feedback.interviewerFeedback.dislikeReason || question.whyDislike;
+            question.note = feedback.interviewerFeedback.note || question.note;
+            question.notesBool = !!feedback.interviewerFeedback.note;
+          }
+        }
+      });
+    }
+
+    return Array.from(questionsMap.values());
+  }, [
+    isEditMode,
+    isViewMode,
+    feedbackData,
+    interviewerSectionData,
+    filteredInterviewerQuestions,
+  ]);
+
+  // console.log("questionsWithFeedback",questionsWithFeedback);
 
   // Build a single, de-duplicated list that prefers current UI state and only falls back to persisted feedback
   // const questionsWithFeedback = React.useMemo(() => {
@@ -454,148 +414,113 @@ const questionsWithFeedback = React.useMemo(() => {
 
   // Final list of questions to render in the interviewer section
 
-//<---v1.0.4-----Venkatesh----Fixed question rendering logic
+  const questionsToRender = React.useMemo(() => {
+    if (isEditMode || isViewMode || isAddMode) {
+      return Array.isArray(questionsWithFeedback) ? questionsWithFeedback : [];
+    }
+    return Array.isArray(filteredInterviewerQuestions)
+      ? filteredInterviewerQuestions
+      : [];
+  }, [
+    isEditMode,
+    isViewMode,
+    isAddMode,
+    questionsWithFeedback,
+    filteredInterviewerQuestions,
+  ]);
 
-const questionsToRender = React.useMemo(() => {
-  let questions = [];
-  
-  if (isEditMode || isViewMode || isAddMode) {
-    questions = Array.isArray(questionsWithFeedback) ? questionsWithFeedback : [];
-  } else {
-    questions = Array.isArray(filteredInterviewerQuestions) ? filteredInterviewerQuestions : [];
-  }
+  // Build a final, de-duplicated list of questionFeedback for updates, preserving existing interviewerFeedback
+  const finalQuestionFeedback = React.useMemo(() => {
+    // Helper to normalize to string id
+    const normId = (q) => {
+      if (!q) return "";
+      if (typeof q === "string") return q;
+      return q.questionId || q.id || q._id || "";
+    };
 
-  // Ensure all questions have proper default values
-  const processedQuestions = questions.map(q => ({
-    ...q,
-    isAnswered: q.isAnswered || "Not Answered",
-    isLiked: q.isLiked || "",
-    whyDislike: q.whyDislike || "",
-    note: q.note || "",
-    notesBool: q.notesBool || false
-  }));
+    // Existing saved feedback map (edit/view modes)
+    const existingMap = (
+      Array.isArray(feedbackData?.questionFeedback)
+        ? feedbackData.questionFeedback
+        : []
+    ).reduce((acc, f) => {
+      const k = normId(f?.questionId || f);
+      if (!k) return acc;
+      acc[k] = f;
+      return acc;
+    }, {});
 
-  console.log("questionsToRender:", processedQuestions);
-  return processedQuestions;
-}, [
-  isEditMode,
-  isViewMode,
-  isAddMode,
-  questionsWithFeedback,
-  filteredInterviewerQuestions,
-]);
+    // Gather candidate IDs from all sources
+    const idsSet = new Set();
+    (preselectedQuestionsResponses || []).forEach((r) => idsSet.add(normId(r)));
+    (interviewerSectionData || []).forEach((q) => idsSet.add(normId(q)));
+    Object.keys(existingMap).forEach((k) => idsSet.add(k));
 
-// Add this sync function inside FeedbackForm component after state declarations
-const syncQuestionChanges = useCallback((questionId, updates) => {
-  console.log("🔄 FeedbackForm syncQuestionChanges called:", { questionId, updates });
-  
-  setInterviewerSectionData(prev =>
-    prev.map(question =>
-      (question.questionId || question.id) === questionId
-        ? { ...question, ...updates }
-        : question
-    )
-  );
-}, []);
+    // Build a quick lookup for overlays
+    const overlayMap = (interviewerSectionData || []).reduce((acc, q) => {
+      const k = normId(q);
+      if (!k) return acc;
+      acc[k] = q;
+      return acc;
+    }, {});
 
-// Fix the finalQuestionFeedback computation to properly sync all responses
-const finalQuestionFeedback = React.useMemo(() => {
-  console.log("🔄 Computing finalQuestionFeedback...");
-  
-  // Create a unified map of all question responses from both sections
-  const responseMap = new Map();
+    const preselectedMap = (preselectedQuestionsResponses || []).reduce(
+      (acc, r) => {
+        const k = normId(r);
+        if (!k) return acc;
+        acc[k] = r;
+        return acc;
+      },
+      {}
+    );
 
-  // Add interviewer section responses
-  interviewerSectionData.forEach(q => {
-    const id = q.questionId || q.id || q._id;
-    if (id) {
-      responseMap.set(id, {
+    // console.log("overlayMap",overlayMap);
+    // console.log("preselectedMap",preselectedMap);
+    // console.log("existingMap",existingMap);
+    // console.log("idsSet",idsSet);
+
+    // Compose final items per id
+    const result = [];
+    idsSet.forEach((id) => {
+      const overlay = overlayMap[id] || {};
+      const pre = preselectedMap[id] || {};
+      const existing = existingMap[id] || {};
+
+      // Prefer UI state; then preselected; then existing persisted
+      const uiIsAnswered =
+        overlay.isAnswered ??
+        pre.isAnswered ??
+        fromBackendAnswerType(existing?.candidateAnswer?.answerType);
+      const uiLiked =
+        overlay.isLiked ?? pre.isLiked ?? existing?.interviewerFeedback?.liked;
+      const uiNote =
+        overlay.note ?? pre.note ?? existing?.interviewerFeedback?.note;
+      const uiWhyDislike =
+        overlay.whyDislike ??
+        pre.whyDislike ??
+        existing?.interviewerFeedback?.dislikeReason;
+
+      result.push({
         questionId: id,
         candidateAnswer: {
-          answerType: toBackendAnswerType(q.isAnswered),
-          submittedAnswer: q.answer || "",
+          answerType: toBackendAnswerType(uiIsAnswered),
+          submittedAnswer: "",
         },
         interviewerFeedback: {
-          liked: q.isLiked || "none",
-          note: q.note || "",
-          dislikeReason: q.whyDislike || "",
+          // Only default if truly missing everywhere to avoid overwriting existing data
+          liked: uiLiked ?? "none",
+          note: uiNote ?? "",
+          dislikeReason: uiWhyDislike ?? "",
         },
       });
-    }
-  });
+    });
 
-  // Add preselected questions responses from scheduler section
-  preselectedQuestionsResponses.forEach(response => {
-    const id = response.questionId || response.id || response._id;
-    if (id) {
-      // Only add if not already present from interviewer section
-      if (!responseMap.has(id)) {
-        responseMap.set(id, {
-          questionId: id,
-          candidateAnswer: {
-            answerType: toBackendAnswerType(response.isAnswered),
-            submittedAnswer: response.answer || "",
-          },
-          interviewerFeedback: {
-            liked: response.isLiked || "none",
-            note: response.note || "",
-            dislikeReason: response.whyDislike || "",
-          },
-        });
-      }
-    }
-  });
-
-  const result = Array.from(responseMap.values());
-  console.log("✅ Final question feedback computed:", result);
-  return result;
-}, [interviewerSectionData, preselectedQuestionsResponses]);
-
-// // In FeedbackForm component, make sure the finalQuestionFeedback is properly computed
-// const finalQuestionFeedback = React.useMemo(() => {
-//   // Create a unified map of all question responses
-//   const responseMap = new Map();
-
-//   // Add interviewer section responses
-//   interviewerSectionData.forEach(q => {
-//     const id = q.questionId || q.id || q._id;
-//     if (id) {
-//       responseMap.set(id, {
-//         questionId: id,
-//         candidateAnswer: {
-//           answerType: toBackendAnswerType(q.isAnswered),
-//           submittedAnswer: "",
-//         },
-//         interviewerFeedback: {
-//           liked: q.isLiked || "none",
-//           note: q.note || "",
-//           dislikeReason: q.whyDislike || "",
-//         },
-//       });
-//     }
-//   });
-
-//   // Add preselected questions responses
-//   preselectedQuestionsResponses.forEach(response => {
-//     const id = typeof response === 'string' ? response : response.questionId;
-//     if (id && !responseMap.has(id)) {
-//       responseMap.set(id, {
-//         questionId: id,
-//         candidateAnswer: {
-//           answerType: toBackendAnswerType(response.isAnswered),
-//           submittedAnswer: "",
-//         },
-//         interviewerFeedback: {
-//           liked: response.isLiked || "none",
-//           note: response.note || "",
-//           dislikeReason: response.whyDislike || "",
-//         },
-//       });
-//     }
-//   });
-
-//   return Array.from(responseMap.values());
-// }, [interviewerSectionData, preselectedQuestionsResponses]);
+    return result;
+  }, [
+    feedbackData?.questionFeedback,
+    interviewerSectionData,
+    preselectedQuestionsResponses,
+  ]);
 
   // Question Bank State Management
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
@@ -755,137 +680,127 @@ const finalQuestionFeedback = React.useMemo(() => {
     );
   };
 
-// Update the radio input handler
-const onChangeRadioInput = (questionId, value) => {
-  console.log("📻 FeedbackForm radio input changed:", { questionId, value });
-  
-  setInterviewerSectionData((prev) => {
-    const exists = prev.some((q) => (q.questionId || q.id) === questionId);
-    
-    if (exists) {
-      const updated = prev.map((q) =>
-        (q.questionId || q.id) === questionId
-          ? { ...q, isAnswered: value }
-          : q
-      );
-      console.log("📝 Updated interviewerSectionData:", updated);
-      return updated;
-    }
-    
-    // If question doesn't exist in interviewerSectionData, add it
-    const newData = [...prev, { questionId, isAnswered: value }];
-    console.log("➕ Added new question to interviewerSectionData:", newData);
-    return newData;
-  });
-};
+  const onChangeRadioInput = (questionId, value) => {
+    //<---v1.0.0-----
+    setInterviewerSectionData((prev) => {
+      const exists = prev.some((q) => (q.questionId || q.id) === questionId);
+      if (exists) {
+        return prev.map((q) =>
+          (q.questionId || q.id) === questionId
+            ? { ...q, isAnswered: value }
+            : q
+        );
+      }
+      return [...prev, { questionId, isAnswered: value }];
+    });
+    //---v1.0.0----->
+  };
 
-// Update the dislike radio handler
-const onChangeDislikeRadioInput = (questionId, value) => {
-  console.log("👎 FeedbackForm dislike radio changed:", { questionId, value });
-  
-  setInterviewerSectionData((prev) => {
-    const exists = prev.some((q) => (q.questionId || q.id) === questionId);
-    if (exists) {
-      return prev.map((q) =>
-        (q.questionId || q.id) === questionId
-          ? { ...q, whyDislike: value, isLiked: "disliked" }
-          : q
-      );
-    }
-    return [...prev, { questionId, whyDislike: value, isLiked: "disliked" }];
-  });
-};
+  const onChangeDislikeRadioInput = (questionId, value) => {
+    //<---v1.0.0-----
+    setInterviewerSectionData((prev) => {
+      const exists = prev.some((q) => (q.questionId || q.id) === questionId);
+      if (exists) {
+        return prev.map((q) =>
+          (q.questionId || q.id) === questionId
+            ? { ...q, whyDislike: value, isLiked: "disliked" }
+            : q
+        );
+      }
+      return [...prev, { questionId, whyDislike: value, isLiked: "disliked" }];
+    });
+    //---v1.0.0----->
+  };
 
-// Update the dislike toggle handler
-const handleDislikeToggle = (id) => {
-  if (isViewMode) return;
-  if (dislikeQuestionId === id) setDislikeQuestionId(null);
-  else setDislikeQuestionId(id);
-  
-  setInterviewerSectionData(prev =>
-    prev.map(q =>
-      (q.questionId || q.id) === id
-        ? { 
-            ...q, 
-            isLiked: q.isLiked === "disliked" ? "" : "disliked",
-            whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike
-          }
-        : q
-    )
-  );
-};
+  const handleDislikeToggle = (id) => {
+    if (isViewMode) return; //<---v1.0.1-----
+    if (dislikeQuestionId === id) setDislikeQuestionId(null);
+    else setDislikeQuestionId(id);
+    //<---v1.0.0-----
+    setInterviewerSectionData((prev) => {
+      const exists = prev.some((q) => (q.questionId || q.id) === id);
+      if (exists) {
+        return prev.map((q) =>
+          (q.questionId || q.id) === id
+            ? { ...q, isLiked: q.isLiked === "disliked" ? "" : "disliked" }
+            : q
+        );
+      }
+      return [...prev, { questionId: id, isLiked: "disliked" }];
+    });
+    //---v1.0.0----->
+  };
 
-// Update the like toggle handler
-const handleLikeToggle = (id) => {
-  if (isViewMode) return;
-  setInterviewerSectionData(prev =>
-    prev.map(q =>
-      (q.questionId || q.id) === id
-        ? { 
-            ...q, 
-            isLiked: q.isLiked === "liked" ? "" : "liked",
-            whyDislike: q.isLiked === "liked" ? q.whyDislike : ""
-          }
-        : q
-    )
-  );
-  if (dislikeQuestionId === id) setDislikeQuestionId(null);
-};
+  const handleLikeToggle = (id) => {
+    if (isViewMode) return; //<---v1.0.1-----
+    //<---v1.0.0-----
+    setInterviewerSectionData((prev) => {
+      const exists = prev.some((q) => (q.questionId || q.id) === id);
+      if (exists) {
+        return prev.map((q) =>
+          (q.questionId || q.id) === id
+            ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" }
+            : q
+        );
+      }
+      return [...prev, { questionId: id, isLiked: "liked" }];
+    });
+    //---v1.0.0----->
+    if (dislikeQuestionId === id) setDislikeQuestionId(null);
+  };
 
   const openQuestionBank = () => {
     setIsQuestionBankOpen(true);
   };
 
-//<---v1.0.4-----Venkatesh----Fixed dislike radio buttons
-
-const DisLikeSection = React.memo(({ each }) => {
-  const questionId = each.questionId || each.id;
-  
-  return (
-    <>
-      {isEditMode || isAddMode ? (
-        <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
-          <div className="flex justify-between items-center mb-2">
-            <h1>Tell us more :</h1>
-            <button onClick={() => setDislikeQuestionId(null)}>
-              <IoIosCloseCircleOutline />
-            </button>
+  // Component Functions
+  const DisLikeSection = React.memo(({ each }) => {
+    return (
+      <>
+        {isEditMode || isAddMode ? (
+          <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
+            <div className="flex justify-between items-center mb-2">
+              <h1>Tell us more :</h1>
+              <button onClick={() => setDislikeQuestionId(null)}>
+                <IoIosCloseCircleOutline />
+              </button>
+            </div>
+            <ul className="flex flex-wrap gap-3">
+              {dislikeOptions.map((option) => (
+                <li key={option.value} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id={`dislike-${each.questionId || each.id}-${option.value}`}
+                    name={`dislike-${each.questionId || each.id}`}
+                    value={option.value}
+                    checked={each.whyDislike === option.value}
+                    onChange={(e) =>
+                      onChangeDislikeRadioInput(
+                        each.questionId || each.id,
+                        e.target.value
+                      )
+                    }
+                  />
+                  <label
+                    htmlFor={`dislike-${each.questionId || each.id}-${
+                      option.value
+                    }`}
+                    className="cursor-pointer"
+                  >
+                    {option.label}
+                  </label>
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="flex flex-wrap gap-3">
-            {dislikeOptions.map((option) => (
-              <li key={option.value} className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id={`dislike-${questionId}-${option.value}`}
-                  name={`dislike-${questionId}`}
-                  value={option.value}
-                  checked={each.whyDislike === option.value}
-                  onChange={(e) => {
-                    console.log("Dislike reason changed:", {
-                      questionId,
-                      reason: e.target.value
-                    });
-                    onChangeDislikeRadioInput(questionId, e.target.value);
-                  }}
-                />
-                <label
-                  htmlFor={`dislike-${questionId}-${option.value}`}
-                  className="cursor-pointer"
-                >
-                  {option.label}
-                </label>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p className="w-full flex gap-x-8 gap-y-2 ">
-          {each.whyDislike || "N/A"}
-        </p>
-      )}
-    </>
-  );
-});
+        ) : (
+          <p className="w-full flex gap-x-8 gap-y-2 ">
+            {each.whyDislike || "N/A"}
+          </p>
+        )}
+      </>
+    );
+  });
 
   const SharePopupSection = () => {
     return (
@@ -906,61 +821,47 @@ const DisLikeSection = React.memo(({ each }) => {
     );
   };
 
- //<---v1.0.4-----Venkatesh----Fixed radio button functionality
-
-const RadioGroupInput = React.memo(({ each }) => {
-  // Debug log to check current state
-  console.log("RadioGroupInput - question:", {
-    id: each.questionId || each.id,
-    currentAnswer: each.isAnswered,
-    questionText: each.snapshot?.questionText || each.question
-  });
-
-  return (
-    <div className="flex rounded-md mt-2">
-      <p className="w-[200px] font-bold text-gray-700">
-        Response Type{" "}
-        {(each.mandatory === "true" ||
-          each.snapshot?.mandatory === "true") && (
-          <span className="text-[red]">*</span>
-        )}
-      </p>
-      <div className={`w-full flex gap-x-8 gap-y-2`}>
-        {["Not Answered", "Partially Answered", "Fully Answered"].map(
-          (option) => (
-            <span key={option} className="flex items-center gap-2">
-              <input
-                checked={each.isAnswered === option}
-                value={option}
-                name={`isAnswered-${each.questionId || each.id}`}
-                type="radio"
-                id={`isAnswered-${each.questionId || each.id}-${option}`}
-                onChange={(e) => {
-                  console.log("Radio changed:", {
-                    questionId: each.questionId || each.id,
-                    newValue: e.target.value,
-                    previousValue: each.isAnswered
-                  });
-                  onChangeRadioInput(
-                    each.questionId || each.id,
-                    e.target.value
-                  );
-                }}
-                className="whitespace-nowrap"
-              />
-              <label
-                htmlFor={`isAnswered-${each.questionId || each.id}-${option}`}
-                className="cursor-pointer"
-              >
-                {option}
-              </label>
-            </span>
-          )
-        )}
+  const RadioGroupInput = React.memo(({ each }) => {
+    return (
+      <div className="flex rounded-md mt-2">
+        <p className="w-[200px] font-bold text-gray-700">
+          Response Type{" "}
+          {(each.mandatory === "true" ||
+            each.snapshot?.mandatory === "true") && (
+            <span className="text-[red]">*</span>
+          )}
+        </p>
+        <div className={`w-full flex gap-x-8 gap-y-2 `}>
+          {["Not Answered", "Partially Answered", "Fully Answered"].map(
+            (option) => (
+              <span key={option} className="flex items-center gap-2">
+                <input
+                  checked={each.isAnswered === option}
+                  value={option}
+                  name={`isAnswered-${each.questionId || each.id}`}
+                  type="radio"
+                  id={`isAnswered-${each.questionId || each.id}-${option}`}
+                  onChange={(e) =>
+                    onChangeRadioInput(
+                      each.questionId || each.id,
+                      e.target.value
+                    )
+                  }
+                  className="whitespace-nowrap"
+                />
+                <label
+                  htmlFor={`isAnswered-${each.questionId || each.id}-${option}`}
+                  className="cursor-pointer"
+                >
+                  {option}
+                </label>
+              </span>
+            )
+          )}
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  });
 
   const renderStarRating = (rating, setRating) => {
     return (
@@ -1200,40 +1101,22 @@ const RadioGroupInput = React.memo(({ each }) => {
         console.warn("Backend validation unavailable, proceeding with frontend validation only", validationError);
       }
 
-      // const updatedFeedbackData = {
-      //   overallRating,
-      //   skills: skillRatings.map((skill) => ({
-      //     skillName: skill.skill,
-      //     rating: skill.rating,
-      //     note: skill.comments,
-      //   })),
-      //   questionFeedback: finalQuestionFeedback,
-      //   generalComments: comments,
-      //   overallImpression: {
-      //     overallRating,
-      //     recommendation,
-      //     note: comments,
-      //   },
-      //   status: "submitted", // Mark as submitted
-      // };
-
-// Update the questionFeedback in submitFeedback function to use finalQuestionFeedback
-const updatedFeedbackData = {
-  overallRating,
-  skills: skillRatings.map((skill) => ({
-    skillName: skill.skill,
-    rating: skill.rating,
-    note: skill.comments,
-  })),
-  questionFeedback: finalQuestionFeedback, // Use the properly synced feedback
-  generalComments: comments,
-  overallImpression: {
-    overallRating,
-    recommendation,
-    note: comments,
-  },
-  status: "submitted",
-};
+      const updatedFeedbackData = {
+        overallRating,
+        skills: skillRatings.map((skill) => ({
+          skillName: skill.skill,
+          rating: skill.rating,
+          note: skill.comments,
+        })),
+        questionFeedback: finalQuestionFeedback,
+        generalComments: comments,
+        overallImpression: {
+          overallRating,
+          recommendation,
+          note: comments,
+        },
+        status: "submitted", // Mark as submitted
+      };
 
       // console.log('📤 Update payload (submit):', updatedFeedbackData);
 
@@ -1414,34 +1297,35 @@ const updatedFeedbackData = {
             {
               onSuccess: (data) => {
                 if (data.success) {
-                  toast.success("Feedback saved as draft successfully!");
+                  notify.success("Feedback saved as draft successfully!");
                 } else {
-                  toast.error(
+                  notify.error(
                     "Failed to save feedback as draft: " + data.message
                   );
                 }
               },
               onError: (error) => {
-                toast.error(
+                notify.error(
                   "Failed to save feedback as draft: " + error.message
                 );
               },
             }
           );
         } else {
-          toast.error("No feedback ID found, cannot save draft.");
+          notify.error("No feedback ID found, cannot save draft.");
         }
       } else {
         createFeedback(feedbackData, {
           onSuccess: (data) => {
             if (data.success) {
-              toast.success("Feedback saved as draft!");
+              notify.success("Feedback saved as draft!");
+                navigate("/feedback");
             } else {
-              toast.error("Failed to save feedback as draft: " + data.message);
+              notify.error("Failed to save feedback as draft: " + data.message);
             }
           },
           onError: (error) => {
-            toast.error("Failed to save feedback as draft: " + error.message);
+            notify.error("Failed to save feedback as draft: " + error.message);
           },
         });
       }
