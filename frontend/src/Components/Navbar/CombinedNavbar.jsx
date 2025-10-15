@@ -130,10 +130,10 @@ const CombinedNavbar = React.memo(() => {
   }, [closeAllDropdowns, userType]);
 
   // Show loading state while permissions are being fetched
-  if (isLoading) {
+  if (isLoading ||loading) {
     return (
       <div className="bg-white fixed top-0 left-0 right-0 z-50 shadow-sm h-14 flex items-center justify-center">
-        <Loading size="medium" message="Logging out..." />
+        <Loading size="medium" message={isLoading ? "Logging out..." : "Loading..."} />
       </div>
     );
   }
