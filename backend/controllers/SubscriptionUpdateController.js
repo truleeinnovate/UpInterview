@@ -3,6 +3,7 @@ const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const Invoice = require('../models/Invoicemodels.js');
 const SubscriptionHistory = require('../models/SubscriptionHistory.js');
 const Usage = require('../models/Usage.js');
+const moment = require('moment');
 const Razorpay = require('razorpay');
 const { calculateEndDate } = require('./CustomerSubscriptionInvoiceContollers.js');
 const Tenant = require('../models/Tenant');
@@ -118,19 +119,43 @@ const updateSubscriptionPlan = async (req, res) => {
         console.warn('Failed to cancel previous invoice (free plan switch):', invErr?.message);
       }
 
-      // Delete or reset Usage document when switching to free plan
+      // Delete current period's Usage document when switching to free plan
       try {
+        const now = moment();
+        const billingCycle = customerSubscription.selectedBillingCycle || 'monthly';
+        
+        // Find Usage document for current period
         const existingUsage = await Usage.findOne({
           tenantId: customerSubscription.tenantId,
           ownerId: customerSubscription.ownerId
         });
         
         if (existingUsage) {
-          await Usage.deleteOne({
-            tenantId: customerSubscription.tenantId,
-            ownerId: customerSubscription.ownerId
-          });
-          console.log('Deleted existing Usage document when switching to free plan');
+          // Check if this Usage is for the current billing period
+          const fromDate = moment(existingUsage.fromDate);
+          const toDate = moment(existingUsage.toDate);
+          let isCurrentPeriod = false;
+          
+          if (billingCycle === 'monthly') {
+            // Check if Usage is for current month
+            isCurrentPeriod = now.isSame(fromDate, 'month') || 
+                            now.isBetween(fromDate, toDate, null, '[]');
+          } else if (billingCycle === 'annual' || billingCycle === 'yearly') {
+            // Check if Usage is for current year
+            isCurrentPeriod = now.isSame(fromDate, 'year') || 
+                            now.isBetween(fromDate, toDate, null, '[]');
+          }
+          
+          if (isCurrentPeriod) {
+            await Usage.deleteOne({
+              _id: existingUsage._id,
+              tenantId: customerSubscription.tenantId,
+              ownerId: customerSubscription.ownerId
+            });
+            console.log(`Deleted current ${billingCycle} Usage document for tenant ${customerSubscription.tenantId} and owner ${customerSubscription.ownerId} when switching to free plan`);
+          } else {
+            console.log('Keeping Usage document - not for current billing period');
+          }
         }
       } catch (usageErr) {
         console.warn('Failed to delete Usage document (free plan switch):', usageErr?.message);
@@ -272,19 +297,43 @@ const updateSubscriptionPlan = async (req, res) => {
         console.warn('Failed to cancel old free plan invoice:', cancelErr?.message);
       }
 
-      // Delete Usage document when upgrading from free to paid plan
+      // Delete current period's Usage document when upgrading from free to paid plan
       try {
+        const now = moment();
+        const billingCycle = oldBillingCycle || 'monthly';
+        
+        // Find Usage document for current period
         const existingUsage = await Usage.findOne({
           tenantId: customerSubscription.tenantId,
           ownerId: customerSubscription.ownerId
         });
         
         if (existingUsage) {
-          await Usage.deleteOne({
-            tenantId: customerSubscription.tenantId,
-            ownerId: customerSubscription.ownerId
-          });
-          console.log('Deleted existing Usage document when upgrading from free to paid plan');
+          // Check if this Usage is for the current billing period
+          const fromDate = moment(existingUsage.fromDate);
+          const toDate = moment(existingUsage.toDate);
+          let isCurrentPeriod = false;
+          
+          if (billingCycle === 'monthly') {
+            // Check if Usage is for current month
+            isCurrentPeriod = now.isSame(fromDate, 'month') || 
+                            now.isBetween(fromDate, toDate, null, '[]');
+          } else if (billingCycle === 'annual' || billingCycle === 'yearly') {
+            // Check if Usage is for current year
+            isCurrentPeriod = now.isSame(fromDate, 'year') || 
+                            now.isBetween(fromDate, toDate, null, '[]');
+          }
+          
+          if (isCurrentPeriod) {
+            await Usage.deleteOne({
+              _id: existingUsage._id,
+              tenantId: customerSubscription.tenantId,
+              ownerId: customerSubscription.ownerId
+            });
+            console.log(`Deleted current ${billingCycle} Usage document for tenant ${customerSubscription.tenantId} and owner ${customerSubscription.ownerId} when upgrading from free to paid plan`);
+          } else {
+            console.log('Keeping Usage document - not for current billing period');
+          }
         }
       } catch (usageErr) {
         console.warn('Failed to delete Usage document (free to paid upgrade):', usageErr?.message);
@@ -420,19 +469,43 @@ const updateSubscriptionPlan = async (req, res) => {
       console.error('Error marking previous invoice cancelled:', cancelInvErr);
     }
 
-    // Delete Usage document when switching between paid plans
+    // Delete current period's Usage document when switching between paid plans
     try {
+      const now = moment();
+      const billingCycle = oldBillingCycle || 'monthly';
+      
+      // Find Usage document for current period
       const existingUsage = await Usage.findOne({
         tenantId: customerSubscription.tenantId,
         ownerId: customerSubscription.ownerId
       });
       
       if (existingUsage) {
-        await Usage.deleteOne({
-          tenantId: customerSubscription.tenantId,
-          ownerId: customerSubscription.ownerId
-        });
-        console.log('Deleted existing Usage document when switching between paid plans');
+        // Check if this Usage is for the current billing period
+        const fromDate = moment(existingUsage.fromDate);
+        const toDate = moment(existingUsage.toDate);
+        let isCurrentPeriod = false;
+        
+        if (billingCycle === 'monthly') {
+          // Check if Usage is for current month
+          isCurrentPeriod = now.isSame(fromDate, 'month') || 
+                          now.isBetween(fromDate, toDate, null, '[]');
+        } else if (billingCycle === 'annual' || billingCycle === 'yearly') {
+          // Check if Usage is for current year
+          isCurrentPeriod = now.isSame(fromDate, 'year') || 
+                          now.isBetween(fromDate, toDate, null, '[]');
+        }
+        
+        if (isCurrentPeriod) {
+          await Usage.deleteOne({
+            _id: existingUsage._id,
+            tenantId: customerSubscription.tenantId,
+            ownerId: customerSubscription.ownerId
+          });
+          console.log(`Deleted current ${billingCycle} Usage document for tenant ${customerSubscription.tenantId} and owner ${customerSubscription.ownerId} when switching between paid plans`);
+        } else {
+          console.log(`Keeping Usage document for tenant ${customerSubscription.tenantId} and owner ${customerSubscription.ownerId} - not for current billing period`);
+        }
       }
     } catch (usageErr) {
       console.warn('Failed to delete Usage document (paid to paid switch):', usageErr?.message);

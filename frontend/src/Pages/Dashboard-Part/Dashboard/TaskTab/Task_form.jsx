@@ -298,6 +298,12 @@ const TaskForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevent submission while data is loading
+    if (categoriesLoading) {
+      notify.error("Please wait while data is loading...");
+      return;
+    }
+
     // First validate ownerId and tenantId
     if (!ownerId) {
       setError("Missing required user information. Please log in again.");
@@ -364,7 +370,7 @@ const TaskForm = ({
         } else {
           notify.error("Failed to save task");
         }
-        setInterval(() => {
+        setTimeout(() => {
           onTaskAdded();
           onClose();
         }, 1000);
@@ -384,15 +390,27 @@ const TaskForm = ({
   };
 
   const [categoriesRelatedTo, setCategoriesRelatedTo] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   useEffect(() => {
     const fetchObjectsData = async () => {
       try {
+        setCategoriesLoading(true);
         const data = await fetchMasterData("sharing-rules-objects");
         setCategoriesRelatedTo(data.map((obj) => obj.objects).flat());
         console.log(data);
       } catch (error) {
         console.error("Error fetching objects data:", error);
+        // Set default categories if fetch fails
+        setCategoriesRelatedTo([
+          "Candidates",
+          "Positions",
+          "Interviews",
+          "MockInterviews",
+          "Assessments"
+        ]);
+      } finally {
+        setCategoriesLoading(false);
       }
     };
     fetchObjectsData();
@@ -652,6 +670,7 @@ const TaskForm = ({
                       handleCategorySelectRelatedTo(e.target.value)
                     }
                     error={errors.relatedToCategory}
+                    disabled={categoriesLoading}
                   />
                 </div>
                 <div className="w-full">

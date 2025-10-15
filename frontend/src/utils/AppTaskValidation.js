@@ -16,7 +16,11 @@ export const validateTaskForm = (formData, selectedPriority, selectedStatus, sch
     // Check for the record ID in "Related To"
     if (!formData.relatedTo.recordId) {
         errors.relatedToOption = "Choose Any Record";
-    } else if (!/^[0-9a-fA-F]{24}$/.test(formData.relatedTo.recordId)) {
+    // } else if (!/^[0-9a-fA-F]{24}$/.test(formData.relatedTo.recordId)) {
+    //     errors.relatedToOption = "Invalid RecordId Format";
+    // }
+    } else if (formData.relatedTo.recordId.length !== 24) {
+        // Only check length, as some IDs might not be standard MongoDB ObjectIds
         errors.relatedToOption = "Invalid RecordId Format";
     }
 
