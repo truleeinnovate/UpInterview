@@ -2,6 +2,7 @@ const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js');
 const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const Invoice = require('../models/Invoicemodels.js');
 const SubscriptionHistory = require('../models/SubscriptionHistory.js');
+const Usage = require('../models/Usage.js');
 const Razorpay = require('razorpay');
 const { calculateEndDate } = require('./CustomerSubscriptionInvoiceContollers.js');
 const Tenant = require('../models/Tenant');
@@ -115,6 +116,24 @@ const updateSubscriptionPlan = async (req, res) => {
         }
       } catch (invErr) {
         console.warn('Failed to cancel previous invoice (free plan switch):', invErr?.message);
+      }
+
+      // Delete or reset Usage document when switching to free plan
+      try {
+        const existingUsage = await Usage.findOne({
+          tenantId: customerSubscription.tenantId,
+          ownerId: customerSubscription.ownerId
+        });
+        
+        if (existingUsage) {
+          await Usage.deleteOne({
+            tenantId: customerSubscription.tenantId,
+            ownerId: customerSubscription.ownerId
+          });
+          console.log('Deleted existing Usage document when switching to free plan');
+        }
+      } catch (usageErr) {
+        console.warn('Failed to delete Usage document (free plan switch):', usageErr?.message);
       }
 
       // Update local subscription
@@ -253,6 +272,24 @@ const updateSubscriptionPlan = async (req, res) => {
         console.warn('Failed to cancel old free plan invoice:', cancelErr?.message);
       }
 
+      // Delete Usage document when upgrading from free to paid plan
+      try {
+        const existingUsage = await Usage.findOne({
+          tenantId: customerSubscription.tenantId,
+          ownerId: customerSubscription.ownerId
+        });
+        
+        if (existingUsage) {
+          await Usage.deleteOne({
+            tenantId: customerSubscription.tenantId,
+            ownerId: customerSubscription.ownerId
+          });
+          console.log('Deleted existing Usage document when upgrading from free to paid plan');
+        }
+      } catch (usageErr) {
+        console.warn('Failed to delete Usage document (free to paid upgrade):', usageErr?.message);
+      }
+
       let invoiceId = null;
       try {
         const lastInvoice = await Invoice.findOne({}).sort({ _id: -1 }).select('invoiceCode').lean();
@@ -381,6 +418,24 @@ const updateSubscriptionPlan = async (req, res) => {
       }
     } catch (cancelInvErr) {
       console.error('Error marking previous invoice cancelled:', cancelInvErr);
+    }
+
+    // Delete Usage document when switching between paid plans
+    try {
+      const existingUsage = await Usage.findOne({
+        tenantId: customerSubscription.tenantId,
+        ownerId: customerSubscription.ownerId
+      });
+      
+      if (existingUsage) {
+        await Usage.deleteOne({
+          tenantId: customerSubscription.tenantId,
+          ownerId: customerSubscription.ownerId
+        });
+        console.log('Deleted existing Usage document when switching between paid plans');
+      }
+    } catch (usageErr) {
+      console.warn('Failed to delete Usage document (paid to paid switch):', usageErr?.message);
     }
 
     let newRpSubscription;
