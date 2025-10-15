@@ -1,11 +1,12 @@
 // v1.0.0 - mansoor - removed unnecessary comments
 // v1.0.1 - mansoor - removed old ui and added new ui
 // v1.0.2 - Ashok - changed logo url from local to cloud storage url
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
 import Slideshow from "./Slideshow";
+import InputField from "../../Components/FormFields/InputField";
 // import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 // <------------------- v1.0.0
 import {
@@ -33,6 +34,10 @@ const OrganizationLogin = () => {
     const [isResending, setIsResending] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    
+    // Refs for input fields
+    const emailRef = useRef(null);
+    const passwordRef = useRef(null);
 
     // Handle verification success and returnUrl
     useEffect(() => {
@@ -1001,15 +1006,9 @@ const OrganizationLogin = () => {
                             {isEmailVerified ? (
                                 <form onSubmit={handleLogin} className="space-y-6">
                                     <div>
-                                        <label
-                                            htmlFor="email"
-                                            className="block text-sm font-medium text-gray-700 mb-2"
-                                        >
-                                            Work Email Address 📧
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="email"
+                                        <InputField
+                                            label="Work Email Address 📧"
+                                            type="email"
                                             name="email"
                                             value={email}
                                             onChange={(e) => {
@@ -1017,42 +1016,20 @@ const OrganizationLogin = () => {
                                                 setErrors((prev) => ({ ...prev, email: "" }));
                                             }}
                                             onBlur={(e) => handleBlur("email", e.target.value)}
-                                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.email
-                                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                                : "border-gray-300"
-                                                }`}
+                                            error={errors.email}
                                             placeholder="your@company.com"
                                             autoComplete="email"
+                                            inputRef={emailRef}
+                                            className="focus:ring-custom-blue focus:border-custom-blue"
                                         />
-                                        {errors.email && (
-                                            <p className="text-red-500 text-sm mt-1 flex items-center">
-                                                <svg
-                                                    className="w-4 h-4 mr-1"
-                                                    fill="currentColor"
-                                                    viewBox="0 0 20 20"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                                {errors.email}
-                                            </p>
-                                        )}
                                     </div>
 
                                     <div>
-                                        <label
-                                            htmlFor="password"
-                                            className="block text-sm font-medium text-gray-700 mb-2"
-                                        >
-                                            Password 🔐
-                                        </label>
+                                        
                                         <div className="relative">
-                                            <input
+                                            <InputField
+                                                label="Password 🔐"
                                                 type={showPassword ? "text" : "password"}
-                                                id="password"
                                                 name="password"
                                                 value={password}
                                                 onChange={(e) => {
@@ -1060,17 +1037,17 @@ const OrganizationLogin = () => {
                                                     setErrors((prev) => ({ ...prev, password: "" }));
                                                 }}
                                                 onBlur={(e) => handleBlur("password", e.target.value)}
-                                                className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.password
-                                                    ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                                    : "border-gray-300"
-                                                    }`}
+                                                error={errors.password}
                                                 placeholder="••••••••"
                                                 autoComplete="current-password"
+                                                inputRef={passwordRef}
+                                                className="password-input pr-12 focus:ring-custom-blue focus:border-custom-blue"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={togglePasswordVisibility}
-                                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                                                className="absolute right-3 top-[43px] transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 z-10"
+                                                aria-label={showPassword ? "Hide password" : "Show password"}
                                             >
                                                 {showPassword ? (
                                                     <EyeOff size={20} />
@@ -1079,22 +1056,6 @@ const OrganizationLogin = () => {
                                                 )}
                                             </button>
                                         </div>
-                                        {errors.password && (
-                                            <p className="text-red-500 text-sm mt-1 flex items-center">
-                                                <svg
-                                                    className="w-4 h-4 mr-1"
-                                                    fill="currentColor"
-                                                    viewBox="0 0 20 20"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                                {errors.password}
-                                            </p>
-                                        )}
                                     </div>
 
                                     <div className="flex items-center justify-between">
