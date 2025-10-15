@@ -278,7 +278,8 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = nu
                                 href={contactData.linkedinUrl.startsWith('http') ? contactData.linkedinUrl : `https://${contactData.linkedinUrl}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-custom-blue hover:underline"
+                                // className="text-custom-blue hover:underline"
+                                className="text-sm text-custom-blue  hover:underline truncate min-w-0 flex-1"
                             >
                                 {contactData.linkedinUrl}
                             </a>
@@ -289,7 +290,10 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = nu
 
                     <div>
                         <p className="text-sm text-gray-500">Portfolio URL</p>
-                        <p className="font-medium truncate sm:text-sm">
+                        <p 
+                         className="text-sm   hover:underline truncate min-w-0 flex-1"
+                        // className="font-medium truncate sm:text-sm"
+                        >
                             {contactData.portfolioUrl || "Not Provided"}
                         </p>
                     </div>
