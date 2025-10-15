@@ -28,7 +28,7 @@ const { TenantInterviewQuestions } = require('../models/QuestionBank/tenantInter
 const { TenantAssessmentQuestions } = require('../models/QuestionBank/tenantAssessmentQuestions.js');//<--------v1.0.8-----
 const { InterviewRounds } = require('../models/Interview/InterviewRounds.js');
 const InterviewQuestions = require('../models/Interview/selectedInterviewQuestion.js');
-const Users = require('../models/Users');
+const { Users } = require('../models/Users');
 const { permissionMiddleware } = require('../middleware/permissionMiddleware');
 // <-------------------------------v1.0.6
 const ScheduledAssessmentSchema = require('../models/Assessment/assessmentsSchema.js');
@@ -156,6 +156,8 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       effectivePermissions_RoleType,
       effectivePermissions_RoleName,
     } = res.locals;
+    console.log("inheritedRoleIds", inheritedRoleIds);
+
 
     // console.log('[4] Permission data from res.locals:', {
     //   roleType: effectivePermissions_RoleType,
@@ -211,24 +213,42 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       query.ownerId = userId;
       // console.log('[13] Individual user - adding ownerId filter:', query);
     } else if (roleType === 'organization' && roleName !== 'Admin') {
-      if (model.toLowerCase() === 'scheduleassessment') {
-        // For scheduled assessments, organization non-admin can see all under same organization
-      }
+      // if (model.toLowerCase() === 'scheduleassessment') {
+      //   // For scheduled assessments, organization non-admin can see all under same organization
+      // }
+      // if (inheritedRoleIds?.length > 0) {
+      //   // console.log('[14] Non-admin org user with inherited roles:', inheritedRoleIds);
+      //   const accessibleUsers = await Users.find({
+      //     tenantId,
+      //     roleId: { $in: inheritedRoleIds },
+      //   }).select('_id');
+
+      //   const userIds = accessibleUsers.map(user => user._id);
+      //   // console.log('[15] Accessible user IDs from inherited roles:', userIds);
+
+      //   query.ownerId = { $in: userIds };
+      // } else {
+      //   // console.log('[16] Non-admin org user with no inherited roles - using own userId');
+      //   query.ownerId = userId;
+      // }
+
       if (inheritedRoleIds?.length > 0) {
-        // console.log('[14] Non-admin org user with inherited roles:', inheritedRoleIds);
         const accessibleUsers = await Users.find({
           tenantId,
           roleId: { $in: inheritedRoleIds },
         }).select('_id');
 
         const userIds = accessibleUsers.map(user => user._id);
-        // console.log('[15] Accessible user IDs from inherited roles:', userIds);
 
-        query.ownerId = { $in: userIds };
+        // ✅ Include current user's own ID as well
+        userIds.push(userId);
+
+        // ✅ Remove duplicates just in case
+        query.ownerId = { $in: [...new Set(userIds.map(id => id.toString()))] };
       } else {
-        // console.log('[16] Non-admin org user with no inherited roles - using own userId');
         query.ownerId = userId;
       }
+
       // console.log('[17] Final query after org user processing:', query);
     } else {
       // console.log('[18] Organization Admin - only tenantId filter applied');
