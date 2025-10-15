@@ -33,6 +33,43 @@ input[type="text"][autocomplete="new-password"] {
   appearance: none !important;
 }
 
+
+
+/* Hide browser's default password reveal button for Edge, Chrome, etc. */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  visibility: hidden !important;
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* Hide Edge/Chrome password reveal button */
+input.password-input::-ms-reveal,
+input.password-input::-ms-clear,
+input.password-input::-webkit-contacts-auto-fill-button,
+input.password-input::-webkit-credentials-auto-fill-button {
+  display: none !important;
+}
+
+/* Additional selector for password fields with custom class */
+.password-input {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Prevent password managers from adding their own buttons */
+input:-webkit-autofill + button,
+input:-webkit-autofill ~ button[type="button"] {
+  z-index: 10 !important;
+}
+
+
+
 /* Optional: Handle focus and autofill states */
 .password-mask:focus {
   -webkit-text-security: none !important; /* Ensure text is visible when focused and showPassword is true */

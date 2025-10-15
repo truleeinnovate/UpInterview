@@ -475,6 +475,9 @@ const MasterTable = lazy(() =>
 const QuestionBankManager = lazy(() =>
     import("./Pages/SuperAdmin-Part/QuestionBankManager/QuestionBankManager.jsx")
 );
+const ContactUsPage = lazy(() =>
+    import("./Pages/SuperAdmin-Part/ContactUs/ContactUsPage.jsx")
+);
 // v2.0.0 <------------------------------------------------------------------
 // v1.0.7 ------------------------------------------------------------------------------->
 // v1.0.8 ------------------------------------------------------------------------------->
@@ -1416,6 +1419,7 @@ const MainAppRoutes = ({
                         <Route path="/master-data/:type" element={<MasterTable />} />
                         {/* v2.0.0 <------------------------------------------------- */}
                         <Route path="/question-bank-manager" element={<QuestionBankManager />} />
+                        <Route path="/contact-us" element={<ContactUsPage />} />
                         {/* v2.0.0 -------------------------------------------------> */}
                         {/* v1.0.7 ---------------------------------------------------------------> */}
                         {/* v1.0.8 ---------------------------------------------------------------------> */}

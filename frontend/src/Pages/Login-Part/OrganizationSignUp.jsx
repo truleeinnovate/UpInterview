@@ -1,14 +1,17 @@
 // v1.0.0 - mansoor - replaced the old ui with new ui
 // v1.0.1  - Ashraf - changed user name format and place holder,suggest part
 // v1.0.2 - Ashok - changed logo url from local to cloud storage url
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
-import { ReactComponent as MdArrowDropDown } from "../../../src/icons/MdArrowDropDown.svg";
 import Slideshow from "./Slideshow";
 import { config } from "../../config";
+import InputField from "../../Components/FormFields/InputField";
+import PhoneField from "../../Components/FormFields/PhoneField";
+import DropdownWithSearchField from "../../Components/FormFields/DropdownWithSearchField";
+import * as countryCodesList from "country-codes-list";
 // import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 import {
   validateEmail,
@@ -44,18 +47,39 @@ export const Organization = () => {
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedPassword, setSelectedPassword] = useState("");
   const [selectedConfirmPassword, setSelectedConfirmPassword] = useState("");
-  const [showDropdownEmployees, setShowDropdownEmployees] = useState(false);
-  const [showDropdownCountry, setShowDropdownCountry] = useState(false);
   const [showDropdownCountryCode, setShowDropdownCountryCode] = useState(false);
   const [errors, setErrors] = useState({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
   const [suggestedProfileId, setSuggestedProfileId] = useState("");
-  const countryOptions = ["India", "UK", "USA", "UAE"];
-  const countryCodeOptions = [
-    { country: "India", code: "+91" },
-    { country: "UK", code: "+44" },
-  ];
+  
+  // Get all country names using country-codes-list package
+  const countryOptions = useMemo(() => {
+    const mod = countryCodesList;
+    const customListFn =
+      (mod && typeof mod.customList === "function" && mod.customList) ||
+      (mod && mod.default && typeof mod.default.customList === "function" && mod.default.customList);
+    
+    if (!customListFn) {
+      console.error("country-codes-list package not properly loaded");
+      return [];
+    }
+    
+    // Get country names
+    const countryNames = customListFn(
+      "countryCode",
+      "{countryNameEn}"
+    );
+    
+    // Convert to array and sort alphabetically
+    const countriesArray = Object.values(countryNames)
+      .filter((name, index, self) => self.indexOf(name) === index) // Remove duplicates
+      .sort();
+    
+    return countriesArray;
+  }, []);
+  
+  
   const employeesOptions = ["0-10", "10-20", "50-100", "100-500", "500-1000"];
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -74,6 +98,12 @@ export const Organization = () => {
   const employeesDropdownRef = useRef(null);
   const countryDropdownRef = useRef(null);
   const countryCodeDropdownRef = useRef(null);
+  
+  // Refs for input fields
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+  const confirmPasswordRef = useRef(null);
+  const phoneRef = useRef(null);
 
   // Handle verification success from query parameter
   useEffect(() => {
@@ -88,8 +118,6 @@ export const Organization = () => {
 
   // Close all dropdowns
   const closeAllDropdowns = () => {
-    setShowDropdownEmployees(false);
-    setShowDropdownCountry(false);
     setShowDropdownCountryCode(false);
   };
 
@@ -97,10 +125,6 @@ export const Organization = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        employeesDropdownRef.current &&
-        !employeesDropdownRef.current.contains(event.target) &&
-        countryDropdownRef.current &&
-        !countryDropdownRef.current.contains(event.target) &&
         countryCodeDropdownRef.current &&
         !countryCodeDropdownRef.current.contains(event.target)
       ) {
@@ -183,49 +207,7 @@ export const Organization = () => {
     };
   }, []);
 
-  const toggleDropdownEmployees = () => {
-    console.log("Toggle employees dropdown clicked");
-    closeAllDropdowns();
-    setShowDropdownEmployees((prev) => {
-      console.log("Setting employees dropdown to:", !prev);
-      return !prev;
-    });
-  };
-
-  const handleEmployeesSelect = (option) => {
-    setSelectedEmployees(option);
-    closeAllDropdowns();
-    setErrors((prev) => ({ ...prev, employees: "" }));
-  };
-
-  const toggleDropdownCountry = () => {
-    console.log("Toggle country dropdown clicked");
-    closeAllDropdowns();
-    setShowDropdownCountry((prev) => {
-      console.log("Setting country dropdown to:", !prev);
-      return !prev;
-    });
-  };
-
-  const handleCountrySelect = (option) => {
-    setSelectedCountry(option);
-    closeAllDropdowns();
-    setErrors((prev) => ({ ...prev, country: "" }));
-  };
-
-  const toggleDropdownCountryCode = () => {
-    closeAllDropdowns();
-    setShowDropdownCountryCode((prev) => !prev);
-  };
-
-  const handleCountryCodeSelect = (code) => {
-    setSelectedCountryCode(code);
-    closeAllDropdowns();
-    setErrors((prev) => ({
-      ...prev,
-      phone: validatePhone(selectedPhone, code),
-    }));
-  };
+  
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -518,145 +500,76 @@ export const Organization = () => {
                         />
                         <label
                           htmlFor="first_name"
-                          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                        >
-                          First Name
-                        </label>
-                      </div>
-                      <div className="relative w-1/2">
-                        <input
-                          type="text"
-                          id="last_name"
-                          className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                          placeholder=" "
-                          value={selectedLastName}
-                          onChange={(e) => handleChange('lastName', e.target.value)}
-                          autoComplete="off"
-                          spellCheck="false"
-                        />
-                        <label
-                          htmlFor="last_name"
-                          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                        >
-                          Last Name
-                        </label>
-                        {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
-                      </div>
                     </div>
                     <div className="relative mb-4">
-                      <input
+                      <InputField
+                        label="Job Title"
                         type="text"
+                        name="jobTitle"
                         id="job_title"
-                        className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.jobTitle ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                        placeholder=" "
                         value={selectedJobTitle}
                         onChange={(e) => handleChange('jobTitle', e.target.value)}
+                        onBlur={(e) => handleBlur('jobTitle', e.target.value)}
+                        error={errors.jobTitle}
+                        placeholder="Enter Job Title"
                         autoComplete="off"
-                        spellCheck="false"
+                        className="focus:ring-custom-blue focus:border-custom-blue"
                       />
-                      <label
-                        htmlFor="job_title"
-                        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                      >
-                        Job Title
-                      </label>
-                      {errors.jobTitle && <p className="text-red-500 text-xs mt-1">{errors.jobTitle}</p>}
                     </div>
                     <div className="relative mb-4">
-                      <input
+                      <InputField
+                        label="Work Email"
                         type="email"
+                        name="email"
                         id="Email"
-                        className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                        placeholder=" "
                         value={selectedEmail}
-                        onInput={handleEmailInput}
+                        onChange={(e) => handleEmailInput(e)}
                         onBlur={(e) => handleBlur('email', e.target.value)}
+                        error={errors.email}
+                        placeholder="Enter Work Email"
                         autoComplete="email"
+                        inputRef={emailRef}
+                        className="focus:ring-custom-blue focus:border-custom-blue"
                       />
-                      <label
-                        htmlFor="Email"
-                        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                      >
-                        Work Email
-                      </label>
                       {isCheckingEmail && (
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <div className="absolute top-8 right-0 flex items-center pr-3">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
                         </div>
                       )}
-                      {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
                     <div className="relative mb-4">
-                      <div className="flex gap-2">
-                        <div className="relative w-1/4" ref={countryCodeDropdownRef}>
-                          <div
-                            className={`flex items-center justify-between rounded border ${errors.phone ? 'border-red-500' : 'border-gray-300'} bg-white px-3 h-11 cursor-pointer`}
-                            onClick={toggleDropdownCountryCode}
-                          >
-                            <span className="text-gray-900 text-sm">{selectedCountryCode}</span>
-                            <MdArrowDropDown className="text-gray-500 text-xl" />
-                          </div>
-                          {showDropdownCountryCode && (
-                            <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1 max-h-60 overflow-y-auto">
-                              {countryCodeOptions.map((option) => (
-                                <div
-                                  key={option.code}
-                                  className="py-1 px-4 cursor-pointer hover:bg-gray-100 text-sm text-gray-900"
-                                  onClick={() => handleCountryCodeSelect(option.code)}
-                                >
-                                  {option.code}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <div className="relative w-3/4">
-                          <div className="relative">
-                            <input
-                              type="tel"
-                              id="Phone"
-                              className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                              placeholder=" "
-                              value={selectedPhone}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, '');
-                                handleChange('phone', value);
-                              }}
-                              maxLength={selectedCountryCode === '+91' ? 10 : 11}
-                              inputMode="numeric"
-                              autoComplete="tel"
-                            />
-                            <label
-                              htmlFor="Phone"
-                              className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                            >
-                              Phone Number
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                      {errors.phone && (
-                        <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
-                      )}
+                      <PhoneField
+                        countryCodeValue={selectedCountryCode}
+                        onCountryCodeChange={(code) => {
+                          setSelectedCountryCode(code);
+                          setErrors((prev) => ({ ...prev, phone: "" }));
+                        }}
+                        phoneValue={selectedPhone}
+                        onPhoneChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '');
+                          handleChange('phone', value);
+                        }}
+                        error={errors.phone}
+                        countryCodeRef={countryCodeDropdownRef}
+                        phoneRef={phoneRef}
+                        label="Phone Number"
+                        required={false}
+                      />
                     </div>
                     <div className="relative mb-4">
-                      <input
+                      <InputField
+                        label="Company"
                         type="text"
+                        name="company"
                         id="company"
-                        className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.company ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                        placeholder=" "
                         value={selectedCompany}
                         onChange={(e) => handleChange('company', e.target.value)}
+                        onBlur={(e) => handleBlur('company', e.target.value)}
+                        error={errors.company}
+                        placeholder="Enter Company Name"
                         autoComplete="off"
-                        spellCheck="false"
+                        className="focus:ring-custom-blue focus:border-custom-blue"
                       />
-                      <label
-                        htmlFor="company"
-                        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                      >
-                        Company
-                      </label>
-                      {errors.company && <p className="text-red-500 text-xs mt-1">{errors.company}</p>}
                     </div>
                     <div className="relative mb-4" ref={employeesDropdownRef}>
                       <div className="relative">
@@ -741,121 +654,93 @@ export const Organization = () => {
                       {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
                     </div>
                     <div className="relative mb-4">
-                      <input
+                      <InputField
+                        label="Create Profile ID"
                         type="text"
-                        id="profileId"
-                        className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.profileId ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                        placeholder=" "
-                        autoComplete="off"
+                        name="profileId"
+                        id="profile_id"
                         value={selectedProfileId}
-                        onChange={(e) => handleChange('profileId', e.target.value)}
+                        onChange={(e) => handleProfileIdChange(e)}
                         onBlur={(e) => handleBlur('profileId', e.target.value)}
+                        error={errors.profileId}
+                        placeholder="Enter Profile ID"
+                        autoComplete="off"
+                        className="focus:ring-custom-blue focus:border-custom-blue"
                       />
-                      <label
-                        htmlFor="profileId"
-                        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                      >
-                        Profile ID / UserName
-                      </label>
                       {isCheckingProfileId && (
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <div className="absolute top-8 right-0 flex items-center pr-3">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
                         </div>
                       )}
-                      {errors.profileId && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.profileId}
-                          {suggestedProfileId && errors.profileId.includes('already taken') && (
-                            <span className="text-gray-600 ml-2">
-                              Try this:{' '}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedProfileId(suggestedProfileId);
-                                  setSuggestedProfileId('');
-                                  setErrors((prev) => ({ ...prev, profileId: '' }));
-                                }}
-                                className="text-blue-500 hover:underline"
-                              >
-                                {suggestedProfileId}
-                              </button>
-                            </span>
-                          )}
+                      {suggestedProfileId && (
+                        <p className="text-blue-600 text-xs mt-1">
+                          Suggested:
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedProfileId(suggestedProfileId);
+                              setSuggestedProfileId("");
+                              setErrors((prev) => ({ ...prev, profileId: "" }));
+                            }}
+                            className="underline ml-1"
+                          >
+                            {suggestedProfileId}
+                          </button>
                         </p>
                       )}
                     </div>
                     <div className="relative mb-4">
                       <div className="relative">
-                        <input
+                        <InputField
+                          label="Create Password"
                           type={showPassword ? "text" : "password"}
+                          name="password"
                           id="create_password"
-                          className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? "border-red-500" : "border-gray-300"
-                            } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                          placeholder=" "
                           value={selectedPassword}
                           onChange={(e) => handleChange("password", e.target.value)}
                           onBlur={(e) => handleBlur("password", e.target.value)}
-                          onCopy={(e) => e.preventDefault()}
-                          onPaste={(e) => e.preventDefault()}
-                          onCut={(e) => e.preventDefault()}
+                          error={errors.password}
+                          placeholder="Enter Password"
                           autoComplete="new-password"
-                          spellCheck="false"
+                          inputRef={passwordRef}
+                          className="password-input pr-12 focus:ring-custom-blue focus:border-custom-blue"
                         />
-                        <label
-                          htmlFor="create_password"
-                          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                        >
-                          Create Password
-                        </label>
                         <button
                           type="button"
-                          className="absolute top-3 right-3 flex items-center text-gray-500"
+                          className="absolute right-3 top-[38px] transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 z-10"
                           onClick={() => setShowPassword(!showPassword)}
                           aria-label={showPassword ? "Hide password" : "Show password"}
                         >
                           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
                       </div>
-                      {errors.password && (
-                        <p className="text-red-500 text-xs mt-1 w-96">{errors.password}</p>
-                      )}
                     </div>
 
                     <div className="relative mb-4">
                       <div className="relative">
-                        <input
+                        <InputField
+                          label="Confirm Password"
                           type={showConfirmPassword ? "text" : "password"}
+                          name="confirmPassword"
                           id="confirm_password"
-                          className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                            } appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                          placeholder=" "
                           value={selectedConfirmPassword}
                           onChange={(e) => handleChange("confirmPassword", e.target.value)}
                           onBlur={(e) => handleBlur("confirmPassword", e.target.value)}
-                          onCopy={(e) => e.preventDefault()}
-                          onPaste={(e) => e.preventDefault()}
-                          onCut={(e) => e.preventDefault()}
+                          error={errors.confirmPassword}
+                          placeholder="Re-enter Password"
                           autoComplete="new-password"
-                          spellCheck="false"
+                          inputRef={confirmPasswordRef}
+                          className="password-input pr-12 focus:ring-custom-blue focus:border-custom-blue"
                         />
-                        <label
-                          htmlFor="confirm_password"
-                          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3"
-                        >
-                          Confirm Password
-                        </label>
                         <button
                           type="button"
-                          className="absolute top-3 right-3 flex items-center text-gray-500"
+                          className="absolute right-3 top-[38px] transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 z-10"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                         >
                           {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
                       </div>
-                      {errors.confirmPassword && (
-                        <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
-                      )}
                     </div>
 
                     <div className="flex justify-center">
@@ -1228,540 +1113,226 @@ export const Organization = () => {
                     {/* Company Information Section */}
                     <div className="bg-gray-50 rounded-xl p-4 mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <svg
-                          className="w-5 h-5 text-primary-500 mr-2"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-6a1 1 0 00-1-1H9a1 1 0 00-1 1v6a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
                         🏢 Company Information
                       </h3>
 
                       <div className="mb-4">
-                        <label
-                          htmlFor="company"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Company Name *
-                        </label>
-                        <input
+                        <InputField
+                          label="Company Name"
                           type="text"
+                          name="company"
                           id="company"
                           value={selectedCompany}
-                          onChange={(e) =>
-                            handleChange("company", e.target.value)
-                          }
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${
-                            errors.company
-                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                              : "border-gray-300"
-                          }`}
+                          onChange={(e) => handleChange("company", e.target.value)}
+                          error={errors.company}
                           placeholder="Acme Corporation"
                           autoComplete="organization"
+                          required={true}
+                          className="focus:ring-custom-blue focus:border-custom-blue"
                         />
-                        {errors.company && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg
-                              className="w-4 h-4 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {errors.company}
-                          </p>
-                        )}
                       </div>
 
-                      <div className="mb-4 relative" ref={employeesDropdownRef}>
-                        <label
-                          htmlFor="employees"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Employees *
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            id="employees"
-                            value={selectedEmployees}
-                            onClick={toggleDropdownEmployees}
-                            readOnly
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${
-                              errors.employees
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300"
-                            }`}
-                            placeholder="Select employees"
-                          />
-                          <div
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                            onClick={toggleDropdownEmployees}
-                          >
-                            <MdArrowDropDown
-                              className={`text-gray-500 text-xl cursor-pointer transition-transform duration-200 ${
-                                showDropdownEmployees ? "rotate-180" : ""
-                              }`}
-                            />
-                          </div>
-                        </div>
-                        {showDropdownEmployees && (
-                          <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1 top-full left-0 max-h-60 overflow-y-auto">
-                            {employeesOptions.map((option) => (
-                              <div
-                                key={option}
-                                className="py-3 px-4 cursor-pointer hover:bg-gray-100 text-gray-900 text-sm transition-colors duration-150"
-                                onClick={() => handleEmployeesSelect(option)}
-                              >
-                                {option}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        {errors.employees && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg
-                              className="w-4 h-4 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {errors.employees}
-                          </p>
-                        )}
+                      <div className="mb-4" ref={employeesDropdownRef}>
+                        <DropdownWithSearchField
+                          label="Employees"
+                          name="employees"
+                          value={selectedEmployees ? { value: selectedEmployees, label: selectedEmployees } : null}
+                          options={employeesOptions.map(option => ({ value: option, label: option }))}
+                          onChange={(selected) => {
+                            const value = selected ? selected.value : "";
+                            setSelectedEmployees(value);
+                            setErrors((prev) => ({ ...prev, employees: "" }));
+                          }}
+                          error={errors.employees}
+                          required={true}
+                          placeholder="Select Employees"
+                          containerRef={employeesDropdownRef}
+                          ref={employeesDropdownRef}
+                        />
                       </div>
 
-                      <div className="mb-4 relative" ref={countryDropdownRef}>
-                        <label
-                          htmlFor="country"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Country *
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            id="country"
-                            value={selectedCountry}
-                            onClick={toggleDropdownCountry}
-                            readOnly
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${
-                              errors.country
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300"
-                            }`}
-                            placeholder="Select country"
-                          />
-                          <div
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                            onClick={toggleDropdownCountry}
-                          >
-                            <MdArrowDropDown
-                              className={`text-gray-500 text-xl cursor-pointer transition-transform duration-200 ${
-                                showDropdownCountry ? "rotate-180" : ""
-                              }`}
-                            />
-                          </div>
-                        </div>
-                        {showDropdownCountry && (
-                          <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1 top-full left-0 max-h-60 overflow-y-auto">
-                            {countryOptions.map((option) => (
-                              <div
-                                key={option}
-                                className="py-3 px-4 cursor-pointer hover:bg-gray-100 text-gray-900 text-sm transition-colors duration-150"
-                                onClick={() => handleCountrySelect(option)}
-                              >
-                                {option}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        {errors.country && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg
-                              className="w-4 h-4 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {errors.country}
-                          </p>
-                        )}
+                      <div className="mb-4" ref={countryDropdownRef}>
+                        <DropdownWithSearchField
+                          label="Country"
+                          name="country"
+                          value={selectedCountry ? { value: selectedCountry, label: selectedCountry } : null}
+                          options={countryOptions.map(option => ({ value: option, label: option }))}
+                          onChange={(selected) => {
+                            const value = selected ? selected.value : "";
+                            setSelectedCountry(value);
+                            setErrors((prev) => ({ ...prev, country: "" }));
+                          }}
+                          error={errors.country}
+                          required={true}
+                          placeholder="Select Country"
+                          containerRef={countryDropdownRef}
+                          ref={countryDropdownRef}
+                        />
                       </div>
                     </div>
 
                     {/* Personal Information Section */}
                     <div className="bg-gray-50 rounded-xl p-4 mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <svg
-                          className="w-5 h-5 text-primary-500 mr-2"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
                         👤 Account Information
                       </h3>
 
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                          <label
-                            htmlFor="firstName"
-                            className="block text-sm font-medium text-gray-700 mb-2"
-                          >
-                            First Name *
-                          </label>
-                          <input
+                          <InputField
+                            label="First Name"
                             type="text"
+                            name="firstName"
                             id="firstName"
                             value={selectedFirstName}
-                            onChange={(e) =>
-                              handleChange("firstName", e.target.value)
-                            }
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${
-                              errors.firstName
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300"
-                            }`}
+                            onChange={(e) => handleChange("firstName", e.target.value)}
+                            error={errors.firstName}
                             placeholder="John"
                             autoComplete="given-name"
+                            required={true}
+                            className="focus:ring-custom-blue focus:border-custom-blue"
                           />
-                          {errors.firstName && (
-                            <p className="text-red-500 text-sm mt-1 flex items-center">
-                              <svg
-                                className="w-4 h-4 mr-1"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                              {errors.firstName}
-                            </p>
-                          )}
                         </div>
 
                         <div>
-                          <label
-                            htmlFor="lastName"
-                            className="block text-sm font-medium text-gray-700 mb-2"
-                          >
-                            Last Name *
-                          </label>
-                          <input
+                          <InputField
+                            label="Last Name"
                             type="text"
+                            name="lastName"
                             id="lastName"
                             value={selectedLastName}
-                            onChange={(e) =>
-                              handleChange("lastName", e.target.value)
-                            }
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${
-                              errors.lastName
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300"
-                            }`}
+                            onChange={(e) => handleChange("lastName", e.target.value)}
+                            error={errors.lastName}
                             placeholder="Doe"
                             autoComplete="family-name"
+                            required={true}
+                            className="focus:ring-custom-blue focus:border-custom-blue"
                           />
-                          {errors.lastName && (
-                            <p className="text-red-500 text-sm mt-1 flex items-center">
-                              <svg
-                                className="w-4 h-4 mr-1"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                              {errors.lastName}
-                            </p>
-                          )}
                         </div>
                       </div>
 
                       <div className="mb-4">
-                        <label
-                          htmlFor="jobTitle"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Job Title *
-                        </label>
-                        <input
+                        <InputField
+                          label="Job Title"
                           type="text"
+                          name="jobTitle"
                           id="jobTitle"
                           value={selectedJobTitle}
-                          onChange={(e) =>
-                            handleChange("jobTitle", e.target.value)
-                          }
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${
-                            errors.jobTitle
-                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                              : "border-gray-300"
-                          }`}
+                          onChange={(e) => handleChange("jobTitle", e.target.value)}
+                          error={errors.jobTitle}
                           placeholder="HR Manager"
                           autoComplete="organization-title"
+                          required={true}
+                          className="focus:ring-custom-blue focus:border-custom-blue"
                         />
-                        {errors.jobTitle && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg
-                              className="w-4 h-4 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {errors.jobTitle}
-                          </p>
-                        )}
                       </div>
 
                       <div className="mb-4">
-                        <label
-                          htmlFor="phone"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Phone Number
-                        </label>
-                        <div className="flex gap-2">
-                          <div
-                            className="relative w-1/4"
-                            ref={countryCodeDropdownRef}
-                          >
-                            <div
-                              className={`flex items-center justify-between rounded border
-                                 bg-white px-3 h-12 cursor-pointer`}
-                              onClick={toggleDropdownCountryCode}
-                            >
-                              <span className="text-gray-900 text-sm">
-                                {selectedCountryCode}
-                              </span>
-                              <MdArrowDropDown className="text-gray-500 text-xl" />
-                            </div>
-                            {showDropdownCountryCode && (
-                              <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1 max-h-60 overflow-y-auto">
-                                {countryCodeOptions.map((option) => (
-                                  <div
-                                    key={option.code}
-                                    className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm text-gray-900"
-                                    onClick={() =>
-                                      handleCountryCodeSelect(option.code)
-                                    }
-                                  >
-                                    {option.code}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                        <PhoneField
+                          countryCodeValue={selectedCountryCode}
+                          onCountryCodeChange={(code) => {
+                            setSelectedCountryCode(code);
+                            setErrors((prev) => ({ ...prev, phone: "" }));
+                          }}
+                          phoneValue={selectedPhone}
+                          onPhoneChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            handleChange('phone', value);
+                          }}
+                          error={errors.phone}
+                          countryCodeRef={countryCodeDropdownRef}
+                          phoneRef={phoneRef}
+                          label="Phone Number"
+                          required={false}
+                        />
+                      </div>
+
+                      <div className="mb-4 relative">
+                        <InputField
+                          label="Work Email"
+                          type="email"
+                          name="email"
+                          id="email"
+                          value={selectedEmail}
+                          onChange={handleEmailInput}
+                          onBlur={(e) => handleBlur("email", e.target.value)}
+                          error={errors.email}
+                          placeholder="john.doe@company.com"
+                          autoComplete="email"
+                          inputRef={emailRef}
+                          required={true}
+                          className="focus:ring-custom-blue focus:border-custom-blue"
+                        />
+                        {isCheckingEmail && (
+                          <div className="absolute top-8 right-0 flex items-center pr-3">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
                           </div>
-                          <div className="relative w-3/4">
-                            <input
-                              type="tel"
-                              id="phone"
-                              value={selectedPhone}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, "");
-                                handleChange("phone", value);
+                        )}
+                      </div>
+
+                      <div className="mb-4 relative">
+                        <InputField
+                          label="Username"
+                          type="text"
+                          name="profileId"
+                          id="profileId"
+                          value={selectedProfileId}
+                          onChange={(e) => handleChange("profileId", e.target.value)}
+                          onBlur={(e) => handleBlur("profileId", e.target.value)}
+                          error={errors.profileId}
+                          placeholder="your-username@company.com"
+                          autoComplete="username"
+                          required={true}
+                          className="focus:ring-custom-blue focus:border-custom-blue"
+                        />
+                        {isCheckingProfileId && (
+                          <div className="absolute top-8 right-0 flex items-center pr-3">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
+                          </div>
+                        )}
+                        {suggestedProfileId && errors.profileId && errors.profileId.includes("already taken") && (
+                          <p className="text-blue-600 text-xs mt-1">
+                            Try this:{" "}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedProfileId(suggestedProfileId);
+                                setSuggestedProfileId("");
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  profileId: "",
+                                }));
                               }}
-                              maxLength={
-                                selectedCountryCode === "+91" ? 10 : 11
-                              }
-                              inputMode="numeric"
-                              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200
-                                `}
-                              placeholder="1234567890"
-                              autoComplete="tel"
-                            />
-                          </div>
-                        </div>
-                        {/* {errors.phone && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {errors.phone}
-                          </p>
-                        )} */}
-                      </div>
-
-                      <div className="mb-4">
-                        <label
-                          htmlFor="email"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Work Email *
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            id="email"
-                            value={selectedEmail}
-                            onChange={handleEmailInput}
-                            onBlur={(e) => handleBlur("email", e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${
-                              errors.email
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300"
-                            }`}
-                            placeholder="john.doe@company.com"
-                            autoComplete="email"
-                          />
-                          {isCheckingEmail && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
-                            </div>
-                          )}
-                        </div>
-                        {errors.email && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg
-                              className="w-4 h-4 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
+                              className="underline"
                             >
-                              <path
-                                fillRule="evenodd"
-                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {errors.email}
+                              {suggestedProfileId}
+                            </button>
                           </p>
                         )}
                       </div>
 
                       <div className="mb-4">
-                        <label
-                          htmlFor="profileId"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Username *
-                        </label>
                         <div className="relative">
-                          <input
-                            type="text"
-                            id="profileId"
-                            value={selectedProfileId}
-                            onChange={(e) =>
-                              handleChange("profileId", e.target.value)
-                            }
-                            onBlur={(e) =>
-                              handleBlur("profileId", e.target.value)
-                            }
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${
-                              errors.profileId
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300"
-                            }`}
-                            placeholder="your-username@company.com"
-                            autoComplete="username"
-                          />
-                          {isCheckingProfileId && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
-                            </div>
-                          )}
-                        </div>
-                        {errors.profileId && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg
-                              className="w-4 h-4 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {errors.profileId}
-                            {suggestedProfileId &&
-                              errors.profileId.includes("already taken") && (
-                                <span className="text-gray-600 ml-2">
-                                  Try this:{" "}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedProfileId(suggestedProfileId);
-                                      setSuggestedProfileId("");
-                                      setErrors((prev) => ({
-                                        ...prev,
-                                        profileId: "",
-                                      }));
-                                    }}
-                                    className="text-blue-500 hover:underline"
-                                  >
-                                    {suggestedProfileId}
-                                  </button>
-                                </span>
-                              )}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="mb-4">
-                        <label
-                          htmlFor="password"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Create Password *
-                        </label>
-                        <div className="relative">
-                          <input
+                          <InputField
+                            label="Create Password"
                             type={showPassword ? "text" : "password"}
+                            name="password"
                             id="password"
                             value={selectedPassword}
-                            onChange={(e) =>
-                              handleChange("password", e.target.value)
-                            }
-                            onBlur={(e) =>
-                              handleBlur("password", e.target.value)
-                            }
-                            className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${
-                              errors.password
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300"
-                            }`}
+                            onChange={(e) => handleChange("password", e.target.value)}
+                            onBlur={(e) => handleBlur("password", e.target.value)}
+                            error={errors.password}
                             placeholder="••••••••"
                             autoComplete="new-password"
+                            inputRef={passwordRef}
+                            required={true}
+                            className="password-input pr-12 focus:ring-custom-blue focus:border-custom-blue"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                            className="absolute right-3 top-[43px] transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 z-10"
+                            aria-label={showPassword ? "Hide password" : "Show password"}
                           >
                             {showPassword ? (
                               <EyeOff size={20} />
@@ -1770,56 +1341,30 @@ export const Organization = () => {
                             )}
                           </button>
                         </div>
-                        {errors.password && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg
-                              className="w-4 h-4 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {errors.password}
-                          </p>
-                        )}
                       </div>
 
                       <div className="mb-4">
-                        <label
-                          htmlFor="confirmPassword"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Confirm Password *
-                        </label>
                         <div className="relative">
-                          <input
+                          <InputField
+                            label="Confirm Password"
                             type={showConfirmPassword ? "text" : "password"}
+                            name="confirmPassword"
                             id="confirmPassword"
                             value={selectedConfirmPassword}
-                            onChange={(e) =>
-                              handleChange("confirmPassword", e.target.value)
-                            }
-                            onBlur={(e) =>
-                              handleBlur("confirmPassword", e.target.value)
-                            }
-                            className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${
-                              errors.confirmPassword
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300"
-                            }`}
+                            onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                            onBlur={(e) => handleBlur("confirmPassword", e.target.value)}
+                            error={errors.confirmPassword}
                             placeholder="••••••••"
                             autoComplete="new-password"
+                            inputRef={confirmPasswordRef}
+                            required={true}
+                            className="password-input pr-12 focus:ring-custom-blue focus:border-custom-blue"
                           />
                           <button
                             type="button"
-                            onClick={() =>
-                              setShowConfirmPassword(!showConfirmPassword)
-                            }
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-[43px] transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 z-10"
+                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                           >
                             {showConfirmPassword ? (
                               <EyeOff size={20} />
@@ -1828,22 +1373,6 @@ export const Organization = () => {
                             )}
                           </button>
                         </div>
-                        {errors.confirmPassword && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg
-                              className="w-4 h-4 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {errors.confirmPassword}
-                          </p>
-                        )}
                       </div>
                     </div>
 
