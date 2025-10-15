@@ -1136,10 +1136,10 @@ export const Organization = () => {
                         <DropdownWithSearchField
                           label="Employees"
                           name="employees"
-                          value={selectedEmployees ? { value: selectedEmployees, label: selectedEmployees } : null}
+                          value={selectedEmployees}
                           options={employeesOptions.map(option => ({ value: option, label: option }))}
-                          onChange={(selected) => {
-                            const value = selected ? selected.value : "";
+                          onChange={(e) => {
+                            const value = e.target.value;
                             setSelectedEmployees(value);
                             setErrors((prev) => ({ ...prev, employees: "" }));
                           }}
@@ -1155,10 +1155,10 @@ export const Organization = () => {
                         <DropdownWithSearchField
                           label="Country"
                           name="country"
-                          value={selectedCountry ? { value: selectedCountry, label: selectedCountry } : null}
+                          value={selectedCountry}
                           options={countryOptions.map(option => ({ value: option, label: option }))}
-                          onChange={(selected) => {
-                            const value = selected ? selected.value : "";
+                          onChange={(e) => {
+                            const value = e.target.value;
                             setSelectedCountry(value);
                             setErrors((prev) => ({ ...prev, country: "" }));
                           }}
@@ -1230,7 +1230,8 @@ export const Organization = () => {
                       <div className="mb-4">
                         <PhoneField
                           countryCodeValue={selectedCountryCode}
-                          onCountryCodeChange={(code) => {
+                          onCountryCodeChange={(e) => {
+                            const code = e.target.value;
                             setSelectedCountryCode(code);
                             setErrors((prev) => ({ ...prev, phone: "" }));
                           }}
