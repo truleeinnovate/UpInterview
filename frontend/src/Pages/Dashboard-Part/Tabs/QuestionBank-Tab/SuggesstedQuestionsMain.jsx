@@ -24,6 +24,7 @@ import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
 import { useNavigate } from "react-router-dom";
 import { Lock, Unlock } from "lucide-react";
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.5 <-------------------------------------------------------
 // v1.0.5 ------------------------------------------------------->
 
@@ -187,6 +188,7 @@ const SuggestedQuestionsComponent = ({
     questionType: selectedQuestionType,
   });
 
+  useScrollLock(true);
   //<------v1.0.4--------
   // Show/hide Question Type filter based on dropdown selection
   const showQuestionTypeFilter = dropdownValue !== "Interview Questions";
@@ -196,7 +198,13 @@ const SuggestedQuestionsComponent = ({
     if (!suggestedQuestions || suggestedQuestions.length === 0) return [];
     const set = new Set();
     suggestedQuestions.forEach((q) => {
-      if (q?.category) set.add(String(q.category).trim());
+      if (q?.category) {
+        const categoryValue = String(q.category).trim();
+        // Only add non-empty category values
+        if (categoryValue) {
+          set.add(categoryValue);
+        }
+      }
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [suggestedQuestions]);
@@ -208,7 +216,13 @@ const SuggestedQuestionsComponent = ({
     suggestedQuestions.forEach((q) => {
       const techArr = Array.isArray(q?.technology) ? q.technology : [];
       techArr.forEach((t) => {
-        if (t != null) set.add(String(t).trim());
+        if (t != null) {
+          const techValue = String(t).trim();
+          // Only add non-empty technology values
+          if (techValue) {
+            set.add(techValue);
+          }
+        }
       });
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b));
@@ -1174,7 +1188,7 @@ const SuggestedQuestionsComponent = ({
                         }`}>
                           {/* COMMENTED OUT FOR NOW - Don't show lock icon */}
                           {/* {item.isLocked && <Lock className="w-4 h-4" />} */}
-                          <p className="font-medium">{item.category}</p>
+                          <p className="font-medium">{item.technology[0]}</p>
                         </div>
                       </div>
                       {/* v1.0.6 ----------------------------------------------------------------------------> */}
