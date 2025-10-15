@@ -1,17 +1,17 @@
 // JoinMeeting.jsx
 
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import Cookies from 'js-cookie';
-import RoleSelector from './RoleSelector';
-import CandidateView from './CandidateView';
-import InterviewerView from './InterviewerView';
-import CombinedNavbar from '../../Components/Navbar/CombinedNavbar';
-import { decryptData } from '../../utils/PaymentCard';
-import { config } from '../../config';
-import AuthCookieManager from '../../utils/AuthCookieManager/AuthCookieManager';
-import { useFeedbackData } from '../../apiHooks/useFeedbacks';
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Cookies from "js-cookie";
+import RoleSelector from "./RoleSelector";
+import CandidateView from "./CandidateView";
+import InterviewerView from "./InterviewerView";
+import CombinedNavbar from "../../Components/Navbar/CombinedNavbar";
+import { decryptData } from "../../utils/PaymentCard";
+import { config } from "../../config";
+import AuthCookieManager from "../../utils/AuthCookieManager/AuthCookieManager";
+import { useFeedbackData } from "../../apiHooks/useFeedbacks";
 
 function JoinMeeting() {
   const location = useLocation();
@@ -29,7 +29,6 @@ function JoinMeeting() {
   const [candidateDetails, setCandidateDetails] = useState(null);
   const [candidateLoading, setCandidateLoading] = useState(false);
   const [candidateError, setCandidateError] = useState(null);
-
 
   const fetchCandidateDetails = async (roundId, retryCount = 0) => {
     if (!roundId) {
@@ -49,13 +48,12 @@ function JoinMeeting() {
         params: { roundId },
         timeout: timeout,
         headers: {
-          'Accept': 'application/json',
-        }
+          Accept: "application/json",
+        },
       });
 
       if (res.data && res.data.success) {
         if (res.data.candidate) {
- 
           setCandidateDetails({
             ...res.data.candidate,
             position: res.data.position,
@@ -66,7 +64,8 @@ function JoinMeeting() {
           setCandidateError("Candidate data not found in response");
         }
       } else {
-        const errorMessage = res.data?.message || "API returned unsuccessful response";
+        const errorMessage =
+          res.data?.message || "API returned unsuccessful response";
         console.error("❌ API returned error:", errorMessage);
         setCandidateError(errorMessage);
       }
@@ -79,7 +78,10 @@ function JoinMeeting() {
         data: err.response?.data,
       });
 
-      if ((err.code === 'ECONNABORTED' || err.message.includes('timeout')) && retryCount < 2) {
+      if (
+        (err.code === "ECONNABORTED" || err.message.includes("timeout")) &&
+        retryCount < 2
+      ) {
         console.log(`🔄 Retrying request (attempt ${retryCount + 2}/3)...`);
         setTimeout(() => {
           fetchCandidateDetails(roundId, retryCount + 1);
@@ -87,16 +89,22 @@ function JoinMeeting() {
         return;
       }
 
-      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-        setCandidateError("Request timeout - server is not responding. Please check if the backend server is running on port 5000.");
-      } else if (err.code === 'ERR_NETWORK') {
-        setCandidateError("Network error - please check CORS configuration or server status");
+      if (err.code === "ECONNABORTED" || err.message.includes("timeout")) {
+        setCandidateError(
+          "Request timeout - server is not responding. Please check if the backend server is running on port 5000."
+        );
+      } else if (err.code === "ERR_NETWORK") {
+        setCandidateError(
+          "Network error - please check CORS configuration or server status"
+        );
       } else if (err.response?.status === 404) {
         setCandidateError("Candidate not found for this round");
       } else if (err.response?.status === 500) {
         setCandidateError("Server error occurred");
       } else {
-        setCandidateError(err.response?.data?.message || "Failed to fetch candidate details");
+        setCandidateError(
+          err.response?.data?.message || "Failed to fetch candidate details"
+        );
       }
     } finally {
       setCandidateLoading(false);
@@ -105,31 +113,33 @@ function JoinMeeting() {
 
   const redirectToLogin = (isIndividual) => {
     const returnUrl = encodeURIComponent(window.location.href);
-    const loginPath = isIndividual ? '/individual-login' : '/organization-login';
+    const loginPath = isIndividual
+      ? "/individual-login"
+      : "/organization-login";
     navigate(`${loginPath}?returnUrl=${returnUrl}`);
   };
 
   const checkAuthentication = () => {
     try {
       if (!AuthCookieManager.isAuthenticated()) {
-        console.log('User not authenticated, redirecting to login');
-        redirectToLogin(authType === 'individual');
+        console.log("User not authenticated, redirecting to login");
+        redirectToLogin(authType === "individual");
         return false;
       }
 
       const currentUserData = AuthCookieManager.getActiveUserData();
       if (!currentUserData) {
-        console.log('Unable to get current user data, redirecting to login');
-        redirectToLogin(authType === 'individual');
+        console.log("Unable to get current user data, redirecting to login");
+        redirectToLogin(authType === "individual");
         return false;
       }
 
       const urlParams = new URLSearchParams(location.search);
-      const encryptedOwnerId = urlParams.get('owner');
+      const encryptedOwnerId = urlParams.get("owner");
 
       if (!encryptedOwnerId) {
-        console.log('No ownerId in URL parameters');
-        setAuthError('Invalid meeting link: missing owner information');
+        console.log("No ownerId in URL parameters");
+        setAuthError("Invalid meeting link: missing owner information");
         setIsAuthChecking(false);
         return false;
       }
@@ -138,30 +148,32 @@ function JoinMeeting() {
       try {
         const decodedOwnerId = decodeURIComponent(encryptedOwnerId);
         decryptedOwnerId = decryptData(decodedOwnerId);
-        console.log('Decrypted ownerId from URL:', decryptedOwnerId);
+        console.log("Decrypted ownerId from URL:", decryptedOwnerId);
       } catch (error) {
-        console.error('Error decrypting ownerId:', error);
-        setAuthError('Invalid meeting link: unable to decrypt owner information');
+        console.error("Error decrypting ownerId:", error);
+        setAuthError(
+          "Invalid meeting link: unable to decrypt owner information"
+        );
         setIsAuthChecking(false);
         return false;
       }
 
       const currentUserOwnerId = currentUserData.userId || currentUserData.id;
-      console.log('Current user ownerId:', currentUserOwnerId);
-      console.log('URL ownerId:', decryptedOwnerId);
+      console.log("Current user ownerId:", currentUserOwnerId);
+      console.log("URL ownerId:", decryptedOwnerId);
 
       if (currentUserOwnerId !== decryptedOwnerId) {
-        console.log('OwnerId mismatch, redirecting to login');
-        redirectToLogin(authType === 'individual');
+        console.log("OwnerId mismatch, redirecting to login");
+        redirectToLogin(authType === "individual");
         return false;
       }
 
-      console.log('Authentication successful, ownerId matches');
+      console.log("Authentication successful, ownerId matches");
       setIsAuthChecking(false);
       return true;
     } catch (error) {
-      console.error('Error in authentication check:', error);
-      setAuthError('Authentication error occurred');
+      console.error("Error in authentication check:", error);
+      setAuthError("Authentication error occurred");
       setIsAuthChecking(false);
       return false;
     }
@@ -169,18 +181,17 @@ function JoinMeeting() {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const schedule = urlParams.get('scheduler');
-    const meeting = urlParams.get('meeting');
-    const round = urlParams.get('round');
-    const candidate = urlParams.get('candidate');
-    const interviewer = urlParams.get('interviewer');
-    const interviewerToken = urlParams.get('interviewertoken');
-    const schedulerToken = urlParams.get('schedulertoken');
+    const schedule = urlParams.get("scheduler");
+    const meeting = urlParams.get("meeting");
+    const round = urlParams.get("round");
+    const candidate = urlParams.get("candidate");
+    const interviewer = urlParams.get("interviewer");
+    const interviewerToken = urlParams.get("interviewertoken");
+    const schedulerToken = urlParams.get("schedulertoken");
 
-    const isSchedule = schedule === 'true';
-    const isCandidate = candidate === 'true';
-    const isInterviewer = interviewer === 'true';
-    
+    const isSchedule = schedule === "true";
+    const isCandidate = candidate === "true";
+    const isInterviewer = interviewer === "true";
 
     let decryptedMeeting = null;
     if (meeting) {
@@ -188,8 +199,10 @@ function JoinMeeting() {
         const decodedMeeting = decodeURIComponent(meeting);
         decryptedMeeting = decryptData(decodedMeeting);
       } catch (error) {
-        console.error('Error decrypting meeting data:', error);
-        setAuthError('Invalid meeting link: unable to decrypt meeting information');
+        console.error("Error decrypting meeting data:", error);
+        setAuthError(
+          "Invalid meeting link: unable to decrypt meeting information"
+        );
         setPreAuthLoading(false);
         setIsAuthChecking(false);
         return;
@@ -202,8 +215,10 @@ function JoinMeeting() {
         const decodedRound = decodeURIComponent(round);
         decryptedRound = decryptData(decodedRound);
       } catch (error) {
-        console.error('Error decrypting round data:', error);
-        setAuthError('Invalid meeting link: unable to decrypt round information');
+        console.error("Error decrypting round data:", error);
+        setAuthError(
+          "Invalid meeting link: unable to decrypt round information"
+        );
         setPreAuthLoading(false);
         setIsAuthChecking(false);
         return;
@@ -213,11 +228,15 @@ function JoinMeeting() {
     let decryptedInterviewerId = null;
     if (interviewerToken || schedulerToken) {
       try {
-        const decodedToken = decodeURIComponent(interviewerToken || schedulerToken);
+        const decodedToken = decodeURIComponent(
+          interviewerToken || schedulerToken
+        );
         decryptedInterviewerId = decryptData(decodedToken);
       } catch (error) {
-        console.error('Error decrypting token data:', error);
-        setAuthError('Invalid meeting link: unable to decrypt token information');
+        console.error("Error decrypting token data:", error);
+        setAuthError(
+          "Invalid meeting link: unable to decrypt token information"
+        );
         setPreAuthLoading(false);
         setIsAuthChecking(false);
         return;
@@ -232,7 +251,9 @@ function JoinMeeting() {
         fetchCandidateDetails(decryptedRound);
       }
       if (decryptedMeeting) {
-        setCandidateDetails(prev => prev ? { ...prev, meetingLink: decryptedMeeting } : prev);
+        setCandidateDetails((prev) =>
+          prev ? { ...prev, meetingLink: decryptedMeeting } : prev
+        );
       }
     }
 
@@ -242,8 +263,8 @@ function JoinMeeting() {
       isInterviewer: isInterviewer,
       meetLink: decryptedMeeting,
       roundData: decryptedRound,
-      interviewRoundId: decryptedRound || '',
-      interviewerId: decryptedInterviewerId || '',
+      interviewRoundId: decryptedRound || "",
+      interviewerId: decryptedInterviewerId || "",
     };
 
     setDecodedData(extractedData);
@@ -257,36 +278,46 @@ function JoinMeeting() {
     setUrlRoleInfo(roleInfo);
 
     if (isCandidate) {
-      setCurrentRole('candidate');
+      setCurrentRole("candidate");
     }
 
     if (!isCandidate && decryptedInterviewerId && decryptedRound) {
       const fetchPreAuthDetails = async () => {
         try {
           setPreAuthLoading(true);
-          const res = await axios.get(`${config.REACT_APP_API_URL}/feedback/contact-details`, {
-            params: {
-              contactId: decryptedInterviewerId,
-              roundId: decryptedRound,
-            },
-          });
+          const res = await axios.get(
+            `${config.REACT_APP_API_URL}/feedback/contact-details`,
+            {
+              params: {
+                contactId: decryptedInterviewerId,
+                roundId: decryptedRound,
+              },
+            }
+          );
 
           const result = res.data;
           if (result && res.status === 200) {
             setPreAuthPassed(true);
             setAuthType(result?.tenant?.type);
           } else {
-            setAuthError(result?.error || 'Error fetching meeting details');
-            if (result?.error === 'Owner mismatch between contact and tenant') {
-              redirectToLogin(result?.tenant?.type === 'individual');
+            setAuthError(result?.error || "Error fetching meeting details");
+            if (result?.error === "Owner mismatch between contact and tenant") {
+              redirectToLogin(result?.tenant?.type === "individual");
             }
           }
         } catch (err) {
-          console.error('API call failed:', err);
-          if (err.response?.status === 403 && err.response?.data?.error === 'Owner mismatch between contact and tenant') {
-            redirectToLogin(authType === 'individual' || err.response?.data?.tenant?.type === 'individual');
+          console.error("API call failed:", err);
+          if (
+            err.response?.status === 403 &&
+            err.response?.data?.error ===
+              "Owner mismatch between contact and tenant"
+          ) {
+            redirectToLogin(
+              authType === "individual" ||
+                err.response?.data?.tenant?.type === "individual"
+            );
           } else {
-            setAuthError('Failed to check meeting details');
+            setAuthError("Failed to check meeting details");
           }
         } finally {
           setPreAuthLoading(false);
@@ -296,24 +327,26 @@ function JoinMeeting() {
       fetchPreAuthDetails();
     } else if (!isCandidate) {
       setPreAuthLoading(false);
-      setAuthError('Invalid meeting link: missing required parameters');
+      setAuthError("Invalid meeting link: missing required parameters");
     }
 
     if (isSchedule && decryptedRound) {
       const fetchSchedulerRoundDetails = async () => {
         try {
           setPreAuthLoading(true);
-          const res = await axios.get(`${config.REACT_APP_API_URL}/feedback/round/${decryptedRound}`);
+          const res = await axios.get(
+            `${config.REACT_APP_API_URL}/feedback/round/${decryptedRound}`
+          );
           if (res.data && res.data.success) {
-            console.log('Scheduler round details:', res.data.data);
+            console.log("Scheduler round details:", res.data.data);
             setSchedulerFeedback(res.data.data);
             setPreAuthPassed(true);
           } else {
-            setAuthError(res.data?.message || 'Error fetching round details');
+            setAuthError(res.data?.message || "Error fetching round details");
           }
         } catch (err) {
-          console.error('Scheduler API call failed:', err);
-          setAuthError('Failed to fetch scheduler round details');
+          console.error("Scheduler API call failed:", err);
+          setAuthError("Failed to fetch scheduler round details");
         } finally {
           setPreAuthLoading(false);
           setIsAuthChecking(false);
@@ -326,25 +359,27 @@ function JoinMeeting() {
   useEffect(() => {
     if (!preAuthLoading && preAuthPassed) {
       const urlParams = new URLSearchParams(location.search);
-      const schedule = urlParams.get('scheduler');
-      const interviewer = urlParams.get('interviewer');
-      const candidate = urlParams.get('candidate');
+      const schedule = urlParams.get("scheduler");
+      const interviewer = urlParams.get("interviewer");
+      const candidate = urlParams.get("candidate");
 
-      const isSchedule = schedule === 'true';
-      const isInterviewer = interviewer === 'true';
-      const isCandidate = candidate === 'true';
+      const isSchedule = schedule === "true";
+      const isInterviewer = interviewer === "true";
+      const isCandidate = candidate === "true";
 
       if (isCandidate) {
-        console.log('Candidate link detected, skipping authentication');
+        console.log("Candidate link detected, skipping authentication");
         setIsAuthChecking(false);
         return;
       }
 
       if (isSchedule || isInterviewer) {
-        console.log('Schedule or interviewer link detected, checking authentication');
+        console.log(
+          "Schedule or interviewer link detected, checking authentication"
+        );
         checkAuthentication();
       } else {
-        console.log('No specific role detected, skipping authentication');
+        console.log("No specific role detected, skipping authentication");
         setIsAuthChecking(false);
       }
     }
@@ -355,24 +390,31 @@ function JoinMeeting() {
     isLoading: feedbackLoading,
     error: feedbackError,
   } = useFeedbackData(
-    !isAuthChecking && preAuthPassed && currentRole !== 'candidate' ? decodedData?.interviewRoundId : null,
-    !isAuthChecking && preAuthPassed && currentRole !== 'candidate' ? decodedData?.interviewerId : null
+    !isAuthChecking && preAuthPassed && currentRole !== "candidate"
+      ? decodedData?.interviewRoundId
+      : null,
+    !isAuthChecking && preAuthPassed && currentRole !== "candidate"
+      ? decodedData?.interviewerId
+      : null
   );
 
   useEffect(() => {
     if (!feedbackLoading && feedbackData?.feedbacks?.length) {
       const matchedFeedbacks = feedbackData.feedbacks
-        .filter((fb) => fb.interviewerId?._id?.toString() === decodedData?.interviewerId)
+        .filter(
+          (fb) =>
+            fb.interviewerId?._id?.toString() === decodedData?.interviewerId
+        )
         .map((fb) => ({
           ...fb,
           interviewRound: feedbackData.interviewRound,
           candidate: feedbackData.candidate,
           position: feedbackData.position,
         }));
-      console.log('matchedFeedbacks', matchedFeedbacks);
+      console.log("matchedFeedbacks", matchedFeedbacks);
       setFeedbackData(matchedFeedbacks[0]);
     } else {
-      console.log('feedbackData', feedbackData);
+      console.log("feedbackData", feedbackData);
       setFeedbackData(feedbackData);
     }
   }, [feedbackLoading, feedbackData, decodedData?.interviewRoundId]);
@@ -395,7 +437,7 @@ function JoinMeeting() {
           <div className="text-red-600 text-xl mb-4">⚠️</div>
           <p className="text-gray-800 mb-4">{authError}</p>
           <button
-            onClick={() => redirectToLogin(authType === 'individual')}
+            onClick={() => redirectToLogin(authType === "individual")}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
             Go to Login
@@ -405,7 +447,7 @@ function JoinMeeting() {
     );
   }
 
-  if (currentRole === 'candidate' || urlRoleInfo?.isCandidate) {
+  if (currentRole === "candidate" || urlRoleInfo?.isCandidate) {
     return (
       <CandidateView
         decodedData={decodedData}
@@ -416,13 +458,21 @@ function JoinMeeting() {
     );
   }
 
-
-
   if (!currentRole && urlRoleInfo?.isInterviewer) {
-    return <RoleSelector onRoleSelect={setCurrentRole} roleInfo={urlRoleInfo} feedbackData={feedbackDatas} />;
+    return (
+      <RoleSelector
+        onRoleSelect={setCurrentRole}
+        roleInfo={urlRoleInfo}
+        feedbackData={feedbackDatas}
+      />
+    );
   }
 
-  if ( urlRoleInfo?.isInterviewer || currentRole === 'interviewer' || currentRole === 'scheduler') {
+  if (
+    urlRoleInfo?.isInterviewer ||
+    currentRole === "interviewer" ||
+    currentRole === "scheduler"
+  ) {
     return (
       <div className="h-screen flex flex-col overflow-hidden">
         <CombinedNavbar />
@@ -432,7 +482,7 @@ function JoinMeeting() {
           feedbackData={feedbackDatas}
           feedbackLoading={feedbackLoading}
           feedbackError={feedbackError}
-          isScheduler={currentRole === 'scheduler'}
+          isScheduler={currentRole === "scheduler"}
           schedulerFeedbackData={schedulerFeedbackData}
         />
       </div>
@@ -448,8 +498,6 @@ function JoinMeeting() {
 
 export default JoinMeeting;
 
-
-
 // import { useLocation, useNavigate } from 'react-router-dom';
 // import axios from 'axios';
 // import Cookies from 'js-cookie';
@@ -462,7 +510,6 @@ export default JoinMeeting;
 // import AuthCookieManager from '../../utils/AuthCookieManager/AuthCookieManager';
 // import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode';
 // import { useFeedbackData } from '../../apiHooks/useFeedbacks';
-
 
 // function JoinMeeting() {
 //   const location = useLocation();
@@ -611,9 +658,6 @@ export default JoinMeeting;
 //     }
 //   };
 
-
-
-
 //   // Function to fetch feedback data
 //   // const fetchFeedbackData = async (roundId, interviewerId) => {
 //   //   if (!roundId) {
@@ -624,7 +668,6 @@ export default JoinMeeting;
 //   //   try {
 //   //     setFeedbackLoading(true);
 //   //     setFeedbackError(null);
-
 
 //   //     // Build URL with query parameters
 //   //     let url = `${config.REACT_APP_API_URL}/feedback/round/${roundId}`;
@@ -669,7 +712,6 @@ export default JoinMeeting;
 //     const interviewerToken = urlParams.get('interviewertoken');
 //     const schedulerToken = urlParams.get('schedulertoken');
 
-
 //     // Parse schedule parameter
 //     const isSchedule = schedule === 'true';
 //     const isCandidate = candidate === 'true';
@@ -686,7 +728,6 @@ export default JoinMeeting;
 //       setPreAuthLoading(false);
 //       return;
 //     }
-
 
 //     // Decrypt meeting data
 //     let decryptedMeeting = null;
@@ -775,7 +816,6 @@ export default JoinMeeting;
 //         if (result) {
 //           console.log('📅 Pre-auth API data:', result);
 
-
 //           // Check meeting expiry
 //           // if (res.data.round && res.data.round.dateTime) {
 //           //   const roundDate = new Date(res.data.round.dateTime);
@@ -804,7 +844,6 @@ export default JoinMeeting;
 
 //     fetchPreAuthDetails();
 
-
 //     // ✅ Pre-Auth API Call
 //     // const fetchPreAuthDetails = async () => {
 //     //   try {
@@ -832,13 +871,7 @@ export default JoinMeeting;
 
 //     // fetchPreAuthDetails();
 
-
-
-
 //   }, [location.search]);
-
-
-
 
 //   // Check authentication on component mount
 //   useEffect(() => {
@@ -853,9 +886,6 @@ export default JoinMeeting;
 //       const isSchedule = schedule === 'true';
 //       const isInterviewer = interviewer === 'true';
 //       const isCandidate = candidate === 'true';
-
-
-
 
 //       // Skip authentication for candidate links
 //       if (isCandidate) {
@@ -874,9 +904,6 @@ export default JoinMeeting;
 //       }
 //     }
 //   }, [preAuthLoading, preAuthPassed]);
-
-
-
 
 //   const {
 //     data: feedbackData,
@@ -916,8 +943,6 @@ export default JoinMeeting;
 //       setFeedbackData(feedbackData);
 //     }
 //   }, [feedbackLoading, feedbackData, decodedData?.interviewRoundId]);
-
-  
 
 //   // Loading state for pre-auth
 //   if (preAuthLoading) {
