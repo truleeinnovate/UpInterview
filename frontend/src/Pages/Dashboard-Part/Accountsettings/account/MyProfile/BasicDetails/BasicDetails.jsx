@@ -46,7 +46,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = nu
     // console.log("ownerId ownerId",ownerId);
 
     // Always call the hook to comply with React rules
-    const { userProfile } = useUserProfile();
+    const { userProfile } = useUserProfile(usersId ? usersId :"");
 
     useEffect(() => {
         // Use external data if provided, otherwise use userProfile from hook

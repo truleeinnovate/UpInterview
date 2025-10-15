@@ -57,7 +57,8 @@ const EditInterviewDetails = ({
 
   // Fetch user profile for "my-profile" context
   const { userProfile } = useUserProfile(
-    from === "my-profile" ? resolvedId : null
+    resolvedId
+    // from === "my-profile" ? resolvedId : null
   );
 
   // Fetch outsource interviewers for "outsource-interviewer" context

@@ -17,7 +17,7 @@ import {
 import { X } from "lucide-react";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../../config";
-import { useRolesQuery } from "../../../../../apiHooks/useRoles.js";
+import { useCreateRole, useRolesQuery, useUpdateRole } from "../../../../../apiHooks/useRoles.js";
 import { usePermissions } from "../../../../../Context/PermissionsContext.js";
 import {
   formatWithSpaces,
@@ -62,7 +62,8 @@ const RoleFormPopup = ({ onSave, onClose }) => {
   // v1.0.4 <----------------------------------------------------------------
   const [loading, setLoading] = useState(false);
   // v1.0.4 ---------------------------------------------------------------->
-
+  const { mutate: createRole, isLoading: isCreating } = useCreateRole();
+  const { mutate: updateRole, isLoading: isUpdating } = useUpdateRole();
   const [formData, setFormData] = useState({
     _id: "",
     label: "",
@@ -701,24 +702,48 @@ const RoleFormPopup = ({ onSave, onClose }) => {
 
         if (editMode) {
           // PATCH the main roles collection
-          const response = await axios.patch(
-            `${config.REACT_APP_API_URL}/roles/${formData._id}`,
-            roleData
+          // const response = await axios.patch(
+          //   `${config.REACT_APP_API_URL}/roles/${formData._id}`,
+          //   roleData
+          // );
+          // console.log("Server response (update):", response.data);
+          // if (response.data && onSave) {
+          //   onSave(response.data);
+          // }
+          updateRole(
+            { roleId: formData._id, roleData },
+            {
+              onSuccess: (data) => {
+                console.log("Server response (update):", data);
+                if (onSave) onSave(data);
+                navigate("/account-settings/roles");
+              },
+              onError: (error) => {
+                console.error("Error updating role:", error);
+              },
+            }
           );
-          console.log("Server response (update):", response.data);
-          if (response.data && onSave) {
-            onSave(response.data);
-          }
         } else {
           // POST to the main roles collection
-          const response = await axios.post(
-            `${config.REACT_APP_API_URL}/roles`,
-            roleData
-          );
-          console.log("Server response (create):", response.data);
-          if (response.data && onSave) {
-            onSave(response.data);
-          }
+          createRole(roleData, {
+            onSuccess: (data) => {
+              console.log("Server response (create):", data);
+              if (onSave) onSave(data);
+              navigate("/account-settings/roles");
+            },
+            onError: (error) => {
+              console.error("Error creating role:", error);
+            },
+          });
+         
+          // const response = await axios.post(
+          //   `${config.REACT_APP_API_URL}/roles`,
+          //   roleData
+          // );
+          // console.log("Server response (create):", response.data);
+          // if (response.data && onSave) {
+          //   onSave(response.data);
+          // }
         }
       } else {
         // <-------------------------------v1.0.1

@@ -81,7 +81,8 @@ const BasicDetailsEditPage = ({
 
   // Fetch user profile for "my-profile" context
   const { userProfile, isLoading, isError, error } = useUserProfile(
-    from === "my-profile" ? resolvedId : null
+    // from === "my-profile" ? resolvedId : null
+    resolvedId
   );
 
   // Fetch outsource interviewers for "outsource-interviewer" context

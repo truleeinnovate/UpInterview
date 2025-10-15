@@ -40,7 +40,7 @@ const AvailabilityUser = ({
   const ownerId = usersId || userId;
 
   // Always call the hooks to comply with React rules
-  const { userProfile } = useUserProfile(ownerId);
+  const { userProfile } = useUserProfile(usersId ? usersId :"");
   
   // Use external data if provided for the availability hook
   const availabilityId = externalData 

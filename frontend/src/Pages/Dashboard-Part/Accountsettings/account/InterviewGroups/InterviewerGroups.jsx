@@ -12,10 +12,16 @@ import { useCustomContext } from "../../../../../Context/Contextfetch";
 import Cookies from "js-cookie";
 import { Outlet, useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import { useGroupsQuery } from "../../../../../apiHooks/useInterviewerGroups";
 
 const InterviewerGroups = () => {
   // <------------------------- v1.0.0
-  const { groups, groupsLoading } = useCustomContext();
+  // const { groups, groupsLoading } = useCustomContext();
+  const { data: groups = [],
+     isLoading: groupsLoading, 
+    error: groupError
+   } = useGroupsQuery();
+
   // v1.0.0 -------------------------->
   const navigate = useNavigate();
   // const [selectedGroup, setSelectedGroup] = useState(null)

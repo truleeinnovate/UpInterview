@@ -194,6 +194,7 @@ const CustomProvider = ({ children }) => {
       setLoading(false);
     }
   }, [tenantId]);
+  
 
   useEffect(() => {
     fetchGroupsData();

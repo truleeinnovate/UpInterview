@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
+import AuthCookieManager from "../../../../../../utils/AuthCookieManager/AuthCookieManager";
 
 const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type, externalData = null }) => {
 
@@ -14,21 +15,13 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type, externalData
 
   const [contactData, setContactData] = useState({});
 
-  const authToken = Cookies.get("authToken");
-  const impersonationToken = Cookies.get("impersonationToken");
-  const tokenPayload = decodeJwt(authToken);
-  const impersonatedTokenPayload = decodeJwt(impersonationToken);
-  let ownerId;
-  if (type === "superAdmin") {
-    ownerId = impersonatedTokenPayload?.impersonatedUserId;
-  } else {
-    ownerId = tokenPayload?.userId;
-    ownerId = usersId;
-  }
+  const ownerId = AuthCookieManager.getCurrentUserId();
+     
 
   // Always call the hook to comply with React rules
-  const { userProfile } = useUserProfile(ownerId);
+  const { userProfile } = useUserProfile(usersId ? usersId :"");
 
+  console.log("userProfile AdvancedDetails", userProfile);
   // console.log("userId AdvancedDetails", userId);
 
   //  useEffect(() => {

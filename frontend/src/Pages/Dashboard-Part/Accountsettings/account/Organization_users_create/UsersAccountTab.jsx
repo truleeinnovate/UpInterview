@@ -36,6 +36,7 @@ import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { config } from "../../../../../config";
 import axios from "axios";
 import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
+import StatusBadge from "../../../../../Components/SuperAdminComponents/common/StatusBadge";
 
 const UsersAccountTab = () => {
   const userType = AuthCookieManager.getUserType();
@@ -251,6 +252,11 @@ const UsersAccountTab = () => {
     navigate(`edit/${user._id}`, { state: { userData: user } });
   };
 
+    const capitalizeFirstLetter = (str) => {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
   // Table Columns Configuration
   const tableColumns = [
     {
@@ -316,12 +322,25 @@ const UsersAccountTab = () => {
       render: (value) => value || "Not Provided",
     },
     { key: "label", header: "Role", render: (value) => value || "Not Found" },
-    {
+     {
       key: "status",
       header: "Status",
-      render: (value) =>
-        value.charAt(0).toUpperCase() + value.slice(1) || "Not Found",
-    },
+      render: (value) => {
+        return value ?  (
+       
+          <StatusBadge status={capitalizeFirstLetter(value)} />
+     
+        ) : (
+          <span className="text-gray-400 text-sm">N/A</span>
+        );  
+      },
+    }
+    // {
+    //   key: "status",
+    //   header: "Status",
+    //   render: (value) =>
+    //     value.charAt(0).toUpperCase() + value.slice(1) || "Not Found",
+    // },
   ];
 
   // Table Actions Configuration
