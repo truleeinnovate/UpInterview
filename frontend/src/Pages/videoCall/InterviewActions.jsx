@@ -1,4 +1,5 @@
 // v.0.0 ---------------------------------------------------------- Ranjith added entire changes made for v.0.0
+// v1.0.1 - Ashok - Improved responsiveness
 
 import React, { useState, useEffect } from "react";
 import {
@@ -19,51 +20,53 @@ import { toast } from "react-toastify";
 import { config } from "../../config";
 import { useInterviews } from "../../apiHooks/useInterviews";
 
-
-
-const InterviewActions = ({ interviewData,isAddMode,decodedData, onActionComplete }) => {
- const { saveInterviewRound } = useInterviews();
+const InterviewActions = ({
+  interviewData,
+  isAddMode,
+  decodedData,
+  onActionComplete,
+}) => {
+  const { saveInterviewRound } = useInterviews();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [modal, setModal] = useState(null);
   const [formData, setFormData] = useState({ reason: "", comments: "" });
 
-  console.log("interviewData InterviewActions ",interviewData);
+  console.log("interviewData InterviewActions ", interviewData);
 
   // Mock interview times for demonstration
- // Replace the mock start/end time with real ones
- const parseInterviewTimes = (interviewData) => {
-  if (!interviewData?.interviewRound?.dateTime) return {};
+  // Replace the mock start/end time with real ones
+  const parseInterviewTimes = (interviewData) => {
+    if (!interviewData?.interviewRound?.dateTime) return {};
 
-  // Example: "17-08-2025 1:32 PM - 07:25 PM"
-  const dateTimeString = interviewData.interviewRound.dateTime;
-  
-  // Split on space to get all parts
-  const parts = dateTimeString.split(" ");
-  
-  // Extract date (first part)
-  const date = parts[0];
-  
-  // Extract start time (second and third parts)
-  const startTime = `${parts[1]} ${parts[2]}`;
-  
-  // Extract end time (fourth and fifth parts)
-  const endTime = `${parts[4]} ${parts[5]}`;
-  
-  const [day, month, year] = date.split("-");
+    // Example: "17-08-2025 1:32 PM - 07:25 PM"
+    const dateTimeString = interviewData.interviewRound.dateTime;
 
-  // Build Date strings
-  const startDateTime = new Date(`${year}-${month}-${day} ${startTime}`);
-  const endDateTime = new Date(`${year}-${month}-${day} ${endTime}`);
+    // Split on space to get all parts
+    const parts = dateTimeString.split(" ");
 
-  return { startDateTime, endDateTime };
-};
+    // Extract date (first part)
+    const date = parts[0];
 
-const { startDateTime, endDateTime } = parseInterviewTimes(interviewData);
+    // Extract start time (second and third parts)
+    const startTime = `${parts[1]} ${parts[2]}`;
 
-// Fallback if parsing fails
-const startTime = startDateTime 
-const endTime =   endDateTime 
+    // Extract end time (fourth and fifth parts)
+    const endTime = `${parts[4]} ${parts[5]}`;
 
+    const [day, month, year] = date.split("-");
+
+    // Build Date strings
+    const startDateTime = new Date(`${year}-${month}-${day} ${startTime}`);
+    const endDateTime = new Date(`${year}-${month}-${day} ${endTime}`);
+
+    return { startDateTime, endDateTime };
+  };
+
+  const { startDateTime, endDateTime } = parseInterviewTimes(interviewData);
+
+  // Fallback if parsing fails
+  const startTime = startDateTime;
+  const endTime = endDateTime;
 
   // Timer updater
   useEffect(() => {
@@ -76,13 +79,10 @@ const endTime =   endDateTime
   // const completionActionEnabled = currentTime >= new Date(endTime.getTime() - 15 * 60000);
   const canCancel = currentTime <= endTime;
   // const canRaiseIssue = currentTime >= startTime && currentTime <= endTime;
-const candidateActionEnabled = startDateTime
-  const completionActionEnabled = startDateTime 
+  const candidateActionEnabled = startDateTime;
+  const completionActionEnabled = startDateTime;
   // const canCancel = currentTime <= endTime;
-  const canRaiseIssue =startTime
-
-
-
+  const canRaiseIssue = startTime;
 
   // Handlers
   // const handleConfirm = (type, extra = {}) => {
@@ -90,7 +90,7 @@ const candidateActionEnabled = startDateTime
   //   setModal(null);
   //   setFormData({ reason: "", comments: "" });
   // };
- 
+
   const handleConfirm = async (type, extra = {}) => {
     try {
       if (type === "completion" || type === "noShow" || type === "cancel") {
@@ -99,20 +99,20 @@ const candidateActionEnabled = startDateTime
         let rejectionReason = null;
         let event = null;
         let eventReason = null;
-        
+
         if (type === "completion") {
-          newStatus = extra.status === "completed" ? "Completed" : "InCompleted";
+          newStatus =
+            extra.status === "completed" ? "Completed" : "InCompleted";
           rejectionReason = extra.comments || null;
         } else if (type === "noShow") {
           newStatus = "NoShow";
           event = "Candidate_NoShow";
-          eventReason = extra.comments 
+          eventReason = extra.comments;
         } else if (type === "cancel") {
           newStatus = "Cancelled";
           rejectionReason = extra.reason || null;
         }
-  
-  
+
         // Prepare the round data for API call
         const roundData = {
           status: newStatus,
@@ -120,49 +120,48 @@ const candidateActionEnabled = startDateTime
           rejectionReason: rejectionReason,
           // NEW: Add event and eventReason for Candidate No-Show
           ...(event && { event }),
-          ...(eventReason && { eventReason })
+          ...(eventReason && { eventReason }),
         };
-  
+
         const payload = {
           interviewId: interviewData?.interviewRound?.interviewId,
           round: { ...roundData },
           roundId: interviewData?.interviewRound?._id,
           isEditing: true,
         };
-  
+
         try {
           // const response = await axios.post(
           //   `${config.REACT_APP_API_URL}/interview/save-round`,
           //   payload
           // );
           const response = await saveInterviewRound(payload);
-          
+
           console.log("Status updated:", response.data);
 
-            // Show success toast based on action type
-        if (type === "completion") {
-          toast.success(`Interview marked as ${newStatus}`, {});
-        } else if (type === "noShow") {
-          toast.success("Candidate marked as no-show", {});
-        } else if (type === "cancel") {
-          toast.success("Interview cancelled successfully", {});
-        }
-          
+          // Show success toast based on action type
+          if (type === "completion") {
+            toast.success(`Interview marked as ${newStatus}`, {});
+          } else if (type === "noShow") {
+            toast.success("Candidate marked as no-show", {});
+          } else if (type === "cancel") {
+            toast.success("Interview cancelled successfully", {});
+          }
+
           // Show success toast based on action type
           // if (type === "completion") {
           //   toast.success(`Interview marked as ${newStatus}`, {});
           // } else if (type === "noShow") {
           //   toast.success("Candidate marked as no-show", {});
           // }
-          
+
           // Update local state after success
           // onActionComplete({ type, timestamp: new Date(), ...extra });
-         
-            // Update local state after success - ADD SAFETY CHECK
-        if (typeof onActionComplete === 'function') {
-          onActionComplete({ type, timestamp: new Date(), ...extra });
-        }
 
+          // Update local state after success - ADD SAFETY CHECK
+          if (typeof onActionComplete === "function") {
+            onActionComplete({ type, timestamp: new Date(), ...extra });
+          }
         } catch (error) {
           console.error("Error updating status:", error);
           toast.error("Failed to update status");
@@ -198,38 +197,36 @@ const candidateActionEnabled = startDateTime
   };
 
   const isCompleted = interviewData?.interviewRound?.status === "completed";
-
-
-
-  const ActionCard = ({ 
-    icon: Icon, 
-    title, 
-    description, 
-    onClick, 
-    disabled, 
+  // v1.0.1 <------------------------------------------------
+  const ActionCard = ({
+    icon: Icon,
+    title,
+    description,
+    onClick,
+    disabled,
     variant = "default",
     timeUntil = null,
-    ready = false
+    ready = false,
   }) => {
     const variants = {
       success: "border-green-200 bg-green-50 hover:bg-green-100",
       warning: "border-yellow-200 bg-yellow-50 hover:bg-yellow-100",
       danger: "border-red-200 bg-red-50 hover:bg-red-100",
-      default: "border-gray-200 bg-white hover:bg-gray-50"
+      default: "border-gray-200 bg-white hover:bg-gray-50",
     };
 
     const iconColors = {
       success: "text-green-600 bg-green-100",
-      warning: "text-yellow-600 bg-yellow-100", 
+      warning: "text-yellow-600 bg-yellow-100",
       danger: "text-red-600 bg-red-100",
-      default: "text-gray-600 bg-gray-100"
+      default: "text-gray-600 bg-gray-100",
     };
 
     return (
       <div
-        className={`relative border-2 rounded-xl p-6 transition-all duration-200 cursor-pointer ${
-          disabled 
-            ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed" 
+        className={`relative border-2 rounded-xl sm:px-4 p-6 transition-all duration-200 cursor-pointer ${
+          disabled
+            ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
             : variants[variant]
         }`}
         onClick={disabled ? undefined : onClick}
@@ -239,20 +236,32 @@ const candidateActionEnabled = startDateTime
             Ready
           </div>
         )}
-        
+
         <div className="flex items-start gap-4">
-          <div className={`p-3 rounded-lg ${disabled ? "bg-gray-200 text-gray-400" : iconColors[variant]}`}>
+          <div
+            className={`p-3 rounded-lg ${
+              disabled ? "bg-gray-200 text-gray-400" : iconColors[variant]
+            }`}
+          >
             <Icon size={24} />
           </div>
-          
+
           <div className="flex-1">
-            <h3 className={`font-semibold mb-2 ${disabled ? "text-gray-400" : "text-gray-800"}`}>
+            <h3
+              className={`font-semibold mb-2 ${
+                disabled ? "text-gray-400" : "text-gray-800"
+              }`}
+            >
               {title}
             </h3>
-            <p className={`text-sm mb-3 ${disabled ? "text-gray-400" : "text-gray-600"}`}>
+            <p
+              className={`text-sm mb-3 ${
+                disabled ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               {description}
             </p>
-            
+
             {/* {timeUntil && (
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <Clock size={12} />
@@ -264,6 +273,7 @@ const candidateActionEnabled = startDateTime
       </div>
     );
   };
+  // v1.0.1 ------------------------------------------------>
 
   const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
@@ -280,20 +290,21 @@ const candidateActionEnabled = startDateTime
               <X size={20} />
             </button>
           </div>
-          <div className="p-6">
-            {children}
-          </div>
+          <div className="p-6">{children}</div>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="">
+    // v1.0.1 <----------------------------------------------------------------------------
+    <div className="mb-10">
       {/* Status Card */}
-      <div className="bg-gradient-to-r from-[#217989] to-[#1a616e] rounded-xl p-6 text-white">
+      <div className="mb-4 bg-gradient-to-r from-custom-blue to-custom-blue/90 rounded-xl p-6 text-white">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Interview Status</h2>
+          <h2 className="sm:text-lg md:text-lg lg:text-lg xl:text-xl 2xl:text-xl font-bold">
+            Interview Status
+          </h2>
           {/* <div className="flex items-center gap-2 bg-white bg-opacity-20 rounded-lg px-3 py-1">
             <Clock size={16} />
             <span className="text-sm font-medium">
@@ -301,24 +312,35 @@ const candidateActionEnabled = startDateTime
             </span>
           </div> */}
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 text-sm">
           <div>
             <p className="text-white text-opacity-80">Start Time</p>
-            <p className="font-semibold">{startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            <p className="font-semibold">
+              {startTime.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
           </div>
-         
+
           <div>
             <p className="text-white text-opacity-80">Status</p>
-            <p className="font-semibold">{interviewData?.interviewRound?.status === "InProgress" ? "In Progress" : interviewData?.interviewRound?.status}</p>
+            <p className="font-semibold">
+              {interviewData?.interviewRound?.status === "InProgress"
+                ? "In Progress"
+                : interviewData?.interviewRound?.status}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Actions Grid */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-800">Available Actions</h3>
-        
+        <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
+          Available Actions
+        </h3>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
           {/* Candidate Participation */}
           <ActionCard
@@ -348,7 +370,7 @@ const candidateActionEnabled = startDateTime
             title="Mark Completed"
             description="Mark the interview as successfully completed"
             onClick={() => openModal("completion", "completed")}
-            disabled={isCompleted ||!completionActionEnabled}
+            disabled={isCompleted || !completionActionEnabled}
             variant="success"
             // timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
             ready={completionActionEnabled}
@@ -401,18 +423,21 @@ const candidateActionEnabled = startDateTime
               <span className="font-medium">No-Show Confirmation</span>
             </div>
             <p className="text-red-700 text-sm mt-2">
-              This will mark the candidate as a no-show and end the interview session.
+              This will mark the candidate as a no-show and end the interview
+              session.
             </p>
           </div>
-          
+
           <textarea
             className="w-full border border-gray-300 rounded-lg p-3 text-sm"
             placeholder="Add any additional comments about the no-show..."
             value={formData.comments}
-            onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, comments: e.target.value })
+            }
             rows={3}
           />
-          
+
           <div className="flex justify-end gap-3">
             <button
               onClick={closeModal}
@@ -433,29 +458,48 @@ const candidateActionEnabled = startDateTime
       <Modal
         isOpen={modal?.type === "completion"}
         onClose={closeModal}
-        title={modal?.status === "completed" ? "Confirm Interview Completion" : "Mark Interview Incomplete"}
+        title={
+          modal?.status === "completed"
+            ? "Confirm Interview Completion"
+            : "Mark Interview Incomplete"
+        }
       >
         <div className="space-y-4">
-          <div className={`border rounded-lg p-4 ${
-            modal?.status === "completed" 
-              ? "bg-green-50 border-green-200" 
-              : "bg-yellow-50 border-yellow-200"
-          }`}>
-            <div className={`flex items-center gap-2 ${
-              modal?.status === "completed" ? "text-green-800" : "text-yellow-800"
-            }`}>
-              {modal?.status === "completed" ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+          <div
+            className={`border rounded-lg p-4 ${
+              modal?.status === "completed"
+                ? "bg-green-50 border-green-200"
+                : "bg-yellow-50 border-yellow-200"
+            }`}
+          >
+            <div
+              className={`flex items-center gap-2 ${
+                modal?.status === "completed"
+                  ? "text-green-800"
+                  : "text-yellow-800"
+              }`}
+            >
+              {modal?.status === "completed" ? (
+                <CheckCircle size={16} />
+              ) : (
+                <AlertTriangle size={16} />
+              )}
               <span className="font-medium">
-                {modal?.status === "completed" ? "Interview Completed" : "Interview Incomplete"}
+                {modal?.status === "completed"
+                  ? "Interview Completed"
+                  : "Interview Incomplete"}
               </span>
             </div>
-            <p className={`text-sm mt-2 ${
-              modal?.status === "completed" ? "text-green-700" : "text-yellow-700"
-            }`}>
-              {modal?.status === "completed" 
+            <p
+              className={`text-sm mt-2 ${
+                modal?.status === "completed"
+                  ? "text-green-700"
+                  : "text-yellow-700"
+              }`}
+            >
+              {modal?.status === "completed"
                 ? "This will mark the interview as successfully completed."
-                : "This will mark the interview as incomplete due to issues."
-              }
+                : "This will mark the interview as incomplete due to issues."}
             </p>
           </div>
           {/* {modal?.status === "completed" ? "" :
@@ -467,7 +511,7 @@ const candidateActionEnabled = startDateTime
             rows={3}
           />
 } */}
-          
+
           <div className="flex justify-end gap-3">
             <button
               onClick={closeModal}
@@ -476,27 +520,31 @@ const candidateActionEnabled = startDateTime
               Cancel
             </button>
             <button
-              onClick={() => handleConfirm("completion", { status: modal.status, ...formData })}
+              onClick={() =>
+                handleConfirm("completion", {
+                  status: modal.status,
+                  ...formData,
+                })
+              }
               className={`px-4 py-2 rounded-lg text-white transition-colors ${
-                modal?.status === "completed" 
-                  ? "bg-green-600 hover:bg-green-700" 
+                modal?.status === "completed"
+                  ? "bg-green-600 hover:bg-green-700"
                   : "bg-yellow-600 hover:bg-yellow-700"
               }`}
             >
-              Confirm {modal?.status === "completed" ? "Completion" : "Incomplete"}
+              Confirm{" "}
+              {modal?.status === "completed" ? "Completion" : "Incomplete"}
             </button>
           </div>
         </div>
       </Modal>
 
-      {
-    modal?.type === "techIssue" && (
-      <SupportForm  
-      onClose={closeModal}
-      FeedbackIssueType="FeedbackInterviewTechIssue"
-      />
-    )
-   }
+      {modal?.type === "techIssue" && (
+        <SupportForm
+          onClose={closeModal}
+          FeedbackIssueType="FeedbackInterviewTechIssue"
+        />
+      )}
 
       {/* <Modal
         isOpen={modal?.type === "techIssue"}
@@ -564,11 +612,10 @@ const candidateActionEnabled = startDateTime
         </div>
       </Modal> */}
 
+      {/* // cancellation modal */}
 
-   {/* // cancellation modal */}
-
-   {/* SupportForm */}
-   {/* {
+      {/* SupportForm */}
+      {/* {
     modal?.type === "cancel" && (
       <SupportForm  
       onClose={closeModal}
@@ -576,9 +623,7 @@ const candidateActionEnabled = startDateTime
       />
     )
    } */}
-      
-  
-      
+
       <Modal
         isOpen={modal?.type === "cancel"}
         onClose={closeModal}
@@ -591,10 +636,11 @@ const candidateActionEnabled = startDateTime
               <span className="font-medium">Cancel Interview</span>
             </div>
             <p className="text-red-700 text-sm mt-2">
-              This will cancel the interview and notify all parties. This action cannot be undone.
+              This will cancel the interview and notify all parties. This action
+              cannot be undone.
             </p>
           </div>
-          
+
           {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Cancellation Reason <span className="text-red-500">*</span>
@@ -613,7 +659,7 @@ const candidateActionEnabled = startDateTime
               <option value="other">Other</option>
             </select>
           </div> */}
-          
+
           {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Additional Comments
@@ -626,7 +672,7 @@ const candidateActionEnabled = startDateTime
               rows={3}
             />
           </div> */}
-          
+
           <div className="flex justify-end gap-3">
             <button
               onClick={closeModal}
@@ -644,8 +690,8 @@ const candidateActionEnabled = startDateTime
           </div>
         </div>
       </Modal>
-
     </div>
+    // v1.0.1 ---------------------------------------------------------------------------->
   );
 };
 

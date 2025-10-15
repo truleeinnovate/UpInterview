@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - Fixed responsiveness issues
 
 import React, { useState } from "react";
 
@@ -65,7 +66,7 @@ const CandidateMiniTab = ({ selectedData, isAddMode, decodedData }) => {
           <div className="flex justify-end items-center gap-3">
             <button
               onClick={() => window.open(decodedData.meetLink, "_blank")}
-              className="  bg-[#1a616e] text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+              className="text-sm bg-custom-blue hover:bg-custom-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
             >
               <Video className="w-4 h-4" />
               Start Meeting

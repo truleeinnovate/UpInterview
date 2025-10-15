@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  assessments to assessment templates
 // v1.0.1  -  Ashok   -  updated loading view
+// v1.0.2  -  Ashok   -  fixed zoom in effect
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -92,6 +93,7 @@ const AssessmentKanban = ({
   if (loading) {
     return (
       // v1.0.1 <----------------------------------------------------------------------------
+      // v1.0.2 <----------------------------------------------------------------------------
       <motion.div
         className="w-full h-[calc(100vh-12rem)] rounded-xl p-6 overflow-x-auto"
         initial={{ opacity: 0 }}
@@ -113,10 +115,10 @@ const AssessmentKanban = ({
           {[...Array(2)].map((_, colIndex) => (
             <motion.div
               key={colIndex}
-              className="sm:w-full w-1/2 bg-gray-50 rounded-xl p-4 shadow animate-pulse"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: colIndex * 0.1 }}
+              className="sm:w-full w-1/2 bg-gray-50 rounded-xl p-4 shadow"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
             >
               {/* Column header */}
               <div className="h-6 w-3/4 bg-gray-200 rounded shimmer mb-4"></div>
@@ -161,6 +163,7 @@ const AssessmentKanban = ({
           ))}
         </div>
       </motion.div>
+      // v1.0.2 ---------------------------------------------------------------------------->
       // v1.0.1 ---------------------------------------------------------------------------->
     );
   }
@@ -194,9 +197,9 @@ const AssessmentKanban = ({
             <motion.div
               key={columnId}
               className="sm:w-full w-1/2 bg-gray-50 rounded-xl p-4 shadow"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: colIndex * 0.1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
             >
               <h2 className="text-xl font-semibold mb-4 text-gray-900">
                 {column.title} ({column.items.length})
@@ -221,9 +224,9 @@ const AssessmentKanban = ({
                             {...provided.dragHandleProps}
                             className="bg-white rounded-lg shadow p-4 space-y-3 relative group border border-gray-200"
                             whileHover={{ y: -5 }}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2, delay: index * 0.05 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
                           >
                             <motion.div
                               className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity"

@@ -1,5 +1,6 @@
 //<----v1.0.0---Venkatesh-----disable like and dislike in view mode
 // v1.0.1 - Ashok - Improved responsiveness
+// v1.0.2 - Ashok - Fixed responsiveness issues
 
 /* eslint-disable no-lone-blocks */
 import React, { useState, useRef } from "react";
@@ -380,6 +381,7 @@ const SchedulerSectionComponent = ({
   };
 
   // Define DisLikeSection component
+  // v1.0.2 <---------------------------------------------------------------
   const DisLikeSection = React.memo(({ each }) => {
     return (
       <>
@@ -400,13 +402,14 @@ const SchedulerSectionComponent = ({
                     name={`dislike-${each._id}`}
                     value={option.value}
                     checked={each.whyDislike === option.value}
+                    className="accent-custom-blue"
                     onChange={(e) =>
                       onChangeDislikeRadioInput(each._id, e.target.value)
                     }
                   />
                   <label
                     htmlFor={`dislike-${each._id}-${option.value}`}
-                    className="cursor-pointer"
+                    className="text-sm cursor-pointer"
                   >
                     {option.label}
                   </label>
@@ -422,6 +425,7 @@ const SchedulerSectionComponent = ({
       </>
     );
   });
+  // v1.0.2 --------------------------------------------------------------->
 
   // Define SharePopupSection component
   const SharePopupSection = () => {
@@ -444,15 +448,21 @@ const SchedulerSectionComponent = ({
   };
 
   // Define RadioGroupInput component
+  // v1.0.2 <-----------------------------------------------------------------------
   const RadioGroupInput = React.memo(({ each }) => {
     return (
-      <div className="flex rounded-md mt-2">
-        <p className="w-[200px] font-bold text-gray-700">
-          Response Type{" "}
-          {each.mandatory === "true" && <span className="text-[red]">*</span>}
+      <div className="flex sm:flex-col md:flex-col lg:flex-col rounded-md mt-2">
+        <p className="sm:text-sm md:text-sm w-[200px] font-bold text-gray-700 sm:mb-2 md:mb-2">
+          Response Type
+          {each.mandatory === "true" && (
+            <span className="text-[red] ml-1">*</span>
+          )}
         </p>
         {isEditMode || isAddMode ? (
-          <div className={`w-full flex gap-x-2 gap-y-2 `}>
+          // <div className={`w-full flex gap-x-2 gap-y-2`}>
+          <div
+            className={`w-full grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3`}
+          >
             {["Not Answered", "Partially Answered", "Fully Answered"].map(
               (option) => (
                 <span key={option} className="flex items-center gap-2">
@@ -465,11 +475,11 @@ const SchedulerSectionComponent = ({
                     onChange={(e) =>
                       onChangeRadioInput(each._id, e.target.value)
                     }
-                    className="whitespace-nowrap"
+                    className="accent-custom-blue whitespace-nowrap text-sm"
                   />
                   <label
                     htmlFor={`isAnswered-${each._id}-${option}`}
-                    className="cursor-pointer"
+                    className="text-sm cursor-pointer"
                   >
                     {option}
                   </label>
@@ -485,9 +495,11 @@ const SchedulerSectionComponent = ({
       </div>
     );
   });
+  // v1.0.2 ----------------------------------------------------------------------->
 
   // Return JSX
   return (
+    // v1.0.2 <------------------------------------------------------------------------
     <div className="space-y-4">
       {schedulerQuestionsData.length > 0 ? (
         schedulerQuestionsData.map((question) => (
@@ -496,7 +508,7 @@ const SchedulerSectionComponent = ({
             className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2"
           >
             <div className="flex items-start justify-between mb-3">
-              <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
+              <span className="px-3 py-1 bg-custom-blue/10 text-custom-blue rounded-full text-sm font-medium">
                 {question.snapshot.technology &&
                 question.snapshot.technology.length > 0
                   ? question.snapshot.technology[0]
@@ -506,7 +518,7 @@ const SchedulerSectionComponent = ({
                 {question.snapshot.difficultyLevel}
               </span>
             </div>
-            <h3 className="font-semibold text-gray-800 mb-2">
+            <h3 className="sm:text-sm md:text-sm font-semibold text-gray-800 mb-2">
               {question.snapshot.questionText}
             </h3>
             {question.snapshot.correctAnswer && (
@@ -526,12 +538,12 @@ const SchedulerSectionComponent = ({
                 </span>
               </div>
             )}
-            <div className="flex items-center justify-between gap-2 mt-2">
+            <div className="flex sm:flex-col sm:items-start items-center justify-between gap-2 mt-2">
               <RadioGroupInput each={question} />
               <div className="flex items-center gap-4 mt-2">
                 {(isEditMode || isAddMode) && (
                   <button
-                    className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
+                    className={`text-sm py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
                     // className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
                     // onClick={() => onClickAddNote(question._id)}
                     onClick={() =>
@@ -573,10 +585,10 @@ const SchedulerSectionComponent = ({
 
             {question.notesBool && (
               <div>
-                <div className="flex justify-start mt-4">
+                <div className="flex flex-col mt-4">
                   <label
                     htmlFor={`note-input-${question._id}`}
-                    className="w-[180px] font-bold text-gray-700"
+                    className="sm:text-sm md:text-sm mb-2 w-[180px] font-bold text-gray-700"
                   >
                     Note
                   </label>
@@ -640,6 +652,7 @@ const SchedulerSectionComponent = ({
         // v1.0.1 -------------------------------------------------------------------------------->
       )}
     </div>
+    // v1.0.2 ------------------------------------------------------------------------>
   );
 };
 

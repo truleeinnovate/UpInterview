@@ -2,6 +2,7 @@
 //<---v1.0.1-----Venkatesh----solved edit mode issues
 //<---v1.0.2-----Ranjith----solved feedback issues
 // v1.0.3 - Ashok - Improved responsiveness
+// v1.0.4 - Ashok - fixed responsiveness issues
 
 import React, {
   useState,
@@ -1079,18 +1080,21 @@ const FeedbackForm = ({
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
-              'Content-Type': 'application/json'
-            }
+              "Content-Type": "application/json",
+            },
           }
         );
 
         if (!validationResponse.data.success) {
-          console.log("❌ Backend validation failed", validationResponse.data.errors);
+          console.log(
+            "❌ Backend validation failed",
+            validationResponse.data.errors
+          );
           // Update error state with backend errors
           if (validationResponse.data.errors) {
-            setErrors(prevErrors => ({
+            setErrors((prevErrors) => ({
               ...prevErrors,
-              ...validationResponse.data.errors
+              ...validationResponse.data.errors,
             }));
           }
           alert("Validation failed. Please check the form.");
@@ -1098,7 +1102,10 @@ const FeedbackForm = ({
         }
       } catch (validationError) {
         // If backend validation fails, continue with frontend validation only
-        console.warn("Backend validation unavailable, proceeding with frontend validation only", validationError);
+        console.warn(
+          "Backend validation unavailable, proceeding with frontend validation only",
+          validationError
+        );
       }
 
       const updatedFeedbackData = {
@@ -1319,7 +1326,7 @@ const FeedbackForm = ({
           onSuccess: (data) => {
             if (data.success) {
               notify.success("Feedback saved as draft!");
-                navigate("/feedback");
+              navigate("/feedback");
             } else {
               notify.error("Failed to save feedback as draft: " + data.message);
             }
@@ -1385,13 +1392,14 @@ const FeedbackForm = ({
   };
 
   return (
+    // v1.0.4 <----------------------------------------------------------------------
     <>
       {isAddMode === true && (
-        <div className="  right-4 z-40  pb-3 top-5">
+        <div className="right-4 z-40  pb-3 top-5">
           <div className="flex justify-end items-center gap-3">
             <button
               onClick={() => window.open(decodedData.meetLink, "_blank")}
-              className="  bg-[#1a616e] text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+              className="text-sm bg-custom-blue hover:bg-custom-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
             >
               <Video className="w-4 h-4" />
               Start Meeting
@@ -1401,14 +1409,14 @@ const FeedbackForm = ({
       )}
 
       {/* v1.0.3 <--------------------------------------------------------- */}
-      <div className="bg-white rounded-lg sm:px-3 px-6 py-6 shadow-sm">
+      <div className="bg-white rounded-lg sm:px-3 px-6 py-6 shadow-sm pb-20 mb-8">
         {/* v1.0.3 ---------------------------------------------------------> */}
         <div className="flex items-center mb-6">
           <FileText
             className="h-5 w-5 mr-2"
             style={{ color: "rgb(33, 121, 137)" }}
           />
-          <h3 className="text-lg font-medium text-gray-900">
+          <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
             Interview Feedback
           </h3>
         </div>
@@ -1473,6 +1481,7 @@ const FeedbackForm = ({
                     borderColor: "rgb(33, 121, 137)",
                     color: "rgb(33, 121, 137)",
                   }}
+                  className="bg-custom-blue text-sm border-custom-blue"
                 >
                   <Plus className="h-3 w-3 mr-1" />
                   Add Skill
@@ -1567,13 +1576,14 @@ const FeedbackForm = ({
                 <div></div>
               ) : (
                 <button
-                  className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
+                  className="text-sm flex items-center gap-2 sm:px-3 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 font-medium"
                   onClick={openQuestionBank}
                   title="Add Question from Question Bank"
                   // disabled={decodedData?.schedule}
                 >
                   <FaPlus className="text-sm" />
-                  <span>Add Question</span>
+                  <span>Add</span>
+                  <span className="sm:hidden inline">Question</span>
                 </button>
               )}
             </div>
@@ -1911,8 +1921,7 @@ const FeedbackForm = ({
               </Button>
               <Button
                 onClick={submitFeedback}
-                style={{ backgroundColor: "rgb(33, 121, 137)" }}
-                className="text-white hover:opacity-90"
+                className="text-sm bg-custom-blue text-white hover:bg-custom-blue/90"
                 // disabled={decodedData.schedule}
               >
                 Submit Feedback
@@ -1924,11 +1933,11 @@ const FeedbackForm = ({
         {/* QuestionBank Modal */}
         {isQuestionBankOpen && (
           <div
-            className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+            className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center min-h-screen z-50"
             onClick={() => setIsQuestionBankOpen(false)}
           >
             <div
-              className="bg-white rounded-md w-[95%] h-[90%]"
+              className="bg-white rounded-md w-[96%] max-h-[90vh] overflow-y-auto sm:px-2  px-4 py-4"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="py-3 px-4 flex items-center justify-between">
@@ -1960,6 +1969,7 @@ const FeedbackForm = ({
         )}
       </div>
     </>
+    // v1.0.4 ---------------------------------------------------------------------->
   );
 };
 

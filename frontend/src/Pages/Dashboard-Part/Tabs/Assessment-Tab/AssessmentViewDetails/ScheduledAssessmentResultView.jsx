@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  displaying more fileds in result
 // v1.0.1  -  Ashok   -  changed manImage (man.png) url from local to cloud storage url
 // v1.0.2  -  Ashok   -  Improved responsiveness
+// v1.0.3  -  Ashok   -  Fixed responsiveness issues
 
 import { format } from "date-fns";
 // import manImage from "../../../Images/man.png";
@@ -85,15 +86,15 @@ function AssessmentResultView({
       {/* v1.0.2 ------------------------------------------------------------> */}
       {/* Back Button */}
       {mode !== "interviewMode" && (
-      <div className={`${isFullscreen ? "mb-2" : "mb-4"} flex items-center`}>
-        <button
-          onClick={onBack}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
-        >
-          <IoIosArrowBack className="mr-2 h-5 w-5" />
-          Back to Results
-        </button>
-      </div>
+        <div className={`${isFullscreen ? "mb-2" : "mb-4"} flex items-center`}>
+          <button
+            onClick={onBack}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+          >
+            <IoIosArrowBack className="mr-2 h-5 w-5" />
+            Back to Results
+          </button>
+        </div>
       )}
 
       {/* Main Content */}
@@ -259,17 +260,18 @@ function AssessmentResultView({
 
         {/* Right Panel - Question Details */}
         {/* v1.0.2 <--------------------------------------------------------------- */}
+        {/* v1.0.3 <------------------------------------------------------------------------- */}
         <div
-          className={`${
+          className={`max-h-[100vh-160px] ${
             isFullscreen ? "sm:w-full md:w-full w-2/3" : "w-full"
-          } bg-white rounded-lg shadow-sm border border-gray-200 flex-1 h-fit`}
+          } bg-white rounded-lg shadow-sm border border-gray-200 flex-1`}
         >
           {/* v1.0.2 ---------------------------------------------------------------> */}
           <div className="p-4 border-b border-gray-200">
             <h3 className="font-medium text-gray-800">Question Responses</h3>
           </div>
 
-          <div className="divide-y divide-gray-200 max-h-[calc(100vh-250px)] overflow-y-auto">
+          <div className="divide-y divide-gray-200 max-h-[calc(100vh-116px)] overflow-y-auto">
             {assessmentQuestions?.sections?.map((section, index) => {
               const candidateSection = candidate.sections.find(
                 (candSec) => candSec.SectionName === section.sectionName
@@ -358,7 +360,7 @@ function AssessmentResultView({
                                     <p className="text-xs text-gray-500 mb-1">
                                       Correct Answer
                                     </p>
-                                    <p className="font-medium">
+                                    <p className="font-medium break-words whitespace-pre-wrap">
                                       {question.snapshot?.correctAnswer ||
                                         "N/A"}
                                     </p>
@@ -368,7 +370,7 @@ function AssessmentResultView({
                                       Candidate's Answer
                                     </p>
                                     <p
-                                      className={`font-medium ${
+                                      className={`font-medium break-words whitespace-pre-wrap ${
                                         isCorrect === false
                                           ? "text-red-600"
                                           : isCorrect
@@ -407,6 +409,7 @@ function AssessmentResultView({
             })}
           </div>
         </div>
+        {/* v1.0.3 -------------------------------------------------------------------------> */}
       </div>
     </div>
   );
