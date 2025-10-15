@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {  User, MessageSquare, FileText } from 'lucide-react';
 
 // import CandidateDetails from './CandidateDetails';
@@ -16,11 +16,37 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
   console.log("selectedCandidate",selectedCandidate,isScheduler,feedbackData);
   
   // Question Bank State Management
-  const initialQuestions = feedbackData?.questionFeedback;
-const [interviewerSectionData, setInterviewerSectionData] = useState(
-  Array.isArray(initialQuestions) ? [...initialQuestions] : []
-);
-console.log("interviewerSectionData",initialQuestions);
+  const initialQuestions = feedbackData?.questionFeedback || [];
+// const [interviewerSectionData, setInterviewerSectionData] = useState(
+//   Array.isArray(initialQuestions) ? [...initialQuestions] : []
+// );
+
+const [interviewerSectionData, setInterviewerSectionData] = useState(() => {
+  if (!feedbackData?.questionFeedback) return [];
+  
+  return feedbackData.questionFeedback.map(q => {
+    // Map backend answer types to UI values
+    const mapAnswerType = (type) => {
+      if (type === "correct") return "Fully Answered";
+      if (type === "partial") return "Partially Answered";
+      if (type === "incorrect" || type === "not answered") return "Not Answered";
+      return "Not Answered";
+    };
+
+    return {
+      ...q,
+      questionId: q.questionId || q._id,
+      isAnswered: mapAnswerType(q.candidateAnswer?.answerType),
+      isLiked: q.interviewerFeedback?.liked || "",
+      whyDislike: q.interviewerFeedback?.dislikeReason || "",
+      note: q.interviewerFeedback?.note || "",
+      notesBool: !!q.interviewerFeedback?.note,
+      // Preserve original data for reference
+      originalData: q
+    };
+  });
+});
+console.log("interviewerSectionData",interviewerSectionData);
 
   // const [interviewerSectionData, setInterviewerSectionData] = useState( [...selectedCandidate.interviewData?.questionFeedback]);
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
@@ -46,8 +72,36 @@ console.log("interviewerSectionData",initialQuestions);
 console.log("mergedQuestions",mergedQuestions);
 
 
-  // Preselected Questions Responses State Management
-  const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] = useState([]);
+  // // Preselected Questions Responses State Management
+  // const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] = useState([]);
+
+// Properly initialize preselected questions with full question data and responses
+const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] = useState(() => {
+  const preselectedQuestions = feedbackData?.interviewQuestions?.preselectedQuestions || [];
+  console.log("🔄 Initializing preselected questions:", preselectedQuestions);
+  
+  return preselectedQuestions.map(question => {
+    // Find existing feedback for this question
+    const existingFeedback = feedbackData?.questionFeedback?.find(
+      f => f.questionId === (question.questionId || question._id)
+    );
+    
+    return {
+      // Include the full question data
+      ...question,
+      // Response data with proper defaults
+      isAnswered: existingFeedback?.candidateAnswer?.answerType 
+        ? (existingFeedback.candidateAnswer.answerType === "correct" ? "Fully Answered" :
+           existingFeedback.candidateAnswer.answerType === "partial" ? "Partially Answered" : "Not Answered")
+        : "Not Answered",
+      isLiked: existingFeedback?.interviewerFeedback?.liked || "",
+      whyDislike: existingFeedback?.interviewerFeedback?.dislikeReason || "",
+      note: existingFeedback?.interviewerFeedback?.note || "",
+      notesBool: !!existingFeedback?.interviewerFeedback?.note,
+      answer: existingFeedback?.candidateAnswer?.submittedAnswer || ""
+    };
+  });
+});
 
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
@@ -154,6 +208,54 @@ console.log("mergedQuestions",mergedQuestions);
       }
     });
   };
+
+
+  // Enhanced handler to update both response data and question data
+const enhancedHandlePreselectedQuestionResponse = useCallback((questionId, updates) => {
+  console.log("🔄 Enhanced handler called with full question data:", { questionId, updates });
+  
+  setPreselectedQuestionsResponses(prev => {
+    const existingIndex = prev.findIndex(response => 
+      response.questionId === questionId || response.id === questionId || response._id === questionId
+    );
+    
+    let newResponses;
+    if (existingIndex >= 0) {
+      // Update existing response while preserving question data
+      newResponses = prev.map((response, index) => 
+        index === existingIndex 
+          ? { 
+              ...response, // Preserve existing question data
+              ...updates   // Update response fields
+            }
+          : response
+      );
+    } else {
+      // This shouldn't happen often, but handle it by finding the question data
+      const preselectedQuestions = feedbackData?.interviewQuestions?.preselectedQuestions || [];
+      const questionData = preselectedQuestions.find(q => 
+        q.questionId === questionId || q._id === questionId
+      );
+      
+      newResponses = [
+        ...prev, 
+        { 
+          ...questionData, // Include full question data
+          questionId: questionId,
+          ...updates 
+        }
+      ];
+    }
+    
+    console.log("📝 Updated preselectedQuestionsResponses:", newResponses);
+    return newResponses;
+  });
+  
+  // Also call the original handler if it exists
+  if (handlePreselectedQuestionResponse) {
+    handlePreselectedQuestionResponse(questionId, updates);
+  }
+}, [setPreselectedQuestionsResponses, handlePreselectedQuestionResponse, feedbackData]);
 
   const tabs = [
     { id: 'candidate', label: 'Candidate Details', icon: User },

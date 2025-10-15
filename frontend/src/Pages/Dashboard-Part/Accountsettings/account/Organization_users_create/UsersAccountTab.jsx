@@ -421,21 +421,21 @@ const UsersAccountTab = () => {
               <Header
                 title={userType === "superAdmin" ? "Super Admins" : "Users"}
                 onAddClick={() => {
-                  if (dataSource.length >= currentPlan.maxUsers) {
-                    toast(
-                      "Please upgrade your plan or deactivate existing users to add more.",
-                      {
-                        icon: "⚠️",
-                        style: {
-                          background: "#fff3cd",
-                          color: "#856404",
-                          border: "1px solid #ffeeba",
-                        },
-                      }
-                    );
-                  } else {
+                  // if (dataSource.length >= currentPlan.maxUsers) {
+                  //   toast(
+                  //     "Please upgrade your plan or deactivate existing users to add more.",
+                  //     {
+                  //       icon: "⚠️",
+                  //       style: {
+                  //         background: "#fff3cd",
+                  //         color: "#856404",
+                  //         border: "1px solid #ffeeba",
+                  //       },
+                  //     }
+                  //   );
+                  // } else {
                     navigate("new");
-                  }
+                  // }
                 }}
                 addButtonText="Add User"
                 canCreate={
