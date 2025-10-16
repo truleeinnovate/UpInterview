@@ -160,7 +160,7 @@ async function createInterviewRoundScheduledNotification(round) {
       ownerId: String(interview.ownerId),
       tenantId: String(interview.tenantId),
       title: 'Interview Round Scheduled',
-      message: `Round ${round.sequence || 'undefined'} scheduled for ${candidateName} - ${positionTitle} on ${scheduledDate} with ${interviewerNames}`,
+      message: `Round ${round.sequence || 'undefined'} scheduled for ${candidateName} - ${positionTitle} on ${scheduledDate}`,
       type: 'system',
       category: 'interview_round_scheduled',
       unread: true,

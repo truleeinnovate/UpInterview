@@ -142,35 +142,35 @@ const createMaster = async (req, res) => {
       result = await Model.insertMany(bulkData, { ordered: false });
 
       // Feed data for bulk creation
-      res.locals.feedData = {
-        feedType: "bulk_create",
-        action: {
-          name: "master_bulk_created",
-          description: `${result.length} ${type} records created via bulk upload`,
-        },
-        ownerId: req.body[0]?.ownerId || null,
-        parentId: null,
-        parentObject: "MasterData",
-        metadata: {
-          type: type,
-          count: result.length,
-          isBulk: true,
-        },
-        severity: res.statusCode >= 500 ? "high" : "low",
-        fieldMessage: [
-          {
-            fieldName: "bulk_upload",
-            message: `Bulk upload of ${result.length} ${type} records completed successfully`,
-          },
-        ],
-        history: [
-          {
-            fieldName: "bulk_creation",
-            oldValue: null,
-            newValue: `${result.length} ${type} records created`,
-          },
-        ],
-      };
+      // res.locals.feedData = {
+      //   feedType: "bulk_create",
+      //   action: {
+      //     name: "master_bulk_created",
+      //     description: `${result.length} ${type} records created via bulk upload`,
+      //   },
+      //   ownerId: req.body[0]?.ownerId || null,
+      //   parentId: null,
+      //   parentObject: "MasterData",
+      //   metadata: {
+      //     type: type,
+      //     count: result.length,
+      //     isBulk: true,
+      //   },
+      //   severity: res.statusCode >= 500 ? "high" : "low",
+      //   fieldMessage: [
+      //     {
+      //       fieldName: "bulk_upload",
+      //       message: `Bulk upload of ${result.length} ${type} records completed successfully`,
+      //     },
+      //   ],
+      //   history: [
+      //     {
+      //       fieldName: "bulk_creation",
+      //       oldValue: null,
+      //       newValue: `${result.length} ${type} records created`,
+      //     },
+      //   ],
+      // };
     } else {
       // Single insert
       const data = {
@@ -183,19 +183,19 @@ const createMaster = async (req, res) => {
       result = await newDoc.save();
 
       // Feed data for single creation
-      res.locals.feedData = {
-        feedType: "info",
-        action: {
-          name: `${type}_created`,
-          description: `${type} was created`,
-        },
-        ownerId: req.body?.ownerId || null,
-        parentId: result._id,
-        parentObject: "MasterData",
-        metadata: data,
-        severity: res.statusCode >= 500 ? "high" : "low",
-        message: `${type} was created successfully`,
-      };
+      // res.locals.feedData = {
+      //   feedType: "info",
+      //   action: {
+      //     name: `${type}_created`,
+      //     description: `${type} was created`,
+      //   },
+      //   ownerId: req.body?.ownerId || null,
+      //   parentId: result._id,
+      //   parentObject: "MasterData",
+      //   metadata: data,
+      //   severity: res.statusCode >= 500 ? "high" : "low",
+      //   message: `${type} was created successfully`,
+      // };
     }
 
     res.status(201).json(result);
