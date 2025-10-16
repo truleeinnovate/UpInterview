@@ -2,14 +2,20 @@ const mongoose = require('mongoose');
 
 const OutsourceInterviewerSchema = new mongoose.Schema({
     interviewerNo: { type: String, unique: true }, // Auto-generated unique number
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users',},
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', },
     contactId: { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts', required: true },
 
-    status: { type: String, enum: ["New",
-        "Under Review",
-        "Approved",
-        "Rejected",
-        "Suspended",], default: 'New' },
+    // status: { type: String, enum: ["New",
+    //     "Under Review",
+    //     "Approved",
+    //     "Rejected",
+    //     "Suspended",], default: 'New' },
+
+    status: {
+        type: String,
+        enum: ["new", "underReview", "approved", "rejected", "suspended"],
+        default: "new",
+    },
 
     requestedRate: {
         hourlyRate: { type: Number }
@@ -25,7 +31,7 @@ const OutsourceInterviewerSchema = new mongoose.Schema({
     }],
 
     contractSigned: { type: Boolean, default: false }, // NDA/Contract agreement status
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users'}, // Who added the interviewer
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' }, // Who added the interviewer
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
