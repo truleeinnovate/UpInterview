@@ -366,6 +366,14 @@ const InterviewDetails = ({
         }));
     };
 
+    // to re-fetch rate cards on mount if a technology is already selected (e.g., after refresh)
+    useEffect(() => {
+        const selectedTech = selectedTechnologyies?.[0]?.TechnologyMasterName;
+        if (selectedTech) {
+            fetchRateCards(selectedTech);
+        }
+    }, [selectedTechnologyies, fetchRateCards]);
+
     const handleRemoveSkill = (skillId) => {
         // console.log('Removing skill with ID:', skillId);
         // console.log('Current selectedSkills before removal:', selectedSkills);

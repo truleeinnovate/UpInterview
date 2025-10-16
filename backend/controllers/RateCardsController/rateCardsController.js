@@ -96,36 +96,25 @@ const getAllRateCards = async (req, res) => {
 };
 
 const getRateCardsByTechnology = async (req, res) => {
-    console.log("req.params =", req.params); // e.g., { name: "FullStackDeveloper" }
+    console.log("req.params =", req.params); // e.g., { technology: 'PerformanceTesterLoadTester' }
     console.log("req.query =", req.query);
 
     try {
-        const { name } = req.params;
-
-        // ---- Validation ----
-        if (!name) {
-            return res
-                .status(400)
-                .json({ message: "Name parameter is required" });
+        const { technology: slug } = req.params;
+        if (!slug) {
+            return res.status(400).json({ message: "Name parameter is required" });
         }
 
-        // ---- Query ----
-        // Option 1: Exact case-insensitive match using regex
-        // const cards = await RateCard.find({
-        //   name: { $regex: new RegExp(`^${name}$`, 'i') },
-        //   isActive: true,
-        // });
-
-        // Option 2 (recommended for exact slug): Use collation for case-insensitivity
+        // Exact match on the slug only (case-insensitive via collation, no other conditions)
         const cards = await RateCard.find({
-            name: name,            // exact value (case-sensitive by default)
-            isActive: true,
-        }).collation({ locale: 'en', strength: 2 }); // strength 2 = case-insensitive
+            name: slug  // Sole filter: match the name/slug directly
+        }).collation({ locale: 'en', strength: 2 });
 
-        // ---- Response ----
+        console.log(`Found ${cards.length} cards for slug: ${slug}`);
+
         if (!cards || cards.length === 0) {
             return res.status(404).json({
-                message: `No rate cards found for name: ${name}`,
+                message: `No rate cards found for name: ${slug}`,
             });
         }
 
