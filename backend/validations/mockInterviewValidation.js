@@ -45,22 +45,32 @@ const createRoundSchema = baseRoundSchema.keys({
 
 // ✅ PAGE 1 VALIDATION - For initial POST without rounds
 const mockInterviewPage1Schema = Joi.object({
-  skills: Joi.array().items(
-    Joi.object({
-      skill: Joi.string().required().messages({
-        'string.empty': 'Skill name is required'
-      }),
-      experience: Joi.string().required().messages({
-        'string.empty': 'Experience is required'
-      }),
-      expertise: Joi.string().required().messages({
-        'string.empty': 'Expertise is required'
-      })
+  // skills: Joi.array().items(
+  //   Joi.object({
+  //     skill: Joi.string().required().messages({
+  //       'string.empty': 'Skill name is required'
+  //     }),
+  //     experience: Joi.string().required().messages({
+  //       'string.empty': 'Experience is required'
+  //     }),
+  //     expertise: Joi.string().required().messages({
+  //       'string.empty': 'Expertise is required'
+  //     })
+  //   })
+  // ).min(1).required().messages({
+  //   'array.min': 'At least one skill is required',
+  //   'array.base': 'Skills must be an array'
+  // }),
+   skills: Joi.array().items(
+    Joi.string().required().messages({
+      'string.empty': 'Skill name cannot be empty'
     })
   ).min(1).required().messages({
     'array.min': 'At least one skill is required',
-    'array.base': 'Skills must be an array'
+    'array.base': 'Skills must be an array',
+    'any.required': 'Skills are required'
   }),
+
   ownerId: Joi.string().required().messages({
     'string.empty': 'Owner ID is required'
   }),
@@ -108,12 +118,15 @@ const mockInterviewFullSchema = mockInterviewPage1Schema.keys({
 
 // ✅ UPDATE VALIDATION - Flexible for PATCH operations
 const mockInterviewUpdateSchema = Joi.object({
-  skills: Joi.array().items(
-    Joi.object({
-      skill: Joi.string().optional(),
-      experience: Joi.string().optional(),
-      expertise: Joi.string().optional()
-    })
+  // skills: Joi.array().items(
+  //   Joi.object({
+  //     skill: Joi.string().optional(),
+  //     experience: Joi.string().optional(),
+  //     expertise: Joi.string().optional()
+  //   })
+  // ).optional(),
+   skills: Joi.array().items(
+    Joi.string().optional()
   ).optional(),
   ownerId: Joi.string().optional(),
   tenantId: Joi.string().optional(),
