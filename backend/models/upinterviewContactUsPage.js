@@ -7,4 +7,4 @@ const upinterviewContactUsPageSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model("upinterviewContactUsPage", upinterviewContactUsPageSchema);
+module.exports = mongoose.model("upinterviewContactUsData", upinterviewContactUsPageSchema);
