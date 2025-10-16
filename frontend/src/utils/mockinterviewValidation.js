@@ -47,22 +47,32 @@ const getErrorMessage = (field, value) => {
     });
   
     // Validate skills (at least one skill is required)
-    if (entries.length === 0) {
-      newErrors.skills = getErrorMessage("skills", entries.length);
-      formIsValid = false;
-    }
-    else if (entries.some((entry) => !entry.skill)) {
-      newErrors.skills = "skills must have a value in the skill fields";
-      formIsValid = false;
-    }
-    else if (entries.some((entry) => !entry.experience )) {
-      newErrors.skills = "experience must have a value in the experience fields";
-      formIsValid = false;
-    }
-    else if (entries.some((entry) => !entry.expertise )) {
-      newErrors.skills = "expertise must have a value in the expertise fields";
-      formIsValid = false;
-    }
+    // if (formData.skills.length === 0) {
+    //   newErrors.skills = getErrorMessage("skills", formData.skills.length);
+    //   formIsValid = false;
+    // }
+    // else if (formData.skills.some((entry) => !entry.skill)) {
+    //   newErrors.skills = "skills must have a value in the skill fields";
+    //   formIsValid = false;
+    // }
+
+    // Validate skills (at least one skill is required)
+  if (formData.skills.length === 0) {
+    newErrors.skills = getErrorMessage("skills", formData.skills.length);
+    formIsValid = false;
+  }
+  else if (formData.skills.some((skill) => !skill || skill.trim() === "")) {
+    newErrors.skills = "skills must have a value in the skill fields";
+    formIsValid = false;
+  }
+    // else if (entries.some((entry) => !entry.experience )) {
+    //   newErrors.skills = "experience must have a value in the experience fields";
+    //   formIsValid = false;
+    // }
+    // else if (entries.some((entry) => !entry.expertise )) {
+    //   newErrors.skills = "expertise must have a value in the expertise fields";
+    //   formIsValid = false;
+    // }
   
     return { formIsValid, newErrors };
   };
@@ -104,8 +114,8 @@ const getErrorMessage = (field, value) => {
   
     console.log("newErrors", newErrors);
   
-    if (entries.length === 0) {
-      newErrors.skills = getErrorMessage("skills", entries.length);
+    if (formData.skills.length === 0) {
+      newErrors.skills = getErrorMessage("skills", formData.skills.length);
       formIsValid = false;
     } else {
       delete newErrors.skills;

@@ -7,11 +7,12 @@ const mockInterviewSchema = new mongoose.Schema(
     mockInterviewCode: { type: String },
     // ------------------------------ v1.0.0 >
     skills: [
-      {
-        skill: String,
-        experience: String,
-        expertise: String,
-      },
+       String
+      // {
+      //   skill: String,
+      //   experience: String,
+      //   expertise: String,
+      // },
     ],
 
     // interviewer: String,
