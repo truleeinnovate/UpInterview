@@ -6,17 +6,6 @@
 // v1.0.5 - Ashok -  Fixed style issue
 
 import React, { useState, useEffect, useRef, useCallback } from "react"; //<---v1.0.2-----
-import Modal from "react-modal";
-import classNames from "classnames";
-
-import {
-  Minimize,
-  Expand,
-  X,
-  ChevronUp,
-  ChevronDown,
-  Info,
-} from "lucide-react";
 import axios from "axios";
 import { config } from "../../../../config.js";
 import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
@@ -113,14 +102,12 @@ const TaskForm = ({
     dueDate: "",
     comments: "",
   });
-  const [isOpen, setIsOpen] = useState(false);
 
   const [selectedPriority, setSelectedPriority] = useState("");
   const priorities = ["High", "Medium", "Low", "Normal"];
 
   const [selectedStatus, setSelectedStatus] = useState("New");
   const statuses = ["New", "In Progress", "Completed", "No Response"];
-  const [isFullScreen, setIsFullScreen] = useState(false);
   const [scheduledDate, setScheduledDate] = useState("");
 
   const [errors, setErrors] = useState({});
@@ -178,8 +165,6 @@ const TaskForm = ({
     useState("");
   const [selectedOptionIdRelatedTo, setSelectedOptionIdRelatedTo] =
     useState("");
-
-  const [isModalOpen] = useState(false);
 
   const formRef = useRef(null);
 
@@ -325,7 +310,6 @@ const TaskForm = ({
     }
 
     try {
-      const dueDateISO = formatForISOString(scheduledDate);
       const taskData = {
         ...formData,
         ownerId,
@@ -334,7 +318,6 @@ const TaskForm = ({
         dueDate: scheduledDate
           ? formatForISOString(scheduledDate)
           : formData.dueDate,
-        // dueDate: dueDateISO,
         // Ranjith v1.0.4
         priority: selectedPriority,
         status: selectedStatus,
@@ -416,10 +399,19 @@ const TaskForm = ({
     fetchObjectsData();
   }, []);
 
-  const { data: fetchedTask } = useTaskById(taskId);
+  const { data: fetchedTask, isLoading: isLoadingTask, error: fetchError } = useTaskById(taskId);
+
+  // Log fetch errors for debugging
+  useEffect(() => {
+    if (fetchError) {
+      console.error("Error fetching task data:", fetchError);
+      notify.error("Failed to load task data. Please check your connection and try again.");
+    }
+  }, [fetchError]);
 
   useEffect(() => {
     if (taskId && fetchedTask) {
+      //console.log("Task data loaded:", fetchedTask); // Debug log
       setFormData(fetchedTask);
       setSelectedPriority(fetchedTask.priority);
       setSelectedStatus(fetchedTask.status);
@@ -432,16 +424,6 @@ const TaskForm = ({
     }
   }, [taskId, fetchedTask, initialData]);
 
-  const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200",
-    {
-      "overflow-y-auto": !isModalOpen,
-      "overflow-hidden": isModalOpen,
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
-
   return (
     // v1.0.3 <-------------------------------------------------------------------------
     <SidebarPopup
@@ -450,6 +432,16 @@ const TaskForm = ({
     >
       {/* v1.0.5 <---------------------------------- */}
       <div className="sm:p-0 px-6 py-2 mb-8">
+        {/* Show loading state when fetching task data */}
+        {taskId && isLoadingTask ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading task data...</p>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* v1.0.5 ----------------------------------> */}
         {/* added to Task Form Guideliness by Ranjith */}
         <div className="mb-4">
@@ -765,6 +757,8 @@ const TaskForm = ({
             {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
           </div>
         </form>
+          </>
+        )}
       </div>
       {/* </div> */}
       {/* </Modal> */}
