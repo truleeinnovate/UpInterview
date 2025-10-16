@@ -254,8 +254,6 @@ const MultiStepForm = () => {
     contactEmailFromOrg
   );
 
-  console.log("matchedContact", matchedContact);
-
   const [formLoading, setFormLoading] = useState(false);
 
   useEffect(() => {
@@ -472,8 +470,6 @@ const MultiStepForm = () => {
 
       // Validate current step
       if (currentStep === 0) {
-        if (!basicDetailsData.firstName)
-          currentErrors.firstName = "First name is required";
         if (!basicDetailsData.lastName)
           currentErrors.lastName = "Last name is required";
         if (!basicDetailsData.email) currentErrors.email = "Email is required";
