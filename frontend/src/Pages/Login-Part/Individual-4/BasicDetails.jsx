@@ -481,7 +481,7 @@ const BasicDetails = ({
                         placeholder="linkedin.com/in/johndoe"
                         error={errors.linkedinUrl}
                         required
-                        disabled={!!basicDetailsData.linkedinUrl}
+                        // disabled={!!basicDetailsData.linkedinUrl}
                         type="url"
                         leftIcon={
                             <svg

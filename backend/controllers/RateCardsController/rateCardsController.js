@@ -96,31 +96,44 @@ const getAllRateCards = async (req, res) => {
 };
 
 const getRateCardsByTechnology = async (req, res) => {
-    console.log("🔥 req.params =", req.params);
-    console.log("🔥 req.query =", req.query);
+    console.log("req.params =", req.params); // e.g., { name: "FullStackDeveloper" }
+    console.log("req.query =", req.query);
+
     try {
-        const { technology } = req.params;
-        if (!technology) {
+        const { name } = req.params;
+
+        // ---- Validation ----
+        if (!name) {
             return res
                 .status(400)
-                .json({ message: "Technology parameter is required" });
+                .json({ message: "Name parameter is required" });
         }
 
-        const cards = await RateCard.find({
-            technology: { $regex: new RegExp(technology, "i") }, // case-insensitive match
-            isActive: true,
-        });
+        // ---- Query ----
+        // Option 1: Exact case-insensitive match using regex
+        // const cards = await RateCard.find({
+        //   name: { $regex: new RegExp(`^${name}$`, 'i') },
+        //   isActive: true,
+        // });
 
+        // Option 2 (recommended for exact slug): Use collation for case-insensitivity
+        const cards = await RateCard.find({
+            name: name,            // exact value (case-sensitive by default)
+            isActive: true,
+        }).collation({ locale: 'en', strength: 2 }); // strength 2 = case-insensitive
+
+        // ---- Response ----
         if (!cards || cards.length === 0) {
             return res.status(404).json({
-                message: `No rate cards found for technology: ${technology}`,
+                message: `No rate cards found for name: ${name}`,
             });
         }
 
         res.status(200).json(cards);
     } catch (error) {
+        console.error("Error fetching rate cards by name:", error);
         res.status(500).json({
-            message: "Error fetching rate cards by technology",
+            message: "Error fetching rate cards by name",
             error: error.message,
         });
     }

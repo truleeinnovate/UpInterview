@@ -27,8 +27,8 @@ const InterviewDetails = ({
     setIsMockInterviewSelected,
     yearsOfExperience = 0,
 }) => {
-    console.log('=== InterviewDetails Component Props ===');
-    console.log('interviewDetailsData:', interviewDetailsData);
+    // console.log('=== InterviewDetails Component Props ===');
+    // console.log('interviewDetailsData:', interviewDetailsData);
     const [showCustomDiscount, setShowCustomDiscount] = useState(false);
     const [customDiscountValue, setCustomDiscountValue] = useState('');
     const expYears = parseInt(yearsOfExperience, 10) || 0;
@@ -46,7 +46,7 @@ const InterviewDetails = ({
 
     // Initialize form data when component mounts or interviewDetailsData changes
     useEffect(() => {
-        console.log('Initializing InterviewDetails with data:', interviewDetailsData);
+        // console.log('Initializing InterviewDetails with data:', interviewDetailsData);
 
         // Initialize rates if they don't exist
         if (!interviewDetailsData.rates) {
@@ -79,7 +79,7 @@ const InterviewDetails = ({
 
         // Initialize skills if they exist in interviewDetailsData but not in selectedSkills
         if (interviewDetailsData?.skills?.length > 0 && (!selectedSkills || selectedSkills.length === 0)) {
-            console.log('Initializing skills from interviewDetailsData:', interviewDetailsData.skills);
+            // console.log('Initializing skills from interviewDetailsData:', interviewDetailsData.skills);
             const initialSkills = interviewDetailsData.skills.map(skill => ({
                 _id: Math.random().toString(36).substr(2, 9),
                 SkillName: typeof skill === 'object' ? skill.SkillName : skill
@@ -102,7 +102,7 @@ const InterviewDetails = ({
                     setLastRateUpdate(new Date().toISOString());
                 }
             } catch (error) {
-                console.error('Error fetching exchange rate:', error);
+                // console.error('Error fetching exchange rate:', error);
                 // Use default rate if API fails
                 setExchangeRate(83.5);
                 toast.warning('Using default exchange rate. Some features may be limited.');
@@ -188,8 +188,19 @@ const InterviewDetails = ({
         try {
             const token = localStorage.getItem('token');
             const baseUrl = process.env.REACT_APP_API_URL || '';
-            const encodedTech = encodeURIComponent(techName);
-            const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
+            // const encodedTech = encodeURIComponent(techName);
+            // Derive the 'name' slug from TechnologyMasterName (e.g., "Help Desk Technician" -> "HelpDeskTechnician")
+            const slug = techName
+                .replace(/\s+/g, '')  // Remove spaces
+                .replace(/[^a-zA-Z0-9]/g, '');  // Remove special chars if any (optional, adjust as needed)
+
+            console.log('Derived slug from technologyName:', slug);
+
+            const encodedSlug = encodeURIComponent(slug);
+
+            console.log('Encoded slug for URL:', encodedSlug);
+
+            const apiUrl = `${baseUrl}/rate-cards/technology/${encodedSlug}`;
 
             console.log('2. Making API request to:', apiUrl);
 
@@ -243,19 +254,19 @@ const InterviewDetails = ({
 
     const handleTechnologyChange = async (event) => {
         const selectedValue = event.target.value;
-        console.log('handleTechnologyChange called with:', selectedValue);
+        // console.log('handleTechnologyChange called with:', selectedValue);
 
         if (selectedValue) {
-            console.log('Selected value:', selectedValue);
+            // console.log('Selected value:', selectedValue);
 
             const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue) || {
                 _id: Math.random().toString(36).substr(2, 9),
                 TechnologyMasterName: selectedValue
             };
-            console.log('Found technology:', technology);
+            // console.log('Found technology:', technology);
 
             setSelectedTechnologyies([technology]);
-            console.log('Updated selectedTechnologyies:', [technology]);
+            // console.log('Updated selectedTechnologyies:', [technology]);
 
             try {
                 const rateCards = await fetchRateCards(selectedValue);
@@ -298,7 +309,7 @@ const InterviewDetails = ({
                         rates: ratesUpdate
                     };
 
-                    console.log('Updated interviewDetailsData:', newFormData);
+                    // console.log('Updated interviewDetailsData:', newFormData);
                     return newFormData;
                 });
             } catch (error) {
@@ -325,7 +336,7 @@ const InterviewDetails = ({
                 senior_inr: ''
             }));
         } else {
-            console.log('No value selected, clearing selection');
+            // console.log('No value selected, clearing selection');
             setSelectedTechnologyies([]);
             setInterviewDetailsData(prev => ({
                 ...prev,
@@ -356,14 +367,14 @@ const InterviewDetails = ({
     };
 
     const handleRemoveSkill = (skillId) => {
-        console.log('Removing skill with ID:', skillId);
-        console.log('Current selectedSkills before removal:', selectedSkills);
+        // console.log('Removing skill with ID:', skillId);
+        // console.log('Current selectedSkills before removal:', selectedSkills);
 
         const updatedSkills = selectedSkills.filter(skill =>
             skill._id !== skillId && skill.SkillName !== skillId
         );
 
-        console.log('Updated skills after removal:', updatedSkills);
+        // console.log('Updated skills after removal:', updatedSkills);
 
         setSelectedSkills(updatedSkills);
         setInterviewDetailsData(prev => ({
@@ -618,11 +629,11 @@ const InterviewDetails = ({
     const skillsInputRef = useRef(null);
 
     const addSkill = (skillName) => {
-        console.log('addSkill called with:', skillName);
+        // console.log('addSkill called with:', skillName);
         const trimmedSkill = skillName.trim();
-        console.log('Trimmed skill:', trimmedSkill);
+        // console.log('Trimmed skill:', trimmedSkill);
         if (!trimmedSkill) {
-            console.log('Empty skill name, returning');
+            // console.log('Empty skill name, returning');
             return;
         }
 
@@ -630,17 +641,17 @@ const InterviewDetails = ({
         const skillExists = selectedSkills.some(s =>
             (typeof s === 'object' ? s.SkillName : s).toLowerCase() === trimmedSkill.toLowerCase()
         );
-        console.log('Skill exists check:', skillExists, 'Current skills:', selectedSkills);
+        // console.log('Skill exists check:', skillExists, 'Current skills:', selectedSkills);
 
         if (!skillExists) {
             const newSkill = {
                 _id: Math.random().toString(36).substr(2, 9),
                 SkillName: trimmedSkill
             };
-            console.log('Creating new skill object:', newSkill);
+            // console.log('Creating new skill object:', newSkill);
 
             const updatedSkills = [...selectedSkills, newSkill];
-            console.log('Updated skills array:', updatedSkills);
+            // console.log('Updated skills array:', updatedSkills);
 
             setSelectedSkills(updatedSkills);
             setInterviewDetailsData(prev => ({
@@ -648,9 +659,9 @@ const InterviewDetails = ({
                 skills: updatedSkills.map(s => s?.SkillName || s).filter(Boolean),
             }));
             setErrors(prev => ({ ...prev, skills: '' }));
-            console.log("Skill added successfully");
+            // console.log("Skill added successfully");
         } else {
-            console.log("Skill already exists");
+            // console.log("Skill already exists");
         }
     };
 
@@ -780,7 +791,7 @@ const InterviewDetails = ({
 
                     {/* Selected Skills Display - Full width */}
                     <div className="w-full mt-4">
-                        {console.log('Rendering selectedSkills:', selectedSkills)}
+                        {/* {console.log('Rendering selectedSkills:', selectedSkills)} */}
                         {selectedSkills && selectedSkills.length > 0 ? (
                             <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                                 <div className="flex items-center justify-between mb-3">
@@ -1392,17 +1403,16 @@ const InterviewDetails = ({
                     />
                     <div className="flex justify-between mt-1">
                         <p className="text-xs text-gray-500">
-                            {errors.professionalTitle ? 
-                                <span className="text-red-500">Min 50 characters</span> : 
+                            {errors.professionalTitle ?
+                                <span className="text-red-500">Min 50 characters</span> :
                                 'Min 50 characters'
                             }
                         </p>
                         {interviewDetailsData.professionalTitle?.length > 0 && (
-                            <p className={`text-xs ${
-                                interviewDetailsData.professionalTitle.length < 50 || errors.professionalTitle 
-                                    ? 'text-red-500' 
-                                    : 'text-gray-500'
-                            }`}>
+                            <p className={`text-xs ${interviewDetailsData.professionalTitle.length < 50 || errors.professionalTitle
+                                ? 'text-red-500'
+                                : 'text-gray-500'
+                                }`}>
                                 {interviewDetailsData.professionalTitle.length}/100
                             </p>
                         )}
@@ -1452,13 +1462,12 @@ const InterviewDetails = ({
                             )}
                         </p>
                         {interviewDetailsData.bio?.length > 0 && (
-                            <p className={`text-xs ${
-                                interviewDetailsData.bio.length < 150 || errors.bio
-                                    ? 'text-red-500'
-                                    : interviewDetailsData.bio.length > 450
-                                        ? 'text-yellow-500'
-                                        : 'text-gray-500'
-                            }`}>
+                            <p className={`text-xs ${interviewDetailsData.bio.length < 150 || errors.bio
+                                ? 'text-red-500'
+                                : interviewDetailsData.bio.length > 450
+                                    ? 'text-yellow-500'
+                                    : 'text-gray-500'
+                                }`}>
                                 {interviewDetailsData.bio.length}/500
                             </p>
                         )}

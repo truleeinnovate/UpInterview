@@ -41,16 +41,16 @@ const config = require("./config.js");
 
 // CORS configuration
 const allowedOrigins = [
-  //   `https://${config.REACT_APP_API_URL_FRONTEND}`,
-  "http://localhost:3000",
-  "http://localhost:5000",
-  /^https:\/\/[a-z0-9-]+\.dev\.upinterview\.io$/,
-  // "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
-  // "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
-  "https://dev.upinterview.io",
-  "https://app.upinterview.io",
-  "https://upinterview-dpdgchhbafekdhca.canadacentral-01.azurewebsites.net",
-  "https://upinterview.io",
+    //   `https://${config.REACT_APP_API_URL_FRONTEND}`,
+    "http://localhost:3000",
+    "http://localhost:5000",
+    /^https:\/\/[a-z0-9-]+\.dev\.upinterview\.io$/,
+    // "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
+    // "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
+    "https://dev.upinterview.io",
+    "https://app.upinterview.io",
+    "https://upinterview-dpdgchhbafekdhca.canadacentral-01.azurewebsites.net",
+    "https://upinterview.io",
 ];
 
 // const allowedOrigins = [
@@ -61,50 +61,50 @@ const allowedOrigins = [
 
 // CORS middleware
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-//   console.log(
-//     "Request Method:",
-//     req.method,
-//     "Path:",
-//     req.path,
-//     "Origin:",
-//     origin
-//   );
+    const origin = req.headers.origin;
+    //   console.log(
+    //     "Request Method:",
+    //     req.method,
+    //     "Path:",
+    //     req.path,
+    //     "Origin:",
+    //     origin
+    //   );
 
-  const isAllowed = allowedOrigins.some(o =>
-    typeof o === "string" ? o === origin : o.test(origin)
-  );
+    const isAllowed = allowedOrigins.some(o =>
+        typeof o === "string" ? o === origin : o.test(origin)
+    );
 
-  if (isAllowed) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-permissions, x-tenant-id");
-    res.setHeader("Access-Control-Expose-Headers", "x-user-id, x-tenant-id, x-impersonation-userid, x-permissions, x-new-token");
-  }
+    if (isAllowed) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-permissions, x-tenant-id");
+        res.setHeader("Access-Control-Expose-Headers", "x-user-id, x-tenant-id, x-impersonation-userid, x-permissions, x-new-token");
+    }
 
-  if (req.method === "OPTIONS") {
-    // console.log("Responding to OPTIONS request with headers:", res.getHeaders());
-    return res.status(200).end();
-  }
+    if (req.method === "OPTIONS") {
+        // console.log("Responding to OPTIONS request with headers:", res.getHeaders());
+        return res.status(200).end();
+    }
 
-  next();
+    next();
 });
 
 
 // Add OPTIONS handlers for main routes
 const handleOptions = (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-*"
-  );
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.status(200).end();
+    res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+    res.setHeader(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    );
+    res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-*"
+    );
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.status(200).end();
 };
 
 // Add specific OPTIONS handlers for your routes
@@ -140,55 +140,55 @@ app.use(bodyParser.json());
 
 // Enhanced MongoDB connection with Azure-specific configurations
 const mongooseOptions = {
-  serverSelectionTimeoutMS: 60000, // 60 seconds - increased for Azure
-  socketTimeoutMS: 90000, // 90 seconds - increased for Azure
-  connectTimeoutMS: 60000, // 60 seconds - increased for Azure
-  maxPoolSize: 20, // Increased pool size for Azure
-  minPoolSize: 5, // Increased minimum pool size
-  maxIdleTimeMS: 60000, // 60 seconds
-  retryWrites: false, // Disabled for compatibility with older MongoDB versions
-  w: 1, // Changed from 'majority' to 1 for better compatibility
-  bufferCommands: false, // Disable mongoose buffering
-  retryReads: true, // Connection retry settings
-  heartbeatFrequencyMS: 10000, // Heartbeat settings
-  writeConcern: {
-    w: 1,
-    j: false,
-    wtimeout: 30000,
-  },
+    serverSelectionTimeoutMS: 60000, // 60 seconds - increased for Azure
+    socketTimeoutMS: 90000, // 90 seconds - increased for Azure
+    connectTimeoutMS: 60000, // 60 seconds - increased for Azure
+    maxPoolSize: 20, // Increased pool size for Azure
+    minPoolSize: 5, // Increased minimum pool size
+    maxIdleTimeMS: 60000, // 60 seconds
+    retryWrites: false, // Disabled for compatibility with older MongoDB versions
+    w: 1, // Changed from 'majority' to 1 for better compatibility
+    bufferCommands: false, // Disable mongoose buffering
+    retryReads: true, // Connection retry settings
+    heartbeatFrequencyMS: 10000, // Heartbeat settings
+    writeConcern: {
+        w: 1,
+        j: false,
+        wtimeout: 30000,
+    },
 };
 
 // MongoDB connection with retry mechanism
 const connectWithRetry = (retries = 5, delay = 5000) => {
-  return new Promise((resolve, reject) => {
-    const attemptConnect = async (attempt = 0) => {
-      try {
-        await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
-        console.log("✅ MongoDB connected successfully");
-        resolve(mongoose.connection);
-      } catch (err) {
-        console.error(
-          `❌ MongoDB connection attempt ${attempt + 1} failed:`,
-          err.message
-        );
+    return new Promise((resolve, reject) => {
+        const attemptConnect = async (attempt = 0) => {
+            try {
+                await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
+                console.log("✅ MongoDB connected successfully");
+                resolve(mongoose.connection);
+            } catch (err) {
+                console.error(
+                    `❌ MongoDB connection attempt ${attempt + 1} failed:`,
+                    err.message
+                );
 
-        if (attempt >= retries - 1) {
-          console.error("❌ All MongoDB connection attempts failed");
-          console.error(
-            "MongoDB URI status:",
-            process.env.MONGODB_URI ? "SET" : "NOT SET"
-          );
-          reject(new Error('Failed to connect to MongoDB after multiple attempts'));
-          return;
-        }
+                if (attempt >= retries - 1) {
+                    console.error("❌ All MongoDB connection attempts failed");
+                    console.error(
+                        "MongoDB URI status:",
+                        process.env.MONGODB_URI ? "SET" : "NOT SET"
+                    );
+                    reject(new Error('Failed to connect to MongoDB after multiple attempts'));
+                    return;
+                }
 
-        // Wait for the specified delay before retrying
-        setTimeout(() => attemptConnect(attempt + 1), delay);
-      }
-    };
+                // Wait for the specified delay before retrying
+                setTimeout(() => attemptConnect(attempt + 1), delay);
+            }
+        };
 
-    attemptConnect();
-  });
+        attemptConnect();
+    });
 };
 
 // Initialize MongoDB connection
@@ -199,11 +199,11 @@ const { setupInterviewStatusCronJob } = require('./services/interviewStatusServi
 
 // Set up the cron job when database is connected
 dbConnection.then(() => {
-  if (process.env.NODE_ENV !== 'test') {
-    setupInterviewStatusCronJob();
-  }
+    if (process.env.NODE_ENV !== 'test') {
+        setupInterviewStatusCronJob();
+    }
 }).catch(err => {
-  console.error('Failed to set up interview status cron job:', err);
+    console.error('Failed to set up interview status cron job:', err);
 });
 
 // Export the MongoDB connection promise for other modules to use
@@ -211,21 +211,21 @@ app.locals.dbConnection = dbConnection;
 
 // Handle MongoDB connection events with enhanced logging
 mongoose.connection.on("error", (err) => {
-  console.error("❌ MongoDB connection error:", err);
-  console.error("Error details:", {
-    name: err.name,
-    message: err.message,
-    code: err.code,
-    stack: err.stack,
-  });
+    console.error("❌ MongoDB connection error:", err);
+    console.error("Error details:", {
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        stack: err.stack,
+    });
 });
 
 mongoose.connection.on("disconnected", () => {
-  console.warn("⚠️ MongoDB disconnected - attempting to reconnect...");
+    console.warn("⚠️ MongoDB disconnected - attempting to reconnect...");
 });
 
 mongoose.connection.on("reconnected", () => {
-  console.log("✅ MongoDB reconnected successfully");
+    console.log("✅ MongoDB reconnected successfully");
 });
 
 // mongoose.connection.on('connected', async () => {
@@ -250,191 +250,191 @@ mongoose.connection.on("reconnected", () => {
 
 // Add connection monitoring
 setInterval(() => {
-  const state = mongoose.connection.readyState;
-  const states = {
-    0: "disconnected",
-    1: "connected",
-    2: "connecting",
-    3: "disconnecting",
-  };
-  // console.log(`📊 MongoDB connection state: ${states[state]} (${state})`);
+    const state = mongoose.connection.readyState;
+    const states = {
+        0: "disconnected",
+        1: "connected",
+        2: "connecting",
+        3: "disconnecting",
+    };
+    // console.log(`📊 MongoDB connection state: ${states[state]} (${state})`);
 }, 30000); // Log every 30 seconds
 
 // Middleware to capture raw body for webhook endpoints
 const rawBodyParser = require("body-parser").raw({ type: "*/*" });
 // Raw body parser for webhook endpoints
 app.use((req, res, next) => {
-  if (
-    req.originalUrl === "/payment/webhook" ||
-    req.path === "/payment/webhook"
-  ) {
-    rawBodyParser(req, res, (err) => {
-      if (err) return next(err);
-      req.rawBody = req.body.toString();
-      next();
-    });
-  } else {
-    next();
-  }
+    if (
+        req.originalUrl === "/payment/webhook" ||
+        req.path === "/payment/webhook"
+    ) {
+        rawBodyParser(req, res, (err) => {
+            if (err) return next(err);
+            req.rawBody = req.body.toString();
+            next();
+        });
+    } else {
+        next();
+    }
 });
 
 // Enhanced health check endpoints for monitoring
 
 // Main health check endpoint
 app.get("/health", (req, res) => {
-  const isHealthy = mongoose.connection.readyState === 1;
-  const healthCheck = {
-    status: isHealthy ? "OK" : "UNHEALTHY",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || "development",
-    version: "1.0.0",
-    mongodb: {
-      status:
-        mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-      readyState: mongoose.connection.readyState,
-      host: mongoose.connection.host || "unknown",
-      port: mongoose.connection.port || "unknown",
-      name: mongoose.connection.name || "unknown",
-    },
-    memory: {
-      ...process.memoryUsage(),
-      heapUsed:
-        Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + " MB",
-      heapTotal:
-        Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + " MB",
-      external:
-        Math.round(process.memoryUsage().external / 1024 / 1024) + " MB",
-    },
-    system: {
-      platform: process.platform,
-      nodeVersion: process.version,
-      pid: process.pid,
-    },
-    env: {
-      MONGODB_URI: process.env.MONGODB_URI ? "CONFIGURED" : "NOT CONFIGURED",
-      NODE_ENV: process.env.NODE_ENV || "development",
-      COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || "NOT SET",
-    },
-  };
+    const isHealthy = mongoose.connection.readyState === 1;
+    const healthCheck = {
+        status: isHealthy ? "OK" : "UNHEALTHY",
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || "development",
+        version: "1.0.0",
+        mongodb: {
+            status:
+                mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+            readyState: mongoose.connection.readyState,
+            host: mongoose.connection.host || "unknown",
+            port: mongoose.connection.port || "unknown",
+            name: mongoose.connection.name || "unknown",
+        },
+        memory: {
+            ...process.memoryUsage(),
+            heapUsed:
+                Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + " MB",
+            heapTotal:
+                Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + " MB",
+            external:
+                Math.round(process.memoryUsage().external / 1024 / 1024) + " MB",
+        },
+        system: {
+            platform: process.platform,
+            nodeVersion: process.version,
+            pid: process.pid,
+        },
+        env: {
+            MONGODB_URI: process.env.MONGODB_URI ? "CONFIGURED" : "NOT CONFIGURED",
+            NODE_ENV: process.env.NODE_ENV || "development",
+            COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || "NOT SET",
+        },
+    };
 
-  res.status(isHealthy ? 200 : 503).json(healthCheck);
+    res.status(isHealthy ? 200 : 503).json(healthCheck);
 });
 
 // Simple health check for load balancers
 app.get("/health/simple", (req, res) => {
-  const isHealthy = mongoose.connection.readyState === 1;
-  res.status(isHealthy ? 200 : 503).json({
-    status: isHealthy ? "OK" : "UNHEALTHY",
-    timestamp: new Date().toISOString(),
-  });
+    const isHealthy = mongoose.connection.readyState === 1;
+    res.status(isHealthy ? 200 : 503).json({
+        status: isHealthy ? "OK" : "UNHEALTHY",
+        timestamp: new Date().toISOString(),
+    });
 });
 
 // Detailed health check with database test
 app.get("/health/detailed", async (req, res) => {
-  try {
-    const isConnected = mongoose.connection.readyState === 1;
-    let dbTest = { status: "not_connected", error: null };
+    try {
+        const isConnected = mongoose.connection.readyState === 1;
+        let dbTest = { status: "not_connected", error: null };
 
-    if (isConnected) {
-      try {
-        // Test database connection with a simple ping
-        await mongoose.connection.db.admin().ping();
-        dbTest = { status: "connected", ping: "success" };
-      } catch (pingError) {
-        dbTest = {
-          status: "connected_but_ping_failed",
-          error: pingError.message,
+        if (isConnected) {
+            try {
+                // Test database connection with a simple ping
+                await mongoose.connection.db.admin().ping();
+                dbTest = { status: "connected", ping: "success" };
+            } catch (pingError) {
+                dbTest = {
+                    status: "connected_but_ping_failed",
+                    error: pingError.message,
+                };
+            }
+        }
+
+        const detailedHealth = {
+            status: isConnected && dbTest.status === "connected" ? "OK" : "UNHEALTHY",
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime(),
+            environment: process.env.NODE_ENV || "development",
+            mongodb: {
+                connection: {
+                    status: isConnected ? "connected" : "disconnected",
+                    readyState: mongoose.connection.readyState,
+                    host: mongoose.connection.host || "unknown",
+                    port: mongoose.connection.port || "unknown",
+                    name: mongoose.connection.name || "unknown",
+                },
+                test: dbTest,
+            },
+            memory: {
+                ...process.memoryUsage(),
+                heapUsed:
+                    Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + " MB",
+                heapTotal:
+                    Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + " MB",
+                external:
+                    Math.round(process.memoryUsage().external / 1024 / 1024) + " MB",
+            },
+            system: {
+                platform: process.platform,
+                nodeVersion: process.version,
+                pid: process.pid,
+                cpuUsage: process.cpuUsage(),
+            },
         };
-      }
+
+        const isHealthy = isConnected && dbTest.status === "connected";
+        res.status(isHealthy ? 200 : 503).json(detailedHealth);
+    } catch (error) {
+        res.status(503).json({
+            status: "ERROR",
+            timestamp: new Date().toISOString(),
+            error: error.message,
+            mongodb: {
+                connection: {
+                    status: "error",
+                    readyState: mongoose.connection.readyState,
+                },
+            },
+        });
     }
-
-    const detailedHealth = {
-      status: isConnected && dbTest.status === "connected" ? "OK" : "UNHEALTHY",
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || "development",
-      mongodb: {
-        connection: {
-          status: isConnected ? "connected" : "disconnected",
-          readyState: mongoose.connection.readyState,
-          host: mongoose.connection.host || "unknown",
-          port: mongoose.connection.port || "unknown",
-          name: mongoose.connection.name || "unknown",
-        },
-        test: dbTest,
-      },
-      memory: {
-        ...process.memoryUsage(),
-        heapUsed:
-          Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + " MB",
-        heapTotal:
-          Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + " MB",
-        external:
-          Math.round(process.memoryUsage().external / 1024 / 1024) + " MB",
-      },
-      system: {
-        platform: process.platform,
-        nodeVersion: process.version,
-        pid: process.pid,
-        cpuUsage: process.cpuUsage(),
-      },
-    };
-
-    const isHealthy = isConnected && dbTest.status === "connected";
-    res.status(isHealthy ? 200 : 503).json(detailedHealth);
-  } catch (error) {
-    res.status(503).json({
-      status: "ERROR",
-      timestamp: new Date().toISOString(),
-      error: error.message,
-      mongodb: {
-        connection: {
-          status: "error",
-          readyState: mongoose.connection.readyState,
-        },
-      },
-    });
-  }
 });
 
 // Readiness probe for Kubernetes/Azure
 app.get("/ready", (req, res) => {
-  const isReady = mongoose.connection.readyState === 1;
-  res.status(isReady ? 200 : 503).json({
-    ready: isReady,
-    timestamp: new Date().toISOString(),
-    mongodb: {
-      status:
-        mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-      readyState: mongoose.connection.readyState,
-    },
-  });
+    const isReady = mongoose.connection.readyState === 1;
+    res.status(isReady ? 200 : 503).json({
+        ready: isReady,
+        timestamp: new Date().toISOString(),
+        mongodb: {
+            status:
+                mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+            readyState: mongoose.connection.readyState,
+        },
+    });
 });
 
 // Liveness probe for Kubernetes/Azure
 app.get("/live", (req, res) => {
-  res.status(200).json({
-    alive: true,
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
+    res.status(200).json({
+        alive: true,
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+    });
 });
 
 // Database connection check middleware
 const dbConnectionMiddleware = (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
-    console.error(
-      "❌ Database not connected. ReadyState:",
-      mongoose.connection.readyState
-    );
-    return res.status(503).json({
-      error: "Database connection unavailable",
-      message: "Service temporarily unavailable. Please try again later.",
-      timestamp: new Date().toISOString(),
-    });
-  }
-  next();
+    if (mongoose.connection.readyState !== 1) {
+        console.error(
+            "❌ Database not connected. ReadyState:",
+            mongoose.connection.readyState
+        );
+        return res.status(503).json({
+            error: "Database connection unavailable",
+            message: "Service temporarily unavailable. Please try again later.",
+            timestamp: new Date().toISOString(),
+        });
+    }
+    next();
 };
 // ------------------------------v1.0.3 >
 // Apply permission middleware to all routes except authentication routes
@@ -442,28 +442,28 @@ const { permissionMiddleware } = require("./middleware/permissionMiddleware");
 
 // Create a middleware that skips permission check for auth routes
 const conditionalPermissionMiddleware = (req, res, next) => {
-  // Skip permission middleware for authentication routes
-  const authRoutes = [
-    "/Organization/Login",
-    "/Organization/Signup",
-    "/Organization/reset-password",
-    "/Organization/verify-email",
-    "/Organization/verify-user-email",
-    "/Individual/Login",
-    "/Individual/Signup",
-    "/linkedin/auth",
-    "/linkedin/callback",
-    // Remove /users/permissions from excluded routes - it needs permission middleware
-  ];
+    // Skip permission middleware for authentication routes
+    const authRoutes = [
+        "/Organization/Login",
+        "/Organization/Signup",
+        "/Organization/reset-password",
+        "/Organization/verify-email",
+        "/Organization/verify-user-email",
+        "/Individual/Login",
+        "/Individual/Signup",
+        "/linkedin/auth",
+        "/linkedin/callback",
+        // Remove /users/permissions from excluded routes - it needs permission middleware
+    ];
 
-  const isAuthRoute = authRoutes.some((route) => req.path.includes(route));
+    const isAuthRoute = authRoutes.some((route) => req.path.includes(route));
 
-  if (isAuthRoute) {
-    return next();
-  }
+    if (isAuthRoute) {
+        return next();
+    }
 
-  // Apply permission middleware for non-auth routes
-  return permissionMiddleware(req, res, next);
+    // Apply permission middleware for non-auth routes
+    return permissionMiddleware(req, res, next);
 };
 
 app.use(conditionalPermissionMiddleware);
@@ -490,26 +490,26 @@ const port = process.env.PORT || 5000;
 
 // Start the server only after MongoDB is connected
 const startServer = async () => {
-  try {
-    // Wait for MongoDB connection
-    await dbConnection;
-    console.log('MongoDB connected successfully');
+    try {
+        // Wait for MongoDB connection
+        await dbConnection;
+        console.log('MongoDB connected successfully');
 
-    const server = app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
+        const server = app.listen(port, () => {
+            console.log(`Server running on port ${port}`);
 
-      // Initialize the daily exchange rate update
-      if (process.env.NODE_ENV !== 'test') {
-        const ExchangeRateService = require('./services/exchangeRateService');
-        ExchangeRateService.scheduleDailyRateUpdate();
-      }
-    });
+            // Initialize the daily exchange rate update
+            if (process.env.NODE_ENV !== 'test') {
+                const ExchangeRateService = require('./services/exchangeRateService');
+                ExchangeRateService.scheduleDailyRateUpdate();
+            }
+        });
 
-    return server;
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
+        return server;
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
 };
 
 // Start the server
@@ -517,23 +517,23 @@ const serverPromise = startServer();
 
 // Handle server shutdown
 const shutdown = async () => {
-  console.log('SIGTERM received. Shutting down gracefully');
-  try {
-    const server = await serverPromise;
-    server.close(() => {
-      console.log('Process terminated');
-      process.exit(0);
-    });
+    console.log('SIGTERM received. Shutting down gracefully');
+    try {
+        const server = await serverPromise;
+        server.close(() => {
+            console.log('Process terminated');
+            process.exit(0);
+        });
 
-    // Force close the server after 10 seconds
-    setTimeout(() => {
-      console.error('Forcing shutdown after timeout');
-      process.exit(1);
-    }, 10000);
-  } catch (error) {
-    console.error('Error during shutdown:', error);
-    process.exit(1);
-  }
+        // Force close the server after 10 seconds
+        setTimeout(() => {
+            console.error('Forcing shutdown after timeout');
+            process.exit(1);
+        }, 10000);
+    } catch (error) {
+        console.error('Error during shutdown:', error);
+        process.exit(1);
+    }
 };
 
 process.on('SIGTERM', shutdown);
@@ -545,10 +545,10 @@ const { LocationMaster } = require("./models/MasterSchemas/LocationMaster.js");
 const { Industry } = require("./models/MasterSchemas/industries.js");
 const { RoleMaster } = require("./models/MasterSchemas/RoleMaster.js");
 const {
-  TechnologyMaster,
+    TechnologyMaster,
 } = require("./models/MasterSchemas/TechnologyMaster.js");
 const {
-  HigherQualification,
+    HigherQualification,
 } = require("./models/MasterSchemas/higherqualification.js");
 const { University_CollegeName } = require("./models/MasterSchemas/college.js");
 const { Company } = require("./models/MasterSchemas/company.js");
@@ -557,122 +557,122 @@ const { CategoryQuestionsMaster } = require("./models/MasterSchemas/CategoryQues
 // Master Data Endpoints
 // v1.0.9 <------------------------------------------------------------------------
 app.get("/skills", async (req, res) => {
-  try {
-    const skills = await Skills.find({})
-      .populate("ownerId", "firstName lastName email -password")
-      .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password").lean();
-    res.json(skills);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+    try {
+        const skills = await Skills.find({})
+            .populate("ownerId", "firstName lastName email -password")
+            .populate("createdBy", "firstName lastName email -password")
+            .populate("updatedBy", "firstName lastName email -password").lean();
+        res.json(skills);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 app.get("/locations", async (req, res) => {
-  try {
-    const LocationNames = await LocationMaster.find({})
-      .populate("ownerId", "firstName lastName email -password")
-      .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password").lean();
-    res.json(LocationNames);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+    try {
+        const LocationNames = await LocationMaster.find({})
+            .populate("ownerId", "firstName lastName email -password")
+            .populate("createdBy", "firstName lastName email -password")
+            .populate("updatedBy", "firstName lastName email -password").lean();
+        res.json(LocationNames);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 app.get("/industries", async (req, res) => {
-  try {
-    const IndustryNames = await Industry.find({})
-      .populate("ownerId", "firstName lastName email -password")
-      .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password").lean();
-    res.json(IndustryNames);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+    try {
+        const IndustryNames = await Industry.find({})
+            .populate("ownerId", "firstName lastName email -password")
+            .populate("createdBy", "firstName lastName email -password")
+            .populate("updatedBy", "firstName lastName email -password").lean();
+        res.json(IndustryNames);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 app.get("/roles", async (req, res) => {
-  try {
-    const roles = await RoleMaster.find({})
-      .populate("ownerId", "firstName lastName email -password")
-      .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password").lean();
-    res.json(roles);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+    try {
+        const roles = await RoleMaster.find({})
+            .populate("ownerId", "firstName lastName email -password")
+            .populate("createdBy", "firstName lastName email -password")
+            .populate("updatedBy", "firstName lastName email -password").lean();
+        res.json(roles);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 // v1.0.9 ------------------------------------------------------------------------>
 
 // v1.0.7 <----------------------------------------------------------------------------------
 app.get("/technology", async (req, res) => {
-  try {
-    const technology = await TechnologyMaster.find({})
-      .populate("ownerId", "firstName lastName email -password")
-      .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password").lean();
-    res.json(technology);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+    try {
+        const technology = await TechnologyMaster.find({})
+            .populate("ownerId", "firstName lastName email -password")
+            .populate("createdBy", "firstName lastName email -password")
+            .populate("updatedBy", "firstName lastName email -password").lean();
+        res.json(technology);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 // v1.0.7 ---------------------------------------------------------------------------------->
 
 // v1.0.9 <-----------------------------------------------------------------------------
 app.get("/qualification", async (req, res) => {
-  try {
-    const higherqualifications = await HigherQualification.find({})
-      .populate("ownerId", "firstName lastName email -password")
-      .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password").lean();
-    res.json(higherqualifications);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+    try {
+        const higherqualifications = await HigherQualification.find({})
+            .populate("ownerId", "firstName lastName email -password")
+            .populate("createdBy", "firstName lastName email -password")
+            .populate("updatedBy", "firstName lastName email -password").lean();
+        res.json(higherqualifications);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 app.get("/universitycollege", async (req, res) => {
-  try {
-    const universityCollegeNames = await University_CollegeName.find({})
-      .populate("ownerId", "firstName lastName email -password")
-      .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password").lean();
-    res.json(universityCollegeNames);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+    try {
+        const universityCollegeNames = await University_CollegeName.find({})
+            .populate("ownerId", "firstName lastName email -password")
+            .populate("createdBy", "firstName lastName email -password")
+            .populate("updatedBy", "firstName lastName email -password").lean();
+        res.json(universityCollegeNames);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 app.get("/company", async (req, res) => {
-  try {
-    const CompanyNames = await Company.find({})
-      .populate("ownerId", "firstName lastName email -password")
-      .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password").lean();
-    res.json(CompanyNames);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+    try {
+        const CompanyNames = await Company.find({})
+            .populate("ownerId", "firstName lastName email -password")
+            .populate("createdBy", "firstName lastName email -password")
+            .populate("updatedBy", "firstName lastName email -password").lean();
+        res.json(CompanyNames);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 app.get("/category", async (req, res) => {
-  try {
-    const CategoryNames = await CategoryQuestionsMaster.find({})
-      .populate("ownerId", "firstName lastName email -password")
-      .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password").lean();
-    res.json(CategoryNames);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+    try {
+        const CategoryNames = await CategoryQuestionsMaster.find({})
+            .populate("ownerId", "firstName lastName email -password")
+            .populate("createdBy", "firstName lastName email -password")
+            .populate("updatedBy", "firstName lastName email -password").lean();
+        res.json(CategoryNames);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 // v1.0.9 ----------------------------------------------------------------------------->
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong!" });
+    console.error(err.stack);
+    res.status(500).json({ message: "Something went wrong!" });
 });
 
 // this is common code for datautils
@@ -978,38 +978,38 @@ const SharingRule = require("./models/SharingRules.js");
 // });
 
 app.get("/getUsersByRoleId", async (req, res) => {
-  const { organizationId, roleId } = req.query;
-  try {
-    // Build the query object
-    const query = { organizationId };
-    if (roleId) {
-      query.RoleId = { $in: Array.isArray(roleId) ? roleId : [roleId] };
+    const { organizationId, roleId } = req.query;
+    try {
+        // Build the query object
+        const query = { organizationId };
+        if (roleId) {
+            query.RoleId = { $in: Array.isArray(roleId) ? roleId : [roleId] };
+        }
+        // Fetch users based on the query
+        const users = await Users.find(query);
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("Error fetching users by organization and role:", error);
+        res
+            .status(500)
+            .json({ message: "Internal server error", error: error.message });
     }
-    // Fetch users based on the query
-    const users = await Users.find(query);
-    res.status(200).json(users);
-  } catch (error) {
-    console.error("Error fetching users by organization and role:", error);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
-  }
 });
 
 // this is realted to data utils i think
 app.get("/rolesdata/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    const role = await Role.findById(id);
-    if (!role) {
-      return res.status(404).json({ message: "Role not found" });
+    const { id } = req.params;
+    try {
+        const role = await Role.findById(id);
+        if (!role) {
+            return res.status(404).json({ message: "Role not found" });
+        }
+        res.status(200).json(role);
+    } catch (error) {
+        res
+            .status(500)
+            .json({ message: "Error fetching role", error: error.message });
     }
-    res.status(200).json(role);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching role", error: error.message });
-  }
 });
 
 //this is related to roles main page get
@@ -1028,22 +1028,22 @@ app.get("/rolesdata/:id", async (req, res) => {
 // });
 
 app.get("/api/rolesdata/:organizationId", async (req, res) => {
-  const { organizationId } = req.params;
-  try {
-    const roles = await Role.find({ organizationId }).populate(
-      "reportsToRoleId"
-    );
-    if (!roles || roles.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No roles found for this organization" });
+    const { organizationId } = req.params;
+    try {
+        const roles = await Role.find({ organizationId }).populate(
+            "reportsToRoleId"
+        );
+        if (!roles || roles.length === 0) {
+            return res
+                .status(404)
+                .json({ message: "No roles found for this organization" });
+        }
+        res.status(200).json(roles);
+    } catch (error) {
+        res
+            .status(500)
+            .json({ message: "Error fetching roles", error: error.message });
     }
-    res.status(200).json(roles);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching roles", error: error.message });
-  }
 });
 
 
@@ -1098,36 +1098,36 @@ require("./controllers/SubscriptionRenewalController");
 // No manual intervention needed - completely automatic
 const { startFreePlanRenewalCron } = require("./controllers/FreePlanRenewalController");
 dbConnection.then(() => {
-  if (process.env.NODE_ENV !== 'test') {
-    startFreePlanRenewalCron();
-    console.log('[FREE PLAN RENEWAL] Automatic renewal system initialized - runs hourly');
-  }
+    if (process.env.NODE_ENV !== 'test') {
+        startFreePlanRenewalCron();
+        // console.log('[FREE PLAN RENEWAL] Automatic renewal system initialized - runs hourly');
+    }
 }).catch(err => {
-  console.error('[FREE PLAN RENEWAL] Failed to initialize automatic renewal system:', err);
+    //   console.error('[FREE PLAN RENEWAL] Failed to initialize automatic renewal system:', err);
 });
 
 // in contextfetch for fetchUserProfile
 app.get("/auth/users/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const user = await Users.findById(id).lean();
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    try {
+        const { id } = req.params;
+        const user = await Users.findById(id).lean();
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const contact = await Contacts.findOne({ ownerId: id }, "_id").lean();
+        // user.contactId = contact._id;
+
+
+        // res.json(user);
+        res.json({
+            ...user, // convert mongoose doc to plain object
+            contactId: contact ? contact._id : null, // attach contactId
+        });
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
-
-    const contact = await Contacts.findOne({ ownerId: id }, "_id").lean();
-    // user.contactId = contact._id;
-
-
-    // res.json(user);
-    res.json({
-      ...user, // convert mongoose doc to plain object
-      contactId: contact ? contact._id : null, // attach contactId
-    });
-  } catch (error) {
-    console.error("Error fetching user:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
 });
 
 // app.delete("/users/:id/image", async (req, res) => {
@@ -1158,25 +1158,8 @@ app.get("/auth/users/:id", async (req, res) => {
 // });
 
 app.put("/users/:id", async (req, res) => {
-  const { id } = req.params;
-  const {
-    Name,
-    Firstname,
-    CountryCode,
-    UserId,
-    Email,
-    Phone,
-    LinkedinUrl,
-    Gender,
-    isFreelancer,
-    ImageData,
-    ModifiedBy,
-  } = req.body;
-
-  try {
-    const updatedUser = await Users.findByIdAndUpdate(
-      id,
-      {
+    const { id } = req.params;
+    const {
         Name,
         Firstname,
         CountryCode,
@@ -1187,18 +1170,35 @@ app.put("/users/:id", async (req, res) => {
         Gender,
         isFreelancer,
         ImageData,
-      },
-      { new: true }
-    );
+        ModifiedBy,
+    } = req.body;
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
+    try {
+        const updatedUser = await Users.findByIdAndUpdate(
+            id,
+            {
+                Name,
+                Firstname,
+                CountryCode,
+                UserId,
+                Email,
+                Phone,
+                LinkedinUrl,
+                Gender,
+                isFreelancer,
+                ImageData,
+            },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json(updatedUser);
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
     }
-
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
 });
 
 // mock interview
@@ -1209,22 +1209,22 @@ const groupsRoutes = require("./routes/interviewerGroupRoutes");
 app.use("/groups", groupsRoutes);
 
 app.get("/org-users", async (req, res) => {
-  try {
-    const tenantId = req.query.tenantId;
+    try {
+        const tenantId = req.query.tenantId;
 
-    if (!tenantId) {
-      return res.status(400).json({ message: "tenantId is required" });
+        if (!tenantId) {
+            return res.status(400).json({ message: "tenantId is required" });
+        }
+
+        const users = await Users.find({ tenantId });
+
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res
+            .status(500)
+            .json({ message: "Error fetching users", error: error.message });
     }
-
-    const users = await Users.find({ tenantId });
-
-    res.status(200).json(users);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    res
-      .status(500)
-      .json({ message: "Error fetching users", error: error.message });
-  }
 });
 
 // Email TemplateRouter
@@ -1285,18 +1285,18 @@ app.use("/", CardDetailsRouter);
 
 // this codes need to change in to routers and controllers,this will use in login pages and user creation page
 app.get("/check-email", async (req, res) => {
-  try {
-    const { email } = req.query;
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+    try {
+        const { email } = req.query;
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+        const user = await Users.findOne({ email });
+        res.json({ exists: !!user });
+    } catch (error) {
+        res
+            .status(500)
+            .json({ message: "Error checking email", error: error.message });
     }
-    const user = await Users.findOne({ email });
-    res.json({ exists: !!user });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error checking email", error: error.message });
-  }
 });
 
 // const Emailrouter = require('./routes/emailCommonRoutes.js')
@@ -1304,18 +1304,18 @@ app.get("/check-email", async (req, res) => {
 // app.use('/', Emailrouter)
 
 app.get("/check-profileId", async (req, res) => {
-  try {
-    const { profileId } = req.query;
-    if (!profileId) {
-      return res.status(400).json({ message: "profileId is required" });
+    try {
+        const { profileId } = req.query;
+        if (!profileId) {
+            return res.status(400).json({ message: "profileId is required" });
+        }
+        const user = await Users.findOne({ profileId });
+        res.json({ exists: !!user });
+    } catch (error) {
+        res
+            .status(500)
+            .json({ message: "Error checking username", error: error.message });
     }
-    const user = await Users.findOne({ profileId });
-    res.json({ exists: !!user });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error checking username", error: error.message });
-  }
 });
 
 // app.get('/check-profileId', async (req, res) => {
@@ -1342,9 +1342,9 @@ app.use("/tasks", taskRoutes);
 
 // Notification test routes (only for development/testing)
 if (process.env.NODE_ENV !== 'production') {
-  const notificationTestRoutes = require("./routes/pushNotificationTestRoutes");
-  app.use("/notifications", notificationTestRoutes);
-//   console.log('[NOTIFICATIONS] Test endpoints registered at /notifications/*');
+    const notificationTestRoutes = require("./routes/pushNotificationTestRoutes");
+    app.use("/notifications", notificationTestRoutes);
+    //   console.log('[NOTIFICATIONS] Test endpoints registered at /notifications/*');
 }
 
 //i am using this code for outsource interviewers we need to change his into contact controller
@@ -1402,15 +1402,15 @@ app.use("/invoices", InvoiceRoutes);
 const SharingRulesObject = require("./models/SharingRulesObject.js");
 //sharing rule object name ftech
 app.get("/sharing-rules-objects", async (req, res) => {
-  try {
-    const sharingRulesObjects = await SharingRulesObject.find();
-    res.status(200).json(sharingRulesObjects);
-  } catch (error) {
-    res.status(500).json({
-      message: "Error fetching sharing rules objects",
-      error: error.message,
-    });
-  }
+    try {
+        const sharingRulesObjects = await SharingRulesObject.find();
+        res.status(200).json(sharingRulesObjects);
+    } catch (error) {
+        res.status(500).json({
+            message: "Error fetching sharing rules objects",
+            error: error.message,
+        });
+    }
 });
 
 //notifications
@@ -1489,22 +1489,22 @@ const filterRoutes = require("./routes/AnalyticsRoutes/filterRoutes.js");
 const columnRoutes = require("./routes/AnalyticsRoutes/columnRoutes");
 const reportRoutes = require("./routes/AnalyticsRoutes/reportRoutes");
 const {
-  interviews,
-  interviewers,
-  assessments,
-  candidates,
-  organizations,
-  reportTemplates,
-  getKPIData,
-  getChartData,
-  getTopSkills,
-  getTopExternalInterviewers,
+    interviews,
+    interviewers,
+    assessments,
+    candidates,
+    organizations,
+    reportTemplates,
+    getKPIData,
+    getChartData,
+    getTopSkills,
+    getTopExternalInterviewers,
 } = require("./data/mockData.js");
 const { Contacts } = require("./models/Contacts.js");
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
-  res.json({ status: "OK", message: "Interview SaaS Backend is running" });
+    res.json({ status: "OK", message: "Interview SaaS Backend is running" });
 });
 // Dashboard endpoints
 // Filter routes
@@ -1517,142 +1517,142 @@ app.use("/api/columns", columnRoutes);
 app.use("/api/reports", reportRoutes);
 
 app.get("/api/kpis", (req, res) => {
-  try {
-    const kpis = getKPIData();
-    res.json(kpis);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch KPI data" });
-  }
+    try {
+        const kpis = getKPIData();
+        res.json(kpis);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch KPI data" });
+    }
 });
 
 
 
 app.get("/api/charts", (req, res) => {
-  try {
-    const data = getChartData();
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch chart data" });
-  }
+    try {
+        const data = getChartData();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch chart data" });
+    }
 });
 
 // Data endpoints
 app.get("/api/interviews", (req, res) => {
-  try {
-    res.json(interviews);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch interviews data" });
-  }
+    try {
+        res.json(interviews);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch interviews data" });
+    }
 });
 
 app.get("/api/interviews/:id", (req, res) => {
-  try {
-    const interview = interviews.find((i) => i.id === req.params.id);
-    if (!interview) {
-      return res.status(404).json({ error: "Interview not found" });
+    try {
+        const interview = interviews.find((i) => i.id === req.params.id);
+        if (!interview) {
+            return res.status(404).json({ error: "Interview not found" });
+        }
+        res.json(interview);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch interview data" });
     }
-    res.json(interview);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch interview data" });
-  }
 });
 
 app.get("/api/interviewers", (req, res) => {
-  try {
-    res.json(interviewers);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch interviewers data" });
-  }
+    try {
+        res.json(interviewers);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch interviewers data" });
+    }
 });
 
 app.get("/api/interviewers/:id", (req, res) => {
-  try {
-    const interviewer = interviewers.find((i) => i.id === req.params.id);
-    if (!interviewer) {
-      return res.status(404).json({ error: "Interviewer not found" });
+    try {
+        const interviewer = interviewers.find((i) => i.id === req.params.id);
+        if (!interviewer) {
+            return res.status(404).json({ error: "Interviewer not found" });
+        }
+        res.json(interviewer);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch interviewer data" });
     }
-    res.json(interviewer);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch interviewer data" });
-  }
 });
 
 app.get("/api/assessments", (req, res) => {
-  try {
-    res.json(assessments);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch assessments data" });
-  }
+    try {
+        res.json(assessments);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch assessments data" });
+    }
 });
 
 app.get("/api/candidates", (req, res) => {
-  try {
-    res.json(candidates);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch candidates data" });
-  }
+    try {
+        res.json(candidates);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch candidates data" });
+    }
 });
 
 app.get("/api/organizations", (req, res) => {
-  try {
-    res.json(organizations);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch organizations data" });
-  }
+    try {
+        res.json(organizations);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch organizations data" });
+    }
 });
 
 app.get("/api/report-templates", (req, res) => {
-  try {
-    res.json(reportTemplates);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch report templates data" });
-  }
+    try {
+        res.json(reportTemplates);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch report templates data" });
+    }
 });
 
 // Trends endpoints
 app.get("/api/trends/skills", (req, res) => {
-  try {
-    const data = getTopSkills();
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch top skills data" });
-  }
+    try {
+        const data = getTopSkills();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch top skills data" });
+    }
 });
 
 app.get("/api/trends/external-interviewers", (req, res) => {
-  try {
-    const data = getTopExternalInterviewers();
-    res.json(data);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Failed to fetch top external interviewers data" });
-  }
+    try {
+        const data = getTopExternalInterviewers();
+        res.json(data);
+    } catch (error) {
+        res
+            .status(500)
+            .json({ error: "Failed to fetch top external interviewers data" });
+    }
 });
 
 // Export endpoints (placeholders)
 app.post("/api/export/csv", (req, res) => {
-  try {
-    // Placeholder for CSV export functionality
-    res.json({
-      message: "CSV export functionality would be implemented here",
-      data: req.body,
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to export CSV" });
-  }
+    try {
+        // Placeholder for CSV export functionality
+        res.json({
+            message: "CSV export functionality would be implemented here",
+            data: req.body,
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to export CSV" });
+    }
 });
 
 app.post("/api/export/pdf", (req, res) => {
-  try {
-    // Placeholder for PDF export functionality
-    res.json({
-      message: "PDF export functionality would be implemented here",
-      data: req.body,
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to export PDF" });
-  }
+    try {
+        // Placeholder for PDF export functionality
+        res.json({
+            message: "PDF export functionality would be implemented here",
+            data: req.body,
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to export PDF" });
+    }
 });
 
 
@@ -1663,93 +1663,93 @@ let tokenExpiresAt = 0;
 
 // Get Zoom S2S token
 async function getS2SToken() {
-  if (cachedToken && Date.now() < tokenExpiresAt - 60000) return cachedToken;
+    if (cachedToken && Date.now() < tokenExpiresAt - 60000) return cachedToken;
 
-  const tokenUrl = 'https://zoom.us/oauth/token';
-  const auth = Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64');
+    const tokenUrl = 'https://zoom.us/oauth/token';
+    const auth = Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64');
 
-  const data = qs.stringify({
-    grant_type: 'account_credentials',
-    account_id: process.env.ZOOM_ACCOUNT_ID
-  });
+    const data = qs.stringify({
+        grant_type: 'account_credentials',
+        account_id: process.env.ZOOM_ACCOUNT_ID
+    });
 
-  const r = await axios.post(tokenUrl, data, {
-    headers: {
-      'Authorization': `Basic ${auth}`,
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  });
+    const r = await axios.post(tokenUrl, data, {
+        headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    });
 
-  cachedToken = r.data.access_token;
-  tokenExpiresAt = Date.now() + (r.data.expires_in * 1000);
-  return cachedToken;
+    cachedToken = r.data.access_token;
+    tokenExpiresAt = Date.now() + (r.data.expires_in * 1000);
+    return cachedToken;
 }
 
 
 // Create meeting endpoint Zoom meet Links
 app.post('/api/create-meeting', async (req, res) => {
-  try {
-    const { topic, start_time, duration, timezone, userId, settings } = req.body;
-    const token = await getS2SToken();
+    try {
+        const { topic, start_time, duration, timezone, userId, settings } = req.body;
+        const token = await getS2SToken();
 
-    // Validate start_time
-    if (start_time) {
-      const startDate = new Date(start_time);
-      if (isNaN(startDate.getTime())) {
-        return res.status(400).json({
-          error: 'Invalid start_time format. Use ISO 8601 format: YYYY-MM-DDTHH:mm:ss'
-        });
-      }
-      if (startDate <= new Date()) {
-        return res.status(400).json({ error: 'start_time must be in the future' });
-      }
-    }
-
-    const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
-    const type = start_time ? 2 : 1;
-
-    const body = {
-      topic: topic || 'Interview Meeting',
-      type,
-      ...(start_time && { start_time }),
-      duration: duration || 60,
-      timezone: timezone || 'Asia/Kolkata',
-      settings: settings || {
-        join_before_host: true,
-        host_video: false,
-        participant_video: false
-      }
-    };
-
-    console.log("Creating Zoom meeting with:", body);
-
-    const create = await axios.post(
-      `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
-      body,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+        // Validate start_time
+        if (start_time) {
+            const startDate = new Date(start_time);
+            if (isNaN(startDate.getTime())) {
+                return res.status(400).json({
+                    error: 'Invalid start_time format. Use ISO 8601 format: YYYY-MM-DDTHH:mm:ss'
+                });
+            }
+            if (startDate <= new Date()) {
+                return res.status(400).json({ error: 'start_time must be in the future' });
+            }
         }
-      }
-    );
 
-    // ✅ Return only what frontend needs
-    return res.json({
-      meetingId: create.data.id,
-      password: create.data.password,
-      hostId: create.data.host_id,
-      hostEmail: create.data.host_email,
-      start_url: create.data.start_url, // host link
-      join_url: create.data.join_url    // attendee link
-    });
+        const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
+        const type = start_time ? 2 : 1;
 
-  } catch (err) {
-    console.error("Zoom API Error:", err.response?.data || err.message);
-    return res.status(err.response?.status || 500).json({
-      error: err.response?.data?.message || err.message
-    });
-  }
+        const body = {
+            topic: topic || 'Interview Meeting',
+            type,
+            ...(start_time && { start_time }),
+            duration: duration || 60,
+            timezone: timezone || 'Asia/Kolkata',
+            settings: settings || {
+                join_before_host: true,
+                host_video: false,
+                participant_video: false
+            }
+        };
+
+        console.log("Creating Zoom meeting with:", body);
+
+        const create = await axios.post(
+            `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
+            body,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        // ✅ Return only what frontend needs
+        return res.json({
+            meetingId: create.data.id,
+            password: create.data.password,
+            hostId: create.data.host_id,
+            hostEmail: create.data.host_email,
+            start_url: create.data.start_url, // host link
+            join_url: create.data.join_url    // attendee link
+        });
+
+    } catch (err) {
+        console.error("Zoom API Error:", err.response?.data || err.message);
+        return res.status(err.response?.status || 500).json({
+            error: err.response?.data?.message || err.message
+        });
+    }
 });
 
 // upinterview contact us page routes
@@ -1870,7 +1870,7 @@ app.use("/upinterviewcontactuspage", upinterviewContactUsPageRoutes);
 
 // Catch-all for undefined routes
 app.use("*", (req, res) => {
-  res.status(404).json({ error: "Endpoint not found" });
+    res.status(404).json({ error: "Endpoint not found" });
 });
 
 //  v1.0.4 ------------------------------------------------------------------------------>
