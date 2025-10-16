@@ -150,15 +150,29 @@ const cancelSubscription = async (req, res) => {
         updatedSubscription.autoRenew = false;
         updatedSubscription.endDate = new Date();
         updatedSubscription.endReason = 'cancelled';
+        // Clear Razorpay subscription ID since it's cancelled
+        updatedSubscription.razorpaySubscriptionId = null;
+        updatedSubscription.razorpayPaymentId = null;
+        updatedSubscription.lastPaymentId = null;
         await updatedSubscription.save();
 
-        // Optionally mark any pending invoice as cancelled
+        // Mark any related invoice as cancelled (including paid ones for free plans)
         if (updatedSubscription.invoiceId) {
           try {
             const invoice = await Invoice.findById(updatedSubscription.invoiceId);
-            if (invoice && invoice.status !== 'paid' && invoice.status !== 'cancelled') {
+            if (invoice && invoice.status !== 'cancelled') {
+              // Store original status before cancelling (especially for paid free plan invoices)
+              const originalStatus = invoice.status;
               invoice.status = 'cancelled';
+              
+              // Add metadata to track cancellation details
+              if (!invoice.metadata) invoice.metadata = {};
+              invoice.metadata.cancelledDate = new Date();
+              invoice.metadata.cancelReason = 'Subscription cancelled by user';
+              invoice.metadata.originalStatus = originalStatus;
+              
               await invoice.save();
+              console.log(`Cancelled invoice ${invoice.invoiceCode} (was ${originalStatus}) for subscription ${subscriptionId}`);
             }
           } catch (invErr) {
             console.warn('Failed to update related invoice status on cancel:', invErr?.message);
