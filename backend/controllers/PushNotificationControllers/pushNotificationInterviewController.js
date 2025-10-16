@@ -8,6 +8,7 @@ const InterviewRequest = require('../../models/InterviewRequest');
 const { Candidate } = require('../../models/candidate');
 const { Position } = require('../../models/Position/position');
 const { Users } = require('../../models/Users');
+const { Contacts } = require('../../models/Contacts');
 
 // console.log('[INTERVIEW NOTIFICATIONS] Module loaded at', new Date().toISOString());
 
@@ -15,7 +16,7 @@ const { Users } = require('../../models/Users');
 async function getUserDetails(userId) {
   try {
     if (!userId) return null;
-    const user = await Users.findById(userId).select('firstName lastName email');
+    const user = await Contacts.findById(userId).select('firstName lastName email');
     return user;
   } catch (error) {
     console.error('[INTERVIEW NOTIFICATIONS] Error fetching user details:', error);
@@ -152,7 +153,7 @@ async function createInterviewRoundScheduledNotification(round) {
 
     const candidateName = candidate ? `${candidate.FirstName} ${candidate.LastName}` : 'Unknown Candidate';
     const positionTitle = position ? position.title : 'Unknown Position';
-    const scheduledDate = round.dateTime ? moment(round.dateTime).format('MMMM Do, YYYY, h:mm a') : 'TBD';
+    const scheduledDate = round?.dateTime ? round?.dateTime : 'Invalid Date';
 
     // Notify interview owner
     const ownerNotification = new PushNotification({
@@ -168,7 +169,7 @@ async function createInterviewRoundScheduledNotification(round) {
         roundId: String(round._id),
         roundNumber: round.sequence,
         interviewers: round.interviewers ? round.interviewers.map(id => String(id)) : [],
-        scheduledDate: round.dateTime
+        scheduledDate: round?.dateTime
       }
     });
     await ownerNotification.save();
@@ -188,7 +189,7 @@ async function createInterviewRoundScheduledNotification(round) {
             interviewId: String(interview._id),
             roundId: String(round._id),
             roundNumber: round.sequence,
-            scheduledDate: round.dateTime,
+            scheduledDate: round?.dateTime,
             candidateId: String(interview.candidateId)
           }
         });
@@ -342,8 +343,34 @@ const runInterviewReminderJob = async () => {
 
       const candidateName = candidate ? `${candidate.FirstName} ${candidate.LastName}` : 'Unknown Candidate';
       const positionTitle = position ? position.title : 'Unknown Position';
-      const scheduledTime = moment(round.dateTime);
-      const hoursUntil = scheduledTime.diff(now, 'hours');
+      
+      // Parse the dateTime format: "15-10-2025 05:08 PM - 06:08 PM"
+      // Extract the start date and time (before the dash)
+      let scheduledTime;
+      let hoursUntil;
+      
+      try {
+        // Split by ' - ' to get start time
+        const dateTimeParts = round.dateTime.split(' - ');
+        if (dateTimeParts.length > 0) {
+          const startDateTime = dateTimeParts[0]; // "15-10-2025 05:08 PM"
+          // Parse with the correct format
+          scheduledTime = moment(startDateTime, 'DD-MM-YYYY hh:mm A');
+          
+          if (!scheduledTime.isValid()) {
+            console.log(`[Interview Reminder] Invalid date format for round ${round._id}: ${round.dateTime}`);
+            continue; // Skip this round if date is invalid
+          }
+          
+          hoursUntil = scheduledTime.diff(now, 'hours');
+        } else {
+          console.log(`[Interview Reminder] Cannot parse dateTime for round ${round._id}: ${round.dateTime}`);
+          continue; // Skip this round
+        }
+      } catch (error) {
+        console.log(`[Interview Reminder] Error parsing dateTime for round ${round._id}:`, error.message);
+        continue; // Skip this round
+      }
 
       // Check if we've already sent a reminder for this round
       const reminderIdentifier = `round_${round._id}_${hoursUntil}h`;
@@ -359,7 +386,7 @@ const runInterviewReminderJob = async () => {
           message = `Your interview with ${candidateName} for ${positionTitle} starts in less than 1 hour`;
         } else if (hoursUntil <= 24) {
           title = 'Interview Reminder';
-          message = `You have an interview with ${candidateName} for ${positionTitle} scheduled for ${scheduledTime.format('MMMM Do, h:mm a')} (in ${hoursUntil} hours)`;
+          message = `You have an interview with ${candidateName} for ${positionTitle} scheduled for ${scheduledTime.format('MMMM Do, h:mm A')} (in ${hoursUntil} hours)`;
         }
 
         // Notify interviewer
@@ -390,7 +417,7 @@ const runInterviewReminderJob = async () => {
           ownerId: String(interview.ownerId),
           tenantId: String(interview.tenantId),
           title: 'Interview Reminder',
-          message: `Interview round ${round.sequence} for ${candidateName} - ${positionTitle} is scheduled for ${scheduledTime.format('MMMM Do, h:mm a')}`,
+          message: `Interview round ${round.sequence} for ${candidateName} - ${positionTitle} is scheduled for ${scheduledTime.format('MMMM Do, h:mm A')}`,
           type: 'system',
           category: 'interview_reminder',
           unread: true,
