@@ -7,12 +7,16 @@ const Schema = mongoose.Schema;
 
 const TechnologyMasterSchema = new Schema(
   {
-    TechnologyMasterName: {
+    TechnologyMasterName: {//label
       type: String,
       required: true,
     },
     // v1.0.0 <------------------------------------
     Category: {
+      type: String,
+      required: true,
+    },
+    name:{
       type: String,
       required: true,
     },

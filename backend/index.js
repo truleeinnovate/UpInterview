@@ -1756,7 +1756,7 @@ app.post('/api/create-meeting', async (req, res) => {
 
 // upinterview contact us page routes
 const upinterviewContactUsPageRoutes = require("./routes/upinterviewContactUsPageRoutes");
-app.use("/api/contact", upinterviewContactUsPageRoutes);
+app.use("/contact", upinterviewContactUsPageRoutes);
 
 
 
