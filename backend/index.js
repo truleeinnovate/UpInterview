@@ -51,8 +51,6 @@ const allowedOrigins = [
   "https://app.upinterview.io",
   "https://upinterview-dpdgchhbafekdhca.canadacentral-01.azurewebsites.net",
   "https://upinterview.io",
-  
-
 ];
 
 // const allowedOrigins = [
@@ -1756,7 +1754,7 @@ app.post('/api/create-meeting', async (req, res) => {
 
 // upinterview contact us page routes
 const upinterviewContactUsPageRoutes = require("./routes/upinterviewContactUsPageRoutes");
-app.use("/api/contact", upinterviewContactUsPageRoutes);
+app.use("/upinterviewcontactuspage", upinterviewContactUsPageRoutes);
 
 
 
