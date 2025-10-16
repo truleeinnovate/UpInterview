@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Added toast message for creating, updating and deleting masters
 // v1.0.1 - Ashok - Fixed issues
 // v1.0.2 - Ashok - Change placement of category field
+// v1.0.3 - Ashok - Added Name field at the table for technology
 
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useParams, useNavigate } from "react-router-dom";
@@ -124,8 +125,6 @@ const MasterTable = () => {
   // };
   const handleSaveMaster = async (data) => {
     try {
-      console.log("MASTER DATA FOR SAVING FORM ==========> ", data);
-
       const payload =
         Array.isArray(data) && data.length > 0
           ? data.map((item) => ({ ...item, ownerId })) // bulk + ownerId
@@ -172,7 +171,6 @@ const MasterTable = () => {
       );
 
       if (res.status === 200) {
-        console.log(`${type} deleted successfully:`, res.data);
         setMasterData((prev) => prev.filter((m) => m._id !== deleteTarget._id));
         setIsDeletePopupOpen(false);
         setDeleteTarget(null);
@@ -230,6 +228,7 @@ const MasterTable = () => {
 
   // v1.0.1 <------------------------------------------------------------
   // v1.0.2 <------------------------------------------------------------
+  // v1.0.3 <------------------------------------------------------------
   const tableColumns = [
     {
       key: "name",
@@ -284,6 +283,17 @@ const MasterTable = () => {
               <span>
                 {row.Category ? capitalizeFirstLetter(row.Category) : "N/A"}
               </span>
+            ),
+          },
+        ]
+      : []),
+    ...(type === "technology"
+      ? [
+          {
+            key: "name",
+            header: "Name",
+            render: (value, row) => (
+              <span>{row.name ? capitalizeFirstLetter(row.name) : "N/A"}</span>
             ),
           },
         ]
@@ -352,6 +362,7 @@ const MasterTable = () => {
         ]
       : []),
   ];
+  // v1.0.3 ------------------------------------------------------------>
   // v1.0.2 ------------------------------------------------------------>
   // v1.0.1 ------------------------------------------------------------>
 
@@ -390,27 +401,77 @@ const MasterTable = () => {
   // v1.0.1 ------------------------------------------------------------>
 
   const kanbanColumns = [
+    // {
+    //   key: "name",
+    //   header: "Master Name",
+    //   render: (value, row) => (
+    //     <div className="font-medium">
+    //       {row.IndustryName ||
+    //         row.TechnologyMasterName ||
+    //         row.SkillName ||
+    //         row.LocationName ||
+    //         row.RoleName ||
+    //         row.QualificationName ||
+    //         row.University_CollegeName ||
+    //         row.CompanyName ||
+    //         "N/A"}
+    //     </div>
+    //   ),
+    // },
+    ...(type === "technology"
+      ? [
+          {
+            key: "name",
+            header: "Name",
+            render: (value, row) => (
+              <span>{row.name ? capitalizeFirstLetter(row.name) : "N/A"}</span>
+            ),
+          },
+        ]
+      : []),
     {
-      key: "name",
-      header: "Name",
+      key: "createdBy",
+      header: "Created By",
       render: (value, row) => (
-        <div className="font-medium">
-          {row.IndustryName ||
-            row.TechnologyMasterName ||
-            row.SkillName ||
-            row.LocationName ||
-            row.RoleName ||
-            row.QualificationName ||
-            row.University_CollegeName ||
-            row.CompanyName ||
-            "N/A"}
-        </div>
+        <span>
+          {row?.createdBy
+            ? `${capitalizeFirstLetter(row.createdBy.firstName) || ""} ${
+                capitalizeFirstLetter(row.createdBy.lastName) || ""
+              }`.trim() || "N/A"
+            : "N/A"}
+        </span>
       ),
     },
     {
       key: "createdAt",
       header: "Created Date",
-      render: (value, row) => <span>{row.createdAt || "N/A"}</span>,
+      render: (value, row) => (
+        <span>{new Date(row.createdAt).toLocaleDateString() || "N/A"}</span>
+      ),
+    },
+    {
+      key: "updatedBy",
+      header: "Updated By",
+      render: (value, row) => (
+        <span>
+          {row?.updatedBy
+            ? `${capitalizeFirstLetter(row.updatedBy.firstName) || ""} ${
+                capitalizeFirstLetter(row.updatedBy.lastName) || ""
+              }`.trim() || "N/A"
+            : "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "updatedAt",
+      header: "Updated Date",
+      render: (value, row) => {
+        return row.updatedAt ? (
+          <span>{new Date(row.updatedAt).toLocaleDateString()}</span>
+        ) : (
+          "N/A"
+        );
+      },
     },
   ];
 
@@ -503,7 +564,7 @@ const MasterTable = () => {
                 row.TechnologyMasterName ||
                 row.SkillName ||
                 "N/A",
-              subtitle: row.status || "Unknown",
+              // subtitle: row.status || "Unknown",
             }))}
             masterData={masterData}
             columns={kanbanColumns}
