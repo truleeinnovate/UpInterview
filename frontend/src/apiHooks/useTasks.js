@@ -10,7 +10,6 @@ import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 export const useTasks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const hasViewPermission = effectivePermissions?.Tasks?.View;
-  const hasDeletePermission = effectivePermissions?.Tasks?.Delete;
 
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
@@ -21,7 +20,12 @@ export const useTasks = (filters = {}) => {
   return useQuery({
     queryKey: ['tasks', ownerId, tenantId, organization],
     queryFn: async () => {
-      const res = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
+      const res = await axios.get(`${config.REACT_APP_API_URL}/tasks`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        withCredentials: true,
+      });
       let tasks = Array.isArray(res.data) ? res.data : [];
       // match existing behavior: client-side filter by ownerId
       tasks = tasks.filter((t) => t?.ownerId === ownerId);
@@ -45,29 +49,44 @@ export const useTasks = (filters = {}) => {
 
 // Fetch a single task by id
 export const useTaskById = (taskId) => {
+  const authToken = Cookies.get('authToken');
+  
   return useQuery({
     queryKey: ['task', taskId],
     queryFn: async () => {
       if (!taskId) return null;
-      const res = await axios.get(`${config.REACT_APP_API_URL}/tasks/${taskId}`);
+      
+      const res = await axios.get(`${config.REACT_APP_API_URL}/tasks/${taskId}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        withCredentials: true,
+      });
       return res.data;
     },
     enabled: !!taskId,
-    retry: 1,
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 20,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    retry: 2,
+    staleTime: 1000 * 30, // 30 seconds - reduce stale time for edit mode
+    cacheTime: 1000 * 60 * 5, // 5 minutes - reduce cache time
+    refetchOnWindowFocus: true, // Enable refetch on focus for fresh data
+    refetchOnMount: true, // Enable refetch on mount to ensure fresh data in edit mode
+    refetchOnReconnect: true, // Enable refetch on reconnect
   });
 };
 
 // Create task
 export const useCreateTask = () => {
   const queryClient = useQueryClient();
+  const authToken = Cookies.get('authToken');
+  
   return useMutation({
     mutationFn: async (payload) => {
-      const res = await axios.post(`${config.REACT_APP_API_URL}/tasks`, payload);
+      const res = await axios.post(`${config.REACT_APP_API_URL}/tasks`, payload, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        withCredentials: true,
+      });
       return res.data;
     },
     onSuccess: () => {
@@ -82,10 +101,17 @@ export const useCreateTask = () => {
 // Update task
 export const useUpdateTask = () => {
   const queryClient = useQueryClient();
+  const authToken = Cookies.get('authToken');
+  
   return useMutation({
     mutationFn: async ({ id, data }) => {
       if (!id) throw new Error('Missing task id');
-      const res = await axios.patch(`${config.REACT_APP_API_URL}/tasks/${id}`, data);
+      const res = await axios.patch(`${config.REACT_APP_API_URL}/tasks/${id}`, data, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        withCredentials: true,
+      });
       return res.data;
     },
     onSuccess: (_data, variables) => {
@@ -103,6 +129,7 @@ export const useUpdateTask = () => {
 // Delete task
 export const useDeleteTask = () => {
   const queryClient = useQueryClient();
+  const authToken = Cookies.get('authToken');
   const { effectivePermissions } = usePermissions();
   const hasDeletePermission = effectivePermissions?.Tasks?.Delete;
   
@@ -114,7 +141,12 @@ export const useDeleteTask = () => {
       if (!id) throw new Error('Missing task id');
       
       // Make sure this endpoint matches your backend route
-      const res = await axios.delete(`${config.REACT_APP_API_URL}/tasks/delete-task/${id}`);
+      const res = await axios.delete(`${config.REACT_APP_API_URL}/tasks/delete-task/${id}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        withCredentials: true,
+      });
       return res.data;
     },
     onSuccess: () => {
