@@ -50,9 +50,9 @@ const KanbanView = ({
                         <h4 className="text-sm font-bold text-custom-blue truncate">
                           {capitalizeFirstLetter(item?.title) || "N/A"}
                         </h4>
-                        <p className="text-sm text-gray-600 truncate">
+                        {/* <p className="text-sm text-gray-600 truncate">
                           {item?.subtitle || "N/A"}
-                        </p>
+                        </p> */}
                       </div>
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
