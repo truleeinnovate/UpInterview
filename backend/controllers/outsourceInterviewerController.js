@@ -40,15 +40,15 @@ exports.updateInterviewerFeedback = async (req, res) => {
 
     // Validate status value if provided
     if (status) {
-      const validStatuses = ["New",
-        "Under Review",
-        "Approved",
-        "Rejected",
-        "Suspended",];
+      const validStatuses = ["new",
+        "underReview",
+        "approved",
+        "rejected",
+        "suspended",];
       if (!validStatuses.includes(status)) {
-        return res.status(400).json({ 
-          success: false, 
-          message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` 
+        return res.status(400).json({
+          success: false,
+          message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
         });
       }
     }
@@ -89,7 +89,7 @@ exports.updateInterviewerFeedback = async (req, res) => {
         },
         { new: true }
       );
-     
+
       console.log(`✅ Status synced for Contact ${contactId}: ${status}`);
     }
 
