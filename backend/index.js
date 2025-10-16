@@ -50,6 +50,9 @@ const allowedOrigins = [
   "https://dev.upinterview.io",
   "https://app.upinterview.io",
   "https://upinterview-dpdgchhbafekdhca.canadacentral-01.azurewebsites.net",
+  "https://upinterview.io",
+  
+
 ];
 
 // const allowedOrigins = [
