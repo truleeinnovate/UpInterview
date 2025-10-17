@@ -660,7 +660,7 @@ const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
                 row.passScore
                     ? row.passScoreType === "Percentage"
                         ? `${row.passScore}%`
-                        : `${row.passScore} pts` // or "marks"
+                        : `${row.passScore} marks` // or "pts"
                     : "Not Provided",
         },
         {
