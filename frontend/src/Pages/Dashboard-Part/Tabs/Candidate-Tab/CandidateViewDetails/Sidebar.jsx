@@ -234,7 +234,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
             <Mail className="text-gray-500 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
             <div className="min-w-0 flex-1 pb-2 pt-2">
               <span className="block truncate text-sm">
-                {candidate?.Email || "?"}
+                {candidate?.Email || "Not Provided"}
               </span>
             </div>
           </div>
@@ -252,7 +252,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
             <GraduationCap className="text-black mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
             <div className="min-w-0 flex-1 pb-2 pt-2">
               <span className="block truncate text-sm">
-                {candidate?.HigherQualification || "?"}
+                {candidate?.HigherQualification || "Not Provided"}
               </span>
             </div>
           </div>
@@ -261,7 +261,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
             <Building2 className="text-custom-blue mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
             <div className="min-w-0 flex-1 pb-2 pt-2">
               <span className="block truncate text-sm">
-                {candidate?.UniversityCollege || "?"}
+                {candidate?.UniversityCollege || "Not Provided"}
               </span>
             </div>
           </div>

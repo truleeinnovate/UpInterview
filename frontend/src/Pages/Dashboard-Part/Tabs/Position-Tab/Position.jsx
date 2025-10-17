@@ -510,15 +510,16 @@ const PositionTab = () => {
   const handleStatusChange = async (row, newStatus) => {
     if (!effectivePermissions.Positions?.Edit) return;
     if (!newStatus || row.status === newStatus) return;
+    
 
-    if (["closed", "cancelled"].includes(newStatus)) {
-      const confirmed = window.confirm(
-        `Are you sure you want to mark this position as ${capitalizeFirstLetter(
-          newStatus
-        )}?`
-      );
-      if (!confirmed) return;
-    }
+    // if (["closed", "cancelled"].includes(newStatus)) {
+    //   const confirmed = window.confirm(
+    //     `Are you sure you want to mark this position as ${capitalizeFirstLetter(
+    //       newStatus
+    //     )}?`
+    //   );
+    //   if (!confirmed) return;
+    // }
 
     try {
       setUpdatingStatusId(row._id);

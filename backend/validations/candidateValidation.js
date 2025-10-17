@@ -58,6 +58,10 @@ const candidateValidationSchema = Joi.object({
     "string.empty": "Current Role is required",
     "any.required": "Current Role is required",
   }),
+  Technology: Joi.string().required().messages({
+    "string.empty": "Technology is required",
+    "any.required": "Technology is required",
+  }),
 //   PositionId: Joi.string().required().messages({
 //     "string.empty": "Position is required",
 //     "any.required": "Position is required",

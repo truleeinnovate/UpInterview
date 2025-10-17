@@ -662,12 +662,12 @@ const MockSchedulelater = () => {
             setCurrentPage(2);
             setIsSubmitting(false);
 
-              // Scroll to top when moving to page 2
-        setTimeout(() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 100);
- setIsSubmitting(false);
-        // setIsSubmitting(false);
+            // Scroll to top when moving to page 2
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 100);
+            setIsSubmitting(false);
+            // setIsSubmitting(false);
 
 
         } catch (error) {
@@ -1748,128 +1748,134 @@ const MockSchedulelater = () => {
                                                 onMenuOpen={loadCurrentRoles}
                                                 loading={isCurrentRolesFetching}
                                             />
-                                        </div>
-                                        <div>
+                                            {/* skills updated code by Ranjith */}
 
-                                            <DropdownWithSearchField
-                                                ref={fieldRefs.skills}
-                                                value={null}
-                                                allowCreateOnEnter={true}
-                                                options={
-                                                    skills
-                                                        ?.filter(
-                                                            (skill) =>
-                                                                !allSelectedSkills.some(
-                                                                    (s) => s.SkillName === skill.SkillName
-                                                                )
-                                                        )
-                                                        .map((skill) => ({
-                                                            value: skill.SkillName,
-                                                            label: skill.SkillName,
-                                                        })) || []
-                                                }
-                                                onChange={(option) => {
-                                                    if (!option) return;
-                                                    const selectedOption = option?.target?.value
-                                                        ? { value: option.target.value }
-                                                        : option;
-                                                    if (selectedOption?.value) {
-                                                        addSkill(selectedOption.value);
-                                                        if (fieldRefs.skills.current) {
-                                                            fieldRefs.skills.current.value = "";
-                                                        }
+                                            <div>
+
+                                                <DropdownWithSearchField
+                                                    ref={fieldRefs.skills}
+                                                    value={null}
+                                                    allowCreateOnEnter={true}
+                                                    options={
+                                                        skills
+                                                            ?.filter(
+                                                                (skill) =>
+                                                                    !allSelectedSkills.some(
+                                                                        (s) => s.SkillName === skill.SkillName
+                                                                    )
+                                                            )
+                                                            .map((skill) => ({
+                                                                value: skill.SkillName,
+                                                                label: skill.SkillName,
+                                                            })) || []
                                                     }
-                                                }}
-                                                onKeyDown={(e) => {
-                                                    console.log(
-                                                        "Key pressed:",
-                                                        e.key,
-                                                        "Value:",
-                                                        e.target?.value
-                                                    );
+                                                    onChange={(option) => {
+                                                        if (!option) return;
+                                                        const selectedOption = option?.target?.value
+                                                            ? { value: option.target.value }
+                                                            : option;
+                                                        if (selectedOption?.value) {
+                                                            addSkill(selectedOption.value);
+                                                            if (fieldRefs.skills.current) {
+                                                                fieldRefs.skills.current.value = "";
+                                                            }
+                                                        }
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                        console.log(
+                                                            "Key pressed:",
+                                                            e.key,
+                                                            "Value:",
+                                                            e.target?.value
+                                                        );
 
-                                                    // Handle the create action from the dropdown
-                                                    if (e.key === "Enter" && e.target?.action === "create") {
-                                                        const newSkill = e.target.value?.trim();
-                                                        if (newSkill) {
-                                                            console.log("Adding new skill:", newSkill);
-                                                            addSkill(newSkill);
+                                                        // Handle the create action from the dropdown
+                                                        if (e.key === "Enter" && e.target?.action === "create") {
+                                                            const newSkill = e.target.value?.trim();
+                                                            if (newSkill) {
+                                                                console.log("Adding new skill:", newSkill);
+                                                                addSkill(newSkill);
 
-                                                            // Clear the input field and close the dropdown
-                                                            setTimeout(() => {
-                                                                console.log("Attempting to close dropdown");
-                                                                // Blur any active element to close dropdowns
-                                                                if (document.activeElement) {
-                                                                    document.activeElement.blur();
-                                                                }
-
-                                                                // Clear the input field
-                                                                if (fieldRefs.skills.current) {
-                                                                    // Clear react-select value
-                                                                    if (fieldRefs.skills.current.select) {
-                                                                        fieldRefs.skills.current.select.clearValue();
-                                                                        console.log("React-select value cleared");
+                                                                // Clear the input field and close the dropdown
+                                                                setTimeout(() => {
+                                                                    console.log("Attempting to close dropdown");
+                                                                    // Blur any active element to close dropdowns
+                                                                    if (document.activeElement) {
+                                                                        document.activeElement.blur();
                                                                     }
 
-                                                                    // Find and clear the input
-                                                                    const selectInput =
-                                                                        fieldRefs.skills.current.querySelector("input");
-                                                                    if (selectInput) {
-                                                                        selectInput.value = "";
-                                                                        const inputEvent = new Event("input", {
-                                                                            bubbles: true,
-                                                                        });
-                                                                        selectInput.dispatchEvent(inputEvent);
+                                                                    // Clear the input field
+                                                                    if (fieldRefs.skills.current) {
+                                                                        // Clear react-select value
+                                                                        if (fieldRefs.skills.current.select) {
+                                                                            fieldRefs.skills.current.select.clearValue();
+                                                                            console.log("React-select value cleared");
+                                                                        }
+
+                                                                        // Find and clear the input
+                                                                        const selectInput =
+                                                                            fieldRefs.skills.current.querySelector("input");
+                                                                        if (selectInput) {
+                                                                            selectInput.value = "";
+                                                                            const inputEvent = new Event("input", {
+                                                                                bubbles: true,
+                                                                            });
+                                                                            selectInput.dispatchEvent(inputEvent);
+                                                                        }
                                                                     }
-                                                                }
-                                                            }, 0);
+                                                                }, 0);
+                                                            }
                                                         }
-                                                    }
-                                                }}
-                                                error={errors.skills}
-                                                label="Select Skills"
-                                                name="skills"
-                                                required={allSelectedSkills.length === 0}
-                                                onMenuOpen={loadSkills}
-                                                loading={isSkillsFetching}
-                                                isMulti={false}
-                                                placeholder="Type to search or press Enter to add new skill"
-                                                creatable={true}
-                                            />
-                                        </div>
+                                                    }}
+                                                    error={errors.skills}
+                                                    label="Select Skills"
+                                                    name="skills"
+                                                    required={allSelectedSkills.length === 0}
+                                                    onMenuOpen={loadSkills}
+                                                    loading={isSkillsFetching}
+                                                    isMulti={false}
+                                                    placeholder="Type to search or press Enter to add new skill"
+                                                    creatable={true}
+                                                />
+                                                {/* Selected Skills */}
+                                                {formData.skills.length > 0 && (
+                                                    <div className="mt-3 flex flex-wrap gap-2">
+                                                        {formData.skills.map((skill, index) => {
+                                                            // Always get skill name from formData.skills (which should be strings)
+                                                            const skillName = skill;
 
-                                        {/* Selected Skills */}
-                                        {formData.skills.length > 0 && (
-                                            <div className="mt-3 flex flex-wrap gap-2">
-                                                {formData.skills.map((skill, index) => {
-                                                    // Always get skill name from formData.skills (which should be strings)
-                                                    const skillName = skill;
+                                                            return (
+                                                                <div
+                                                                    key={index}
+                                                                    className="bg-custom-blue/10 border border-custom-blue/40 rounded-full px-3 py-1 text-sm text-custom-blue flex items-center"
+                                                                >
+                                                                    <span className="mr-1.5">{skillName}</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleRemoveSkill(index)}
+                                                                        className="ml-1 text-custom-blue hover:text-custom-blue/80"
+                                                                        aria-label={`Remove ${skillName}`}
+                                                                    >
+                                                                        <X className="h-3.5 w-3.5" />
+                                                                    </button>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
 
-                                                    return (
-                                                        <div
-                                                            key={index}
-                                                            className="bg-custom-blue/10 border border-custom-blue/40 rounded-full px-3 py-1 text-sm text-custom-blue flex items-center"
-                                                        >
-                                                            <span className="mr-1.5">{skillName}</span>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleRemoveSkill(index)}
-                                                                className="ml-1 text-custom-blue hover:text-custom-blue/80"
-                                                                aria-label={`Remove ${skillName}`}
-                                                            >
-                                                                <X className="h-3.5 w-3.5" />
-                                                            </button>
-                                                        </div>
-                                                    );
-                                                })}
+                                                {errors.skills && (
+                                                    <p className="text-red-500 text-xs mt-1">{errors.skills}</p>
+                                                )}
                                             </div>
-                                        )}
 
-                                        {errors.skills && (
-                                            <p className="text-red-500 text-xs mt-1">{errors.skills}</p>
-                                        )}
 
-                                        {/* skills updated code by Ranjith */}
+
+
+
+                                        </div>
+
+
                                         {/* v1.0.0 <---------------------------------------------------------------- */}
                                         {/* <SkillsField
                                                 ref={fieldRefs.skills}
@@ -2094,7 +2100,7 @@ const MockSchedulelater = () => {
                                                         : undefined
                                                 }
                                             >
-                                                <DropdownWithSearchField
+                                                <InputField
                                                     containerRef={fieldRefs["rounds.interviewMode"]}
                                                     label="Interview Mode"
                                                     name="rounds.interviewMode"
@@ -2488,7 +2494,7 @@ const MockSchedulelater = () => {
 
                                                     {/* duration field */}
                                                     <div className="mt-4">
-                                                        <DropdownWithSearchField
+                                                        <InputField
                                                             containerRef={fieldRefs["rounds.duration"]}
                                                             label="Duration (minutes)"
                                                             name="rounds.duration"
