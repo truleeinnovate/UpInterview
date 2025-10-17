@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
-import OutsourceOption from "../Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx";
+import OutsourcedInterviewerModal from "../Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
 import LoadingButton from "../../../../Components/LoadingButton";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
@@ -2021,7 +2021,7 @@ const MockSchedulelater = () => {
                             </div> */}
                                                         {fileName && (
                                                             <div
-                                                                className="border mt-2 flex items-center justify-between gap-2 px-2 rounded-md 
+                                                                className="border mt-2 flex items-center justify-between gap-2 px-2 rounded-md
                                 max-w-[12rem] sm:max-w-[14rem] md:max-w-sm xl:max-w-md"
                                                             >
                                                                 <div className="min-w-0 flex-1 overflow-hidden">
@@ -2758,11 +2758,12 @@ const MockSchedulelater = () => {
 
             {
                 showOutsourcePopup && (
-                    <OutsourceOption
+                    <OutsourcedInterviewerModal
                         onClose={() => setShowOutsourcePopup(false)}
                         dateTime={combinedDateTime}
                         onProceed={handleExternalInterviewerSelect}
                         skills={formData.skills}
+                        technology={formData.technology}
                         navigatedfrom="mock-interview"
                         candidateExperience={formData?.currentExperience}
                         isMockInterview={true}  // Correctly passes true for mock interviews
