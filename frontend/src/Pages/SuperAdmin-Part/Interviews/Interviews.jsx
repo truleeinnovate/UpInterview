@@ -10,6 +10,7 @@ import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusB
 import { Eye, Pencil, ChevronUp, ChevronDown } from "lucide-react";
 import KanbanView from "./KanbanView.jsx";
 import TableView from "../../../Components/Shared/Table/TableView.jsx";
+import InterviewDetailsSidebar from "./InterviewDetailsSidebar.jsx";
 // v1.0.0 <------------------------------------------------------------
 import { config } from "../../../config.js";
 import axios from "axios";
@@ -33,19 +34,44 @@ const Interviewers = () => {
   const filterIconRef = useRef(null);
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [selectedInterview, setSelectedInterview] = useState(null); // For view details
   const [interviews, setInterviews] = useState([]);
+  const [isLoading, setIsLoading] = useState(true); // Loading state
 
   // v1.0.0 --------------------------------------------->
   useEffect(() => {
     const getInterviews = async () => {
       try {
+        setIsLoading(true); // Start loading
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/interview/interviews`
+          `${config.REACT_APP_API_URL}/interview/interview-rounds`
         );
-        setInterviews(response.data);
-        console.log("INTERVIEWS DATA ==============> : ", response.data);
+        if (response.data.success) {
+          setInterviews(response.data.data);
+          console.log("INTERVIEW ROUNDS DATA ==============> : ", response.data.data);
+          
+          // Debug: Check organization types in the data
+          const orgTypes = response.data.data.reduce((acc, round) => {
+            const type = round.organizationType || 'undefined';
+            acc[type] = (acc[type] || 0) + 1;
+            return acc;
+          }, {});
+          console.log("Organization Types Distribution (frontend):", orgTypes);
+          console.log("Organization Types Distribution (backend):", response.data.typeDistribution);
+          
+          // Debug: Sample first 3 rounds
+          console.log("Sample rounds:", response.data.data.slice(0, 3).map(r => ({
+            id: r._id,
+            orgType: r.organizationType,
+            orgName: r.organization
+          })));
+        } else {
+          console.error("Failed to fetch interview rounds");
+        }
       } catch (err) {
-        console.log(err);
+        console.error("Error fetching interview rounds:", err);
+      } finally {
+        setIsLoading(false); // Stop loading
       }
     };
 
@@ -54,7 +80,7 @@ const Interviewers = () => {
   // v1.0.0 --------------------------------------------->
 
   // v1.0.0 <---------------------------------------------
-  const [selectedType, setSelectedType] = useState("organization");
+  const [selectedType, setSelectedType] = useState("all"); // Show all by default
   // v1.0.0 --------------------------------------------->
 
   useEffect(() => {
@@ -135,24 +161,40 @@ const Interviewers = () => {
 
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
-    return dataToUse.filter((interview) => {
+    
+    const filtered = dataToUse.filter((round) => {
+      // Filter by organization/individual using organizationType field
+      const matchesType = selectedType === "all"
+        ? true  // Show all types
+        : selectedType === "organization" 
+        ? round?.organizationType === "organization"  // Only show organization type
+        : round?.organizationType === "individual"; // Show individual type
+
       const fieldsToSearch = [
-        interview?.status,
-        interview?.interviewNo,
-        interview?.contactId?.firstName,
-        interview?.contactId?.lastName,
+        round?.status,
+        round?.interviewCode,
+        round?.interviewerNames,
+        round?.organization,
+        round?.roundTitle,
+        round?.interviewMode,
+        round?.interviewType,
       ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(interview?.status);
+        selectedFilters.status.includes(round?.status);
 
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return matchesSearchQuery && matchesStatus;
+      return matchesType && matchesSearchQuery && matchesStatus;
     });
+    
+    // Debug logging
+    console.log(`FilteredData: selectedType=${selectedType}, total=${dataToUse.length}, filtered=${filtered.length}`);
+    
+    return filtered;
   };
 
   // Pagination
@@ -178,9 +220,6 @@ const Interviewers = () => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
   };
-
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
   // v1.0.0 <-----------------------------------------------------------------------------------
   // Table Columns
@@ -247,7 +286,7 @@ const Interviewers = () => {
 
   const tableColumns = [
     {
-      key: "order",
+      key: "interviewCode",
       header: "Interview ID",
       render: (value, row) => (
         <div className="flex items-center">
@@ -256,258 +295,44 @@ const Interviewers = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               // onClick={() => handleViewInterview(row)}
             >
-              {row.interviewCode || ""}
+              {row.interviewCode || "N/A"}
             </div>
           </div>
         </div>
       ),
     },
     {
-      key: "candidateName",
-      header: "Candidate Name",
-      render: (value, row) => {
-        const candidate = row.candidate;
-        return (
-          <Tooltip
-            label={`${candidate?.FirstName || ""} ${candidate?.LastName || ""}`}
-          >
-            <div className="flex items-center">
-              <div className="flex-shrink-0 h-8 w-8">
-                {candidate?.imageUrl ? (
-                  <img
-                    src={candidate?.ImageData?.path}
-                    alt={candidate?.LastName}
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                    {candidate?.LastName
-                      ? candidate?.LastName?.charAt(0).toUpperCase()
-                      : "?"}
-                  </div>
-                )}
-              </div>
-              <div className="ml-3 truncate max-w-[120px]">
-                <div
-                  className="text-sm font-medium text-custom-blue cursor-pointer truncate"
-                  // onClick={() => handleView(candidate)}
-                >
-                  {(candidate?.FirstName
-                    ? candidate.FirstName.charAt(0).toUpperCase() +
-                      candidate.FirstName.slice(1)
-                    : "") +
-                    " " +
-                    (candidate?.LastName
-                      ? candidate.LastName.charAt(0).toUpperCase() +
-                        candidate.LastName.slice(1)
-                      : "")}
-                </div>
-                <div className="text-sm text-gray-500 truncate">
-                  {candidate?.Email || "No Email"}
-                </div>
-              </div>
-            </div>
-          </Tooltip>
-        );
-      },
-    },
-    {
-      key: "position",
-      header: "Position",
-      render: (value, row) => {
-        const position = row.position;
-        return (
-          <Tooltip
-            label={`${position?.title || "Unknown"} • ${
-              position?.companyname || "No Company"
-            } • ${position?.Location || "No location"}`}
-          >
-            <div className="truncate max-w-[120px]">
-              <div
-                className="text-sm font-medium text-custom-blue cursor-pointer truncate"
-                // onClick={() => handleViewPosition(position)}
-              >
-                {position?.title
-                  ? position.title.charAt(0).toUpperCase() +
-                    position.title.slice(1)
-                  : "Unknown"}
-              </div>
-              <div className="text-sm text-gray-500 truncate">
-                {position?.companyname || "No Company"} •{" "}
-                {position?.Location || "No location"}
-              </div>
-            </div>
-          </Tooltip>
-        );
-      },
-    },
-    {
-      key: "interviewers",
-      header: "Interviewers",
-      render: (value, row) => {
-        const rounds = row.rounds || [];
-        const nextRound =
-          rounds
-            .filter((round) =>
-              ["Scheduled", "RequestSent"].includes(round.status)
-            )
-            .sort((a, b) => a.sequence - b.sequence)[0] || null;
-        const nextRoundInterviewers =
-          nextRound?.interviewers?.map((interviewer) => ({
-            ...interviewer,
-            isExternal: nextRound?.interviewerType === "external",
-          })) || [];
-        return (
-          <Tooltip
-            label={nextRoundInterviewers
-              .map((i) => i.name || "Unknown")
-              .join(", ")}
-          >
-            <div className="flex flex-wrap gap-1 truncate max-w-[120px]">
-              {/* {nextRoundInterviewers.slice(0, 2).map((interviewer) => (
-                <InterviewerAvatar
-                  key={interviewer?._id}
-                  interviewer={interviewer}
-                  size="sm"
-                />
-              ))} */}
-              {nextRoundInterviewers.length > 2 && (
-                <span className="text-xs text-gray-500">
-                  +{nextRoundInterviewers.length - 2}
-                </span>
-              )}
-              {!nextRoundInterviewers.length && (
-                <span className="text-sm text-gray-500">None</span>
-              )}
-            </div>
-          </Tooltip>
-        );
-      },
-    },
-    {
-      key: "progress",
-      header: "Progress",
-      render: (value, row) => {
-        const rounds = row.rounds || [];
-        const completedRounds = rounds.filter(
-          (round) => round.status === "Completed"
-        ).length;
-        const totalRounds = rounds.length;
-        return (
-          <div className="truncate max-w-[120px]">
+      key: "interviewerNames",
+      header: "Interviewer",
+      render: (value, row) => (
+        <Tooltip label={row.interviewerNames || "No interviewers assigned"}>
+          <div className="truncate max-w-[200px]">
             <div className="text-sm text-gray-700">
-              {completedRounds} of {totalRounds} Rounds
-            </div>
-            <div className="w-16 bg-gray-200 rounded-full h-2 mt-1">
-              <div
-                className="bg-custom-blue h-2 rounded-full"
-                style={{
-                  width: `${
-                    totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0
-                  }%`,
-                }}
-              ></div>
+              {row.interviewerNames || "No interviewers assigned"}
             </div>
           </div>
-        );
-      },
-    },
-    {
-      key: "currentRound",
-      header: "Current Round",
-      render: (value, row) => {
-        const rounds = row.rounds || [];
-        const currentRound =
-          rounds
-            .filter((round) =>
-              ["Scheduled", "RequestSent"].includes(round.status)
-            )
-            .sort((a, b) => a.sequence - b.sequence)[0] || null;
-        return (
-          <div className="min-w-[200px] max-w-[250px]">
-            {currentRound ? (
-              <div>
-                <div className="text-sm font-medium text-gray-700">
-                  {currentRound.roundTitle} • {currentRound.interviewType}
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <StatusBadge status={currentRound.status} size="sm" />
-                  <div className="text-xs text-gray-500">
-                    {currentRound.dateTime ? (
-                      <span>{currentRound.dateTime.split(" - ")[0]}</span>
-                    ) : (
-                      <span>Not scheduled</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <span className="text-sm text-gray-500">No current round</span>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      key: "nextRound",
-      header: "Next Round",
-      render: (value, row) => {
-        const rounds = row.rounds || [];
-        const nextRound =
-          rounds.sort((a, b) => a.sequence - b.sequence)[1] || null;
-        return (
-          <Tooltip
-            label={
-              nextRound
-                ? `${nextRound.roundTitle} (${nextRound.interviewType})`
-                : "No upcoming rounds"
-            }
-          >
-            <div className="truncate max-w-[120px]">
-              {nextRound ? (
-                <>
-                  <div className="text-sm font-medium text-gray-700 truncate">
-                    {nextRound.roundTitle}
-                  </div>
-                  <div className="flex items-center mt-1">
-                    <StatusBadge status={nextRound.status} size="sm" />
-                    <span className="ml-2 text-xs text-gray-500 truncate">
-                      {nextRound.interviewType}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <span className="text-sm text-gray-500">None</span>
-              )}
-            </div>
-          </Tooltip>
-        );
-      },
+        </Tooltip>
+      ),
     },
     {
       key: "organization",
       header: "Organization",
-      render: (value, row) => {
-        const position = row.position;
-        return (
-          <div className="flex items-center truncate max-w-[120px]">
-            {/* <Calendar className="h-4 w-4 mr-1 text-gray-500" /> */}
-            <span className="text-sm text-gray-500">
-              {position?.companyname || "N/A"}
-            </span>
+      render: (value, row) => (
+        <div className="truncate max-w-[150px]">
+          <div className="text-sm text-gray-700">
+            {row.organization || "N/A"}
           </div>
-        );
-      },
+        </div>
+      ),
     },
     {
       key: "createdOn",
       header: "Created On",
       render: (value, row) => (
         <div className="flex items-center truncate max-w-[120px]">
-          {/* <Calendar className="h-4 w-4 mr-1 text-gray-500" /> */}
           <span className="text-sm text-gray-500">
-            {row.createdAt
-              ? new Date(row.createdAt).toLocaleDateString()
+            {row.createdOn
+              ? new Date(row.createdOn).toLocaleDateString()
               : "N/A"}
           </span>
         </div>
@@ -516,7 +341,7 @@ const Interviewers = () => {
     {
       key: "status",
       header: "Status",
-      render: (value, row) => <StatusBadge status={row.status} />,
+      render: (value, row) => <StatusBadge status={row.status || "Draft"} />,
     },
   ];
   // v1.0.0 ----------------------------------------------------------------------------------->
@@ -528,7 +353,7 @@ const Interviewers = () => {
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => {
-        // setSelectedInterviewId(row._id);
+        setSelectedInterview(row);
         setIsPopupOpen(true);
       },
     },
@@ -543,11 +368,31 @@ const Interviewers = () => {
   // Kanban Columns Configuration
   const kanbanColumns = [
     {
-      key: "hourlyRate",
-      header: "Price per hour",
+      key: "interviewerNames",
+      header: "Interviewers",
       render: (value, row) => (
-        <div className="font-medium">
-          {row.requestedRate?.hourlyRate || "N/A"}
+        <div className="text-sm text-gray-700 truncate">
+          {row.interviewerNames || "No interviewers"}
+        </div>
+      ),
+    },
+    {
+      key: "organization",
+      header: "Organization",
+      render: (value, row) => (
+        <div className="text-sm text-gray-700">
+          {row.organization || "N/A"}
+        </div>
+      ),
+    },
+    {
+      key: "createdOn",
+      header: "Created On",
+      render: (value, row) => (
+        <div className="text-sm text-gray-500">
+          {row.createdOn
+            ? new Date(row.createdOn).toLocaleDateString()
+            : "N/A"}
         </div>
       ),
     },
@@ -555,7 +400,7 @@ const Interviewers = () => {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <StatusBadge status={capitalizeFirstLetter(value)} />
+        <StatusBadge status={row.status || "Draft"} />
       ),
     },
   ];
@@ -567,7 +412,7 @@ const Interviewers = () => {
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => {
-        // handleOpenPopup(row);
+        setSelectedInterview(row);
         setIsPopupOpen(true);
       },
     },
@@ -600,8 +445,21 @@ const Interviewers = () => {
 
   // Render Filter Content
   const renderFilterContent = () => {
-    // filters options
-    const statusOptions = ["draft", "cancelled", "completed"];
+    // filters options matching InterviewRounds schema
+    const statusOptions = [
+      "Draft", 
+      "RequestSent",
+      "Scheduled", 
+      "InProgress", 
+      "Completed",
+      "InCompleted",
+      "Rescheduled",
+      "Rejected",
+      "Selected",
+      "Cancelled",
+      "Incomplete",
+      "NoShow"
+    ];
 
     return (
       <div className="space-y-3">
@@ -634,7 +492,7 @@ const Interviewers = () => {
                           onChange={() => handleCurrentStatusToggle(status)}
                           className="accent-custom-blue"
                         />
-                        <span>{status}</span>
+                        <span className="text-sm">{status}</span>
                       </label>
                     ))}
                   </div>
@@ -660,6 +518,16 @@ const Interviewers = () => {
             </div>
           </div>
           <div className="flex self-end rounded-lg border border-gray-300 p-1 mb-4 mr-4">
+            <button
+              className={`px-4 py-1 rounded-md text-sm ${
+                selectedType === "all"
+                  ? "bg-gray-100 text-gray-900"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+              onClick={() => setSelectedType("all")}
+            >
+              All
+            </button>
             <button
               className={`px-4 py-1 rounded-md text-sm ${
                 selectedType === "organization"
@@ -710,7 +578,7 @@ const Interviewers = () => {
                   <TableView
                     data={currentFilteredRows}
                     columns={tableColumns}
-                    // loading={isLoading}
+                    loading={isLoading}
                     actions={tableActions}
                     emptyState="No Interviews found."
                   />
@@ -718,21 +586,22 @@ const Interviewers = () => {
               ) : (
                 <div className="w-full">
                   <KanbanView
-                    data={currentFilteredRows.map((interview) => ({
-                      ...interview,
-                      id: interview._id,
-                      title: interview.interviewNo || "N/A",
-                      subtitle:
-                        interview?.contactId?.firstName &&
-                        interview?.contactId?.lastName
-                          ? `${interview?.contactId.firstName} ${interview?.contactId.lastName}`
-                          : "N/A",
+                    data={currentFilteredRows.map((round) => ({
+                      ...round,
+                      id: round._id,
+                      title: round.interviewCode || "N/A",
+                      subtitle: round.roundTitle || "Interview Round",
+                      interviewerNames: round.interviewerNames || "No interviewers",
+                      organization: round.organization || "N/A",
+                      organizationType: round.organizationType || "individual",
+                      createdOn: round.createdOn,
+                      status: round.status || "Draft"
                     }))}
                     interviews={interviews}
                     columns={kanbanColumns}
-                    // loading={isLoading}
+                    loading={isLoading}
                     renderActions={renderKanbanActions}
-                    emptyState="No interviews found."
+                    emptyState="No interview rounds found."
                   />
                 </div>
               )}
@@ -752,6 +621,17 @@ const Interviewers = () => {
         </div>
       </div>
       {/* v1.0.0 -----------------------------------------------------------------------------------> */}
+      
+      {/* Interview Details Sidebar */}
+      {/* <InterviewDetailsSidebar
+        isOpen={isPopupOpen}
+        onClose={() => {
+          setIsPopupOpen(false);
+          setSelectedInterview(null);
+        }}
+        interviewData={selectedInterview}
+      /> */}
+      
       <Outlet />
     </>
   );

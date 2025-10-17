@@ -198,7 +198,7 @@ currentAction: {
   
   scheduleAssessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "ScheduledAssessment" },
   rejectionReason: String,
-});
+}, { timestamps: true });
 
 // Add middleware to track status changes for internal interview usage
 const { handleInterviewStatusChange } = require('../../services/interviewUsageService');

@@ -9,6 +9,7 @@ const {
   deleteRound,
   getInterviews,
   getAllInterviews,
+  getAllInterviewRounds, // Added new function
   updateInterview,
   updateInterviewRound,
   updateInterviewStatus,
@@ -36,6 +37,7 @@ router.delete("/delete-round/:id", deleteRound);
 router.get("/all-interviews", getInterviews); // SUPER ADMIN Added by Ashok
 // v1.0.0 <-------------------------------------------------------------
 router.get("/interviews", getAllInterviews);
+router.get("/interview-rounds", getAllInterviewRounds); // SUPER ADMIN - All interview rounds with details
 // v1.0.0 ------------------------------------------------------------->
 
 router.patch('/status/:interviewId/:status', updateInterviewStatus);

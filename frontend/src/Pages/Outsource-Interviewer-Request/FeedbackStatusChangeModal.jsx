@@ -230,9 +230,9 @@ const FeedbackStatusChangeModal = ({
                                 name="rating"
                                 label=""
                                 value={typeof newStatus.rating === "number" ? newStatus.rating : ""}
-                                onChange={(e) => setNewStatus({ ...newStatus, rating: e.target.value === "" ? "" : Math.max(0, Math.min(5, Number(e.target.value))) })}
+                                onChange={(e) => setNewStatus({ ...newStatus, rating: e.target.value === "" ? "" : Math.max(0, Math.min(10, Number(e.target.value))) })}
                                 min={0}
-                                max={5}
+                                max={10}
                                 // required
                                 error={fieldErrors.rating}
                             />
