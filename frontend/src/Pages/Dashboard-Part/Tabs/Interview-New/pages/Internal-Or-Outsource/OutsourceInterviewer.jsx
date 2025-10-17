@@ -851,7 +851,7 @@ function OutsourcedInterviewerModal({
                     return;
                 }
 
-                // ========== REGULAR FLOW (with positionData) ==========
+                // {{ ========== REGULAR FLOW (with positionData) ==========
                 console.log("🕒 Regular flow - checking availability and skills");
 
                 // Regular flow for non-dashboard/non-mock-interview
@@ -968,8 +968,8 @@ function OutsourcedInterviewerModal({
                     availableInterviewers
                 );
 
-                // Apply skill filtering for regular flow
-                const skillFilteredInterviewers = availableInterviewers.filter(
+                // Apply skill filtering for regular flow with match count sorting
+                const skillFilteredInterviewersWithMatchCount = availableInterviewers.map(
                     (interviewer, index) => {
                         console.log(
                             `\n🔍 Checking Interviewer #${index + 1}:`,
@@ -985,53 +985,65 @@ function OutsourcedInterviewerModal({
                                 "⚠️ positionSkills is invalid or not an array:",
                                 positionSkills
                             );
-                            return false;
+                            return { ...interviewer, matchedSkills: 0 };
                         }
 
                         const interviewerSkills = interviewer.contact?.skills || [];
                         console.log("📝 Interviewer's Skills:", interviewerSkills);
                         console.log("🎯 Position Skills:", positionSkills);
 
-                        const matchingSkills = interviewerSkills.filter(
-                            (interviewerSkill) =>
-                                positionSkills.some(
-                                    (positionSkill) =>
-                                        positionSkill.skill?.toLowerCase() ===
-                                        interviewerSkill?.toLowerCase()
-                                )
+                        const matchingSkills = interviewerSkills.filter((interviewerSkill) =>
+                            positionSkills.some(
+                                (positionSkill) =>
+                                    positionSkill.skill?.toLowerCase() === interviewerSkill?.toLowerCase()
+                            )
                         );
 
                         console.log("✅ Matching Skills Found:", matchingSkills);
-                        const hasMatchingSkills = matchingSkills.length > 0;
+                        const matchCount = matchingSkills.length;
+
                         console.log(
-                            `🎯 ${interviewer.contact?.firstName || "Unknown"
-                            } Skill Match Status: ${hasMatchingSkills}`
+                            `🎯 ${interviewer.contact?.firstName || "Unknown"} Skill Match Count: ${matchCount}`
                         );
-                        return hasMatchingSkills;
+
+                        // Return interviewer with an extra property for sorting
+                        return { ...interviewer, matchedSkills: matchCount };
                     }
                 );
 
-                console.log(
-                    "✅ Skill Filtered External Interviewers count:",
-                    skillFilteredInterviewers.length
+                // Filter only interviewers who have at least 1 matching skill
+                const skillFilteredInterviewers = skillFilteredInterviewersWithMatchCount.filter(
+                    (interviewer) => interviewer.matchedSkills > 0
                 );
+
+                // Sort by number of matched skills (descending order)
+                const sortedBySkillMatch = skillFilteredInterviewers.sort(
+                    (a, b) => b.matchedSkills - a.matchedSkills
+                );
+
                 console.log(
-                    "✅ Skill Filtered External Interviewers:",
-                    skillFilteredInterviewers
+                    "✅ Skill-Sorted External Interviewers:",
+                    sortedBySkillMatch.map((i) => ({
+                        name: i.contact?.firstName || "Unknown",
+                        matchedSkills: i.matchedSkills,
+                    }))
                 );
 
                 // Filter for approved interviewers
-                const approvedInterviewers = skillFilteredInterviewers.filter(
+                const approvedInterviewers = sortedBySkillMatch.filter(
                     (interviewer) => interviewer.contact?.status === 'approved'
                 );
 
                 console.log(
-                    "✅ Approved External Interviewers:",
+                    "✅ Approved & Skill-Sorted External Interviewers:",
                     approvedInterviewers
                 );
 
+                // Update state
                 setBaseInterviewers(approvedInterviewers);
                 setFilteredInterviewers(approvedInterviewers);
+
+                // ========== REGULAR FLOW (with positionData) ========== }}
             } catch (error) {
                 console.error("❌ Error processing interviewers:", error);
             }
