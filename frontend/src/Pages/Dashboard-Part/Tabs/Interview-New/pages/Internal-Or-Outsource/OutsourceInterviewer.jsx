@@ -213,6 +213,8 @@ function OutsourcedInterviewerModal({
     navigatedfrom,
     candidateExperience, //<-----v1.0.4-----Venkatesh---- Added to determine experience level for rate calculation
     isMockInterview = false, //<-----v1.0.4-----Venkatesh---- Added to determine interview type (mock vs regular)
+     previouslySelectedInterviewers = [],
+    isEditing = false
 }) {
     const { interviewers, contacts } = useCustomContext(); //<----v1.0.1-----
     // console.log("contacts===", contacts);
@@ -234,16 +236,23 @@ function OutsourcedInterviewerModal({
     // })
 
     const [searchTerm, setSearchTerm] = useState("");
-    const [rateRange, setRateRange] = useState([0, 250]);
+    const [rateRange, setRateRange] = useState([0, ]);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [selectedInterviewer, setSelectedInterviewer] = useState(null);
     const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState(
-        []
+       previouslySelectedInterviewers || []
     );
     const requestSentRef = useRef(false);
     const [filteredInterviewers, setFilteredInterviewers] = useState([]);
     const [baseInterviewers, setBaseInterviewers] = useState([]);
     const [showWalletModal, setShowWalletModal] = useState(false); //<----v1.0.1-----
+
+       // Update local state when previouslySelectedInterviewers changes
+    useEffect(() => {
+        if (previouslySelectedInterviewers && previouslySelectedInterviewers.length > 0) {
+            setSelectedInterviewersLocal(previouslySelectedInterviewers);
+        }
+    }, [previouslySelectedInterviewers]);
 
     //<----v1.0.1-----
     //<-----v1.0.4-----Venkatesh---- Updated to compute the highest rate from all contacts and all levels (junior/mid/senior)
@@ -969,6 +978,20 @@ function OutsourcedInterviewerModal({
                         </div>
 
                         <div className="flex flex-row items-center  justify-between mt-4 gap-4">
+                           
+                            <div className="w-full mt-5">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name, role, company, or skills..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+                            </div>
+                           
                             <div className="flex flex-col w-full">
                                 <label className="flex text-sm font-medium text-gray-700 mb-1 md:mb-2">
                                     Hourly Rate Range
@@ -994,7 +1017,7 @@ function OutsourcedInterviewerModal({
                                         onChange={(e) =>
                                             setRateRange([
                                                 rateRange[0],
-                                                parseInt(e.target.value) || 250,
+                                                parseInt(e.target.value) ,
                                             ])
                                         }
                                         className="px-2 py-2 border border-gray-300 rounded-md w-full"
@@ -1004,18 +1027,9 @@ function OutsourcedInterviewerModal({
                                 </div>
                             </div>
 
-                            <div className="w-full mt-5">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search by name, role, company, or skills..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
-                            </div>
+                           
+
+
                         </div>
                     </div>
 
