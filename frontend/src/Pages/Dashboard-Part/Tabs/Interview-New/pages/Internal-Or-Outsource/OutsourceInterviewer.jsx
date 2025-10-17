@@ -218,6 +218,10 @@ function OutsourcedInterviewerModal({
     console.log("contacts===", contacts)
     const { data: walletBalance, refetch } = useWallet(); //<----v1.0.1-----
 
+    const authToken = Cookies.get('authToken');
+    const tokenPayload = decodeJwt(authToken);
+    const userId = tokenPayload?.userId;
+
     console.log("navigatedfrom", {
         onClose,
         dateTime,
@@ -321,9 +325,7 @@ function OutsourcedInterviewerModal({
                 });
                 console.log(`🔍 Filtered out ${externalInterviewers.length - filteredByOwnerId.length} interviewers with matching ownerId`);
 
-                const authToken = Cookies.get('authToken');
-                const tokenPayload = decodeJwt(authToken);
-                const userId = tokenPayload?.userId;
+
 
                 // ========== MOCK INTERVIEW FLOW - FILTER BY TIME + SKILLS ==========
                 if (navigatedfrom === "mock-interview") {
