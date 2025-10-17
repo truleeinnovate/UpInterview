@@ -115,7 +115,7 @@ const RoundFormInterviews = () => {
     useState("zoom"); // Default to Google Meet googlemeet
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
   // v1.0.2 <-----------------------------------------
- 
+
   const { interviewId, roundId } = useParams();
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -153,7 +153,7 @@ const RoundFormInterviews = () => {
           const response = await axios.get(
             `${config.REACT_APP_API_URL}/users/owner/${userId}`
           );
-        
+
           setOwnerData(response.data);
         } catch (error) {
           console.error("Error fetching owner data:", error);
@@ -2926,6 +2926,7 @@ const RoundFormInterviews = () => {
           onClose={() => setShowOutsourcePopup(false)}
           dateTime={combinedDateTime}
           positionData={position}
+          candidateData={candidate}
           onProceed={handleExternalInterviewerSelect}
           candidateExperience={candidate?.CurrentExperience}
           isMockInterview={false} // For regular interview rounds, set to true for mock interviews

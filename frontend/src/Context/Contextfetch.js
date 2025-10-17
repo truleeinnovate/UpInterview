@@ -40,7 +40,7 @@ const CustomProvider = ({ children }) => {
   // const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
   // const [createdLists, setCreatedLists] = useState([]);
 
-  
+
   const [feedbackTabErrors, setFeedbackTabError] = useState({
     interviewQuestion: true,
     skills: true,
@@ -194,7 +194,7 @@ const CustomProvider = ({ children }) => {
       setLoading(false);
     }
   }, [tenantId]);
-  
+
 
   useEffect(() => {
     fetchGroupsData();
@@ -736,9 +736,9 @@ const CustomProvider = ({ children }) => {
 
         interviewRounds,
         fetchInterviewRounds,
-        
-        
-        
+
+
+
         // superAdminProfile,
       }}
     >
