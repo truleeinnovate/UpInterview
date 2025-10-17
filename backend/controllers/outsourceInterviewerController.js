@@ -62,8 +62,8 @@ exports.updateInterviewerFeedback = async (req, res) => {
           updatedAt: new Date(),
           feedback: {
             givenBy: givenBy || null,
-            rating: rating,
-            comments: comments,
+            rating: rating || null,
+            comments: comments || null,
             createdAt: new Date(),
           },
         },
