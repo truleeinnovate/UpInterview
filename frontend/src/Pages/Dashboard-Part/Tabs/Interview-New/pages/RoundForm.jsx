@@ -97,14 +97,14 @@ const RoundFormInterviews = () => {
   const { checkInternalInterviewUsage, isChecking } = useInternalInterviewUsage();
   // v1.0.2 <-----------------------------------------
 
-   const {
-      data,
-      isLoading,
-      isError,
-      // error,
-      refetch,
-      // isOrganization,
-    } = useVideoSettingsQuery();
+  const {
+    data,
+    isLoading,
+    isError,
+    // error,
+    refetch,
+    // isOrganization,
+  } = useVideoSettingsQuery();
 
 
   // State for meeting creation loading
@@ -171,8 +171,9 @@ const RoundFormInterviews = () => {
       setSelectedMeetingPlatform(data?.data?.defaultProvider);
       // setTemplate(interview?.templateId || null)
     }
-  }, [interviewData, interview,data]);
-  console.log("selectedMeetingPlatform",selectedMeetingPlatform);
+  }, [interviewData, interview, data]);
+  console.log("selectedMeetingPlatform", selectedMeetingPlatform);
+
 
   const navigate = useNavigate();
   const [roundTitle, setRoundTitle] = useState("");
@@ -210,6 +211,9 @@ const RoundFormInterviews = () => {
   // console.log("internalInterviewers", internalInterviewers);
   // console.log("interviewerViewType", interviewerViewType);
   // console.log("interviewerGroupName", interviewerGroupName);
+
+
+
 
   useEffect(() => {
     if (
@@ -503,7 +507,7 @@ const RoundFormInterviews = () => {
       setIsCustomRoundTitle(true);
       setRoundTitle("Other");
       setCustomRoundTitle("");
-      setInstructions(""); // Clear instructions when selecting "Other"
+      // setInstructions(""); // Clear instructions when selecting "Other"
       setErrors((prev) => ({ ...prev, roundTitle: "" }));
       return;
     }
@@ -513,7 +517,7 @@ const RoundFormInterviews = () => {
     setCustomRoundTitle("");
 
     // Clear instructions whenever round title changes
-    setInstructions("");
+    // setInstructions("");
 
     if (value === "Assessment") {
       setInterviewMode("Virtual");
@@ -532,20 +536,20 @@ const RoundFormInterviews = () => {
       setSelectedAssessmentData(null);
       setCombinedDateTime("");
     } else {
-      setInterviewMode("");
-      setInstructions(""); // Clear instructions for non-Assessment rounds
-      setInterviewType("instant");
-      setScheduledDate("");
-      setDuration(60);
-      setStartTime("");
-      setEndTime("");
+      // setInterviewMode("");
+      // setInstructions(""); // Clear instructions for non-Assessment rounds
+      // setInterviewType("instant");
+      // setScheduledDate("");
+      // setDuration(60);
+      // setStartTime("");
+      // setEndTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
       setSelectedAssessmentData(null);
-      setCombinedDateTime("");
+      // setCombinedDateTime("");
 
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
-      setInterviewerViewType("");
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
+      // setInterviewerViewType("");
     }
 
     setErrors((prev) => ({
@@ -556,77 +560,91 @@ const RoundFormInterviews = () => {
     }));
   };
 
-  const handleRoundTitleChange = (e) => {
-    const selectedTitle = e.target.value;
+  // Add this useEffect to handle interviewMode changes
+  useEffect(() => {
+    // When interviewMode changes from "Face to Face" to "Virtual", 
+    // the outsource button will automatically enable because the disabled condition will be false
+    // console.log("Interview mode changed to:", interviewMode);
 
-    if (selectedTitle === "Other") {
-      setCustomRoundTitle("");
-      setInterviewerViewType("");
-      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null);
-      setCombinedDateTime("");
-
-    } else {
-      setRoundTitle(selectedTitle);
-      setCustomRoundTitle("");
-      setInstructions("");
-      setInterviewMode("");
-      // setStatus("Pending");
-      setInterviewType("instant");
-      setScheduledDate("");
-      setDuration(60);
-      setStartTime("");
-      setEndTime("");
-
-      setInterviewerGroupName("");
-
-      setInterviewerGroupId("")
-      setInterviewerViewType("");
-      setCombinedDateTime("");
-      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null);
+    // If switching to Virtual and there were external interviewers cleared, reset the interview type
+    if (interviewMode === "Virtual" && selectedInterviewType === null && externalInterviewers.length === 0) {
+      // Allow selection of either internal or external
+      setSelectedInterviewType(null);
+      setExternalInterviewers([]);
     }
+  }, [interviewMode, selectedInterviewType, externalInterviewers.length]);
 
-    if (selectedTitle === "Other") {
-      setCustomRoundTitle("");
-      setInstructions("");
-    } else if (selectedTitle === "Assessment") {
-      setInterviewMode("Virtual");
-      setInterviewQuestionsList([]);
-      setInstructions("");
+  // const handleRoundTitleChange = (e) => {
+  //   const selectedTitle = e.target.value;
 
-      setInterviewerGroupName("");
-      setInterviewerGroupId("")
-      setInterviewerViewType("");
-      // setStatus("Pending");
-      setInterviewType("instant");
-      setScheduledDate("");
-      setDuration(60);
-      setStartTime("");
-      setEndTime("");
-      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null);
-      setCombinedDateTime("");
-    } else {
-      setInterviewMode("");
-      setInstructions("");
-      setInstructions("");
-      setInterviewMode("");
-      // setStatus("Pending");
-      setInterviewType("instant");
-      setScheduledDate("");
-      setDuration(60);
-      setStartTime("");
-      setEndTime("");
-      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null);
-      setCombinedDateTime("");
+  //   if (selectedTitle === "Other") {
+  //     setCustomRoundTitle("");
+  //     setInterviewerViewType("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //     setCombinedDateTime("");
 
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
-      setInterviewerViewType("");
-    }
-  };
+  //   } else {
+  //     setRoundTitle(selectedTitle);
+  //     setCustomRoundTitle("");
+  //     setInstructions("");
+  //     setInterviewMode("");
+  //     // setStatus("Pending");
+  //     setInterviewType("instant");
+  //     setScheduledDate("");
+  //     setDuration(60);
+  //     setStartTime("");
+  //     setEndTime("");
+
+  //     setInterviewerGroupName("");
+
+  //     setInterviewerGroupId("")
+  //     setInterviewerViewType("");
+  //     setCombinedDateTime("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //   }
+
+  //   if (selectedTitle === "Other") {
+  //     setCustomRoundTitle("");
+  //     setInstructions("");
+  //   } else if (selectedTitle === "Assessment") {
+  //     setInterviewMode("Virtual");
+  //     setInterviewQuestionsList([]);
+  //     setInstructions("");
+
+  //     setInterviewerGroupName("");
+  //     setInterviewerGroupId("")
+  //     setInterviewerViewType("");
+  //     // setStatus("Pending");
+  //     setInterviewType("instant");
+  //     setScheduledDate("");
+  //     setDuration(60);
+  //     setStartTime("");
+  //     setEndTime("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //     setCombinedDateTime("");
+  //   } else {
+  //     setInterviewMode("");
+  //     setInstructions("");
+  //     setInstructions("");
+  //     setInterviewMode("");
+  //     // setStatus("Pending");
+  //     setInterviewType("instant");
+  //     setScheduledDate("");
+  //     setDuration(60);
+  //     setStartTime("");
+  //     setEndTime("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //     setCombinedDateTime("");
+
+  //     setInterviewerGroupName("");
+  //     setInterviewerGroupId("");
+  //     setInterviewerViewType("");
+  //   }
+  // };
 
   // const handleSuggestedTabClick = (questionType) => {
   //   setActiveTab("SuggesstedQuestions");
@@ -637,6 +655,8 @@ const RoundFormInterviews = () => {
   // };
 
   // const [error, setError] = useState(null);
+
+
   useEffect(() => {
     // Clean up when component unmounts or roundId changes
     return () => {
@@ -798,7 +818,7 @@ const RoundFormInterviews = () => {
         setSequence(maxSequence + 1);
       }
     }
-  }, [rounds, roundId, isEditing, assessmentData, interviewData,groups]);
+  }, [rounds, roundId, isEditing, assessmentData, interviewData, groups]);
 
   const handleInternalInterviewerSelect = (
     interviewers,
@@ -1348,8 +1368,33 @@ const RoundFormInterviews = () => {
             }
           }
         } else {
+
+          // Handle Face to Face interview
+    console.log("=== Handling Face to Face Interview ===");
+    
+    const targetRoundId = response?.savedRound?._id || roundId;
+
+
+    // have to add email template for face to face round
+    
+    // Update the round with proper status
+    const faceToFaceRoundData = {
+      ...roundData,
+      status: "Scheduled" // Use the current status from state
+    };
+
+    const updatePayload = {
+      interviewId,
+      roundId: targetRoundId,
+      round: faceToFaceRoundData,
+      ...(isEditing ? { questions: interviewQuestionsList } : {}),
+    };
+
+    // Update the round status
+    const updateResponse = await updateInterviewRound(updatePayload);
+    console.log("updateResponse", updateResponse);
           navigate(`/interviews/${interviewId}`);
-          notify.success("Selected interview mode is Face to Face");
+          notify.success("Interview Round Created successfully");
         }
 
         // console.log("response", response);
@@ -1370,7 +1415,7 @@ const RoundFormInterviews = () => {
         if (response.status === "ok") {
           // console.log("Generating meeting link for the interview");
           const shouldGenerateMeeting =
-            !isEditing &&                                   // 🧩 Skip in edit mode
+            // 🧩 Skip in edit mode (!isEditing &&) commneted have to implement further    
             payload?.round?.interviewMode !== "Face to Face" &&
             Array.isArray(selectedInterviewers) &&
             selectedInterviewers.length > 0;
@@ -2519,7 +2564,8 @@ const RoundFormInterviews = () => {
                             onClick={() => setShowOutsourcePopup(true)}
                             variant="outline"
                             size="sm"
-                            className={`${isInternalSelected
+                            className={`${isInternalSelected ||
+                              interviewMode === "Face to Face"
                               ? "opacity-50 cursor-not-allowed"
                               : ""
                               }`}
@@ -2686,27 +2732,7 @@ const RoundFormInterviews = () => {
                                   ))}
                                 </div>
                               </section>
-                              // <div className="mb-3">
-                              //   <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
-                              //   <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                              //     {/* {console.log("internalInterviewers near shoing place :", internalInterviewers)} */}
-                              //     {internalInterviewers?.map((interviewer) => (
-                              //       <div key={interviewer._id} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
-                              //         <div className="flex items-center">
-                              //           <span className="ml-2 text-sm text-custom-blue truncate">{interviewer.firstName} {interviewer.lastName}</span>
-                              //         </div>
-                              //         <button
-                              //           type="button"
-                              //           onClick={() => handleRemoveInternalInterviewer(interviewer._id)}
-                              //           className="text-custom-blue hover:text-custom-blue/80 p-1 rounded-full hover:bg-blue-100"
-                              //           title="Remove interviewer"
-                              //         >
-                              //           <X className="h-4 w-4" />
-                              //         </button>
-                              //       </div>
-                              //     ))}
-                              //   </div>
-                              // </div>
+
                             )}
 
                             {/* External Interviewers */}
@@ -2720,7 +2746,7 @@ const RoundFormInterviews = () => {
                                   {externalInterviewers?.map((interviewer) => (
                                     <div
                                       key={interviewer.id}
-                                      className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
+                                      className="flex items-center max-w-[500px] justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
                                     >
                                       <div className="flex items-center">
                                         <span className="ml-2 text-sm text-orange-800 truncate">
@@ -2930,6 +2956,9 @@ const RoundFormInterviews = () => {
           onProceed={handleExternalInterviewerSelect}
           candidateExperience={candidate?.CurrentExperience}
           isMockInterview={false} // For regular interview rounds, set to true for mock interviews
+          previouslySelectedInterviewers={externalInterviewers}
+          isEditing={isEditing}
+
         />
       )}
 

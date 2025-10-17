@@ -1056,7 +1056,7 @@ const RoundCard = ({
                     </div>
                   )}
 
-                  {(internalInterviewers || externalInterviewers).length === 0 && <span className="text-sm text-gray-500">No interviewers assigned</span>
+                  {(internalInterviewers || externalInterviewers).length === 0 && round.roundTitle !== "Assessment" && <span className="text-sm text-gray-500">No interviewers assigned</span>
                   }
 
                   {
