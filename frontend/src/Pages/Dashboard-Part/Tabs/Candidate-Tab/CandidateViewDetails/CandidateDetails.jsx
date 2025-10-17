@@ -308,7 +308,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                         <Briefcase className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Experience</p>
+                        <p className="text-sm text-gray-500">Total Experience</p>
                         <p className="text-gray-700">
                           {candidate?.CurrentExperience || "N/A"}{" "}
                         </p>
@@ -358,7 +358,20 @@ const CandidateDetails = ({ mode, candidateId }) => {
                     </div>
                   </div> */}
                   <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                    <div className="flex items-center justify-between gap-3 w-full">
+                    {/* <div className="flex items-center justify-between gap-3 w-full"> */}
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-custom-bg rounded-lg">
+                        <Briefcase className="w-5 h-5" />
+                      </div>
+                       <div>
+                        <p className="text-sm text-gray-500">Technology</p>
+                        <p className="text-gray-700">
+                          {candidate?.Technology || "N/A"}{" "}
+                        </p>
+                      </div>
+                      
+                      </div>
+
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-custom-bg rounded-lg">
                           <GrDocumentText className="w-5 h-5" />
@@ -384,7 +397,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                           )}
                         </div>
                       </div>
-                    </div>
+                    {/* </div> */}
                   </div>
                 </div>
               </div>

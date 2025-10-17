@@ -71,6 +71,9 @@ const AddCandidateForm = ({
     isQualificationsFetching,
     isCollegesFetching,
     isCurrentRolesFetching,
+    technologies,
+    loadTechnologies,
+    isTechnologiesFetching,
   } = useMasterData();
 
   // Get user token information
@@ -159,6 +162,7 @@ const AddCandidateForm = ({
     RelevantExperience: useRef(null),
     CurrentRole: useRef(null),
     skills: useRef(null),
+    Technology: useRef(null),
   };
 
   // v1.0.3 --------------------------------------------------------------------------->
@@ -176,6 +180,7 @@ const AddCandidateForm = ({
     CountryCode: "+91",
     skills: [],
     CurrentRole: "",
+    Technology: "",
   });
   const [errors, setErrors] = useState({});
 
@@ -211,15 +216,16 @@ const AddCandidateForm = ({
         RelevantExperience: selectedCandidate.RelevantExperience || "",
         skills: selectedCandidate.skills || [],
         // ImageData: selectedCandidate.imageUrl || null,
-        ImageData: selectedCandidate.ImageData || null, // Added by Ashok
-        resume: selectedCandidate.resume || null,
-        CurrentRole: selectedCandidate.CurrentRole || "",
-        CountryCode: selectedCandidate.CountryCode || "",
+        ImageData: selectedCandidate?.ImageData || null, // Added by Ashok
+        resume: selectedCandidate?.resume || null,
+        CurrentRole: selectedCandidate?.CurrentRole || "",
+        CountryCode: selectedCandidate?.CountryCode || "",
+        Technology: selectedCandidate?.Technology || "",
       });
 
       if (selectedCandidate.ImageData?.filename) {
-        setImagePreview(selectedCandidate.ImageData.path);
-        setSelectedImage(selectedCandidate.ImageData);
+        setImagePreview(selectedCandidate?.ImageData.path);
+        setSelectedImage(selectedCandidate?.ImageData);
       } else {
         setImagePreview(null);
         setSelectedImage(null);
@@ -227,9 +233,9 @@ const AddCandidateForm = ({
 
       if (selectedCandidate.resume?.filename) {
         setSelectedResume({
-          path: selectedCandidate.resume.path,
-          name: selectedCandidate.resume.filename,
-          size: selectedCandidate.resume.fileSize,
+          path: selectedCandidate?.resume.path,
+          name: selectedCandidate?.resume.filename,
+          size: selectedCandidate?.resume.fileSize,
         });
       } else {
         setSelectedResume(null);
@@ -301,10 +307,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry
       );
       setEntries(updatedEntries);
@@ -471,12 +477,12 @@ const AddCandidateForm = ({
       [name]: errorMessage,
       ...(name === "CurrentExperience" && formData.RelevantExperience
         ? {
-            RelevantExperience: getErrorMessage(
-              "RelevantExperience",
-              formData.RelevantExperience,
-              nextFormData
-            ),
-          }
+          RelevantExperience: getErrorMessage(
+            "RelevantExperience",
+            formData.RelevantExperience,
+            nextFormData
+          ),
+        }
         : {}),
     }));
   };
@@ -503,6 +509,7 @@ const AddCandidateForm = ({
       skills: [],
       CurrentRole: "",
       CountryCode: "",
+      Technology: "",
     });
 
     setErrors({});
@@ -547,7 +554,7 @@ const AddCandidateForm = ({
 
     switch (mode) {
       case "Edit":
-        navigate(`/candidate`);
+        navigate(-1); // `/candidate`
         break;
       case "Candidate Edit":
         navigate(`/candidate/${id}`);
@@ -605,6 +612,7 @@ const AddCandidateForm = ({
       Date_Of_Birth: formData.Date_Of_Birth,
       skills: filledSkills,
       CurrentRole: formData.CurrentRole,
+      Technology: formData.Technology,
       ownerId: userId,
       tenantId: orgId,
     };
@@ -669,7 +677,7 @@ const AddCandidateForm = ({
         switch (mode) {
           case ("Edit" && response.status === "no_changes") ||
             response.status === "Updated successfully":
-            navigate(`/candidate`);
+            navigate(-1); // /candidate
             notify.success("Candidate updated successfully");
             break;
           case "Candidate Edit":
@@ -702,8 +710,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save candidate"
+        error.message ||
+        "Failed to save candidate"
       );
 
       if (error.response?.data?.errors) {
@@ -924,7 +932,7 @@ const AddCandidateForm = ({
                     // error={errors.Gender}
                     containerRef={fieldRefs.Gender}
                     label="Gender"
-                    // required
+                  // required
                   />
                 </div>
                 {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -1018,7 +1026,7 @@ const AddCandidateForm = ({
                     onChange={handleChange}
                     inputRef={fieldRefs.CurrentExperience}
                     error={errors.CurrentExperience}
-                    label="Current Experience"
+                    label="Total Experience"
                     name="CurrentExperience"
                     required
                   />
@@ -1047,6 +1055,32 @@ const AddCandidateForm = ({
                     required
                     onMenuOpen={loadCurrentRoles}
                     loading={isCurrentRolesFetching}
+                  />
+
+                  <DropdownWithSearchField
+                    containerRef={fieldRefs.Technology}
+                    label="Technology"
+                    name="technology"
+                    value={formData.Technology}
+                    options={technologies.map((t) => ({
+                      value: t.TechnologyMasterName,
+                      label: t.TechnologyMasterName,
+                    }))}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        Technology: e.target.value,
+                      }));
+                      setErrors((prev) => ({
+                        ...prev,
+                        Technology: "",
+                      }));
+                    }}
+                    error={errors.Technology}
+                    placeholder="Select Technology"
+                    required
+                    onMenuOpen={loadTechnologies}
+                    loading={isTechnologiesFetching}
                   />
                 </div>
               </div>
@@ -1145,9 +1179,8 @@ const AddCandidateForm = ({
                   type="button"
                   onClick={handleClose}
                   disabled={isMutationLoading}
-                  className={`sm:px-2 sm:py-1 md:px-2 md:py-1 lg:px-6 lg:py-2 xl:px-6 xl:py-2 2xl:px-6 2xl:py-2 sm:text-sm text-custom-blue border border-custom-blue rounded-lg transition-colors ${
-                    isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className={`sm:px-2 sm:py-1 md:px-2 md:py-1 lg:px-6 lg:py-2 xl:px-6 xl:py-2 2xl:px-6 2xl:py-2 sm:text-sm text-custom-blue border border-custom-blue rounded-lg transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                 >
                   Cancel
                 </button>

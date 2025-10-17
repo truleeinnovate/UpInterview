@@ -27,6 +27,7 @@ const getErrorMessage = (field, value, formData) => {
         invalidEmail: "Invalid Email address",
         invalidPhone: "Invalid Phone number",
         CurrentRole: "Current Role is required",
+        Technology: "Technology is required",
     };
 
     if (!value) {
@@ -39,6 +40,9 @@ const getErrorMessage = (field, value, formData) => {
 
     if (field === "Phone" && !validatePhoneNumber(value)) {
         return messages.invalidPhone;
+    }
+    if (field === "Technology" && !value) {
+        return messages.Technology;
     }
 
     // Validate RelevantExperience against CurrentExperience

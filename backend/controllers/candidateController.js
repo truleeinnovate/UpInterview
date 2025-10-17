@@ -20,6 +20,8 @@ const addCandidatePostCall = async (req, res) => {
 
   let newCandidate = null;
 
+  console.log("req.body", req.body);
+
   try {
 
      // Joi validation
@@ -52,6 +54,7 @@ const addCandidatePostCall = async (req, res) => {
       PositionId,
       ownerId,
       tenantId,
+      Technology,
     } = req.body;
 
     if (!ownerId) {
@@ -80,9 +83,10 @@ const addCandidatePostCall = async (req, res) => {
       Gender,
       HigherQualification,
       UniversityCollege,
-      CurrentExperience,
+      CurrentExperience, // CurrentExperience is related to total experience in Ui mentioned. 
       CurrentRole,
       RelevantExperience,
+      Technology,
       skills,
       PositionId,
       ownerId,

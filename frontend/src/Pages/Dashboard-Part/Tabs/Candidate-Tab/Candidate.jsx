@@ -710,7 +710,7 @@ function Candidate({
     },
     {
       key: "CurrentExperience",
-      header: "Current Experience",
+      header: "Total Experience",
       render: (value) => value || "Not Provided",
     },
     {
@@ -1116,7 +1116,7 @@ function Candidate({
     },
     {
       key: "currentExperience",
-      header: "Experience",
+      header: "Total Experience",
       render: (value, row) =>
         (
           <span>
