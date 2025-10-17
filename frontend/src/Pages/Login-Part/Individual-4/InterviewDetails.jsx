@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { Trash2, X, ChevronDown, ChevronUp, Tag as SkillsIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -181,9 +181,7 @@ const InterviewDetails = ({
 
     const fetchRateCardsMemoized = useCallback(async (techName) => {
         if (!techName) return;
-
-        console.group('=== fetchRateCards ===');
-        console.log('1. Input technologyName:', techName);
+        console.log('1')
 
         try {
             const token = localStorage.getItem('token');
@@ -194,15 +192,9 @@ const InterviewDetails = ({
                 .replace(/\s+/g, '')  // Remove spaces
                 .replace(/[^a-zA-Z0-9]/g, '');  // Remove special chars if any (optional, adjust as needed)
 
-            console.log('Derived slug from technologyName:', slug);
-
             const encodedSlug = encodeURIComponent(slug);
 
-            console.log('Encoded slug for URL:', encodedSlug);
-
             const apiUrl = `${baseUrl}/rate-cards/technology/${encodedSlug}`;
-
-            console.log('2. Making API request to:', apiUrl);
 
             const response = await axios.get(apiUrl, {
                 withCredentials: true,
@@ -210,11 +202,6 @@ const InterviewDetails = ({
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 }
-            });
-
-            console.log('3. API Response:', {
-                status: response.status,
-                data: response.data || 'No data'
             });
 
             if (response.data) {
@@ -228,14 +215,12 @@ const InterviewDetails = ({
                 data: error.response?.data
             });
             setRateCards([]);
-        } finally {
-            console.groupEnd();
         }
     }, []);
 
-    const fetchRateCards = (technologyName) => {
+    const fetchRateCards = useCallback((technologyName) => {
         return fetchRateCardsMemoized(technologyName);
-    }
+    }, [fetchRateCardsMemoized]);
 
     const getRateRanges = (level) => {
         if (!rateCards.length) return null;
@@ -366,13 +351,19 @@ const InterviewDetails = ({
         }));
     };
 
+    // Extract the selected technology name to avoid unnecessary re-renders
+    const selectedTechnologyName = useMemo(() => {
+        return selectedTechnologyies && selectedTechnologyies.length > 0
+            ? selectedTechnologyies[0].TechnologyMasterName || null
+            : null;
+    }, [selectedTechnologyies]);
+
     // to re-fetch rate cards on mount if a technology is already selected (e.g., after refresh)
     useEffect(() => {
-        const selectedTech = selectedTechnologyies?.[0]?.TechnologyMasterName;
-        if (selectedTech) {
-            fetchRateCards(selectedTech);
+        if (selectedTechnologyName) {
+            fetchRateCards(selectedTechnologyName);
         }
-    }, [selectedTechnologyies, fetchRateCards]);
+    }, [selectedTechnologyName, fetchRateCards]);
 
     const handleRemoveSkill = (skillId) => {
         // console.log('Removing skill with ID:', skillId);
@@ -748,18 +739,14 @@ const InterviewDetails = ({
                                 }
                             }}
                             onKeyDown={(e) => {
-                                console.log('Key pressed:', e.key, 'Value:', e.target?.value);
-
                                 // Handle the create action from the dropdown
                                 if (e.key === 'Enter' && e.target?.action === 'create') {
                                     const newSkill = e.target.value?.trim();
                                     if (newSkill) {
-                                        console.log('Adding new skill:', newSkill);
                                         addSkill(newSkill);
 
                                         // Clear the input field and close the dropdown
                                         setTimeout(() => {
-                                            console.log('Attempting to close dropdown');
                                             // Blur any active element to close dropdowns
                                             if (document.activeElement) {
                                                 document.activeElement.blur();
@@ -770,7 +757,6 @@ const InterviewDetails = ({
                                                 // Clear react-select value
                                                 if (skillsInputRef.current.select) {
                                                     skillsInputRef.current.select.clearValue();
-                                                    console.log('React-select value cleared');
                                                 }
 
                                                 // Find and clear the input
@@ -825,7 +811,6 @@ const InterviewDetails = ({
                                         const skillId = skill._id || `skill-${index}`;
 
                                         if (!skillName) {
-                                            console.warn('Invalid skill object:', skill);
                                             return null;
                                         }
 
