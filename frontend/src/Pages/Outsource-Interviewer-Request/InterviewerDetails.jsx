@@ -71,7 +71,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
     const [newStatus, setNewStatus] = useState({
         status: "",
-        rating: 4.5,
+        rating: 4,
         comments: "",
     });
 

@@ -12,6 +12,7 @@ const DropdownWithSearchField = forwardRef(({
     setIsCustomName = undefined,
     containerRef,
     disabled = false,
+    isSearchable = true,
     label,
     required = false,
     onMenuOpen,
@@ -162,7 +163,7 @@ const DropdownWithSearchField = forwardRef(({
                 <div ref={containerRef}>
                     <DropdownSelect
                         options={options}
-                        isSearchable
+                        isSearchable={isSearchable}
                         components={componentsMap}
                         filterOption={preserveStickyOptionFilter()}
                         isMulti={isMulti}

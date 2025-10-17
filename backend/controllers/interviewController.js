@@ -2074,10 +2074,150 @@ const updateInterviewStatusController = async (req, res) => {
     }
 };
 
+// Get all interview rounds for super admin
+const getAllInterviewRounds = async (req, res) => {
+    try {
+        // Fetch all interview rounds with populated data
+        const interviewRounds = await InterviewRounds.find()
+            .populate({
+                path: 'interviewId',
+                select: 'interviewCode candidateId positionId status tenantId ownerId createdAt',
+                populate: [
+                    {
+                        path: 'candidateId',
+                        select: 'FirstName LastName Email'
+                    },
+                    {
+                        path: 'positionId',
+                        select: 'title companyname Location'
+                    }
+                ]
+            })
+            .populate('interviewers', 'firstName lastName email _id')
+            .lean() // Add lean for better performance
+            .sort({ _id: -1 }); // Latest first
+        
+        //console.log(`[getAllInterviewRounds] Found ${interviewRounds.length} rounds`);
+        
+        // Check first few rounds for debugging
+        // if (interviewRounds.length > 0) {
+        //     console.log('[getAllInterviewRounds] Sample round interviewers:', {
+        //         roundId: interviewRounds[0]._id,
+        //         interviewersCount: interviewRounds[0].interviewers?.length || 0,
+        //         interviewers: interviewRounds[0].interviewers
+        //     });
+        // }
+
+        // Format the data for frontend
+        const formattedRounds = await Promise.all(interviewRounds.map(async (round) => {
+            // Get organization/tenant info
+            let organizationType = 'individual'; // Default to individual
+            let organizationName = 'Individual';
+            
+            if (round.interviewId?.tenantId) {
+                try {
+                    const Tenant = require('../models/Tenant');
+                    const tenant = await Tenant.findById(round.interviewId.tenantId);
+                    if (tenant) {
+                        organizationType = tenant?.type;
+                        // Use company name for organizations, or firstName + lastName for individuals
+                        if (tenant?.type === 'organization') {
+                            organizationName = tenant.company || 'Organization';
+                        } else {
+                            organizationName = 'Individual';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching tenant:', error);
+                }
+            }
+
+            // Debug logging for interviewers
+            // if (round.interviewers && round.interviewers.length > 0) {
+            //     console.log(`[Round ${round._id}] Interviewers:`, round.interviewers.map(i => ({
+            //         id: i?._id,
+            //         firstName: i?.firstName,
+            //         lastName: i?.lastName,
+            //         populated: !!i?.firstName
+            //     })));
+            // }
+
+            // Format interviewer names
+            const interviewerNames = round.interviewers && round.interviewers.length > 0
+                ? round.interviewers
+                    .map(interviewer => {
+                        if (interviewer && (interviewer.firstName || interviewer.lastName)) {
+                            const name = `${interviewer.firstName || ''} ${interviewer.lastName || ''}`.trim();
+                            return name || 'Unknown';
+                        }
+                        return null;
+                    })
+                    .filter(name => name !== null)
+                    .join(', ')
+                : '';
+            
+            const finalInterviewerNames = interviewerNames || 'No interviewers assigned';
+
+            return {
+                _id: round._id,
+                interviewCode: round.interviewId?.interviewCode || 'N/A',
+                roundTitle: round.roundTitle || 'N/A',
+                interviewMode: round.interviewMode || 'N/A',
+                interviewType: round.interviewType || 'N/A',
+                interviewerType: round.interviewerType || 'N/A',
+                duration: round.duration || 'N/A',
+                dateTime: round.dateTime || 'Not scheduled',
+                status: round.status || 'Draft',
+                interviewerNames: finalInterviewerNames,
+                organizationType: organizationType,
+                organization: organizationName,
+                createdOn: round.createdAt || new Date(),
+                candidate: round.interviewId?.candidateId ? {
+                    name: `${round.interviewId.candidateId.FirstName || ''} ${round.interviewId.candidateId.LastName || ''}`.trim() || 'Unknown',
+                    email: round.interviewId.candidateId.Email || 'N/A'
+                } : null,
+                position: round.interviewId?.positionId ? {
+                    title: round.interviewId.positionId.title || 'N/A',
+                    company: round.interviewId.positionId.companyname || 'N/A',
+                    location: round.interviewId.positionId.Location || 'N/A'
+                } : null,
+                interviewStatus: round.interviewId?.status || 'N/A',
+                interviewId: round.interviewId?._id || null,
+                sequence: round.sequence || 1
+            };
+        }));
+
+        // // Debug: Count organization types
+        // const typeCounts = formattedRounds.reduce((acc, round) => {
+        //     const type = round.organizationType || 'undefined';
+        //     acc[type] = (acc[type] || 0) + 1;
+        //     return acc;
+        // }, {});
+        
+        // console.log('[getAllInterviewRounds] Organization type distribution:', typeCounts);
+        // console.log('[getAllInterviewRounds] Total rounds:', formattedRounds.length);
+        
+        res.status(200).json({
+            success: true,
+            data: formattedRounds,
+            total: formattedRounds.length,
+            //typeDistribution: typeCounts // Include in response for debugging
+        });
+    } catch (error) {
+        console.error('Error fetching interview rounds:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch interview rounds',
+            error: error.message
+        });
+    }
+};
+
 // Export all controller functions
 module.exports = {
     createInterview,
     getAllInterviews,
+    getAllInterviewRounds, // Added new function
     updateInterview,
     saveInterviewRound,
     updateInterviewRound,

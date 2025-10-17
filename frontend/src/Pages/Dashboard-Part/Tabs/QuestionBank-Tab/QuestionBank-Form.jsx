@@ -1509,6 +1509,7 @@ const extractValidationErrors = (axiosError) => {
                 <DropdownWithSearchField
                   value={selectedDifficultyLevel}
                   options={difficultyOptionsRS}
+                  isSearchable={false}
                   onChange={(e) => handleDifficultyLevelSelect(e.target.value)}
                   error={errors.difficultyLevel}
                   containerRef={fieldRefs.difficultyLevel}
@@ -1676,6 +1677,7 @@ const extractValidationErrors = (axiosError) => {
                         value={formData.correctAnswer}
                         onChange={handleChange}
                         name="correctAnswer"
+                        required
                         inputRef={fieldRefs.correctAnswer}
                         error={errors.correctAnswer}
                         label={selectedQuestionType === "MCQ" ? "Correct Answer" : "Answer"}
