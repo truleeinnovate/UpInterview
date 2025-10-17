@@ -185,25 +185,32 @@ router.post("/check-user", async (req, res) => {
       await newTenant.save();
 
       // Create new Contact
-      // await Contacts.create({
-      //   firstName: userInfo.firstName,
-      //   lastName: userInfo.lastName,
-      //   email: userInfo.email,
-      //   linkedinUrl: userInfo.profileUrl,
-      //   imageData: {
-      //     filename: String,
-      //     path: userInfo.pictureUrl,
-      //     contentType: String,
-      //     publicId: String,
-      //   },
-      //   ownerId: newUser._id,
-      //   tenantId: newTenant._id,
-      //   createdBy: newUser._id,
-      // });
+      console.log("Backend: 5. Creating new contact for LinkedIn user");
+      console.log("Contact data to be created:", {
+        firstName: userInfo.firstName,
+        lastName: userInfo.lastName,
+        email: userInfo.email,
+        linkedinUrl: userInfo.profileUrl,
+        ownerId: newUser._id,
+        tenantId: newTenant._id,
+        createdBy: newUser._id,
+        status: "new",
+      });
 
       // Step 1: Create contact without imageData
       let newContact;
       try {
+        console.log("Backend: Creating contact with data:", {
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+          email: userInfo.email,
+          linkedinUrl: userInfo.profileUrl,
+          ownerId: newUser._id,
+          tenantId: newTenant._id,
+          createdBy: newUser._id,
+          status: "new",
+        });
+
         newContact = await Contacts.create({
           firstName: userInfo.firstName,
           lastName: userInfo.lastName,
@@ -214,8 +221,22 @@ router.post("/check-user", async (req, res) => {
           createdBy: newUser._id,
           status: "new",
         });
+
+        console.log("Backend: Contact created successfully:", {
+          id: newContact._id,
+          email: newContact.email,
+          ownerId: newContact.ownerId,
+          tenantId: newContact.tenantId,
+          createdBy: newContact.createdBy,
+          status: newContact.status
+        });
       } catch (contactError) {
-        console.error("Error creating contact:", contactError);
+        console.error("Backend: Error creating contact:", {
+          error: contactError.message,
+          stack: contactError.stack,
+          code: contactError.code,
+          name: contactError.name
+        });
         return res.status(500).json({
           error: "Failed to create contact",
           details: contactError.message
@@ -226,10 +247,12 @@ router.post("/check-user", async (req, res) => {
       let imageData = null;
       if (userInfo.pictureUrl) {
         try {
+          console.log("Backend: 6. Downloading LinkedIn profile image");
           const { buffer, contentType } = await downloadImageAsBuffer(
             userInfo.pictureUrl
           );
 
+          console.log("Backend: 6.1. Uploading image to Cloudinary");
           const cloudinaryResult = await uploadToCloudinary(
             buffer,
             "linkedin_profile_image.jpg",
@@ -243,12 +266,16 @@ router.post("/check-user", async (req, res) => {
             publicId: cloudinaryResult.public_id,
           };
 
+          console.log("Backend: 6.2. Updating contact with image data");
           // Step 3: Update the contact with imageData
           newContact.imageData = imageData;
           await newContact.save();
+          console.log("Backend: 6.3. Contact updated with image successfully");
         } catch (err) {
-          console.warn("LinkedIn image upload failed:", err.message);
+          console.warn("Backend: 6.4. LinkedIn image upload failed:", err.message);
         }
+      } else {
+        console.log("Backend: 6. No profile picture URL provided by LinkedIn");
       }
 
       // Generate token
