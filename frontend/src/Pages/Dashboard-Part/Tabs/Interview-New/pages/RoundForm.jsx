@@ -218,9 +218,9 @@ const RoundFormInterviews = () => {
     ) {
       setStatus("RequestSent");
     } else if (selectedInterviewType !== "External") {
-      setStatus("Draft");
+      internalInterviewers.length > 0 ? setStatus("Scheduled") : setStatus("Draft");
     }
-  }, [selectedInterviewType, externalInterviewers]);
+  }, [selectedInterviewType, externalInterviewers, internalInterviewers]);
 
   //<-----v1.0.4----
   // Helper: format a Date to 'YYYY-MM-DDTHH:mm' for <input type="datetime-local"/>

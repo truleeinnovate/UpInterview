@@ -736,7 +736,7 @@ const RoundCard = ({
     Draft: {
       canEdit: true,
       canDelete: true,
-      canMarkScheduled: true,
+      canMarkScheduled: false,
       canReschedule: false,
       canCancel: false,
       canComplete: false,
@@ -749,7 +749,7 @@ const RoundCard = ({
     RequestSent: {
       canEdit: true,
       canDelete: false,
-      canMarkScheduled: true,
+      canMarkScheduled: false,
       canReschedule: false,
       canCancel: false,
       canComplete: false,
