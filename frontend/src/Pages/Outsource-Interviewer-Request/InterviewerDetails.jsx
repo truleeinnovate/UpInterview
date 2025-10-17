@@ -97,11 +97,11 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
 
     const statusOptions = [
-        "New",
-        "Under Review",
-        "Approved",
-        "Rejected",
-        "Suspended",
+        "new",
+        "underReview",
+        "approved",
+        "rejected",
+        "suspended",
     ];
 
     const handleChangeStatus = () => {

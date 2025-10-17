@@ -9,6 +9,7 @@
    outside its parent hierarchy.
 */
 // v1.0.3 - Ashok - Improved responsiveness
+// v1.0.4 - Ashok - Fixed style issues
 
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
@@ -38,7 +39,13 @@ import { Button } from "../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
 import { useAssessments } from "../../apiHooks/useAssessments";
 import { useInterviewTemplates } from "../../apiHooks/useInterviewTemplates";
 
-const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false, template }) => {
+const RoundCard = ({
+  round,
+  onEdit,
+  isActive = false,
+  hideHeader = false,
+  template,
+}) => {
   console.log("template", template);
   //console.log("rounds---",round.interviewers)
 
@@ -162,8 +169,9 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false, templa
   return (
     <>
       <div
-        className={`bg-white rounded-lg ${!hideHeader && "shadow-md"
-          } overflow-hidden ${isActive ? "ring-2 ring-custom-blue p-2" : ""}`}
+        className={`bg-white rounded-lg ${
+          !hideHeader && "shadow-md"
+        } overflow-hidden ${isActive ? "ring-2 ring-custom-blue p-2" : ""}`}
       >
         {/* v1.0.0 <----------------------- */}
         <div className="sm:p-4 p-5">
@@ -332,53 +340,54 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false, templa
             </div>
           </div>
 
-          {round.roundTitle !== "Assessment" && round?.questions?.length > 0 && (
-            <div className="mt-4">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="text-sm font-medium text-gray-700">
-                  Interview Questions
-                </h4>
-                <button
-                  onClick={() => setShowQuestions(!showQuestions)}
-                  className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
-                >
-                  {showQuestions ? "Hide" : "Show"}
-                  {showQuestions ? (
-                    <ChevronUp className="h-4 w-4 ml-1" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 ml-1" />
-                  )}
-                </button>
-              </div>
-
-              {showQuestions && round?.questions && (
-                <div className="space-y-2">
-                  {round?.questions.length > 0 ? (
-                    <ul className="mt-2 space-y-2">
-                      {round.questions.map((question, qIndex) => {
-                        const isMandatory = question?.mandatory === "true";
-                        const questionText =
-                          question?.snapshot?.questionText ||
-                          "No Question Text Available";
-                        return (
-                          <li key={qIndex} className="text-sm text-gray-600">
-                            <span className="">
-                              {/* {qIndex + 1}. */}•{" "}
-                              {questionText || "No Question Text Available"}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <p className="mt-2 text-gray-500 flex justify-center">
-                      No Questions added yet.
-                    </p>
-                  )}
+          {round.roundTitle !== "Assessment" &&
+            round?.questions?.length > 0 && (
+              <div className="mt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="text-sm font-medium text-gray-700">
+                    Interview Questions
+                  </h4>
+                  <button
+                    onClick={() => setShowQuestions(!showQuestions)}
+                    className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
+                  >
+                    {showQuestions ? "Hide" : "Show"}
+                    {showQuestions ? (
+                      <ChevronUp className="h-4 w-4 ml-1" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 ml-1" />
+                    )}
+                  </button>
                 </div>
-              )}
-            </div>
-          )}
+
+                {showQuestions && round?.questions && (
+                  <div className="space-y-2">
+                    {round?.questions.length > 0 ? (
+                      <ul className="mt-2 space-y-2">
+                        {round.questions.map((question, qIndex) => {
+                          const isMandatory = question?.mandatory === "true";
+                          const questionText =
+                            question?.snapshot?.questionText ||
+                            "No Question Text Available";
+                          return (
+                            <li key={qIndex} className="text-sm text-gray-600">
+                              <span className="">
+                                {/* {qIndex + 1}. */}•{" "}
+                                {questionText || "No Question Text Available"}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="mt-2 text-gray-500 flex justify-center">
+                        No Questions added yet.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
           {round.roundTitle === "Assessment" && (
             <div className="mt-4">
@@ -432,23 +441,24 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false, templa
                                   <span className="font-medium">
                                     {sectionData?.sectionName
                                       ? sectionData?.sectionName
-                                        .charAt(0)
-                                        .toUpperCase() +
-                                      sectionData?.sectionName.slice(1)
+                                          .charAt(0)
+                                          .toUpperCase() +
+                                        sectionData?.sectionName.slice(1)
                                       : "Unnamed Section"}
                                   </span>
                                   <ChevronUp
-                                    className={`transform transition-transform ${expandedSections[sectionId]
+                                    className={`transform transition-transform ${
+                                      expandedSections[sectionId]
                                         ? ""
                                         : "rotate-180"
-                                      }`}
+                                    }`}
                                   />
                                 </button>
 
                                 {expandedSections[sectionId] && (
                                   <div className="mt-4 space-y-3">
                                     {Array.isArray(sectionData.questions) &&
-                                      sectionData.questions.length > 0 ? (
+                                    sectionData.questions.length > 0 ? (
                                       sectionData.questions.map(
                                         (question, idx) => (
                                           <div
@@ -478,78 +488,80 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false, templa
                                                 </p>
                                               </div>
                                               <ChevronDown
-                                                className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
+                                                className={`w-5 h-5 text-gray-400 transition-transform ${
+                                                  expandedQuestions[
                                                     question._id
                                                   ]
                                                     ? "transform rotate-180"
                                                     : ""
-                                                  }`}
+                                                }`}
                                               />
                                             </div>
 
                                             {expandedQuestions[
                                               question._id
                                             ] && (
-                                                <div className="px-4 py-3">
-                                                  <div className="flex justify-between mb-2">
-                                                    <div className="flex items-center gap-2">
-                                                      <span className="text-sm font-medium text-gray-500">
-                                                        Type:
-                                                      </span>
-                                                      <span className="text-sm text-gray-700">
-                                                        {question.snapshot
-                                                          ?.questionType ||
-                                                          "Not specified"}
-                                                      </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                      <span className="text-sm font-medium text-gray-500">
-                                                        Score:
-                                                      </span>
-                                                      <span className="text-sm text-gray-700">
-                                                        {question.snapshot
-                                                          ?.score || "0"}
-                                                      </span>
+                                              <div className="px-4 py-3">
+                                                <div className="flex justify-between mb-2">
+                                                  <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-medium text-gray-500">
+                                                      Type:
+                                                    </span>
+                                                    <span className="text-sm text-gray-700">
+                                                      {question.snapshot
+                                                        ?.questionType ||
+                                                        "Not specified"}
+                                                    </span>
+                                                  </div>
+                                                  <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-medium text-gray-500">
+                                                      Score:
+                                                    </span>
+                                                    <span className="text-sm text-gray-700">
+                                                      {question.snapshot
+                                                        ?.score || "0"}
+                                                    </span>
+                                                  </div>
+                                                </div>
+
+                                                {/* Display question options if MCQ */}
+                                                {question.snapshot
+                                                  ?.questionType === "MCQ" && (
+                                                  <div className="mt-2">
+                                                    <span className="text-sm font-medium text-gray-500">
+                                                      Options:
+                                                    </span>
+                                                    <div className="grid grid-cols-2 gap-2 mt-1">
+                                                      {question.snapshot?.options?.map(
+                                                        (option, optIdx) => (
+                                                          <div
+                                                            key={optIdx}
+                                                            //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                            className={`text-sm p-2 rounded border ${
+                                                              option ===
+                                                              question.snapshot
+                                                                .correctAnswer
+                                                                ? "bg-green-50 border-green-200 text-green-800"
+                                                                : "bg-gray-50 border-gray-200"
+                                                            }`}
+                                                          >
+                                                            {option}
+                                                            {option ===
+                                                              question.snapshot
+                                                                .correctAnswer && (
+                                                              <span className="ml-2 text-green-600">
+                                                                ✓
+                                                              </span>
+                                                            )}
+                                                          </div>
+                                                        )
+                                                      )}
                                                     </div>
                                                   </div>
+                                                )}
 
-                                                  {/* Display question options if MCQ */}
-                                                  {question.snapshot
-                                                    ?.questionType === "MCQ" && (
-                                                      <div className="mt-2">
-                                                        <span className="text-sm font-medium text-gray-500">
-                                                          Options:
-                                                        </span>
-                                                        <div className="grid grid-cols-2 gap-2 mt-1">
-                                                          {question.snapshot?.options?.map(
-                                                            (option, optIdx) => (
-                                                              <div
-                                                                key={optIdx}
-                                                                //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                className={`text-sm p-2 rounded border ${option ===
-                                                                    question.snapshot
-                                                                      .correctAnswer
-                                                                    ? "bg-green-50 border-green-200 text-green-800"
-                                                                    : "bg-gray-50 border-gray-200"
-                                                                  }`}
-                                                              >
-                                                                {option}
-                                                                {option ===
-                                                                  question.snapshot
-                                                                    .correctAnswer && (
-                                                                    <span className="ml-2 text-green-600">
-                                                                      ✓
-                                                                    </span>
-                                                                  )}
-                                                              </div>
-                                                            )
-                                                          )}
-                                                        </div>
-                                                      </div>
-                                                    )}
-
-                                                  {/* Display correct answer */}
-                                                  {/* <div className="mt-2">
+                                                {/* Display correct answer */}
+                                                {/* <div className="mt-2">
                                                                   <span className="text-sm font-medium text-gray-500">
                                                                     Correct Answer:
                                                                   </span>
@@ -558,31 +570,31 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false, templa
                                                                   </div>
                                                                 </div> */}
 
-                                                  {/* Additional question metadata */}
-                                                  <div className="grid grid-cols-2 gap-4 mt-3">
-                                                    <div>
-                                                      <span className="text-xs font-medium text-gray-500">
-                                                        Difficulty:
-                                                      </span>
-                                                      <span className="text-xs text-gray-700 ml-1">
-                                                        {question.snapshot
-                                                          ?.difficultyLevel ||
-                                                          "Not specified"}
-                                                      </span>
-                                                    </div>
-                                                    <div>
-                                                      <span className="text-xs font-medium text-gray-500">
-                                                        Skills:
-                                                      </span>
-                                                      <span className="text-xs text-gray-700 ml-1">
-                                                        {question.snapshot?.skill?.join(
-                                                          ", "
-                                                        ) || "None"}
-                                                      </span>
-                                                    </div>
+                                                {/* Additional question metadata */}
+                                                <div className="grid grid-cols-2 gap-4 mt-3">
+                                                  <div>
+                                                    <span className="text-xs font-medium text-gray-500">
+                                                      Difficulty:
+                                                    </span>
+                                                    <span className="text-xs text-gray-700 ml-1">
+                                                      {question.snapshot
+                                                        ?.difficultyLevel ||
+                                                        "Not specified"}
+                                                    </span>
+                                                  </div>
+                                                  <div>
+                                                    <span className="text-xs font-medium text-gray-500">
+                                                      Skills:
+                                                    </span>
+                                                    <span className="text-xs text-gray-700 ml-1">
+                                                      {question.snapshot?.skill?.join(
+                                                        ", "
+                                                      ) || "None"}
+                                                    </span>
                                                   </div>
                                                 </div>
-                                              )}
+                                              </div>
+                                            )}
                                           </div>
                                         )
                                       )
@@ -610,6 +622,7 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false, templa
           )}
         </div>
 
+        {/* v1.0.4 <----------------------------------------------------------- */}
         <div className="m-4 flex justify-end space-x-3">
           {template?.type !== "standard" && (
             <>
@@ -620,7 +633,7 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false, templa
                 className="flex items-center"
               >
                 <Edit className="h-4 w-4 mr-1" />
-                Edit <span className="sm:hidden inline">Round</span>
+                Edit <span className="sm:hidden inline ml-1">Round</span>
               </Button>
               <Button
                 variant="destructive"
@@ -629,11 +642,12 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false, templa
                 className="flex items-center"
               >
                 <XCircle className="h-4 w-4 mr-1" />
-                Delete <span className="sm:hidden inline">Round</span>
+                Delete <span className="sm:hidden inline ml-1">Round</span>
               </Button>
             </>
           )}
         </div>
+        {/* v1.0.4 -----------------------------------------------------------> */}
       </div>
       {/* v1.0.2 <--------------------------------------------------- */}
       {/* {showDeleteConfirmModal && (

@@ -106,9 +106,9 @@ const MockSchedulelater = () => {
         jobDescription: "",
         Role: "",
         rounds: {
-            roundTitle: "",
+            roundTitle: "Technical Round",
             interviewMode: "Virtual",
-            duration: "30",
+            duration: "60",
             instructions: "",
             interviewType: "",
             interviewers: [],
@@ -236,7 +236,7 @@ const MockSchedulelater = () => {
         if (id && mockinterviewData.length > 0) {
             // console.log("mockinterviewData", mockinterviewData);
             const MockEditData = mockinterviewData.find((moc) => moc._id === id);
-            console.log("MockEditData", MockEditData);
+            // console.log("MockEditData", MockEditData);
             if (MockEditData) {
                 setMockEdit(true);
 
@@ -265,7 +265,7 @@ const MockSchedulelater = () => {
                     rounds: {
                         roundTitle: MockEditData.rounds?.[0]?.roundTitle || "",
                         interviewMode: MockEditData.rounds?.[0]?.interviewMode || "Virtual",
-                        duration: MockEditData.rounds?.[0]?.duration || "30",
+                        duration: MockEditData.rounds?.[0]?.duration || "60",
                         instructions: MockEditData.rounds?.[0]?.instructions || "",
                         interviewType:
                             MockEditData.rounds?.[0]?.interviewType || "scheduled",
@@ -280,7 +280,7 @@ const MockSchedulelater = () => {
                 //     MockEditData.rounds?.[0]?.dateTime,
                 //     MockEditData.rounds?.[0]?.duration
                 // );
-                console.log("formattedInterviewers", formattedInterviewers);
+                // console.log("formattedInterviewers", formattedInterviewers);
 
                 setFileName(MockEditData?.resume?.filename);
 
@@ -312,7 +312,7 @@ const MockSchedulelater = () => {
                         setScheduledDate(localDateTime);
 
                         // Calculate end time based on duration
-                        const duration = MockEditData.rounds?.[0]?.duration || "30";
+                        const duration = MockEditData.rounds?.[0]?.duration || "60";
                         const endDate = new Date(
                             startDate.getTime() + parseInt(duration) * 60000
                         );
@@ -336,20 +336,61 @@ const MockSchedulelater = () => {
                 }
 
                 // Populate skills entries
-                if (MockEditData.skills?.length > 0) {
-                    const skillEntries = MockEditData.skills.map((skill) => ({
-                        skill: skill.skill || "",
-                        experience: skill.experience || "",
-                        expertise: skill.expertise || "",
-                    }));
-                    setEntries(skillEntries);
-                    setAllSelectedSkills(skillEntries.map((entry) => entry.skill));
-                }
+                // if (MockEditData.skills?.length > 0) {
+                //     const skillEntries = MockEditData.skills.map((skill) => ({
+                //         skill: skill.skill || "",
+                //         // experience: skill.experience || "",
+                //         // expertise: skill.expertise || "",
+                //     }));
+                //     setEntries(skillEntries);
+                //     setAllSelectedSkills(skillEntries.map((entry) => entry.skill));
+                // }
+
+                const skillEntries = MockEditData.skills.map((skill) => ({
+                    skill: typeof skill === 'object' ? skill.skill || skill.SkillName : skill,
+                }));
+
+
+
+                // Set allSelectedSkills as objects
+                const skillObjects = MockEditData.skills.map(skill => {
+                    if (typeof skill === 'object') {
+                        return {
+                            _id: skill._id || Math.random().toString(36).substr(2, 9),
+                            SkillName: skill.skill || skill.SkillName || skill
+                        };
+                    }
+                    return {
+                        _id: Math.random().toString(36).substr(2, 9),
+                        SkillName: skill
+                    };
+                });
+
+                // Set formData.skills as strings
+                const skillStrings = MockEditData.skills.map(skill =>
+                    typeof skill === 'object' ? skill.skill || skill.SkillName : skill
+                );
+                setEntries(skillStrings);
+
+                setAllSelectedSkills(skillObjects);
+                setFormData(prev => ({
+                    ...prev,
+                    skills: skillStrings
+                }));
+
+                console.log("Edit mode skills initialized:", {
+                    skillObjects,
+                    skillStrings
+                });
             }
         } else {
             updateTimes(formData.rounds.duration);
         }
     }, [id, mockinterviewData]);
+
+    console.log("formData", formData);
+    console.log("entries", entries);
+    console.log("allSelectedSkills", allSelectedSkills);
 
     // useEffect(() => {
     //     if (id && mockinterviewData.length > 0) {
@@ -547,7 +588,7 @@ const MockSchedulelater = () => {
     const handleNext = async () => {
         setShowSkillValidation(true);
 
-        const { formIsValid, newErrors } = validatePage1(formData, entries);
+        const { formIsValid, newErrors } = validatePage1(formData);
         setErrors(newErrors);
         scrollToFirstError(newErrors, fieldRefs);
 
@@ -564,7 +605,8 @@ const MockSchedulelater = () => {
         try {
             // ✅ FIX: Prepare Page 1 data WITHOUT rounds
             const page1Data = {
-                skills: entries,
+                // skills: entries,
+                skills: formData.skills,
                 candidateName: formData.candidateName,
                 higherQualification: formData.higherQualification,
                 currentExperience: formData.currentExperience,
@@ -619,6 +661,13 @@ const MockSchedulelater = () => {
             //   notify.success("Candidate details saved successfully");
             setCurrentPage(2);
             setIsSubmitting(false);
+
+              // Scroll to top when moving to page 2
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
+ setIsSubmitting(false);
+        // setIsSubmitting(false);
 
 
         } catch (error) {
@@ -1046,53 +1095,53 @@ const MockSchedulelater = () => {
         setResumeError("");
     };
 
-    const handleAddEntry = () => {
-        if (editingIndex !== null) {
-            const oldSkill = entries[editingIndex].skill;
-            const updatedEntries = entries.map((entry, index) =>
-                index === editingIndex
-                    ? {
-                        skill: selectedSkill,
-                        experience: selectedExp,
-                        expertise: selectedLevel,
-                    }
-                    : entry
-            );
-            setEntries(updatedEntries);
-            setEditingIndex(null);
-            setAllSelectedSkills((prev) => {
-                const newSkills = prev.filter((skill) => skill !== oldSkill);
-                newSkills.push(selectedSkill);
-                return newSkills;
-            });
-            setFormData((prevFormData) => ({
-                ...prevFormData,
-                skills: updatedEntries,
-            }));
-        } else {
-            const newEntry = {
-                skill: selectedSkill,
-                experience: selectedExp,
-                expertise: selectedLevel,
-            };
-            const updatedEntries = [...entries, newEntry];
-            setEntries(updatedEntries);
-            setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
-            setAllSelectedExperiences([...allSelectedExperiences, selectedExp]);
-            setAllSelectedExpertises([...allSelectedExpertises, selectedLevel]);
-            setFormData((prevFormData) => ({
-                ...prevFormData,
-                skills: updatedEntries,
-            }));
-        }
+    // const handleAddEntry = () => {
+    //     if (editingIndex !== null) {
+    //         const oldSkill = entries[editingIndex].skill;
+    //         const updatedEntries = entries.map((entry, index) =>
+    //             index === editingIndex
+    //                 ? {
+    //                     skill: selectedSkill,
+    //                     // experience: selectedExp,
+    //                     // expertise: selectedLevel,
+    //                 }
+    //                 : entry
+    //         );
+    //         setEntries(updatedEntries);
+    //         setEditingIndex(null);
+    //         setAllSelectedSkills((prev) => {
+    //             const newSkills = prev.filter((skill) => skill !== oldSkill);
+    //             newSkills.push(selectedSkill);
+    //             return newSkills;
+    //         });
+    //         setFormData((prevFormData) => ({
+    //             ...prevFormData,
+    //             skills: updatedEntries,
+    //         }));
+    //     } else {
+    //         const newEntry = {
+    //             skill: selectedSkill,
+    //             // experience: selectedExp,
+    //             // expertise: selectedLevel,
+    //         };
+    //         const updatedEntries = [...entries, newEntry];
+    //         setEntries(updatedEntries);
+    //         setAllSelectedSkills([...allSelectedSkills, selectedSkill]);
+    //         setAllSelectedExperiences([...allSelectedExperiences, selectedExp]);
+    //         setAllSelectedExpertises([...allSelectedExpertises, selectedLevel]);
+    //         setFormData((prevFormData) => ({
+    //             ...prevFormData,
+    //             skills: updatedEntries,
+    //         }));
+    //     }
 
-        setErrors((prevErrors) => ({
-            ...prevErrors,
-            skills: "",
-        }));
+    //     setErrors((prevErrors) => ({
+    //         ...prevErrors,
+    //         skills: "",
+    //     }));
 
-        resetForm();
-    };
+    //     resetForm();
+    // };
 
     const resetForm = () => {
         setSelectedSkill("");
@@ -1187,7 +1236,7 @@ const MockSchedulelater = () => {
         }
 
         // Add duration in minutes
-        const durationMinutes = Number(duration) || 30;
+        const durationMinutes = Number(duration) || 60;
         const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
 
         // Always return formatted string
@@ -1317,12 +1366,12 @@ const MockSchedulelater = () => {
             now.setMinutes(now.getMinutes() + 15);
             start = now;
             end = new Date(now);
-            end.setMinutes(end.getMinutes() + Number(newDuration || 30));
+            end.setMinutes(end.getMinutes() + Number(newDuration || 60));
         } else if (interviewType === "scheduled" && scheduledDate) {
             start = new Date(scheduledDate);
             if (isNaN(start.getTime())) return;
             end = new Date(start);
-            end.setMinutes(end.getMinutes() + Number(newDuration || 30));
+            end.setMinutes(end.getMinutes() + Number(newDuration || 60));
         }
 
         if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime())) {
@@ -1382,7 +1431,7 @@ const MockSchedulelater = () => {
             const start = new Date();
             start.setMinutes(start.getMinutes() + 15);
             const end = new Date(start);
-            end.setMinutes(end.getMinutes() + Number(formData.rounds.duration || 30));
+            end.setMinutes(end.getMinutes() + Number(formData.rounds.duration || 60));
 
             setStartTime(start.toISOString());
             setEndTime(end.toISOString());
@@ -1408,7 +1457,7 @@ const MockSchedulelater = () => {
             if (isNaN(start.getTime())) return;
 
             const end = new Date(start);
-            end.setMinutes(end.getMinutes() + Number(formData.rounds.duration || 30));
+            end.setMinutes(end.getMinutes() + Number(formData.rounds.duration || 60));
 
             setStartTime(start.toISOString());
             setEndTime(end.toISOString());
@@ -1478,6 +1527,91 @@ const MockSchedulelater = () => {
             },
         }));
         setSelectedInterviewType("scheduled");
+    };
+
+    const addSkill = (skillName) => {
+        console.log("addSkill called with:", skillName);
+        const trimmedSkill = skillName.trim();
+        console.log("Trimmed skill:", trimmedSkill);
+        if (!trimmedSkill) {
+            console.log("Empty skill name, returning");
+            return;
+        }
+
+        // Check if skill already exists in the list (case-insensitive)
+        const skillExists = allSelectedSkills.some((existingSkill) => {
+            const existingSkillName = typeof existingSkill === 'object' ? existingSkill.SkillName : existingSkill;
+            return existingSkillName.toLowerCase() === trimmedSkill.toLowerCase();
+        });
+
+        console.log("Skill exists check:", skillExists, "Current skills:", allSelectedSkills);
+
+        if (!skillExists) {
+            const newSkillObj = {
+                _id: Math.random().toString(36).substr(2, 9),
+                SkillName: trimmedSkill,
+            };
+
+            // Update both states consistently
+            const updatedAllSkills = [...allSelectedSkills, newSkillObj];
+            const updatedFormSkills = [...formData.skills, trimmedSkill];
+            // const updatedEntries = [...entries, { skill: trimmedSkill }];
+
+            // setEntries(updatedEntries);
+
+            setAllSelectedSkills(updatedAllSkills);
+            setFormData((prev) => ({
+                ...prev,
+                skills: updatedFormSkills,
+            }));
+
+            setErrors((prev) => ({ ...prev, skills: "" }));
+            console.log("Skill added successfully");
+            console.log("Updated allSelectedSkills:", updatedAllSkills);
+            console.log("Updated formData.skills:", updatedFormSkills);
+        } else {
+            notify.error("Skill already exists");
+        }
+    };
+
+    // Handle skill removal
+    //   const handleRemoveSkill = (index) => {
+    //     const updatedSkills = [...allSelectedSkills];
+    //     updatedSkills.splice(index, 1);
+    //     setAllSelectedSkills(updatedSkills);
+    //     setFormData((prev) => ({
+    //       ...prev,
+    //       skills: updatedSkills,
+    //     }));
+    //   };
+
+    // Handle skill removal - FIXED VERSION
+    // Handle skill removal - PROPERLY FIXED VERSION
+
+
+
+    const handleRemoveSkill = (index) => {
+        console.log("Removing skill at index:", index);
+        console.log("Current allSelectedSkills:", allSelectedSkills);
+        console.log("Current formData.skills:", formData.skills);
+
+        // Create new arrays without mutating the original
+        const updatedAllSkills = [...allSelectedSkills];
+        const updatedFormSkills = [...formData.skills];
+
+        // Remove the skill at the specified index from both arrays
+        updatedAllSkills.splice(index, 1);
+        updatedFormSkills.splice(index, 1);
+
+        // Update both states
+        setAllSelectedSkills(updatedAllSkills);
+        setFormData((prev) => ({
+            ...prev,
+            skills: updatedFormSkills,
+        }));
+
+        console.log("After removal - allSelectedSkills:", updatedAllSkills);
+        console.log("After removal - formData.skills:", updatedFormSkills);
     };
 
 
@@ -1616,8 +1750,128 @@ const MockSchedulelater = () => {
                                             />
                                         </div>
                                         <div>
-                                            {/* v1.0.0 <---------------------------------------------------------------- */}
-                                            <SkillsField
+
+                                            <DropdownWithSearchField
+                                                ref={fieldRefs.skills}
+                                                value={null}
+                                                allowCreateOnEnter={true}
+                                                options={
+                                                    skills
+                                                        ?.filter(
+                                                            (skill) =>
+                                                                !allSelectedSkills.some(
+                                                                    (s) => s.SkillName === skill.SkillName
+                                                                )
+                                                        )
+                                                        .map((skill) => ({
+                                                            value: skill.SkillName,
+                                                            label: skill.SkillName,
+                                                        })) || []
+                                                }
+                                                onChange={(option) => {
+                                                    if (!option) return;
+                                                    const selectedOption = option?.target?.value
+                                                        ? { value: option.target.value }
+                                                        : option;
+                                                    if (selectedOption?.value) {
+                                                        addSkill(selectedOption.value);
+                                                        if (fieldRefs.skills.current) {
+                                                            fieldRefs.skills.current.value = "";
+                                                        }
+                                                    }
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    console.log(
+                                                        "Key pressed:",
+                                                        e.key,
+                                                        "Value:",
+                                                        e.target?.value
+                                                    );
+
+                                                    // Handle the create action from the dropdown
+                                                    if (e.key === "Enter" && e.target?.action === "create") {
+                                                        const newSkill = e.target.value?.trim();
+                                                        if (newSkill) {
+                                                            console.log("Adding new skill:", newSkill);
+                                                            addSkill(newSkill);
+
+                                                            // Clear the input field and close the dropdown
+                                                            setTimeout(() => {
+                                                                console.log("Attempting to close dropdown");
+                                                                // Blur any active element to close dropdowns
+                                                                if (document.activeElement) {
+                                                                    document.activeElement.blur();
+                                                                }
+
+                                                                // Clear the input field
+                                                                if (fieldRefs.skills.current) {
+                                                                    // Clear react-select value
+                                                                    if (fieldRefs.skills.current.select) {
+                                                                        fieldRefs.skills.current.select.clearValue();
+                                                                        console.log("React-select value cleared");
+                                                                    }
+
+                                                                    // Find and clear the input
+                                                                    const selectInput =
+                                                                        fieldRefs.skills.current.querySelector("input");
+                                                                    if (selectInput) {
+                                                                        selectInput.value = "";
+                                                                        const inputEvent = new Event("input", {
+                                                                            bubbles: true,
+                                                                        });
+                                                                        selectInput.dispatchEvent(inputEvent);
+                                                                    }
+                                                                }
+                                                            }, 0);
+                                                        }
+                                                    }
+                                                }}
+                                                error={errors.skills}
+                                                label="Select Skills"
+                                                name="skills"
+                                                required={allSelectedSkills.length === 0}
+                                                onMenuOpen={loadSkills}
+                                                loading={isSkillsFetching}
+                                                isMulti={false}
+                                                placeholder="Type to search or press Enter to add new skill"
+                                                creatable={true}
+                                            />
+                                        </div>
+
+                                        {/* Selected Skills */}
+                                        {formData.skills.length > 0 && (
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                {formData.skills.map((skill, index) => {
+                                                    // Always get skill name from formData.skills (which should be strings)
+                                                    const skillName = skill;
+
+                                                    return (
+                                                        <div
+                                                            key={index}
+                                                            className="bg-custom-blue/10 border border-custom-blue/40 rounded-full px-3 py-1 text-sm text-custom-blue flex items-center"
+                                                        >
+                                                            <span className="mr-1.5">{skillName}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveSkill(index)}
+                                                                className="ml-1 text-custom-blue hover:text-custom-blue/80"
+                                                                aria-label={`Remove ${skillName}`}
+                                                            >
+                                                                <X className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {errors.skills && (
+                                            <p className="text-red-500 text-xs mt-1">{errors.skills}</p>
+                                        )}
+
+                                        {/* skills updated code by Ranjith */}
+                                        {/* v1.0.0 <---------------------------------------------------------------- */}
+                                        {/* <SkillsField
                                                 ref={fieldRefs.skills}
                                                 entries={entries}
                                                 errors={errors}
@@ -1706,9 +1960,9 @@ const MockSchedulelater = () => {
                                                 skillpopupcancelbutton={skillpopupcancelbutton}
                                                 editingIndex={editingIndex}
                                                 onOpenSkills={loadSkills}
-                                            />
-                                            {/* v1.0.0 -------------------------------------------------------------------> */}
-                                        </div>
+                                            /> */}
+                                        {/* v1.0.0 -------------------------------------------------------------------> */}
+                                        {/* </div> */}
                                         <DescriptionField
                                             inputRef={fieldRefs.jobDescription}
                                             value={formData.jobDescription}
@@ -1802,7 +2056,7 @@ const MockSchedulelater = () => {
                                 {currentPage === 2 && (
                                     <>
                                         <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
-                                            <DropdownWithSearchField
+                                            {/* <DropdownWithSearchField
                                                 inputRef={fieldRefs["rounds.roundTitle"]}
                                                 id="rounds.roundTitle"
                                                 name="rounds.roundTitle"
@@ -1817,8 +2071,21 @@ const MockSchedulelater = () => {
                                                     (title) => title.value !== "Assessment"
                                                 )}
                                                 isSearchable
-                                            />
+                                            /> */}
 
+                                            {/* // Replace the DropdownWithSearchField for round title with a regular InputField: */}
+                                            <InputField
+                                                inputRef={fieldRefs["rounds.roundTitle"]}
+                                                value={formData.rounds.roundTitle}
+                                                onChange={handleChange}
+                                                name="rounds.roundTitle"
+                                                type="text"
+                                                id="rounds.roundTitle"
+                                                label="Round Title"
+                                                required
+                                                error={errors["rounds.roundTitle"]}
+                                                placeholder="Enter round title"
+                                            />
                                             {/* v1.0.2 - Disable interview mode when Assessment is selected */}
                                             <div
                                                 className={
@@ -2236,9 +2503,8 @@ const MockSchedulelater = () => {
                                                             onChange={handleChange}
                                                             error={errors["rounds.duration"]}
                                                             placeholder="Select duration"
-                                                            readOnly={
-                                                                formData.rounds.roundTitle === "Assessment"
-                                                            }
+                                                            disabled={true} // Add this to disable the field
+                                                            readOnly={true} // Also make it read-only
                                                         />
                                                     </div>
                                                 </div>
@@ -2414,7 +2680,7 @@ const MockSchedulelater = () => {
                         </div>
                     </div>
                     {currentPage === 1 ? (
-                        <div className="flex justify-end gap-4 mt-5 mb-4">
+                        <div className="flex justify-between gap-4 mt-5 mb-4">
                             <button
                                 className="border border-custom-blue p-3 rounded py-1"
                                 onClick={() =>
@@ -2435,7 +2701,7 @@ const MockSchedulelater = () => {
                             </LoadingButton>
                         </div>
                     ) : (
-                        <div className="flex justify-end gap-4 mt-5 mb-4">
+                        <div className="flex justify-between gap-4 mt-5 mb-4">
                             <button
                                 className="border border-custom-blue p-3 rounded py-1"
                                 onClick={() => setCurrentPage(1)}
@@ -2490,17 +2756,19 @@ const MockSchedulelater = () => {
                 </div>
             </div>
 
-            {showOutsourcePopup && (
-                <OutsourceOption
-                    onClose={() => setShowOutsourcePopup(false)}
-                    dateTime={combinedDateTime}
-                    onProceed={handleExternalInterviewerSelect}
-                    skills={formData.skills}
-                    navigatedfrom="mock-interview"
-                    candidateExperience={formData?.currentExperience}
-                    isMockInterview={true}  // Correctly passes true for mock interviews
-                />
-            )}
+            {
+                showOutsourcePopup && (
+                    <OutsourceOption
+                        onClose={() => setShowOutsourcePopup(false)}
+                        dateTime={combinedDateTime}
+                        onProceed={handleExternalInterviewerSelect}
+                        skills={formData.skills}
+                        navigatedfrom="mock-interview"
+                        candidateExperience={formData?.currentExperience}
+                        isMockInterview={true}  // Correctly passes true for mock interviews
+                    />
+                )
+            }
 
             {/* {showOutsourcePopup && (
                 <OutsourceOption
@@ -2511,7 +2779,7 @@ const MockSchedulelater = () => {
                     navigatedfrom="mock-interview"
                 />
             )} */}
-        </div>
+        </div >
     );
 };
 

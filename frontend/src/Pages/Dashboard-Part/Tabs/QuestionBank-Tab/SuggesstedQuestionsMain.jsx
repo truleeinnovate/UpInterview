@@ -9,8 +9,15 @@
 // v1.0.6 - Ashok - Fixed alignment issues
 // v1.0.7 - Ashok - Fixed responsive issues
 // v1.0.7 - Ashok - Fixed suggested questions header
+// v1.0.8 - Ashok - Fixed style issues
 
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import toast from "react-hot-toast";
 import { Tooltip } from "@mui/material";
 import { ChevronUp, ChevronDown, Search, X, Plus } from "lucide-react";
@@ -42,7 +49,7 @@ function HeaderBar({
   totalPages,
   onClickLeftPaginationIcon,
   onClickRightPagination,
-  type
+  type,
 }) {
   // Using DropdownSelect for interview type selection; no manual portal/open-state needed.
 
@@ -70,27 +77,29 @@ function HeaderBar({
 
         {/* Dropdown */}
 
-        {type !== 'assessment' &&
-         <div className="w-48 flex-shrink-0">
-        <DropdownSelect
-            isSearchable={false}
-            value={
-              dropdownValue
-                ? { value: dropdownValue, label: dropdownValue }
-                : null
-            }
-            onChange={(opt) => setDropdownValue(opt?.value || "")}
-            options={[
-              { value: "Interview Questions", label: "Interview Questions" },
-              { value: "Assessment Questions", label: "Assessment Questions" },
-            ]}
-            placeholder="Select Question Type"
-            menuPortalTarget={document.body}
-            menuPosition="fixed"
-          />
+        {type !== "assessment" && (
+          <div className="w-48 flex-shrink-0">
+            <DropdownSelect
+              isSearchable={false}
+              value={
+                dropdownValue
+                  ? { value: dropdownValue, label: dropdownValue }
+                  : null
+              }
+              onChange={(opt) => setDropdownValue(opt?.value || "")}
+              options={[
+                { value: "Interview Questions", label: "Interview Questions" },
+                {
+                  value: "Assessment Questions",
+                  label: "Assessment Questions",
+                },
+              ]}
+              placeholder="Select Question Type"
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+            />
           </div>
-          }
-
+        )}
 
         {/* Pagination + Filter */}
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -168,7 +177,9 @@ const SuggestedQuestionsComponent = ({
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const itemsPerPage = 10;
   const [dropdownOpen, setDropdownOpen] = useState(null);
-  const [dropdownValue, setDropdownValue] = useState(type === 'assessment' ? "Assessment Questions" : "Interview Questions");
+  const [dropdownValue, setDropdownValue] = useState(
+    type === "assessment" ? "Assessment Questions" : "Interview Questions"
+  );
 
   // Map dropdown selection to backend-supported questionType filter
   const selectedQuestionType = useMemo(
@@ -176,14 +187,14 @@ const SuggestedQuestionsComponent = ({
       dropdownValue === "Interview Questions" ? "Interview" : "Assignment",
     [dropdownValue]
   );
-  const { 
-    suggestedQuestions, 
+  const {
+    suggestedQuestions,
     questionBankUsageLimit,
     totalQuestions: totalQuestionsFromAPI,
     accessibleQuestions,
     lockedQuestions: lockedQuestionsCount,
     questionTypeFilter,
-    isLoading 
+    isLoading,
   } = useQuestions({
     questionType: selectedQuestionType,
   });
@@ -309,7 +320,11 @@ const SuggestedQuestionsComponent = ({
       }
       return prevData;
     });
-  }, [showQuestionTypeFilter, uniqueCategories.length, uniqueTechnologies.length]);
+  }, [
+    showQuestionTypeFilter,
+    uniqueCategories.length,
+    uniqueTechnologies.length,
+  ]);
 
   const [questionTypeFilterItems, setQuestionTypeFilterItems] = useState([]);
   const [difficultyLevelFilterItems, setDifficultyLevelFilterItems] = useState(
@@ -524,7 +539,7 @@ const SuggestedQuestionsComponent = ({
     //   navigate('/account-settings/subscription');
     //   return;
     // }
-    
+
     if (type === "assessment") {
       const isDuplicate = addedSections.some((section) =>
         section.Questions.some((q) => q.questionId === item._id)
@@ -715,8 +730,6 @@ const SuggestedQuestionsComponent = ({
     }
   };
 
-
-
   // const onClickRemoveQuestion = async (id) => {
   //   if (type === "assessment") {
   //     // Remove question from assessment sections
@@ -736,15 +749,14 @@ const SuggestedQuestionsComponent = ({
   // };
 
   const onClickRemoveQuestion = async (id) => {
-    console.log("item ID",id);
+    console.log("item ID", id);
     if (type === "assessment") {
       // Remove question from assessment sections
       updateQuestionsInAddedSectionFromQuestionBank(sectionName, null, id);
       toast.success("Question removed successfully!");
 
-      console.log("addedSections",addedSections);
-    }
-    else if (
+      console.log("addedSections", addedSections);
+    } else if (
       type === "interviewerSection" ||
       (type === "feedback" && handleRemoveQuestion)
     ) {
@@ -845,9 +857,7 @@ const SuggestedQuestionsComponent = ({
     setTempTechnologyFilterItems(technologyFilterItems);
     setTempSelectedSkills(selectedSkills);
     setTempSkillInput(skillInput);
-    setTempFiltrationData(
-      JSON.parse(JSON.stringify(filtrationData))
-    );
+    setTempFiltrationData(JSON.parse(JSON.stringify(filtrationData)));
     setIsPopupOpen(!isPopupOpen);
   };
 
@@ -993,6 +1003,11 @@ const SuggestedQuestionsComponent = ({
     );
   }
 
+  // v1.0.8 <---------------------------------------------
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  // v1.0.8 --------------------------------------------->
+
   return (
     <div className="h-full flex flex-col">
       {/* Search/Filter Bar */}
@@ -1132,6 +1147,7 @@ const SuggestedQuestionsComponent = ({
               ...technologyFilterItems,
             ].length > 0 && (
               /* v1.0.6 <---------------------------------------------------------------------- */
+              /* v1.0.8 <---------------------------------------------------------------------- */
               <div className="flex items-center flex-wrap px-4 pt-2 mb-3 gap-3">
                 <h3 className="font-medium text-gray-700 text-sm">
                   Filters applied:
@@ -1147,7 +1163,7 @@ const SuggestedQuestionsComponent = ({
                       key={index}
                       className="flex items-center gap-1 rounded-full border border-custom-blue px-3 py-1 text-custom-blue font-medium bg-blue-50 text-sm"
                     >
-                      <span>{filterItem}</span>
+                      <span>{capitalizeFirstLetter(filterItem)}</span>
                       <button
                         className="hover:text-red-500 transition-colors"
                         onClick={() =>
@@ -1161,31 +1177,34 @@ const SuggestedQuestionsComponent = ({
                   ))}
                 </ul>
               </div>
+              // v1.0.8 ---------------------------------------------------------------------->
               // v1.0.6 ---------------------------------------------------------------------->
             )}
             {/* v1.0.7 <----------------------------------------------------------------------- */}
             <ul className="flex flex-col gap-4 pr-2 h-[calc(100vh-210px)] overflow-y-auto">
-            {/* v1.0.7 <----------------------------------------------------------------------- */}
+              {/* v1.0.7 <----------------------------------------------------------------------- */}
               {paginatedData.length > 0 ? (
                 paginatedData.map((item, index) => (
                   <div
                     key={index}
                     className={`border rounded-lg h-full shadow-sm transition-shadow text-sm ${
                       // COMMENTED OUT FOR NOW - Show all questions without locked styling
-                      // item.isLocked 
-                      //   ? 'border-gray-300 bg-gray-50 opacity-75' 
+                      // item.isLocked
+                      //   ? 'border-gray-300 bg-gray-50 opacity-75'
                       //   : 'border-gray-200 hover:shadow-md'
-                      'border-gray-200 hover:shadow-md'
+                      "border-gray-200 hover:shadow-md"
                     }`}
                   >
                     <div className="flex justify-between items-center border-b border-gray-200 px-4">
                       {/* v1.0.6 <---------------------------------------------------------------------------- */}
                       <div className="flex items-start justify-start sm:w-[50%] md:w-[58%] w-[80%]">
-                        <div className={`flex items-center gap-2 justify-center rounded-md px-3 py-1 text-white text-sm transition-colors ${
-                          // COMMENTED OUT FOR NOW - Show all questions without locked styling
-                          // item.isLocked ? 'bg-gray-400' : 'bg-custom-blue/80'
-                          'bg-custom-blue/80'
-                        }`}>
+                        <div
+                          className={`flex items-center gap-2 justify-center rounded-md px-3 py-1 text-white text-sm transition-colors ${
+                            // COMMENTED OUT FOR NOW - Show all questions without locked styling
+                            // item.isLocked ? 'bg-gray-400' : 'bg-custom-blue/80'
+                            "bg-custom-blue/80"
+                          }`}
+                        >
                           {/* COMMENTED OUT FOR NOW - Don't show lock icon */}
                           {/* {item.isLocked && <Lock className="w-4 h-4" />} */}
                           <p className="font-medium">{item.technology[0]}</p>
@@ -1282,8 +1301,7 @@ const SuggestedQuestionsComponent = ({
                         <div className="w-[8%] flex justify-center">
                           {addedSections.some((s) =>
                             s.Questions.some((q) => q.questionId === item._id)
-                          ) ?
-                          (
+                          ) ? (
                             <button
                               type="button"
                               onClick={() => onClickRemoveQuestion(item?._id)}
@@ -1292,13 +1310,12 @@ const SuggestedQuestionsComponent = ({
                               <span className="sm:hidden inline">Remove</span>
                               <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                             </button>
-                          )
-                          // (
-                          //   <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
-                          //     ✓ <span className="sm:hidden inline">Added</span>
-                          //   </span>
-                          // )
-                           : (
+                          ) : (
+                            // (
+                            //   <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
+                            //     ✓ <span className="sm:hidden inline">Added</span>
+                            //   </span>
+                            // )
                             <button
                               type="button"
                               className={`sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${
@@ -1337,27 +1354,27 @@ const SuggestedQuestionsComponent = ({
                               <span>Unlock</span>
                             </button>
                           ) : ( */}
-                            <>
-                              <button
-                                type="button"
-                                className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
-                                onClick={() => toggleDropdown(item._id)}
-                              >
-                                Add{" "}
-                                <span className="sm:hidden md:hidden inline">
-                                  to list
-                                </span>
-                              </button>
-                              {dropdownOpen === item._id && (
-                                <MyQuestionList
-                                  question={item}
-                                  closeDropdown={closeDropdown}
-                                  isInterviewType={
-                                    dropdownValue === "Interview Questions"
-                                  }
-                                />
-                              )}
-                            </>
+                          <>
+                            <button
+                              type="button"
+                              className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
+                              onClick={() => toggleDropdown(item._id)}
+                            >
+                              Add{" "}
+                              <span className="sm:hidden md:hidden inline">
+                                to list
+                              </span>
+                            </button>
+                            {dropdownOpen === item._id && (
+                              <MyQuestionList
+                                question={item}
+                                closeDropdown={closeDropdown}
+                                isInterviewType={
+                                  dropdownValue === "Interview Questions"
+                                }
+                              />
+                            )}
+                          </>
                           {/* ) */}
                         </div>
                       )}
@@ -1386,64 +1403,67 @@ const SuggestedQuestionsComponent = ({
                           </div>
                         </div>
                       ) : ( */}
-                        <div className="flex items-start w-full pt-2 gap-2">
-                          <span className="sm:text-sm font-semibold">
-                            {(currentPage - 1) * itemsPerPage + index + 1}.
-                          </span>
-                          <p className="sm:text-sm text-gray-700 break-words w-full">
-                            {item.questionText}
-                          </p>
-                        </div>
+                      <div className="flex items-start w-full pt-2 gap-2">
+                        <span className="sm:text-sm font-semibold">
+                          {(currentPage - 1) * itemsPerPage + index + 1}.
+                        </span>
+                        <p className="sm:text-sm text-gray-700 break-words w-full">
+                          {item.questionText}
+                        </p>
+                      </div>
                       {/* ) */}
                       {/* COMMENTED OUT FOR NOW - Show MCQ options for all questions */}
-                      {/* !item.isLocked && */ item.questionType === "MCQ" && item.options && (
-                        <div className="mb-2 ml-12 mt-2">
-                          <ul className="list-none">
-                            {(() => {
-                              const isAnyOptionLong = item.options.some(
-                                (option) => option.length > 55
-                              );
-                              return item.options.map((option, idx) => (
-                                <li
-                                  key={idx}
-                                  className={`${
-                                    isAnyOptionLong
-                                      ? "block w-full"
-                                      : "inline-block w-1/2"
-                                  } mb-2`}
-                                >
-                                  <span className="text-gray-700">
-                                    {option}
-                                  </span>
-                                </li>
-                              ));
-                            })()}
-                          </ul>
-                        </div>
-                      )}
+                      {
+                        /* !item.isLocked && */ item.questionType === "MCQ" &&
+                          item.options && (
+                            <div className="mb-2 ml-12 mt-2">
+                              <ul className="list-none">
+                                {(() => {
+                                  const isAnyOptionLong = item.options.some(
+                                    (option) => option.length > 55
+                                  );
+                                  return item.options.map((option, idx) => (
+                                    <li
+                                      key={idx}
+                                      className={`${
+                                        isAnyOptionLong
+                                          ? "block w-full"
+                                          : "inline-block w-1/2"
+                                      } mb-2`}
+                                    >
+                                      <span className="text-gray-700">
+                                        {option}
+                                      </span>
+                                    </li>
+                                  ));
+                                })()}
+                              </ul>
+                            </div>
+                          )
+                      }
                     </div>
                     {/* COMMENTED OUT FOR NOW - Show answer for all questions */}
                     {/* !item.isLocked && ( */}
-                      <div className="p-4">
-                        <p className="text-sm break-words whitespace-pre-wrap">
-                          <span className="sm:text-sm font-medium text-gray-700">
-                            Answer:{" "}
-                          </span>
-                          <span className="sm:text-sm text-gray-600">
-                            {item.questionType === "Programming"
-                              ? renderSolutions(item.solutions)
-                              : item.correctAnswer}
-                          </span>
-                        </p>
-                        <p className="sm:text-sm font-medium pt-2">
-                          Tags:{" "}
-                          <span className="text-sm text-gray-600">
-                            {Array.isArray(item.tags)
-                              ? item.tags.join(", ")
-                              : String(item.tags || "")}
-                          </span>
-                        </p>
-                      </div>
+                    <div className="p-4">
+                      <p className="text-sm break-words whitespace-pre-wrap">
+                        <span className="sm:text-sm font-medium text-gray-700">
+                          Answer:{" "}
+                        </span>
+                        <span className="sm:text-sm text-gray-600">
+                          {item.questionType === "Programming"
+                            ? renderSolutions(item.solutions)
+                            : item.correctAnswer}
+                        </span>
+                      </p>
+                      <p className="sm:text-sm font-medium pt-2">
+                        Tags:{" "}
+                        <span className="text-sm text-gray-600">
+                          {Array.isArray(item.tags)
+                            ? item.tags.join(", ")
+                            : String(item.tags || "")}
+                        </span>
+                      </p>
+                    </div>
                     {/* ) */}
                   </div>
                 ))
@@ -1740,7 +1760,7 @@ const SuggestedQuestionsComponent = ({
           {/*------v1.0.4-------->*/}
         </div>
       </FilterPopup>
-      
+
       {/* COMMENTED OUT FOR NOW - No usage limit banners */}
       {/* Usage Limit Banner */}
       {/* questionBankUsageLimit && questionBankUsageLimit.remaining <= 10 && questionBankUsageLimit.remaining > 0 && (
@@ -1764,7 +1784,7 @@ const SuggestedQuestionsComponent = ({
           </div>
         </div>
       ) */}
-      
+
       {/* Usage Info Banner - Always show when there's a limit */}
       {/* questionBankUsageLimit && questionBankUsageLimit.entitled !== Infinity && (
         <div className="bg-blue-50 border-l-4 border-custom-blue text-gray-700 p-3 mb-4 mx-5">

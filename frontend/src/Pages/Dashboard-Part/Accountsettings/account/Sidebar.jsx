@@ -1,5 +1,7 @@
 // v1.0.0 - Ashok - Improved responsiveness and fixed sliding sidebar
 // v1.1.0 - Ashraf  - Optimized permission checks and added debug logs for initialization
+// v1.0.2 - Ashok   - Fixed style issue for super admin settings title ACCOUNT
+
 import React from "react";
 import { UserIcon, UsersIcon, BellIcon } from "@heroicons/react/24/outline";
 import { usePermissionCheck } from "../../../../utils/permissionUtils";
@@ -30,7 +32,12 @@ const SidebarProfile = ({
     },
     { name: "Roles", icon: UserIcon, id: "roles", permissionKey: "Roles" },
     { name: "Users", icon: UsersIcon, id: "users", permissionKey: "Users" },
-    { name: "Notifications", icon: BellIcon, id: "email-settings", permissionKey: "Notification"},
+    {
+      name: "Notifications",
+      icon: BellIcon,
+      id: "email-settings",
+      permissionKey: "Notification",
+    },
   ];
 
   return (
@@ -55,24 +62,27 @@ const SidebarProfile = ({
           <nav className="mt-2 pb-4">
             {currentUserType === "superAdmin" ? (
               <div className="py-2">
-                <h2 className="px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {/* v1.0.2 <----------------------------------------------------------------------- */}
+                <h2 className="text-start px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Account
                 </h2>
+                {/* v1.0.2 -----------------------------------------------------------------------> */}
                 {superAdminTabs.map((item) => {
-                  const hasPermission = isInitialized && checkPermission(item.permissionKey);
-                //   console.log('🎯 SidebarProfile SuperAdmin Tab:', {
-                //     id: item.id,
-                //     permissionKey: item.permissionKey,
-                //     hasPermission,
-                //     isInitialized,
-                //   });
+                  const hasPermission =
+                    isInitialized && checkPermission(item.permissionKey);
+                  //   console.log('🎯 SidebarProfile SuperAdmin Tab:', {
+                  //     id: item.id,
+                  //     permissionKey: item.permissionKey,
+                  //     hasPermission,
+                  //     isInitialized,
+                  //   });
 
                   return hasPermission ? (
                     <button
                       key={item.id}
                       onClick={() => {
                         if (activeTab !== item.id) {
-                        //   console.log('🎯 SidebarProfile: Clicking tab:', item.id);
+                          //   console.log('🎯 SidebarProfile: Clicking tab:', item.id);
                           handleTabChange(item.id);
                         }
                       }}
@@ -131,11 +141,17 @@ const SidebarProfile = ({
         className="absolute cursor-pointer right-0 top-2 sm:translate-x-3/4 md:translate-x-3/4 lg:translate-x-1/2 xl:translate-x-1/2 2xl:translate-x-1/2 rounded-full w-10 h-10 flex items-center justify-center shadow lg:hidden xl:hidden 2xl:hidden transition-opacity duration-300 bg-white/70 opacity-90"
       >
         {isSidebarOpen ? (
-          <span title="Close Sidebar" className="flex items-center justify-center">
+          <span
+            title="Close Sidebar"
+            className="flex items-center justify-center"
+          >
             <ChevronLeft className="h-5 w-5 text-custom-blue" />
           </span>
         ) : (
-          <span title="Open Sidebar" className="flex items-center justify-center">
+          <span
+            title="Open Sidebar"
+            className="flex items-center justify-center"
+          >
             <ChevronRight className="h-5 w-5 text-custom-blue" />
           </span>
         )}

@@ -170,9 +170,10 @@ const updateSubscriptionPlan = async (req, res) => {
       customerSubscription.status = 'active';
       customerSubscription.autoRenew = false;
       customerSubscription.planName = plan.name;
-      customerSubscription.razorpaySubscriptionId = undefined;
-      customerSubscription.razorpayPaymentId = undefined;
-      customerSubscription.lastPaymentId = undefined;
+      // Properly clear Razorpay fields using null instead of undefined
+      customerSubscription.razorpaySubscriptionId = null;
+      customerSubscription.razorpayPaymentId = null;
+      customerSubscription.lastPaymentId = null;
       customerSubscription.endDate = calculateEndDate(newBillingCycle);
       customerSubscription.nextBillingDate = calculateEndDate(newBillingCycle);
 
@@ -269,7 +270,8 @@ const updateSubscriptionPlan = async (req, res) => {
     }
 
     // If no existing Razorpay subscription (e.g., upgrading from free), create a pending invoice and instruct checkout
-    if (!customerSubscription.razorpaySubscriptionId) {
+    // Check for null, undefined, or empty string
+    if (!customerSubscription.razorpaySubscriptionId || customerSubscription.razorpaySubscriptionId === null) {
       // Store old plan info for history
       const oldPlanName = customerSubscription.planName;
       const oldPlanId = customerSubscription.subscriptionPlanId;
@@ -449,12 +451,31 @@ const updateSubscriptionPlan = async (req, res) => {
     const existingRpCustomerId = customerSubscription.razorpayCustomerId;
     const oldInvoiceId = customerSubscription.invoiceId;
 
-    try {
-      await razorpay.subscriptions.cancel(customerSubscription.razorpaySubscriptionId);
-      console.log('Cancelled old Razorpay subscription (immediate):', customerSubscription.razorpaySubscriptionId);
-    } catch (cancelErr) {
-      console.error('Error cancelling old Razorpay subscription:', cancelErr);
-      return res.status(400).json({ success: false, message: 'Failed to cancel existing Razorpay subscription' });
+    // Try to cancel the old subscription if it exists and is active
+    if (customerSubscription.razorpaySubscriptionId) {
+      try {
+        // First check if the subscription exists and is active
+        const existingSubscription = await razorpay.subscriptions.fetch(customerSubscription.razorpaySubscriptionId);
+        
+        // Only cancel if the subscription is in an active state
+        if (existingSubscription && ['created', 'authenticated', 'active'].includes(existingSubscription.status)) {
+          await razorpay.subscriptions.cancel(customerSubscription.razorpaySubscriptionId);
+          console.log('Cancelled old Razorpay subscription (immediate):', customerSubscription.razorpaySubscriptionId);
+        } else {
+          console.log('Subscription already cancelled or in terminal state:', existingSubscription?.status);
+          // Clear the subscription ID since it's no longer valid
+          customerSubscription.razorpaySubscriptionId = null;
+        }
+      } catch (cancelErr) {
+        // If subscription doesn't exist or is already cancelled, just log and continue
+        if (cancelErr.statusCode === 400 || cancelErr.error?.description?.includes('already')) {
+          console.log('Subscription already cancelled or does not exist, continuing with upgrade');
+          customerSubscription.razorpaySubscriptionId = null;
+        } else {
+          console.error('Error cancelling old Razorpay subscription:', cancelErr);
+          return res.status(400).json({ success: false, message: 'Failed to cancel existing Razorpay subscription' });
+        }
+      }
     }
 
     try {
