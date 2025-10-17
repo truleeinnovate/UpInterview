@@ -87,6 +87,114 @@ function AssessmentTest({
     setShowConfirmSubmit(true);
   };
 
+  console.log("answers", answers);
+  console.log("skippedQuestions", skippedQuestions);
+  console.log("questions", questions);
+
+
+// Enhanced verifyAnswer function with comprehensive trimming and type handling
+const verifyAnswer = (question, selectedAnswer) => {
+  const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
+  const questionType = question.snapshot?.questionType || question.questionType;
+  
+  // Helper function to clean and normalize answers with proper trimming
+  const normalizeAnswer = (answer, preserveFormatting = false) => {
+    if (answer === null || answer === undefined || answer === '') return '';
+    
+    let processedAnswer = answer.toString();
+    
+    if (!preserveFormatting) {
+      // For most answer types, trim and normalize
+      processedAnswer = processedAnswer.trim();
+    }
+    
+    return processedAnswer;
+  };
+  
+  // Enhanced MCQ cleaning function
+  const cleanMCQAnswer = (answer) => {
+    const normalized = normalizeAnswer(answer);
+    if (!normalized) return '';
+    
+    // Remove patterns like "A) ", "B) ", "C) " etc. from the beginning
+    // Also handles "A. ", "1) ", "1. " etc.
+    const cleaned = normalized
+      .replace(/^[A-Z][).]\s*/, '')  // Remove "A) ", "B) ", "A. ", "B. "
+      .replace(/^\d+[).]\s*/, '')    // Remove "1) ", "2) ", "1. ", "2. "
+      .trim();
+    
+    return cleaned.toLowerCase();
+  };
+  
+  // Enhanced boolean normalization
+  const normalizeBoolean = (value) => {
+    const normalized = normalizeAnswer(value);
+    if (!normalized) return '';
+    
+    const trueValues = ['true', 't', 'yes', 'y', '1', 'correct', 'right'];
+    const falseValues = ['false', 'f', 'no', 'n', '0', 'incorrect', 'wrong'];
+    
+    if (trueValues.includes(normalized.toLowerCase())) return 'true';
+    if (falseValues.includes(normalized.toLowerCase())) return 'false';
+    
+    return normalized.toLowerCase(); // Return as-is for strict comparison
+  };
+
+  switch (questionType) {
+    case 'MCQ':
+    case 'Multiple Choice':
+      // For MCQ, clean both answers before comparison
+      const cleanedSelected = cleanMCQAnswer(selectedAnswer);
+      const cleanedCorrect = cleanMCQAnswer(correctAnswer);
+      console.log(`MCQ Comparison - Selected: "${cleanedSelected}", Correct: "${cleanedCorrect}"`);
+      return cleanedSelected === cleanedCorrect;
+    
+    case 'Short Answer':
+      // For short answers, trim and compare case-insensitively
+      const shortSelected = normalizeAnswer(selectedAnswer);
+      const shortCorrect = normalizeAnswer(correctAnswer);
+      console.log(`Short Answer Comparison - Selected: "${shortSelected}", Correct: "${shortCorrect}"`);
+      return shortSelected.toLowerCase() === shortCorrect.toLowerCase();
+    
+    case 'Long Answer':
+      // For long answers, trim and compare case-insensitively
+      const longSelected = normalizeAnswer(selectedAnswer);
+      const longCorrect = normalizeAnswer(correctAnswer);
+      console.log(`Long Answer Comparison - Selected: "${longSelected}", Correct: "${longCorrect}"`);
+      return longSelected.toLowerCase() === longCorrect.toLowerCase();
+    
+    case 'Number':
+    case 'Numeric':
+      // For numbers, compare numerically after trimming
+      const numSelected = normalizeAnswer(selectedAnswer);
+      const numCorrect = normalizeAnswer(correctAnswer);
+      console.log(`Number Comparison - Selected: "${numSelected}", Correct: "${numCorrect}"`);
+      return parseFloat(numSelected) === parseFloat(numCorrect);
+    
+    case 'Boolean':
+      // For boolean, normalize both values and compare
+      const boolSelected = normalizeBoolean(selectedAnswer);
+      const boolCorrect = normalizeBoolean(correctAnswer);
+      console.log(`Boolean Comparison - Selected: "${boolSelected}", Correct: "${boolCorrect}"`);
+      return boolSelected === boolCorrect;
+    
+    case 'Programming':
+    case 'Code':
+      // For programming questions, preserve formatting but trim outer whitespace
+      const codeSelected = normalizeAnswer(selectedAnswer, true); // Preserve internal formatting
+      const codeCorrect = normalizeAnswer(correctAnswer, true);
+      console.log(`Code Comparison - Selected: "${codeSelected}", Correct: "${codeCorrect}"`);
+      return codeSelected === codeCorrect;
+    
+    default:
+      // Default comparison with trimming
+      const defaultSelected = normalizeAnswer(selectedAnswer);
+      const defaultCorrect = normalizeAnswer(correctAnswer);
+      console.log(`Default Comparison - Selected: "${defaultSelected}", Correct: "${defaultCorrect}"`);
+      return defaultSelected === defaultCorrect;
+  }
+};
+
   const handleConfirmSubmit = async () => {
     try {
       const candidateAssessmentData = {
@@ -99,12 +207,15 @@ function AssessmentTest({
           Answers: section.questions.map((question) => {
             // Remove console logs to prevent loops
             // console.log("Question ID:", question._id);
-            // console.log("Question:", question);
+            console.log("Question:", question);
             const correctAnswer =
               question.snapshot?.correctAnswer || question.correctAnswer;
-            const selectedAnswer = answers[question._id];
-            const isCorrect = correctAnswer === selectedAnswer;
-            const score = isCorrect ? question.score ?? 0 : 0;
+          const selectedAnswer = answers[question._id];
+          const isCorrect = verifyAnswer(question, selectedAnswer);
+          const score = isCorrect ? question.score ?? 0 : 0;
+              // const selectedAnswer = answers[question._id];
+            // const isCorrect = correctAnswer === selectedAnswer;
+            // const score = isCorrect ? question.score ?? 0 : 0;
             // console.log("Correct Answer:", correctAnswer);
             // console.log("Selected Answer:", selectedAnswer);
             // console.log("Score:", score);
@@ -175,6 +286,7 @@ function AssessmentTest({
           body: JSON.stringify(candidateAssessmentData),
         }
       );
+      console.log("response", response);
 
       const responseData = await response.json();
       if (!response.ok) {
