@@ -1,38 +1,41 @@
 // v1.0.0 - Ashok - set overflow as hidden to fix the outer scroll
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import PropTypes from 'prop-types';
-import { X, AlertTriangle, Clock } from 'lucide-react';
-import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
-import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
-import { Button } from '../../CommonCode-AllTabs/ui/button';
-import { motion } from 'framer-motion';
-import { notify } from '../../../../../services/toastService';
+// v1.0.1 - Ashok - Added common code to popup
+
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import PropTypes from "prop-types";
+import { X, AlertTriangle, Clock } from "lucide-react";
+import StatusBadge from "../../CommonCode-AllTabs/StatusBadge";
+import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
+import { Button } from "../../CommonCode-AllTabs/ui/button";
+import { motion } from "framer-motion";
+import { notify } from "../../../../../services/toastService";
+import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 
 const CompletionReasonModal = ({
   onClose,
   onComplete,
   pendingRoundsCount,
   interviewId,
-  interview
+  interview,
 }) => {
-  const [reason, setReason] = useState('');
-  const [error, setError] = useState('');
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState("");
   const [pendingRoundActions, setPendingRoundActions] = useState({});
   const modalRef = useRef(null);
 
-
-  const pendingRounds = useMemo(() =>
-    interview?.rounds.filter(round =>
-      ['Pending', 'Scheduled'].includes(round.status)
-    ) || [],
+  const pendingRounds = useMemo(
+    () =>
+      interview?.rounds.filter((round) =>
+        ["Pending", "Scheduled"].includes(round.status)
+      ) || [],
     [interview]
   );
 
   useEffect(() => {
     if (pendingRounds.length > 0) {
       const initialActions = {};
-      pendingRounds.forEach(round => {
-        initialActions[round.id] = 'keep';
+      pendingRounds.forEach((round) => {
+        initialActions[round.id] = "keep";
       });
       setPendingRoundActions(initialActions);
     }
@@ -45,94 +48,86 @@ const CompletionReasonModal = ({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!reason.trim()) {
-       notify.error('Please provide a reason');
+      notify.error("Please provide a reason");
       return;
     }
     onComplete(reason);
-    setReason(''); // Reset the reason
+    setReason(""); // Reset the reason
   };
 
-//   if (!isOpen) return null;
+  //   if (!isOpen) return null;
 
   const handleRoundActionChange = (roundId, action) => {
-    setPendingRoundActions(prev => ({
+    setPendingRoundActions((prev) => ({
       ...prev,
-      [roundId]: action
+      [roundId]: action,
     }));
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Not scheduled';
+    if (!dateString) return "Not scheduled";
 
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   return (
-    // v1.0.0 <-------------------------------------------------------------------------------------------------------
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50 overflow-hidden">
-    {/* // v1.0.0 ---------------------------------------------------------------------------------------------------> */}
-      <motion.div
-        ref={modalRef}
-        className="bg-card h-full w-1/2 shadow-xl p-6 overflow-y-auto glass-sidebar"
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-custom-blue">Complete Interview</h2>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-
+    // v1.0.1 <--------------------------------------------------------------
+    <SidebarPopup title="Complete Interview" onClose={onClose}>
+      <div className="sm:px-0 px-6">
         {pendingRoundsCount > 0 && (
           <div className="mb-6">
             <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md mb-4">
               <div className="flex">
                 <AlertTriangle className="h-5 w-5 text-yellow-500 dark:text-yellow-400 mr-2 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">Pending Rounds Detected</p>
+                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
+                    Pending Rounds Detected
+                  </p>
                   <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                    There are {pendingRoundsCount} rounds that are not completed. Please decide what to do with each pending round before completing the interview.
+                    There are {pendingRoundsCount} rounds that are not
+                    completed. Please decide what to do with each pending round
+                    before completing the interview.
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-md font-medium text-foreground">Pending Rounds</h3>
+              <h3 className="text-md font-medium text-foreground">
+                Pending Rounds
+              </h3>
 
-              {pendingRounds.map(round => {
+              {pendingRounds.map((round) => {
                 // const interviewers = round.interviewers
                 //   .map(id => getInterviewerById(id))
                 //   .filter(Boolean);
 
                 return (
-                  <div key={round.id} className="border border-border rounded-md p-4 bg-secondary/50">
+                  <div
+                    key={round.id}
+                    className="border border-border rounded-md p-4 bg-secondary/50"
+                  >
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="text-md font-medium text-foreground">{round.name}</h4>
+                        <h4 className="text-md font-medium text-foreground">
+                          {round.name}
+                        </h4>
                         <div className="flex items-center mt-1 text-sm text-muted-foreground">
                           <span className="mr-2">{round.type}</span>
                           <span>•</span>
@@ -143,7 +138,9 @@ const CompletionReasonModal = ({
                         <div className="mt-2 text-sm text-muted-foreground">
                           <div className="flex items-center mb-1">
                             <Clock className="h-4 w-4 mr-1" />
-                            <span>Scheduled: {formatDate(round.scheduledDate)}</span>
+                            <span>
+                              Scheduled: {formatDate(round.scheduledDate)}
+                            </span>
                           </div>
                         </div>
 
@@ -166,8 +163,10 @@ const CompletionReasonModal = ({
 
                       <div className="ml-4">
                         <select
-                          value={pendingRoundActions[round.id] || 'keep'}
-                          onChange={(e) => handleRoundActionChange(round.id, e.target.value)}
+                          value={pendingRoundActions[round.id] || "keep"}
+                          onChange={(e) =>
+                            handleRoundActionChange(round.id, e.target.value)
+                          }
                           className="block w-full pl-3 pr-10 py-2 text-sm border-input bg-background focus:outline-none focus:ring-primary focus:border-primary rounded-md"
                         >
                           <option value="keep">Keep as {round.status}</option>
@@ -183,10 +182,12 @@ const CompletionReasonModal = ({
             </div>
           </div>
         )}
-
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div className="mb-4">
-            <label htmlFor="reason" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="reason"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Completion Reason *
             </label>
             <textarea
@@ -200,15 +201,11 @@ const CompletionReasonModal = ({
           </div>
 
           <div className="flex justify-end space-x-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-            >
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <button
-              className='bg-custom-blue text-white rounded-md px-4 py-2'
+              className="bg-custom-blue text-white rounded-md px-4 py-2"
               type="submit"
               variant="default"
             >
@@ -216,8 +213,9 @@ const CompletionReasonModal = ({
             </button>
           </div>
         </form>
-      </motion.div>
-    </div>
+      </div>
+    </SidebarPopup>
+    // v1.0.1 -------------------------------------------------------------->
   );
 };
 
@@ -225,7 +223,7 @@ CompletionReasonModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   onComplete: PropTypes.func.isRequired,
   pendingRoundsCount: PropTypes.number.isRequired,
-  interviewId: PropTypes.string.isRequired
+  interviewId: PropTypes.string.isRequired,
 };
 
 export default CompletionReasonModal;

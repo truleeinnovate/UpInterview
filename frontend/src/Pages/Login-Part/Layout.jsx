@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - commented p tag
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -32,9 +34,9 @@ const Layout = ({ children, showBackButton = false, backPath = '/' }) => {
             </div>
 
             {/* Right: Tagline (hidden on small screens) */}
-            <div className="hidden md:flex items-center justify-end space-x-4">
+            {/* <div className="hidden md:flex items-center justify-end space-x-4">
               <span className="text-sm text-gray-600">Accelerating hiring for 200+ companies</span>
-            </div>
+            </div> */}
           </div>
         </div>
       </header>

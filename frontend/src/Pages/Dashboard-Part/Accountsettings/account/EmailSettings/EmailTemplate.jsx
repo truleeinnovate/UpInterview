@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Fixed z-index issue using createPortal
 // v1.0.1 - Ashok - Fixed scroll issues
+// v1.0.2 - Ashok - Fixed style issues again
 
 import { useState, useEffect } from "react";
 import DOMPurify from "dompurify";
@@ -322,13 +323,12 @@ const EmailTemplate = () => {
                     </div>
                   </div>
                   <div
-                    className="prose max-w-none whitespace-pre-wrap"
                     dangerouslySetInnerHTML={{
                       __html: DOMPurify.sanitize(
                         selectedTemplate.body || "<p>No content available</p>"
                       ),
                     }}
-                  />
+                  ></div>
                   {/* {selectedTemplate.type === 'email' ? (
               <>
                 <div className="mb-4 pb-4 border-b">
