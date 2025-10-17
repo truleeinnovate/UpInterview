@@ -481,7 +481,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
         onClose={() => navigate(-1)}
         id={candidate._id}
         showEdit
-        onEdit={() => navigate(`/candidate/edit/${candidate._id}`)}
+        onEdit={() => navigate(-1)} // `/candidate/edit/${candidate._id}`
         showExternal
       >
         {content}
