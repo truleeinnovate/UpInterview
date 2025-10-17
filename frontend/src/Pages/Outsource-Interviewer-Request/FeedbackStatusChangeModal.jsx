@@ -166,25 +166,26 @@ const FeedbackStatusChangeModal = ({
     const { mutate, isPending } = useUpdateInterviewerFeedback();
     const [fieldErrors, setFieldErrors] = useState({ rating: "" });
 
+    // Map backend status values to display labels
+    const statusDisplayMap = {
+        "new": "New",
+        "underReview": "Under Review",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "suspended": "Suspended"
+    };
+
     const handleFormSubmit = (e) => {
         e.preventDefault();
 
-        // Client-side: rating required (0-5). Status optional.
-        const errors = { rating: "" };
-        const ratingNum = newStatus.rating === "" || newStatus.rating === null || newStatus.rating === undefined ? NaN : Number(newStatus.rating);
-        const ratingValid = !Number.isNaN(ratingNum) && ratingNum >= 0 && ratingNum <= 5;
-        if (!ratingValid) {
-            errors.rating = "Rating is required (0 to 5)";
-            setFieldErrors(errors);
-            return;
-        }
+        // Remove rating validation - make it optional
         setFieldErrors({ rating: "" });
 
         const payload = {
             contactId: interviewer._id,
             givenBy: interviewer._id,
             status: newStatus.status,
-            rating: ratingNum,
+            rating: newStatus.rating ? Number(newStatus.rating) : undefined,
             comments: newStatus.comments,
         };
 
@@ -213,18 +214,18 @@ const FeedbackStatusChangeModal = ({
                         <div className="mb-4 grid items-center gap-4">
                             <label className="block text-sm font-medium text-gray-700">Select New Status</label>
                             <DropdownSelect
-                                value={newStatus.status ? { value: newStatus.status, label: newStatus.status } : null}
+                                value={newStatus.status ? { value: newStatus.status, label: statusDisplayMap[newStatus.status] || newStatus.status } : null}
                                 onChange={(opt) => setNewStatus({ ...newStatus, status: opt?.value || "" })}
-                                options={statusOptions.map((s) => ({ value: s, label: s }))}
+                                options={statusOptions.map((s) => ({ value: s, label: statusDisplayMap[s] || s }))}
                                 placeholder="Select status"
                                 isSearchable={false}
                                 menuPortalTarget={document.body}
                             />
                         </div>
 
-                        {/* Rating (required) */}
+                        {/* Rating (optional) */}
                         <div className="mb-4 grid items-center gap-4">
-                            <label className="block text-sm font-medium text-gray-700">Rating <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-medium text-gray-700">Rating</label>
                             <IncreaseAndDecreaseField
                                 name="rating"
                                 label=""
