@@ -44,12 +44,12 @@ const OutsourcedInterviewerCard = ({
         interviewer?.contact?.CurrentRole ||
         "Interviewer";
     const company = interviewer?.contact?.industry || "Freelancer";
-    
+
     //<-----v1.0.4-----Venkatesh---- Display rate range from rates object (junior/mid/senior)
     const getRateDisplay = () => {
         const rates = interviewer?.contact?.rates;
         if (!rates) return interviewer?.contact?.hourlyRate || "not provided";
-        
+
         const visibleRates = [];
         if (rates.junior?.isVisible && rates.junior?.inr > 0) {
             visibleRates.push(rates.junior.inr);
@@ -60,7 +60,7 @@ const OutsourcedInterviewerCard = ({
         if (rates.senior?.isVisible && rates.senior?.inr > 0) {
             visibleRates.push(rates.senior.inr);
         }
-        
+
         if (visibleRates.length === 0) {
             // If no visible rates, show all non-zero rates
             ['junior', 'mid', 'senior'].forEach(level => {
@@ -69,15 +69,15 @@ const OutsourcedInterviewerCard = ({
                 }
             });
         }
-        
+
         if (visibleRates.length === 0) return "not provided";
         if (visibleRates.length === 1) return `₹${visibleRates[0]}/hr`;
-        
+
         const minRate = Math.min(...visibleRates);
         const maxRate = Math.max(...visibleRates);
         return `₹${minRate}-${maxRate}/hr`;
     };
-    
+
     const hourlyRate = getRateDisplay();
     //-----v1.0.4-----Venkatesh---->
     const rating = interviewer?.contact?.rating || "4.5";
@@ -90,8 +90,8 @@ const OutsourcedInterviewerCard = ({
     return (
         <div
             className={`bg-white rounded-lg border ${isSelected
-                    ? "border-orange-500 ring-2 ring-orange-200"
-                    : "border-gray-200"
+                ? "border-orange-500 ring-2 ring-orange-200"
+                : "border-gray-200"
                 } p-4 shadow-sm hover:shadow-md transition-all`}
         >
             {/* v1.0.3 <----------------------------------------------------------------------- */}
@@ -211,7 +211,7 @@ function OutsourcedInterviewerModal({
     isMockInterview = false, //<-----v1.0.4-----Venkatesh---- Added to determine interview type (mock vs regular)
 }) {
     const { interviewers, contacts } = useCustomContext(); //<----v1.0.1-----
-    console.log("contacts===",contacts)
+    console.log("contacts===", contacts)
     const { data: walletBalance, refetch } = useWallet(); //<----v1.0.1-----
 
     console.log("navigatedfrom", {
@@ -239,7 +239,7 @@ function OutsourcedInterviewerModal({
     //<-----v1.0.4-----Venkatesh---- Updated to compute the highest rate from all contacts and all levels (junior/mid/senior)
     const maxHourlyRate = useMemo(() => {
         if (!Array.isArray(contacts) || contacts.length === 0) return 0;
-        
+
         const allRates = [];
         contacts.forEach(contact => {
             if (contact?.rates) {
@@ -252,7 +252,7 @@ function OutsourcedInterviewerModal({
                 });
             }
         });
-        
+
         return allRates.length > 0 ? Math.max(...allRates) : 0;
     }, [contacts]);
     //----v1.0.1----->
@@ -773,7 +773,7 @@ function OutsourcedInterviewerModal({
                         const offersMock = interviewer.contact?.InterviewFormatWeOffer?.includes('mock');
 
                         console.log(`👤 ${interviewer.contact?.firstName || 'Unknown'} - ` +
-                                  `Approved: ${isApproved}, Offers Mock: ${offersMock}`);
+                            `Approved: ${isApproved}, Offers Mock: ${offersMock}`);
 
                         return isApproved && offersMock;
                     });
@@ -851,7 +851,7 @@ function OutsourcedInterviewerModal({
                     return;
                 }
 
-                // ========== REGULAR FLOW (with positionData) ==========
+                // {{ ========== REGULAR FLOW (with positionData) ==========
                 console.log("🕒 Regular flow - checking availability and skills");
 
                 // Regular flow for non-dashboard/non-mock-interview
@@ -968,8 +968,8 @@ function OutsourcedInterviewerModal({
                     availableInterviewers
                 );
 
-                // Apply skill filtering for regular flow
-                const skillFilteredInterviewers = availableInterviewers.filter(
+                // Apply skill filtering for regular flow with match count sorting
+                const skillFilteredInterviewersWithMatchCount = availableInterviewers.map(
                     (interviewer, index) => {
                         console.log(
                             `\n🔍 Checking Interviewer #${index + 1}:`,
@@ -985,53 +985,65 @@ function OutsourcedInterviewerModal({
                                 "⚠️ positionSkills is invalid or not an array:",
                                 positionSkills
                             );
-                            return false;
+                            return { ...interviewer, matchedSkills: 0 };
                         }
 
                         const interviewerSkills = interviewer.contact?.skills || [];
                         console.log("📝 Interviewer's Skills:", interviewerSkills);
                         console.log("🎯 Position Skills:", positionSkills);
 
-                        const matchingSkills = interviewerSkills.filter(
-                            (interviewerSkill) =>
-                                positionSkills.some(
-                                    (positionSkill) =>
-                                        positionSkill.skill?.toLowerCase() ===
-                                        interviewerSkill?.toLowerCase()
-                                )
+                        const matchingSkills = interviewerSkills.filter((interviewerSkill) =>
+                            positionSkills.some(
+                                (positionSkill) =>
+                                    positionSkill.skill?.toLowerCase() === interviewerSkill?.toLowerCase()
+                            )
                         );
 
                         console.log("✅ Matching Skills Found:", matchingSkills);
-                        const hasMatchingSkills = matchingSkills.length > 0;
+                        const matchCount = matchingSkills.length;
+
                         console.log(
-                            `🎯 ${interviewer.contact?.firstName || "Unknown"
-                            } Skill Match Status: ${hasMatchingSkills}`
+                            `🎯 ${interviewer.contact?.firstName || "Unknown"} Skill Match Count: ${matchCount}`
                         );
-                        return hasMatchingSkills;
+
+                        // Return interviewer with an extra property for sorting
+                        return { ...interviewer, matchedSkills: matchCount };
                     }
                 );
 
-                console.log(
-                    "✅ Skill Filtered External Interviewers count:",
-                    skillFilteredInterviewers.length
+                // Filter only interviewers who have at least 1 matching skill
+                const skillFilteredInterviewers = skillFilteredInterviewersWithMatchCount.filter(
+                    (interviewer) => interviewer.matchedSkills > 0
                 );
+
+                // Sort by number of matched skills (descending order)
+                const sortedBySkillMatch = skillFilteredInterviewers.sort(
+                    (a, b) => b.matchedSkills - a.matchedSkills
+                );
+
                 console.log(
-                    "✅ Skill Filtered External Interviewers:",
-                    skillFilteredInterviewers
+                    "✅ Skill-Sorted External Interviewers:",
+                    sortedBySkillMatch.map((i) => ({
+                        name: i.contact?.firstName || "Unknown",
+                        matchedSkills: i.matchedSkills,
+                    }))
                 );
 
                 // Filter for approved interviewers
-                const approvedInterviewers = skillFilteredInterviewers.filter(
+                const approvedInterviewers = sortedBySkillMatch.filter(
                     (interviewer) => interviewer.contact?.status === 'approved'
                 );
 
                 console.log(
-                    "✅ Approved External Interviewers:",
+                    "✅ Approved & Skill-Sorted External Interviewers:",
                     approvedInterviewers
                 );
 
+                // Update state
                 setBaseInterviewers(approvedInterviewers);
                 setFilteredInterviewers(approvedInterviewers);
+
+                // ========== REGULAR FLOW (with positionData) ========== }}
             } catch (error) {
                 console.error("❌ Error processing interviewers:", error);
             }
@@ -1117,16 +1129,16 @@ function OutsourcedInterviewerModal({
         //<----v1.0.1-----
         //<-----v1.0.4-----Venkatesh---- Updated to calculate required amount based on experience level
         const balance = walletBalance?.balance || 0;
-        
+
         // Calculate the required amount based on selected interviewers' rates and experience level
         let requiredAmount = maxHourlyRate; // Default to max rate
-        
+
         if (selectedInterviewersLocal.length > 0) {
             // If interviewers are selected, calculate based on their actual rates
             const selectedRates = selectedInterviewersLocal.map(interviewer => {
                 const contact = interviewer?.contact;
                 if (!contact?.rates) return 0;
-                
+
                 let experienceLevel;
                 if (isMockInterview) {
                     // For mock interviews, use the contact's expertise level
@@ -1134,18 +1146,18 @@ function OutsourcedInterviewerModal({
                 } else {
                     // For regular interviews, map candidate experience to level
                     const expYears = Number(candidateExperience) || 0;
-                    experienceLevel = expYears <= 3 ? 'junior' : 
-                                     expYears <= 7 ? 'mid' : 'senior';
+                    experienceLevel = expYears <= 3 ? 'junior' :
+                        expYears <= 7 ? 'mid' : 'senior';
                 }
-                
+
                 // Get the rate for the determined level
                 return contact.rates[experienceLevel]?.inr || 0;
             });
-            
+
             // Use the highest rate among selected interviewers
             requiredAmount = Math.max(...selectedRates, 0);
         }
-        
+
         if (balance >= requiredAmount) {
             console.log("Selected Interviewers:", selectedInterviewersLocal);
             onProceed(selectedInterviewersLocal);
@@ -1186,12 +1198,11 @@ function OutsourcedInterviewerModal({
                             {selectedInterviewersLocal?.length !== 1 ? "s" : ""} selected
                         </span> */}
                         <span className="text-sm font-medium">
-                            Current Balance: 
-                            <span className={`ml-1 font-bold ${
-                                (walletBalance?.balance || 0) >= maxHourlyRate 
-                                    ? 'text-green-600' 
+                            Current Balance:
+                            <span className={`ml-1 font-bold ${(walletBalance?.balance || 0) >= maxHourlyRate
+                                    ? 'text-green-600'
                                     : 'text-red-600'
-                            }`}>
+                                }`}>
                                 ₹{Number(walletBalance?.balance || 0).toFixed(2)}
                             </span>
                         </span>
@@ -1313,8 +1324,8 @@ function OutsourcedInterviewerModal({
                     <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
                         <div
                             className={`grid gap-4 ${isFullscreen
-                                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
-                                    : "grid-cols-1"
+                                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
+                                : "grid-cols-1"
                                 }`}
                         >
                             {filteredInterviewers.map((interviewer) => (
@@ -1366,11 +1377,11 @@ function OutsourcedInterviewerModal({
             {/* v1.0.2 --------------------------------------------------------------------------> */}
             <AnimatePresence>
                 {selectedInterviewer && navigatedfrom !== "dashboard" && (
-                     <div className="relative z-[60]">
-                    <InterviewerDetailsModal
-                        interviewer={selectedInterviewer}
-                        onClose={() => setSelectedInterviewer(null)}
-                    />
+                    <div className="relative z-[60]">
+                        <InterviewerDetailsModal
+                            interviewer={selectedInterviewer}
+                            onClose={() => setSelectedInterviewer(null)}
+                        />
                     </div>
                 )}
             </AnimatePresence>
