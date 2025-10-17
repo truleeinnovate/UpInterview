@@ -215,23 +215,23 @@ function OutsourcedInterviewerModal({
     isMockInterview = false, //<-----v1.0.4-----Venkatesh---- Added to determine interview type (mock vs regular)
 }) {
     const { interviewers, contacts } = useCustomContext(); //<----v1.0.1-----
-    console.log("contacts===", contacts)
+    // console.log("contacts===", contacts);
     const { data: walletBalance, refetch } = useWallet(); //<----v1.0.1-----
 
     const authToken = Cookies.get('authToken');
     const tokenPayload = decodeJwt(authToken);
     const userId = tokenPayload?.userId;
 
-    console.log("navigatedfrom", {
-        onClose,
-        dateTime,
-        positionData,
-        candidateData,
-        onProceed,
-        skills,
-        technology,
-        navigatedfrom,
-    })
+    // console.log("navigatedfrom", {
+    //     onClose,
+    //     dateTime,
+    //     positionData,
+    //     candidateData,
+    //     onProceed,
+    //     skills,
+    //     technology,
+    //     navigatedfrom,
+    // })
 
     const [searchTerm, setSearchTerm] = useState("");
     const [rateRange, setRateRange] = useState([0, 250]);
@@ -329,7 +329,7 @@ function OutsourcedInterviewerModal({
 
                 // ========== MOCK INTERVIEW FLOW - FILTER BY TIME + SKILLS ==========
                 if (navigatedfrom === "mock-interview") {
-                    console.log(`📍 Navigated from MOCK-INTERVIEW – filtering by time availability AND skills`);
+                    console.log(`📍 Navigated from MOCK-INTERVIEW – filtering by time availability, technology, and skills`);
 
                     if (!dateTime) {
                         console.log("❌ No dateTime provided for mock-interview, cannot filter by availability");
@@ -338,7 +338,7 @@ function OutsourcedInterviewerModal({
                         return;
                     }
 
-                    // Parse date and time for availability checking
+                    // 🔹 Utility: Convert time string ("hh:mm AM/PM") → minutes
                     const timeToMinutes = (timeStr) => {
                         const [time, period] = timeStr.split(" ");
                         const [hours, minutes] = time.split(":").map(Number);
@@ -358,19 +358,16 @@ function OutsourcedInterviewerModal({
 
                     const [day, month, year] = datePart.split("-");
                     const interviewDate = new Date(`${year}-${month}-${day}`);
-                    const interviewDayFull = interviewDate.toLocaleDateString("en-US", {
-                        weekday: "long",
-                    });
+                    const interviewDayFull = interviewDate.toLocaleDateString("en-US", { weekday: "long" });
                     const interviewDayShort = interviewDayFull.substring(0, 3);
 
                     // ✅ Step 1: Filter by time availability
                     const availableInterviewers = filteredByOwnerId.filter((externalInterviewer) => {
                         const isAvailable = externalInterviewer.days?.some((day) => {
-                            const dayMatches =
-                                day.day === interviewDayFull || day.day === interviewDayShort;
+                            const dayMatches = day.day === interviewDayFull || day.day === interviewDayShort;
                             if (!dayMatches) return false;
 
-                            const hasMatchingTimeSlot = day.timeSlots?.some((timeSlot) => {
+                            return day.timeSlots?.some((timeSlot) => {
                                 const availabilityStartMinutes = timeToMinutes(timeSlot.startTime);
                                 const availabilityEndMinutes = timeToMinutes(timeSlot.endTime);
                                 return (
@@ -378,76 +375,106 @@ function OutsourcedInterviewerModal({
                                     endTimeMinutes <= availabilityEndMinutes
                                 );
                             });
-
-                            return hasMatchingTimeSlot;
                         });
-
                         return isAvailable;
                     });
 
                     console.log("✅ Available Interviewers:", availableInterviewers.length);
 
-                    // ✅ Step 2: Filter by Technology (if provided)
-                    let technologyFilteredInterviewers = availableInterviewers;
+                    // ✅ Step 2: Split into tech-matched and non-tech-matched interviewers
+                    let techMatchedInterviewers = [];
+                    let nonTechMatchedInterviewers = [];
 
                     if (technology && Array.isArray(technology) && technology.length > 0) {
                         console.log("🧩 Filtering interviewers by technology:", technology);
-                        const techLower = technology.map(t => t.toLowerCase());
+                        const techLower = technology.map((t) => t.toLowerCase());
 
-                        technologyFilteredInterviewers = availableInterviewers.filter((interviewer) => {
+                        techMatchedInterviewers = availableInterviewers.filter((interviewer) => {
                             const interviewerTech = interviewer.contact?.technology || [];
-                            const interviewerTechLower = interviewerTech.map(t => t.toLowerCase());
-                            const hasTechMatch = techLower.some(t => interviewerTechLower.includes(t));
+                            const interviewerTechLower = interviewerTech.map((t) => t.toLowerCase());
+                            const hasTechMatch = techLower.some((t) => interviewerTechLower.includes(t));
 
-                            console.log(`👤 ${interviewer.contact?.firstName || 'Unknown'} - Technology Match: ${hasTechMatch}`);
+                            console.log(
+                                `💻 ${interviewer.contact?.firstName || "Unknown"} - Tech Match: ${hasTechMatch}`
+                            );
                             return hasTechMatch;
                         });
+
+                        nonTechMatchedInterviewers = availableInterviewers.filter((interviewer) => {
+                            const interviewerTech = interviewer.contact?.technology || [];
+                            const interviewerTechLower = interviewerTech.map((t) => t.toLowerCase());
+                            const hasTechMatch = techLower.some((t) => interviewerTechLower.includes(t));
+                            return !hasTechMatch;
+                        });
                     } else {
-                        console.log("ℹ️ No technology provided, skipping tech filter");
+                        console.log("ℹ️ No technology provided, skipping tech split");
+                        nonTechMatchedInterviewers = availableInterviewers;
                     }
 
-                    // ✅ Step 3: Filter & rank by Skills
-                    let skillFilteredInterviewers = technologyFilteredInterviewers.map((interviewer) => {
-                        const interviewerSkills = interviewer.contact?.skills || [];
-                        const interviewerSkillsLower = interviewerSkills.map(skill =>
-                            typeof skill === "string"
-                                ? skill.toLowerCase()
-                                : (skill?.skill || "").toLowerCase()
-                        ).filter(Boolean);
+                    // ✅ Step 3: Skill matching function
+                    const calculateSkillMatches = (interviewersList, label) => {
+                        console.log(`\n🎯 Checking skill matches for group: ${label}`);
+                        return interviewersList.map((interviewer, index) => {
+                            console.log(
+                                `🧑 #${index + 1}: ${interviewer.contact?.firstName || "Unknown"}`
+                            );
 
-                        const matchingSkills = skills?.filter(requiredSkill => {
-                            const requiredSkillName = requiredSkill.skill?.toLowerCase();
-                            return requiredSkillName && interviewerSkillsLower.includes(requiredSkillName);
-                        }) || [];
+                            const interviewerSkills = interviewer.contact?.skills || [];
+                            const interviewerSkillsLower = interviewerSkills
+                                .map((s) => (typeof s === "string" ? s.toLowerCase() : s?.skill?.toLowerCase()))
+                                .filter(Boolean);
 
-                        const matchCount = matchingSkills.length;
+                            const matchingSkills =
+                                skills?.filter((requiredSkill) => {
+                                    const required = requiredSkill.skill?.toLowerCase();
+                                    return required && interviewerSkillsLower.includes(required);
+                                }) || [];
 
-                        console.log(`🎯 ${interviewer.contact?.firstName || "Unknown"} - Matching Skills (${matchCount}):`, matchingSkills);
-                        return { ...interviewer, matchedSkills: matchCount };
-                    });
+                            const matchCount = matchingSkills.length;
+                            console.log(`✅ Matched Skills (${matchCount}):`, matchingSkills);
 
-                    // Keep only interviewers who have at least 1 skill match
-                    skillFilteredInterviewers = skillFilteredInterviewers.filter(i => i.matchedSkills > 0);
+                            return { ...interviewer, matchedSkills: matchCount };
+                        });
+                    };
 
-                    // ✅ Step 4: Sort by number of matched skills (descending)
-                    const sortedBySkillMatch = skillFilteredInterviewers.sort(
-                        (a, b) => b.matchedSkills - a.matchedSkills
+                    // ✅ Step 4: Apply skill matching for both tech and non-tech groups
+                    const techMatchedWithSkills = calculateSkillMatches(techMatchedInterviewers, "Tech-Matched");
+                    const nonTechMatchedWithSkills = calculateSkillMatches(nonTechMatchedInterviewers, "Non-Tech-Matched");
+
+                    // ✅ Step 5: Filter out those with zero skill matches
+                    const techSkillFiltered = techMatchedWithSkills.filter((i) => i.matchedSkills > 0);
+                    const nonTechSkillFiltered = nonTechMatchedWithSkills.filter((i) => i.matchedSkills > 0);
+
+                    // ✅ Step 6: Sort both by skill count descending
+                    const sortedTechSkillMatched = techSkillFiltered.sort((a, b) => b.matchedSkills - a.matchedSkills);
+                    const sortedSkillOnlyMatched = nonTechSkillFiltered.sort((a, b) => b.matchedSkills - a.matchedSkills);
+
+                    // ✅ Step 7: Merge both lists (tech+skill first, skill-only next)
+                    const combinedInterviewers = [...sortedTechSkillMatched, ...sortedSkillOnlyMatched];
+
+                    console.log("✅ Combined Sorted (Tech+Skill first):",
+                        combinedInterviewers.map((i) => ({
+                            name: i.contact?.firstName || "Unknown",
+                            matchedSkills: i.matchedSkills,
+                            technology: i.contact?.technology,
+                        }))
                     );
 
-                    console.log("✅ Sorted by Skill Matches:", sortedBySkillMatch.map(i => ({
-                        name: i.contact?.firstName || "Unknown",
-                        matchedSkills: i.matchedSkills,
-                    })));
-
-                    // ✅ Step 5: Keep only approved & mock-offering interviewers
-                    const finalInterviewers = sortedBySkillMatch.filter(interviewer => {
-                        const isApproved = interviewer.contact?.status === 'approved';
-                        const offersMock = interviewer.contact?.InterviewFormatWeOffer?.includes('mock');
+                    // ✅ Step 8: Filter approved + offering mock
+                    const finalInterviewers = combinedInterviewers.filter((interviewer) => {
+                        const isApproved = interviewer.contact?.status === "approved";
+                        const offersMock = interviewer.contact?.InterviewFormatWeOffer?.includes("mock");
                         return isApproved && offersMock;
                     });
 
+                    // // ✅ Step 9: Remove logged-in user
+                    // const cleanedInterviewers = finalInterviewers.filter(
+                    //     (i) => i.contact?._id?.toString() !== userId?.toString()
+                    // );
+
                     console.log("✅ Final mock-interview filtered interviewers:", finalInterviewers);
 
+                    // ✅ Step 10: Update state
                     setBaseInterviewers(finalInterviewers);
                     setFilteredInterviewers(finalInterviewers);
                     return;
@@ -590,36 +617,38 @@ function OutsourcedInterviewerModal({
                 // 2️⃣ Filter by Technology (before skill matching)
                 console.log("🎯 Candidate Technology:", candidateTechnology);
 
+                // Split into two groups: tech-matched and non-tech-matched
                 const techMatchedInterviewers = availableInterviewers.filter((interviewer) => {
                     const interviewerTech = interviewer.contact?.technology?.toLowerCase()?.trim();
                     const candidateTech = candidateTechnology?.toLowerCase()?.trim();
-
                     const isMatch = interviewerTech === candidateTech;
                     console.log(
                         `💻 Interviewer: ${interviewer.contact?.firstName || "Unknown"} | Interviewer Tech: ${interviewerTech} | Candidate Tech: ${candidateTech} | Match: ${isMatch}`
                     );
-
                     return isMatch;
                 });
 
-                console.log("✅ Technology Matched Interviewers:", techMatchedInterviewers);
+                const nonTechMatchedInterviewers = availableInterviewers.filter((interviewer) => {
+                    const interviewerTech = interviewer.contact?.technology?.toLowerCase()?.trim();
+                    const candidateTech = candidateTechnology?.toLowerCase()?.trim();
+                    return interviewerTech !== candidateTech;
+                });
 
-                // 3️⃣ Apply skill filtering (same logic as before)
-                const skillFilteredInterviewersWithMatchCount = techMatchedInterviewers.map(
-                    (interviewer, index) => {
+                console.log("✅ Technology Matched Interviewers:", techMatchedInterviewers);
+                console.log("⚪ Non-Technology Interviewers:", nonTechMatchedInterviewers);
+
+                // 🔍 Reusable function to calculate skill matches
+                const calculateSkillMatches = (interviewersList, label) => {
+                    console.log(`\n🔍 Checking Skill Matches for Group: ${label}`);
+                    return interviewersList.map((interviewer, index) => {
                         console.log(
-                            `\n🔍 Checking Interviewer #${index + 1}:`,
-                            interviewer.contact?.firstName ||
-                            interviewer.contact?.UserName ||
-                            "Unknown"
+                            `\n🧑 Interviewer #${index + 1}:`,
+                            interviewer.contact?.firstName || interviewer.contact?.UserName || "Unknown"
                         );
                         console.log("👉 Interviewer's Skills:", interviewer.contact?.skills || []);
 
                         if (!positionSkills || !Array.isArray(positionSkills)) {
-                            console.log(
-                                "⚠️ positionSkills is invalid or not an array:",
-                                positionSkills
-                            );
+                            console.log("⚠️ positionSkills is invalid or not an array:", positionSkills);
                             return { ...interviewer, matchedSkills: 0 };
                         }
 
@@ -635,42 +664,54 @@ function OutsourcedInterviewerModal({
                         const matchCount = matchingSkills.length;
 
                         return { ...interviewer, matchedSkills: matchCount };
-                    }
-                );
+                    });
+                };
 
-                // 4️⃣ Keep only interviewers with at least 1 skill match
-                const skillFilteredInterviewers = skillFilteredInterviewersWithMatchCount.filter(
-                    (interviewer) => interviewer.matchedSkills > 0
-                );
+                // 3️⃣ Apply skill matching for both groups
+                const techMatchedWithSkills = calculateSkillMatches(techMatchedInterviewers, "Tech-Matched");
+                const nonTechMatchedWithSkills = calculateSkillMatches(nonTechMatchedInterviewers, "Non-Tech-Matched");
 
-                // 5️⃣ Sort by matched skill count (descending)
-                const sortedBySkillMatch = skillFilteredInterviewers.sort(
+                // 4️⃣ Keep only those with ≥1 skill match
+                const techSkillFiltered = techMatchedWithSkills.filter((i) => i.matchedSkills > 0);
+                const nonTechSkillFiltered = nonTechMatchedWithSkills.filter((i) => i.matchedSkills > 0);
+
+                console.log("✅ Tech+Skill Matched Interviewers:", techSkillFiltered);
+                console.log("✅ Skill-Only Matched Interviewers:", nonTechSkillFiltered);
+
+                // 5️⃣ Sort both lists by matched skill count (descending)
+                const sortedTechSkillMatched = techSkillFiltered.sort(
+                    (a, b) => b.matchedSkills - a.matchedSkills
+                );
+                const sortedSkillOnlyMatched = nonTechSkillFiltered.sort(
                     (a, b) => b.matchedSkills - a.matchedSkills
                 );
 
-                console.log(
-                    "✅ Skill-Sorted External Interviewers:",
-                    sortedBySkillMatch.map((i) => ({
+                // 6️⃣ Merge both (tech+skill first, then skill-only)
+                const combinedInterviewers = [...sortedTechSkillMatched, ...sortedSkillOnlyMatched];
+
+                console.log("✅ Combined Sorted Interviewers (Tech+Skill on top):",
+                    combinedInterviewers.map((i) => ({
                         name: i.contact?.firstName || "Unknown",
                         matchedSkills: i.matchedSkills,
+                        technology: i.contact?.technology,
                     }))
                 );
 
-                // 6️⃣ Filter only approved ones
-                const approvedInterviewers = sortedBySkillMatch.filter(
-                    (interviewer) => interviewer.contact?.status === "approved"
+                // 7️⃣ Filter only approved
+                const approvedInterviewers = combinedInterviewers.filter(
+                    (i) => i.contact?.status === "approved"
                 );
 
-                // 7️⃣ ✅ Finally, filter out the logged-in user (userId last)
-                const finalInterviewers = approvedInterviewers.filter(
-                    (interviewer) => interviewer.contact?._id?.toString() !== userId?.toString()
-                );
+                // // 8️⃣ Remove logged-in user
+                // const finalInterviewers = approvedInterviewers.filter(
+                //     (i) => i.contact?._id?.toString() !== userId?.toString()
+                // );
 
-                console.log("✅ Final Filtered Interviewers:", finalInterviewers);
+                console.log("✅ Final Filtered Interviewers:", approvedInterviewers);
 
-                // 8️⃣ Update state
-                setBaseInterviewers(finalInterviewers);
-                setFilteredInterviewers(finalInterviewers);
+                // 9️⃣ Update state
+                setBaseInterviewers(approvedInterviewers);
+                setFilteredInterviewers(approvedInterviewers);
 
 
                 // ========== REGULAR FLOW (with positionData) ========== }}
