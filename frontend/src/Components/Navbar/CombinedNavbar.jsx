@@ -9,6 +9,8 @@
 // v1.0.7  -  Ashok   -  Tab name changed from "Interviewers" to "Interviews"
 // V1.0.8  -  Ashok   -  Changed Logo from local to cloud url and added new tab name Master Data
 // v1.0.9  -  Ashok   -  Added Master Data tab in more
+// v2.0.0  -  Ashok   -  fixed icons vertically expanding issue
+
 import React, { useState, useEffect, useRef } from "react";
 import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
@@ -130,10 +132,13 @@ const CombinedNavbar = React.memo(() => {
   }, [closeAllDropdowns, userType]);
 
   // Show loading state while permissions are being fetched
-  if (isLoading ||loading) {
+  if (isLoading || loading) {
     return (
       <div className="bg-white fixed top-0 left-0 right-0 z-50 shadow-sm h-14 flex items-center justify-center">
-        <Loading size="medium" message={isLoading ? "Logging out..." : "Loading..."} />
+        <Loading
+          size="medium"
+          message={isLoading ? "Logging out..." : "Loading..."}
+        />
       </div>
     );
   }
@@ -363,9 +368,9 @@ const CombinedNavbar = React.memo(() => {
     if (userType === "superAdmin") {
       return [
         {
-            path: '/contact-us',
-            label: 'Contact Us',
-            permissionKey: 'ContactUs.ViewTab',
+          path: "/contact-us",
+          label: "Contact Us",
+          permissionKey: "ContactUs.ViewTab",
         },
         {
           path: "/internal-logs",
@@ -601,6 +606,7 @@ const CombinedNavbar = React.memo(() => {
   );
 
   // Icon configuration for Home, Information, Bell, and Profile
+  // v2.0.0 <-----------------------------------------------------------------------------------
   const icons = [
     {
       key: "home",
@@ -650,7 +656,7 @@ const CombinedNavbar = React.memo(() => {
           {dropdownState.outlineDropdown && outlineDropdownContent}
         </div>
       ),
-      className: "text-xl border rounded-md p-2",
+      className: "text-xl border rounded-md p-2 h-10 w-10",
       isActive: dropdownState.outlineDropdown,
     },
     {
@@ -663,7 +669,7 @@ const CombinedNavbar = React.memo(() => {
           closeOtherDropdowns={() => closeAllDropdowns("isNotificationOpen")}
         />
       ),
-      className: "text-xl border rounded-md",
+      className: "text-xl border rounded-md h-10 w-10",
       isActive: dropdownState.isNotificationOpen,
     },
     {
@@ -676,7 +682,7 @@ const CombinedNavbar = React.memo(() => {
             onClick={toggleProfileDropdown}
           >
             {singleContactLoading ? (
-              <div className="w-7 h-7 rounded-full bg-gray-200 skeleton-animation"></div>
+              <div className="h-10 w-10 rounded-full bg-gray-200 skeleton-animation"></div>
             ) : singleContact?.imageData?.path ? (
               <img
                 src={singleContact?.imageData?.path}
@@ -699,12 +705,13 @@ const CombinedNavbar = React.memo(() => {
           {dropdownState.profileDropdown && profileDropdownContent}
         </div>
       ),
-      className: `text-xl border rounded-md ${
+      className: `text-xl border rounded-md h-10 w-10 ${
         singleContact?.imageData?.path ? "p-1" : "p-2"
       }`,
       isActive: dropdownState.profileDropdown,
     },
   ];
+  // v2.0.0 ----------------------------------------------------------------------------------->
 
   const getRequestsDropdownItems = () => {
     if (userType === "superAdmin") {
