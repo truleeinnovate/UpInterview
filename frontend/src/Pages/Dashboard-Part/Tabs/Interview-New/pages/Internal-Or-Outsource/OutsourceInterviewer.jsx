@@ -245,7 +245,8 @@ function OutsourcedInterviewerModal({
     // })
 
     const [searchTerm, setSearchTerm] = useState("");
-    const [rateRange, setRateRange] = useState([0, 250]);
+    const [rateRange, setRateRange] = useState([0, 0]);
+    const [appliedRateRange, setAppliedRateRange] = useState([0, Infinity]);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [selectedInterviewer, setSelectedInterviewer] = useState(null);
     const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState(
@@ -776,8 +777,35 @@ function OutsourcedInterviewerModal({
         requestSentRef.current = true;
     }, [positionData, dateTime, navigatedfrom, interviewers, skills]);
 
-    // Filter interviewers based on search term and rate range
+    // Filter interviewers based on search term and applied rate range
     useEffect(() => {
+        const getExperienceBasedRateValue = (contact, experience) => {
+            const rates = contact?.rates;
+            if (!rates) return 0;
+
+            let selectedLevel = null;
+
+            if (experience >= 1 && experience <= 3) {
+                selectedLevel = "junior";
+            } else if (experience > 3 && experience <= 6) {
+                selectedLevel = "mid";
+            } else if (experience > 6) {
+                selectedLevel = "senior";
+            }
+
+            let rate = rates[selectedLevel]?.inr || 0;
+
+            if (rate === 0) {
+                if (selectedLevel === "senior") {
+                    rate = rates.mid?.inr || rates.junior?.inr || 0;
+                } else if (selectedLevel === "mid") {
+                    rate = rates.junior?.inr || 0;
+                } // junior no fallback
+            }
+
+            return rate;
+        };
+
         const filtered = baseInterviewers.filter((interviewer) => {
             const fullName =
                 interviewer?.contact?.firstName || interviewer?.contact?.Name || "";
@@ -787,7 +815,7 @@ function OutsourcedInterviewerModal({
                 "";
             const company = interviewer?.contact?.industry || "";
             const skills = interviewer?.contact?.skills || [];
-            const hourlyRate = parseFloat(interviewer?.contact?.hourlyRate) || 0;
+            const hourlyRate = getExperienceBasedRateValue(interviewer.contact, candidateExperience);
 
             const searchMatch =
                 searchTerm.trim() === "" ||
@@ -799,13 +827,14 @@ function OutsourcedInterviewerModal({
                 );
 
             const rateMatch =
-                hourlyRate >= rateRange[0] && hourlyRate <= rateRange[1];
+                hourlyRate >= appliedRateRange[0] &&
+                (appliedRateRange[1] === Infinity || hourlyRate <= appliedRateRange[1]);
 
             return searchMatch && rateMatch;
         });
 
         setFilteredInterviewers(filtered);
-    }, [searchTerm, rateRange, navigatedfrom, baseInterviewers, skills]);
+    }, [searchTerm, appliedRateRange, navigatedfrom, baseInterviewers, skills, candidateExperience]);
 
     // const handleSelectClick = (interviewer) => {
     //   console.log("Selected or removed interviewer:", interviewer);
@@ -901,6 +930,11 @@ function OutsourcedInterviewerModal({
     };
 
     const [isOpen, setIsOpen] = useState(false);
+
+    const handleApplyRateFilter = () => {
+        const maxVal = rateRange[1];
+        setAppliedRateRange([rateRange[0], maxVal === 0 ? Infinity : maxVal]);
+    };
 
     return (
         <>
@@ -1015,40 +1049,6 @@ function OutsourcedInterviewerModal({
                         </div>
 
                         <div className="flex flex-row items-center  justify-between mt-4 gap-4">
-                            <div className="flex flex-col w-full">
-                                <label className="flex text-sm font-medium text-gray-700 mb-1 md:mb-2">
-                                    Hourly Rate Range
-                                </label>
-                                <div className="flex items-center space-x-1.5 w-full">
-                                    <input
-                                        type="number"
-                                        value={rateRange[0]}
-                                        onChange={(e) =>
-                                            setRateRange([
-                                                parseInt(e.target.value) || 0,
-                                                rateRange[1],
-                                            ])
-                                        }
-                                        className="px-2 py-2 border border-gray-300 rounded-md w-full"
-                                        min="0"
-                                        max={rateRange[1]}
-                                    />
-                                    <span className="text-gray-500">-</span>
-                                    <input
-                                        type="number"
-                                        value={rateRange[1]}
-                                        onChange={(e) =>
-                                            setRateRange([
-                                                rateRange[0],
-                                                parseInt(e.target.value) || 250,
-                                            ])
-                                        }
-                                        className="px-2 py-2 border border-gray-300 rounded-md w-full"
-                                        min={rateRange[0]}
-                                        max="250"
-                                    />
-                                </div>
-                            </div>
 
                             <div className="w-full mt-5">
                                 <div className="relative">
@@ -1062,6 +1062,50 @@ function OutsourcedInterviewerModal({
                                     />
                                 </div>
                             </div>
+
+                            <div className="flex flex-col w-full">
+                                <label className="flex text-sm font-medium text-gray-700 mb-1 md:mb-2">
+                                    Hourly Rate Range
+                                </label>
+                                <div className="flex justify-between">
+                                    <div className="flex items-center space-x-1.5 w-2/3">
+                                        <input
+                                            type="number"
+                                            value={rateRange[0]}
+                                            onChange={(e) =>
+                                                setRateRange([
+                                                    parseInt(e.target.value) || 0,
+                                                    rateRange[1],
+                                                ])
+                                            }
+                                            className="px-2 py-2 border border-gray-300 rounded-md w-full"
+                                            min="0"
+                                            max={rateRange[1]}
+                                        />
+                                        <span className="text-gray-500">-</span>
+                                        <input
+                                            type="number"
+                                            value={rateRange[1]}
+                                            onChange={(e) =>
+                                                setRateRange([
+                                                    rateRange[0],
+                                                    parseInt(e.target.value) || 0,
+                                                ])
+                                            }
+                                            className="px-2 py-2 border border-gray-300 rounded-md w-full"
+                                            min={rateRange[0]}
+                                            max={maxHourlyRate}
+                                        />
+                                    </div>
+                                    <button
+                                        className="px-5 py-1 ml-3 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 text-sm font-medium"
+                                        onClick={handleApplyRateFilter}
+                                    >
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
