@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Added value withdrawn at enum for status
+
 const mongoose = require("mongoose");
 
 const OutsourceInterviewRequestSchema = new mongoose.Schema(
@@ -32,22 +34,29 @@ const OutsourceInterviewRequestSchema = new mongoose.Schema(
     candidateId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Candidate",
-    },//only for interviews
+    }, //only for interviews
     isMockInterview: {
       type: Boolean,
       default: false,
-    },//is mock interview true use contactId else use candidateId
+    }, //is mock interview true use contactId else use candidateId
     contactId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Contacts",
-    },//from mockinterview candidate
+    }, //from mockinterview candidate
     positionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Position",
     },
     status: {
       type: String,
-      enum: ["inprogress", "accepted", "declined", "expired", "cancelled"],
+      enum: [
+        "inprogress",
+        "accepted",
+        "declined",
+        "expired",
+        "cancelled",
+        "withdrawn",
+      ],
       default: "inprogress",
     },
     // roundNumber: {
@@ -56,7 +65,7 @@ const OutsourceInterviewRequestSchema = new mongoose.Schema(
     roundId: {
       type: mongoose.Schema.Types.ObjectId,
       // ref: "InterviewRounds",
-    },//both mock and interviews saves here
+    }, //both mock and interviews saves here
     requestMessage: {
       type: String,
     },
