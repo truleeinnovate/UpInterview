@@ -97,14 +97,14 @@ const RoundFormInterviews = () => {
   const { checkInternalInterviewUsage, isChecking } = useInternalInterviewUsage();
   // v1.0.2 <-----------------------------------------
 
-   const {
-      data,
-      isLoading,
-      isError,
-      // error,
-      refetch,
-      // isOrganization,
-    } = useVideoSettingsQuery();
+  const {
+    data,
+    isLoading,
+    isError,
+    // error,
+    refetch,
+    // isOrganization,
+  } = useVideoSettingsQuery();
 
 
   // State for meeting creation loading
@@ -171,8 +171,8 @@ const RoundFormInterviews = () => {
       setSelectedMeetingPlatform(data?.data?.defaultProvider);
       // setTemplate(interview?.templateId || null)
     }
-  }, [interviewData, interview,data]);
-  console.log("selectedMeetingPlatform",selectedMeetingPlatform);
+  }, [interviewData, interview, data]);
+  console.log("selectedMeetingPlatform", selectedMeetingPlatform);
 
   const navigate = useNavigate();
   const [roundTitle, setRoundTitle] = useState("");
@@ -798,7 +798,7 @@ const RoundFormInterviews = () => {
         setSequence(maxSequence + 1);
       }
     }
-  }, [rounds, roundId, isEditing, assessmentData, interviewData,groups]);
+  }, [rounds, roundId, isEditing, assessmentData, interviewData, groups]);
 
   const handleInternalInterviewerSelect = (
     interviewers,
@@ -1238,6 +1238,8 @@ const RoundFormInterviews = () => {
         }
       }
       if (payload.round.roundTitle !== "Assessment") {
+
+        //  out sourced email sent
         if (payload?.round?.interviewMode !== "Face to Face") {
           // Handle outsource request if interviewers are selected
           if (selectedInterviewers && selectedInterviewers.length > 0) {
@@ -1363,6 +1365,7 @@ const RoundFormInterviews = () => {
 
         // }
 
+              // internal  interview  email sent
         // Meeting platform link creation
         if (response.status === "ok") {
           // console.log("Generating meeting link for the interview");
@@ -1374,11 +1377,11 @@ const RoundFormInterviews = () => {
           console.log(shouldGenerateMeeting, "shouldGenerateMeeting");
 
 
-      
+
 
 
           try {
-          
+
             // v1.0.3 <-----------------------------------------------------------
             setMeetingCreationProgress("Creating links...");
             // v1.0.3 ----------------------------------------------------------->
@@ -1391,7 +1394,7 @@ const RoundFormInterviews = () => {
 
             let meetingLink;
             if (shouldGenerateMeeting) {
-                setIsMeetingCreationLoading(true);
+              setIsMeetingCreationLoading(true);
               // ========================================
               // Google Meet creation
               // ========================================
@@ -1502,7 +1505,9 @@ const RoundFormInterviews = () => {
                 updatePayload
               );
               console.log("Round updated with meeting link:", updateResponse);
-            } else {
+            }
+            else if (Array.isArray(selectedInterviewers) &&
+              selectedInterviewers.length > 0) {
               // Handle Face to Face interview
               console.log("=== Handling Face to Face Interview ===");
 
@@ -2945,10 +2950,10 @@ const RoundFormInterviews = () => {
                       isLoading={
                         isMutationLoading ||
                         isMeetingCreationLoading ||
-                        isSubmitting 
+                        isSubmitting
                       }
                       loadingText={
-                        isMeetingCreationLoading 
+                        isMeetingCreationLoading
                           ? meetingCreationProgress || "Creating meeting..."
                           : isSubmitting
                             ? "Submitting..."
