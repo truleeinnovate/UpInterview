@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - changed url of maleImage (man.png) from local to cloud storage
+// v1.0.1  -  Venkatesh   -  Updated default rating to 4.6 for decimal support
 import { useState, useMemo } from "react";
 import InterviewStatusIndicator from "./InterviewStatusIndicator";
 import FeedbackStatusChangeModal from "./FeedbackStatusChangeModal";
@@ -56,7 +57,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     const [showStatusModal, setShowStatusModal] = useState(false);
 
     const closeFeedbackPopUp = () => {
-        setNewStatus({ status: "", rating: 4.5, comments: "" });
+        setNewStatus({ status: "", rating: 4.6, comments: "" });  // v1.0.1 - Updated default to 4.6
         setShowStatusModal(false);
     };
 
@@ -71,7 +72,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
     const [newStatus, setNewStatus] = useState({
         status: "",
-        rating: 4,
+        rating: 4.6,  // v1.0.1 - Default rating set to 4.6
         comments: "",
     });
 

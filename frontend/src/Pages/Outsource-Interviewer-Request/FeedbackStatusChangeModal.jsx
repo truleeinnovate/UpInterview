@@ -147,12 +147,14 @@
 
 // export default FeedbackStatusChangeModal;
 
+// v1.0.1  -  Venkatesh   -  Updated rating field to support decimal values up to 10 with default 4.6
+// v1.0.2  -  Venkatesh   -  Changed rating input to use InputField component for consistency
 /* eslint-disable react/prop-types */
 import React, { useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { useUpdateInterviewerFeedback } from "../../apiHooks/superAdmin/useOutsourceInterviewers";
 import DropdownSelect from "../../Components/Dropdowns/DropdownSelect";
-import IncreaseAndDecreaseField from "../../Components/FormFields/IncreaseAndDecreaseField";
+import InputField from "../../Components/FormFields/InputField";
 import DescriptionField from "../../Components/FormFields/DescriptionField";
 
 const FeedbackStatusChangeModal = ({
@@ -223,17 +225,39 @@ const FeedbackStatusChangeModal = ({
                             />
                         </div>
 
-                        {/* Rating (optional) */}
-                        <div className="mb-4 grid items-center gap-4">
-                            <label className="block text-sm font-medium text-gray-700">Rating</label>
-                            <IncreaseAndDecreaseField
+                        {/* Rating (optional) - v1.0.2: Using InputField component */}
+                        <div className="mb-4">
+                            <InputField
+                                type="number"
                                 name="rating"
-                                label=""
+                                label={
+                                    <>
+                                        Rating <span className="text-gray-400 text-xs">(0-10)</span>
+                                    </>
+                                }
                                 value={typeof newStatus.rating === "number" ? newStatus.rating : ""}
-                                onChange={(e) => setNewStatus({ ...newStatus, rating: e.target.value === "" ? "" : Math.max(0, Math.min(10, Number(e.target.value))) })}
-                                min={0}
-                                max={10}
-                                // required
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === "") {
+                                        setNewStatus({ ...newStatus, rating: "" });
+                                        setFieldErrors({ ...fieldErrors, rating: "" });
+                                    } else {
+                                        // Allow decimal values with max 1 decimal place
+                                        const numValue = parseFloat(value);
+                                        if (!isNaN(numValue)) {
+                                            // Clamp between 0 and 10
+                                            const clampedValue = Math.max(0, Math.min(10, numValue));
+                                            // Round to 1 decimal place
+                                            const roundedValue = Math.round(clampedValue * 10) / 10;
+                                            setNewStatus({ ...newStatus, rating: roundedValue });
+                                            setFieldErrors({ ...fieldErrors, rating: "" });
+                                        }
+                                    }
+                                }}
+                                step="0.1"
+                                min="0"
+                                max="10"
+                                placeholder="Enter rating (e.g., 4.6)"
                                 error={fieldErrors.rating}
                             />
                         </div>

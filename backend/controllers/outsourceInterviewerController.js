@@ -1,4 +1,5 @@
 // controllers/outsourceInterviewerController.js
+// v1.0.1  -  Venkatesh   -  Updated to save rating in both OutsourceInterviewer and Contacts collections
 
 const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js");
 const { Contacts } = require("../models/Contacts.js");
@@ -53,6 +54,20 @@ exports.updateInterviewerFeedback = async (req, res) => {
       }
     }
 
+    // v1.0.1 - Validate rating if provided (0 to 10 with decimal support)
+    let validatedRating = null;
+    if (rating !== undefined && rating !== null && rating !== '') {
+      const numRating = parseFloat(rating);
+      if (isNaN(numRating) || numRating < 0 || numRating > 10) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid rating. Must be a number between 0 and 10'
+        });
+      }
+      // Round to 1 decimal place
+      validatedRating = Math.round(numRating * 10) / 10;
+    }
+
     // Find and update the interviewer based on contactId
     const updatedInterviewer = await OutsourceInterviewer.findOneAndUpdate(
       { contactId: contactId },
@@ -62,7 +77,7 @@ exports.updateInterviewerFeedback = async (req, res) => {
           updatedAt: new Date(),
           feedback: {
             givenBy: givenBy || null,
-            rating: rating || null,
+            rating: validatedRating,  // v1.0.1 - Use validated rating
             comments: comments || null,
             createdAt: new Date(),
           },
@@ -77,20 +92,31 @@ exports.updateInterviewerFeedback = async (req, res) => {
         .json({ success: false, message: "Interviewer not found" });
     }
 
-    // If status was updated, also update the Contact status
+    // v1.0.1 - Update both status AND rating in Contact
+    const contactUpdateFields = {
+      updatedAt: new Date()
+    };
+    
     if (status) {
+      contactUpdateFields.status = status;
+    }
+    
+    if (validatedRating !== null) {
+      contactUpdateFields.rating = validatedRating;
+    }
+
+    // Update Contact only if there's something to update
+    if (status || validatedRating !== null) {
       const updatedContact = await Contacts.findByIdAndUpdate(
         contactId,
-        {
-          $set: {
-            status: status,
-            updatedAt: new Date()
-          }
-        },
+        { $set: contactUpdateFields },
         { new: true }
       );
 
-      console.log(`✅ Status synced for Contact ${contactId}: ${status}`);
+      console.log(`✅ Contact ${contactId} updated:`, {
+        status: status || 'unchanged',
+        rating: validatedRating !== null ? validatedRating : 'unchanged'
+      });
     }
 
     res.status(200).json({
