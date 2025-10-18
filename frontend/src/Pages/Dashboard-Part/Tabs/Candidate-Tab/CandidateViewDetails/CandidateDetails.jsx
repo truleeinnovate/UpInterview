@@ -7,6 +7,7 @@
 // v1.0.6  - Ashok - Fixed responsiveness issues
 // v1.0.7  - Ashok - Fixed scrollbar issue
 // v1.0.8  - Ashok - modified edit path
+// v1.0.9  - Ashok - fixed navigation to edit popup
 
 import Modal from "react-modal";
 import {
@@ -308,7 +309,9 @@ const CandidateDetails = ({ mode, candidateId }) => {
                         <Briefcase className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Total Experience</p>
+                        <p className="text-sm text-gray-500">
+                          Total Experience
+                        </p>
                         <p className="text-gray-700">
                           {candidate?.CurrentExperience || "N/A"}{" "}
                         </p>
@@ -359,44 +362,43 @@ const CandidateDetails = ({ mode, candidateId }) => {
                   </div> */}
                   <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
                     {/* <div className="flex items-center justify-between gap-3 w-full"> */}
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-custom-bg rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-custom-bg rounded-lg">
                         <Briefcase className="w-5 h-5" />
                       </div>
-                       <div>
+                      <div>
                         <p className="text-sm text-gray-500">Technology</p>
                         <p className="text-gray-700">
                           {candidate?.Technology || "N/A"}{" "}
                         </p>
                       </div>
-                      
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-custom-bg rounded-lg">
+                        <GrDocumentText className="w-5 h-5" />
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-custom-bg rounded-lg">
-                          <GrDocumentText className="w-5 h-5" />
-                        </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Resume</p>
 
-                        <div>
-                          <p className="text-sm text-gray-500">Resume</p>
-
-                          {candidate?.resume?.path ? (
-                            <a
-                              href={candidate.resume.path}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="View Resume"
-                              className="text-blue-600 hover:underline break-all"
-                            >
-                              {candidate.resume.filename}
-                            </a>
-                          ) : (
-                            <p className="text-gray-700 break-all">
-                              Not Provided
-                            </p>
-                          )}
-                        </div>
+                        {candidate?.resume?.path ? (
+                          <a
+                            href={candidate.resume.path}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="View Resume"
+                            className="text-blue-600 hover:underline break-all"
+                          >
+                            {candidate.resume.filename}
+                          </a>
+                        ) : (
+                          <p className="text-gray-700 break-all">
+                            Not Provided
+                          </p>
+                        )}
                       </div>
+                    </div>
                     {/* </div> */}
                   </div>
                 </div>
@@ -475,18 +477,18 @@ const CandidateDetails = ({ mode, candidateId }) => {
 
   return (
     <>
-    {/* v1.0.8 <----------------------------------------------------------- */}
+      {/* v1.0.8 <----------------------------------------------------------- */}
       <SidebarPopup
         title="Candidate"
         onClose={() => navigate(-1)}
         id={candidate._id}
         showEdit
-        onEdit={() => navigate(-1)} // `/candidate/edit/${candidate._id}`
+        onEdit={() => navigate(`/candidate/edit/${candidate._id}`)}
         showExternal
       >
         {content}
       </SidebarPopup>
-    {/* v1.0.8 -----------------------------------------------------------> */}
+      {/* v1.0.8 -----------------------------------------------------------> */}
     </>
   );
 };
