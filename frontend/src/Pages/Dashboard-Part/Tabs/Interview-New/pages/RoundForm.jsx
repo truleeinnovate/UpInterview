@@ -513,7 +513,7 @@ const RoundFormInterviews = () => {
     setCustomRoundTitle("");
 
     // Clear instructions whenever round title changes
-    setInstructions("");
+    // setInstructions("");
 
     if (value === "Assessment") {
       setInterviewMode("Virtual");
@@ -1477,18 +1477,22 @@ const RoundFormInterviews = () => {
                   }
                 );
 
-                console.log("Zoom meeting response:", meetingLink);
+                // console.log("Zoom meeting response:", meetingLink);
               }
 
               const data = await meetingLink;
               console.log("meetingLink zoom response", data);
             }
 
+            console.log("meetingLink", meetingLink);
+            console.log("data?.start_url", data?.meetingLink?.start_url);
+            console.log("meetingLink?.start_url", meetingLink?.start_url);
+
             // Persist meeting link on the round (avoid reassigning consts)
             if (data) {
               const updatedRoundData = {
                 ...roundData,
-                meetingId: data?.start_url || meetingLink,
+                meetingId: meetingLink?.start_url ? meetingLink?.start_url : meetingLink,
                 meetPlatform: selectedMeetingPlatform,
               };
               const targetRoundId = response?.savedRound?._id || roundId;
