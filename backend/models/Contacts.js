@@ -237,6 +237,13 @@ const ContactsSchema = new mongoose.Schema(
       default: "new",
     },
     // v1.0.0 ------------------------------------------------------>
+    // v1.0.1  -  Venkatesh   -  Added rating field for outsource interviewers (decimal values up to 10)
+    rating: {
+      type: Number,
+      min: 0,
+      max: 10,
+      default: null
+    },
   },
   { timestamps: true }
 );
