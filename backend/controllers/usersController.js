@@ -580,21 +580,9 @@ const getSuperAdminUsers = async (req, res) => {
                     label: role.label || 'Unknown',
                     roleName: role.roleName || 'Unknown',
                 };
-                console.log(`User included: ${user.email || user._id}, Role: ${enrichedUser.roleName}, Label: ${enrichedUser.label}`);
                 return enrichedUser;
             })
             .filter(user => user !== null); // Remove users with no matching role
-
-        console.log(`Filtered super admin users count: ${filteredUsers.length}`, {
-            users: filteredUsers.map(user => ({
-                _id: user._id.toString(),
-                email: user.email,
-                label: user.label,
-                roleName: user.roleName,
-            })),
-        });
-
-        console.log('--- getSuperAdminUsers END ---');
         res.status(200).json(filteredUsers);
     } catch (error) {
         console.error('Error in getSuperAdminUsers:', {

@@ -39,4 +39,41 @@ router.post("/", async (req, res) => {
   }
 });
 
+// GET: Fetch all contact form submissions
+router.get("/", async (req, res) => {
+  console.log("📋 [GET /] Fetching all contact us submissions");
+  
+  try {
+    // Fetch all contacts, sorted by newest first
+    const contacts = await Contact.find().sort({ createdAt: -1 });
+    console.log(`✅ Found ${contacts.length} contact submissions`);
+    
+    // Transform data for frontend
+    const formattedContacts = contacts.map(contact => ({
+      _id: contact._id,
+      name: contact.name,
+      email: contact.email,
+      message: contact.message,
+      createdAt: contact.createdAt
+    }));
+    
+    res.status(200).json({
+      success: true,
+      contacts: formattedContacts,
+      total: contacts.length
+    });
+    console.log("📤 Response sent: Contact data retrieved successfully");
+  } catch (err) {
+    console.error("❌ Error fetching contacts:", err.message);
+    console.error("🧩 Stack Trace:", err.stack);
+    
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch contact submissions"
+    });
+  } finally {
+    console.log("🔚 [GET /] Fetch contacts process completed.\n");
+  }
+});
+
 module.exports = router;

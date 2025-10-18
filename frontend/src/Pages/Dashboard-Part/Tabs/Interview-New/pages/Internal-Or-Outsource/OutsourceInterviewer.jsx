@@ -213,8 +213,6 @@ function OutsourcedInterviewerModal({
     navigatedfrom,
     candidateExperience, //<-----v1.0.4-----Venkatesh---- Added to determine experience level for rate calculation
     isMockInterview = false, //<-----v1.0.4-----Venkatesh---- Added to determine interview type (mock vs regular)
-    previouslySelectedInterviewers = [],
-    isEditing = false
 }) {
     const { interviewers, contacts } = useCustomContext(); //<----v1.0.1-----
     // console.log("contacts===", contacts);
@@ -236,13 +234,7 @@ function OutsourcedInterviewerModal({
     // })
 
     const [searchTerm, setSearchTerm] = useState("");
-
-    // const [rateRange, setRateRange] = useState([0, 0]);
-    // const [appliedRateRange, setAppliedRateRange] = useState([0, 0]);
-    const [rateRange, setRateRange] = useState(['', '']); // Empty strings for inputs
-    const [appliedRateRange, setAppliedRateRange] = useState([0, 0]);
-    const [showRateFilter, setShowRateFilter] = useState(false);
-
+    const [rateRange, setRateRange] = useState([0, 250]);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [selectedInterviewer, setSelectedInterviewer] = useState(null);
     const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState(
@@ -252,15 +244,6 @@ function OutsourcedInterviewerModal({
     const [filteredInterviewers, setFilteredInterviewers] = useState([]);
     const [baseInterviewers, setBaseInterviewers] = useState([]);
     const [showWalletModal, setShowWalletModal] = useState(false); //<----v1.0.1-----
-
-    // Update local state when previouslySelectedInterviewers changes
-    useEffect(() => {
-        if (previouslySelectedInterviewers && previouslySelectedInterviewers.length > 0) {
-            setSelectedInterviewersLocal(previouslySelectedInterviewers);
-        }
-    }, [previouslySelectedInterviewers]);
-
-
 
     //<----v1.0.1-----
     //<-----v1.0.4-----Venkatesh---- Updated to compute the highest rate from all contacts and all levels (junior/mid/senior)
@@ -283,16 +266,6 @@ function OutsourcedInterviewerModal({
         return allRates.length > 0 ? Math.max(...allRates) : 0;
     }, [contacts]);
     //----v1.0.1----->
-
-
-    // Add this useEffect to initialize rate range when maxHourlyRate is available
-    useEffect(() => {
-        if (maxHourlyRate > 0) {
-            // Set default values to 0 for both min and max
-            setRateRange([0, 0]);
-            setAppliedRateRange([0, 0]);
-        }
-    }, [maxHourlyRate]);
 
     // Fetch and filter interviewers based on skills and availability added by Ranjith
     useEffect(() => {
@@ -779,37 +752,14 @@ function OutsourcedInterviewerModal({
                     skill?.toLowerCase().includes(searchTerm.toLowerCase())
                 );
 
-            // SKIP RATE FILTERING INITIALLY - only apply if user has specifically set a range
-            // Check if appliedRateRange is different from the default full range
-            const isDefaultRange = appliedRateRange[0] === 0 && appliedRateRange[1] === maxHourlyRate;
-            const rateMatch = isDefaultRange ?
-                true : // Skip rate filtering initially (show all interviewers)
-                hourlyRate >= appliedRateRange[0] && hourlyRate <= appliedRateRange[1];
+            const rateMatch =
+                hourlyRate >= rateRange[0] && hourlyRate <= rateRange[1];
 
             return searchMatch && rateMatch;
-
-            // const rateMatch =
-            //     hourlyRate >= rateRange[0] && hourlyRate <= rateRange[1];
-            // return searchMatch && rateMatch;
         });
 
         setFilteredInterviewers(filtered);
-    }, [searchTerm, appliedRateRange, rateRange, navigatedfrom, baseInterviewers, skills]);
-
-
-    const handleApplyRateFilter = () => {
-        // Convert empty strings to 0 for filtering
-        const minRate = rateRange[0] === '' ? 0 : parseInt(rateRange[0]) || 0;
-        const maxRate = rateRange[1] === '' ? 0 : parseInt(rateRange[1]) || 0;
-        setAppliedRateRange([minRate, maxRate]);
-    };
-
-    const handleClearRateFilter = () => {
-        // Reset to empty strings for inputs and [0, 0] for filtering
-        setRateRange(['', '']);
-        setAppliedRateRange([0, 0]);
-    };
-
+    }, [searchTerm, rateRange, navigatedfrom, baseInterviewers, skills]);
 
     // const handleSelectClick = (interviewer) => {
     //   console.log("Selected or removed interviewer:", interviewer);
@@ -1019,90 +969,7 @@ function OutsourcedInterviewerModal({
                         </div>
 
                         <div className="flex flex-row items-center  justify-between mt-4 gap-4">
-
-                            <div className="w-full mt-6">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search by name, role, company, or skills..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
-                            </div>
-
-
                             <div className="flex flex-col w-full">
-                                <label className="flex text-sm font-medium text-gray-700 mb-1 md:mb-2">
-                                    Hourly Rate Range
-                                    {(appliedRateRange[0] > 0 || appliedRateRange[1] > 0) ? (
-                                        <span className="ml-2 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
-                                            Filter Applied
-                                        </span>
-                                    ) : null}
-                                </label>
-
-                                <div className="flex items-center space-x-2 w-full">
-                                    <div className="flex items-center space-x-1.5 w-full">
-                                        <input
-                                            type="number"
-                                            value={rateRange[0]}
-                                            onChange={(e) =>
-                                                setRateRange([
-                                                    e.target.value, // Keep as string to allow empty
-                                                    rateRange[1],
-                                                ])
-                                            }
-                                            className="px-2 py-2 border border-gray-300 rounded-md w-full"
-                                            min="0"
-                                            placeholder="Min"
-                                        />
-                                        <span className="text-gray-500">-</span>
-                                        <input
-                                            type="number"
-                                            value={rateRange[1]}
-                                            onChange={(e) =>
-                                                setRateRange([
-                                                    rateRange[0],
-                                                    e.target.value, // Keep as string to allow empty
-                                                ])
-                                            }
-                                            className="px-2 py-2 border border-gray-300 rounded-md w-full"
-                                            min={rateRange[0] || 0}
-                                            placeholder="Max"
-                                        />
-                                    </div>
-
-                                    <div className="flex space-x-2">
-                                        {/* Show Apply button only when no filter is applied */}
-                                        {(appliedRateRange[0] === 0 && appliedRateRange[1] === 0) ? (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={handleApplyRateFilter}
-                                                className="whitespace-nowrap"
-                                            >
-                                                Apply
-                                            </Button>
-                                        ) : (
-                                            /* Show Clear button only when filter is applied */
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={handleClearRateFilter}
-                                                className="whitespace-nowrap"
-                                            >
-                                                Clear
-                                            </Button>
-                                        )}
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            {/* <div className="flex flex-col w-full">
                                 <label className="flex text-sm font-medium text-gray-700 mb-1 md:mb-2">
                                     Hourly Rate Range
                                 </label>
@@ -1127,7 +994,7 @@ function OutsourcedInterviewerModal({
                                         onChange={(e) =>
                                             setRateRange([
                                                 rateRange[0],
-                                                parseInt(e.target.value) ,
+                                                parseInt(e.target.value) || 250,
                                             ])
                                         }
                                         className="px-2 py-2 border border-gray-300 rounded-md w-full"
@@ -1135,11 +1002,20 @@ function OutsourcedInterviewerModal({
                                         max="250"
                                     />
                                 </div>
-                            </div> */}
+                            </div>
 
-
-
-
+                            <div className="w-full mt-5">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name, role, company, or skills..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-// import { config } from "../../config"; // Uncomment when backend is ready
+import { config } from "../../config";
 import { usePermissions } from "../../Context/PermissionsContext";
 import { notify } from "../../services/toastService";
 
@@ -15,13 +15,10 @@ export const useContactUs = () => {
   const query = useQuery({
     queryKey: ["contactUs"],
     queryFn: async () => {
-      // For now, return empty array since we're using dummy data
-      // When backend is ready, uncomment the following:
-      // const response = await axios.get(
-      //   `${config.REACT_APP_API_URL}/contact-us`
-      // );
-      // return response.data;
-      return { contactMessages: [] };
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/upinterviewcontactuspage`
+      );
+      return response.data;
     },
     enabled: isInitialized && hasViewPermission,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -29,10 +26,11 @@ export const useContactUs = () => {
   });
 
   return {
-    contactMessages: query.data?.contactMessages || [],
+    contactMessages: query.data?.contacts || [],
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
+    total: query.data?.total || 0,
   };
 };
 
