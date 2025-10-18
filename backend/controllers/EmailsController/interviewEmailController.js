@@ -1,7 +1,6 @@
 // v1.0.0  -  Ashraf  -  creating interview email controller to send emails when rounds are saved
 
 const CryptoJS = require('crypto-js');
-const mongoose = require('mongoose');
 const { Interview } = require("../../models/Interview/Interview.js");
 const { MockInterview } = require("../../models/MockInterview/MockInterview.js");
 const { MockInterviewRound } = require("../../models/MockInterview/mockinterviewRound.js");
@@ -11,6 +10,7 @@ const { Contacts } = require("../../models/Contacts");
 const emailTemplateModel = require("../../models/EmailTemplatemodel");
 const sendEmail = require('../../utils/sendEmail');
 const Notification = require("../../models/notification");
+const mongoose = require("mongoose");
 const config = require("../../config");
 const Tenant = require("../../models/Tenant");
 
@@ -481,6 +481,7 @@ const encryptData = (data) => {
 //   }
 // };
 
+
 exports.sendInterviewRoundEmails = async (req, res = null) => {
   try {
     const {
@@ -497,18 +498,22 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     if (!interviewId || !mongoose.isValidObjectId(interviewId)) {
       const error = {
         success: false,
-        message: 'Invalid or missing interview ID',
+        message: 'Invalid or missing interview ID'
       };
-      if (res) return res.status(400).json(error);
+      if (res) {
+        return res.status(400).json(error);
+      }
       return error;
     }
 
     if (!roundId || !mongoose.isValidObjectId(roundId)) {
       const error = {
         success: false,
-        message: 'Invalid or missing round ID',
+        message: 'Invalid or missing round ID'
       };
-      if (res) return res.status(400).json(error);
+      if (res) {
+        return res.status(400).json(error);
+      }
       return error;
     }
 
@@ -519,9 +524,11 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     if (!interview) {
       const error = {
         success: false,
-        message: 'Interview not found',
+        message: 'Interview not found'
       };
-      if (res) return res.status(404).json(error);
+      if (res) {
+        return res.status(404).json(error);
+      }
       return error;
     }
 
@@ -531,37 +538,44 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     const address = tenant?.offices?.[0]?.address || 'To be provided';
 
     // Fetch round details
-    const round = await InterviewRounds.findById(roundId).populate('interviewers');
+    const round = await InterviewRounds.findById(roundId)
+      .populate('interviewers');
     if (!round) {
       const error = {
         success: false,
-        message: 'Interview round not found',
+        message: 'Interview round not found'
       };
-      if (res) return res.status(404).json(error);
+      if (res) {
+        return res.status(404).json(error);
+      }
       return error;
     }
 
-    // Check if emails should be sent
+    // Check if emails should be sent based on the sendEmails parameter
     if (!sendEmails) {
       const result = {
         success: true,
         message: 'Emails will be sent later when interviewer accepts request',
-        data: { roundId: round._id },
+        data: { roundId: round._id }
       };
-      if (res) return res.status(200).json(result);
+      if (res) {
+        return res.status(200).json(result);
+      }
       return result;
     }
 
-    const isFaceToFace = round.interviewMode === 'Face to Face';
+    const isFaceToFace = round.interviewMode === "Face to Face";
     const candidate = interview.candidateId;
     const owner = interview.ownerId;
 
     if (!candidate) {
       const error = {
         success: false,
-        message: 'Candidate not found',
+        message: 'Candidate not found'
       };
-      if (res) return res.status(404).json(error);
+      if (res) {
+        return res.status(404).json(error);
+      }
       return error;
     }
 
@@ -570,9 +584,11 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     if (!candidateEmail) {
       const error = {
         success: false,
-        message: 'No email address found for candidate',
+        message: 'No email address found for candidate'
       };
-      if (res) return res.status(400).json(error);
+      if (res) {
+        return res.status(400).json(error);
+      }
       return error;
     }
 
@@ -580,7 +596,9 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     let schedulerEmail = null;
     let scheduler = null;
     if (owner && owner._id) {
-      const schedulerContact = await Contacts.findOne({ ownerId: owner._id });
+      const schedulerContact = await Contacts.findOne({
+        ownerId: owner._id
+      });
       scheduler = schedulerContact;
       schedulerEmail = schedulerContact?.email;
     }
@@ -595,9 +613,6 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       }
     }
 
-    const notifications = [];
-    const emailPromises = [];
-
     // Common email data
     const roundTitle = round.roundTitle || 'Interview Round';
     const interviewMode = round.interviewMode || 'Online';
@@ -605,48 +620,59 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     const duration = round.duration || '60 minutes';
     const instructions = round.instructions || 'Please arrive on time.';
 
-    // Base data for emails
-    const baseEmailData = {
-      companyName: tenantCompanyName,
-      roundTitle,
-      dateTime,
-      duration,
-      instructions,
-      supportEmail,
-    };
+    const notifications = [];
+    const emailPromises = [];
 
     // Handle Face-to-Face interviews
     if (isFaceToFace) {
-      const templateCategory = 'interview_face_to_face';
+      // Get face-to-face template
+      const faceToFaceTemplate = await emailTemplateModel.findOne({
+        category: 'interview_face_to_face',
+        isSystemTemplate: true,
+        isActive: true
+      });
 
       // Candidate email
-      if (candidateEmail) {
+      if (faceToFaceTemplate && candidateEmail) {
         const candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
-        const emailResult = await sendEmailNotification({
-          to: candidateEmail,
-          category: templateCategory,
-          data: {
-            ...baseEmailData,
-            recipientName: candidateName,
-            address,
-          },
-        });
+        const emailSubject = faceToFaceTemplate.subject
+          .replace('{{companyName}}', tenantCompanyName)
+          .replace('{{roundTitle}}', roundTitle);
+
+        const emailBody = faceToFaceTemplate.body
+          .replace('{{recipientName}}', candidateName)
+          .replace('{{companyName}}', tenantCompanyName)
+          .replace('{{roundTitle}}', roundTitle)
+          .replace('{{dateTime}}', dateTime)
+          .replace('{{duration}}', duration)
+          .replace('{{address}}', address)
+          .replace('{{instructions}}', instructions)
+          .replace('{{supportEmail}}', supportEmail);
 
         emailPromises.push(
-          Promise.resolve({
-            email: candidateEmail,
-            recipient: 'candidate',
-            success: emailResult.success,
-            error: emailResult.error,
-          })
+          sendEmail(candidateEmail, emailSubject, emailBody)
+            .then(response => ({
+              email: candidateEmail,
+              recipient: 'candidate',
+              success: true
+            }))
+            .catch(error => ({
+              email: candidateEmail,
+              recipient: 'candidate',
+              success: false,
+              error: error.message
+            }))
         );
 
         notifications.push({
-          title: `${tenantCompanyName} - Face-to-Face Interview for ${roundTitle}`,
-          body: `Face-to-Face interview scheduled for ${candidateName}`,
+          title: emailSubject,
+          body: emailBody,
           notificationType: 'email',
-          object: { objectName: 'interview_round', objectId: roundId },
-          status: emailResult.success ? 'Success' : 'Failed',
+          object: {
+            objectName: 'interview_round',
+            objectId: roundId,
+          },
+          status: 'Pending',
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
           recipientId: candidate._id,
@@ -656,69 +682,97 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       }
 
       // Interviewer emails
-      for (const interviewer of interviewerEmails) {
-        const interviewerName = [interviewer.firstName, interviewer.lastName].filter(Boolean).join(' ') || 'Interviewer';
-        const emailResult = await sendEmailNotification({
-          to: interviewer.email,
-          category: templateCategory,
-          data: {
-            ...baseEmailData,
-            recipientName: interviewerName,
-            address,
-          },
-        });
+      if (faceToFaceTemplate && interviewerEmails.length > 0) {
+        for (const interviewer of interviewerEmails) {
+          const interviewerName = [interviewer.firstName, interviewer.lastName].filter(Boolean).join(' ') || 'Interviewer';
+          const emailSubject = faceToFaceTemplate.subject
+            .replace('{{companyName}}', tenantCompanyName)
+            .replace('{{roundTitle}}', roundTitle);
 
-        emailPromises.push(
-          Promise.resolve({
-            email: interviewer.email,
-            recipient: 'interviewer',
-            success: emailResult.success,
-            error: emailResult.error,
-          })
-        );
+          const emailBody = faceToFaceTemplate.body
+            .replace('{{recipientName}}', interviewerName)
+            .replace('{{companyName}}', tenantCompanyName)
+            .replace('{{roundTitle}}', roundTitle)
+            .replace('{{dateTime}}', dateTime)
+            .replace('{{duration}}', duration)
+            .replace('{{address}}', address)
+            .replace('{{instructions}}', instructions)
+            .replace('{{supportEmail}}', supportEmail);
 
-        notifications.push({
-          title: `${tenantCompanyName} - Face-to-Face Interview for ${roundTitle}`,
-          body: `Face-to-Face interview scheduled with ${candidate.FirstName || 'Candidate'}`,
-          notificationType: 'email',
-          object: { objectName: 'interview_round', objectId: roundId },
-          status: emailResult.success ? 'Success' : 'Failed',
-          tenantId: interview.tenantId,
-          ownerId: interview.ownerId,
-          recipientId: interviewer.email,
-          createdBy: interview.ownerId,
-          updatedBy: interview.ownerId,
-        });
+          emailPromises.push(
+            sendEmail(interviewer.email, emailSubject, emailBody)
+              .then(response => ({
+                email: interviewer.email,
+                recipient: 'interviewer',
+                success: true
+              }))
+              .catch(error => ({
+                email: interviewer.email,
+                recipient: 'interviewer',
+                success: false,
+                error: error.message
+              }))
+          );
+
+          notifications.push({
+            title: emailSubject,
+            body: emailBody,
+            notificationType: 'email',
+            object: {
+              objectName: 'interview_round',
+              objectId: roundId,
+            },
+            status: 'Pending',
+            tenantId: interview.tenantId,
+            ownerId: interview.ownerId,
+            recipientId: interviewer.email,
+            createdBy: interview.ownerId,
+            updatedBy: interview.ownerId,
+          });
+        }
       }
 
       // Scheduler email
-      if (schedulerEmail) {
+      if (faceToFaceTemplate && schedulerEmail) {
         const schedulerName = [scheduler?.firstName, scheduler?.lastName].filter(Boolean).join(' ') || 'Scheduler';
-        const emailResult = await sendEmailNotification({
-          to: schedulerEmail,
-          category: templateCategory,
-          data: {
-            ...baseEmailData,
-            recipientName: schedulerName,
-            address,
-          },
-        });
+        const emailSubject = faceToFaceTemplate.subject
+          .replace('{{companyName}}', tenantCompanyName)
+          .replace('{{roundTitle}}', roundTitle);
+
+        const emailBody = faceToFaceTemplate.body
+          .replace('{{recipientName}}', schedulerName)
+          .replace('{{companyName}}', tenantCompanyName)
+          .replace('{{roundTitle}}', roundTitle)
+          .replace('{{dateTime}}', dateTime)
+          .replace('{{duration}}', duration)
+          .replace('{{address}}', address)
+          .replace('{{instructions}}', instructions)
+          .replace('{{supportEmail}}', supportEmail);
 
         emailPromises.push(
-          Promise.resolve({
-            email: schedulerEmail,
-            recipient: 'scheduler',
-            success: emailResult.success,
-            error: emailResult.error,
-          })
+          sendEmail(schedulerEmail, emailSubject, emailBody)
+            .then(response => ({
+              email: schedulerEmail,
+              recipient: 'scheduler',
+              success: true
+            }))
+            .catch(error => ({
+              email: schedulerEmail,
+              recipient: 'scheduler',
+              success: false,
+              error: error.message
+            }))
         );
 
         notifications.push({
-          title: `${tenantCompanyName} - Face-to-Face Interview for ${roundTitle}`,
-          body: `Face-to-Face interview scheduled with ${candidate.FirstName || 'Candidate'}`,
+          title: emailSubject,
+          body: emailBody,
           notificationType: 'email',
-          object: { objectName: 'interview_round', objectId: roundId },
-          status: emailResult.success ? 'Success' : 'Failed',
+          object: {
+            objectName: 'interview_round',
+            objectId: roundId,
+          },
+          status: 'Pending',
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
           recipientId: schedulerEmail,
@@ -728,43 +782,77 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       }
     } else {
       // Non-Face-to-Face (Online) interviews
+      const candidateTemplate = await emailTemplateModel.findOne({
+        category: 'interview_candidate_invite',
+        isSystemTemplate: true,
+        isActive: true
+      });
+
+      const interviewerTemplate = await emailTemplateModel.findOne({
+        category: 'interview_interviewer_invite',
+        isSystemTemplate: true,
+        isActive: true
+      });
+
+      const schedulerTemplate = await emailTemplateModel.findOne({
+        category: 'interview_scheduler_notification',
+        isSystemTemplate: true,
+        isActive: true
+      });
+
       const baseUrl = `${config.REACT_APP_API_URL_FRONTEND}/join-meeting`;
       const meetingLink = round.meetingId;
       const encryptedMeetingLink = encryptData(meetingLink);
       const encryptedRoundId = encryptData(roundId);
 
-      // Candidate email
-      if (candidateEmail) {
+      // Send email to candidate
+      if (candidateTemplate && candidateEmail) {
         const candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
-        const candidateUrl = meetingLink
-          ? `${baseUrl}?candidate=true&meeting=${encodeURIComponent(encryptedMeetingLink)}&round=${encodeURIComponent(encryptedRoundId)}`
-          : 'Meeting link will be provided later';
+        const emailSubject = candidateTemplate.subject
+          .replace('{{companyName}}', tenantCompanyName)
+          .replace('{{roundTitle}}', roundTitle);
 
-        const emailResult = await sendEmailNotification({
-          to: candidateEmail,
-          category: 'interview_candidate_invite',
-          data: {
-            ...baseEmailData,
-            candidateName,
-            meetingLink: candidateUrl,
-          },
-        });
+        let emailBody = candidateTemplate.body
+          .replace('{{candidateName}}', candidateName)
+          .replace('{{companyName}}', tenantCompanyName)
+          .replace('{{roundTitle}}', roundTitle)
+          .replace('{{interviewMode}}', interviewMode)
+          .replace('{{dateTime}}', dateTime)
+          .replace('{{duration}}', duration)
+          .replace('{{instructions}}', instructions)
+          .replace('{{supportEmail}}', supportEmail);
+
+        if (meetingLink && meetingLink.length > 0) {
+          const candidateUrl = `${baseUrl}?candidate=true&meeting=${encodeURIComponent(encryptedMeetingLink)}&round=${encodeURIComponent(encryptedRoundId)}`;
+          emailBody = emailBody.replace('{{meetingLink}}', candidateUrl);
+        } else {
+          emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
+        }
 
         emailPromises.push(
-          Promise.resolve({
-            email: candidateEmail,
-            recipient: 'candidate',
-            success: emailResult.success,
-            error: emailResult.error,
-          })
+          sendEmail(candidateEmail, emailSubject, emailBody)
+            .then(response => ({
+              email: candidateEmail,
+              recipient: 'candidate',
+              success: true
+            }))
+            .catch(error => ({
+              email: candidateEmail,
+              recipient: 'candidate',
+              success: false,
+              error: error.message
+            }))
         );
 
         notifications.push({
-          title: `${tenantCompanyName} - Interview for ${roundTitle}`,
-          body: `Interview scheduled for ${candidateName}`,
+          title: emailSubject,
+          body: emailBody,
           notificationType: 'email',
-          object: { objectName: 'interview_round', objectId: roundId },
-          status: emailResult.success ? 'Success' : 'Failed',
+          object: {
+            objectName: 'interview_round',
+            objectId: roundId,
+          },
+          status: 'Pending',
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
           recipientId: candidate._id,
@@ -773,88 +861,114 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         });
       }
 
-      // Interviewer emails
-      for (const interviewer of interviewerEmails) {
-        const interviewerName = [interviewer.firstName, interviewer.lastName].filter(Boolean).join(' ') || 'Interviewer';
-        const encryptedInterviewerId = encryptData(interviewer._id);
-        const encryptedOwnerId = encryptData(interviewer.ownerId);
-        const interviewerLink = meetingLink
-          ? `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(encryptedMeetingLink)}&round=${encodeURIComponent(encryptedRoundId)}&interviewertoken=${encodeURIComponent(encryptedInterviewerId)}&owner=${encodeURIComponent(encryptedOwnerId)}`
-          : 'Meeting link will be provided later';
+      // Send emails to interviewers
+      if (interviewerTemplate && interviewerEmails.length > 0) {
+        for (const interviewer of interviewerEmails) {
+          const emailSubject = interviewerTemplate.subject
+            .replace('{{companyName}}', tenantCompanyName)
+            .replace('{{roundTitle}}', roundTitle);
 
-        const emailResult = await sendEmailNotification({
-          to: interviewer.email,
-          category: 'interview_interviewer_invite',
-          data: {
-            ...baseEmailData,
-            companyName: tenantCompanyName,
-            roundTitle,
-            interviewMode,
-            dateTime,
-            duration,
-            instructions,
-            meetingLink: interviewerLink,
-          },
-        });
+          let emailBody = interviewerTemplate.body
+            .replace('{{companyName}}', tenantCompanyName)
+            .replace('{{roundTitle}}', roundTitle)
+            .replace('{{interviewMode}}', interviewMode)
+            .replace('{{dateTime}}', dateTime)
+            .replace('{{duration}}', duration)
+            .replace('{{instructions}}', instructions)
+            .replace('{{supportEmail}}', supportEmail);
 
-        emailPromises.push(
-          Promise.resolve({
-            email: interviewer.email,
-            recipient: 'interviewer',
-            success: emailResult.success,
-            error: emailResult.error,
-          })
-        );
+          if (meetingLink && meetingLink.length > 0) {
+            const encryptedInterviewerId = encryptData(interviewer._id);
+            const encryptedOwnerId = encryptData(interviewer.ownerId);
+            const interviewerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(encryptedMeetingLink)}&round=${encodeURIComponent(encryptedRoundId)}&interviewertoken=${encodeURIComponent(encryptedInterviewerId)}&owner=${encodeURIComponent(encryptedOwnerId)}`;
+            emailBody = emailBody.replace('{{meetingLink}}', interviewerLink);
+          } else {
+            emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
+          }
 
-        notifications.push({
-          title: `${tenantCompanyName} - Interview for ${roundTitle}`,
-          body: `Interview scheduled with ${candidate.FirstName || 'Candidate'}`,
-          notificationType: 'email',
-          object: { objectName: 'interview_round', objectId: roundId },
-          status: emailResult.success ? 'Success' : 'Failed',
-          tenantId: interview.tenantId,
-          ownerId: interview.ownerId,
-          recipientId: interviewer.email,
-          createdBy: interview.ownerId,
-          updatedBy: interview.ownerId,
-        });
+          emailPromises.push(
+            sendEmail(interviewer.email, emailSubject, emailBody)
+              .then(response => ({
+                email: interviewer.email,
+                recipient: 'interviewer',
+                success: true
+              }))
+              .catch(error => ({
+                email: interviewer.email,
+                recipient: 'interviewer',
+                success: false,
+                error: error.message
+              }))
+          );
+
+          notifications.push({
+            title: emailSubject,
+            body: emailBody,
+            notificationType: 'email',
+            object: {
+              objectName: 'interview_round',
+              objectId: roundId,
+            },
+            status: 'Pending',
+            tenantId: interview.tenantId,
+            ownerId: interview.ownerId,
+            recipientId: interviewer.email,
+            createdBy: interview.ownerId,
+            updatedBy: interview.ownerId,
+          });
+        }
       }
 
-      // Scheduler email
-      if (schedulerEmail) {
-        const schedulerName = [scheduler?.firstName, scheduler?.lastName].filter(Boolean).join(' ') || 'Scheduler';
+      // Send email to scheduler/owner
+      if (schedulerTemplate && schedulerEmail) {
         const candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
-        const encryptedSchedulerId = encryptData(scheduler?._id);
-        const encryptedSchedulerOwnerId = encryptData(scheduler?.ownerId);
-        const schedulerLink = meetingLink
-          ? `${baseUrl}?scheduler=true&meeting=${encodeURIComponent(encryptedMeetingLink)}&round=${encodeURIComponent(encryptedRoundId)}&schedulertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}`
-          : 'Meeting link will be provided later';
+        const emailSubject = schedulerTemplate.subject
+          .replace('{{companyName}}', tenantCompanyName)
+          .replace('{{roundTitle}}', roundTitle);
 
-        const emailResult = await sendEmailNotification({
-          to: schedulerEmail,
-          category: 'interview_scheduler_notification',
-          data: {
-            ...baseEmailData,
-            candidateName,
-            meetingLink: schedulerLink,
-          },
-        });
+        let emailBody = schedulerTemplate.body
+          .replace('{{companyName}}', tenantCompanyName)
+          .replace('{{roundTitle}}', roundTitle)
+          .replace('{{candidateName}}', candidateName)
+          .replace('{{interviewMode}}', interviewMode)
+          .replace('{{dateTime}}', dateTime)
+          .replace('{{duration}}', duration)
+          .replace('{{instructions}}', instructions)
+          .replace('{{supportEmail}}', supportEmail);
+
+        if (meetingLink && meetingLink.length > 0) {
+          const encryptedSchedulerId = encryptData(scheduler?._id);
+          const encryptedSchedulerOwnerId = encryptData(scheduler?.ownerId);
+          const schedulerLink = `${baseUrl}?scheduler=true&meeting=${encodeURIComponent(encryptedMeetingLink)}&round=${encodeURIComponent(encryptedRoundId)}&schedulertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
+          emailBody = emailBody.replace('{{meetingLink}}', schedulerLink);
+        } else {
+          emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
+        }
 
         emailPromises.push(
-          Promise.resolve({
-            email: schedulerEmail,
-            recipient: 'scheduler',
-            success: emailResult.success,
-            error: emailResult.error,
-          })
+          sendEmail(schedulerEmail, emailSubject, emailBody)
+            .then(response => ({
+              email: schedulerEmail,
+              recipient: 'scheduler',
+              success: true
+            }))
+            .catch(error => ({
+              email: schedulerEmail,
+              recipient: 'scheduler',
+              success: false,
+              error: error.message
+            }))
         );
 
         notifications.push({
-          title: `${tenantCompanyName} - Interview for ${roundTitle}`,
-          body: `Interview scheduled with ${candidateName}`,
+          title: emailSubject,
+          body: emailBody,
           notificationType: 'email',
-          object: { objectName: 'interview_round', objectId: roundId },
-          status: emailResult.success ? 'Success' : 'Failed',
+          object: {
+            objectName: 'interview_round',
+            objectId: roundId,
+          },
+          status: 'Pending',
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
           recipientId: schedulerEmail,
@@ -869,10 +983,26 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       await Notification.insertMany(notifications);
     }
 
-    // Collect email results
+    // Send emails
     const emailResults = await Promise.all(emailPromises);
     const successfulEmails = emailResults.filter(r => r.success);
     const failedEmails = emailResults.filter(r => !r.success);
+
+    // Update notification status
+    if (failedEmails.length > 0) {
+      console.error('Failed emails:', failedEmails);
+      await Notification.updateMany(
+        { recipientId: { $in: failedEmails.map(f => f.email) } },
+        { $set: { status: 'Failed', body: 'Failed to send email' } }
+      );
+    }
+
+    if (successfulEmails.length > 0) {
+      await Notification.updateMany(
+        { recipientId: { $in: successfulEmails.map(s => s.email) } },
+        { $set: { status: 'Success' } }
+      );
+    }
 
     const result = {
       success: true,
@@ -884,13 +1014,16 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         recipients: {
           candidate: candidateEmail,
           interviewers: interviewerEmails.map(i => i.email),
-          scheduler: schedulerEmail,
-        },
-      },
+          scheduler: schedulerEmail
+        }
+      }
     };
 
-    if (res) return res.status(200).json(result);
+    if (res) {
+      return res.status(200).json(result);
+    }
     return result;
+
   } catch (error) {
     console.error('Error sending interview round emails:', error);
     const errorResult = {
@@ -898,7 +1031,9 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       message: 'Failed to send interview round emails',
       error: error.message,
     };
-    if (res) return res.status(500).json(errorResult);
+    if (res) {
+      return res.status(500).json(errorResult);
+    }
     return errorResult;
   }
 };
