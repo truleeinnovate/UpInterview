@@ -57,7 +57,7 @@ const ContactUsActionDropdown = ({ row, onView, onEdit, onDelete, permissions })
 
       {isOpen && (
         <div 
-          className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-xl z-[9999] border border-gray-200"
+          className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-xl z-50 border border-gray-200"
           role="menu"
           aria-orientation="vertical"
           aria-labelledby="actions-menu"
@@ -74,7 +74,7 @@ const ContactUsActionDropdown = ({ row, onView, onEdit, onDelete, permissions })
                 <span>View</span>
               </button>
             )}
-            {permissions?.Edit && (
+            {/* {permissions?.Edit && (
               <button
                 onClick={handleEdit}
                 className="flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 transition-colors focus:outline-none focus:bg-gray-100"
@@ -83,8 +83,8 @@ const ContactUsActionDropdown = ({ row, onView, onEdit, onDelete, permissions })
                 <Pencil className="w-4 h-4 mr-2" aria-hidden="true" />
                 <span>Edit</span>
               </button>
-            )}
-            {permissions?.Delete && (
+            )} */}
+            {/* {permissions?.Delete && (
               <button
                 onClick={handleDelete}
                 className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors focus:outline-none focus:bg-gray-100"
@@ -93,7 +93,7 @@ const ContactUsActionDropdown = ({ row, onView, onEdit, onDelete, permissions })
                 <Trash className="w-4 h-4 mr-2" aria-hidden="true" />
                 <span>Delete</span>
               </button>
-            )}
+            )} */}
           </div>
         </div>
       )}

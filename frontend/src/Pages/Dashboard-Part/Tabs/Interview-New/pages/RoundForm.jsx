@@ -84,18 +84,27 @@ const formatDateTime = (date, showDate = true) => {
 };
 
 const RoundFormInterviews = () => {
-    // Add useScrollLock hook at the beginning
-    const {
-        interviewData,
-        isMutationLoading,
-        saveInterviewRound,
-        updateInterviewRound,
-        updateRoundWithMeetingLinks,
-    } = useInterviews();
-    const { assessmentData, fetchAssessmentQuestions } = useAssessments();
-    const { groups } = useCustomContext();
-    const { checkInternalInterviewUsage, isChecking } = useInternalInterviewUsage();
-    // v1.0.2 <-----------------------------------------
+  // Add useScrollLock hook at the beginning
+  const {
+    interviewData,
+    isMutationLoading,
+    saveInterviewRound,
+    updateInterviewRound,
+    updateRoundWithMeetingLinks,
+  } = useInterviews();
+  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  const { groups } = useCustomContext();
+  const { checkInternalInterviewUsage, isChecking } = useInternalInterviewUsage();
+  // v1.0.2 <-----------------------------------------
+
+  const {
+    data,
+    isLoading,
+    isError,
+    // error,
+    refetch,
+    // isOrganization,
+  } = useVideoSettingsQuery();
 
     const {
         data,
@@ -107,14 +116,300 @@ const RoundFormInterviews = () => {
     } = useVideoSettingsQuery();
 
 
-    // State for meeting creation loading
-    const [isMeetingCreationLoading, setIsMeetingCreationLoading] =
-        useState(false);
-    const [meetingCreationProgress, setMeetingCreationProgress] = useState("");
-    const [selectedMeetingPlatform, setSelectedMeetingPlatform] =
-        useState("zoom"); // Default to Google Meet googlemeet
-    const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
-    // v1.0.2 <-----------------------------------------
+          setOwnerData(response.data);
+        } catch (error) {
+          console.error("Error fetching owner data:", error);
+        }
+      }
+    };
+    fetchOwnerData();
+  }, [organization, userId,]);
+
+  useEffect(() => {
+    if (interviewData) {
+      setCandidate(interview?.candidateId || null);
+      setPosition(interview?.positionId || null);
+      setRounds(interview?.rounds || []);
+      setSelectedMeetingPlatform(data?.data?.defaultProvider);
+      // setTemplate(interview?.templateId || null)
+    }
+  }, [interviewData, interview, data]);
+  console.log("selectedMeetingPlatform", selectedMeetingPlatform);
+
+
+  const navigate = useNavigate();
+  const [roundTitle, setRoundTitle] = useState("");
+  const [customRoundTitle, setCustomRoundTitle] = useState("");
+  const [interviewMode, setInterviewMode] = useState("");
+  const [status, setStatus] = useState("Draft");
+  const [instructions, setInstructions] = useState("");
+  const [sequence, setSequence] = useState(1);
+  const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] =
+    useState(false);
+  // const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
+  const [interviewQuestionsList, setInterviewQuestionsList] = useState([]);
+  const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
+  // console.log("interviewQuestionsList",interviewQuestionsList);
+
+  const [interviewType, setInterviewType] = useState("instant"); // "instant" or "scheduled"
+  const [scheduledDate, setScheduledDate] = useState(""); // Start Date & Time
+  const [duration, setDuration] = useState(60); // Duration in minutes
+  const [startTime, setStartTime] = useState(""); // Final Start Time
+  const [endTime, setEndTime] = useState(""); // Calculated End Time
+  const [combinedDateTime, setCombinedDateTime] = useState("");
+  const [interviewerViewType, setInterviewerViewType] = useState("individuals"); // group or individuals
+  const [interviewerGroupName, setInterviewerGroupName] = useState("");
+  const [interviewerGroupId, setInterviewerGroupId] = useState("");
+  const [expandedSections, setExpandedSections] = useState({});
+  const [expandedQuestions, setExpandedQuestions] = useState({});
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedInterviewType, setSelectedInterviewType] = useState(null);
+  const [internalInterviewers, setInternalInterviewers] = useState([]);
+  // console.log("internalInterviewers selected", internalInterviewers);
+  const [externalInterviewers, setExternalInterviewers] = useState([]);
+
+  // console.log("externalInterviewers 0000000000000000", externalInterviewers);
+
+  // console.log("internalInterviewers", internalInterviewers);
+  // console.log("interviewerViewType", interviewerViewType);
+  // console.log("interviewerGroupName", interviewerGroupName);
+
+
+
+
+  useEffect(() => {
+    if (
+      selectedInterviewType === "External" &&
+      externalInterviewers.length > 0
+    ) {
+      setStatus("RequestSent");
+    } else if (selectedInterviewType !== "External") {
+      internalInterviewers.length > 0 ? setStatus("Scheduled") : setStatus("Draft");
+    }
+  }, [selectedInterviewType, externalInterviewers, internalInterviewers]);
+
+  //<-----v1.0.4----
+  // Helper: format a Date to 'YYYY-MM-DDTHH:mm' for <input type="datetime-local"/>
+  const formatForDatetimeLocal = (date) => {
+    const pad = (n) => String(n).padStart(2, "0");
+    const y = date.getFullYear();
+    const m = pad(date.getMonth() + 1);
+    const d = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    return `${y}-${m}-${d}T${hh}:${mm}`;
+  };
+
+  // Helper: minimum selectable scheduled time = now + 2 hours (local time)
+  const twoHoursFromNowLocal = () => {
+    const d = new Date();
+    d.setHours(d.getHours() + 2);
+    d.setSeconds(0, 0); // strip seconds/millis for consistency
+    return formatForDatetimeLocal(d);
+  };
+
+  //-----v1.0.4---->
+
+  // v1.0.1 <-------------------------------------------------------------------------
+  const fieldRefs = {
+    roundTitle: useRef(null),
+    interviewMode: useRef(null),
+    sequence: useRef(null),
+    assessmentTemplate: useRef(null),
+  };
+  // v1.0.1 ------------------------------------------------------------------------->
+
+  const updateTimes = useCallback(
+    (newDuration) => {
+      let start = null;
+      let end = null;
+
+      if (interviewType === "instant") {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 15); // Start after 15 min
+        // start = now;
+
+        // Convert to UTC
+        const localTimeStr = moment(now)?.format("YYYY-MM-DD HH:mm");
+        start = moment
+          ?.tz(
+            localTimeStr,
+            "YYYY-MM-DD HH:mm",
+            Intl.DateTimeFormat().resolvedOptions().timeZone
+          )
+          .utc()
+          .toDate();
+
+        const endTime = new Date(start);
+        // const endTime = new Date(now);
+        endTime.setMinutes(endTime.getMinutes() + newDuration);
+        end = endTime;
+      } else if (interviewType === "scheduled" && scheduledDate) {
+        // start = new Date(scheduledDate);
+        // Convert scheduled date from local timezone to UTC
+        const localTimeStr = moment(scheduledDate).format("YYYY-MM-DD HH:mm");
+        start = moment
+          ?.tz(
+            localTimeStr,
+            "YYYY-MM-DD HH:mm",
+            Intl.DateTimeFormat().resolvedOptions().timeZone
+          )
+          .utc()
+          .toDate();
+
+        const endTime = new Date(start);
+        endTime.setMinutes(endTime.getMinutes() + newDuration);
+        end = endTime;
+      }
+
+      if (start && end) {
+        setStartTime(start.toISOString()); // Store in ISO for backend
+        setEndTime(end.toISOString()); // Store in ISO for backend
+
+        // ✅ Ensure start shows date & time, but end shows only time
+        const formattedStart = formatDateTime(start, true);
+        const formattedEnd = formatDateTime(end, false);
+        let combinedDateTime = `${formattedStart} - ${formattedEnd}`;
+
+        // console.log("Combined DateTime:", combinedDateTime);
+        setCombinedDateTime(combinedDateTime);
+      }
+    },
+    [interviewType, scheduledDate]
+  );
+
+  // Replace this useEffect
+
+  // useEffect(() => {
+  //   let start = null;
+  //   let end = null;
+
+  //   if (interviewType === "instant") {
+  //     const now = new Date();
+  //     now.setMinutes(now.getMinutes() + 15);
+  //     start = now;
+  //     end = new Date(now);
+  //     end.setMinutes(end.getMinutes() + duration);
+  //   } else if (interviewType === "scheduled" && scheduledDate) {
+  //     start = new Date(scheduledDate);
+  //     end = new Date(start);
+  //     end.setMinutes(end.getMinutes() + duration);
+  //   }
+
+  //   if (start && end) {
+  //     // Only update state if the values have actually changed
+  //     if (startTime !== start.toISOString()) {
+  //       setStartTime(start.toISOString());
+  //     }
+  //     if (endTime !== end.toISOString()) {
+  //       setEndTime(end.toISOString());
+  //     }
+
+  //     const formattedStart = formatDateTime(start, true);
+  //     const formattedEnd = formatDateTime(end, false);
+  //     const newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
+
+  //     if (combinedDateTime !== newCombinedDateTime) {
+  //       setCombinedDateTime(newCombinedDateTime);
+  //     }
+  //   }
+  // }, [duration, interviewType, scheduledDate]);
+
+  // useEffect(() => {
+  //   let start = null;
+  //   let end = null;
+
+  //   if (interviewType === "instant") {
+  //     const now = new Date();
+  //     now.setMinutes(now.getMinutes() + 15);
+  //     start = now;
+  //     end = new Date(now);
+  //     end.setMinutes(end.getMinutes() + duration);
+  //   } else if (interviewType === "scheduled" && scheduledDate) {
+  //     start = new Date(scheduledDate);
+  //     end = new Date(start);
+  //     end.setMinutes(end.getMinutes() + duration);
+  //   }
+
+  //   if (start && end) {
+  //     // Only update state if the values have actually changed
+  //     if (startTime !== start.toISOString()) {
+  //       setStartTime(start.toISOString());
+  //     }
+  //     if (endTime !== end.toISOString()) {
+  //       setEndTime(end.toISOString());
+  //     }
+
+  //     const formattedStart = formatDateTime(start, true);
+  //     const formattedEnd = formatDateTime(end, false);
+  //     const newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
+
+  //     if (combinedDateTime !== newCombinedDateTime) {
+  //       setCombinedDateTime(newCombinedDateTime);
+  //     }
+  //   }
+  // },
+  // [duration, interviewType, scheduledDate]
+  // // [duration, interviewType, scheduledDate, startTime, endTime, combinedDateTime]
+  // );
+
+  useEffect(() => {
+    updateTimes(duration);
+  }, [duration, updateTimes]);
+
+  //<-----v1.0.4----
+  // Default and enforce scheduledDate when switching to "scheduled"
+  useEffect(() => {
+    if (interviewType === "scheduled") {
+      const minVal = twoHoursFromNowLocal();
+      if (!scheduledDate || scheduledDate < minVal) {
+        setScheduledDate(minVal);
+      }
+    }
+  }, [interviewType]);
+  //-----v1.0.4---->
+
+  const handleAddQuestionToRound = (question) => {
+    if (question && question.questionId && question.snapshot) {
+      setInterviewQuestionsList((prevList) => {
+        if (prevList.some((q) => q.questionId === question.questionId)) {
+          return prevList;
+        }
+        return [
+          ...prevList,
+          {
+            ...question,
+
+            mandatory: "false", // Default to false when adding a new question
+          },
+        ]; // Add new question
+      });
+
+      // console.log("question", question);
+
+      setErrors((prev) => ({
+        ...prev,
+        questions: undefined,
+      }));
+    }
+  };
+
+  const handleToggleMandatory = (questionId) => {
+    setInterviewQuestionsList((prev) =>
+      prev.map((question) =>
+        question.questionId === questionId
+          ? {
+            ...question,
+            snapshot: {
+              ...question.snapshot,
+              mandatory:
+                question.snapshot.mandatory === "true" ? "false" : "true",
+            },
+          }
+          : question
+      )
+    );
+  };
 
     const { interviewId, roundId } = useParams();
     const authToken = Cookies.get("authToken");
@@ -132,19 +427,56 @@ const RoundFormInterviews = () => {
         assessmentName: "",
     });
 
-    const [candidate, setCandidate] = useState(null);
-    const [position, setPosition] = useState(null);
-    const [rounds, setRounds] = useState(null);
+    // DropdownWithSearchField sends an empty string when "Other" is chosen.
+    // Enter custom mode and keep roundTitle as "Other" for submission mapping.
+    if (value === "") {
+      setIsCustomRoundTitle(true);
+      setRoundTitle("Other");
+      setCustomRoundTitle("");
+      // setInstructions(""); // Clear instructions when selecting "Other"
+      setErrors((prev) => ({ ...prev, roundTitle: "" }));
+      return;
+    }
 
-    const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
-    const [isInternalInterviews, setInternalInterviews] = useState(false);
-    // const [template, setTemplate] = useState(null);
-    const [sectionQuestions, setSectionQuestions] = useState({});
-    const [questionsLoading, setQuestionsLoading] = useState(false);
+    // Normal predefined selection
+    setRoundTitle(value);
+    setCustomRoundTitle("");
 
-    const [ownerData, setOwnerData] = useState(null);
-    const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
-    const queryClient = useQueryClient();
+    // Clear instructions whenever round title changes
+    // setInstructions("");
+
+    if (value === "Assessment") {
+      setInterviewMode("Virtual");
+      setInterviewQuestionsList([]);
+      setInstructions(""); // Ensure instructions are cleared for Assessment
+
+      setInterviewerGroupName("");
+      setInterviewerGroupId("");
+      setInterviewerViewType("");
+      setInterviewType("instant");
+      setScheduledDate("");
+      setDuration(60);
+      setStartTime("");
+      setEndTime("");
+      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+      setSelectedAssessmentData(null);
+      setCombinedDateTime("");
+    } else {
+      // setInterviewMode("");
+      // setInstructions(""); // Clear instructions for non-Assessment rounds
+      // setInterviewType("instant");
+      // setScheduledDate("");
+      // setDuration(60);
+      // setStartTime("");
+      // setEndTime("");
+      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+      setSelectedAssessmentData(null);
+      // setCombinedDateTime("");
+
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
+      // setInterviewerViewType("");
+    }
 
     useEffect(() => {
         const fetchOwnerData = async () => {
@@ -154,102 +486,112 @@ const RoundFormInterviews = () => {
                         `${config.REACT_APP_API_URL}/users/owner/${userId}`
                     );
 
-                    setOwnerData(response.data);
-                } catch (error) {
-                    console.error("Error fetching owner data:", error);
-                }
-            }
-        };
-        fetchOwnerData();
-    }, [organization, userId,]);
+  // Add this useEffect to handle interviewMode changes
+  useEffect(() => {
+    // When interviewMode changes from "Face to Face" to "Virtual", 
+    // the outsource button will automatically enable because the disabled condition will be false
+    // console.log("Interview mode changed to:", interviewMode);
 
-    useEffect(() => {
-        if (interviewData) {
-            setCandidate(interview?.candidateId || null);
-            setPosition(interview?.positionId || null);
-            setRounds(interview?.rounds || []);
-            setSelectedMeetingPlatform(data?.data?.defaultProvider);
-            // setTemplate(interview?.templateId || null)
-        }
-    }, [interviewData, interview, data]);
-    console.log("selectedMeetingPlatform", selectedMeetingPlatform);
+    // If switching to Virtual and there were external interviewers cleared, reset the interview type
+    if (interviewMode === "Virtual" && selectedInterviewType === null && externalInterviewers.length === 0) {
+      // Allow selection of either internal or external
+      setSelectedInterviewType(null);
+      setExternalInterviewers([]);
+    }
+  }, [interviewMode, selectedInterviewType, externalInterviewers.length]);
 
-    const navigate = useNavigate();
-    const [roundTitle, setRoundTitle] = useState("");
-    const [customRoundTitle, setCustomRoundTitle] = useState("");
-    const [interviewMode, setInterviewMode] = useState("");
-    const [status, setStatus] = useState("Draft");
-    const [instructions, setInstructions] = useState("");
-    const [sequence, setSequence] = useState(1);
-    const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] =
-        useState(false);
-    // const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
-    const [interviewQuestionsList, setInterviewQuestionsList] = useState([]);
-    const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
-    // console.log("interviewQuestionsList",interviewQuestionsList);
+  // const handleRoundTitleChange = (e) => {
+  //   const selectedTitle = e.target.value;
 
-    const [interviewType, setInterviewType] = useState("instant"); // "instant" or "scheduled"
-    const [scheduledDate, setScheduledDate] = useState(""); // Start Date & Time
-    const [duration, setDuration] = useState(60); // Duration in minutes
-    const [startTime, setStartTime] = useState(""); // Final Start Time
-    const [endTime, setEndTime] = useState(""); // Calculated End Time
-    const [combinedDateTime, setCombinedDateTime] = useState("");
-    const [interviewerViewType, setInterviewerViewType] = useState("individuals"); // group or individuals
-    const [interviewerGroupName, setInterviewerGroupName] = useState("");
-    const [interviewerGroupId, setInterviewerGroupId] = useState("");
-    const [expandedSections, setExpandedSections] = useState({});
-    const [expandedQuestions, setExpandedQuestions] = useState({});
-    const [showDropdown, setShowDropdown] = useState(false);
-    const [selectedInterviewType, setSelectedInterviewType] = useState(null);
-    const [internalInterviewers, setInternalInterviewers] = useState([]);
-    // console.log("internalInterviewers selected", internalInterviewers);
-    const [externalInterviewers, setExternalInterviewers] = useState([]);
+  //   if (selectedTitle === "Other") {
+  //     setCustomRoundTitle("");
+  //     setInterviewerViewType("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //     setCombinedDateTime("");
 
-    // console.log("externalInterviewers 0000000000000000", externalInterviewers);
+  //   } else {
+  //     setRoundTitle(selectedTitle);
+  //     setCustomRoundTitle("");
+  //     setInstructions("");
+  //     setInterviewMode("");
+  //     // setStatus("Pending");
+  //     setInterviewType("instant");
+  //     setScheduledDate("");
+  //     setDuration(60);
+  //     setStartTime("");
+  //     setEndTime("");
 
-    // console.log("internalInterviewers", internalInterviewers);
-    // console.log("interviewerViewType", interviewerViewType);
-    // console.log("interviewerGroupName", interviewerGroupName);
+  //     setInterviewerGroupName("");
 
-    useEffect(() => {
-        if (
-            selectedInterviewType === "External" &&
-            externalInterviewers.length > 0
-        ) {
-            setStatus("RequestSent");
-        } else if (selectedInterviewType !== "External") {
-            internalInterviewers.length > 0 ? setStatus("Scheduled") : setStatus("Draft");
-        }
-    }, [selectedInterviewType, externalInterviewers, internalInterviewers]);
+  //     setInterviewerGroupId("")
+  //     setInterviewerViewType("");
+  //     setCombinedDateTime("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //   }
 
-    //<-----v1.0.4----
-    // Helper: format a Date to 'YYYY-MM-DDTHH:mm' for <input type="datetime-local"/>
-    const formatForDatetimeLocal = (date) => {
-        const pad = (n) => String(n).padStart(2, "0");
-        const y = date.getFullYear();
-        const m = pad(date.getMonth() + 1);
-        const d = pad(date.getDate());
-        const hh = pad(date.getHours());
-        const mm = pad(date.getMinutes());
-        return `${y}-${m}-${d}T${hh}:${mm}`;
-    };
+  //   if (selectedTitle === "Other") {
+  //     setCustomRoundTitle("");
+  //     setInstructions("");
+  //   } else if (selectedTitle === "Assessment") {
+  //     setInterviewMode("Virtual");
+  //     setInterviewQuestionsList([]);
+  //     setInstructions("");
 
-    // Helper: minimum selectable scheduled time = now + 2 hours (local time)
-    const twoHoursFromNowLocal = () => {
-        const d = new Date();
-        d.setHours(d.getHours() + 2);
-        d.setSeconds(0, 0); // strip seconds/millis for consistency
-        return formatForDatetimeLocal(d);
-    };
+  //     setInterviewerGroupName("");
+  //     setInterviewerGroupId("")
+  //     setInterviewerViewType("");
+  //     // setStatus("Pending");
+  //     setInterviewType("instant");
+  //     setScheduledDate("");
+  //     setDuration(60);
+  //     setStartTime("");
+  //     setEndTime("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //     setCombinedDateTime("");
+  //   } else {
+  //     setInterviewMode("");
+  //     setInstructions("");
+  //     setInstructions("");
+  //     setInterviewMode("");
+  //     // setStatus("Pending");
+  //     setInterviewType("instant");
+  //     setScheduledDate("");
+  //     setDuration(60);
+  //     setStartTime("");
+  //     setEndTime("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //     setCombinedDateTime("");
 
-    //-----v1.0.4---->
+  //     setInterviewerGroupName("");
+  //     setInterviewerGroupId("");
+  //     setInterviewerViewType("");
+  //   }
+  // };
 
-    // v1.0.1 <-------------------------------------------------------------------------
-    const fieldRefs = {
-        roundTitle: useRef(null),
-        interviewMode: useRef(null),
-        sequence: useRef(null),
-        assessmentTemplate: useRef(null),
+  // const handleSuggestedTabClick = (questionType) => {
+  //   setActiveTab("SuggesstedQuestions");
+  // };
+
+  // const handleFavoriteTabClick = (questionType) => {
+  //   setActiveTab("MyQuestionsList");
+  // };
+
+  // const [error, setError] = useState(null);
+
+
+  useEffect(() => {
+    // Clean up when component unmounts or roundId changes
+    return () => {
+      setInternalInterviewers([]);
+      setExternalInterviewers([]);
+      setInterviewerGroupName("");
+      setInterviewerGroupId("");
+      setInterviewerViewType("individuals");
+      setSelectedInterviewType(null);
     };
     // v1.0.1 ------------------------------------------------------------------------->
 
@@ -400,19 +742,30 @@ const RoundFormInterviews = () => {
                 setScheduledDate(minVal);
             }
         }
-    }, [interviewType]);
-    //-----v1.0.4---->
+      }
+    } else {
+      const maxSequence =
+        rounds?.length > 0 ? Math.max(...rounds.map((r) => r.sequence)) : 0;
+      if (sequence !== maxSequence + 1) {
+        setSequence(maxSequence + 1);
+      }
+    }
+  }, [rounds, roundId, isEditing, assessmentData, interviewData, groups]);
 
-    const handleAddQuestionToRound = (question) => {
-        if (question && question.questionId && question.snapshot) {
-            setInterviewQuestionsList((prevList) => {
-                if (prevList.some((q) => q.questionId === question.questionId)) {
-                    return prevList;
-                }
-                return [
-                    ...prevList,
-                    {
-                        ...question,
+  const handleInternalInterviewerSelect = (
+    interviewers,
+    viewType,
+    groupName,
+    groupId
+  ) => {
+    // console.log("Interviewers passed to parent:", interviewers); // Debugging
+
+    if (selectedInterviewType === "External") {
+      alert(
+        "You need to clear external interviewers before selecting Internal interviewers."
+      );
+      return;
+    }
 
                         mandatory: "false", // Default to false when adding a new question
                     },
@@ -916,13 +1269,58 @@ const RoundFormInterviews = () => {
     const handleClearAllInterviewers = () => {
         // console.log("not clearing");
 
-        setInternalInterviewers([]);
-        setExternalInterviewers([]);
-        setSelectedInterviewType(null);
-        setInterviewerGroupName("");
-        setInterviewerGroupId("");
-        setInterviewerViewType("individuals");
+                if (emailResponse.data.success) {
+                  // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
+                  if (emailResponse.data.data.failedEmails > 0) {
+                    notify.warning(
+                      `${emailResponse.data.data.failedEmails} emails failed to send`
+                    );
+                  }
+                } else {
+                  notify.error(
+                    "Failed to send outsource interview request emails"
+                  );
+                }
+              } catch (emailError) {
+                console.error(
+                  "Error sending outsource interview request emails:",
+                  emailError
+                );
+                notify.error(
+                  "Failed to send outsource interview request emails"
+                );
+              }
+            }
+          }
+        } else {
+
+          // Handle Face to Face interview
+    console.log("=== Handling Face to Face Interview ===");
+    
+    const targetRoundId = response?.savedRound?._id || roundId;
+
+
+    // have to add email template for face to face round
+    
+    // Update the round with proper status
+    const faceToFaceRoundData = {
+      ...roundData,
+      status: "Scheduled" // Use the current status from state
     };
+
+    const updatePayload = {
+      interviewId,
+      roundId: targetRoundId,
+      round: faceToFaceRoundData,
+      ...(isEditing ? { questions: interviewQuestionsList } : {}),
+    };
+
+    // Update the round status
+    const updateResponse = await updateInterviewRound(updatePayload);
+    console.log("updateResponse", updateResponse);
+          navigate(`/interviews/${interviewId}`);
+          notify.success("Interview Round Created successfully");
+        }
 
     const selectedInterviewers =
         selectedInterviewType === "Internal"
@@ -1050,23 +1448,47 @@ const RoundFormInterviews = () => {
         setIsSubmitting(true);
 
 
-        try {
-            // console.log("Preparing round data for validation");
-            // Clean interviewers data to remove undefined fields
-            const cleanInterviewer = (interviewer) => {
-                const { availability, ...rest } = interviewer;
-                return rest;
-            };
-            // const cleanedInterviewers = selectedInterviewersData.map(cleanInterviewer);
-            // console.log("cleanedInterviewers", cleanedInterviewers);
+        // Meeting platform link creation
+        if (response.status === "ok") {
+          // console.log("Generating meeting link for the interview");
+          const shouldGenerateMeeting =
+            // 🧩 Skip in edit mode (!isEditing &&) commneted have to implement further    
+            payload?.round?.interviewMode !== "Face to Face" &&
+            Array.isArray(selectedInterviewers) &&
+            selectedInterviewers.length > 0;
+          console.log(shouldGenerateMeeting, "shouldGenerateMeeting");
 
-            // Format interviewers data based on view type
-            let formattedInterviewers = [];
-            if (interviewerViewType === "groups" && internalInterviewers.length > 0) {
-                // For groups, we need to handle group data appropriately
-                // Assuming internalInterviewers contains group data when in group view
-                formattedInterviewers = internalInterviewers.flatMap(
-                    (group) => group.userIds || []
+          if (shouldGenerateMeeting) {
+            try {
+              setIsMeetingCreationLoading(true);
+              // v1.0.3 <-----------------------------------------------------------
+              setMeetingCreationProgress("Creating links...");
+              // v1.0.3 ----------------------------------------------------------->
+              // Import the meeting platform utility
+              const { createMeeting } = await import(
+                "../../../../../utils/meetingPlatforms.js"
+              );
+
+
+
+              let meetingLink;
+
+              // ========================================
+              // Google Meet creation
+              // ========================================
+              if (selectedMeetingPlatform === "googlemeet") {
+                meetingLink = await createMeeting(
+                  "googlemeet",
+                  {
+                    roundTitle,
+                    instructions,
+                    combinedDateTime,
+                    duration,
+                    selectedInterviewers,
+                  },
+                  (progress) => {
+                    setMeetingCreationProgress(progress);
+                  }
                 );
             } else {
                 // For individuals, store their IDs
@@ -2514,33 +2936,90 @@ const RoundFormInterviews = () => {
                                                         </Button>
                                                     )}
 
-                                                    <Button
-                                                        type="button"
-                                                        onClick={() => setShowOutsourcePopup(true)}
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className={`${isInternalSelected
-                                                            ? "opacity-50 cursor-not-allowed"
-                                                            : ""
-                                                            }`}
-                                                        disabled={
-                                                            isInternalSelected ||
-                                                            interviewMode === "Face to Face"
-                                                        }
-                                                        title={
-                                                            isInternalSelected
-                                                                ? "Clear internal interviewers first"
-                                                                : ""
-                                                        }
-                                                    >
-                                                        <User className="h-4 w-4 sm:mr-0 mr-1 text-orange-600" />
-                                                        <span className="sm:hidden inline">
-                                                            Select Outsourced
-                                                        </span>
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                            {/* v1.0.5 --------------------------------------------------------> */}
+                      {/* Select Interviewers */}
+                      {/* v1.0.5 <-------------------------------------------------------- */}
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Interviewers
+                        </label>
+                        <div className="flex space-x-2">
+                          {organization === false ? (
+                            <Button
+                              type="button"
+                              onClick={() => {
+                                handleInternalInterviewerSelect([ownerData]);
+                                // clearError('interviewerType');
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className={`${isExternalSelected
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                                }`}
+                              disabled={isExternalSelected}
+                              title={
+                                isExternalSelected
+                                  ? "Clear external interviewers first"
+                                  : ""
+                              }
+                            >
+                              <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
+                              <span className="sm:hidden inline">
+                                Select Internal
+                              </span>
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              onClick={() => setInternalInterviews(true)}
+                              variant="outline"
+                              size="sm"
+                              className={`${isExternalSelected
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                                }`}
+                              disabled={isExternalSelected}
+                              title={
+                                isExternalSelected
+                                  ? "Clear external interviewers first"
+                                  : ""
+                              }
+                            >
+                              <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
+                              <span className="sm:hidden inline">
+                                Select Internal
+                              </span>
+                            </Button>
+                          )}
+
+                          <Button
+                            type="button"
+                            onClick={() => setShowOutsourcePopup(true)}
+                            variant="outline"
+                            size="sm"
+                            className={`${isInternalSelected ||
+                              interviewMode === "Face to Face"
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                              }`}
+                            disabled={
+                              isInternalSelected ||
+                              interviewMode === "Face to Face"
+                            }
+                            title={
+                              isInternalSelected
+                                ? "Clear internal interviewers first"
+                                : ""
+                            }
+                          >
+                            <User className="h-4 w-4 sm:mr-0 mr-1 text-orange-600" />
+                            <span className="sm:hidden inline">
+                              Select Outsourced
+                            </span>
+                          </Button>
+                        </div>
+                      </div>
+                      {/* v1.0.5 --------------------------------------------------------> */}
 
                                             {/* Internal Interview Usage Display */}
                                             {/* {isInternalSelected && (
@@ -2550,335 +3029,177 @@ const RoundFormInterviews = () => {
                         />
                       )} */}
 
-                                            {/* Selected Interviewers Summary */}
-                                            {/* v1.0.5 <------------------------------------------------------------ */}
-                                            <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
-                                                {selectedInterviewers.length === 0 ? (
-                                                    <p className="text-sm text-gray-500 text-center">
-                                                        No Interviewers
-                                                        <span className="sm:hidden inline ml-1">
-                                                            Selected
-                                                        </span>
-                                                    </p>
-                                                ) : (
-                                                    <div>
-                                                        <div className="flex items-center justify-between mb-3">
-                                                            <div className="flex items-center">
-                                                                <Users className="h-4 w-4 text-gray-500 mr-2" />
-                                                                <span className="text-sm text-gray-700">
-                                                                    {selectedInterviewers.length} Interviewer
-                                                                    {selectedInterviewers.length > 1 ? "s " : " "}
-                                                                    <span className="sm:hidden inline ml-1">
-                                                                        Selected
-                                                                    </span>
-                                                                    {isInternalSelected && (
-                                                                        <span className="ml-1 px-2 py-0.5 bg-blue-100 text-custom-blue rounded-full text-xs">
-                                                                            Internal
-                                                                        </span>
-                                                                    )}
-                                                                    {isExternalSelected && (
-                                                                        <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
-                                                                            Outsourced
-                                                                        </span>
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                            {selectedInterviewers.length > 0 && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={handleClearAllInterviewers}
-                                                                    className="text-sm text-red-600 hover:text-red-800 flex items-center"
-                                                                >
-                                                                    <Trash2 className="h-3 w-3 mr-1" />
-                                                                    <span className="sm:hidden inline">
-                                                                        Clear All
-                                                                    </span>
-                                                                </button>
-                                                            )}
-                                                        </div>
+                      {/* Selected Interviewers Summary */}
+                      {/* v1.0.5 <------------------------------------------------------------ */}
+                      <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
+                        {selectedInterviewers.length === 0 ? (
+                          <p className="text-sm text-gray-500 text-center">
+                            No Interviewers
+                            <span className="sm:hidden inline ml-1">
+                              Selected
+                            </span>
+                          </p>
+                        ) : (
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center">
+                                <Users className="h-4 w-4 text-gray-500 mr-2" />
+                                <span className="text-sm text-gray-700">
+                                  {selectedInterviewers.length} Interviewer
+                                  {selectedInterviewers.length > 1 ? "s " : " "}
+                                  <span className="sm:hidden inline ml-1">
+                                    Selected
+                                  </span>
+                                  {isInternalSelected && (
+                                    <span className="ml-1 px-2 py-0.5 bg-blue-100 text-custom-blue rounded-full text-xs">
+                                      Internal
+                                    </span>
+                                  )}
+                                  {isExternalSelected && (
+                                    <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
+                                      Outsourced
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                              {selectedInterviewers.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={handleClearAllInterviewers}
+                                  className="text-sm text-red-600 hover:text-red-800 flex items-center"
+                                >
+                                  <Trash2 className="h-3 w-3 mr-1" />
+                                  <span className="sm:hidden inline">
+                                    Clear All
+                                  </span>
+                                </button>
+                              )}
+                            </div>
 
-                                                        {/* Internal Interviewers */}
-                                                        {isInternalSelected && (
-                                                            <section className="mb-4 mt-2 w-full">
-                                                                <h4 className="text-sm font-semibold text-gray-600 mb-3">
-                                                                    {interviewerViewType === "groups" || interviewerGroupId
-                                                                        ? "Interviewer Groups "
-                                                                        : "Internal Interviewers "}
-                                                                    <span className="text-xs text-custom-blue">
-                                                                        ({selectedInterviewers.length || "Not Provided"}{" "}
-                                                                        {selectedInterviewers.length > 1 ? "Members" : "Member"})
-                                                                    </span>
-                                                                </h4>
-                                                                <div className="grid grid-cols-4 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 w-full gap-4">
-                                                                    {/* Render group card if group exists */}
-                                                                    {interviewerGroupId && (
-                                                                        <div
-                                                                            key={`group-${interviewerGroupId}`}
-                                                                            className="rounded-xl border w-[80%] border-blue-200 bg-blue-50 p-3 shadow-sm flex flex-col justify-between"
-                                                                        >
-                                                                            <div className="flex justify-between items-start mb-2">
-                                                                                <div>
-                                                                                    <span className="font-medium text-blue-900 block">
-                                                                                        {interviewerGroupName || "Not Provided"}
-                                                                                    </span>
-                                                                                    <span className="text-xs text-blue-700">(Group)</span>
-                                                                                </div>
-                                                                                <button
-                                                                                    onClick={handleClearAllInterviewers}
-                                                                                    className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
-                                                                                >
-                                                                                    <X className="h-4 w-4" />
-                                                                                </button>
-                                                                            </div>
-                                                                            <div>
-                                                                                <ul className="list-disc list-inside text-xs text-blue-800 ml-1">
-                                                                                    {/* Check if we have a group with usersNames */}
-                                                                                    {interviewerGroupId && selectedInterviewers[0]?.usersNames ? (
-                                                                                        // Render group members from usersNames
-                                                                                        selectedInterviewers[0].usersNames.map((name, i) => (
-                                                                                            <li key={`${selectedInterviewers[0]._id}-user-${i}`}>
-                                                                                                {name}
-                                                                                            </li>
-                                                                                        ))
-                                                                                    ) : interviewerGroupId && selectedInterviewers[0]?.userIds ? (
-                                                                                        // Fallback: if we have group but no usersNames, show placeholder
-                                                                                        selectedInterviewers[0].userIds.map((userId, i) => (
-                                                                                            <li key={`${selectedInterviewers[0]._id}-user-${i}`}>
-                                                                                                User ID: {userId}
-                                                                                            </li>
-                                                                                        ))
-                                                                                    ) : (
-                                                                                        // Render individual interviewers
-                                                                                        selectedInterviewers.map((interviewer, index) => (
-                                                                                            <li key={`${interviewer._id}-${index}`}>
-                                                                                                {`${interviewer.firstName || ""} ${interviewer.lastName || ""}`.trim() ||
-                                                                                                    interviewer.email}
-                                                                                            </li>
-                                                                                        ))
-                                                                                    )}
-                                                                                </ul>
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
+                            {/* Internal Interviewers */}
+                            {isInternalSelected && (
+                              <section className="mb-4 mt-2 w-full">
+                                <h4 className="text-sm font-semibold text-gray-600 mb-3">
+                                  {interviewerViewType === "groups" || interviewerGroupId
+                                    ? "Interviewer Groups "
+                                    : "Internal Interviewers "}
+                                  <span className="text-xs text-custom-blue">
+                                    ({selectedInterviewers.length || "Not Provided"}{" "}
+                                    {selectedInterviewers.length > 1 ? "Members" : "Member"})
+                                  </span>
+                                </h4>
+                                <div className="grid grid-cols-4 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 w-full gap-4">
+                                  {/* Render group card if group exists */}
+                                  {interviewerGroupId && (
+                                    <div
+                                      key={`group-${interviewerGroupId}`}
+                                      className="rounded-xl border w-[80%] border-blue-200 bg-blue-50 p-3 shadow-sm flex flex-col justify-between"
+                                    >
+                                      <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                          <span className="font-medium text-blue-900 block">
+                                            {interviewerGroupName || "Not Provided"}
+                                          </span>
+                                          <span className="text-xs text-blue-700">(Group)</span>
+                                        </div>
+                                        <button
+                                          onClick={handleClearAllInterviewers}
+                                          className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                      <div>
+                                        <ul className="list-disc list-inside text-xs text-blue-800 ml-1">
+                                          {/* Check if we have a group with usersNames */}
+                                          {interviewerGroupId && selectedInterviewers[0]?.usersNames ? (
+                                            // Render group members from usersNames
+                                            selectedInterviewers[0].usersNames.map((name, i) => (
+                                              <li key={`${selectedInterviewers[0]._id}-user-${i}`}>
+                                                {name}
+                                              </li>
+                                            ))
+                                          ) : interviewerGroupId && selectedInterviewers[0]?.userIds ? (
+                                            // Fallback: if we have group but no usersNames, show placeholder
+                                            selectedInterviewers[0].userIds.map((userId, i) => (
+                                              <li key={`${selectedInterviewers[0]._id}-user-${i}`}>
+                                                User ID: {userId}
+                                              </li>
+                                            ))
+                                          ) : (
+                                            // Render individual interviewers
+                                            selectedInterviewers.map((interviewer, index) => (
+                                              <li key={`${interviewer._id}-${index}`}>
+                                                {`${interviewer.firstName || ""} ${interviewer.lastName || ""}`.trim() ||
+                                                  interviewer.email}
+                                              </li>
+                                            ))
+                                          )}
+                                        </ul>
+                                      </div>
+                                    </div>
+                                  )}
 
-                                                                    {/* Render individual interviewers if no group */}
-                                                                    {!interviewerGroupId && selectedInterviewers.map((interviewer, index) => (
-                                                                        <div
-                                                                            key={`${interviewer._id}-${index}`}
-                                                                            className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 p-3 shadow-sm w-full md:w-auto"
-                                                                        >
-                                                                            <div className="flex items-center">
-                                                                                <User className="h-4 w-4 text-blue-600 mr-2" />
-                                                                                <span className="text-sm font-medium text-blue-900 truncate">
-                                                                                    {`${interviewer.firstName || ""} ${interviewer.lastName || ""}`.trim() ||
-                                                                                        interviewer.email}
-                                                                                </span>
-                                                                            </div>
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => handleRemoveInternalInterviewer(interviewer._id)}
-                                                                                className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
-                                                                                title="Remove interviewer"
-                                                                            >
-                                                                                <X className="h-4 w-4" />
-                                                                            </button>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </section>
-                                                            // <div className="mb-3">
-                                                            //   <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
-                                                            //   <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                                                            //     {/* {console.log("internalInterviewers near shoing place :", internalInterviewers)} */}
-                                                            //     {internalInterviewers?.map((interviewer) => (
-                                                            //       <div key={interviewer._id} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
-                                                            //         <div className="flex items-center">
-                                                            //           <span className="ml-2 text-sm text-custom-blue truncate">{interviewer.firstName} {interviewer.lastName}</span>
-                                                            //         </div>
-                                                            //         <button
-                                                            //           type="button"
-                                                            //           onClick={() => handleRemoveInternalInterviewer(interviewer._id)}
-                                                            //           className="text-custom-blue hover:text-custom-blue/80 p-1 rounded-full hover:bg-blue-100"
-                                                            //           title="Remove interviewer"
-                                                            //         >
-                                                            //           <X className="h-4 w-4" />
-                                                            //         </button>
-                                                            //       </div>
-                                                            //     ))}
-                                                            //   </div>
-                                                            // </div>
-                                                        )}
+                                  {/* Render individual interviewers if no group */}
+                                  {!interviewerGroupId && selectedInterviewers.map((interviewer, index) => (
+                                    <div
+                                      key={`${interviewer._id}-${index}`}
+                                      className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 p-3 shadow-sm w-full md:w-auto"
+                                    >
+                                      <div className="flex items-center">
+                                        <User className="h-4 w-4 text-blue-600 mr-2" />
+                                        <span className="text-sm font-medium text-blue-900 truncate">
+                                          {`${interviewer.firstName || ""} ${interviewer.lastName || ""}`.trim() ||
+                                            interviewer.email}
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveInternalInterviewer(interviewer._id)}
+                                        className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
+                                        title="Remove interviewer"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </section>
 
-                                                        {/* External Interviewers */}
-                                                        {isExternalSelected && (
-                                                            <div>
-                                                                <h4 className="text-xs font-medium text-gray-500 mb-2">
-                                                                    Outsourced Interviewers
-                                                                </h4>
-                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                                    {/* {console.log("externalInterviewers near shoing place :", externalInterviewers)} */}
-                                                                    {externalInterviewers?.map((interviewer) => (
-                                                                        <div
-                                                                            key={interviewer.id}
-                                                                            className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
-                                                                        >
-                                                                            <div className="flex items-center">
-                                                                                <span className="ml-2 text-sm text-orange-800 truncate">
-                                                                                    {interviewer?.contact?.firstName}{" "}
-                                                                                    {interviewer?.contact?.lastName}{" "}
-                                                                                    (Outsourced)
-                                                                                </span>
-                                                                            </div>
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() =>
-                                                                                    handleRemoveExternalInterviewer(
-                                                                                        interviewer.id
-                                                                                    )
-                                                                                }
-                                                                                className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
-                                                                                title="Remove interviewer"
-                                                                            >
-                                                                                <X className="h-4 w-4" />
-                                                                            </button>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {/* v1.0.5 ------------------------------------------------------------> */}
-                                            {errors.interviewers && (
-                                                <p className="text-red-500 text-sm -mt-5">
-                                                    {errors.interviewers}
-                                                </p>
-                                            )}
-                                            {/* questions */}
-                                            <div className="mt-4">
-                                                <div className="py-3 mx-auto rounded-md">
-                                                    {/* Header with Title and Add Button */}
-                                                    <div className="flex items-center justify-end mb-2">
-                                                        <button
-                                                            className="text-custom-blue font-semibold hover:underline"
-                                                            onClick={handlePopupToggle}
-                                                            type="button"
-                                                        >
-                                                            + Add Question
-                                                        </button>
-                                                    </div>
-                                                    <div className="border border-gray-300 rounded-md p-4 max-h-60 overflow-y-auto">
-                                                        {/* Display Added Questions */}
-                                                        {interviewQuestionsList.length > 0 ? (
-                                                            <ul className="mt-2 space-y-2">
-                                                                {interviewQuestionsList.map(
-                                                                    (question, qIndex) => {
-                                                                        // const isMandatory = question?.mandatory === "true";
-                                                                        const isMandatory =
-                                                                            question?.snapshot?.mandatory === "true";
-                                                                        return (
-                                                                            <li
-                                                                                key={qIndex}
-                                                                                className={`flex justify-between items-center p-3 border rounded-md ${isMandatory
-                                                                                    ? "border-red-500"
-                                                                                    : "border-gray-300"
-                                                                                    }`}
-                                                                            >
-                                                                                <span className="text-gray-900 font-medium">
-                                                                                    {qIndex + 1}.{" "}
-                                                                                    {question?.snapshot?.questionText ||
-                                                                                        "No Question Text"}
-                                                                                </span>
-                                                                                <button
-                                                                                    onClick={(e) =>
-                                                                                        handleRemoveQuestion(
-                                                                                            question.questionId,
-                                                                                            e
-                                                                                        )
-                                                                                    }
-                                                                                >
-                                                                                    <span className="text-red-500 text-xl font-bold">
-                                                                                        &times;
-                                                                                    </span>
-                                                                                </button>
-                                                                            </li>
-                                                                        );
-                                                                    }
-                                                                )}
-                                                            </ul>
-                                                        ) : (
-                                                            <p className="mt-2 text-gray-500 flex justify-center">
-                                                                No Questions added yet.
-                                                            </p>
-                                                        )}
-                                                    </div>
+                            )}
 
-                                                    {/* Question Popup */}
-                                                    {/* v1.0.5 <--------------------------------------------------------------------- */}
-                                                    {isInterviewQuestionPopup && (
-                                                        <div
-                                                            className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50 min-h-screen sm:px-1"
-                                                            onClick={() => setIsInterviewQuestionPopup(false)}
-                                                        >
-                                                            <div
-                                                                className="bg-white rounded-md w-[98%] max-h-[90vh] overflow-y-auto sm:px-2  px-4 py-4"
-                                                                onClick={(e) => e.stopPropagation()}
-                                                            >
-                                                                <div className="py-3 px-4  flex items-center justify-between">
-                                                                    <h2 className="text-xl text-custom-blue font-semibold">
-                                                                        Add Interview Question
-                                                                    </h2>
-                                                                    <button>
-                                                                        <X
-                                                                            className="text-2xl text-red-500"
-                                                                            onClick={() => handlePopupToggle()}
-                                                                        />
-                                                                    </button>
-                                                                </div>
-
-                                                                {isInterviewQuestionPopup && (
-                                                                    <QuestionBank
-                                                                        interviewQuestionsLists={
-                                                                            interviewQuestionsList
-                                                                        }
-                                                                        type="interviewerSection"
-                                                                        fromScheduleLater={true}
-                                                                        onAddQuestion={handleAddQuestionToRound}
-                                                                        handleRemoveQuestion={handleRemoveQuestion}
-                                                                        handleToggleMandatory={
-                                                                            handleToggleMandatory
-                                                                        }
-                                                                        removedQuestionIds={removedQuestionIds}
-                                                                    />
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {/* v1.0.5 ---------------------------------------------------------------------> */}
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {/* instructions */}
-                                    <div>
-                                        <DescriptionField
-                                            inputRef={fieldRefs.instructions}
-                                            name="instructions"
-                                            label="Instructions"
-                                            id="instructions"
-                                            rows="10"
-                                            minLength={50}
-                                            maxLength={1000}
-                                            placeholder="Provide detailed instructions for interviewers including evaluation criteria, scoring guidelines (e.g., 1-10 scale), key focus areas, time allocation, and specific protocols to follow during the interview session."
-                                            value={instructions}
-                                            readOnly={roundTitle === "Assessment"}
-                                            onChange={(e) => setInstructions(e.target.value)}
-                                        />
-                                        <p className="text-sm text-gray-500">
-                                            Add Instructions after the interview round is completed
-                                        </p>
+                            {/* External Interviewers */}
+                            {isExternalSelected && (
+                              <div>
+                                <h4 className="text-xs font-medium text-gray-500 mb-2">
+                                  Outsourced Interviewers
+                                </h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {/* {console.log("externalInterviewers near shoing place :", externalInterviewers)} */}
+                                  {externalInterviewers?.map((interviewer) => (
+                                    <div
+                                      key={interviewer.id}
+                                      className="flex items-center max-w-[500px] justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
+                                    >
+                                      <div className="flex items-center">
+                                        <span className="ml-2 text-sm text-orange-800 truncate">
+                                          {interviewer?.contact?.firstName}{" "}
+                                          {interviewer?.contact?.lastName}{" "}
+                                          (Outsourced)
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleRemoveExternalInterviewer(
+                                            interviewer.id
+                                          )
+                                        }
+                                        className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
+                                        title="Remove interviewer"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
                                     </div>
                                     {/* footer */}
                                     <div className="flex justify-end">
@@ -2954,7 +3275,46 @@ const RoundFormInterviews = () => {
                 />
             )}
         </div>
-    );
+      </main>
+
+      {/* External Interviews Modal */}
+      {showOutsourcePopup && (
+        <OutsourceOption
+          onClose={() => setShowOutsourcePopup(false)}
+          dateTime={combinedDateTime}
+          positionData={position}
+          candidateData={candidate}
+          onProceed={handleExternalInterviewerSelect}
+          candidateExperience={candidate?.CurrentExperience}
+          isMockInterview={false} // For regular interview rounds, set to true for mock interviews
+          previouslySelectedInterviewers={externalInterviewers}
+          isEditing={isEditing}
+
+        />
+      )}
+
+      {isInternalInterviews && (
+        <InternalInterviews
+          isOpen={isInternalInterviews}
+          // onClose={() => setInternalInterviews(false)}
+          onClose={() => {
+            setInternalInterviews(false);
+            // If no interviewers were selected during this session, reset view type
+            // if (internalInterviewers.length === 0) {
+            //   setInterviewerViewType('individuals');
+            //   setInterviewerGroupName('');
+            // }
+          }}
+          onSelectCandidates={handleInternalInterviewerSelect}
+          selectedInterviewers={internalInterviewers}
+          // defaultViewType={interviewerViewType}
+          selectedGroupName={interviewerGroupName}
+          selectedGroupId={interviewerGroupId}
+        //  clearOnViewTypeChange={true}
+        />
+      )}
+    </div>
+  );
 };
 
 export default RoundFormInterviews;

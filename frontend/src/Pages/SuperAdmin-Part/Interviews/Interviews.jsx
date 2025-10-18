@@ -325,6 +325,12 @@ const Interviewers = () => {
         </div>
       ),
     },
+    
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => <StatusBadge status={row.status || "Draft"} />,
+    },
     {
       key: "createdOn",
       header: "Created On",
@@ -337,11 +343,6 @@ const Interviewers = () => {
           </span>
         </div>
       ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (value, row) => <StatusBadge status={row.status || "Draft"} />,
     },
   ];
   // v1.0.0 ----------------------------------------------------------------------------------->
@@ -357,12 +358,7 @@ const Interviewers = () => {
         setIsPopupOpen(true);
       },
     },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
+    
   ];
 
   // Kanban Columns Configuration
@@ -410,18 +406,13 @@ const Interviewers = () => {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         setSelectedInterview(row);
         setIsPopupOpen(true);
       },
     },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
+    
   ];
 
   // Render Actions for Kanban
@@ -623,14 +614,14 @@ const Interviewers = () => {
       {/* v1.0.0 -----------------------------------------------------------------------------------> */}
       
       {/* Interview Details Sidebar */}
-      {/* <InterviewDetailsSidebar
+      <InterviewDetailsSidebar
         isOpen={isPopupOpen}
         onClose={() => {
           setIsPopupOpen(false);
           setSelectedInterview(null);
         }}
         interviewData={selectedInterview}
-      /> */}
+      />
       
       <Outlet />
     </>
