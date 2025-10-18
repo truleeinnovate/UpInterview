@@ -1347,9 +1347,6 @@ const RoundFormInterviews = () => {
               }
             }
           }
-        } else {
-          navigate(`/interviews/${interviewId}`);
-          notify.success("Selected interview mode is Face to Face");
         }
 
         // console.log("response", response);
@@ -1376,21 +1373,25 @@ const RoundFormInterviews = () => {
             selectedInterviewers.length > 0;
           console.log(shouldGenerateMeeting, "shouldGenerateMeeting");
 
-          if (shouldGenerateMeeting) {
-            try {
-              setIsMeetingCreationLoading(true);
-              // v1.0.3 <-----------------------------------------------------------
-              setMeetingCreationProgress("Creating links...");
-              // v1.0.3 ----------------------------------------------------------->
-              // Import the meeting platform utility
-              const { createMeeting } = await import(
-                "../../../../../utils/meetingPlatforms.js"
-              );
+
+      
+
+
+          try {
+          
+            // v1.0.3 <-----------------------------------------------------------
+            setMeetingCreationProgress("Creating links...");
+            // v1.0.3 ----------------------------------------------------------->
+            // Import the meeting platform utility
+            const { createMeeting } = await import(
+              "../../../../../utils/meetingPlatforms.js"
+            );
 
 
 
-              let meetingLink;
-
+            let meetingLink;
+            if (shouldGenerateMeeting) {
+                setIsMeetingCreationLoading(true);
               // ========================================
               // Google Meet creation
               // ========================================
@@ -1478,38 +1479,78 @@ const RoundFormInterviews = () => {
 
               const data = await meetingLink;
               console.log("meetingLink zoom response", data);
+            }
 
-              // Persist meeting link on the round (avoid reassigning consts)
-              if (data) {
-                const updatedRoundData = {
-                  ...roundData,
-                  meetingId: data?.start_url || meetingLink,
-                  meetPlatform: selectedMeetingPlatform,
-                };
-                const targetRoundId = response?.savedRound?._id || roundId;
-                const updatePayload = {
-                  interviewId,
-                  roundId: targetRoundId,
-                  round: updatedRoundData,
-                  ...(isEditing ? { questions: interviewQuestionsList } : {}),
-                };
-                // console.log("updatePayload", updatePayload);
+            // Persist meeting link on the round (avoid reassigning consts)
+            if (data) {
+              const updatedRoundData = {
+                ...roundData,
+                meetingId: data?.start_url || meetingLink,
+                meetPlatform: selectedMeetingPlatform,
+              };
+              const targetRoundId = response?.savedRound?._id || roundId;
+              const updatePayload = {
+                interviewId,
+                roundId: targetRoundId,
+                round: updatedRoundData,
+                ...(isEditing ? { questions: interviewQuestionsList } : {}),
+              };
+              // console.log("updatePayload", updatePayload);
 
-                // 🔹 Call PATCH mutation instead of POST
-                const updateResponse = await updateInterviewRound(
-                  updatePayload
-                );
-                console.log("Round updated with meeting link:", updateResponse);
-              }
+              // 🔹 Call PATCH mutation instead of POST
+              const updateResponse = await updateInterviewRound(
+                updatePayload
+              );
+              console.log("Round updated with meeting link:", updateResponse);
+            } else {
+              // Handle Face to Face interview
+              console.log("=== Handling Face to Face Interview ===");
 
-              // Use the new utility to generate and save meeting URLs
-              try {
-                console.log("=== Starting meeting URL processing ===");
+              const targetRoundId = response?.savedRound?._id || roundId;
+
+
+              // have to add email template for face to face round
+
+              // Update the round with proper status
+              const faceToFaceRoundData = {
+                ...roundData,
+                status: "Scheduled" // Use the current status from state
+              };
+
+              const updatePayload = {
+                interviewId,
+                roundId: targetRoundId,
+                round: faceToFaceRoundData,
+                ...(isEditing ? { questions: interviewQuestionsList } : {}),
+              };
+
+              // Update the round status
+              const updateResponse = await updateInterviewRound(updatePayload);
+              console.log("updateResponse", updateResponse);
+              // navigate(`/interviews/${interviewId}`);
+              // notify.success("Interview Round Created successfully");
+            }
+
+
+            // ✅ CHANGES START HERE - Email sending logic
+            console.log("=== Starting email sending process ===");
+
+            // Use the new utility to generate and save meeting URLs
+            try {
+              console.log("=== Starting meeting URL processing ===");
 
 
 
-                // console.log("Meeting URL processing completed successfully:", result);
-                const isInternal = selectedInterviewType === "Internal";
+              // console.log("Meeting URL processing completed successfully:", result);
+              const isInternal = selectedInterviewType === "Internal";
+
+              // Determine if we should send emails
+              const shouldSendEmails =
+                // payload?.round?.interviewMode !== "Face to Face" && // Only for Virtual mode
+                Array.isArray(selectedInterviewers) &&
+                selectedInterviewers.length > 0;
+
+              if (shouldSendEmails) {
                 // Send emails after meeting links are generated
                 try {
                   console.log("=== Sending interview round emails ===");
@@ -1554,45 +1595,50 @@ const RoundFormInterviews = () => {
                   notify.error("Round created but email sending failed");
                 }
 
-                // ✅ Show toasts one by one after everything finishes
-                for (const [i, msg] of successMessages.entries()) {
-                  setTimeout(() => {
-                    notify.success(msg);
-                  }, i * 1000); // gap of 1s between each toast
-                }
-
-                // ✅ Navigate after showing toasts
-                setTimeout(() => {
-                  navigate(`/interviews/${interviewId}`);
-                }, successMessages.length * 1000);
-
-
-              } catch (urlError) {
-                console.error("Error processing meeting URLs:", urlError);
-                console.error("URL Error details:", {
-                  message: urlError.message,
-                  stack: urlError.stack,
-                  response: urlError.response?.data,
-                });
+              } else {
+                console.log("Skipping email sending - Face to Face mode or no interviewers");
+                successMessages.push("Interview round created successfully!");
               }
 
-              // Navigate to interview page after successful creation
-              // console.log(
-              //   "Navigating to interview page:",
-              //   `/interviews/${interviewId}`
-              // );
+              // ✅ Show toasts one by one after everything finishes
+              for (const [i, msg] of successMessages.entries()) {
+                setTimeout(() => {
+                  notify.success(msg);
+                }, i * 1000); // gap of 1s between each toast
+              }
 
-            } catch (err) {
-              console.error("Error in meeting creation:", err);
-              setErrors({
-                meetingCreation: err.message || "Failed to create meeting",
+              // ✅ Navigate after showing toasts
+              setTimeout(() => {
+                navigate(`/interviews/${interviewId}`);
+              }, successMessages.length * 1000);
+
+
+            } catch (urlError) {
+              console.error("Error processing meeting URLs:", urlError);
+              console.error("URL Error details:", {
+                message: urlError.message,
+                stack: urlError.stack,
+                response: urlError.response?.data,
               });
-            } finally {
-              console.log("Meeting creation process finished");
-              setIsMeetingCreationLoading(false);
-              setMeetingCreationProgress("");
             }
+
+            // Navigate to interview page after successful creation
+            // console.log(
+            //   "Navigating to interview page:",
+            //   `/interviews/${interviewId}`
+            // );
+
+          } catch (err) {
+            console.error("Error in meeting creation:", err);
+            setErrors({
+              meetingCreation: err.message || "Failed to create meeting",
+            });
+          } finally {
+            console.log("Meeting creation process finished");
+            setIsMeetingCreationLoading(false);
+            setMeetingCreationProgress("");
           }
+
 
           // notify.success("Selected interview mode is Face to Face");
           navigate(`/interviews/${interviewId}`);
@@ -1620,6 +1666,9 @@ const RoundFormInterviews = () => {
       setIsSubmitting(false);
     }
   };
+
+
+
   // v1.0.2 <-----------------------------------------
   // useEffect(() => {
   //   const date = new Date();
@@ -2896,10 +2945,10 @@ const RoundFormInterviews = () => {
                       isLoading={
                         isMutationLoading ||
                         isMeetingCreationLoading ||
-                        isSubmitting
+                        isSubmitting 
                       }
                       loadingText={
-                        isMeetingCreationLoading
+                        isMeetingCreationLoading 
                           ? meetingCreationProgress || "Creating meeting..."
                           : isSubmitting
                             ? "Submitting..."
