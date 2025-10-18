@@ -37,7 +37,9 @@ const OutsourcedInterviewerCard = ({
     onSelect,
     onViewDetails,
     navigatedfrom,
+    candidateExperience
 }) => {
+    console.log('candidateExperience', candidateExperience)
     const [isExpanded, setIsExpanded] = useState(false);
     const fullName =
         interviewer?.contact?.firstName || interviewer?.contact?.Name || "Unnamed";
@@ -47,42 +49,51 @@ const OutsourcedInterviewerCard = ({
         "Interviewer";
     const company = interviewer?.contact?.industry || "Freelancer";
 
-    //<-----v1.0.4-----Venkatesh---- Display rate range from rates object (junior/mid/senior)
-    const getRateDisplay = () => {
+    // ✅ New logic: get rate based on candidate experience
+    const getExperienceBasedRate = () => {
         const rates = interviewer?.contact?.rates;
-        if (!rates) return interviewer?.contact?.hourlyRate || "not provided";
+        if (!rates) return interviewer?.contact?.hourlyRate || "Not provided";
 
-        const visibleRates = [];
-        if (rates.junior?.isVisible && rates.junior?.inr > 0) {
-            visibleRates.push(rates.junior.inr);
-        }
-        if (rates.mid?.isVisible && rates.mid?.inr > 0) {
-            visibleRates.push(rates.mid.inr);
-        }
-        if (rates.senior?.isVisible && rates.senior?.inr > 0) {
-            visibleRates.push(rates.senior.inr);
-        }
+        let selectedLevel = null;
 
-        if (visibleRates.length === 0) {
-            // If no visible rates, show all non-zero rates
-            ['junior', 'mid', 'senior'].forEach(level => {
-                if (rates[level]?.inr > 0) {
-                    visibleRates.push(rates[level].inr);
-                }
-            });
+        if (candidateExperience >= 1 && candidateExperience <= 3) {
+            selectedLevel = "junior";
+        } else if (candidateExperience > 3 && candidateExperience <= 6) {
+            selectedLevel = "mid";
+        } else if (candidateExperience > 6) {
+            selectedLevel = "senior";
         }
 
-        if (visibleRates.length === 0) return "not provided";
-        if (visibleRates.length === 1) return `₹${visibleRates[0]}/hr`;
+        // ✅ Try to get the rate for selected level
+        const selectedRate = selectedLevel && rates[selectedLevel]?.inr > 0
+            ? rates[selectedLevel].inr
+            : null;
 
-        const minRate = Math.min(...visibleRates);
-        const maxRate = Math.max(...visibleRates);
-        return `₹${minRate}-${maxRate}/hr`;
+        // ✅ If selected level rate is not available, fallback gracefully
+        if (!selectedRate) {
+            if (selectedLevel === "senior") {
+                // fallback to mid → junior
+                if (rates?.mid?.inr > 0) return `₹${rates.mid.inr}/hr`;
+                if (rates?.junior?.inr > 0) return `₹${rates.junior.inr}/hr`;
+            } else if (selectedLevel === "mid") {
+                // fallback to junior
+                if (rates?.junior?.inr > 0) return `₹${rates.junior.inr}/hr`;
+            } else if (selectedLevel === "junior") {
+                // no fallback below junior
+                return "Not provided";
+            }
+        }
+
+        // ✅ Found valid rate for level
+        if (selectedRate) return `₹${selectedRate}/hr`;
+
+        return "Not provided";
     };
 
-    const hourlyRate = getRateDisplay();
-    //-----v1.0.4-----Venkatesh---->
-    const rating = interviewer?.contact?.rating || "4.5";
+
+    const hourlyRate = getExperienceBasedRate(); // ✅ use new logic
+
+    const rating = interviewer?.contact?.rating || "4.6";
     const introduction =
         interviewer?.contact?.introduction || "No introduction provided.";
     const skillsArray = interviewer?.contact?.skills ?? [];
@@ -96,7 +107,6 @@ const OutsourcedInterviewerCard = ({
                 : "border-gray-200"
                 } p-4 shadow-sm hover:shadow-md transition-all`}
         >
-            {/* v1.0.3 <----------------------------------------------------------------------- */}
             <div className="w-full">
                 <div className="flex items-center gap-3 w-full">
                     <div>
@@ -209,6 +219,7 @@ function OutsourcedInterviewerModal({
     candidateData,
     onProceed,
     skills,
+    currentExperience,
     technology,
     navigatedfrom,
     candidateExperience, //<-----v1.0.4-----Venkatesh---- Added to determine experience level for rate calculation
@@ -324,7 +335,6 @@ function OutsourcedInterviewerModal({
                     return interviewerOwnerId !== userId;
                 });
                 console.log(`🔍 Filtered out ${externalInterviewers.length - filteredByOwnerId.length} interviewers with matching ownerId`);
-
 
 
                 // ========== MOCK INTERVIEW FLOW - FILTER BY TIME + SKILLS ==========
@@ -461,22 +471,40 @@ function OutsourcedInterviewerModal({
                     );
 
                     // ✅ Step 8: Filter approved + offering mock
-                    const finalInterviewers = combinedInterviewers.filter((interviewer) => {
+                    const approvedInterviewers = combinedInterviewers.filter((interviewer) => {
                         const isApproved = interviewer.contact?.status === "approved";
                         const offersMock = interviewer.contact?.InterviewFormatWeOffer?.includes("mock");
                         return isApproved && offersMock;
                     });
+
+                    // 🧠 Step: Filter by experience match (interviewer's experience >= candidate's experience)
+                    const experienceFiltered = approvedInterviewers.filter(interviewer => {
+                        const interviewerExp = parseFloat(currentExperience);
+                        const candidateExp = parseFloat(candidateExperience);
+
+                        // Include interviewer only if their experience >= candidate experience
+                        const isEligible = interviewerExp >= candidateExp;
+
+                        console.log(
+                            `🎓 Experience Check -> Interviewer: ${interviewer.contact?.firstName || "Unknown"} | ` +
+                            `InterviewerExp: ${interviewerExp} | CandidateExp: ${candidateExp} | Eligible: ${isEligible}`
+                        );
+
+                        return isEligible;
+                    });
+
+                    console.log(`✅ After experience filtering: ${experienceFiltered.length} interviewers remaining`);
 
                     // // ✅ Step 9: Remove logged-in user
                     // const cleanedInterviewers = finalInterviewers.filter(
                     //     (i) => i.contact?._id?.toString() !== userId?.toString()
                     // );
 
-                    console.log("✅ Final mock-interview filtered interviewers:", finalInterviewers);
+                    console.log("✅ Final mock-interview filtered interviewers:", experienceFiltered);
 
                     // ✅ Step 10: Update state
-                    setBaseInterviewers(finalInterviewers);
-                    setFilteredInterviewers(finalInterviewers);
+                    setBaseInterviewers(experienceFiltered);
+                    setFilteredInterviewers(experienceFiltered);
                     return;
                 }
 
@@ -707,11 +735,29 @@ function OutsourcedInterviewerModal({
                 //     (i) => i.contact?._id?.toString() !== userId?.toString()
                 // );
 
-                console.log("✅ Final Filtered Interviewers:", approvedInterviewers);
+                // 🧠 Step: Filter by experience match (interviewer's experience >= candidate's experience)
+                const experienceFiltered = approvedInterviewers.filter(interviewer => {
+                    const interviewerExp = parseFloat(interviewer.contact?.yearsOfExperience);
+                    const candidateExp = parseFloat(candidateExperience);
+
+                    // Include interviewer only if their experience >= candidate experience
+                    const isEligible = interviewerExp >= candidateExp;
+
+                    console.log(
+                        `🎓 Experience Check -> Interviewer: ${interviewer.contact?.firstName || "Unknown"} | ` +
+                        `InterviewerExp: ${interviewerExp} | CandidateExp: ${candidateExp} | Eligible: ${isEligible}`
+                    );
+
+                    return isEligible;
+                });
+
+                console.log(`✅ After experience filtering: ${experienceFiltered.length} interviewers remaining`);
+
+                console.log("✅ Final Filtered Interviewers:", experienceFiltered);
 
                 // 9️⃣ Update state
-                setBaseInterviewers(approvedInterviewers);
-                setFilteredInterviewers(approvedInterviewers);
+                setBaseInterviewers(experienceFiltered);
+                setFilteredInterviewers(experienceFiltered);
 
 
                 // ========== REGULAR FLOW (with positionData) ========== }}
@@ -1047,6 +1093,7 @@ function OutsourcedInterviewerModal({
                                     onSelect={() => handleSelectClick(interviewer)}
                                     onViewDetails={() => setSelectedInterviewer(interviewer)}
                                     navigatedfrom={navigatedfrom}
+                                    candidateExperience={candidateExperience}
                                 />
                             ))}
                         </div>
