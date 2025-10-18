@@ -1143,8 +1143,9 @@ const updateInterviewRound = async (req, res) => {
         Object.assign(existingRound, otherRoundData);
 
         if (meetPlatform) existingRound.meetPlatform = meetPlatform;
+        // && Array.isArray(meetLink)
 
-        if (meetLink && Array.isArray(meetLink)) {
+        if (meetLink ) {
             // console.log("Updating meetLink directly:", meetLink);
             existingRound.meetLink = meetLink;
             // existingRound.meetPlatform = meetPlatform;
