@@ -9,7 +9,7 @@ import StatusBadge from '../../../Components/SuperAdminComponents/common/StatusB
 const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
   const navigate = useNavigate();
   
-  if (interviewData) return null;
+  if (!interviewData) return null;
 
   const handleEdit = () => {
     navigate(`/superadmin/interviews/edit/${interviewData._id}`);
