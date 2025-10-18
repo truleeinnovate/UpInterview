@@ -2160,7 +2160,7 @@ const getAllInterviewRounds = async (req, res) => {
 
             return {
                 _id: round._id,
-                interviewCode: round.interviewId?.interviewCode || 'N/A',
+                interviewCode: `${round.interviewId?.interviewCode}-${round.sequence}` || 'N/A',
                 roundTitle: round.roundTitle || 'N/A',
                 interviewMode: round.interviewMode || 'N/A',
                 interviewType: round.interviewType || 'N/A',

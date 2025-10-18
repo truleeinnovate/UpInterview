@@ -207,24 +207,26 @@ const Usage = () => {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Used: {interviewerUtilized}</span>
               <span className="text-gray-600">
-                Limit: {interviewerEntitled}
+                Limit: {interviewerEntitled === 0 ? "Unlimited" : interviewerEntitled}
               </span>
             </div>
-            <div className="mt-2 h-2 bg-gray-200 rounded-full">
-              <div
-                className="h-full bg-custom-blue rounded-full"
-                style={{
-                  width: `${
-                    interviewerEntitled > 0
-                      ? Math.min(
-                          (interviewerUtilized / interviewerEntitled) * 100,
-                          100
-                        )
-                      : 0
-                  }%`,
-                }}
-              />
-            </div>
+            {interviewerEntitled !== 0 && (
+              <div className="mt-2 h-2 bg-gray-200 rounded-full">
+                <div
+                  className="h-full bg-custom-blue rounded-full"
+                  style={{
+                    width: `${
+                      interviewerEntitled > 0
+                        ? Math.min(
+                            (interviewerUtilized / interviewerEntitled) * 100,
+                            100
+                          )
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -235,24 +237,26 @@ const Usage = () => {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Used: {assessmentsUtilized}</span>
               <span className="text-gray-600">
-                Limit: {assessmentsEntitled}
+                Limit: {assessmentsEntitled === 0 ? "Unlimited" : assessmentsEntitled}
               </span>
             </div>
-            <div className="mt-2 h-2 bg-gray-200 rounded-full">
-              <div
-                className="h-full bg-green-600 rounded-full"
-                style={{
-                  width: `${
-                    assessmentsEntitled > 0
-                      ? Math.min(
-                          (assessmentsUtilized / assessmentsEntitled) * 100,
-                          100
-                        )
-                      : 0
-                  }%`,
-                }}
-              />
-            </div>
+            {assessmentsEntitled !== 0 && (
+              <div className="mt-2 h-2 bg-gray-200 rounded-full">
+                <div
+                  className="h-full bg-green-600 rounded-full"
+                  style={{
+                    width: `${
+                      assessmentsEntitled > 0
+                        ? Math.min(
+                            (assessmentsUtilized / assessmentsEntitled) * 100,
+                            100
+                          )
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -281,21 +285,23 @@ const Usage = () => {
                 Limit: {bandwidthEntitled === 0 ? "Unlimited" : `${bandwidthEntitled} GB`}
               </span>
             </div>
-            <div className="mt-2 h-2 bg-gray-200 rounded-full">
-              <div
-                className="h-full bg-orange-600 rounded-full"
-                style={{
-                  width: `${
-                    bandwidthEntitled > 0
-                      ? Math.min(
-                          (bandwidthUtilized / bandwidthEntitled) * 100,
-                          100
-                        )
-                      : 0
-                  }%`,
-                }}
-              />
-            </div>
+            {bandwidthEntitled !== 0 && (
+              <div className="mt-2 h-2 bg-gray-200 rounded-full">
+                <div
+                  className="h-full bg-orange-600 rounded-full"
+                  style={{
+                    width: `${
+                      bandwidthEntitled > 0
+                        ? Math.min(
+                            (bandwidthUtilized / bandwidthEntitled) * 100,
+                            100
+                          )
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -312,23 +318,25 @@ const Usage = () => {
             Limit: {usage?.totalUsers === 0 ? "Unlimited" : usage?.totalUsers ?? "—"}
           </span>
         </div>
-        <div className="h-2 bg-gray-200 rounded-full">
-          <div
-            className="h-full bg-custom-blue rounded-full"
-            // v1.0.0 <------------------------------------------------------------------------------------------
-            style={{
-              width: `${
-                usage?.totalUsers
-                  ? Math.min(
-                      (usage?.currentUsers / usage?.totalUsers) * 100,
-                      100
-                    )
-                  : 0
-              }%`,
-            }}
-            // v1.0.0 ------------------------------------------------------------------------------------------>
-          />
-        </div>
+        {usage?.totalUsers !== 0 && (
+          <div className="h-2 bg-gray-200 rounded-full">
+            <div
+              className="h-full bg-custom-blue rounded-full"
+              // v1.0.0 <------------------------------------------------------------------------------------------
+              style={{
+                width: `${
+                  usage?.totalUsers
+                    ? Math.min(
+                        (usage?.currentUsers / usage?.totalUsers) * 100,
+                        100
+                      )
+                    : 0
+                }%`,
+              }}
+              // v1.0.0 ------------------------------------------------------------------------------------------>
+            />
+          </div>
+        )}
       </div>
     )}
 

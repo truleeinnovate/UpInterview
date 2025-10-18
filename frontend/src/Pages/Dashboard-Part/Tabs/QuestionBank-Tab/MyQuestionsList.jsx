@@ -10,6 +10,7 @@
 // v1.0.9 - Ashok - Fixed responsive issues at header
 // v2.0.0 - Ashok - changed loading from skelton to shimmer and proper structure
 // v2.0.1 - Ashok - added question text at rangeLabel
+// v2.0.2 -Venkatesh - Close filter popup when sidebar opens
 
 import React, {
   useState,
@@ -696,6 +697,13 @@ const MyQuestionsList = ({
   useEffect(() => {
     setTempFiltrationData(filtrationData);
   }, [filtrationData]);
+
+  //v2.0.2- Close filter popup when sidebar opens
+  useEffect(() => {
+    if (sidebarOpen) {
+      setIsPopupOpen(false);
+    }
+  }, [sidebarOpen]);
 
   // When switching to Assessment Questions view, ensure any previously selected
   // 'Interview Questions' question type filter is cleared to avoid stale filters
