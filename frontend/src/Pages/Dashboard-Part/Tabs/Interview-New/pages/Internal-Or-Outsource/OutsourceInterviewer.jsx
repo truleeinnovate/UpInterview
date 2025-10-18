@@ -37,6 +37,7 @@ const OutsourcedInterviewerCard = ({
     onSelect,
     onViewDetails,
     navigatedfrom,
+    candidateExperience, // ✅ added
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const fullName =
@@ -47,41 +48,41 @@ const OutsourcedInterviewerCard = ({
         "Interviewer";
     const company = interviewer?.contact?.industry || "Freelancer";
 
-    //<-----v1.0.4-----Venkatesh---- Display rate range from rates object (junior/mid/senior)
-    const getRateDisplay = () => {
+    // ✅ New logic: get rate based on candidate experience
+    const getExperienceBasedRate = () => {
         const rates = interviewer?.contact?.rates;
-        if (!rates) return interviewer?.contact?.hourlyRate || "not provided";
+        if (!rates) return interviewer?.contact?.hourlyRate || "Not provided";
 
+        let selectedLevel = null;
+
+        if (candidateExperience >= 1 && candidateExperience <= 3) {
+            selectedLevel = "junior";
+        } else if (candidateExperience > 3 && candidateExperience < 6) {
+            selectedLevel = "mid";
+        } else if (candidateExperience >= 6) {
+            selectedLevel = "senior";
+        }
+
+        const selectedRate = selectedLevel ? rates[selectedLevel]?.inr : null;
+        if (selectedRate && selectedRate > 0) {
+            return `₹${selectedRate}/hr (${selectedLevel})`;
+        }
+
+        // fallback to visible or all available rates
         const visibleRates = [];
-        if (rates.junior?.isVisible && rates.junior?.inr > 0) {
-            visibleRates.push(rates.junior.inr);
-        }
-        if (rates.mid?.isVisible && rates.mid?.inr > 0) {
-            visibleRates.push(rates.mid.inr);
-        }
-        if (rates.senior?.isVisible && rates.senior?.inr > 0) {
-            visibleRates.push(rates.senior.inr);
-        }
+        ['junior', 'mid', 'senior'].forEach(level => {
+            if (rates[level]?.inr > 0) visibleRates.push(rates[level].inr);
+        });
+        if (visibleRates.length === 0) return "Not provided";
 
-        if (visibleRates.length === 0) {
-            // If no visible rates, show all non-zero rates
-            ['junior', 'mid', 'senior'].forEach(level => {
-                if (rates[level]?.inr > 0) {
-                    visibleRates.push(rates[level].inr);
-                }
-            });
-        }
-
-        if (visibleRates.length === 0) return "not provided";
         if (visibleRates.length === 1) return `₹${visibleRates[0]}/hr`;
-
         const minRate = Math.min(...visibleRates);
         const maxRate = Math.max(...visibleRates);
         return `₹${minRate}-${maxRate}/hr`;
     };
 
-    const hourlyRate = getRateDisplay();
-    //-----v1.0.4-----Venkatesh---->
+    const hourlyRate = getExperienceBasedRate(); // ✅ use new logic
+
     const rating = interviewer?.contact?.rating || "4.5";
     const introduction =
         interviewer?.contact?.introduction || "No introduction provided.";
@@ -91,12 +92,12 @@ const OutsourcedInterviewerCard = ({
 
     return (
         <div
-            className={`bg-white rounded-lg border ${isSelected
-                ? "border-orange-500 ring-2 ring-orange-200"
-                : "border-gray-200"
-                } p-4 shadow-sm hover:shadow-md transition-all`}
+            className={`bg-white rounded-lg border ${
+                isSelected
+                    ? "border-orange-500 ring-2 ring-orange-200"
+                    : "border-gray-200"
+            } p-4 shadow-sm hover:shadow-md transition-all`}
         >
-            {/* v1.0.3 <----------------------------------------------------------------------- */}
             <div className="w-full">
                 <div className="flex items-center gap-3 w-full">
                     <div>
@@ -219,6 +220,8 @@ function OutsourcedInterviewerModal({
     const { interviewers, contacts } = useCustomContext(); //<----v1.0.1-----
     // console.log("contacts===", contacts);
     const { data: walletBalance, refetch } = useWallet(); //<----v1.0.1-----
+
+    console.log('candidateExperience', candidateExperience);
 
     const authToken = Cookies.get('authToken');
     const tokenPayload = decodeJwt(authToken);
@@ -1171,6 +1174,7 @@ function OutsourcedInterviewerModal({
                                     onSelect={() => handleSelectClick(interviewer)}
                                     onViewDetails={() => setSelectedInterviewer(interviewer)}
                                     navigatedfrom={navigatedfrom}
+                                    candidateExperience={candidateExperience}
                                 />
                             ))}
                         </div>
