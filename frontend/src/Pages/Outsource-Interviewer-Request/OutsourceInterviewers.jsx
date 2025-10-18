@@ -335,16 +335,16 @@ const OutsourceInterviewers = () => {
         //   onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
         // },
 
-        ...(superAdminPermissions?.OutsourceInterviewerRequest?.Edit
-            ? [
-                {
-                    key: "edit",
-                    label: "Edit",
-                    icon: <Pencil className="w-4 h-4 text-green-600" />,
-                    onClick: (row) => navigate(`edit/${row._id}`),
-                },
-            ]
-            : []),
+        // ...(superAdminPermissions?.OutsourceInterviewerRequest?.Edit
+        //     ? [
+        //         {
+        //             key: "edit",
+        //             label: "Edit",
+        //             icon: <Pencil className="w-4 h-4 text-green-600" />,
+        //             onClick: (row) => navigate(`edit/${row._id}`),
+        //         },
+        //     ]
+        //     : []),
         // {
         //   key: "resend-link",
         //   label: "Resend Link",
@@ -391,16 +391,16 @@ const OutsourceInterviewers = () => {
             ]
             : []),
 
-        ...(superAdminPermissions?.OutsourceInterviewerRequest?.Edit
-            ? [
-                {
-                    key: "edit",
-                    label: "Edit",
-                    icon: <Pencil className="w-4 h-4 text-green-600" />,
-                    onClick: (row) => navigate(`edit/${row._id}`),
-                },
-            ]
-            : []),
+        // ...(superAdminPermissions?.OutsourceInterviewerRequest?.Edit
+        //     ? [
+        //         {
+        //             key: "edit",
+        //             label: "Edit",
+        //             icon: <Pencil className="w-4 h-4 text-green-600" />,
+        //             onClick: (row) => navigate(`edit/${row._id}`),
+        //         },
+        //     ]
+        //     : []),
         // {
         //   key: "login-as-user",
         //   label: "Login as User",
