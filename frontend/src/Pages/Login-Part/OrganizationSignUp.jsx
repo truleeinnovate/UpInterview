@@ -1,7 +1,15 @@
 // v1.0.0 - mansoor - replaced the old ui with new ui
 // v1.0.1  - Ashraf - changed user name format and place holder,suggest part
 // v1.0.2 - Ashok - changed logo url from local to cloud storage url
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+// v1.0.3 - Ashok - fixed style issues
+
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -34,7 +42,6 @@ import { Link } from "react-router-dom";
 // import Layout from './Layout.jsx';
 
 export const Organization = () => {
-  console.log("org signup");
   const [selectedFirstName, setSelectedFirstName] = useState("");
   const [selectedLastName, setSelectedLastName] = useState("");
   const [selectedEmail, setSelectedEmail] = useState("");
@@ -52,34 +59,33 @@ export const Organization = () => {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
   const [suggestedProfileId, setSuggestedProfileId] = useState("");
-  
+
   // Get all country names using country-codes-list package
   const countryOptions = useMemo(() => {
     const mod = countryCodesList;
     const customListFn =
       (mod && typeof mod.customList === "function" && mod.customList) ||
-      (mod && mod.default && typeof mod.default.customList === "function" && mod.default.customList);
-    
+      (mod &&
+        mod.default &&
+        typeof mod.default.customList === "function" &&
+        mod.default.customList);
+
     if (!customListFn) {
       console.error("country-codes-list package not properly loaded");
       return [];
     }
-    
+
     // Get country names
-    const countryNames = customListFn(
-      "countryCode",
-      "{countryNameEn}"
-    );
-    
+    const countryNames = customListFn("countryCode", "{countryNameEn}");
+
     // Convert to array and sort alphabetically
     const countriesArray = Object.values(countryNames)
       .filter((name, index, self) => self.indexOf(name) === index) // Remove duplicates
       .sort();
-    
+
     return countriesArray;
   }, []);
-  
-  
+
   const employeesOptions = ["0-10", "10-20", "50-100", "100-500", "500-1000"];
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -98,7 +104,7 @@ export const Organization = () => {
   const employeesDropdownRef = useRef(null);
   const countryDropdownRef = useRef(null);
   const countryCodeDropdownRef = useRef(null);
-  
+
   // Refs for input fields
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
@@ -206,8 +212,6 @@ export const Organization = () => {
       clearTimeout(profileIdTimeoutRef.current);
     };
   }, []);
-
-  
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -810,7 +814,7 @@ export const Organization = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-custom-blue/90 to-custom-blue/80"></div>
             </div>
 
-            <div className="relative z-10 flex -mt-20 flex-col justify-center px-4 lg:px-8 text-white">
+            <div className="relative z-10 flex mt-8 mx-4 mb-10 flex-col justify-center px-4 lg:px-8 text-white">
               <div className="mb-8">
                 <h1 className="text-4xl font-bold mb-4">
                   Transform Your Hiring Process
@@ -1086,7 +1090,7 @@ export const Organization = () => {
                 </div>
 
                 {/* Benefits Banner */}
-                <div className="bg-gradient-to-r from-custom-blue to-custom-blue/90 rounded-xl p-3 mb-4 text-white">
+                <div className="bg-gradient-to-r from-custom-blue to-custom-blue/90 rounded-xl p-4 mb-4 text-white">
                   <div className="flex items-center mb-2">
                     <svg
                       className="w-5 h-5 mr-2"
@@ -1123,7 +1127,9 @@ export const Organization = () => {
                           name="company"
                           id="company"
                           value={selectedCompany}
-                          onChange={(e) => handleChange("company", e.target.value)}
+                          onChange={(e) =>
+                            handleChange("company", e.target.value)
+                          }
                           error={errors.company}
                           placeholder="Acme Corporation"
                           autoComplete="organization"
@@ -1137,7 +1143,10 @@ export const Organization = () => {
                           label="Employees"
                           name="employees"
                           value={selectedEmployees}
-                          options={employeesOptions.map(option => ({ value: option, label: option }))}
+                          options={employeesOptions.map((option) => ({
+                            value: option,
+                            label: option,
+                          }))}
                           onChange={(e) => {
                             const value = e.target.value;
                             setSelectedEmployees(value);
@@ -1156,7 +1165,10 @@ export const Organization = () => {
                           label="Country"
                           name="country"
                           value={selectedCountry}
-                          options={countryOptions.map(option => ({ value: option, label: option }))}
+                          options={countryOptions.map((option) => ({
+                            value: option,
+                            label: option,
+                          }))}
                           onChange={(e) => {
                             const value = e.target.value;
                             setSelectedCountry(value);
@@ -1185,7 +1197,9 @@ export const Organization = () => {
                             name="firstName"
                             id="firstName"
                             value={selectedFirstName}
-                            onChange={(e) => handleChange("firstName", e.target.value)}
+                            onChange={(e) =>
+                              handleChange("firstName", e.target.value)
+                            }
                             error={errors.firstName}
                             placeholder="John"
                             autoComplete="given-name"
@@ -1201,7 +1215,9 @@ export const Organization = () => {
                             name="lastName"
                             id="lastName"
                             value={selectedLastName}
-                            onChange={(e) => handleChange("lastName", e.target.value)}
+                            onChange={(e) =>
+                              handleChange("lastName", e.target.value)
+                            }
                             error={errors.lastName}
                             placeholder="Doe"
                             autoComplete="family-name"
@@ -1218,7 +1234,9 @@ export const Organization = () => {
                           name="jobTitle"
                           id="jobTitle"
                           value={selectedJobTitle}
-                          onChange={(e) => handleChange("jobTitle", e.target.value)}
+                          onChange={(e) =>
+                            handleChange("jobTitle", e.target.value)
+                          }
                           error={errors.jobTitle}
                           placeholder="HR Manager"
                           autoComplete="organization-title"
@@ -1237,8 +1255,8 @@ export const Organization = () => {
                           }}
                           phoneValue={selectedPhone}
                           onPhoneChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '');
-                            handleChange('phone', value);
+                            const value = e.target.value.replace(/\D/g, "");
+                            handleChange("phone", value);
                           }}
                           error={errors.phone}
                           countryCodeRef={countryCodeDropdownRef}
@@ -1278,8 +1296,12 @@ export const Organization = () => {
                           name="profileId"
                           id="profileId"
                           value={selectedProfileId}
-                          onChange={(e) => handleChange("profileId", e.target.value)}
-                          onBlur={(e) => handleBlur("profileId", e.target.value)}
+                          onChange={(e) =>
+                            handleChange("profileId", e.target.value)
+                          }
+                          onBlur={(e) =>
+                            handleBlur("profileId", e.target.value)
+                          }
                           error={errors.profileId}
                           placeholder="your-username@company.com"
                           autoComplete="username"
@@ -1291,25 +1313,27 @@ export const Organization = () => {
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
                           </div>
                         )}
-                        {suggestedProfileId && errors.profileId && errors.profileId.includes("already taken") && (
-                          <p className="text-blue-600 text-xs mt-1">
-                            Try this:{" "}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedProfileId(suggestedProfileId);
-                                setSuggestedProfileId("");
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  profileId: "",
-                                }));
-                              }}
-                              className="underline"
-                            >
-                              {suggestedProfileId}
-                            </button>
-                          </p>
-                        )}
+                        {suggestedProfileId &&
+                          errors.profileId &&
+                          errors.profileId.includes("already taken") && (
+                            <p className="text-blue-600 text-xs mt-1">
+                              Try this:{" "}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedProfileId(suggestedProfileId);
+                                  setSuggestedProfileId("");
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    profileId: "",
+                                  }));
+                                }}
+                                className="underline"
+                              >
+                                {suggestedProfileId}
+                              </button>
+                            </p>
+                          )}
                       </div>
 
                       <div className="mb-4">
@@ -1320,8 +1344,12 @@ export const Organization = () => {
                             name="password"
                             id="password"
                             value={selectedPassword}
-                            onChange={(e) => handleChange("password", e.target.value)}
-                            onBlur={(e) => handleBlur("password", e.target.value)}
+                            onChange={(e) =>
+                              handleChange("password", e.target.value)
+                            }
+                            onBlur={(e) =>
+                              handleBlur("password", e.target.value)
+                            }
                             error={errors.password}
                             placeholder="••••••••"
                             autoComplete="new-password"
@@ -1333,7 +1361,9 @@ export const Organization = () => {
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-3 top-[43px] transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 z-10"
-                            aria-label={showPassword ? "Hide password" : "Show password"}
+                            aria-label={
+                              showPassword ? "Hide password" : "Show password"
+                            }
                           >
                             {showPassword ? (
                               <EyeOff size={20} />
@@ -1352,8 +1382,12 @@ export const Organization = () => {
                             name="confirmPassword"
                             id="confirmPassword"
                             value={selectedConfirmPassword}
-                            onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                            onBlur={(e) => handleBlur("confirmPassword", e.target.value)}
+                            onChange={(e) =>
+                              handleChange("confirmPassword", e.target.value)
+                            }
+                            onBlur={(e) =>
+                              handleBlur("confirmPassword", e.target.value)
+                            }
                             error={errors.confirmPassword}
                             placeholder="••••••••"
                             autoComplete="new-password"
@@ -1363,9 +1397,15 @@ export const Organization = () => {
                           />
                           <button
                             type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
                             className="absolute right-3 top-[43px] transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 z-10"
-                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                            aria-label={
+                              showConfirmPassword
+                                ? "Hide password"
+                                : "Show password"
+                            }
                           >
                             {showConfirmPassword ? (
                               <EyeOff size={20} />
@@ -1549,7 +1589,7 @@ export const Organization = () => {
                   </form>
                 ) : (
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-custom-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-custom-blue/10 rounded-full flex items-center justify-center mx-auto p-3 mb-4">
                       <svg
                         className="w-8 h-8 text-custom-blue"
                         fill="none"

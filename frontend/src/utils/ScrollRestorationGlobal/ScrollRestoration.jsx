@@ -1,5 +1,6 @@
 // Added by Ashok
 // v1.0.0 - Ashok - Improved the scroll to top at global
+// v1.0.1 - Ashok - Improved the scroll also for step page changes
 /**
  * ScrollRestoration Component
  *
@@ -18,17 +19,21 @@
  *
  * Usage:
  * Place this component just inside <BrowserRouter> and outside <Routes> in App.jsx
+ *
+ * ScrollRestoration
+ * Props:
+ *  - trigger: any value (state/prop) that should also scroll the page when it changes
  */
 // v1.0.0 <------------------------------------------
 import { useLayoutEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-const ScrollRestoration = () => {
+const ScrollRestoration = ({ trigger }) => {
   const { pathname } = useLocation();
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
-  }, [pathname]);
+  }, [pathname, trigger]);
 
   return null;
 };
