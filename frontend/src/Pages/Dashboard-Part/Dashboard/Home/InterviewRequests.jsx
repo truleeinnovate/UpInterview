@@ -2,6 +2,7 @@
 // v1.0.1 - Ashok - fixed style issue
 // v1.0.2 - Ashraf - fixed api issue.add tansak
 // v1.0.3 - Ashok - Added popup to view all Interview requests and made it as common code
+// v1.0.4 - Ashok - Added dynamic text for button at request cards
 
 import React, { useState, useEffect } from "react";
 import {
@@ -316,7 +317,7 @@ const InterviewRequests = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleDetails(request)}
-                    className="px-2.5 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-300"
+                    className="px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors duration-300"
                   >
                     Details
                   </button>
@@ -548,20 +549,44 @@ const InterviewRequests = () => {
               >
                 Close
               </button>
-              {selectedRequest.status !== "accepted" && (
+              {selectedRequest.status === "inprogress" ? (
                 <button
-                  onClick={() => {
+                  onClick={() =>
                     handleAccept(
                       selectedRequest.id,
                       selectedRequest.interviewerId,
                       selectedRequest.roundId
-                    );
-                    setSelectedRequest(null);
-                  }}
-                  disabled={acceptRequestMutation.isPending}
-                  className="px-4 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80"
+                    )
+                  }
+                  disabled={acceptingId === selectedRequest.id}
+                  className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${
+                    acceptingId === selectedRequest.id
+                      ? "opacity-60 cursor-wait"
+                      : "cursor-pointer"
+                  }`}
                 >
-                  {acceptRequestMutation.isPending ? "Accepting..." : "Accept"}
+                  {acceptingId === selectedRequest.id
+                    ? "Accepting..."
+                    : "Accept"}
+                </button>
+              ) : (
+                <button
+                  disabled
+                  className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${
+                    selectedRequest.status === "accepted"
+                      ? "bg-green-600"
+                      : selectedRequest.status === "declined"
+                      ? "bg-red-500"
+                      : selectedRequest.status === "expired"
+                      ? "bg-gray-500"
+                      : selectedRequest.status === "cancelled"
+                      ? "bg-orange-500"
+                      : selectedRequest.status === "withdrawn"
+                      ? "bg-amber-600"
+                      : "bg-gray-400"
+                  }`}
+                >
+                  {capitalizeFirstLetter(selectedRequest?.status)}
                 </button>
               )}
             </div>
@@ -649,31 +674,45 @@ const InterviewRequests = () => {
                   <div className="flex items-center gap-2 justify-end">
                     <button
                       onClick={() => handleDetails(req)}
-                      className="flex items-center justify-center px-3 py-2 text-xs font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors duration-300"
                     >
                       Details
                     </button>
-                    <div className="flex items-center gap-2">
-                      {req.status === "accepted" ? (
-                        <span className="px-2 py-2 text-xs rounded-lg bg-green-100 text-green-700 font-medium">
-                          Accepted
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() =>
-                            handleAccept(req.id, req.interviewerId, req.roundId)
-                          }
-                          disabled={acceptingId === req.id}
-                          className={`flex items-center justify-center px-3 py-2 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 ${
-                            acceptingId === req.id
-                              ? "opacity-60 cursor-wait"
-                              : "cursor-pointer"
-                          }`}
-                        >
-                          {acceptingId === req.id ? "Accepting..." : "Accept"}
-                        </button>
-                      )}
-                    </div>
+
+                    {req.status === "inprogress" ? (
+                      <button
+                        onClick={() =>
+                          handleAccept(req.id, req.interviewerId, req.roundId)
+                        }
+                        disabled={acceptingId === req.id}
+                        className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${
+                          acceptingId === req.id
+                            ? "opacity-60 cursor-wait"
+                            : "cursor-pointer"
+                        }`}
+                      >
+                        {acceptingId === req.id ? "Accepting..." : "Accept"}
+                      </button>
+                    ) : (
+                      <button
+                        disabled
+                        className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${
+                          req.status === "accepted"
+                            ? "bg-green-600"
+                            : req.status === "declined"
+                            ? "bg-red-500"
+                            : req.status === "expired"
+                            ? "bg-gray-500"
+                            : req.status === "cancelled"
+                            ? "bg-orange-500"
+                            : req.status === "withdrawn"
+                            ? "bg-amber-600"
+                            : "bg-gray-400"
+                        }`}
+                      >
+                        {capitalizeFirstLetter(req?.status)}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
