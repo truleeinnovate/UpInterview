@@ -2773,6 +2773,7 @@ const MockSchedulelater = () => {
                         navigatedfrom="mock-interview"
                         candidateExperience={formData?.currentExperience}
                         isMockInterview={true}  // Correctly passes true for mock interviews
+                        currentExperience={formData?.currentExperience}
                     />
                 )
             }
