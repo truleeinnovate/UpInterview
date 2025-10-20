@@ -95,10 +95,10 @@ const OutsourcedInterviewerCard = ({
 
     const rating = interviewer?.contact?.rating || "4.6";
     const introduction =
-        interviewer?.contact?.introduction || "No introduction provided.";
+        interviewer?.contact?.bio || "No introduction provided.";
     const skillsArray = interviewer?.contact?.skills ?? [];
-    const avgResponseTime =
-        interviewer?.contact?.avgResponseTime || "not provided";
+    // const avgResponseTime =
+    // interviewer?.contact?.avgResponseTime || "not provided";
 
     return (
         <div
@@ -143,12 +143,14 @@ const OutsourcedInterviewerCard = ({
             </div>
             {/* v1.0.3 -----------------------------------------------------------------------> */}
 
-            <div className="mt-3">
+            <div className="mt-3 w-40">
                 <div
-                    className={`text-sm text-gray-600 ${!isExpanded && "line-clamp-2"}`}
+                    className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${isExpanded ? 'line-clamp-none' : 'truncate'
+                        }`}
                 >
                     {introduction}
                 </div>
+
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
                     className="text-xs text-custom-blue hover:text-custom-blue/80 mt-1 flex items-center"
@@ -183,11 +185,11 @@ const OutsourcedInterviewerCard = ({
                 </div>
             </div>
 
-            <div className="mt-4 flex justify-between items-center">
-                <div className="flex items-center text-sm text-gray-600">
+            <div className="mt-4 flex justify-end items-center">
+                {/* <div className="flex items-center text-sm text-gray-600">
                     <Clock className="h-4 w-4 mr-1 text-gray-400" /> Avg. response:{" "}
                     {avgResponseTime}
-                </div>
+                </div> */}
                 {navigatedfrom !== "dashboard" && (
                     <div className="flex items-center space-x-2">
                         <Button
@@ -249,9 +251,7 @@ function OutsourcedInterviewerModal({
     const [appliedRateRange, setAppliedRateRange] = useState([0, Infinity]);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [selectedInterviewer, setSelectedInterviewer] = useState(null);
-    const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState(
-        []
-    );
+    const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState([]);
     const requestSentRef = useRef(false);
     const [filteredInterviewers, setFilteredInterviewers] = useState([]);
     const [baseInterviewers, setBaseInterviewers] = useState([]);
@@ -778,67 +778,67 @@ function OutsourcedInterviewerModal({
     }, [positionData, dateTime, navigatedfrom, interviewers, skills]);
 
     // Filter interviewers based on search term and applied rate range
-useEffect(() => {
-    const getExperienceBasedRateValue = (contact, experience) => {
-        const rates = contact?.rates;
-        if (!rates) return 0;
+    useEffect(() => {
+        const getExperienceBasedRateValue = (contact, experience) => {
+            const rates = contact?.rates;
+            if (!rates) return 0;
 
-        let selectedLevel = null;
+            let selectedLevel = null;
 
-        if (experience >= 1 && experience <= 3) selectedLevel = "junior";
-        else if (experience > 3 && experience <= 6) selectedLevel = "mid";
-        else if (experience > 6) selectedLevel = "senior";
+            if (experience >= 1 && experience <= 3) selectedLevel = "junior";
+            else if (experience > 3 && experience <= 6) selectedLevel = "mid";
+            else if (experience > 6) selectedLevel = "senior";
 
-        let rate = rates[selectedLevel]?.inr || 0;
+            let rate = rates[selectedLevel]?.inr || 0;
 
-        if (rate === 0) {
-            if (selectedLevel === "senior") rate = rates.mid?.inr || rates.junior?.inr || 0;
-            else if (selectedLevel === "mid") rate = rates.junior?.inr || 0;
-        }
+            if (rate === 0) {
+                if (selectedLevel === "senior") rate = rates.mid?.inr || rates.junior?.inr || 0;
+                else if (selectedLevel === "mid") rate = rates.junior?.inr || 0;
+            }
 
-        return rate;
-    };
+            return rate;
+        };
 
-    const filtered = baseInterviewers.filter((interviewer) => {
-        const fullName =
-            interviewer?.contact?.firstName || interviewer?.contact?.Name || "";
-        const professionalTitle =
-            interviewer?.contact?.professionalTitle ||
-            interviewer?.contact?.CurrentRole ||
-            "";
-        const company = interviewer?.contact?.industry || "";
-        const skills = interviewer?.contact?.skills || [];
-        const hourlyRate = getExperienceBasedRateValue(
-            interviewer.contact,
-            candidateExperience
-        );
-
-        const searchMatch =
-            searchTerm.trim() === "" ||
-            fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            professionalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            skills.some((skill) =>
-                skill?.toLowerCase().includes(searchTerm.toLowerCase())
+        const filtered = baseInterviewers.filter((interviewer) => {
+            const fullName =
+                interviewer?.contact?.firstName || interviewer?.contact?.Name || "";
+            const professionalTitle =
+                interviewer?.contact?.professionalTitle ||
+                interviewer?.contact?.CurrentRole ||
+                "";
+            const company = interviewer?.contact?.industry || "";
+            const skills = interviewer?.contact?.skills || [];
+            const hourlyRate = getExperienceBasedRateValue(
+                interviewer.contact,
+                candidateExperience
             );
 
-        const rateMatch =
-            hourlyRate >= appliedRateRange[0] &&
-            (appliedRateRange[1] === Infinity ||
-                hourlyRate <= appliedRateRange[1]);
+            const searchMatch =
+                searchTerm.trim() === "" ||
+                fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                professionalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                skills.some((skill) =>
+                    skill?.toLowerCase().includes(searchTerm.toLowerCase())
+                );
 
-        return searchMatch && rateMatch;
-    });
+            const rateMatch =
+                hourlyRate >= appliedRateRange[0] &&
+                (appliedRateRange[1] === Infinity ||
+                    hourlyRate <= appliedRateRange[1]);
 
-    setFilteredInterviewers(filtered);
-}, [
-    searchTerm,
-    appliedRateRange,
-    navigatedfrom,
-    baseInterviewers,
-    skills,
-    candidateExperience,
-]);
+            return searchMatch && rateMatch;
+        });
+
+        setFilteredInterviewers(filtered);
+    }, [
+        searchTerm,
+        appliedRateRange,
+        navigatedfrom,
+        baseInterviewers,
+        skills,
+        candidateExperience,
+    ]);
 
 
     // const handleSelectClick = (interviewer) => {
@@ -936,19 +936,30 @@ useEffect(() => {
 
     const [isOpen, setIsOpen] = useState(false);
 
-const handleApplyRateFilter = () => {
+  const [isRateApplied, setIsRateApplied] = useState(false);
+
+  const handleApplyRateFilter = () => {
     const minVal = parseInt(rateRange[0]) || 0;
     const maxVal = parseInt(rateRange[1]) || Infinity;
 
-    // ✅ Apply the filter range
     setAppliedRateRange([minVal, maxVal]);
 
-    // ✅ If min was empty, show 0 in input field visually
+    // If min is empty, visually show 0
     setRateRange([
-        rateRange[0] === "" ? "0" : rateRange[0],
-        rateRange[1]
+      rateRange[0] === "" ? "0" : rateRange[0],
+      rateRange[1],
     ]);
-};
+
+    // ✅ Change button to "Clear"
+    setIsRateApplied(true);
+  };
+
+  const handleClearRateFilter = () => {
+    // ✅ Reset everything
+    setRateRange(["", ""]);
+    setAppliedRateRange([0, Infinity]);
+    setIsRateApplied(false);
+  };
 
     return (
         <>
@@ -1042,49 +1053,58 @@ const handleApplyRateFilter = () => {
                                 </div>
                             </div>
 
-                  <div className="flex flex-col w-full">
-    <label className="flex text-sm font-medium text-gray-700 mb-1 md:mb-2">
+                                <div className="flex flex-col w-full">
+      <label className="flex text-sm font-medium text-gray-700 mb-1 md:mb-2">
         Hourly Rate Range
-    </label>
+      </label>
 
-    <div className="flex justify-between">
+      <div className="flex justify-between">
         <div className="flex items-center space-x-1.5 w-2/3">
-            {/* MIN Input */}
-            <input
-                type="number"
-                value={rateRange[0]}
-                onChange={(e) =>
-                    setRateRange([e.target.value, rateRange[1]])
-                }
-                className="px-2 py-2 border border-gray-300 rounded-md w-full"
-                placeholder="Min"
-                min="0"
-            />
+          {/* MIN Input */}
+          <input
+            type="number"
+            value={rateRange[0]}
+            onChange={(e) =>
+              setRateRange([e.target.value, rateRange[1]])
+            }
+            className="px-2 py-2 border border-gray-300 rounded-md w-full"
+            placeholder="Min"
+            min="0"
+          />
 
-            <span className="text-gray-500">-</span>
+          <span className="text-gray-500">-</span>
 
-            {/* MAX Input */}
-            <input
-                type="number"
-                value={rateRange[1]}
-                onChange={(e) =>
-                    setRateRange([rateRange[0], e.target.value])
-                }
-                className="px-2 py-2 border border-gray-300 rounded-md w-full"
-                placeholder="Max"
-                min="0"
-            />
+          {/* MAX Input */}
+          <input
+            type="number"
+            value={rateRange[1]}
+            onChange={(e) =>
+              setRateRange([rateRange[0], e.target.value])
+            }
+            className="px-2 py-2 border border-gray-300 rounded-md w-full"
+            placeholder="Max"
+            min="0"
+          />
         </div>
 
-        <button
+        {/* ✅ Dynamic Button */}
+        {isRateApplied ? (
+          <button
+            className="px-5 py-1 ml-3 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm font-medium"
+            onClick={handleClearRateFilter}
+          >
+            Clear
+          </button>
+        ) : (
+          <button
             className="px-5 py-1 ml-3 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 text-sm font-medium"
             onClick={handleApplyRateFilter}
-        >
+          >
             Apply
-        </button>
+          </button>
+        )}
+      </div>
     </div>
-</div>
-
                         </div>
                     </div>
 
