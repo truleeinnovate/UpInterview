@@ -143,11 +143,12 @@ WithdrawalRequestSchema.pre("save", async function(next) {
       .select("withdrawalCode")
       .lean();
     
-    let nextNumber = 1;
-    if (lastWithdrawal?.withdrawalCode) {
+    let nextNumber = 50001; // Start from 50001
+    if (lastWithdrawal && lastWithdrawal.withdrawalCode) {
       const match = lastWithdrawal.withdrawalCode.match(/WD-(\d+)/);
       if (match) {
-        nextNumber = parseInt(match[1], 10) + 1;
+        const lastNumber = parseInt(match[1], 10);
+        nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
       }
     }
     this.withdrawalCode = `WD-${String(nextNumber).padStart(6, "0")}`;

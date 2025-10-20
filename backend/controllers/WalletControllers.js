@@ -91,11 +91,12 @@ const createTopupOrder = async (req, res) => {
           .select("walletCode")
           .lean();
         
-        let nextWalletNumber = 1;
+        let nextWalletNumber = 50001; // Start from 50001
         if (lastWallet?.walletCode) {
           const match = lastWallet.walletCode.match(/WLT-(\d+)/);
           if (match) {
-            nextWalletNumber = parseInt(match[1], 10) + 1;
+            const lastNumber = parseInt(match[1], 10);
+            nextWalletNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
           }
         }
         
@@ -274,11 +275,12 @@ const walletVerifyPayment = async (req, res) => {
               .sort({ _id: -1 })
               .select("walletCode")
               .lean();
-            let nextWalletNumber = 1;
+            let nextWalletNumber = 50001; // Start from 50001
             if (lastWallet?.walletCode) {
               const match = lastWallet.walletCode.match(/WLT-(\d+)/);
               if (match) {
-                nextWalletNumber = parseInt(match[1], 10) + 1;
+                const lastNumber = parseInt(match[1], 10);
+                nextWalletNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
               }
             }
             // Add attempts to ensure uniqueness in concurrent scenarios
@@ -1256,11 +1258,12 @@ const createWithdrawalRequest = async (req, res) => {
           .select("withdrawalCode")
           .lean();
 
-        let nextNumber = 1;
-        if (lastWithdrawal?.withdrawalCode) {
+        let nextNumber = 50001; // Start from 50001
+        if (lastWithdrawal && lastWithdrawal.withdrawalCode) {
           const match = lastWithdrawal.withdrawalCode.match(/WD-(\d+)/);
           if (match) {
-            nextNumber = parseInt(match[1], 10) + 1;
+            const lastNumber = parseInt(match[1], 10);
+            nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
           }
         }
         

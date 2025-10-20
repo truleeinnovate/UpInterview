@@ -212,11 +212,12 @@ exports.createMockInterview = async (req, res) => {
       .select("mockInterviewCode")
       .lean();
 
-    let nextNumber = 1;
+    let nextNumber = 50001; // Start from 50001
     if (lastMockInterview?.mockInterviewCode) {
       const match = lastMockInterview.mockInterviewCode.match(/MINT-(\d+)/);
       if (match) {
-        nextNumber = parseInt(match[1], 10) + 1;
+        const lastNumber = parseInt(match[1], 10);
+        nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
       }
     }
 

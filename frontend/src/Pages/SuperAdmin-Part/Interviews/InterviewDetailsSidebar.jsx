@@ -1,7 +1,7 @@
 // v1.0.1 - Interview Details Sidebar with Enhanced Alignment and Visual Design
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, User, Building2, MapPin, Briefcase, Users, Hash, KeyRound, Stamp, MailIcon, PictureInPicture, StampIcon, ProportionsIcon, User2 } from 'lucide-react';
+import { Calendar, Clock, User, Building2, MapPin, Briefcase, Users, Hash, KeyRound, Stamp, MailIcon, PictureInPicture, StampIcon, User2 } from 'lucide-react';
 import SidebarPopup from '../../../Components/Shared/SidebarPopup/SidebarPopup.jsx';
 import StatusBadge from '../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
 
