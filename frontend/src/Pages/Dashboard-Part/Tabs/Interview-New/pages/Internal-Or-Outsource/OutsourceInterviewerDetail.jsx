@@ -165,27 +165,73 @@ function TabButton({ isActive, onClick, children }) {
 }
 
 function InterviewerDetailsModal({ interviewer, onClose }) {
-    console.log("interviewer details modal", interviewer.contact);
+    console.log("interviewer details modal", interviewer);
     const [activeTab, setActiveTab] = useState('about');
 
     if (!interviewer) return null;
 
-    // Process availability data from the interviewer object
-    const processAvailability = () => {
-        const availabilityMap = {};
-        interviewer.contact.availability?.forEach(availability => {
-            availability.days?.forEach(day => {
-                const dayIndex = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-                    .indexOf(day.day);
-                if (dayIndex === -1) return;
+    // // Process availability data from the interviewer object
+    // const processAvailability = () => {
+    //     const availabilityMap = {};
+    //     interviewer.contact.availability?.forEach(availability => {
+    //         availability.days?.forEach(day => {
+    //             const dayIndex = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    //                 .indexOf(day.day);
+    //             if (dayIndex === -1) return;
 
-                availabilityMap[dayIndex] = day.timeSlots?.flatMap(slot => {
-                    const startHour = new Date(slot.startTime).getHours();
-                    const endHour = new Date(slot.endTime).getHours();
-                    return Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
-                }) || [];
+    //             availabilityMap[dayIndex] = day.timeSlots?.flatMap(slot => {
+    //                 const startHour = new Date(slot.startTime).getHours();
+    //                 const endHour = new Date(slot.endTime).getHours();
+    //                 return Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
+    //             }) || [];
+    //         });
+    //     });
+    //     return availabilityMap;
+    // };
+
+    // Process availability data from interviewer.days
+    const processAvailability = () => {
+        if (!interviewer?.days || interviewer.days.length === 0) return {};
+
+        const dayMap = {
+            Sun: 0,
+            Mon: 1,
+            Tue: 2,
+            Wed: 3,
+            Thu: 4,
+            Fri: 5,
+            Sat: 6
+        };
+
+        const availabilityMap = {};
+
+        interviewer.days.forEach((dayObj) => {
+            const dayIndex = dayMap[dayObj.day];
+            if (dayIndex === undefined) return;
+
+            availabilityMap[dayIndex] = [];
+
+            dayObj.timeSlots?.forEach((slot) => {
+                // Parse start and end hours
+                const parseTime = (timeStr) => {
+                    const [time, meridian] = timeStr.split(" ");
+                    let [hour, minute] = time.split(":").map(Number);
+                    if (meridian === "PM" && hour !== 12) hour += 12;
+                    if (meridian === "AM" && hour === 12) hour = 0;
+                    return hour;
+                };
+
+                const startHour = parseTime(slot.startTime);
+                const endHour = parseTime(slot.endTime);
+
+                // Fill available hours between start and end
+                for (let hour = startHour; hour < endHour; hour++) {
+                    availabilityMap[dayIndex].push(hour);
+                }
             });
         });
+
+        console.log("Final availabilityMap:", availabilityMap);
         return availabilityMap;
     };
 
@@ -193,282 +239,127 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
         switch (activeTab) {
             case 'about':
                 return (
-                    <div key="about" className="space-y-4">
-    {/* ========== About Section ========== */}
-    <div>
-        <h3 className="text-lg font-medium text-gray-900">About</h3>
-        <p className="text-gray-600 text-sm">
-            {interviewer.contact.bio || "No biography or introduction available."}
-        </p>
-    </div>
+                    <div key="about" className="space-y-4 mb-5">
+                        {/* ========== About Section ========== */}
+                        <div>
+                            <h3 className="text-lg font-medium text-gray-900">About</h3>
+                            <p className="text-gray-600 text-sm">
+                                {interviewer.contact.bio || "No biography or introduction available."}
+                            </p>
+                        </div>
 
-    {/* ========== Professional Details ========== */}
-    <div className="bg-custom-blue/5 rounded-lg p-4">
-        <h3 className="text-lg font-medium text-custom-blue mb-3">
-            Professional Details
-        </h3>
+                        {/* ========== Professional Details ========== */}
+                        <div className="bg-custom-blue/5 rounded-lg p-4">
+                            <h3 className="text-lg font-medium text-custom-blue mb-3">
+                                Professional Details
+                            </h3>
 
-        {/* --- Basic Info --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <h4 className="text-sm font-medium text-custom-blue/80 mb-2">
-                    Basic Information
-                </h4>
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-custom-blue/70">Name</span>
-                        <span className="text-sm font-medium text-custom-blue">
-                            {interviewer.contact.firstName}{" "}
-                            {interviewer.contact.lastName}
-                        </span>
+                            {/* --- Basic Info --- */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 className="text-sm font-medium text-custom-blue/80 mb-2">
+                                        Basic Information
+                                    </h4>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm text-custom-blue/70">Name</span>
+                                            <span className="text-sm font-medium text-custom-blue">
+                                                {interviewer.contact.firstName}{" "}
+                                                {interviewer.contact.lastName}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm text-custom-blue/70">Industry</span>
+                                            <span className="text-sm font-medium text-custom-blue">
+                                                {interviewer.contact.industry || "Not specified"}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm text-custom-blue/70">Experience</span>
+                                            <span className="text-sm font-medium text-custom-blue">
+                                                {interviewer.contact.yearsOfExperience || "0"} years
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm text-custom-blue/70">
+                                                Current Role
+                                            </span>
+                                            <span className="text-sm font-medium text-custom-blue">
+                                                {interviewer.contact.currentRole || "Not specified"}
+                                            </span>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        {/* ========== Technologies & Skills ========== */}
+                        <div className="bg-custom-blue/5 rounded-lg p-4">
+                            <h3 className="text-lg font-medium text-custom-blue mb-3">Technologies & Skills</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 className="text-sm font-medium text-custom-blue/80 mb-2">
+                                        Technologies
+                                    </h4>
+                                    {interviewer.contact.technologies?.length ? (
+                                        <div className="flex flex-wrap gap-2">
+                                            {interviewer.contact.technologies.map((tech, index) => (
+                                                <span
+                                                    key={index}
+                                                    className="px-3 py-1 bg-custom-blue/10 text-custom-blue text-xs font-medium rounded-full"
+                                                >
+                                                    {tech}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-gray-500">No technologies listed.</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <h4 className="text-sm font-medium text-custom-blue/80 mb-2">Skills</h4>
+                                    {interviewer.contact.skills?.length ? (
+                                        <div className="flex flex-wrap gap-2">
+                                            {interviewer.contact.skills.map((skill, index) => (
+                                                <span
+                                                    key={index}
+                                                    className="px-3 py-1 bg-custom-blue/10 text-custom-blue text-xs font-medium rounded-full"
+                                                >
+                                                    {skill}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-gray-500">No skills listed.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ========== Location Details ========== */}
+                        <div className="bg-custom-blue/5 rounded-lg p-4">
+                            <h3 className="text-lg font-medium text-custom-blue mb-3">Location</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-custom-blue/70">Location</span>
+                                    <span className="text-sm font-medium text-custom-blue">
+                                        {interviewer.contact.location || "Remote"}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+
                     </div>
-
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-custom-blue/70">Gender</span>
-                        <span className="text-sm font-medium text-custom-blue">
-                            {interviewer.contact.gender || "Not specified"}
-                        </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-custom-blue/70">Industry</span>
-                        <span className="text-sm font-medium text-custom-blue">
-                            {interviewer.contact.industry || "Not specified"}
-                        </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-custom-blue/70">Experience</span>
-                        <span className="text-sm font-medium text-custom-blue">
-                            {interviewer.contact.yearsOfExperience || "0"} years
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* --- Role & Interview Info --- */}
-            <div>
-                <h4 className="text-sm font-medium text-custom-blue/80 mb-2">
-                    Role & Interview Info
-                </h4>
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-custom-blue/70">
-                            Current Role
-                        </span>
-                        <span className="text-sm font-medium text-custom-blue">
-                            {interviewer.contact.currentRole || "Not specified"}
-                        </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-custom-blue/70">
-                            Interview Formats
-                        </span>
-                        <span className="text-sm font-medium text-custom-blue text-right">
-                            {interviewer.contact.InterviewFormatWeOffer?.join(", ") ||
-                                "Not specified"}
-                        </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-custom-blue/70">Mock Discount</span>
-                        <span className="text-sm font-medium text-custom-blue">
-                            {interviewer.contact.mock_interview_discount
-                                ? `${interviewer.contact.mock_interview_discount}%`
-                                : "None"}
-                        </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-custom-blue/70">
-                            Preferred Duration
-                        </span>
-                        <span className="text-sm font-medium text-custom-blue">
-                            {interviewer.contact.preferredDuration
-                                ? `${interviewer.contact.preferredDuration} mins`
-                                : "Not specified"}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {/* ========== Technologies & Skills ========== */}
-    <div className="bg-custom-blue/5 rounded-lg p-4">
-        <h3 className="text-lg font-medium text-custom-blue mb-3">Technologies & Skills</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <h4 className="text-sm font-medium text-custom-blue/80 mb-2">
-                    Technologies
-                </h4>
-                {interviewer.contact.technologies?.length ? (
-                    <div className="flex flex-wrap gap-2">
-                        {interviewer.contact.technologies.map((tech, index) => (
-                            <span
-                                key={index}
-                                className="px-3 py-1 bg-custom-blue/10 text-custom-blue text-xs font-medium rounded-full"
-                            >
-                                {tech}
-                            </span>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-sm text-gray-500">No technologies listed.</p>
-                )}
-            </div>
-
-            <div>
-                <h4 className="text-sm font-medium text-custom-blue/80 mb-2">Skills</h4>
-                {interviewer.contact.skills?.length ? (
-                    <div className="flex flex-wrap gap-2">
-                        {interviewer.contact.skills.map((skill, index) => (
-                            <span
-                                key={index}
-                                className="px-3 py-1 bg-custom-blue/10 text-custom-blue text-xs font-medium rounded-full"
-                            >
-                                {skill}
-                            </span>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-sm text-gray-500">No skills listed.</p>
-                )}
-            </div>
-        </div>
-    </div>
-
-    {/* ========== Location Details ========== */}
-    <div className="bg-custom-blue/5 rounded-lg p-4">
-        <h3 className="text-lg font-medium text-custom-blue mb-3">Location</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between">
-                <span className="text-sm text-custom-blue/70">Location</span>
-                <span className="text-sm font-medium text-custom-blue">
-                    {interviewer.contact.location || "Remote"}
-                </span>
-            </div>
-        </div>
-    </div>
-
-    {/* ========== Contact Info ========== */}
-    <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-3">
-            Contact Information
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center">
-                <Mail className="h-5 w-5 text-gray-400" />
-                <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-500">Email</p>
-                    <p className="text-sm text-gray-900 break-all">
-                        {interviewer.contact.email || "Not available"}
-                    </p>
-                </div>
-            </div>
-
-            <div className="flex items-center">
-                <Phone className="h-5 w-5 text-gray-400" />
-                <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-500">Phone</p>
-                    <p className="text-sm text-gray-900">
-                        {interviewer.contact.phone
-                            ? `${interviewer.contact.countryCode} ${interviewer.contact.phone}`
-                            : "Not available"}
-                    </p>
-                </div>
-            </div>
-
-            {interviewer.contact.linkedinUrl && (
-                <div className="flex items-center">
-                    <Globe className="h-5 w-5 text-gray-400" />
-                    <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-500">LinkedIn</p>
-                        <a
-                            href={interviewer.contact.linkedinUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-custom-blue underline"
-                        >
-                            View Profile
-                        </a>
-                    </div>
-                </div>
-            )}
-
-            {interviewer.contact.portfolioUrl && (
-                <div className="flex items-center">
-                    <Globe className="h-5 w-5 text-gray-400" />
-                    <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-500">Portfolio</p>
-                        <a
-                            href={interviewer.contact.portfolioUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-custom-blue underline"
-                        >
-                            Visit Website
-                        </a>
-                    </div>
-                </div>
-            )}
-        </div>
-    </div>
-</div>
 
                 );
 
-            // case 'expertise':
-            //     return (
-            //         <div key="expertise" className="space-y-3">
-            //             <div>
-            //                 <h3 className="text-lg font-medium text-gray-900">Technical Expertise</h3>
-            //                 <div className="flex flex-wrap gap-2">
-            //                     {console.log(interviewer.contact.skills)}
-            //                     {interviewer.contact.skills?.map((skill, index) => (
-            //                         <span
-            //                             key={index}
-            //                             className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-custom-blue/10 text-custom-blue"
-            //                         >
-            //                             {typeof skill === 'string' ? skill : skill.skill}
-            //                         </span>
-            //                     ))}
-            //                     {console.log(interviewer.contact.technologies)}
-            //                     {interviewer.contact.technologies?.map((tech, index) => (
-            //                         <span
-            //                             key={`tech-${index}`}
-            //                             className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
-            //                         >
-            //                             {tech}
-            //                         </span>
-            //                     ))}
-            //                 </div>
-            //             </div>
-
-            //             <div>
-            //                 <h3 className="text-lg font-medium text-gray-900">Interview Focus Areas</h3>
-            //                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            //                     <div className="bg-gray-50 p-4 rounded-lg">
-            //                         <h4 className="text-sm font-medium text-gray-900 mb-2">Technical Evaluation</h4>
-            //                         <ul className="space-y-1 text-sm text-gray-600">
-            //                             <li>• System Design & Architecture</li>
-            //                             <li>• Code Quality Assessment</li>
-            //                             <li>• Problem Solving Skills</li>
-            //                         </ul>
-            //                     </div>
-            //                     <div className="bg-gray-50 p-4 rounded-lg">
-            //                         <h4 className="text-sm font-medium text-gray-900 mb-2">Professional Skills</h4>
-            //                         <ul className="space-y-1 text-sm text-gray-600">
-            //                             <li>• Communication Skills</li>
-            //                             <li>• Team Collaboration</li>
-            //                             <li>• Time Management</li>
-            //                         </ul>
-            //                     </div>
-            //                 </div>
-            //             </div>
-            //         </div>
-            //     );
 
             case 'availability':
                 return (
@@ -482,7 +373,7 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                             </div>
                         </div>
                         <AvailabilityCalendar availabilities={processAvailability()} />
-                        <div className="mt-6 bg-custom-blue/5 p-4 rounded-lg">
+                        <div className="mt-6 bg-custom-blue/5 p-4 rounded-lg mb-5">
                             <h4 className="text-sm font-medium text-custom-blue mb-2">Scheduling Notes</h4>
                             <div className="space-y-2 text-sm text-custom-blue/80">
                                 <p>• Preferred interview duration: {interviewer.contact.preferredDuration || 60} minutes</p>
@@ -500,7 +391,7 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
     return (
         // <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[50]">
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] overflow-hidden">
                 <div className=" border-b border-gray-200 px-4 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
@@ -508,13 +399,9 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                             <h2 className="text-xl font-semibold text-gray-900 mx-2">{interviewer.contact.firstName + ' ' + interviewer.contact.lastName}</h2>
                             <p className="text-sm text-gray-500">{interviewer.professionalTitle}</p>
                             <Star className="h-4 w-4 text-custom-blue fill-custom-blue/20" />
-                            {interviewer.contact.rating ? (
-                                <span className="mx-1 text-sm font-medium text-custom-blue">
-                                    {interviewer.contact.rating} Rating
-                                </span>
-                            ) : (
-                                <span className="mx-1 text-sm font-medium text-custom-blue">Not Rated</span>
-                            )}
+                            <span className="mx-1 text-sm font-medium text-custom-blue">
+                                {interviewer?.contact?.rating || 4.6} Rating
+                            </span>
                             <span className="mx-2">•</span>
                             <span className="text-sm font-medium text-gray-700">
                                 {interviewer.interviewerType} Interviewer
@@ -571,19 +458,14 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                     {renderTabContent()}
                 </div>
 
-                <div className="flex justify-end space-x-3 px-4 py-3 border-t border-gray-200">
+                {/* <div className="flex justify-end space-x-3 px-4 py-3 border-t border-gray-200">
                     <button
                         onClick={onClose}
                         className="px-4 py-1 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
                     >
                         Close
                     </button>
-                    <button
-                        className="bg-custom-blue hover:bg-custom-blue/90 text-white px-4 py-1 border border-transparent rounded-md"
-                    >
-                        Schedule Interview
-                    </button>
-                </div>
+                </div> */}
             </div>
         </div>
     );
