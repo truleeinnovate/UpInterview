@@ -464,6 +464,9 @@ const RoundCard = ({
   const shouldShowResultButton = () => {
     if (round.roundTitle !== "Assessment") return false;
 
+    console.log("candidateAssessment", candidateAssessment);
+    console.log("candidateAssessment?.status", candidateAssessment?.status);
+
     if (candidateAssessment?.status) {
       const showStatuses = ['completed', 'failed', 'pass'];
       return showStatuses.includes(candidateAssessment.status.toLowerCase());
@@ -1684,7 +1687,7 @@ const RoundCard = ({
                   {/* Share (always for Assessment) */}
                   {permissions.canResendLink && round.roundTitle === "Assessment"
                     && round?.scheduleAssessmentId
-                    // && shouldShowResultButton()
+                    && !shouldShowResultButton()
                     && (
                       <button
                         onClick={() => handleResendClick(round)}
@@ -1697,7 +1700,7 @@ const RoundCard = ({
 
 
                   {/* Share (always for Assessment) */}
-                  {permissions.canShareLink && round.roundTitle === "Assessment" && !round?.scheduleAssessmentId && (
+                  {permissions.canShareLink && round.roundTitle === "Assessment" && !round?.scheduleAssessmentId &&  !candidateAssessment?.status === "Draft" && (
                     <button
                       onClick={() => handleShareClick(round)}
                       // onClick={ handleShareClick}
@@ -1708,7 +1711,7 @@ const RoundCard = ({
                   )}
 
                   {/* Share (always for Assessment) */}
-                  {round.roundTitle === "Assessment" && !round?.scheduleAssessmentId
+                  {round.roundTitle === "Assessment" && round?.scheduleAssessmentId
                     && shouldShowResultButton()
                     && (
                       <button

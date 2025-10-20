@@ -615,49 +615,51 @@ function InterviewList() {
       },
     },
     // v1.0.3 ----------------------------------------------------------->
-    {
-      key: "interviewers",
-      header: "Interviewers",
-      render: (value, row) => {
-        const rounds = row.rounds || [];
-        const nextRound =
-          rounds
-            .filter((round) =>
-              ["Scheduled", "RequestSent"].includes(round.status)
-            )
-            .sort((a, b) => a.sequence - b.sequence)[0] || null;
-        const nextRoundInterviewers =
-          nextRound?.interviewers?.map((interviewer) => ({
-            ...interviewer,
-            isExternal: nextRound?.interviewerType === "external",
-          })) || [];
-        return (
-          <Tooltip
-            label={nextRoundInterviewers
-              .map((i) => i.name || "Unknown")
-              .join(", ")}
-          >
-            <div className="flex flex-wrap gap-1 truncate max-w-[120px]">
-              {nextRoundInterviewers.slice(0, 2).map((interviewer) => (
-                <InterviewerAvatar
-                  key={interviewer?._id}
-                  interviewer={interviewer}
-                  size="sm"
-                />
-              ))}
-              {nextRoundInterviewers.length > 2 && (
-                <span className="text-xs text-gray-500">
-                  +{nextRoundInterviewers.length - 2}
-                </span>
-              )}
-              {!nextRoundInterviewers.length && (
-                <span className="text-sm text-gray-500">None</span>
-              )}
-            </div>
-          </Tooltip>
-        );
-      },
-    },
+    // {
+    //   key: "interviewers",
+    //   header: "Interviewers",
+    //   render: (value, row) => {
+    //     const rounds = row.rounds || [];
+    //     const nextRound =
+    //       rounds
+    //         .filter((round) =>
+    //           ["Scheduled", "RequestSent"].includes(round.status)
+    //         )
+    //         .sort((a, b) => a.sequence - b.sequence)[0] || null;
+    //     const nextRoundInterviewers =
+    //       nextRound?.interviewers?.map((interviewer) => ({
+    //         ...interviewer,
+    //         isExternal: nextRound?.interviewerType === "external",
+    //       })) || [];
+    //       console.log("nextRoundInterviewers", nextRoundInterviewers);
+          
+    //     return (
+    //       <Tooltip
+    //         label={nextRoundInterviewers
+    //           .map((i) => i.name  || (i?.firstName + " " + i?.lastName) || "Unknown")
+    //           .join(", ")}
+    //       >
+    //         <div className="flex flex-wrap gap-1 truncate max-w-[120px]">
+    //           {nextRoundInterviewers.slice(0, 2).map((interviewer) => (
+    //             <InterviewerAvatar
+    //               key={interviewer?._id}
+    //               interviewer={interviewer}
+    //               size="sm"
+    //             />
+    //           ))}
+    //           {nextRoundInterviewers.length > 2 && (
+    //             <span className="text-xs text-gray-500">
+    //               +{nextRoundInterviewers.length - 2}
+    //             </span>
+    //           )}
+    //           {!nextRoundInterviewers.length && (
+    //             <span className="text-sm text-gray-500">None</span>
+    //           )}
+    //         </div>
+    //       </Tooltip>
+    //     );
+    //   },
+    // },
     {
       key: "progress",
       header: "Progress",
@@ -785,6 +787,9 @@ function InterviewList() {
       render: (value, row) => <StatusBadge status={row.status} />,
     },
   ];
+
+  console.log("currentFilteredRows", currentFilteredRows);
+  
 
   // Table Actions Configuration
   const tableActions = [
