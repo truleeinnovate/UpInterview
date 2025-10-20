@@ -1,3 +1,5 @@
+// v1.0.0 - Venkatesh - Added settleInterviewPayment function to handle interview payment settlement from hold to interviewer wallet
+
 const mongoose = require("mongoose");
 const WalletTopup = require("../models/WalletTopup");
 const Razorpay = require("razorpay");
@@ -10,6 +12,8 @@ const WithdrawalRequest = require("../models/WithdrawalRequest");
 const PushNotification = require("../models/PushNotifications");
 const crypto = require("crypto");
 const https = require("https");
+const { MockInterviewRound } = require("../models/MockInterview/mockinterviewRound");
+const { InterviewRounds } = require("../models/Interview/InterviewRounds");
 
 // Initialize Razorpay SDK
 // Note: This uses the same credentials for both Razorpay (payments) and RazorpayX (payouts)
@@ -2086,6 +2090,219 @@ const fixVerifiedBankAccounts = async (req, res) => {
   }
 };
 
+// Settlement function for interview rounds
+const settleInterviewPayment = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
+  try {
+    const { roundId, transactionId, interviewerContactId } = req.body;
+    
+    console.log("[settleInterviewPayment] Starting settlement:", { roundId, transactionId, interviewerContactId });
+    
+    // Validate required fields
+    if (!roundId || !transactionId || !interviewerContactId) {
+      return res.status(400).json({
+        success: false,
+        message: "roundId, transactionId, and interviewerContactId are required"
+      });
+    }
+    
+    // 1. Find the organization's wallet with the hold transaction
+    const orgWallet = await WalletTopup.findOne({
+      'transactions._id': transactionId
+    }).session(session);
+    
+    if (!orgWallet) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Organization wallet with hold transaction not found"
+      });
+    }
+    
+    // 2. Find the specific hold transaction
+    const holdTransaction = orgWallet.transactions.find(
+      t => t._id && t._id.toString() === transactionId
+    );
+    
+    if (!holdTransaction) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Hold transaction not found"
+      });
+    }
+    
+    if (holdTransaction.type !== 'hold' || holdTransaction.status === 'completed') {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Transaction is not a hold or already settled"
+      });
+    }
+    
+    const settlementAmount = holdTransaction.amount;
+    console.log(`[settleInterviewPayment] Settlement amount: ${settlementAmount}`);
+    
+    // 3. Update the hold transaction to debit/completed in organization wallet
+    const updatedOrgWallet = await WalletTopup.findOneAndUpdate(
+      {
+        _id: orgWallet._id,
+        'transactions._id': transactionId
+      },
+      {
+        $set: {
+          'transactions.$.type': 'debit',
+          'transactions.$.status': 'completed',
+          'transactions.$.description': `Settled: ${holdTransaction.description}`,
+          'transactions.$.metadata.settledAt': new Date(),
+          'transactions.$.metadata.settlementStatus': 'completed'
+        },
+        $inc: {
+          holdAmount: -settlementAmount  // Reduce hold amount
+        }
+      },
+      { new: true, session }
+    );
+    
+    if (!updatedOrgWallet) {
+      await session.abortTransaction();
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update organization wallet"
+      });
+    }
+    
+    console.log(`[settleInterviewPayment] Updated org wallet - reduced hold by ${settlementAmount}`);
+    
+    // 4. Find or create interviewer's wallet
+    let interviewerWallet = await WalletTopup.findOne({ ownerId: interviewerContactId }).session(session);
+    
+    if (!interviewerWallet) {
+      // Create wallet for interviewer if doesn't exist
+      interviewerWallet = await WalletTopup.create([{
+        ownerId: interviewerContactId,
+        balance: 0,
+        holdAmount: 0,
+        walletCode: `WLT-${Date.now().toString().slice(-6)}`, // Generate a simple wallet code
+        transactions: []
+      }], { session });
+      interviewerWallet = interviewerWallet[0];
+      console.log(`[settleInterviewPayment] Created new wallet for interviewer ${interviewerContactId}`);
+    }
+    
+    // 5. Create credit transaction for interviewer
+    const creditTransaction = {
+      type: 'credit',
+      amount: settlementAmount,
+      description: `Payment for interview round: ${holdTransaction.metadata?.roundId || roundId}`,
+      relatedInvoiceId: holdTransaction.relatedInvoiceId,
+      status: 'completed',
+      metadata: {
+        ...holdTransaction.metadata,
+        settlementDate: new Date(),
+        originalTransactionId: transactionId,
+        organizationWalletId: orgWallet._id.toString(),
+        roundId: roundId,
+        settlementType: 'interview_payment'
+      },
+      createdDate: new Date(),
+      createdAt: new Date()
+    };
+    
+    // 6. Update interviewer's wallet - add balance and transaction
+    const updatedInterviewerWallet = await WalletTopup.findByIdAndUpdate(
+      interviewerWallet._id,
+      {
+        $inc: {
+          balance: settlementAmount  // Increase interviewer balance
+        },
+        $push: {
+          transactions: creditTransaction
+        }
+      },
+      { new: true, session }
+    );
+    
+    if (!updatedInterviewerWallet) {
+      await session.abortTransaction();
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update interviewer wallet"
+      });
+    }
+    
+    console.log(`[settleInterviewPayment] Added ${settlementAmount} to interviewer wallet. New balance: ${updatedInterviewerWallet.balance}`);
+    
+    // 7. Update the interview round to mark settlement
+    
+    // Try regular interview round first
+    let roundUpdate = await InterviewRounds.findByIdAndUpdate(
+      roundId,
+      {
+        $set: {
+          settlementStatus: 'completed',
+          settlementDate: new Date(),
+          settlementTransactionId: creditTransaction._id
+        }
+      },
+      { new: true, session }
+    );
+    
+    // If not found, try mock interview round
+    if (!roundUpdate) {
+      roundUpdate = await MockInterviewRound.findByIdAndUpdate(
+        roundId,
+        {
+          $set: {
+            settlementStatus: 'completed',
+            settlementDate: new Date(),
+            settlementTransactionId: creditTransaction._id
+          }
+        },
+        { new: true, session }
+      );
+    }
+    
+    // Commit transaction
+    await session.commitTransaction();
+    
+    console.log("[settleInterviewPayment] Settlement completed successfully");
+    
+    return res.status(200).json({
+      success: true,
+      message: "Interview payment settled successfully",
+      data: {
+        settlementAmount,
+        organizationWallet: {
+          ownerId: updatedOrgWallet.ownerId,
+          balance: updatedOrgWallet.balance,
+          holdAmount: updatedOrgWallet.holdAmount
+        },
+        interviewerWallet: {
+          ownerId: updatedInterviewerWallet.ownerId,
+          balance: updatedInterviewerWallet.balance,
+          creditTransactionId: creditTransaction._id
+        },
+        roundId,
+        originalTransactionId: transactionId
+      }
+    });
+    
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("[settleInterviewPayment] Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to settle interview payment",
+      error: error.message
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
 module.exports = {
   getWalletByOwnerId,
   createTopupOrder,
@@ -2100,6 +2317,7 @@ module.exports = {
   cancelWithdrawalRequest,
   handlePayoutWebhook,
   fixVerifiedBankAccounts,
+  settleInterviewPayment,  // Added settlement function
   // Manual processing endpoints for superadmin
   processManualWithdrawal,
   failManualWithdrawal,
