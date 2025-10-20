@@ -15,7 +15,7 @@
 // v2.0.0 - Ashok - Added Question Bank Manager page in super admin
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
-import Cookies from "js-cookie";
+// import Cookies from "js-cookie";
 import ErrorBoundary from "./Components/ErrorBoundary";
 import { getActivityEmitter } from "./utils/activityTracker";
 import CombinedNavbar from "./Components/Navbar/CombinedNavbar";

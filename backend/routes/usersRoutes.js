@@ -21,7 +21,7 @@ router.get('/permissions', async (req, res) => {
   try {
     // The permission middleware will be applied globally, so we can just return the permissions
     // that are already set in res.locals by the middleware
-    
+
     const response = {
       effectivePermissions: res.locals.effectivePermissions || {},
       superAdminPermissions: res.locals.superAdminPermissions || null,
@@ -33,7 +33,7 @@ router.get('/permissions', async (req, res) => {
       impersonatedUser_roleType: res.locals.impersonatedUser_roleType || null,
       impersonatedUser_roleName: res.locals.impersonatedUser_roleName || null
     };
-    
+
     console.log('[Permissions Endpoint] Returning permissions:', {
       hasEffectivePermissions: !!response.effectivePermissions && Object.keys(response.effectivePermissions).length > 0,
       hasSuperAdminPermissions: !!response.superAdminPermissions,
@@ -42,7 +42,7 @@ router.get('/permissions', async (req, res) => {
       roleName: response.effectivePermissions_RoleName,
       userId: res.locals.userId
     });
-    
+
     res.json(response);
   } catch (error) {
     console.error('[Permissions Endpoint] Error:', error);
