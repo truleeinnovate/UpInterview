@@ -471,8 +471,11 @@ const MultiStepForm = () => {
                 if (!basicDetailsData.lastName)
                     currentErrors.lastName = "Last name is required";
                 if (!basicDetailsData.email) currentErrors.email = "Email is required";
-                if (!basicDetailsData.phone)
+                if (!basicDetailsData.phone) {
                     currentErrors.phone = "Phone number is required";
+                } else if (!/^\d{10}$/.test(basicDetailsData.phone)) {
+                    currentErrors.phone = "Phone number must be 10 digits";
+                }
                 if (!basicDetailsData.linkedinUrl)
                     currentErrors.linkedinUrl = "LinkedIn URL is required";
 
