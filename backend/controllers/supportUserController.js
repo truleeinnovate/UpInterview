@@ -60,11 +60,12 @@ exports.createTicket = async (req, res) => {
       .sort({ _id: -1 })
       .select("ticketCode")
       .lean();
-    let nextNumber = 1;
+    let nextNumber = 50001; // Start from 50001
     if (lastTicket && lastTicket.ticketCode) {
       const match = lastTicket.ticketCode.match(/SPT-(\d+)/);
       if (match) {
-        nextNumber = parseInt(match[1], 10) + 1;
+        const lastNumber = parseInt(match[1], 10);
+        nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
       }
     }
     const ticketCode = `SPT-${String(nextNumber).padStart(5, "0")}`;
