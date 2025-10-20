@@ -114,7 +114,7 @@ const NotificationsSection = () => {
                 <Mail size={20} />
                 <span className="sm:hidden inline text-sm">Email</span>
               </button>
-              <button
+              {/* <button
                 title="WhatsApp"
                 onClick={() => setActiveTab("whatsapp")}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
@@ -125,7 +125,7 @@ const NotificationsSection = () => {
               >
                 <MessageSquare size={20} />
                 <span className="sm:hidden inline text-sm">WhatsApp</span>
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
