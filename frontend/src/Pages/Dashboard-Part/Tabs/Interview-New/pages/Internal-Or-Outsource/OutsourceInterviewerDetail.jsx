@@ -354,12 +354,9 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                                 </div>
                             </div>
                         </div>
-
-
                     </div>
 
                 );
-
 
             case 'availability':
                 return (

@@ -1,12 +1,10 @@
 // v1.0.0  -  mansoor  -  removed unnecessary comments from this file
-//v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
-//v1.0.2  -  Ashraf  -  added create role path
+// v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
+// v1.0.2  -  Ashraf  -  added create role path
 // v1.0.3 - Ranjith - new route CandidateDetails to assessment page
 // v1.0.4 - Ashraf - added token expire then clearing cookies  and navigating correctly
 // v1.0.5 - Mansoor - Added custom video call application routes
-
 // v1.0.6 - Mansoor - removed the navbar in the login pages
-
 // v1.0.5 - Ashok - Added Analytics related pages
 // v1.0.6 - Ashok - Added SettingsIntegrations page
 // v1.0.7 - Ashok - Added InterviewerRates and Interviewers pages in super Admin
@@ -15,75 +13,53 @@
 // v2.0.0 - Ashok - Added Question Bank Manager page in super admin
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
-// import Cookies from "js-cookie";
-import ErrorBoundary from "./Components/ErrorBoundary";
-import { getActivityEmitter } from "./utils/activityTracker";
-import CombinedNavbar from "./Components/Navbar/CombinedNavbar";
 import Logo from "./Pages/Login-Part/Logo";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
-import AuthCookieManager, {
-    getAuthToken,
-} from "./utils/AuthCookieManager/AuthCookieManager";
-import {
-    usePermissions,
-    PermissionsProvider,
-} from "./Context/PermissionsContext";
+import AuthCookieManager, { getAuthToken } from "./utils/AuthCookieManager/AuthCookieManager";
+import { usePermissions, PermissionsProvider } from "./Context/PermissionsContext";
 import { CustomProvider } from "./Context/Contextfetch";
 import PageSetter from "./Components/PageSetter";
 import BillingSubtabs from "./Pages/Dashboard-Part/Accountsettings/account/billing/BillingSubtabs.jsx";
 import UserInvoiceDetails from "./Pages/Dashboard-Part/Tabs/Invoice-Tab/InvoiceDetails.jsx";
-import InvoiceTab from "./Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx";
 import SubscriptionSuccess from "./Pages/Login-Part/SubscriptionPlans/SubscriptionSuccess.jsx";
 import AccountSettingsSidebar from "./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx";
+import ErrorBoundary from "./Components/ErrorBoundary";
+import { getActivityEmitter } from "./utils/activityTracker";
+import CombinedNavbar from "./Components/Navbar/CombinedNavbar";
 import VerifyUserEmail from "./VerifyUserEmail.jsx";
 import { DocumentsSection } from "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/DocumentsDetails/DocumentsSection.jsx";
 import SessionExpiration from "./Components/SessionExpiration.jsx";
 import Loading from "./Components/Loading.js";
 import UserDataLoader from "./Components/UserDataLoader.jsx";
-// import {
-//   preloadPermissions,
-//   hasValidCachedPermissions,
-// } from "./utils/permissionPreloader";
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
-// import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
 import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
-import { config } from "./config.js";
-import ToastProvider from "./Components/ToastProvider";
 import { VideoCallingSettings } from "./Pages/Dashboard-Part/Accountsettings/VideoCallingSetting/VideoCallingSettings.jsx";
-
+import ToastProvider from "./Components/ToastProvider";
 import PendingApproval from "./Pages/Login-Part/PendingApproval/PendingApproval.jsx";
-// Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
-// const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
 const SelectProfession = lazy(() => import("./Pages/Login-Part/Individual-3"));
-const ProfileWizard = lazy(() =>
-    import("./Pages/Login-Part/Individual-4/Individual-4")
-);
-
-const OrganizationSignUp = lazy(() =>
-    import("./Pages/Login-Part/OrganizationSignUp")
-);
-const OrganizationLogin = lazy(() =>
-    import("./Pages/Login-Part/OrganizationLogin")
-);
-const SubscriptionPlan = lazy(() =>
-    import("./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan")
-);
+const ProfileWizard = lazy(() => import("./Pages/Login-Part/Individual-4/Individual-4"));
+const OrganizationSignUp = lazy(() => import("./Pages/Login-Part/OrganizationSignUp"));
+const OrganizationLogin = lazy(() => import("./Pages/Login-Part/OrganizationLogin"));
+const SubscriptionPlan = lazy(() => import("./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan"));
 const LinkedInCallback = lazy(() => import("./Components/LinkedInCallback"));
 const OAuthCallback = lazy(() => import("./Components/OAuthCallback"));
-const CardDetails = lazy(() =>
-    import("./Pages/Login-Part/SubscriptionPlans/CardDetails")
-);
-const SubscriptionCardDetails = lazy(() =>
-    import(
-        "./Pages/Dashboard-Part/Accountsettings/account/Subscription/subscriptionCardDetails.jsx"
-    )
-);
+const CardDetails = lazy(() => import("./Pages/Login-Part/SubscriptionPlans/CardDetails"));
+const SubscriptionCardDetails = lazy(() => import("./Pages/Dashboard-Part/Accountsettings/account/Subscription/subscriptionCardDetails.jsx"));
 const ForgetPassword = lazy(() => import("./Pages/Login-Part/ForgetPassword"));
 const ResetPassword = lazy(() => import("./Pages/Login-Part/ResetPassword"));
 
-// <------------------------------- v1.0.5
+// const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
+// import {
+    //   preloadPermissions,
+    //   hasValidCachedPermissions,
+    // } from "./utils/permissionPreloader";
+    // import InvoiceTab from "./Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx";
+// import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
+// import { config } from "./config.js";
+
+
 //  Video Call Application Components
 const VideoCallLanding = lazy(() =>
     import("./Pages/CustomVideoCall/Landing.jsx")
@@ -408,18 +384,18 @@ const AddTenantForm = lazy(() =>
 const TenantDetailsPage = lazy(() =>
     import("./Pages/SuperAdmin-Part/TenantDetailsPage.jsx")
 );
-const CandidatesPage = lazy(() =>
-    import("./Pages/SuperAdmin-Part/CandidatesPage.jsx")
-);
-const PositionsPage = lazy(() =>
-    import("./Pages/SuperAdmin-Part/PositionsPage.jsx")
-);
-const InterviewsPage = lazy(() =>
-    import("./Pages/SuperAdmin-Part/InterviewsPage.jsx")
-);
-const AssessmentsPage = lazy(() =>
-    import("./Pages/SuperAdmin-Part/AssessmentsPage.jsx")
-);
+// const CandidatesPage = lazy(() =>
+//     import("./Pages/SuperAdmin-Part/CandidatesPage.jsx")
+// );
+// const PositionsPage = lazy(() =>
+//     import("./Pages/SuperAdmin-Part/PositionsPage.jsx")
+// );
+// const InterviewsPage = lazy(() =>
+//     import("./Pages/SuperAdmin-Part/InterviewsPage.jsx")
+// );
+// const AssessmentsPage = lazy(() =>
+//     import("./Pages/SuperAdmin-Part/AssessmentsPage.jsx")
+// );
 const OutsourceRequestsPage = lazy(() =>
     import("./Pages/SuperAdmin-Part/OutsourceRequestsPage.jsx")
 );
@@ -435,12 +411,12 @@ const BillingPage = lazy(() =>
 const AddInvoiceForm = lazy(() =>
     import("./Components/SuperAdminComponents/Billing/Invoice/AddInvoiceForm.jsx")
 );
-const SupportTicketsPage = lazy(() =>
-    import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk")
-);
-const AddSupportForm = lazy(() =>
-    import("./Pages/SuperAdmin-Part/Support/AddSupportForm.jsx")
-);
+// const SupportTicketsPage = lazy(() =>
+//     import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk")
+// );
+// const AddSupportForm = lazy(() =>
+//     import("./Pages/SuperAdmin-Part/Support/AddSupportForm.jsx")
+// );
 const SettingsPage = lazy(() =>
     import("./Pages/SuperAdmin-Part/SettingsPage.jsx")
 );
