@@ -180,10 +180,13 @@ const updateSubscriptionPlan = async (req, res) => {
       // Create zero-value paid invoice for bookkeeping
       try {
         const lastInvoice = await Invoice.findOne({}).sort({ _id: -1 }).select('invoiceCode').lean();
-        let nextNumber = 1;
+        let nextNumber = 50001; // Start from 50001
         if (lastInvoice && lastInvoice.invoiceCode) {
           const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
-          if (match) nextNumber = parseInt(match[1], 10) + 1;
+          if (match) {
+            const lastNumber = parseInt(match[1], 10);
+            nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
+          }
         }
         const invoiceCode = `INVC-${String(nextNumber).padStart(5, '0')}`;
 
@@ -344,10 +347,13 @@ const updateSubscriptionPlan = async (req, res) => {
       let invoiceId = null;
       try {
         const lastInvoice = await Invoice.findOne({}).sort({ _id: -1 }).select('invoiceCode').lean();
-        let nextNumber = 1;
+        let nextNumber = 50001; // Start from 50001
         if (lastInvoice && lastInvoice.invoiceCode) {
           const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
-          if (match) nextNumber = parseInt(match[1], 10) + 1;
+          if (match) {
+            const lastNumber = parseInt(match[1], 10);
+            nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
+          }
         }
         const invoiceCode = `INVC-${String(nextNumber).padStart(5, '0')}`;
 
@@ -584,10 +590,13 @@ const updateSubscriptionPlan = async (req, res) => {
 
     try {
       const lastInvoice = await Invoice.findOne({}).sort({ _id: -1 }).select('invoiceCode').lean();
-      let nextNumber = 1;
+      let nextNumber = 50001; // Start from 50001
       if (lastInvoice && lastInvoice.invoiceCode) {
         const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
-        if (match) nextNumber = parseInt(match[1], 10) + 1;
+        if (match) {
+          const lastNumber = parseInt(match[1], 10);
+          nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
+        }
       }
       const invoiceCode = `INVC-${String(nextNumber).padStart(5, '0')}`;
 

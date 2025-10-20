@@ -233,11 +233,12 @@ const verifyPayment = async (req, res) => {
                 .sort({ _id: -1 })
                 .select('paymentCode')
                 .lean();
-            let nextNumber = 1;
+            let nextNumber = 50001; // Start from 50001
             if (lastPayment && lastPayment.paymentCode) {
                 const match = lastPayment.paymentCode.match(/PMT-(\d+)/);
                 if (match) {
-                    nextNumber = parseInt(match[1], 10) + 1;
+                    const lastNumber = parseInt(match[1], 10);
+                    nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
                 }
             }
             const paymentCode = `PMT-${String(nextNumber).padStart(5, '0')}`;
@@ -503,11 +504,12 @@ const verifyPayment = async (req, res) => {
                         .sort({ _id: -1 })
                         .select('receiptCode')
                         .lean();
-                    let nextNumber = 1;
+                    let nextNumber = 50001; // Start from 50001
                     if (lastRecepit && lastRecepit.receiptCode) {
                         const match = lastRecepit.receiptCode.match(/RCP-(\d+)/);
                         if (match) {
-                            nextNumber = parseInt(match[1], 10) + 1;
+                            const lastNumber = parseInt(match[1], 10);
+                            nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
                         }
                     }
                     const receiptCode = `RCP-${String(nextNumber).padStart(5, '0')}`;
@@ -1219,11 +1221,12 @@ const handlePaymentFailed = async (payment) => {
             .sort({ _id: -1 })
             .select('paymentCode')
             .lean();
-        let nextNumber = 1;
+        let nextNumber = 50001; // Start from 50001
         if (lastPayment && lastPayment.paymentCode) {
             const match = lastPayment.paymentCode.match(/PMT-(\d+)/);
             if (match) {
-                nextNumber = parseInt(match[1], 10) + 1;
+                const lastNumber = parseInt(match[1], 10);
+                nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
             }
         }
         const paymentCode = `PMT-${String(nextNumber).padStart(5, '0')}`;
@@ -1921,11 +1924,12 @@ const handleSubscriptionCharged = async (subscription) => {
             .sort({ _id: -1 })
             .select('receiptCode')
             .lean();
-        let nextNumber = 1;
+        let nextNumber = 50001; // Start from 50001
         if (lastRecepit && lastRecepit.receiptCode) {
             const match = lastRecepit.receiptCode.match(/RCP-(\d+)/);
             if (match) {
-                nextNumber = parseInt(match[1], 10) + 1;
+                const lastNumber = parseInt(match[1], 10);
+                nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
             }
         }
         const receiptCode = `RCP-${String(nextNumber).padStart(5, '0')}`;

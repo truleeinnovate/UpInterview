@@ -1,3 +1,5 @@
+// v1.0.0 - Venkatesh - Added hold transaction tracking and settlement status fields for mock interview payment management
+
 const mongoose = require("mongoose");
 
 // Participants (Candidate + Interviewer + Scheduler)
@@ -95,6 +97,18 @@ currentAction: {
   // Extra
   meetingId: String,
   rejectionReason: String,
+  
+  // Hold transaction reference for payment tracking
+  holdTransactionId: { type: String },  // Store the transaction ID from wallet hold
+  
+  // Settlement tracking
+  settlementStatus: { 
+    type: String, 
+    enum: ['pending', 'completed', 'failed'],
+    default: 'pending'
+  },
+  settlementDate: { type: Date },
+  settlementTransactionId: { type: String }  // Credit transaction ID in interviewer's wallet
 });
 
 // Check if model is already defined to avoid overwriting
