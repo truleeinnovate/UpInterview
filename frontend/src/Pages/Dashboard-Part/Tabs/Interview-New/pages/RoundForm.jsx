@@ -23,7 +23,7 @@ import {
 import { Button } from "../../CommonCode-AllTabs/ui/button.jsx";
 import axios from "axios";
 import InternalInterviews from "./Internal-Or-Outsource/InternalInterviewers.jsx";
-import OutsourceOption from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
+import OutsourcedInterviewerModal from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import Cookies from "js-cookie";
 import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from "../../../../../utils/interviewRoundValidation.js";
@@ -507,13 +507,16 @@ const RoundFormInterviews = () => {
       setErrors((prev) => ({ ...prev, roundTitle: "" }));
       return;
     }
-
+    // Store previous round title to detect changes from "Assessment"
+    const previousRoundTitle = roundTitle;
     // Normal predefined selection
     setRoundTitle(value);
     setCustomRoundTitle("");
 
     // Clear instructions whenever round title changes
     // setInstructions("");
+
+
 
     if (value === "Assessment") {
       setInterviewMode("Virtual");
@@ -532,20 +535,20 @@ const RoundFormInterviews = () => {
       setSelectedAssessmentData(null);
       setCombinedDateTime("");
     } else {
-      setInterviewMode("");
-      setInstructions(""); // Clear instructions for non-Assessment rounds
-      setInterviewType("instant");
-      setScheduledDate("");
-      setDuration(60);
-      setStartTime("");
-      setEndTime("");
+      // setInterviewMode("");
+      setInstructions(previousRoundTitle === "Assessment" ? "" : instructions); // Clear instructions for non-Assessment rounds
+      // setInterviewType("instant");
+      // setScheduledDate("");
+      // setDuration(60);
+      // setStartTime("");
+      // setEndTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
       setSelectedAssessmentData(null);
-      setCombinedDateTime("");
+      // setCombinedDateTime("");
 
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
-      setInterviewerViewType("");
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
+      // setInterviewerViewType("");
     }
 
     setErrors((prev) => ({
@@ -800,6 +803,71 @@ const RoundFormInterviews = () => {
     }
   }, [rounds, roundId, isEditing, assessmentData, interviewData, groups]);
 
+
+  // Add this useEffect hook after your existing useEffect hooks
+  useEffect(() => {
+    // Clear external interviewers when date/time changes
+    if (externalInterviewers.length > 0 && (scheduledDate || interviewType === "instant")) {
+      console.log("Date/Time changed - clearing external interviewers");
+      setExternalInterviewers([]);
+
+      // If only external interviewers were selected, reset the interview type
+      if (selectedInterviewType === "External" && internalInterviewers.length === 0) {
+        setSelectedInterviewType(null);
+      }
+    }
+  }, [scheduledDate, interviewType]); // Add this dependency array
+
+  // Also add this useEffect to handle combinedDateTime changes for scheduled interviews
+  useEffect(() => {
+    if (interviewType === "scheduled" && combinedDateTime && externalInterviewers.length > 0) {
+      console.log("Interview timing changed - clearing external interviewers");
+      setExternalInterviewers([]);
+
+      if (selectedInterviewType === "External" && internalInterviewers.length === 0) {
+        setSelectedInterviewType(null);
+      }
+    }
+  }, [combinedDateTime]);
+
+
+  // Replace the existing scheduledDate change handler with this enhanced version
+  const handleScheduledDateChange = (e) => {
+    const val = e.target.value;
+    const minVal = twoHoursFromNowLocal();
+    // Prevent selecting past/less than 2 hours from now
+    const newScheduledDate = val && val < minVal ? minVal : val;
+
+    // Clear external interviewers when date changes
+    if (newScheduledDate !== scheduledDate && externalInterviewers.length > 0) {
+      setExternalInterviewers([]);
+      if (selectedInterviewType === "External" && internalInterviewers.length === 0) {
+        setSelectedInterviewType(null);
+      }
+      // Show notification to user
+      // toast.warn("Date changed - external interviewers have been cleared. Please reselect them.");
+    }
+
+    setScheduledDate(newScheduledDate);
+  };
+
+  // Replace the existing interviewType change handler
+  const handleInterviewTypeChange = (type) => {
+    // Clear external interviewers when switching between instant and scheduled
+    if (interviewType !== type && externalInterviewers.length > 0) {
+      setExternalInterviewers([]);
+      if (selectedInterviewType === "External" && internalInterviewers.length === 0) {
+        setSelectedInterviewType(null);
+      }
+      // toast.warn("Interview type changed - external interviewers have been cleared. Please reselect them.");
+    }
+    setInterviewType(type);
+  };
+
+
+
+
+
   const handleInternalInterviewerSelect = (
     interviewers,
     viewType,
@@ -815,7 +883,7 @@ const RoundFormInterviews = () => {
       return;
     }
 
-    console.log("interviwers", interviewers, viewType, groupName);
+    // console.log("interviwers", interviewers, viewType, groupName);
 
     // Clear existing interviewers when view type changes
 
@@ -1161,7 +1229,7 @@ const RoundFormInterviews = () => {
           if (!usageCheck.canSchedule) {
             // Show detailed error with usage stats
             const usageInfo = usageCheck.usageStats || usageCheck.usage || {};
-            toast.error(
+            notify.error(
               `Cannot schedule: ${usageCheck.message}. ` +
               `Used: ${usageInfo.utilized || 0}/${usageInfo.entitled || 0} interviews.`,
               { duration: 5000 }
@@ -1365,7 +1433,7 @@ const RoundFormInterviews = () => {
 
         // }
 
-              // internal  interview  email sent
+        // internal  interview  email sent
         // Meeting platform link creation
         if (response.status === "ok") {
           // console.log("Generating meeting link for the interview");
@@ -1801,32 +1869,9 @@ const RoundFormInterviews = () => {
     // }
   };
 
-  // const fetchQuestionsForSection = async (sectionId) => {
-  //   try {
-  //     const response = assessmentData.find(pos => pos._id === assessmentTemplate.assessmentId)
-  //     // const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentTemplate.assessmentId}`);
-  //     const assessment = response;
-
-  //     const section = assessment.Sections.find(s => s._id === sectionId);
-  //     if (!section) {
-  //       throw new Error('Section not found');
-  //     }
-
-  //     setSectionQuestions(prev => ({
-  //       ...prev,
-  //       [sectionId]: section.Questions
-  //     }));
-  //   } catch (error) {
-  //     console.error('Error fetching questions:', error);
-  //     setSectionQuestions(prev => ({
-  //       ...prev,
-  //       [sectionId]: 'error'
-  //     }));
-  //   }
-  // };
-
+  
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-y-auto bg-gray-50">
+    <div className="h-[calc(100vh-4rem)] mt-2 overflow-y-auto bg-gray-50">
       {/* v1.0.5 <------------------------------------------------------------- */}
       <main className="max-w-7xl overflow-y-auto mx-auto py-6 sm:px-4 px-8">
         {/* v1.0.5 -------------------------------------------------------------> */}
@@ -2358,7 +2403,8 @@ const RoundFormInterviews = () => {
                         <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
                           <button
                             type="button"
-                            onClick={() => setInterviewType("instant")}
+                            // onClick={() => setInterviewType("instant")}
+                            onClick={() => handleInterviewTypeChange("instant")}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
                               ? "border-custom-blue bg-blue-50"
                               : "border-gray-300 hover:border-gray-400"
@@ -2385,7 +2431,8 @@ const RoundFormInterviews = () => {
 
                           <button
                             type="button"
-                            onClick={() => setInterviewType("scheduled")}
+                            onClick={() => handleInterviewTypeChange("scheduled")} // Use new handler
+                            // onClick={() => setInterviewType("scheduled")}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
                               ? "border-custom-blue bg-blue-50"
                               : "border-gray-300 hover:border-gray-400"
@@ -2426,15 +2473,16 @@ const RoundFormInterviews = () => {
                                 name="scheduledDate"
                                 //lang="en-US"
                                 value={scheduledDate}
+                                onChange={handleScheduledDateChange} // Use the new handler
                                 //<-----v1.0.4----
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  const minVal = twoHoursFromNowLocal();
-                                  // Prevent selecting past/less than 2 hours from now
-                                  setScheduledDate(
-                                    val && val < minVal ? minVal : val
-                                  );
-                                }}
+                                // onChange={(e) => {
+                                //   const val = e.target.value;
+                                //   const minVal = twoHoursFromNowLocal();
+                                //   // Prevent selecting past/less than 2 hours from now
+                                //   setScheduledDate(
+                                //     val && val < minVal ? minVal : val
+                                //   );
+                                // }}
                                 min={twoHoursFromNowLocal()}
                                 //-----v1.0.4---->
                                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-custom-blue focus:border-custom-blue sm:text-sm"
@@ -2769,18 +2817,21 @@ const RoundFormInterviews = () => {
 
                             {/* External Interviewers */}
                             {isExternalSelected && (
-                              <div>
+                              <>
                                 <h4 className="text-xs font-medium text-gray-500 mb-2">
                                   Outsourced Interviewers
                                 </h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-3">
                                   {/* {console.log("externalInterviewers near shoing place :", externalInterviewers)} */}
                                   {externalInterviewers?.map((interviewer) => (
                                     <div
                                       key={interviewer.id}
-                                      className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
+                                        className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 p-3 shadow-sm hover:shadow-md transition-shadow duration-200 min-w-0"
+                                
+                                
+                                        // className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
                                     >
-                                      <div className="flex items-center">
+                                      <div  className="flex items-center min-w-0 flex-1">
                                         <span className="ml-2 text-sm text-orange-800 truncate">
                                           {interviewer?.contact?.firstName}{" "}
                                           {interviewer?.contact?.lastName}{" "}
@@ -2802,7 +2853,7 @@ const RoundFormInterviews = () => {
                                     </div>
                                   ))}
                                 </div>
-                              </div>
+                              </>
                             )}
                           </div>
                         )}
@@ -2980,7 +3031,7 @@ const RoundFormInterviews = () => {
 
       {/* External Interviews Modal */}
       {showOutsourcePopup && (
-        <OutsourceOption
+        <OutsourcedInterviewerModal
           onClose={() => setShowOutsourcePopup(false)}
           dateTime={combinedDateTime}
           positionData={position}
@@ -2988,6 +3039,7 @@ const RoundFormInterviews = () => {
           onProceed={handleExternalInterviewerSelect}
           candidateExperience={candidate?.CurrentExperience}
           isMockInterview={false} // For regular interview rounds, set to true for mock interviews
+          previousSelectedInterviewers={externalInterviewers}
         />
       )}
 

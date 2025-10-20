@@ -226,6 +226,7 @@ function OutsourcedInterviewerModal({
     navigatedfrom,
     candidateExperience, //<-----v1.0.4-----Venkatesh---- Added to determine experience level for rate calculation
     isMockInterview = false, //<-----v1.0.4-----Venkatesh---- Added to determine interview type (mock vs regular)
+    previousSelectedInterviewers
 }) {
     const { interviewers, contacts } = useCustomContext(); //<----v1.0.1-----
     // console.log("contacts===", contacts);
@@ -251,7 +252,9 @@ function OutsourcedInterviewerModal({
     const [appliedRateRange, setAppliedRateRange] = useState([0, Infinity]);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [selectedInterviewer, setSelectedInterviewer] = useState(null);
-    const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState([]);
+    const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState(
+       previousSelectedInterviewers || []
+    );
     const requestSentRef = useRef(false);
     const [filteredInterviewers, setFilteredInterviewers] = useState([]);
     const [baseInterviewers, setBaseInterviewers] = useState([]);

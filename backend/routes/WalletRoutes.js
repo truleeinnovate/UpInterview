@@ -1,3 +1,5 @@
+// v1.0.0 - Venkatesh - Added settle-interview route for processing interview payment settlements
+
 const express = require('express');
 const { 
   getWalletByOwnerId, 
@@ -13,6 +15,7 @@ const {
   cancelWithdrawalRequest,
   handlePayoutWebhook,
   fixVerifiedBankAccounts,
+  settleInterviewPayment,
   // Manual processing endpoints
   processManualWithdrawal,
   failManualWithdrawal,
@@ -48,6 +51,10 @@ WalletRouter.get('/withdrawal-request/:withdrawalRequestId', getWithdrawalReques
 // Webhook Routes
 // POST /wallet/payout-webhook - Handle Razorpay payout webhook events
 WalletRouter.post('/payout-webhook', handlePayoutWebhook);
+
+// Settlement Routes
+// POST /wallet/settle-interview - Settle interview payment from hold to interviewer
+WalletRouter.post('/settle-interview', settleInterviewPayment);
 
 // Utility Routes
 // POST /wallet/fix-verified-accounts - Fix verified bank accounts that are not marked as active

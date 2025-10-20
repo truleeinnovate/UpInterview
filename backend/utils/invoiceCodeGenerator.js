@@ -1,7 +1,7 @@
 const Invoicemodels = require('../models/Invoicemodels.js');
 
 /**
- * Generates a unique invoice code in the format INVC-00001
+ * Generates a unique invoice code in the format INVC-50001
  * Ensures no duplicate codes are created across the entire system
  * @returns {Promise<string>} Unique invoice code
  */
@@ -18,12 +18,14 @@ const generateUniqueInvoiceCode = async () => {
       .select("invoiceCode")
       .lean();
     
-    let nextNumber = 1;
+    let nextNumber = 50001; // Start from 50001
     if (lastInvoice?.invoiceCode) {
-      // Extract number from INVC-00001 format
+      // Extract number from INVC-50001 format
       const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
       if (match) {
-        nextNumber = parseInt(match[1], 10) + 1;
+        const lastNumber = parseInt(match[1], 10);
+        // Only increment if last number is >= 50001, otherwise start from 50001
+        nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
       }
     }
     

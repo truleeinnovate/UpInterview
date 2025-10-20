@@ -20,7 +20,7 @@ function InterviewerAvatar({ interviewer, size = 'md', className = '' }) {
   // Default values for missing properties
   const isExternal = interviewer?.isExternal || false; // Default to false if missing
   const imageUrl = interviewer?.imageUrl || null; // Default to null if missing
-  const name = interviewer?.name || 'Unknown'; // Default name if missing
+  const name = interviewer?.name   || (interviewer?.firstName + " " + interviewer?.lastName) || 'Unknown'; // Default name if missing
 
   // If no interviewer data is provided, show a placeholder
   if (!interviewer) {

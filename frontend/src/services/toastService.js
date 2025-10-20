@@ -6,6 +6,10 @@ export const notify = {
     toast.success(msg, {
       position: "top-right",
     }),
+  warning: (msg) =>
+    toast.warning(msg, {
+      position: "top-right",
+    }),
 
   error: (msg) =>
     toast.error(msg, {

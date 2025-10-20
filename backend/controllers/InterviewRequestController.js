@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - changed createdAt to _id for customRequestId generation
 // v1.0.1 - Venkatesh - added wallet functionality deduction and hold amount
 // v1.0.2 - Venkatesh -- Prepare a transaction record for wallet history (type: 'hold')
+// v1.0.3 - Venkatesh - Store hold transaction ID in interview round for settlement tracking
 
 const mongoose = require("mongoose");
 const Interview = require("../models/Interview/Interview.js");
@@ -1018,7 +1019,7 @@ exports.acceptInterviewRequest = async (req, res) => {
       amount: totalAmount,
       description: `Hold for ${request.isMockInterview ? 'mock ' : ''}interview round ${round?.roundTitle}`,
       relatedInvoiceId: holdID,
-      status: "completed",
+      status: "pending",
       metadata: {
         interviewId: String(request.isMockInterview ? round?.mockInterviewId : round?.interviewId || ""),
         roundId: String(roundId),
@@ -1064,6 +1065,29 @@ exports.acceptInterviewRequest = async (req, res) => {
     console.log(`Deducted ${totalAmount} from wallet balance. New balance: ${updatedWallet.balance}`);
     console.log(`Added ${totalAmount} to hold amount. New hold amount: ${updatedWallet.holdAmount}`);
     console.log(`Recorded hold transaction in wallet history`);
+    
+    // Get the transaction ID from the updated wallet (last transaction)
+    const savedTransaction = updatedWallet.transactions[updatedWallet.transactions.length - 1];
+    const transactionId = savedTransaction._id ? savedTransaction._id.toString() : null;
+    
+    // Update the round with the hold transaction ID
+    if (transactionId) {
+      if (request.isMockInterview) {
+        await MockInterviewRound.findByIdAndUpdate(
+          roundId,
+          { holdTransactionId: transactionId },
+          { new: true }
+        );
+        console.log(`Updated mock interview round ${roundId} with hold transaction ID: ${transactionId}`);
+      } else {
+        await InterviewRounds.findByIdAndUpdate(
+          roundId,
+          { holdTransactionId: transactionId },
+          { new: true }
+        );
+        console.log(`Updated interview round ${roundId} with hold transaction ID: ${transactionId}`);
+      }
+    }
 
     // Send emails
     try {
@@ -1087,8 +1111,13 @@ exports.acceptInterviewRequest = async (req, res) => {
         balance: updatedWallet?.balance,
         holdAmount: updatedWallet?.holdAmount,
       },
-      transaction: holdTransaction,
+      transaction: {
+        ...holdTransaction,
+        _id: transactionId  // Include the actual transaction ID
+      },
       appliedDiscount: request.isMockInterview ? appliedDiscountPercentage : null,
+      roundUpdated: true,
+      holdTransactionId: transactionId
     });
   } catch (error) {
     console.error("[acceptInterviewRequest] Error:", error);

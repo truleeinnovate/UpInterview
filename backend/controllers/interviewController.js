@@ -4,6 +4,7 @@
 // v1.0.2  -  Ashraf  -  added sending interview email
 // v1.0.3  -  Ashok  -  Added new controller to get all interviews
 // v1.0.4  -  Ranjith  -  fixed new update api in updateInterviewRound and interview seprated the patch and post call
+// v1.0.5  -  Venkatesh - Fetch wallet transaction data in getAllInterviewRounds and return settlement status
 
 
 const mongoose = require("mongoose");
@@ -20,6 +21,7 @@ const interviewQuestions = require("../models/Interview/selectedInterviewQuestio
 const { Position } = require("../models/Position/position.js");
 // <-------------------------------v1.0.0
 const Assessment = require("../models/Assessment/assessmentTemplates.js");
+const Wallet = require("../models/WalletTopup");
 const {
     sendInterviewRoundEmails,
 } = require("./EmailsController/interviewEmailController");
@@ -322,11 +324,12 @@ const createInterview = async (req, res) => {
             .select("interviewCode")
             .lean();
 
-        let nextNumber = 1;
+        let nextNumber = 50001; // Start from 50001
         if (lastInterview && lastInterview.interviewCode) {
             const match = lastInterview.interviewCode.match(/INT-(\d+)/);
             if (match) {
-                nextNumber = parseInt(match[1], 10) + 1;
+                const lastNumber = parseInt(match[1], 10);
+                nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
             }
         }
         interviewData.interviewCode = `INT-${String(nextNumber).padStart(
@@ -2078,8 +2081,8 @@ const updateInterviewStatusController = async (req, res) => {
 // Get all interview rounds for super admin
 const getAllInterviewRounds = async (req, res) => {
     try {
-        // Fetch all interview rounds with populated data
-        const interviewRounds = await InterviewRounds.find()
+        // Fetch all interview rounds with populated data (filter for internal interviews only)
+        const interviewRounds = await InterviewRounds.find({ interviewerType: 'Internal' })
             .populate({
                 path: 'interviewId',
                 select: 'interviewCode candidateId positionId status tenantId ownerId createdAt',
@@ -2158,21 +2161,90 @@ const getAllInterviewRounds = async (req, res) => {
                 : '';
             
             const finalInterviewerNames = interviewerNames || 'No interviewers assigned';
+            
+            // Fetch wallet transaction data if holdTransactionId exists
+            let holdTransactionData = null;
+            if (round.holdTransactionId) {
+                try {
+                    // Find the wallet that contains this transaction
+                    // We need to search in the wallet's transactions array
+                    const wallet = await Wallet.findOne({
+                        'transactions._id': round.holdTransactionId
+                    });
+                    
+                    if (wallet) {
+                        // Find the specific transaction in the wallet
+                        holdTransactionData = wallet.transactions.find(
+                            t => t._id && t._id.toString() === round.holdTransactionId
+                        );
+                    }
+                    
+                    if (!holdTransactionData) {
+                        console.log(`Transaction ${round.holdTransactionId} not found in any wallet`);
+                    }
+                } catch (error) {
+                    console.error(`Error fetching transaction for round ${round._id}:`, error);
+                }
+            }
 
             return {
+                // Core identifiers
                 _id: round._id,
                 interviewCode: `${round.interviewId?.interviewCode}-${round.sequence}` || 'N/A',
+                interviewId: round.interviewId?._id || null,
+                sequence: round.sequence || 1,
+                
+                // Round details
                 roundTitle: round.roundTitle || 'N/A',
                 interviewMode: round.interviewMode || 'N/A',
                 interviewType: round.interviewType || 'N/A',
                 interviewerType: round.interviewerType || 'N/A',
                 duration: round.duration || 'N/A',
+                instructions: round.instructions || '',
                 dateTime: round.dateTime || 'Not scheduled',
-                status: round.status || 'Draft',
+                
+                // Interviewer details
+                interviewerViewType: round.interviewerViewType || '',
+                interviewerGroupId: round.interviewerGroupId || '',
+                interviewers: round.interviewers || [],
                 interviewerNames: finalInterviewerNames,
+                
+                // Status and actions
+                status: round.status || 'Draft',
+                currentAction: round.currentAction || null,
+                previousAction: round.previousAction || null,
+                currentActionReason: round.currentActionReason || '',
+                previousActionReason: round.previousActionReason || '',
+                
+                // Support and history
+                supportTickets: round.supportTickets || [],
+                history: round.history || [],
+                
+                // Meeting details
+                meetingId: round.meetingId || '',
+                meetPlatform: round.meetPlatform || '',
+                
+                // Assessment references
+                assessmentId: round.assessmentId || null,
+                scheduleAssessmentId: round.scheduleAssessmentId || null,
+                
+                // Additional info
+                rejectionReason: round.rejectionReason || '',
+                holdTransactionId: round.holdTransactionId || null,
+                holdTransactionData: holdTransactionData || null, // Include full transaction object
+                settlementStatus: round.settlementStatus || 'pending',
+                settlementDate: round.settlementDate || null,
+                settlementTransactionId: round.settlementTransactionId || null,
+                
+                // Organization info
                 organizationType: organizationType,
                 organization: organizationName,
+                
+                // Timestamps
                 createdOn: round.createdAt || new Date(),
+                updatedAt: round.updatedAt || null,
+                
+                // Related data from populated fields
                 candidate: round.interviewId?.candidateId ? {
                     name: `${round.interviewId.candidateId.FirstName || ''} ${round.interviewId.candidateId.LastName || ''}`.trim() || 'Unknown',
                     email: round.interviewId.candidateId.Email || 'N/A'
@@ -2182,9 +2254,7 @@ const getAllInterviewRounds = async (req, res) => {
                     company: round.interviewId.positionId.companyname || 'N/A',
                     location: round.interviewId.positionId.Location || 'N/A'
                 } : null,
-                interviewStatus: round.interviewId?.status || 'N/A',
-                interviewId: round.interviewId?._id || null,
-                sequence: round.sequence || 1
+                interviewStatus: round.interviewId?.status || 'N/A'
             };
         }));
 
