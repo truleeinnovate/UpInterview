@@ -534,6 +534,12 @@ const RoundFormInterviews = () => {
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
       setSelectedAssessmentData(null);
       setCombinedDateTime("");
+
+      setSectionQuestions({});
+      setInternalInterviewers([]);
+      setExternalInterviewers([]);
+      setSelectedInterviewType(null);
+
     } else {
       // setInterviewMode("");
       setInstructions(previousRoundTitle === "Assessment" ? "" : instructions); // Clear instructions for non-Assessment rounds
@@ -743,9 +749,9 @@ const RoundFormInterviews = () => {
         const normalizedInterviewers = roundEditData.interviewers.map(
           (interviewer) => ({
             _id: interviewer._id,
-            firstName: interviewer.firstName,
-            lastName: interviewer.lastName,
-            email: interviewer.email,
+            firstName: interviewer?.firstName,
+            lastName: interviewer?.lastName,
+            email: interviewer?.email,
           })
         );
         // =======
@@ -1819,6 +1825,13 @@ const RoundFormInterviews = () => {
     setInstructions(assessment.Instructions);
     setExpandedSections({});
     setSectionQuestions({});
+    setInternalInterviewers([]);
+    setExternalInterviewers([]);
+    setSelectedInterviewType(null);
+    setInterviewerGroupName("");
+    setInterviewerGroupId("");
+    setInterviewerViewType("individuals");
+    // setInterviewQuestionsList([]);
 
     // v1.0.1 <----------------------------------------------------------------
     // Clear the assessmentTemplate validation error
@@ -1869,7 +1882,7 @@ const RoundFormInterviews = () => {
     // }
   };
 
-  
+
   return (
     <div className="h-[calc(100vh-4rem)] mt-2 overflow-y-auto bg-gray-50">
       {/* v1.0.5 <------------------------------------------------------------- */}
@@ -2002,8 +2015,24 @@ const RoundFormInterviews = () => {
                             { value: "Face to Face", label: "Face to Face" },
                             { value: "Virtual", label: "Virtual" },
                           ]}
+                          // onChange={(e) => {
+                          //   setInterviewMode(e.target.value);
+                          //   setErrors({ ...errors, interviewMode: "" });
+                          // }}
                           onChange={(e) => {
-                            setInterviewMode(e.target.value);
+                            const newMode = e.target.value;
+
+                            // Clear external interviewers when switching from Virtual to Face to Face
+                            if (newMode === "Face to Face" && externalInterviewers.length > 0) {
+                              setExternalInterviewers([]);
+                              if (selectedInterviewType === "External" && internalInterviewers.length === 0) {
+                                setSelectedInterviewType(null);
+                              }
+                              // Optional: Show notification to user
+                              // notify.warn("Interview mode changed to Face to Face - external interviewers have been cleared.");
+                            }
+
+                            setInterviewMode(newMode);
                             setErrors({ ...errors, interviewMode: "" });
                           }}
                           error={errors.interviewMode}
@@ -2108,6 +2137,13 @@ const RoundFormInterviews = () => {
                                 setSelectedAssessmentData(null);
                                 setSectionQuestions({});
                                 setInterviewQuestionsList([]);
+                                setInternalInterviewers([]);
+                                setExternalInterviewers([]);
+                                setSelectedInterviewType(null);
+                                setInterviewerGroupName("");
+                                setInterviewerGroupId("");
+                                setInterviewerViewType("individuals");
+
                               }
                               setErrors((prev) => ({
                                 ...prev,
@@ -2776,8 +2812,8 @@ const RoundFormInterviews = () => {
                                       <div className="flex items-center">
                                         <User className="h-4 w-4 text-blue-600 mr-2" />
                                         <span className="text-sm font-medium text-blue-900 truncate">
-                                          {`${interviewer.firstName || ""} ${interviewer.lastName || ""}`.trim() ||
-                                            interviewer.email}
+                                          {`${interviewer?.firstName || ""} ${interviewer?.lastName || ""}`.trim() ||
+                                            interviewer?.email}
                                         </span>
                                       </div>
                                       <button
@@ -2826,12 +2862,12 @@ const RoundFormInterviews = () => {
                                   {externalInterviewers?.map((interviewer) => (
                                     <div
                                       key={interviewer.id}
-                                        className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 p-3 shadow-sm hover:shadow-md transition-shadow duration-200 min-w-0"
-                                
-                                
-                                        // className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
+                                      className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 p-3 shadow-sm hover:shadow-md transition-shadow duration-200 min-w-0"
+
+
+                                    // className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
                                     >
-                                      <div  className="flex items-center min-w-0 flex-1">
+                                      <div className="flex items-center min-w-0 flex-1">
                                         <span className="ml-2 text-sm text-orange-800 truncate">
                                           {interviewer?.contact?.firstName}{" "}
                                           {interviewer?.contact?.lastName}{" "}
