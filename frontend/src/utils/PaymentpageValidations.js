@@ -95,15 +95,21 @@ export  const handleMembershipChange = (type,setCardDetails,pricePerMember,planD
 const  updateTotalPaid = (membershipType,pricePerMember,planDetails,setTotalPaid) => {
     let total = 0;
     if (membershipType === "monthly") {
-        // DO NOT apply discount - only use actual price for payment
-        total = parseInt(pricePerMember.monthly);
+        // No discount applied - using full price
+        total = parseFloat(pricePerMember.monthly) || 0;
        
     } else if (membershipType === "annual") {
-        // DO NOT apply discount - only use actual price for payment
-        total = parseInt(pricePerMember.annually);
+        // No discount applied - using full price
+        total = parseFloat(pricePerMember.annually) || 0;
        
     }
-    setTotalPaid(total);
+    console.log('Price calculation (no discount):', {
+        membershipType,
+        price: membershipType === 'annual' ? pricePerMember.annually : pricePerMember.monthly,
+        discount: 0, // Fixed at 0 for now
+        finalTotal: total
+    });
+    setTotalPaid(total.toFixed(2));
 };
 
 
