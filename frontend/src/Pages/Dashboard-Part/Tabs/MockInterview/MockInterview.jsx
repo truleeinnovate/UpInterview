@@ -4,6 +4,7 @@
 // v1.0.3  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.4  -  Ashok   -  Improved responsiveness
 // v1.0.5  -  Ashok   -  added common code for kanban
+// v1.0.6  -  Ashok   -  added clickable title to navigate to details page at kanban
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -681,6 +682,7 @@ const MockInterview = () => {
                   id: interview?._id,
                   title: interview?.mockInterviewCode,
                   subTitle: formatDate(interview.createdAt),
+                  navigateTo: `/mockinterview-details/${interview._id}`,
                 }))}
                 columns={kanbanColumns}
                 renderActions={(item) => (

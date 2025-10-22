@@ -5,6 +5,7 @@
 // v1.0.4  - Ashok   - changed loading view of both table and kanban views
 // v1.0.5  - Ashok   - changed check box color to brand color in filters
 // v1.0.6  - Ashok   - added common code for kanban
+// v1.0.7  - Ashok   - added clickable title to navigate to details page at kanban
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
@@ -570,6 +571,11 @@ const InvoiceTab = () => {
                         kanbanActions={kanbanActions}
                       />
                     )}
+                    onTitleClick={(row) => {
+                      navigate(`details/${row.id}`, {
+                        state: { invoiceData: row },
+                      });
+                    }}
                     emptyState="No invoices found."
                     kanbanTitle="Invoice"
                   />

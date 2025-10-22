@@ -1,6 +1,8 @@
 // // Created by Ashok
+// v1.0.0 - Ashok - Added ability to click on title to navigate
 
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const capitalizeFirstLetter = (str) => {
   if (typeof str !== "string" || !str) return "";
@@ -14,7 +16,10 @@ const KanbanCommon = ({
   renderActions = () => null,
   emptyState = "No Data Found",
   kanbanTitle = "",
+  onTitleClick,
 }) => {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -121,9 +126,23 @@ const KanbanCommon = ({
                       </div>
                     )}
 
-                    <div className="overflow-hidden flex-1">
+                    <div className="overflow-hidden flex-1 min-w-0 pr-28">
                       <h4 className="text-base font-semibold text-custom-blue truncate">
-                        {capitalizeFirstLetter(item?.title) || "Untitled"}
+                        <span
+                          className={`${
+                            item?.navigateTo || onTitleClick
+                              ? "cursor-pointer"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            if (onTitleClick) onTitleClick(item);
+                            else if (item?.navigateTo)
+                              navigate(item?.navigateTo);
+                          }}
+                          title={item?.title}
+                        >
+                          {capitalizeFirstLetter(item?.title) || "N/A"}
+                        </span>
                       </h4>
                       <p className="text-sm text-gray-500 truncate">
                         {capitalizeFirstLetter(item?.subTitle) || "N/A"}

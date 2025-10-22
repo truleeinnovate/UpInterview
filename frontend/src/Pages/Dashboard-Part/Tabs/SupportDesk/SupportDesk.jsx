@@ -6,6 +6,7 @@
 // v1.0.4 - Ashok - Improved responsiveness
 // v1.0.5 - Ashok - Fixed issues in responsiveness
 // v1.0.6 - Ashok - Added common code to kanban
+// v1.0.7 - Ashok - Added clickable title to navigate to details page at kanban
 
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
@@ -720,6 +721,17 @@ function SupportDesk() {
                     kanbanActions={kanbanActions}
                   />
                 )}
+                onTitleClick={(ticket) => {
+                  navigate(
+                    effectivePermissions_RoleName === "Admin" ||
+                      effectivePermissions_RoleName ===
+                        "Individual_Freelancer" ||
+                      effectivePermissions_RoleName === "Individual"
+                      ? `/support-desk/${ticket._id}`
+                      : `/support-desk/view/${ticket._id}`,
+                    { state: { ticketData: ticket } }
+                  );
+                }}
                 emptyState="No tickets found."
                 kanbanTitle="Ticket"
               />

@@ -7,6 +7,7 @@
 // v1.0.6  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.7  -  Ashok   -  Improved responsiveness
 // v1.0.8  -  Ashok   -  Added common code to kanban
+// v1.0.9  -  Ashok   -  added clickable title to navigate to details page at kanban
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -832,6 +833,7 @@ const ScheduleAssessment = () => {
                     kanbanActions={kanbanActions}
                   />
                 )}
+                onTitleClick={handleView}
                 emptyState="No Assessments found."
                 kanbanTitle="Assessment"
               />

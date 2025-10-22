@@ -1331,6 +1331,9 @@ function Candidate({
                           candidate?.CurrentExperience ||
                           "N/A",
                         avatar: candidate?.ImageData?.path || null,
+                        navigateTo: isAssessmentView
+                          ? `/${candidate?.assessmentId}/view-details/${candidate._id}`
+                          : `view-details/${candidate._id}`,
                       }))}
                       columns={kanbanColumns}
                       // v2.0.1 <-------------------------------------------------

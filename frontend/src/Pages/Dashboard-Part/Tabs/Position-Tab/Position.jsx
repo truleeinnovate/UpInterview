@@ -7,6 +7,7 @@
 // v1.0.6  -  Fixed   - Fixed alignment style issues at table
 // v1.0.7  -  Ashok   - fixed style issue
 // v1.0.8  -  Ashok   - added common code for kanban
+// v1.0.9  -  Ashok   - added clickable title to navigate to details page at kanban
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -510,7 +511,6 @@ const PositionTab = () => {
   const handleStatusChange = async (row, newStatus) => {
     if (!effectivePermissions.Positions?.Edit) return;
     if (!newStatus || row.status === newStatus) return;
-    
 
     // if (["closed", "cancelled"].includes(newStatus)) {
     //   const confirmed = window.confirm(
@@ -872,6 +872,7 @@ const PositionTab = () => {
                         kanbanActions={kanbanActions}
                       />
                     )}
+                    onTitleClick={(item) => handleView(item)}
                     emptyState="No positions found."
                     kanbanTitle="Position"
                   />

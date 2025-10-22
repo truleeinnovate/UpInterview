@@ -7,6 +7,7 @@
 // v1.0.6 - Ashok - changed check box colors to brand color
 // v1.0.7 - Ashok - Added status badge
 // v1.0.8 - Ashok - Added common code kanban
+// v1.0.9 - Ashok - Added clickable title to navigate to details page at kanban
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
@@ -759,6 +760,7 @@ const Task = () => {
                       kanbanActions={kanbanActions}
                     />
                   )}
+                  onTitleClick={(item) => handleTaskClick(item)}
                   emptyState="No Tasks Found."
                   kanbanTitle="Task"
                 />
