@@ -426,7 +426,7 @@ const MockInterview = () => {
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => navigate(`/mockinterview-details/${row._id}`)}
+          onClick={() => navigate(`/mock-interview-details/${row._id}`)}
         >
           {row?.mockInterviewCode || "N/A"}
         </div>
@@ -438,7 +438,7 @@ const MockInterview = () => {
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => navigate(`/mockinterview-details/${row._id}`)}
+          onClick={() => navigate(`/mock-interview-details/${row._id}`)}
         >
           {row?.rounds?.[0]?.roundTitle || "Not Provided"}
         </div>
@@ -536,7 +536,7 @@ const MockInterview = () => {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => navigate(`/mockinterview-details/${row._id}`),
+      onClick: (row) => navigate(`/mock-interview-details/${row._id}`),
     },
     {
       key: "edit",
@@ -609,7 +609,7 @@ const MockInterview = () => {
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) =>
-        navigate(`/mockinterview-details/${row._id}`, {
+        navigate(`/mock-interview-details/${row._id}`, {
           state: { from: location.pathname },
         }),
     },
@@ -644,7 +644,7 @@ const MockInterview = () => {
           <div className="sm:px-0">
             <Header
               title="Mock Interviews"
-              onAddClick={() => navigate("/mockinterview-create")}
+              onAddClick={() => navigate("mock-interview-create")}
               addButtonText="Add Interview"
               canCreate={effectivePermissions.MockInterviews?.Create}
             />
@@ -682,7 +682,7 @@ const MockInterview = () => {
                   id: interview?._id,
                   title: interview?.mockInterviewCode,
                   subTitle: formatDate(interview.createdAt),
-                  navigateTo: `/mockinterview-details/${interview._id}`,
+                  navigateTo: `/mock-interview-details/${interview._id}`,
                 }))}
                 columns={kanbanColumns}
                 renderActions={(item) => (

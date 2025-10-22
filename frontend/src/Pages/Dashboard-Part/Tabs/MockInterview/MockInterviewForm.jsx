@@ -1019,7 +1019,7 @@ const MockSchedulelater = () => {
             setIsResumeRemoved(false);
 
             // Navigate and show success message
-            navigate("/mockinterview");
+            navigate("/mock-interview");
             setTimeout(() => {
                 notify.success(mockEdit ? "Mock interview updated successfully!" : "Mock interview created successfully!");
                 setIsSubmitting(false);
@@ -2691,7 +2691,7 @@ const MockSchedulelater = () => {
                                 className="border border-custom-blue p-3 rounded py-1"
                                 onClick={() =>
                                     navigate(
-                                        id ? `/mockinterview-details/${id}` : `/mockinterview`
+                                        id ? `/mock-interview-details/${id}` : `/mock-interview`
                                     )
                                 }
                             >

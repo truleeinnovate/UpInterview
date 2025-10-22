@@ -20,7 +20,7 @@ function Breadcrumb({ items }) {
       {/* v1.0.0 <------------------------------------------------------------------------- */}
       <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-wrap">
         {/* <li className="inline-flex items-center">
-          <Link to="/interviewList" className="inline-flex items-center text-sm font-medium text-foreground hover:text-custom-blue transition-colors">
+          <Link to="/interviews" className="inline-flex items-center text-sm font-medium text-foreground hover:text-custom-blue transition-colors">
             Home
           </Link>
         </li> */}
