@@ -314,6 +314,7 @@ const EditInterviewDetails = ({
       parseInt(profileData?.previousExperienceConductingInterviewsYears) || 0;
     console.log("Years of experience for rate calculation:", years);
 
+    console.log("Profile data:", profileData);
     // Show Junior if years <= 6 (0-6 years)
     const shouldShowJunior = years <= 6;
     // Show Mid if years >= 3 AND years <= 9 (3-9 years)
@@ -706,6 +707,7 @@ const EditInterviewDetails = ({
             yearsOfExperience: formData.yearsOfExperience,
             rates: formData.rates
         };
+        console.log("cleanFormData", cleanFormData);
 
         try {
             // Both contexts use the same endpoint since outsource interviewers are Contact records
@@ -1135,6 +1137,8 @@ const EditInterviewDetails = ({
             {/* Technology Selection */}
             <div className="space-y-4">
               <DropdownWithSearchField
+              
+              disabled = {from !== "outsource-interviewer"}
                 value={selectedCandidates[0]?.TechnologyMasterName || ""}
                 options={services.map((tech) => ({
                   value: tech.TechnologyMasterName,
@@ -1423,6 +1427,8 @@ const EditInterviewDetails = ({
                           <div className="relative">
                             <IncreaseAndDecreaseField
                               name="junior_usd"
+                              
+                      disabled = {from !== "outsource-interviewer"}
                               value={formData.rates?.junior?.usd || ""}
                               onChange={handleRateChange("junior", "usd")}
                               label=""
@@ -1451,6 +1457,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.junior?.inr || ""}
                               onChange={handleRateChange("junior", "inr")}
                               label=""
+                                 disabled = {from !== "outsource-interviewer"}
                               min={getRateRanges("Junior")?.inr?.min || 0}
                               max={getRateRanges("Junior")?.inr?.max || 100000}
                               inputProps={{
@@ -1507,6 +1514,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.mid?.usd || ""}
                               onChange={handleRateChange("mid", "usd")}
                               label=""
+                                 disabled = {from !== "outsource-interviewer"}
                               min={getRateRanges("Mid-Level")?.usd?.min || 0}
                               max={getRateRanges("Mid-Level")?.usd?.max || 1000}
                               inputProps={{
@@ -1532,6 +1540,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.mid?.inr || ""}
                               onChange={handleRateChange("mid", "inr")}
                               label=""
+                                 disabled = {from !== "outsource-interviewer"}
                               min={getRateRanges("Mid-Level")?.inr?.min || 0}
                               max={
                                 getRateRanges("Mid-Level")?.inr?.max || 100000
@@ -1590,6 +1599,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.senior?.usd || ""}
                               onChange={handleRateChange("senior", "usd")}
                               label=""
+                                 disabled = {from !== "outsource-interviewer"}
                               min={getRateRanges("Senior")?.usd?.min || 0}
                               max={getRateRanges("Senior")?.usd?.max || 1000}
                               inputProps={{
@@ -1615,6 +1625,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.senior?.inr || ""}
                               onChange={handleRateChange("senior", "inr")}
                               label=""
+                                 disabled = {from !== "outsource-interviewer"}
                               min={getRateRanges("Senior")?.inr?.min || 0}
                               max={getRateRanges("Senior")?.inr?.max || 100000}
                               inputProps={{

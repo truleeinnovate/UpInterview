@@ -1,6 +1,6 @@
 import React from "react";
 
-const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, label = "IncreaseAndDecreaseField", required = false, min = 1, max = 15 }) => {
+const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, label = "IncreaseAndDecreaseField", required = false, min = 1, max = 15, disabled = false }) => {
   
   const handleInputChange = (e) => {
     const inputValue = e.target.value;
@@ -62,6 +62,7 @@ const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, labe
           id={name}
           min={min}
           max={max}
+          disabled={disabled}
           value={value || ''}
           onChange={handleInputChange}
           onBlur={handleBlur}
