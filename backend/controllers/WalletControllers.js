@@ -1,4 +1,5 @@
 // v1.0.0 - Venkatesh - Added settleInterviewPayment function to handle interview payment settlement from hold to interviewer wallet
+// v1.0.1 - Venkatesh - Added tenantId support to wallet creation in getWalletByOwnerId and settleInterviewPayment functions
 
 const mongoose = require("mongoose");
 const WalletTopup = require("../models/WalletTopup");
@@ -10,6 +11,11 @@ const Receipt = require("../models/Receiptmodels");
 const BankAccount = require("../models/BankAccount");
 const WithdrawalRequest = require("../models/WithdrawalRequest");
 const PushNotification = require("../models/PushNotifications");
+
+// Import payment push notification functions
+const {
+    createWalletTopupNotification
+} = require('./PushNotificationControllers/pushNotificationPaymentController');
 const crypto = require("crypto");
 const https = require("https");
 const { MockInterviewRound } = require("../models/MockInterview/mockinterviewRound");
@@ -38,6 +44,8 @@ const razorpay = new Razorpay({
 const getWalletByOwnerId = async (req, res) => {
   try {
     const { ownerId } = req.params;
+    // Extract tenantId from query params or headers
+    const tenantId = req.query.tenantId || req.headers['x-tenant-id'] || req.body?.tenantId;
 
     // Validate ownerId
     if (!ownerId) {
@@ -48,8 +56,14 @@ const getWalletByOwnerId = async (req, res) => {
     let wallet = await WalletTopup.findOne({ ownerId });
 
     if (!wallet) {
+      // Log when creating wallet without tenantId
+      if (!tenantId) {
+        console.warn(`[getWalletByOwnerId] Creating wallet for ${ownerId} without tenantId`);
+      }
+      
       wallet = await WalletTopup.create({
         ownerId,
+        tenantId: tenantId || "default",
         balance: 0,
         transactions: [],
       });
@@ -453,6 +467,20 @@ const walletVerifyPayment = async (req, res) => {
       return res
         .status(500)
         .json({ error: "Failed to update wallet", details: saveError.message });
+    }
+
+    // Create wallet top-up push notification
+    try {
+      await createWalletTopupNotification(ownerId, tenantId, {
+        amount: parsedAmount,
+        walletCode: wallet.walletCode,
+        newBalance: wallet.balance,
+        invoiceCode: invoice?.code || 'N/A'
+      });
+      console.log('[WALLET] Top-up notification created');
+    } catch (notificationError) {
+      console.error('[WALLET] Error creating top-up notification:', notificationError);
+      // Don't fail the response if notification fails
     }
 
     res.status(200).json({
@@ -2181,15 +2209,23 @@ const settleInterviewPayment = async (req, res) => {
     
     if (!interviewerWallet) {
       // Create wallet for interviewer if doesn't exist
+      // Get tenantId from the organization wallet or request
+      const tenantId = orgWallet?.tenantId || req.body?.tenantId || req.query?.tenantId;
+      
+      if (!tenantId) {
+        console.warn(`[settleInterviewPayment] Creating interviewer wallet without tenantId for ${interviewerContactId}`);
+      }
+      
       interviewerWallet = await WalletTopup.create([{
         ownerId: interviewerContactId,
+        tenantId: tenantId || "default",
         balance: 0,
         holdAmount: 0,
         walletCode: `WLT-${Date.now().toString().slice(-6)}`, // Generate a simple wallet code
         transactions: []
       }], { session });
       interviewerWallet = interviewerWallet[0];
-      console.log(`[settleInterviewPayment] Created new wallet for interviewer ${interviewerContactId}`);
+      console.log(`[settleInterviewPayment] Created new wallet for interviewer ${interviewerContactId} with tenantId: ${tenantId || "default"}`);
     }
     
     // 5. Create credit transaction for interviewer

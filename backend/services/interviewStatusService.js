@@ -7,7 +7,96 @@ const cron = require('node-cron');
 const TERMINAL_STATUSES = ['Draft', 'Completed', 'Cancelled', 'Selected', 'Rejected'];
 
 /**
- * Updates an interview status based on its rounds or forces a status update
+ * Core function to update interview status based on its rounds
+ * @param {String} interviewId - The interview ID
+ * @param {String} forcedStatus - Optional forced status to set
+ * @param {String} reason - Optional reason for status change
+ * @returns {Promise<Object|null>} Updated interview or null if not found
+ */
+const updateInterviewStatusCore = async (interviewId, forcedStatus = null, reason = null) => {
+    try {
+        // Find the interview
+        const interview = await Interview.findById(interviewId);
+        if (!interview) {
+            console.error(`Interview not found: ${interviewId}`);
+            return null;
+        }
+
+        const oldStatus = interview.status;
+        let newStatus = interview.status;
+
+        // If a status is being forced, use that
+        if (forcedStatus) {
+            newStatus = forcedStatus;
+            interview.status = forcedStatus;
+            if (reason) {
+                interview.completionReason = reason;
+            }
+        } else {
+            // Otherwise, determine status based on rounds
+            const rounds = await InterviewRounds.find({ interviewId: interviewId });
+            
+            if (rounds.length === 0) {
+                console.log(`No rounds found for interview ${interviewId}`);
+                return interview;
+            }
+
+            // Check if all rounds are in terminal state
+            const allRoundsTerminal = rounds.every(round => 
+                TERMINAL_STATUSES.includes(round.status)
+            );
+
+            if (!allRoundsTerminal) {
+                console.log(`Not all rounds are in terminal state for interview ${interviewId}`);
+                return interview;
+            }
+
+            // Determine the new interview status based on rounds
+            const hasRejected = rounds.some(round => round.status === 'Rejected');
+            const hasCancelled = rounds.some(round => round.status === 'Cancelled');
+            const allCompleted = rounds.every(round => 
+                round.status === 'Completed' || round.status === 'Selected'
+            );
+            
+            if (hasRejected) {
+                newStatus = 'Rejected';
+            } else if (hasCancelled) {
+                newStatus = 'Cancelled';
+            } else if (allCompleted) {
+                newStatus = 'Completed';
+            }
+
+            // Update interview status if changed
+            if (newStatus !== interview.status) {
+                interview.status = newStatus;
+            } else {
+                // No change needed
+                return interview;
+            }
+        }
+
+        // Save the updated interview
+        const updatedInterview = await interview.save();
+
+        // Create notification if status changed
+        if (oldStatus !== newStatus) {
+            try {
+                await createInterviewStatusUpdateNotification(updatedInterview, oldStatus, newStatus);
+            } catch (notificationError) {
+                console.error('[INTERVIEW] Error creating status update notification:', notificationError);
+                // Continue execution even if notification fails
+            }
+        }
+
+        return updatedInterview;
+    } catch (error) {
+        console.error('Error updating interview status:', error);
+        throw error;
+    }
+};
+
+/**
+ * HTTP handler for updating interview status
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -16,38 +105,22 @@ const updateInterviewStatus = async (req, res) => {
         const { interviewId, status } = req.params;
         const { reason } = req.body;
 
-        // Validate status
-        if (!['Completed', 'Cancelled', 'Rejected', 'Selected'].includes(status)) {
+        // Validate status if provided
+        if (status && !['Completed', 'Cancelled', 'Rejected', 'Selected'].includes(status)) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid status. Must be one of: Completed, Cancelled, Rejected, Selected'
             });
         }
 
-        // Find and update the interview
-        const interview = await Interview.findById(interviewId);
-        if (!interview) {
+        // Call the core function
+        const updatedInterview = await updateInterviewStatusCore(interviewId, status, reason);
+        
+        if (!updatedInterview) {
             return res.status(404).json({
                 success: false,
                 message: 'Interview not found'
             });
-        }
-
-        // Update the interview status and reason if provided
-        interview.status = status;
-        if (reason) {
-            interview.completionReason = reason;
-        }
-
-        // Save the updated interview
-        const updatedInterview = await interview.save();
-
-        // Create notification if status changed
-        try {
-            await createInterviewStatusUpdateNotification(updatedInterview, interview.status, status);
-        } catch (notificationError) {
-            console.error('[INTERVIEW] Error creating status update notification:', notificationError);
-            // Continue execution even if notification fails
         }
 
         res.status(200).json({
@@ -89,13 +162,15 @@ const processCompletedInterviews = async () => {
     // Process each interview
     for (const interview of interviews) {
       try {
-        const updatedInterview = await updateInterviewStatus(interview._id);
+        const oldStatus = interview.status;
+        // Use the core function instead of the HTTP handler
+        const updatedInterview = await updateInterviewStatusCore(interview._id);
 
-        if (updatedInterview) {
+        if (updatedInterview && updatedInterview.status !== oldStatus) {
           results.updated++;
           results.details.push({
             interviewId: interview._id,
-            oldStatus: interview.status,
+            oldStatus: oldStatus,
             newStatus: updatedInterview.status,
             success: true
           });
@@ -103,7 +178,7 @@ const processCompletedInterviews = async () => {
           results.details.push({
             interviewId: interview._id,
             status: interview.status,
-            message: 'No update needed - rounds not in terminal state',
+            message: 'No update needed - rounds not in terminal state or no status change',
             success: false
           });
         }
@@ -148,6 +223,7 @@ const setupInterviewStatusCronJob = () => {
 
 module.exports = {
   updateInterviewStatus,
+  updateInterviewStatusCore,
   processCompletedInterviews,
   setupInterviewStatusCronJob,
   TERMINAL_STATUSES

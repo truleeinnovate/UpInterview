@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  login as user issue
 // v1.0.2  -  Ashraf  -  using authcookie manager to get current tokein,cookies works in all browsers correctly,creaing cookies or expiry cookies correctly
 // v1.0.3  -  Ashraf  -  in local cookies expiring issue colved
+// v1.0.4  -  Venkatesh  -  Added getCurrentTenantId method to extract tenantId from JWT token for wallet operations
 
 import Cookies from 'js-cookie';
 // <---------------------- v1.0.2
@@ -397,6 +398,40 @@ class AuthCookieManager {
     }
 
     // console.log('⚠️ No user ID found for user type:', userType);
+    return null;
+  }
+
+  /**
+   * Get the current tenant ID from the active token
+   * 
+   * @returns {string|null} The current tenant ID
+   */
+  static getCurrentTenantId() {
+    // Get the active token based on user type
+    const authToken = this.getAuthToken();
+    
+    if (authToken) {
+      try {
+        const decoded = decodeJwt(authToken);
+        const tenantId = decoded.tenantId;
+        return tenantId || null;
+      } catch (error) {
+        console.warn('Error decoding auth token for tenant ID:', error);
+      }
+    }
+    
+    // Fallback: try to get from impersonation token if no auth token
+    const impersonationToken = this.getImpersonationToken();
+    if (impersonationToken) {
+      try {
+        const decoded = decodeJwt(impersonationToken);
+        const tenantId = decoded.tenantId;
+        return tenantId || null;
+      } catch (error) {
+        console.warn('Error decoding impersonation token for tenant ID:', error);
+      }
+    }
+
     return null;
   }
 

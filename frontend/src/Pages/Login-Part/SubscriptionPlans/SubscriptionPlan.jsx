@@ -227,78 +227,255 @@ const SubscriptionPlan = () => {
           <SubscriptionPlansSkeleton />
         ) : (
         <div className="grid grid-cols-3 sm:grid-cols-1 gap-6 items-stretch sm:mb-5">
-          {plans.map((plan) => (
+          {plans.map((plan) => {
+            // Get actual price
+            const actualPrice = isAnnual ? plan.annualPrice : plan.monthlyPrice;
+            const monthlyPrice = plan.monthlyPrice;
+            
+            // Define static higher prices for organizations to show as strikethrough
+            const getStaticHigherPrice = (planName, isAnnual) => {
+              if (planName === 'Starter') {
+                return isAnnual ? 19999 : 1999; // Monthly: 1999, Annual: 19999
+              } else if (planName === 'Professional' || planName === 'Pro') {
+                return isAnnual ? 42999 : 4299; // Monthly: 4299, Annual: 42999
+              }
+              return actualPrice; // For other plans, use actual price
+            };
+
+            const staticHigherPrice = getStaticHigherPrice(plan.name, isAnnual);
+            const shouldShowLimitedOffer = organization && !isAnnual &&
+              (plan.name === 'Starter' || plan.name === 'Professional' || plan.name === 'Pro');
+            const shouldShowSavings = organization && isAnnual &&
+              (plan.name === 'Starter' || plan.name === 'Professional' || plan.name === 'Pro');
+            
+            // Calculate savings for individuals on annual plans
+            const individualAnnualSavings = !organization && isAnnual && monthlyPrice > 0 ? 
+              (monthlyPrice * 12 - actualPrice) : 0;
+            const shouldShowIndividualSavings = !organization && isAnnual && individualAnnualSavings > 0;
+            
+            const savingsAmount = organization ? (staticHigherPrice - actualPrice) : individualAnnualSavings;
+            const isEnterprise = plan.name === 'Enterprise';
+            const isFree = plan.name === 'Free' || actualPrice === 0;
+
+            return (
             <div
               key={plan.name}
-              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5 h-full flex flex-col ${isHighlighted(plan)
+              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-6 ${isHighlighted(plan)
                   ? "-translate-y-2  md:-translate-y-4 lg:-translate-y-6 xl:-translate-y-6 2xl:-translate-y-6 z-10 bg-[#217989] text-white transform scale-[1.02]"
                   : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
                 }`}
               onMouseEnter={() => setHoveredPlan(plan.name)}
               onMouseLeave={() => setHoveredPlan(null)}
+              style={{
+                minHeight: "480px",
+                display: "flex",
+                flexDirection: "column",
+              }}
             >
-              <div className="flex justify-between items-center">
-
+              {/* Most Popular Badge - Professional for orgs, Premium for individuals */}
+              {((organization && (plan.name === 'Professional' || plan.name === 'Pro')) ||
+                (!organization && plan.name === 'Premium')) && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-[#217989] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+              {/* Plan Name - Centered */}
+              <div className="text-center mb-4 pt-2">
                 <h5
-                  className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
-                    }`}
+                  className={`text-2xl sm:text-3xl md:text-3xl font-bold ${
+                    isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                  }`}
                 >
-                  {plan.name}
+                  {plan?.name ? plan?.name : "Plan Name Not Available"}
                 </h5>
-                {isAnnual ? (
-                  plan.annualBadge && (
-                    <span className="bg-white text-purple-600 font-semibold text-sm py-1 px-2 rounded-md">
-                      {plan.annualBadge}
-                    </span>
-                  )
+              </div>
+              {/* Price Section - Center of card */}
+              <div className="text-center my-6">
+                {shouldShowLimitedOffer ? (
+                  // Monthly plans for organizations - Show strikethrough and Limited-Time Offer
+                  <div>
+                    <p className={`text-3xl sm:text-4xl md:text-5xl font-bold line-through ${
+                      isHighlighted(plan) ? "text-white/70" : "text-gray-400"
+                    }`}>
+                      <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                      {staticHigherPrice.toLocaleString('en-IN')}
+                    </p>
+                    <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 mb-4 ${
+                      isHighlighted(plan) ? "text-white/80" : "text-gray-500"
+                    }`}>
+                      per month
+                    </p>
+                    <div className="mt-4">
+                      <span className={`inline-block px-4 py-2 rounded-md text-sm font-semibold ${
+                        isHighlighted(plan)
+                          ? "bg-white/20 text-white"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}>
+                        Limited-Time Offer: ₹{actualPrice.toLocaleString('en-IN')} / month
+                      </span>
+                    </div>
+                  </div>
+                ) : shouldShowSavings ? (
+                  // Annual plans for organizations - Show actual price and savings
+                  <div>
+                    <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                      isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                    }`}>
+                      <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                      {actualPrice.toLocaleString('en-IN')}
+                    </p>
+                    <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 mb-4 ${
+                      isHighlighted(plan) ? "text-white/80" : "text-gray-600"
+                    }`}>
+                      per year
+                    </p>
+                    <div className="mt-4">
+                      <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
+                        isHighlighted(plan)
+                          ? "bg-green-100/20 text-white border border-white/30"
+                          : "bg-green-50 text-green-700 border border-green-200"
+                      }`}>
+                        <span className="text-lg">🔥</span>
+                        Save ₹{savingsAmount.toLocaleString('en-IN')}/year
+                      </span>
+                    </div>
+                  </div>
+                ) : isEnterprise ? (
+                  // Enterprise plan - Show custom pricing
+                  <div>
+                    <p className={`text-4xl sm:text-5xl md:text-6xl font-bold ${
+                      isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                    }`}>
+                      Custom
+                    </p>
+                    <p className={`text-sm sm:text-base md:text-lg font-medium mt-2 ${
+                      isHighlighted(plan) ? "text-white/80" : "text-gray-600"
+                    }`}>
+                      pricing
+                    </p>
+                  </div>
+                ) : isFree ? (
+                  // Free plan - Show ₹0 forever
+                  <div>
+                    <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                      isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                    }`}>
+                      <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                      0
+                    </p>
+                    <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 ${
+                      isHighlighted(plan) ? "text-white/80" : "text-gray-600"
+                    }`}>
+                      forever
+                    </p>
+                  </div>
+                ) : shouldShowIndividualSavings ? (
+                  // Individual annual plans - Show price with savings
+                  <div>
+                    <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                      isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                    }`}>
+                      <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                      {actualPrice.toLocaleString('en-IN')}
+                    </p>
+                    <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 mb-3 ${
+                      isHighlighted(plan) ? "text-white/80" : "text-gray-600"
+                    }`}>
+                      per year
+                    </p>
+                    <div className="mt-3">
+                      <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                        isHighlighted(plan)
+                          ? "bg-green-100/20 text-white border border-white/30"
+                          : "bg-green-50 text-green-700 border border-green-200"
+                      }`}>
+                        Save ₹{savingsAmount.toLocaleString('en-IN')}/year
+                      </span>
+                    </div>
+                  </div>
                 ) : (
-                  plan.monthlyBadge && (
-                    <span className="bg-white text-purple-600 font-semibold text-sm py-1 px-2 rounded-md">
-                      {plan.monthlyBadge}
-                    </span>
-                  )
+                  // Regular pricing for individuals or other cases
+                  <div>
+                    <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                      isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                    }`}>
+                      <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                      {actualPrice.toLocaleString('en-IN')}
+                      <span className="text-sm sm:text-base md:text-lg font-medium">
+                        {" "}
+                        / {isAnnual ? "year" : "month"}
+                      </span>
+                    </p>
+                  </div>
                 )}
               </div>
+
+              {/* Features List */}
               <div className="flex-grow mt-4">
-              <ul className="space-y-2 text-xs sm:text-sm md:text-base lg:text-lg">
-                {plan.features.map((feature, idx) => (
-                  
-                  <li key={idx} className="flex items-start">
-                     <span className="mr-2">•</span>
-                     <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
+                <ul className="space-y-2 text-xs sm:text-sm md:text-base">
+                  {plan.features && plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start">
+                      <span className={`mr-2 ${
+                        isHighlighted(plan) ? "text-white" : "text-green-500"
+                      }`}>✓</span>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="mt-auto">
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold mt-4">
-                  <span className="text-lg sm:text-xl md:text-2xl">₹</span>
-                  {isAnnual ? plan.annualPrice : plan.monthlyPrice}
-                  <span className="text-lg sm:text-base md:text-lg font-medium"> /{isAnnual ? "annual" : "month"}</span>
-                </p>
-                <button
-                  key={plan._id}
-                  onClick={() => submitPlans(plan)}
-                  isLoading={subscriptionData.subscriptionPlanId === plan.planId  && isSubmitting}
-                  loadingText={subscriptionData.subscriptionPlanId === plan.planId  &&
-                    "Processing..."}
-                  className={`w-full font-semibold h-11 py-2 mt-4 rounded-lg sm:text-xs
-                  ${isHighlighted(plan) ? "bg-white text-custom-blue hover:text-custom-blue " : "text-white bg-custom-blue"}
-                  ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}`}
-                  disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"}
-                >
-                  {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
-                    ? "Subscribed"
-                    : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
-                      ? "Continue to Payment"
-                      : "Choose"}
-                </button>
-              </div>
+              <button
+                key={plan._id}
+                onClick={() => !isEnterprise && submitPlans(plan)}
+                isLoading={subscriptionData.subscriptionPlanId === plan.planId && isSubmitting}
+                loadingText={subscriptionData.subscriptionPlanId === plan.planId &&
+                  "Processing..."}
+                className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
+                ${isHighlighted(plan) ? "bg-white text-custom-blue hover:text-custom-blue " : "text-white bg-custom-blue"}
+                ${isEnterprise
+                  ? "opacity-50 cursor-not-allowed"
+                  : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""}`}
+                disabled={isEnterprise || (subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active")}
+              >
+                {subscriptionData.subscriptionPlanId === plan.planId && isSubmitting ? (
+                  <span className="flex items-center justify-center">
+                    <svg
+                      className="animate-spin h-5 w-5 mr-2"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Processing...
+                  </span>
+                ) : isEnterprise ? (
+                  "Contact Sales"
+                ) : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
+                  ? "Subscribed"
+                  : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
+                    ? "Continue to Payment"
+                    : "Choose"}
+              </button>
             </div>
-          ))}
+            );
+          })}
         </div>
         )}
-
       </div>
     </div>
   );

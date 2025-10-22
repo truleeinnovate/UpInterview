@@ -254,9 +254,10 @@ const Subscription = () => {
         return;
       }
 
-      // If there's no active Razorpay subscription (e.g. on Free plan), create a new subscription
+      // If there's no active Razorpay subscription (e.g. on Free plan or cancelled subscription), create a new subscription
       const hasRazorpaySubscription = Boolean(subscriptionData?.razorpaySubscriptionId);
-      if (!hasRazorpaySubscription) {
+      const isSubscriptionCancelled = subscriptionData?.status === "cancelled";
+      if (!hasRazorpaySubscription || isSubscriptionCancelled) {
         navigate("/account-settings/subscription/card-details", {
           state: {
             plan: {
@@ -473,66 +474,210 @@ const Subscription = () => {
             {/* v1.0.3 <--------------------------------------------------------------------------------------------- */}
             <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
             {/* v1.0.3 ---------------------------------------------------------------------------------------------> */}
-              {plans.map((plan) => (
-                <div
-                  key={plan.name}
-                  className={`shadow-lg rounded-3xl relative transition-all duration-300 p-6 ${
-                    isHighlighted(plan)
-                      ? "-translate-y-2 md:-translate-y-4 lg:-translate-y-6 xl:-translate-y-6 2xl:-translate-y-6 z-10 bg-[#217989] text-white transform scale-[1.02]"
-                      : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
-                  }`}
-                  onMouseEnter={() => setHoveredPlan(plan.name)}
-                  onMouseLeave={() => setHoveredPlan(null)}
-                  style={{
-                    minHeight: "420px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <h5
-                      className={`text-xl sm:text-2xl md:text-3xl font-bold ${
-                        isHighlighted(plan) ? "text-white" : "text-[#217989]"
-                      }`}
-                    >
-                      {plan?.name ? plan?.name : "Plan Name Not Available"}
-                    </h5>
-                    {isAnnual
-                      ? plan.annualBadge && (
-                          <span className="bg-white text-purple-600 font-semibold text-sm py-1 px-2 rounded-md">
-                            {plan.annualBadge}
-                          </span>
-                        )
-                      : plan.monthlyBadge && (
-                          <span className="bg-white text-purple-600 font-semibold text-sm py-1 px-2 rounded-md">
-                            {plan.monthlyBadge}
-                          </span>
-                        )}
-                  </div>
-                  <div className="flex-grow mt-4">
-                    <ul className="space-y-2 text-xs sm:text-sm md:text-base lg:text-lg">
-                      {plan.features && plan.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start">
-                          <span className="mr-2">•</span>
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="mt-6">
-                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                      <span className="text-lg sm:text-xl md:text-2xl">₹</span>
-                      {isAnnual ? plan.annualPrice : plan.monthlyPrice}
-                      <span className="text-sm sm:text-base md:text-lg font-medium">
-                        {" "}
-                        /{isAnnual ? "year" : "month"}
-                      </span>
-                    </p>
-                  </div>
+              {plans.map((plan) => {
+                // Get actual price
+                const actualPrice = isAnnual ? plan.annualPrice : plan.monthlyPrice;
+                const monthlyPrice = plan.monthlyPrice;
+                
+                // Define static higher prices for organizations to show as strikethrough
+                const getStaticHigherPrice = (planName, isAnnual) => {
+                  if (planName === 'Starter') {
+                    return isAnnual ? 19999 : 1999; // Monthly: 1999, Annual: 19999
+                  } else if (planName === 'Professional' || planName === 'Pro') {
+                    return isAnnual ? 42999 : 4299; // Monthly: 4299, Annual: 42999
+                  }
+                  return actualPrice; // For other plans, use actual price
+                };
+
+                const staticHigherPrice = getStaticHigherPrice(plan.name, isAnnual);
+                const shouldShowLimitedOffer = organization && !isAnnual &&
+                  (plan.name === 'Starter' || plan.name === 'Professional' || plan.name === 'Pro');
+                const shouldShowSavings = organization && isAnnual &&
+                  (plan.name === 'Starter' || plan.name === 'Professional' || plan.name === 'Pro');
+                
+                // Calculate savings for individuals on annual plans
+                const individualAnnualSavings = !organization && isAnnual && monthlyPrice > 0 ? 
+                  (monthlyPrice * 12 - actualPrice) : 0;
+                const shouldShowIndividualSavings = !organization && isAnnual && individualAnnualSavings > 0;
+                
+                const savingsAmount = organization ? (staticHigherPrice - actualPrice) : individualAnnualSavings;
+                const isEnterprise = plan.name === 'Enterprise';
+                const isFree = plan.name === 'Free' || actualPrice === 0;
+
+                return (
+                  <div
+                    key={plan.name}
+                    className={`shadow-lg rounded-3xl relative transition-all duration-300 p-6 ${
+                      isHighlighted(plan)
+                        ? "-translate-y-2 md:-translate-y-4 lg:-translate-y-6 xl:-translate-y-6 2xl:-translate-y-6 z-10 bg-[#217989] text-white transform scale-[1.02]"
+                        : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
+                    }`}
+                    onMouseEnter={() => setHoveredPlan(plan.name)}
+                    onMouseLeave={() => setHoveredPlan(null)}
+                    style={{
+                      minHeight: "480px",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    {/* Most Popular Badge - Professional for orgs, Premium for individuals */}
+                    {((organization && (plan.name === 'Professional' || plan.name === 'Pro')) || 
+                      (!organization && plan.name === 'Premium')) && (
+                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <span className="bg-[#217989] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
+                          Most Popular
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Plan Name - Centered */}
+                    <div className="text-center mb-4 pt-2">
+                      <h5
+                        className={`text-2xl sm:text-3xl md:text-3xl font-bold ${
+                          isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                        }`}
+                      >
+                        {plan?.name ? plan?.name : "Plan Name Not Available"}
+                      </h5>
+                    </div>
+
+                    {/* Price Section - Center of card */}
+                    <div className="text-center my-6">
+                      {shouldShowLimitedOffer ? (
+                        // Monthly plans for organizations - Show strikethrough and Limited-Time Offer
+                        <div>
+                          <p className={`text-3xl sm:text-4xl md:text-5xl font-bold line-through ${
+                            isHighlighted(plan) ? "text-white/70" : "text-gray-400"
+                          }`}>
+                            <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                            {staticHigherPrice.toLocaleString('en-IN')}
+                          </p>
+                          <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 mb-4 ${
+                            isHighlighted(plan) ? "text-white/80" : "text-gray-500"
+                          }`}>
+                            per month
+                          </p>
+                          <div className="mt-4">
+                            <span className={`inline-block px-4 py-2 rounded-md text-sm font-semibold ${
+                              isHighlighted(plan) 
+                                ? "bg-white/20 text-white" 
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}>
+                              Limited-Time Offer: ₹{actualPrice.toLocaleString('en-IN')} / month
+                            </span>
+                          </div>
+                        </div>
+                      ) : shouldShowSavings ? (
+                        // Annual plans for organizations - Show actual price and savings
+                        <div>
+                          <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                            isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                          }`}>
+                            <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                            {actualPrice.toLocaleString('en-IN')}
+                          </p>
+                          <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 mb-4 ${
+                            isHighlighted(plan) ? "text-white/80" : "text-gray-600"
+                          }`}>
+                            per year
+                          </p>
+                          <div className="mt-4">
+                            <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
+                              isHighlighted(plan) 
+                                ? "bg-green-100/20 text-white border border-white/30" 
+                                : "bg-green-50 text-green-700 border border-green-200"
+                            }`}>
+                              <span className="text-lg">🔥</span>
+                              Save ₹{savingsAmount.toLocaleString('en-IN')}/year
+                            </span>
+                          </div>
+                        </div>
+                      ) : isEnterprise ? (
+                        // Enterprise plan - Show custom pricing
+                        <div>
+                          <p className={`text-4xl sm:text-5xl md:text-6xl font-bold ${
+                            isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                          }`}>
+                            Custom
+                          </p>
+                          <p className={`text-sm sm:text-base md:text-lg font-medium mt-2 ${
+                            isHighlighted(plan) ? "text-white/80" : "text-gray-600"
+                          }`}>
+                            pricing
+                          </p>
+                        </div>
+                      ) : isFree ? (
+                        // Free plan - Show ₹0 forever
+                        <div>
+                          <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                            isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                          }`}>
+                            <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                            0
+                          </p>
+                          <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 ${
+                            isHighlighted(plan) ? "text-white/80" : "text-gray-600"
+                          }`}>
+                            forever
+                          </p>
+                        </div>
+                      ) : shouldShowIndividualSavings ? (
+                        // Individual annual plans - Show price with savings
+                        <div>
+                          <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                            isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                          }`}>
+                            <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                            {actualPrice.toLocaleString('en-IN')}
+                          </p>
+                          <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 mb-3 ${
+                            isHighlighted(plan) ? "text-white/80" : "text-gray-600"
+                          }`}>
+                            per year
+                          </p>
+                          <div className="mt-3">
+                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                              isHighlighted(plan) 
+                                ? "bg-green-100/20 text-white border border-white/30" 
+                                : "bg-green-50 text-green-700 border border-green-200"
+                            }`}>
+                              Save ₹{savingsAmount.toLocaleString('en-IN')}/year
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        // Regular pricing for individuals or other cases
+                        <div>
+                          <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                            isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                          }`}>
+                            <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                            {actualPrice.toLocaleString('en-IN')}
+                            <span className="text-sm sm:text-base md:text-lg font-medium">
+                              {" "}
+                              / {isAnnual ? "year" : "month"}
+                            </span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Features List */}
+                    <div className="flex-grow mt-4">
+                      <ul className="space-y-2 text-xs sm:text-sm md:text-base">
+                        {plan.features && plan.features.map((feature, idx) => (
+                          <li key={idx} className="flex items-start">
+                            <span className={`mr-2 ${
+                              isHighlighted(plan) ? "text-white" : "text-green-500"
+                            }`}>✓</span>
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
                   <button
-                    onClick={() => submitPlans(plan)}
+                    onClick={() => !isEnterprise && submitPlans(plan)}
                     className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
                 ${
                   isHighlighted(plan)
@@ -540,15 +685,18 @@ const Subscription = () => {
                     : "text-white bg-custom-blue"
                 }
                 ${
-                  subscriptionData.subscriptionPlanId === plan.planId &&
-                  subscriptionData.selectedBillingCycle ===
-                    (isAnnual ? "annual" : "monthly") &&
-                  subscriptionData.status === "active"
+                  isEnterprise
                     ? "opacity-50 cursor-not-allowed"
-                    : ""
+                    : subscriptionData.subscriptionPlanId === plan.planId &&
+                      subscriptionData.selectedBillingCycle ===
+                        (isAnnual ? "annual" : "monthly") &&
+                      subscriptionData.status === "active"
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                 }
                 ${(() => {
-                  // Check if this is an upgrade button
+                  // Check if this is an upgrade button - No animation for Enterprise or cancelled subscriptions
+                  if (isEnterprise || subscriptionData.status === "cancelled") return "";
                   if (subscriptionData.subscriptionPlanId) {
                     const viewingCycle = isAnnual ? "annual" : "monthly";
                     const isSamePlan =
@@ -591,10 +739,11 @@ const Subscription = () => {
                   return "";
                 })()}`}
                     disabled={
-                      subscriptionData.subscriptionPlanId === plan.planId &&
+                      isEnterprise ||
+                      (subscriptionData.subscriptionPlanId === plan.planId &&
                       subscriptionData.selectedBillingCycle ===
                         (isAnnual ? "annual" : "monthly") &&
-                      subscriptionData.status === "active"
+                      subscriptionData.status === "active")
                     }
                   >
                     {loadingPlanId === plan.planId ? (
@@ -620,6 +769,10 @@ const Subscription = () => {
                         </svg>
                         Processing...
                       </span>
+                    ) : isEnterprise ? (
+                      "Contact Sales"
+                    ) : subscriptionData.status === "cancelled" ? (
+                      "Choose"
                     ) : subscriptionData.subscriptionPlanId === plan.planId &&
                       subscriptionData.selectedBillingCycle ===
                         (isAnnual ? "annual" : "monthly") &&
@@ -633,7 +786,8 @@ const Subscription = () => {
                     ) : (
                       (() => {
                         // Determine if this plan is higher or lower than current plan
-                        if (subscriptionData.subscriptionPlanId) {
+                        // Don't show upgrade/downgrade if subscription is cancelled
+                        if (subscriptionData.subscriptionPlanId && subscriptionData.status !== "cancelled") {
                           const viewingCycle = isAnnual ? "annual" : "monthly";
                           const currentCycle =
                             subscriptionData.selectedBillingCycle;
@@ -685,8 +839,9 @@ const Subscription = () => {
                       })()
                     )}
                   </button>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

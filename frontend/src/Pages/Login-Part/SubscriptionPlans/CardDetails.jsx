@@ -127,14 +127,13 @@ const CardDetails = () => {
                 userType: planDetails.user?.userType || ""
             }));
 
-            // Calculate the initial total using the same logic as updateTotalPaid
+            // Calculate the initial total - DO NOT apply discount for payment
+            // Discounts are only for display purposes in frontend
             const price = defaultMembershipType === "annual" ? annual : monthly;
-            const discount = defaultMembershipType === "annual"
-                ? parseFloat(planDetails.annualDiscount) || 0
-                : parseFloat(planDetails.monthDiscount) || 0;
-
-            const initialTotal = Math.max(0, price - discount);
-            console.log('Initial total calculation:', { price, discount, initialTotal });
+            
+            // DO NOT subtract discount from price - use full price for payment
+            const initialTotal = Math.max(0, price);
+            console.log('Initial total calculation (without discount):', { price, initialTotal });
 
             setTotalPaid(initialTotal.toFixed(2));
         }
@@ -545,8 +544,8 @@ const CardDetails = () => {
                                 <div className="mt-6 mb-4 flex flex-col">
                                     <span className="font-semibold text-lg sm:text-base">
                                         {cardDetails.membershipType === "monthly"
-                                            ? `$${(pricePerMember.monthly - planDetails.monthDiscount || Math.round(pricePerMember.monthly))} / Month / User`
-                                            : `$${(pricePerMember.annually - planDetails.annualDiscount || Math.round(pricePerMember.annually))} / Annual / User`}
+                                            ? `₹${(pricePerMember.monthly - planDetails.monthDiscount || Math.round(pricePerMember.monthly))} / Month / User`
+                                            : `₹${(pricePerMember.annually - planDetails.annualDiscount || Math.round(pricePerMember.annually))} / Annual / User`}
                                     </span>
                                     <span className="text-custom-blue text-sm sm:text-xs">Details</span>
                                 </div>
@@ -575,7 +574,7 @@ const CardDetails = () => {
                                         <div className="flex flex-col">
                                             <span className="text-sm font-semibold">Pay Monthly</span>
                                             <span className="text-sm font-medium">
-                                                ${pricePerMember.monthly} / Month Per {planDetails.user?.userType === "individual" ? "Member" : "Organization"}
+                                                ₹{pricePerMember.monthly} / Month Per {planDetails.user?.userType === "individual" ? "Member" : "Organization"}
                                             </span>
                                         </div>
                                     </div>
@@ -598,7 +597,7 @@ const CardDetails = () => {
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-semibold">Pay Annually</span>
                                                 <span className="text-sm font-medium">
-                                                    ${Math.round(pricePerMember.annually / 12)} / Month Per {planDetails.user?.userType === "individual" ? "Member" : "Organization"}
+                                                    ₹{Math.round(pricePerMember.annually / 12)} / Month Per {planDetails.user?.userType === "individual" ? "Member" : "Organization"}
                                                 </span>
                                             </div>
                                         </div>
