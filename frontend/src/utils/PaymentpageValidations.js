@@ -95,10 +95,12 @@ export  const handleMembershipChange = (type,setCardDetails,pricePerMember,planD
 const  updateTotalPaid = (membershipType,pricePerMember,planDetails,setTotalPaid) => {
     let total = 0;
     if (membershipType === "monthly") {
-        total = parseInt(pricePerMember.monthly) - (planDetails.monthDiscount || 0);
+        // DO NOT apply discount - only use actual price for payment
+        total = parseInt(pricePerMember.monthly);
        
     } else if (membershipType === "annual") {
-        total = parseInt(pricePerMember.annually) - (planDetails.annualDiscount || 0);
+        // DO NOT apply discount - only use actual price for payment
+        total = parseInt(pricePerMember.annually);
        
     }
     setTotalPaid(total);

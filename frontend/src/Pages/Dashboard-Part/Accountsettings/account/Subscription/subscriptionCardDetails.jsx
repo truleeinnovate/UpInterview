@@ -194,19 +194,14 @@ const SubscriptionCardDetails = () => {
         userType: userType || planDetails.user?.userType || "",
       }));
 
-      // Calculate the initial total using the same logic as updateTotalPaid
+      // Calculate the initial total - DO NOT apply discount for payment
+      // Discounts are only for display purposes in frontend
       const price = defaultMembershipType === "annual" ? annual : monthly;
-      const discount =
-        defaultMembershipType === "annual"
-          ? parseFloat(planDetails.annualDiscount) || 0
-          : parseFloat(
-              planDetails.monthDiscount ?? planDetails.monthlyDiscount
-            ) || 0;
-
-      const initialTotal = Math.max(0, price - discount);
-      console.log("Initial total calculation:", {
+      
+      // DO NOT subtract discount from price - use full price for payment
+      const initialTotal = Math.max(0, price);
+      console.log("Initial total calculation (without discount):", {
         price,
-        discount,
         initialTotal,
       });
 
@@ -619,14 +614,8 @@ const SubscriptionCardDetails = () => {
                 <span className="font-semibold text-lg">
                   {" "}
                   {cardDetails.membershipType === "monthly"
-                    ? `$${
-                        pricePerMember.monthly - planDetails.monthDiscount ||
-                        Math.round(pricePerMember.monthly)
-                      } / Month / User`
-                    : `$${
-                        pricePerMember.annually - planDetails.annualDiscount ||
-                        Math.round(pricePerMember.annually)
-                      } / Annual / User`}
+                    ? `₹${Math.round(pricePerMember.monthly)} / Month / User`
+                    : `₹${Math.round(pricePerMember.annually)} / Annual / User`}
                 </span>
 
                 <span className="text-blue-400">Details</span>
@@ -672,7 +661,7 @@ const SubscriptionCardDetails = () => {
                     <span className="text-sm font-semibold">Pay Monthly</span>
                     <span className="text-sm font-medium">
                       {" "}
-                      ${pricePerMember.monthly} / Month Per{" "}
+                      ₹{pricePerMember.monthly} / Month Per{" "}
                       {planDetails.user?.userType === "individual"
                         ? "Member"
                         : "Organization"}
@@ -712,7 +701,7 @@ const SubscriptionCardDetails = () => {
                       </span>
                       <span className="text-sm font-medium">
                         {" "}
-                        ${Math.round(pricePerMember.annually / 12)} / Month Per{" "}
+                        ₹{Math.round(pricePerMember.annually / 12)} / Month Per{" "}
                         {planDetails.user?.userType === "individual"
                           ? "Member"
                           : "Organization"}

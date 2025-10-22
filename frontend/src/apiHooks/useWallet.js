@@ -1,4 +1,5 @@
 //<----v1.0.0-----Venkatesh-----tanStack Query added
+//v1.0.1--Venkatesh-----Added tenantId support to useWallet hook using getCurrentTenantId from AuthCookieManager
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
@@ -11,12 +12,17 @@ export const useWallet = (userIdOverride) => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const hasViewPermission = effectivePermissions?.Wallet?.View;
   const userId = userIdOverride || AuthCookieManager.getCurrentUserId();
+  const tenantId = AuthCookieManager.getCurrentTenantId(); // Get tenantId from auth manager
 
   return useQuery({
     queryKey: ['wallet', userId],
     queryFn: async () => {
       if (!userId) return null;
-      const response = await axios.get(`${config.REACT_APP_API_URL}/wallet/${userId}`);
+      // Pass tenantId as query parameter
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/wallet/${userId}`,
+        { params: { tenantId: tenantId || 'default' } }
+      );
       const walletArr = response?.data?.walletDetials;
       return Array.isArray(walletArr) && walletArr.length > 0 ? walletArr[0] : null;
     },

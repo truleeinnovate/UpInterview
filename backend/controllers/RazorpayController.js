@@ -23,6 +23,16 @@ const createInvoice = helpers.createInvoice;
 const createReceipt = helpers.createReceipt;
 const calculateEndDate = helpers.calculateEndDate;
 
+// Import payment push notification functions
+const {
+    createPaymentSuccessNotification,
+    createPaymentFailedNotification,
+    createSubscriptionChargedNotification,
+    createSubscriptionCancelledNotification,
+    createSubscriptionHaltedNotification,
+    createPaymentMethodUpdatedNotification
+} = require('./PushNotificationControllers/pushNotificationPaymentController');
+
 // console.log('Helper functions loaded:', {
 //     createInvoice: typeof createInvoice === 'function',
 //     createReceipt: typeof createReceipt === 'function',
@@ -299,6 +309,8 @@ const verifyPayment = async (req, res) => {
                 tenantId: tenantId
             });
 
+            let cardIndex = -1;
+
             if (!paymentCard) {
                 // Create new payment card record
                 //console.log('Creating new payment card record');
@@ -331,7 +343,7 @@ const verifyPayment = async (req, res) => {
 
                 // Check if this card already exists
                 const last4Digits = cardInfo?.last4 || '';
-                const cardIndex = paymentCard.cards.findIndex(card =>
+                cardIndex = paymentCard.cards.findIndex(card =>
                     card.cardNumber && card.cardNumber.includes(last4Digits)
                 );
 
@@ -371,6 +383,20 @@ const verifyPayment = async (req, res) => {
             try {
                 await paymentCard.save();
                // console.log('Successfully saved payment card details');
+                
+                // Create payment method updated notification for new cards
+                if (cardIndex === -1 && cardInfo?.last4) {
+                    try {
+                        await createPaymentMethodUpdatedNotification(ownerId, tenantId, {
+                            cardLast4: cardInfo.last4,
+                            cardBrand: cardBrand || 'Card',
+                            isDefault: paymentCard.isDefault || false
+                        });
+                        console.log('[PAYMENT] Payment method notification created');
+                    } catch (notificationError) {
+                        console.error('[PAYMENT] Error creating payment method notification:', notificationError);
+                    }
+                }
             } catch (saveError) {
                 console.error('Error saving payment card details:', saveError);
                 // Continue with the payment even if card save fails
@@ -593,7 +619,7 @@ const verifyPayment = async (req, res) => {
                         // Create Usage document only once per billing period after payment verification
                         try {
                             const now = new Date();
-                            const billingCycle = (billingCycle || membershipType || 'monthly').toLowerCase();
+                            const usageBillingCycle = (membershipType || 'monthly').toLowerCase();
                             
                             // Check if Usage already exists for current billing period
                             const existingUsage = await Usage.findOne({ tenantId, ownerId });
@@ -612,13 +638,13 @@ const verifyPayment = async (req, res) => {
                                 }
                                 
                                 // For monthly: check if we're in the same month and year
-                                if (billingCycle.includes('month')) {
+                                if (usageBillingCycle.includes('month')) {
                                     return nowMoment.year() === fromMoment.year() && 
                                            nowMoment.month() === fromMoment.month();
                                 }
                                 
                                 // For annual: check if we're in the same year cycle
-                                if (billingCycle.includes('year') || billingCycle.includes('annual')) {
+                                if (usageBillingCycle.includes('year') || usageBillingCycle.includes('annual')) {
                                     return nowMoment.year() === fromMoment.year();
                                 }
                                 
@@ -656,7 +682,7 @@ const verifyPayment = async (req, res) => {
                                     // Fallback: derive start from billing cycle and endDate
                                     const end = new Date(periodEnd);
                                     const start = new Date(end);
-                                    if (billingCycle.includes('year') || billingCycle.includes('annual')) {
+                                    if (usageBillingCycle.includes('year') || usageBillingCycle.includes('annual')) {
                                         start.setFullYear(start.getFullYear() - 1);
                                     } else {
                                         // default monthly
@@ -742,15 +768,81 @@ const verifyPayment = async (req, res) => {
                     }
                 }
 
-                //update organization subscription status
-
-
             }
 
-           console.log('Payment verification completed, all records updated');
+            // Update wallet if plan has credits
+            if (plan && plan.walletCredits > 0) {
+                //   console.log('Plan includes wallet credits:', plan.walletCredits);
+                // Safely resolve related invoice id if available
+                const relatedInvoiceId = (invoice && invoice._id) ? invoice._id.toString() : undefined;
+
+                const wallet = await WalletTopup.findOne({ ownerId });
+
+                if (wallet) {
+                    console.log('Found existing wallet:', wallet._id);
+
+                    // Update wallet status from pending to completed
+                    let updatedTransaction = false;
+
+                    const txns = Array.isArray(wallet.transactions) ? wallet.transactions : [];
+                    for (let i = 0; i < txns.length; i++) {
+                        if (
+                            txns[i].status === 'pending' &&
+                            relatedInvoiceId &&
+                            txns[i].relatedInvoiceId === relatedInvoiceId
+                        ) {
+                            txns[i].status = 'completed';
+                            updatedTransaction = true;
+                           // console.log('Updated pending transaction to completed status');
+                            break;
+                        }
+                    }
+
+                    if (!updatedTransaction) {
+                        // If no pending transaction found, add a new one
+                        //wallet.balance += plan.walletCredits;
+                        wallet.transactions.push({
+                            type: 'credit',
+                            amount: plan.walletCredits,
+                            description: `Credits from ${plan.name} subscription`,
+                            relatedInvoiceId: relatedInvoiceId,
+                            status: 'completed',
+                            createdDate: new Date()
+                        });
+                        //console.log('Added new completed transaction to wallet');
+                    }
+
+                    await wallet.save();
+                    console.log('Wallet updated successfully');
+                }
+            }
+
+            //update organization subscription status
+
+
         } catch (error) {
             console.error('Error updating subscription records:', error);
             // Don't fail the payment verification if record updates fail
+        }
+
+        console.log('Payment verification completed, all records updated');
+        
+        // Create payment success push notification
+        try {
+            const plan = await SubscriptionPlan.findOne({ planId: planId });
+            const paymentAmount = razorpayPayment?.amount ? razorpayPayment.amount / 100 : 0;
+            
+            await createPaymentSuccessNotification(ownerId, tenantId, {
+                amount: paymentAmount,
+                planName: plan?.name || 'Subscription',
+                billingCycle: membershipType || 'monthly',
+                paymentCode: existingPayment?.paymentCode || 'N/A'
+            });
+            
+            console.log('[PAYMENT] Success notification created for payment verification');
+        } catch (notificationError) {
+            console.error('[PAYMENT] Error creating payment success notification:', notificationError);
+            // Don't fail the payment if notification fails
         }
 
         return res.status(200).json({
@@ -1272,6 +1364,20 @@ const handlePaymentFailed = async (payment) => {
 
         //console.log('Updated subscription with failed payment information');
 
+        // Create payment failed push notification
+        try {
+            const plan = await SubscriptionPlan.findById(customerSubscription.subscriptionPlanId || customerSubscription.planId);
+            await createPaymentFailedNotification(customerSubscription.ownerId, customerSubscription.tenantId, {
+                amount: payment.amount / 100,
+                reason: payment.error_description || payment.error_code || 'Payment failed',
+                planName: plan?.name || 'Subscription',
+                nextRetryDate: payment.next_retry_at ? new Date(payment.next_retry_at * 1000) : null
+            });
+            console.log('[PAYMENT] Failed notification created for payment failure');
+        } catch (notificationError) {
+            console.error('[PAYMENT] Error creating payment failed notification:', notificationError);
+        }
+
     } catch (error) {
         console.error('Error handling payment failed event:', error);
     }
@@ -1299,7 +1405,18 @@ const handleSubscriptionHalted = async (subscription) => {
 
         //console.log('Updated subscription status to halted');
 
-        // You can add notification logic here to inform the user about the halted subscription
+        // Create subscription halted push notification
+        try {
+            const plan = await SubscriptionPlan.findById(customerSubscription.subscriptionPlanId || customerSubscription.planId);
+            await createSubscriptionHaltedNotification(customerSubscription.ownerId, customerSubscription.tenantId, {
+                planName: plan?.name || 'Subscription',
+                reason: subscription.pause_reason || 'Payment failures',
+                nextRetryDate: subscription.next_retry_at ? new Date(subscription.next_retry_at * 1000) : null
+            });
+            console.log('[PAYMENT] Subscription halted notification created');
+        } catch (notificationError) {
+            console.error('[PAYMENT] Error creating subscription halted notification:', notificationError);
+        }
 
     } catch (error) {
         console.error('Error handling subscription halted event:', error);
@@ -1345,6 +1462,19 @@ const handleSubscriptionCancelled = async (subscription) => {
         if (invoice) {
             invoice.status = 'cancelled';
             await invoice.save();
+        }
+        
+        // Create subscription cancelled push notification
+        try {
+            const plan = await SubscriptionPlan.findById(customerSubscription.subscriptionPlanId || customerSubscription.planId);
+            await createSubscriptionCancelledNotification(customerSubscription.ownerId, customerSubscription.tenantId, {
+                planName: plan?.name || 'Subscription',
+                endDate: customerSubscription.endDate || new Date(),
+                reason: subscription.end_reason || 'User initiated'
+            });
+            console.log('[PAYMENT] Subscription cancelled notification created');
+        } catch (notificationError) {
+            console.error('[PAYMENT] Error creating subscription cancelled notification:', notificationError);
         }
     } catch (error) {
         console.error('Error handling subscription cancellation webhook:', error);
@@ -2135,15 +2265,22 @@ const handleSubscriptionCharged = async (subscription) => {
         //         );
         //     }
 
-        //     console.log('Usage upserted successfully:', (updatedUsage && updatedUsage._id) ? updatedUsage._id.toString() : 'unknown');
-        // } catch (error) {
-        //     console.error('Error upserting usage data:', error);
-        // }
-
         console.log('Successfully processed subscription payment:', paymentId);
         console.log('Next billing date set to:', newEndDate);
 
-        // You can add notification logic here to inform the user about the successful payment
+        // Create subscription charged push notification
+        try {
+            await createSubscriptionChargedNotification(customerSubscription.ownerId, customerSubscription.tenantId, {
+                amount: customerSubscription.price,
+                planName: planName || 'Subscription',
+                billingCycle: billingCycle || 'monthly',
+                nextBillingDate: newEndDate,
+                receiptCode: receiptCode || 'N/A'
+            });
+            console.log('[PAYMENT] Subscription charged notification created');
+        } catch (notificationError) {
+            console.error('[PAYMENT] Error creating subscription charged notification:', notificationError);
+        }
 
     } catch (error) {
         console.error('Error handling subscription charged event:', error);
