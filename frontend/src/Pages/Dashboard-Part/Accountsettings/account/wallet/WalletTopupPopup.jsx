@@ -2,12 +2,13 @@
 // v1.0.1 - Ashok - Removed border left and set outline as none
 // v1.0.2 - Ashok - Changed logo url from local to cloud storage url
 // v1.0.3 - Ashok - Ashok - Improved responsiveness and added common code to popup
+// v1.0.4 - Replaced toast notifications with common notify service
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Cookies from "js-cookie";
-import toast from "react-hot-toast";
+import { notify } from "../../../../../services/toastService";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useUserProfile } from "../../../../../apiHooks/useUsers.js";
 // import logo from "../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
@@ -69,7 +70,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        toast.error("Failed to fetch user profile data");
+        notify.error("Failed to fetch user profile data");
       }
     };
 
@@ -145,7 +146,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
                 timestamp: new Date(),
               });
 
-              toast.success("Wallet top-up successful!");
+              notify.success("Wallet top-up successful!");
               onClose();
             } else {
               //console.error('Backend did not confirm success:', verification);//----v1.0.0----->
@@ -245,7 +246,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
             </div>
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Payment Method
             </label>
@@ -258,9 +259,9 @@ export function WalletTopupPopup({ onClose, onTopup }) {
                 Top up your wallet securely using your credit card
               </p>
             </div>
-          </div>
+          </div> */}
 
-          <div className="border-t pt-4">
+          <div className="pt-4">
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
                 {error}

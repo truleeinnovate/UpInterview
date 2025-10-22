@@ -62,7 +62,7 @@ const createSubscriptionControllers = async (req, res) => {
     
 
     const pricing = parseInt(userDetails.membershipType === 'monthly' ? planDetails.monthlyPrice : planDetails.annualPrice) || 0;
-    const discount = parseInt(userDetails.membershipType === 'monthly' ? planDetails.monthDiscount : planDetails.annualDiscount) || 0;
+    const discount = 0; //parseInt(userDetails.membershipType === 'monthly' ? planDetails.monthDiscount : planDetails.annualDiscount) || 0;
 
 
     // Ensure pricing and discount result in a valid total amount

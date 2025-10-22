@@ -127,13 +127,14 @@ const CardDetails = () => {
                 userType: planDetails.user?.userType || ""
             }));
 
-            // Calculate the initial total - DO NOT apply discount for payment
-            // Discounts are only for display purposes in frontend
+            // Calculate the initial total - NO discount applied (fixed at 0)
             const price = defaultMembershipType === "annual" ? annual : monthly;
-            
-            // DO NOT subtract discount from price - use full price for payment
             const initialTotal = Math.max(0, price);
-            console.log('Initial total calculation (without discount):', { price, initialTotal });
+            console.log('Initial total calculation (no discount):', { 
+                price,
+                discount: 0, // Fixed at 0 for now
+                initialTotal 
+            });
 
             setTotalPaid(initialTotal.toFixed(2));
         }
@@ -186,16 +187,23 @@ const CardDetails = () => {
             // Ensure totalAmount is a valid number and properly formatted
             const amountToCharge = parseFloat(totalPaid) || 0;
             console.log('Creating order with amount:', amountToCharge, 'INR');
+            console.log('Discount values - Fixed at 0 for both monthly and annual');
 
             // Create order data object
+            // console.log('DEBUG - Original planDetails:', planDetails);
+            // console.log('DEBUG - planDetails.annualDiscount:', planDetails.annualDiscount);
+            
+            // Create a clean planDetails object without any discount fields
+            const { monthDiscount, annualDiscount, monthlyBadge, annualBadge, ...cleanPlanDetails } = planDetails;
+            
             const orderData = {
                 planDetails: {
-                    ...planDetails,
+                    ...cleanPlanDetails,
                     // Ensure prices are numbers
                     monthlyPrice: parseFloat(planDetails.monthlyPrice) || 0,
                     annualPrice: parseFloat(planDetails.annualPrice) || 0,
-                    monthDiscount: parseFloat(planDetails.monthDiscount) || 0,
-                    annualDiscount: parseFloat(planDetails.annualDiscount) || 0,
+                    monthDiscount: 0, // Explicitly set to 0
+                    annualDiscount: 0, // Explicitly set to 0
                     razorpayPlanIds: planDetails.razorpayPlanIds || {}
                 },
                 ownerId,
@@ -222,18 +230,32 @@ const CardDetails = () => {
                 }
             };
 
-            console.log('Sending order to backend:', {
-                amount: amountToCharge,
-                currency: 'INR',
-                membershipType: cardDetails.membershipType,
-                planId: orderData.planId,
-                autoRenew: true
-            });
+            // console.log('FRONTEND - Sending order to backend:', {
+            //     amount: amountToCharge,
+            //     currency: 'INR',
+            //     membershipType: cardDetails.membershipType,
+            //     planId: orderData.planId,
+            //     autoRenew: true,
+            //     fullOrderData: orderData
+            // });
 
             // Create Razorpay subscription/order via hook mutation
             const orderResponse = await createSubscription(orderData);
 
-            console.log('Order response:', orderResponse);
+            // console.log('BACKEND - Order response received:', orderResponse);
+            // console.log('BACKEND - Amount in response:', orderResponse.amount, 'paise =', orderResponse.amount / 100, 'rupees');
+            
+            // VALIDATION: Check if backend returned different amount than sent
+            //const expectedAmountInPaise = amountToCharge * 100;
+            // if (orderResponse.amount !== expectedAmountInPaise) {
+            //     console.error('❌ AMOUNT MISMATCH!');
+            //     console.error('Sent to backend:', amountToCharge, 'rupees =', expectedAmountInPaise, 'paise');
+            //     console.error('Received from backend:', orderResponse.amount / 100, 'rupees =', orderResponse.amount, 'paise');
+            //     console.error('Difference:', (expectedAmountInPaise - orderResponse.amount) / 100, 'rupees');
+                
+            //     // Alert the user about the discrepancy
+            //     toast.warning(`Note: Payment amount adjusted by backend to ₹${orderResponse.amount / 100}`);
+            // }
 
             // Check if this is a subscription or one-time payment
             if (orderResponse.isSubscription) {
@@ -259,7 +281,10 @@ const CardDetails = () => {
 
                         // Prepare options for Razorpay checkout
                         // Make sure amount is exactly the same as in the order (no modifications)
-                        console.log('Order amount from backend:', orderResponse.amount);
+                        // console.log('RAZORPAY - Order amount from backend (in paise):', orderResponse.amount);
+                        // console.log('RAZORPAY - Order amount in rupees:', orderResponse.amount / 100);
+                        // console.log('RAZORPAY - Original totalPaid sent:', totalPaid);
+                        // console.log('RAZORPAY - amountToCharge sent:', amountToCharge);
 
                         const options = {
                             key: orderResponse.razorpayKeyId,
@@ -544,8 +569,8 @@ const CardDetails = () => {
                                 <div className="mt-6 mb-4 flex flex-col">
                                     <span className="font-semibold text-lg sm:text-base">
                                         {cardDetails.membershipType === "monthly"
-                                            ? `₹${(pricePerMember.monthly - planDetails.monthDiscount || Math.round(pricePerMember.monthly))} / Month / User`
-                                            : `₹${(pricePerMember.annually - planDetails.annualDiscount || Math.round(pricePerMember.annually))} / Annual / User`}
+                                            ? `₹${Math.round(pricePerMember.monthly)} / Month / User`
+                                            : `₹${Math.round(pricePerMember.annually)} / Annual / User`}
                                     </span>
                                     <span className="text-custom-blue text-sm sm:text-xs">Details</span>
                                 </div>
@@ -602,7 +627,7 @@ const CardDetails = () => {
                                             </div>
                                         </div>
                                         <div>
-                                            <span className="text-sm font-semibold">{planDetails.annualBadge}</span>
+                                            <span className="text-sm font-semibold">{planDetails.annualDiscount}%</span>
                                         </div>
                                     </div>
                                 </div>

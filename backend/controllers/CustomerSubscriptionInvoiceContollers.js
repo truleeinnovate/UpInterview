@@ -83,7 +83,7 @@ const  createInvoice = async (
   }
 
   // Calculate final amount
-  const finalAmount = numericTotalAmount - (isNaN(numericDiscount) ? 0 : numericDiscount);
+  const finalAmount = numericTotalAmount //- (isNaN(numericDiscount) ? 0 : numericDiscount);
 
   // Validate type against enum values
   const validTypes = ['subscription', 'wallet', 'payout', 'custom'];

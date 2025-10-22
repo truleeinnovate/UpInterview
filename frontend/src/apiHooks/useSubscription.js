@@ -97,7 +97,11 @@ export const useSubscription = () => {
     queryKey: ['subscription', ownerId],
     queryFn: async () => {
       if (!ownerId) return {};
-      const res = await axios.get(`${config.REACT_APP_API_URL}/subscription-plans/user/${ownerId}`,(authToken ? authHeader(authToken) : undefined));
+      // Add timestamp to bypass any HTTP caching
+      const res = await axios.get(
+        `${config.REACT_APP_API_URL}/subscription-plans/user/${ownerId}?t=${Date.now()}`,
+        authToken ? authHeader(authToken) : undefined
+      );
       const sub = res?.data?.customerSubscription?.[0] || {};
       if (sub && !sub.paymentMethod) {
         sub.paymentMethod = 'card';
@@ -106,11 +110,11 @@ export const useSubscription = () => {
     },
     enabled: !!ownerId,
     retry: 1,
-    staleTime: 1000 * 60 * 10,
-    cacheTime: 1000 * 60 * 30,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 1000 * 60 * 2, // Reduced from 10 minutes to 2 minutes
+    cacheTime: 1000 * 60 * 5, // Reduced from 30 minutes to 5 minutes
+    refetchOnWindowFocus: true, // Changed to true to refetch on focus
+    refetchOnMount: true, // Changed to true to refetch on mount
+    refetchOnReconnect: true, // Changed to true to refetch on reconnect
   });
 
   // Available plans
@@ -279,6 +283,17 @@ export const useSubscription = () => {
     createSubscriptionMutation.isPending ||
     verifyPaymentMutation.isPending;
 
+  // Force refresh function that invalidates cache and refetches
+  const forceRefreshSubscription = async () => {
+    // First invalidate the cache completely
+    await queryClient.invalidateQueries({ queryKey: ['subscription', ownerId] });
+    // Remove the query from cache to force fresh fetch
+    queryClient.removeQueries({ queryKey: ['subscription', ownerId] });
+    // Now refetch with fresh data
+    const result = await refetchSubscription();
+    return result;
+  };
+
   return {
     // data
     subscriptionData,
@@ -302,6 +317,7 @@ export const useSubscription = () => {
 
     // utils
     refetchSubscription,
+    forceRefreshSubscription, // New function for force refresh
     refetchPlans,
 
     // user context (for convenience)

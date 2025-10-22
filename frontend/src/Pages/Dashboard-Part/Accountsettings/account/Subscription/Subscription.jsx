@@ -470,9 +470,9 @@ const Subscription = () => {
         {loading ? (
           <SubscriptionPlansSkeleton />
         ) : (
-          <div className="w-full px-4 pt-10">
+          <div className="w-full px-4 sm:px-6 lg:px-8 pt-8">
             {/* v1.0.3 <--------------------------------------------------------------------------------------------- */}
-            <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* v1.0.3 ---------------------------------------------------------------------------------------------> */}
               {plans.map((plan) => {
                 // Get actual price
@@ -507,19 +507,16 @@ const Subscription = () => {
                 return (
                   <div
                     key={plan.name}
-                    className={`shadow-lg rounded-3xl relative transition-all duration-300 p-6 ${
+                    className={`shadow-lg rounded-2xl relative transition-all duration-300 flex flex-col h-full ${
                       isHighlighted(plan)
-                        ? "-translate-y-2 md:-translate-y-4 lg:-translate-y-6 xl:-translate-y-6 2xl:-translate-y-6 z-10 bg-[#217989] text-white transform scale-[1.02]"
+                        ? "-translate-y-2 md:-translate-y-3 z-10 bg-[#217989] text-white transform scale-[1.02]"
                         : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
                     }`}
                     onMouseEnter={() => setHoveredPlan(plan.name)}
                     onMouseLeave={() => setHoveredPlan(null)}
-                    style={{
-                      minHeight: "480px",
-                      display: "flex",
-                      flexDirection: "column",
-                    }}
+                    style={{ minHeight: "500px" }}
                   >
+                    <div className="p-5 flex flex-col h-full">
                     {/* Most Popular Badge - Professional for orgs, Premium for individuals */}
                     {((organization && (plan.name === 'Professional' || plan.name === 'Pro')) || 
                       (!organization && plan.name === 'Premium')) && (
@@ -531,9 +528,9 @@ const Subscription = () => {
                     )}
 
                     {/* Plan Name - Centered */}
-                    <div className="text-center mb-4 pt-2">
+                    <div className="text-start mb-4">
                       <h5
-                        className={`text-2xl sm:text-3xl md:text-3xl font-bold ${
+                        className={`text-xl md:text-2xl font-bold ${
                           isHighlighted(plan) ? "text-white" : "text-[#217989]"
                         }`}
                       >
@@ -541,24 +538,46 @@ const Subscription = () => {
                       </h5>
                     </div>
 
-                    {/* Price Section - Center of card */}
-                    <div className="text-center my-6">
+                    
+
+                    {/* Features List */}
+                    <div className="flex-grow" style={{ minHeight: "200px", marginBottom: "16px" }}>
+                      <ul className="space-y-2.5 text-sm">
+                        {plan.features && plan.features.map((feature, idx) => (
+                          <li key={idx} className="flex items-center">
+                            <span className={`mr-2 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
+                              isHighlighted(plan) 
+                                ? "bg-white/20 text-white" 
+                                : "bg-green-100 text-green-600"
+                            }`}>
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                              </svg>
+                            </span>
+                            <span className="leading-snug">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Price Section */}
+                    <div className="text-start mb-2">
                       {shouldShowLimitedOffer ? (
                         // Monthly plans for organizations - Show strikethrough and Limited-Time Offer
                         <div>
-                          <p className={`text-3xl sm:text-4xl md:text-5xl font-bold line-through ${
+                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold line-through ${
                             isHighlighted(plan) ? "text-white/70" : "text-gray-400"
                           }`}>
-                            <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                            <span className="text-base sm:text-lg md:text-xl">₹</span>
                             {staticHigherPrice.toLocaleString('en-IN')}
                           </p>
-                          <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 mb-4 ${
+                          <p className={`text-xs font-medium mt-1 ${
                             isHighlighted(plan) ? "text-white/80" : "text-gray-500"
                           }`}>
                             per month
                           </p>
-                          <div className="mt-4">
-                            <span className={`inline-block px-4 py-2 rounded-md text-sm font-semibold ${
+                          <div className="mt-1">
+                            <span className={`inline-block px-3 py-1.5 rounded-md text-xs font-semibold ${
                               isHighlighted(plan) 
                                 ? "bg-white/20 text-white" 
                                 : "bg-yellow-100 text-yellow-800"
@@ -570,24 +589,24 @@ const Subscription = () => {
                       ) : shouldShowSavings ? (
                         // Annual plans for organizations - Show actual price and savings
                         <div>
-                          <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${
                             isHighlighted(plan) ? "text-white" : "text-[#217989]"
                           }`}>
-                            <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                            <span className="text-base sm:text-lg md:text-xl">₹</span>
                             {actualPrice.toLocaleString('en-IN')}
                           </p>
-                          <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 mb-4 ${
+                          <p className={`text-xs font-medium mt-1 ${
                             isHighlighted(plan) ? "text-white/80" : "text-gray-600"
                           }`}>
                             per year
                           </p>
-                          <div className="mt-4">
-                            <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
+                          <div className="mt-1">
+                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${
                               isHighlighted(plan) 
                                 ? "bg-green-100/20 text-white border border-white/30" 
                                 : "bg-green-50 text-green-700 border border-green-200"
                             }`}>
-                              <span className="text-lg">🔥</span>
+                              <span className="text-sm">🔥</span>
                               Save ₹{savingsAmount.toLocaleString('en-IN')}/year
                             </span>
                           </div>
@@ -595,12 +614,12 @@ const Subscription = () => {
                       ) : isEnterprise ? (
                         // Enterprise plan - Show custom pricing
                         <div>
-                          <p className={`text-4xl sm:text-5xl md:text-6xl font-bold ${
+                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${
                             isHighlighted(plan) ? "text-white" : "text-[#217989]"
                           }`}>
                             Custom
                           </p>
-                          <p className={`text-sm sm:text-base md:text-lg font-medium mt-2 ${
+                          <p className={`text-xs font-medium mt-1 ${
                             isHighlighted(plan) ? "text-white/80" : "text-gray-600"
                           }`}>
                             pricing
@@ -609,13 +628,13 @@ const Subscription = () => {
                       ) : isFree ? (
                         // Free plan - Show ₹0 forever
                         <div>
-                          <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${
                             isHighlighted(plan) ? "text-white" : "text-[#217989]"
                           }`}>
-                            <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                            <span className="text-base sm:text-lg md:text-xl">₹</span>
                             0
                           </p>
-                          <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 ${
+                          <p className={`text-xs font-medium mt-1 ${
                             isHighlighted(plan) ? "text-white/80" : "text-gray-600"
                           }`}>
                             forever
@@ -624,18 +643,18 @@ const Subscription = () => {
                       ) : shouldShowIndividualSavings ? (
                         // Individual annual plans - Show price with savings
                         <div>
-                          <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${
                             isHighlighted(plan) ? "text-white" : "text-[#217989]"
                           }`}>
-                            <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                            <span className="text-base sm:text-lg md:text-xl">₹</span>
                             {actualPrice.toLocaleString('en-IN')}
                           </p>
-                          <p className={`text-sm sm:text-base md:text-lg font-medium mt-1 mb-3 ${
+                          <p className={`text-xs font-medium mt-1 ${
                             isHighlighted(plan) ? "text-white/80" : "text-gray-600"
                           }`}>
                             per year
                           </p>
-                          <div className="mt-3">
+                          <div className="mt-1">
                             <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${
                               isHighlighted(plan) 
                                 ? "bg-green-100/20 text-white border border-white/30" 
@@ -648,12 +667,12 @@ const Subscription = () => {
                       ) : (
                         // Regular pricing for individuals or other cases
                         <div>
-                          <p className={`text-3xl sm:text-4xl md:text-5xl font-bold ${
+                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${
                             isHighlighted(plan) ? "text-white" : "text-[#217989]"
                           }`}>
-                            <span className="text-xl sm:text-2xl md:text-3xl">₹</span>
+                            <span className="text-base sm:text-lg md:text-xl">₹</span>
                             {actualPrice.toLocaleString('en-IN')}
-                            <span className="text-sm sm:text-base md:text-lg font-medium">
+                            <span className="text-xs font-medium">
                               {" "}
                               / {isAnnual ? "year" : "month"}
                             </span>
@@ -662,23 +681,10 @@ const Subscription = () => {
                       )}
                     </div>
 
-                    {/* Features List */}
-                    <div className="flex-grow mt-4">
-                      <ul className="space-y-2 text-xs sm:text-sm md:text-base">
-                        {plan.features && plan.features.map((feature, idx) => (
-                          <li key={idx} className="flex items-start">
-                            <span className={`mr-2 ${
-                              isHighlighted(plan) ? "text-white" : "text-green-500"
-                            }`}>✓</span>
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                  <button
-                    onClick={() => !isEnterprise && submitPlans(plan)}
-                    className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
+                    {/* Button Section */}
+                    <button
+                      onClick={() => !isEnterprise && submitPlans(plan)}
+                      className={`w-full font-semibold py-2.5 mt-auto rounded-lg text-sm
                 ${
                   isHighlighted(plan)
                     ? "bg-white text-custom-blue"
@@ -838,7 +844,8 @@ const Subscription = () => {
                         return "Choose";
                       })()
                     )}
-                  </button>
+                    </button>
+                    </div>
                   </div>
                 );
               })}
