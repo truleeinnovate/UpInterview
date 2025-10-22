@@ -116,7 +116,7 @@ const MockInterviewKanban = ({
                   <h4
                     className="text-sm font-medium text-custom-blue cursor-pointer"
                     onClick={() =>
-                      navigate(`/mockinterview-details/${mockinterview._id}`, {
+                      navigate(`/mock-interview-details/${mockinterview._id}`, {
                         state: { from: location.pathname },
                       })
                     }
@@ -132,7 +132,7 @@ const MockInterviewKanban = ({
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() =>
-                      navigate(`/mockinterview-details/${mockinterview._id}`, {
+                      navigate(`/mock-interview-details/${mockinterview._id}`, {
                         state: { from: location.pathname },
                       })
                     }

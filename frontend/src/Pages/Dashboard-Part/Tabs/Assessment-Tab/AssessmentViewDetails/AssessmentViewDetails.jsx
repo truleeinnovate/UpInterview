@@ -175,7 +175,7 @@ function AssessmentView() {
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() =>
-                        navigate(`/assessments-template/edit/${assessment._id}`)
+                        navigate(`/assessment-templates/edit/${assessment._id}`)
                       }
                       className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
                     >

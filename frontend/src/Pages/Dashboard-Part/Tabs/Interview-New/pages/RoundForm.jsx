@@ -1787,7 +1787,7 @@ const RoundFormInterviews = () => {
   const breadcrumbItems = [
     {
       label: "Interviews",
-      path: "/interviewList",
+      path: "/interviews",
     },
     {
       label: candidate?.LastName || "Interview",

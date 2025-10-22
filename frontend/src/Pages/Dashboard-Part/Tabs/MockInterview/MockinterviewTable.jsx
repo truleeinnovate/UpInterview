@@ -92,7 +92,7 @@ const MockinterviewTable = ({ mockinterviews, onRescheduleClick, onCancel }) => 
                               </>
                             )}
                             <div className="py-2 px-2 flex items-center gap-3"
-                              onClick={() => navigate(`/mockinterview-details/${mockinterview._id}`, { state: { from: location.pathname } })}>
+                              onClick={() => navigate(`/mock-interview-details/${mockinterview._id}`, { state: { from: location.pathname } })}>
                               <div className="flex items-center gap-1 text-sm font-medium text-custom-blue">
                                 {mockinterview?.rounds?.roundTitle}
                               </div>
@@ -127,7 +127,7 @@ const MockinterviewTable = ({ mockinterviews, onRescheduleClick, onCancel }) => 
                                 <Menu.Item>
                                   {({ active }) => (
                                     <button
-                                      onClick={() => navigate(`/mockinterview-details/${mockinterview._id}`, { state: { from: location.pathname } })}
+                                      onClick={() => navigate(`/mock-interview-details/${mockinterview._id}`, { state: { from: location.pathname } })}
                                       className={`${active ? 'bg-gray-50' : ''
                                         } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                     >

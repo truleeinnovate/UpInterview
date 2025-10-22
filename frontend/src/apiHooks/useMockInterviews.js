@@ -61,7 +61,7 @@ const addOrUpdateMockInterview = useMutation({
     //     normalizedRound._id = normalizedRound.id;
     //     delete normalizedRound.id;
     //   }
-    
+
     //   const payload = { rounds: [normalizedRound] };
     //   const response = await axios.patch(
     //     `${config.REACT_APP_API_URL}/updateMockInterview/${id}`,
@@ -69,7 +69,7 @@ const addOrUpdateMockInterview = useMutation({
     //   );
     //   return response.data;
     // }
-    
+
 
     // ✅ CASE 2: Normal full create/update
     if (!formData) throw new Error("formData is required for create/update");
@@ -125,7 +125,7 @@ const addOrUpdateMockInterview = useMutation({
 
     const method = isEdit ? "patch" : "post";
     console.log("API Call:", { url, method, payload,isEdit });
-    
+
     const response = await axios[method](url, payload);
     console.log("API Response:", response.data);
 
@@ -148,7 +148,7 @@ const addOrUpdateMockInterview = useMutation({
     console.error("Mock interview error:", error);
   },
 });
-  
+
 
   // Calculate loading states
   const isMutationLoading = addOrUpdateMockInterview.isPending;
@@ -321,8 +321,8 @@ const addOrUpdateMockInterview = useMutation({
 
 //       // //  added by Ranjith - Check if interviewers exist and handle savedRound safely
 //       // const hasInterviewers = formData.rounds?.interviewers?.length > 0;
-//       // const savedRoundId = response.data.savedRound?._id || 
-//       //                     response?.data?.rounds?._id || 
+//       // const savedRoundId = response.data.savedRound?._id ||
+//       //                     response?.data?.rounds?._id ||
 //       //                     response.data.rounds?.[0]?._id;
 
 //       // if (

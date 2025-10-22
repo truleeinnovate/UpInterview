@@ -118,14 +118,14 @@ const MockInterviewDetails = () => {
           <div className="px-4 sm:px-0">
             <Breadcrumb
               items={[
-                { label: "Interviews", path: "/interviewList" },
+                { label: "Interviews", path: "/interviews" },
                 { label: "Not Found" },
               ]}
             />
             <div className="mt-6 text-center py-12 bg-white rounded-lg shadow">
               <p className="text-gray-500">Interview not found.</p>
               <Link
-                to="/mockinterview"
+                to="/mock-interview"
                 className="text-custom-blue hover:text-custom-blue/90 flex items-center mr-4"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
@@ -222,7 +222,7 @@ const MockInterviewDetails = () => {
   const breadcrumbItems = [
     {
       label: "Mock Interview",
-      path: "/mockinterview",
+      path: "/mock-interview",
     },
     {
       label: candidate?.candidateName || "Mock Interview",
@@ -260,7 +260,7 @@ const MockInterviewDetails = () => {
           <div>
             <div className="flex items-center mb-4">
               <Link
-                to="/mockinterview"
+                to="/mock-interview"
                 className="text-custom-blue hover:text-custom-blue/90 flex items-center mr-4"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
@@ -580,9 +580,9 @@ const MockInterviewDetails = () => {
           />
         )}
         {/* {selectPositionView === true && (
-        <PositionSlideDetails 
-          position={selectedPosition} 
-          onClose={() => setSelectPositionView(null)} 
+        <PositionSlideDetails
+          position={selectedPosition}
+          onClose={() => setSelectPositionView(null)}
         />
       )} */}
       </div>
