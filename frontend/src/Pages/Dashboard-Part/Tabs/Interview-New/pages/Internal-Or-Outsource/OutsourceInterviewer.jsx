@@ -30,6 +30,7 @@ import { WalletTopupPopup } from "../../../../Accountsettings/account/wallet/Wal
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 import Cookies from 'js-cookie';
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
+import { notify } from "../../../../../../services/toastService.js";
 
 const OutsourcedInterviewerCard = ({
     interviewer,
@@ -920,17 +921,7 @@ function OutsourcedInterviewerModal({
         } else {
             const required = Number(requiredAmount || 0).toFixed(2);
             const currentBalance = Number(balance || 0).toFixed(2);
-            toast.error(
-                `Your wallet balance is less than the highest interviewer hourly rate.\nRequired: $${required}\nPlease add funds to proceed.`,
-                {
-                    position: "top-center",
-                    style: {
-                        whiteSpace: "pre-line",
-                        textAlign: "center",
-                        maxWidth: "520px",
-                    },
-                }
-            );
+            notify.error( `Your wallet balance is less than the highest interviewer hourly rate.\nRequired: $${required}\nPlease add funds to proceed.` );
             setTimeout(() => setShowWalletModal(true), 1000);
         }
         //----v1.0.1----->
