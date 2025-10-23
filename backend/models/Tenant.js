@@ -32,6 +32,7 @@ const TenantSchema = new mongoose.Schema(
       index: true
     },
     //need to add boolean value for individaul pages wich page is submitted
+    isTestTenant:{type:Boolean,default:false},
 
     // Company Details
     industry: { type: String }, // added

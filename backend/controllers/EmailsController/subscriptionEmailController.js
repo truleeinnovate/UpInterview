@@ -251,7 +251,7 @@ exports.afterSubscribeFreePlan = async (req, res) => {
     // Replace placeholders
     const emailSubject = emailTemplate.subject
       .replace('{{planName}}', planName)
-      .replace('{{companyName}}', process.env.COMPANY_NAME);
+      // .replace('{{companyName}}', process.env.COMPANY_NAME);
 
     const emailBody = emailTemplate.body
       .replace(/{{userName}}/g, userName)
@@ -362,7 +362,7 @@ cron.schedule('0 0 * * *', async () => {
 
         const emailSubject = emailTemplateIncomplete.subject
           .replace('{{planName}}', planName)
-          .replace('{{companyName}}', process.env.COMPANY_NAME);
+          // .replace('{{companyName}}', process.env.COMPANY_NAME);
 
         const emailBody = emailTemplateIncomplete.body
           .replace(/{{userName}}/g, userName)
@@ -431,7 +431,7 @@ cron.schedule('0 0 * * *', async () => {
 
         const emailSubject = emailTemplateRenewal.subject
           .replace('{{planName}}', planName)
-          .replace('{{companyName}}', process.env.COMPANY_NAME)
+          // .replace('{{companyName}}', process.env.COMPANY_NAME)
           .replace('{{nextBillingDate}}', formattedBillingDate);
 
         const emailBody = emailTemplateRenewal.body
