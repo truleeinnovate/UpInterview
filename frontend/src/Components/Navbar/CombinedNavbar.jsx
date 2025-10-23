@@ -464,9 +464,9 @@ const CombinedNavbar = React.memo(() => {
             </div>
             <div>
                 <div className="text-sm border-b w-full pb-5">
-                    <div className="mt-1 mb-2 ml-4 flex items-center">
+                    {/* <div className="mt-1 mb-2 ml-4 flex items-center">
                         <p className="text-black">Introduction</p>
-                    </div>
+                    </div> */}
                     {/* {[
             {
               label: "Getting Started",

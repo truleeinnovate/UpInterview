@@ -25,10 +25,10 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
     //   className={`
     //   fixed lg:relative  lg:block xl:relative 2xl:relative
     //   w-[100%] sm:w-[100%] md:w-[100%] lg:w-[25%] xl:w-[25%] 2xl:w-[25%]
-    //    h-full md:h-screen lg:h-screen xl:h-screen 2xl:h-screen sm:pt-4 
+    //    h-full md:h-screen lg:h-screen xl:h-screen 2xl:h-screen sm:pt-4
     //   md:pt-3
     //   bg-white
-    //   shadow-md lg:shadow-lg 
+    //   shadow-md lg:shadow-lg
     //   transition-transform duration-300
     //   z-40
     //   ${
@@ -276,7 +276,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
           {candidate.skills?.map((skill, index) => (
             <span
               key={index}
-              className="px-2 sm:px-3 py-1 bg-custom-bg text-custom-blue rounded-full sm:text-sm text-base font-medium border border-blue-100 shadow-sm"
+              className="px-2 sm:px-3 py- bg-custom-bg text-custom-blue rounded-full sm:text-sm text-sm font-medium border border-blue-100 shadow-sm"
             >
               {skill.skill}
             </span>
