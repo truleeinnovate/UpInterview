@@ -310,7 +310,7 @@ const SubscriptionPlan = () => {
               </div>
 
               {/* Price Section */}
-              <div className="text-start mb-2">
+              <div className="text-start mb-4">
                 {shouldShowLimitedOffer ? (
                   // Monthly plans for organizations - Show strikethrough and Limited-Time Offer
                   <div>
