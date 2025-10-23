@@ -10,7 +10,7 @@ const interviewSchema = new mongoose.Schema({
     // status: String, // draft --> if accept - inprogress - after all rounds selected or rejected
     status: {
         type: String,
-        enum: ['Draft', 'In Progress', 'Completed', 'Cancelled', 'Rejected', 'Selected'],
+        enum: ['Draft', 'In Progress', 'Completed', 'Cancelled'],
         default: 'Draft'
     },
     scheduleType: String,

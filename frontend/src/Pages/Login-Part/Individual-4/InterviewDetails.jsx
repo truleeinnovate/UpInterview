@@ -87,7 +87,7 @@ const InterviewDetails = ({
             setSelectedSkills(initialSkills);
         }
     }, [interviewDetailsData, selectedSkills, setSelectedSkills, showJuniorLevel, showMidLevel, showSeniorLevel]);
-    const [exchangeRate, setExchangeRate] = useState(83.5); // Default fallback rate
+    const [exchangeRate, setExchangeRate] = useState(""); // Default fallback rate
     const [isRateLoading, setIsRateLoading] = useState(false);
     const [lastRateUpdate, setLastRateUpdate] = useState('');
 
@@ -97,6 +97,7 @@ const InterviewDetails = ({
             try {
                 setIsRateLoading(true);
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/exchange/rate/current`);
+                console.log('exchange rates:-', response.data)
                 if (response.data && response.data.rate) {
                     setExchangeRate(response.data.rate);
                     setLastRateUpdate(new Date().toISOString());
