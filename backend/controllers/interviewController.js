@@ -324,12 +324,11 @@ const createInterview = async (req, res) => {
             .select("interviewCode")
             .lean();
 
-        let nextNumber = 50001; // Start from 50001
+        let nextNumber = 1; // Start from 50001
         if (lastInterview && lastInterview.interviewCode) {
             const match = lastInterview.interviewCode.match(/INT-(\d+)/);
             if (match) {
-                const lastNumber = parseInt(match[1], 10);
-                nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
+                nextNumber = parseInt(match[1], 10);
             }
         }
         interviewData.interviewCode = `INT-${String(nextNumber).padStart(
