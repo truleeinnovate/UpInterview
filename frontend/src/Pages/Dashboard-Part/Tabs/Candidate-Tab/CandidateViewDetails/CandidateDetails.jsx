@@ -8,6 +8,7 @@
 // v1.0.7  - Ashok - Fixed scrollbar issue
 // v1.0.8  - Ashok - modified edit path
 // v1.0.9  - Ashok - fixed navigation to edit popup
+// v2.0.0  - Ashok - fixed style issue
 
 import Modal from "react-modal";
 import {
@@ -171,7 +172,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
             {/* v1.0.4 --------------------------------------------------------> */}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="grid grid-cols-1 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 {/* v1.0.5 <---------------------------------------------------------------- */}
@@ -233,7 +234,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-3">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 {/* v1.0.5 <-------------------------------------------------------- */}
                 {/* <h4 className="text-lg font-semibold text-gray-800 mb-4"> */}
