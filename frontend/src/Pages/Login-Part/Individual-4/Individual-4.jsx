@@ -903,155 +903,10 @@ const MultiStepForm = () => {
                 `${config.REACT_APP_API_URL}/contacts/status/${targetContactId}`,
                 { status: "underReview" },
                 {
-                    withCredentials: true,
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-            // if( currentStep === 3 ){
-            //   if(response.data.success === true){
-
-            //   }
-            // }
-
-            if (response.data.token) {
-                await clearAllAuth();
-                await setAuthCookies({ authToken: response.data.token });
-
-                // Update contact status to 'underReview' if this is the last step
-                if (currentStep === (isInternalInterviewer || Freelancer ? 3 : 1)) {
-                    try {
-                        const targetContactId = response.data.contactId || contactId;
-                        if (targetContactId) {
-                            await axios.patch(
-                                `${config.REACT_APP_API_URL}/contacts/status/${targetContactId}`,
-                                { status: "underReview" },
-                                {
-                                    withCredentials: true,
-                                    headers: {
-                                        Authorization: `Bearer ${response.data.token}`,
-                                    },
-                                }
-                            );
-                        }
-                    } catch (error) {
-                        console.error("Error updating contact status:", error);
-                        // Don't block the user flow if status update fails
-                    }
-                }
-
-                // update state immediately after setting cookie
-                // setAuthToken(response.data.token);
-
-                // console.log("✅ Updated authToken in state:", response.data.token);
-
-                // CUSTOM PROFILE PIC OR LINKEDIN PROFILE PIC
-                if (
-                    currentStep === 0 &&
-                    (file ||
-                        isProfileRemoved ||
-                        (linkedInData?.pictureUrl && !filePreview))
-                ) {
-                    let profileFile = null;
-
-                    if (file) {
-                        profileFile = file;
-                    } else if (
-                        linkedInData?.pictureUrl &&
-                        !filePreview &&
-                        !isProfileRemoved
-                    ) {
-                        try {
-                            const imageResponse = await fetch(linkedInData.pictureUrl);
-                            const blob = await imageResponse.blob();
-                            profileFile = new File([blob], "linkedin-profile.jpg", {
-                                type: "image/jpeg",
-                            });
-                        } catch (err) {
-                            console.error("Failed to fetch LinkedIn image", err);
-                        }
-                    }
-
-                    const newContactId = contactId || response.data.contactId;
-
-                    if (isProfileRemoved && !profileFile) {
-                        await uploadFile(null, "image", "contact", newContactId); // DELETE
-                    } else if (profileFile instanceof File) {
-                        await uploadFile(profileFile, "image", "contact", newContactId); // UPLOAD
-                    }
-                }
-
-                // RESUME AND COVER LETTER UPLOAD
-                if (currentStep >= 1) {
-                    const newContactId = contactId || response.data.contactId;
-
-                    // Resume
-                    if (isResumeRemoved && !resumeFile) {
-                        await uploadFile(null, "resume", "contact", newContactId); // DELETE
-                    } else if (resumeFile instanceof File) {
-                        await uploadFile(resumeFile, "resume", "contact", newContactId);
-                    }
-
-                    // Cover Letter
-                    if (isCoverLetterRemoved && !coverLetterFile) {
-                        await uploadFile(null, "coverLetter", "contact", newContactId); // DELETE
-                    } else if (coverLetterFile instanceof File) {
-                        await uploadFile(
-                            coverLetterFile,
-                            "coverLetter",
-                            "contact",
-                            newContactId
-                        );
-                    }
-                }
-
-                if (currentStep < (isInternalInterviewer ? 3 : Freelancer ? 3 : 1)) {
-                    setCurrentStep(currentStep + 1);
-                } else {
-                    setTimeout(async () => {
-                        if (isProfileCompleteStateOrg) {
-                            navigate("/home");
-                            // if( currentStep === 3 ){
-                            notify.success("Individual Signup Successfully");
-                            // }
-                        } else {
-                            // Check if user has an active subscription before navigating
-                            try {
-                                const authToken = Cookies.get("authToken");
-                                const tokenPayload = decodeJwt(authToken);
-                                const ownerId = tokenPayload?.userId;
-                                
-                                if (ownerId) {
-                                    const res = await axios.get(
-                                        `${config.REACT_APP_API_URL}/subscription-plans/user/${ownerId}`,
-                                        { headers: { Authorization: `Bearer ${authToken}` } }
-                                    );
-                                    const subscription = res?.data?.customerSubscription?.[0];
-                                    
-                                    if (subscription && subscription.status === 'active') {
-                                        // User already has an active subscription, go to home
-                                        navigate("/home");
-                                        notify.success("Welcome back!");
-                                    } else {
-                                        // No active subscription, go to subscription plans
-                                        navigate("/subscription-plans");
-                                        notify.success("Individual Signup Successfully");
-                                    }
-                                } else {
-                                    // If no ownerId, default to subscription plans
-                                    navigate("/subscription-plans");
-                                    notify.success("Individual Signup Successfully");
-                                }
-                            } catch (error) {
-                                console.error("Error checking subscription:", error);
-                                // On error, navigate to subscription plans as fallback
-                                navigate("/subscription-plans");
-                                notify.success("Individual Signup Successfully");
-                            }
-                        }
-                    }, 2000);
+                  withCredentials: true,
+                  headers: {
+                    Authorization: `Bearer ${response.data.token}`,
+                  },
                 }
               );
             }
@@ -1129,17 +984,46 @@ const MultiStepForm = () => {
         if (currentStep < (isInternalInterviewer ? 3 : Freelancer ? 3 : 1)) {
           setCurrentStep(currentStep + 1);
         } else {
-          setTimeout(() => {
+          setTimeout(async () => {
             if (isProfileCompleteStateOrg) {
               navigate("/home");
               // if( currentStep === 3 ){
               notify.success("Individual Signup Successfully");
               // }
             } else {
-              navigate("/subscription-plans");
-              // if( currentStep === 3 ){
-              notify.success("Individual Signup Successfully");
-              // }
+              // Check if user has an active subscription before navigating
+              try {
+                const authToken = Cookies.get("authToken");
+                const tokenPayload = decodeJwt(authToken);
+                const ownerId = tokenPayload?.userId;
+
+                if (ownerId) {
+                  const res = await axios.get(
+                    `${config.REACT_APP_API_URL}/subscription-plans/user/${ownerId}`,
+                    { headers: { Authorization: `Bearer ${authToken}` } }
+                  );
+                  const subscription = res?.data?.customerSubscription?.[0];
+
+                  if (subscription && subscription.status === "active") {
+                    // User already has an active subscription, go to home
+                    navigate("/home");
+                    notify.success("Welcome back!");
+                  } else {
+                    // No active subscription, go to subscription plans
+                    navigate("/subscription-plans");
+                    notify.success("Individual Signup Successfully");
+                  }
+                } else {
+                  // If no ownerId, default to subscription plans
+                  navigate("/subscription-plans");
+                  notify.success("Individual Signup Successfully");
+                }
+              } catch (error) {
+                console.error("Error checking subscription:", error);
+                // On error, navigate to subscription plans as fallback
+                navigate("/subscription-plans");
+                notify.success("Individual Signup Successfully");
+              }
             }
           }, 2000);
         }
@@ -1324,7 +1208,7 @@ const MultiStepForm = () => {
       <form>
         <div className="min-h-screen bg-gray-50">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex sm:flex-col md:flex-col justify-between items-center">
+            <div className="flex sm:flex-col md:flex-col justify-between items-center sm:pt-8 md:pt-8">
               <h1 className="text-2xl font-bold text-gray-900">
                 Create Profile
               </h1>
