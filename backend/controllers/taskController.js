@@ -52,12 +52,12 @@ const createTask = async (req, res) => {
     .sort({ _id: -1 })
     .select('taskCode')
     .lean();
-  let nextNumber = 50001; // Start from 50001
+  let nextNumber = 1; // Start from 50001
   if (lastTask && lastTask.taskCode) {
     const match = lastTask.taskCode.match(/TSK-(\d+)/);
     if (match) {
-      const lastNumber = parseInt(match[1], 10);
-      nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
+      nextNumber = parseInt(match[1], 10) + 1;
+     
     }
   }
   const taskCode = `TSK-${String(nextNumber).padStart(5, '0')}`;
