@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Made resume as mandatory field
 // v1.0.1 - Ashok - Made resume mandatory for freelancers only
+// v1.0.2 - Venkatesh - Added subscription status check before redirecting to subscription-plans, redirect to home if already subscribed
 
 import React, { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -19,6 +20,7 @@ import { useIndividualLogin } from "../../../apiHooks/useIndividualLogin";
 import { uploadFile } from "../../../apiHooks/imageApis.js";
 import Cookies from "js-cookie";
 import { notify } from "../../../services/toastService.js";
+import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode.js";
 
 const FooterButtons = ({
     onNext,
@@ -979,17 +981,46 @@ const MultiStepForm = () => {
                 if (currentStep < (isInternalInterviewer ? 3 : Freelancer ? 3 : 1)) {
                     setCurrentStep(currentStep + 1);
                 } else {
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         if (isProfileCompleteStateOrg) {
                             navigate("/home");
                             // if( currentStep === 3 ){
                             notify.success("Individual Signup Successfully");
                             // }
                         } else {
-                            navigate("/subscription-plans");
-                            // if( currentStep === 3 ){
-                            notify.success("Individual Signup Successfully");
-                            // }
+                            // Check if user has an active subscription before navigating
+                            try {
+                                const authToken = Cookies.get("authToken");
+                                const tokenPayload = decodeJwt(authToken);
+                                const ownerId = tokenPayload?.userId;
+                                
+                                if (ownerId) {
+                                    const res = await axios.get(
+                                        `${config.REACT_APP_API_URL}/subscription-plans/user/${ownerId}`,
+                                        { headers: { Authorization: `Bearer ${authToken}` } }
+                                    );
+                                    const subscription = res?.data?.customerSubscription?.[0];
+                                    
+                                    if (subscription && subscription.status === 'active') {
+                                        // User already has an active subscription, go to home
+                                        navigate("/home");
+                                        notify.success("Welcome back!");
+                                    } else {
+                                        // No active subscription, go to subscription plans
+                                        navigate("/subscription-plans");
+                                        notify.success("Individual Signup Successfully");
+                                    }
+                                } else {
+                                    // If no ownerId, default to subscription plans
+                                    navigate("/subscription-plans");
+                                    notify.success("Individual Signup Successfully");
+                                }
+                            } catch (error) {
+                                console.error("Error checking subscription:", error);
+                                // On error, navigate to subscription plans as fallback
+                                navigate("/subscription-plans");
+                                notify.success("Individual Signup Successfully");
+                            }
                         }
                     }, 2000);
                 }
