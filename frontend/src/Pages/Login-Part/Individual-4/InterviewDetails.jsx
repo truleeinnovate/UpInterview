@@ -106,7 +106,6 @@ const InterviewDetails = ({
                 // console.error('Error fetching exchange rate:', error);
                 // Use default rate if API fails
                 setExchangeRate(83.5);
-                toast.warning('Using default exchange rate. Some features may be limited.');
             } finally {
                 setIsRateLoading(false);
             }
