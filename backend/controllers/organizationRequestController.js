@@ -274,6 +274,7 @@ exports.updateStatus = async (req, res) => {
                     data: {
                         email: user.email,
                         userId: user._id,
+                        tenantId: user.tenantId,
                         firstName: user.firstName || '',
                         lastName: user.lastName || '',
                         actionLink,
