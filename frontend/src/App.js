@@ -677,10 +677,10 @@ const MainAppRoutes = ({
                         {/* Mock Interview Routes */}
                         {hasPermission("MockInterviews") && (
                             <>
-                                <Route path="/mockinterview" element={<MockInterview />} />
+                                <Route path="/mock-interview" element={<MockInterview />} />
                                 {hasPermission("MockInterviews", "Create") && (
                                     <Route
-                                        path="/mockinterview-create"
+                                        path="/mock-interview-create"
                                         element={<MockSchedulelater />}
                                     />
                                 )}
@@ -692,7 +692,7 @@ const MainAppRoutes = ({
                                 )}
                                 {hasPermission("MockInterviews", "View") && (
                                     <Route
-                                        path="/mockinterview-details/:id"
+                                        path="/mock-interview-details/:id"
                                         element={<MockInterviewDetails />}
                                     />
                                 )}
@@ -702,7 +702,7 @@ const MainAppRoutes = ({
                         {/* Interview Routes */}
                         {hasPermission("Interviews") && (
                             <>
-                                <Route path="/interviewList" element={<InterviewList />} />
+                                <Route path="/interviews" element={<InterviewList />} />
                                 {hasPermission("Interviews", "Create") && (
                                     <Route path="/interviews/new" element={<InterviewForm />} />
                                 )}
@@ -727,36 +727,36 @@ const MainAppRoutes = ({
 
                         {/* Question Bank */}
                         {hasPermission("QuestionBank") && (
-                            <Route path="/questionBank" element={<QuestionBank />} />
+                            <Route path="/question-bank" element={<QuestionBank />} />
                         )}
 
                         {/* AssessmentTemplates */}
                         {hasPermission("AssessmentTemplates") && (
                             <>
                                 <Route
-                                    path="/assessments-template"
+                                    path="/assessment-templates"
                                     element={<Assessment />}
                                 />
                                 {hasPermission("AssessmentTemplates", "Create") && (
                                     <Route
-                                        path="/assessments-template/new"
+                                        path="/assessment-templates/new"
                                         element={<AssessmentForm />}
                                     />
                                 )}
                                 {hasPermission("AssessmentTemplates", "View") && (
                                     <Route
-                                        path="/assessments-template-details"
+                                        path="/assessment-template-details"
                                         element={<AssessmentDetails />}
                                     />
                                 )}
                                 {hasPermission("AssessmentTemplates", "Edit") && (
                                     <Route
-                                        path="/assessments-template/edit/:id"
+                                        path="/assessment-templates/edit/:id"
                                         element={<AssessmentForm />}
                                     />
                                 )}
                                 <Route
-                                    path="/assessments-template-details/:id"
+                                    path="/assessment-template-details/:id"
                                     element={
                                         <>
                                             <Assessment />

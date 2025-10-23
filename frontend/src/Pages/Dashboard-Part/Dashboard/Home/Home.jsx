@@ -3,6 +3,7 @@
 // v1.0.2  -  Ashok   -  disabled outer scrollbar when outsource and interviewers popup's open
 // v1.0.3  -  Venkatesh - added the pending feedback count in the stats card
 // v1.0.4  -  Ashok   -  fixed padding issue for large screens like mac 1440px, 1600px, 1920px
+// v1.0.5  -  Ashraf - added the notification section for individual, individual freelancer and admin
 
 import { useState, useEffect } from "react";
 import { TrendingUp, AlertCircle, UserCheck } from "lucide-react";
@@ -27,7 +28,7 @@ import { config } from "../../../../config";
 import { useFeedbacks } from "../../../../apiHooks/useFeedbacks.js"; //<----v1.0.3--------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.2 --------------------------------------------------------------------->
-
+import { usePermissions } from "../../../../Context/PermissionsContext.js";
 const Home = () => {
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const isOrganization = tokenPayload?.organization;
@@ -37,7 +38,10 @@ const Home = () => {
   const freelancer = tokenPayload?.freelancer;
   const [isInternalInterviews, setInternalInterviews] = useState(false);
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
-
+  const { effectivePermissions_RoleName} = usePermissions();
+  const isAdmin = effectivePermissions_RoleName === "Admin";
+  const isIndividualFreelancer = effectivePermissions_RoleName === "Individual_Freelancer";
+  const isIndividual = effectivePermissions_RoleName === "Individual";
   // Disabled outer scrollbar when outsource and interviewers popup open
   // v1.0.2 <-----------------------------------------------
   useScrollLock(showOutsourcePopup || isInternalInterviews);
@@ -162,7 +166,7 @@ const Home = () => {
             </motion.div>
 
             <FeedbackList />
-            <NotificationSection />
+            {(isAdmin || isIndividual || isIndividualFreelancer) && <NotificationSection />}
           </div>
 
           {/* Right Sidebar */}

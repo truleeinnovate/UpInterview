@@ -271,7 +271,11 @@ const EditInterviewDetails = ({
     try {
       const token = localStorage.getItem("token");
       const baseUrl = process.env.REACT_APP_API_URL || "";
-      const encodedTech = encodeURIComponent(techName);
+       const slug = techName
+                .replace(/\s+/g, '')  // Remove spaces
+                .replace(/[^a-zA-Z0-9]/g, '');  // Remove special chars if any (optional, adjust as needed)
+
+      const encodedTech = encodeURIComponent(slug);
       const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
 
       const response = await axios.get(apiUrl, {
@@ -281,6 +285,7 @@ const EditInterviewDetails = ({
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log("response.data", response);
 
       if (response.data) {
         const rateCardsData = Array.isArray(response.data)
@@ -311,7 +316,7 @@ const EditInterviewDetails = ({
 
     // Calculate which levels should be visible based on years of experience
     const years =
-      parseInt(profileData?.previousExperienceConductingInterviewsYears) || 0;
+      parseInt(profileData?.previousExperienceConductingInterviewsYears || profileData?.PreviousExperienceConductingInterviewsYears) || 0;
     console.log("Years of experience for rate calculation:", years);
 
     console.log("Profile data:", profileData);
@@ -331,12 +336,14 @@ const EditInterviewDetails = ({
     // Create the form data with proper rate visibility
     const newFormData = {
       PreviousExperienceConductingInterviews:
-        profileData?.previousExperienceConductingInterviews || "",
+        profileData?.previousExperienceConductingInterviews ||  
+        profileData?.PreviousExperienceConductingInterviews || "" ,
       // If experience is "no", keep years empty; otherwise use the parsed value
       PreviousExperienceConductingInterviewsYears:
-        profileData?.previousExperienceConductingInterviews === "no"
+        profileData?.previousExperienceConductingInterviews === "no" 
           ? ""
           : years || 1,
+          
       ExpertiseLevel_ConductingInterviews:
         profileData?.expertiseLevelConductingInterviews || "",
       hourlyRate: profileData?.hourlyRate || "",
@@ -350,8 +357,8 @@ const EditInterviewDetails = ({
       NoShowPolicy: profileData?.noShowPolicy || "",
       professionalTitle: profileData?.professionalTitle || "",
       bio: profileData?.bio || "",
-      interviewFormatWeOffer: Array.isArray(profileData?.interviewFormatWeOffer)
-        ? profileData.interviewFormatWeOffer
+      interviewFormatWeOffer: Array.isArray(profileData?.interviewFormatWeOffer || profileData?.InterviewFormatWeOffer)
+        ? profileData.interviewFormatWeOffer || profileData?.InterviewFormatWeOffer
         : [],
       yearsOfExperience: profileData?.yearsOfExperience || 0,
       id: profileData?._id,
@@ -373,6 +380,7 @@ const EditInterviewDetails = ({
         },
       },
     };
+    console.log("profileData", profileData);
 
     // Set initial form data for comparison
     setInitialFormData(newFormData);
@@ -590,6 +598,8 @@ const EditInterviewDetails = ({
     }
   };
 
+  
+
   // API call to save all changes
   const handleSave = async (e) => {
     e.preventDefault();
@@ -600,7 +610,7 @@ const EditInterviewDetails = ({
     }
 
     console.log("formData before validation:", formData);
-    console.log("formData.Technology:", formData.Technology);
+  
 
     const validationErrors = validateInterviewForm(formData, isReady);
     console.log("validationErrors:", validationErrors);
@@ -1802,6 +1812,7 @@ const EditInterviewDetails = ({
                           </button>
                         </div>
                       ) : (
+                        <>
                         <DropdownSelect
                           id="mock_interview_discount"
                           name="mock_interview_discount"
@@ -1813,6 +1824,7 @@ const EditInterviewDetails = ({
                                 }
                               : null
                           }
+                          
                           onChange={(selected) => {
                             if (selected?.value === "custom") {
                               setShowCustomDiscount(true);
@@ -1847,6 +1859,12 @@ const EditInterviewDetails = ({
                           classNamePrefix="select"
                           isClearable={true}
                         />
+                          {errors.mock_interview_discount && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.mock_interview_discount}
+                          </p>
+                        )}
+                      </>
                       )}
                     </div>
                     <p className="mt-1.5 text-xs text-custom-blue">

@@ -126,7 +126,7 @@ const ContactsSchema = new mongoose.Schema(
     // hourlyRate: Number,
     currentRole: String,
     industry: { type: String },
-    experience: { type: String },
+    // experience: { type: String },
     gender: String,
     imageData: {
       filename: String,

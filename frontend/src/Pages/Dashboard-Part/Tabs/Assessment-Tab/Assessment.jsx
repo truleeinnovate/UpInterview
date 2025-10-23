@@ -423,13 +423,13 @@ const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
     // <---------------------- v1.0.1
     const handleView = (assessment) => {
         if (effectivePermissions.AssessmentTemplates?.View) {
-            navigate(`/assessments-template-details/${assessment._id}`);
+            navigate(`/assessment-template-details/${assessment._id}`);
         }
     };
 
   const handleEdit = (assessment) => {
     if (effectivePermissions.AssessmentTemplates?.Edit) {
-      navigate(`/assessments-template/edit/${assessment._id}`);
+      navigate(`/assessment-templates/edit/${assessment._id}`);
     }
   };
   // <---------------------- v1.0.1 >
@@ -696,7 +696,7 @@ const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
                     <div className="sm:px-0">
                         <Header
                             title="Assessment Templates"
-                            onAddClick={() => navigate("/assessments-template/new")}
+                            onAddClick={() => navigate("/assessment-templates/new")}
                             addButtonText="New Template"
                             // <---------------------- v1.0.1
                             canCreate={effectivePermissions.AssessmentTemplates?.Create}

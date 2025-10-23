@@ -178,22 +178,22 @@ const InterviewForm = () => {
 useEffect(() => {
   if (isEditing && interview && templatesData.length > 0) {
     console.log("Interview data:", interview);
-    
+
     setCandidateId(interview.candidateId?._id || "");
     setPositionId(interview.positionId?._id || "");
-    
+
     // Fix for template - handle the nested object structure
     if (interview.templateId) {
       console.log("Template data:", interview.templateId);
-      
+
       let templateIdToSet = null;
-      
+
       if (typeof interview.templateId === 'object' && interview.templateId._id) {
         templateIdToSet = interview.templateId._id;
       } else if (typeof interview.templateId === 'string') {
         templateIdToSet = interview.templateId;
       }
-      
+
       // Verify template exists in templatesData
       if (templateIdToSet) {
         const templateExists = templatesData.some(t => t._id === templateIdToSet);
@@ -385,7 +385,7 @@ useEffect(() => {
         <div className="px-4 sm:px-0">
           <Breadcrumb
             items={[
-              { label: "Interviews", path: "/interviewList" },
+              { label: "Interviews", path: "/interviews" },
               ...(isEditing && interview
                 ? [
                   {
@@ -493,7 +493,7 @@ useEffect(() => {
                   </div>
 
                   <div className="relative">
-                   
+
                     <DropdownWithSearchField
                    key={`template-${templateId}-${positionId}`}
                    // key={`template-${templateId}`}
@@ -535,7 +535,7 @@ useEffect(() => {
 
                   </div>
 
-                 
+
                   {rounds.length > 0 && (
                     <div className="mt-6">
                       <p className="text-sm font-semibold text-gray-800 mb-4">Rounds Pathway</p>

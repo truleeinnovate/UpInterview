@@ -1,6 +1,8 @@
 // v1.0.0 - mansoor - removed unnecessary comments
 // v1.0.1 - mansoor - removed old ui and added new ui
 // v1.0.2 - Ashok - changed logo url from local to cloud storage url
+// v1.0.3 - Venkatesh - Added subscription status checks in login flow to redirect subscribed users directly to home
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -325,7 +327,23 @@ const OrganizationLogin = () => {
                     if (status === "active" && isProfileCompleted !== false) {
                         targetPath = "/home";
                     } else if (status === "submitted" || status === "payment_pending") {
-                        targetPath = "/subscription-plans";
+                        // Check if user already has an active subscription
+                        try {
+                            const subRes = await axios.get(
+                                `${config.REACT_APP_API_URL}/subscription-plans/user/${response.data.ownerId}`,
+                                { headers: { Authorization: `Bearer ${response.data.token}` } }
+                            );
+                            const subscription = subRes?.data?.customerSubscription?.[0];
+                            
+                            if (subscription && subscription.status === 'active') {
+                                targetPath = "/home";
+                            } else {
+                                targetPath = "/subscription-plans";
+                            }
+                        } catch (error) {
+                            console.error("Error checking subscription:", error);
+                            targetPath = "/subscription-plans"; // Fallback to subscription plans
+                        }
                     } else if (isProfileCompleted === false && roleName) {
                         targetPath = "/create-profile";
                     }
@@ -357,14 +375,46 @@ const OrganizationLogin = () => {
                         navigate("/pending-approval");
                     } else if (requestStatus === 'approved') {
                         if (status === "payment_pending" || status === "submitted") {
-                            navigate("/subscription-plans");
+                            // Check if user already has an active subscription
+                            try {
+                                const subRes = await axios.get(
+                                    `${config.REACT_APP_API_URL}/subscription-plans/user/${userData.ownerId}`,
+                                    { headers: { Authorization: `Bearer ${response.data.token}` } }
+                                );
+                                const subscription = subRes?.data?.customerSubscription?.[0];
+                                
+                                if (subscription && subscription.status === 'active') {
+                                    navigate("/home");
+                                } else {
+                                    navigate("/subscription-plans");
+                                }
+                            } catch (error) {
+                                console.error("Error checking subscription:", error);
+                                navigate("/subscription-plans"); // Fallback to subscription plans
+                            }
                         } else {
                             navigate("/organization-login");
                         }
                     }
                     break;
                 case "payment_pending":
-                    navigate("/subscription-plans");
+                    // Check if user already has an active subscription
+                    try {
+                        const subRes = await axios.get(
+                            `${config.REACT_APP_API_URL}/subscription-plans/user/${userData.ownerId}`,
+                            { headers: { Authorization: `Bearer ${response.data.token}` } }
+                        );
+                        const subscription = subRes?.data?.customerSubscription?.[0];
+                        
+                        if (subscription && subscription.status === 'active') {
+                            navigate("/home");
+                        } else {
+                            navigate("/subscription-plans");
+                        }
+                    } catch (error) {
+                        console.error("Error checking subscription:", error);
+                        navigate("/subscription-plans"); // Fallback to subscription plans
+                    }
                     break;
                 case "active":
                     if (isProfileCompleted === false && roleName) {

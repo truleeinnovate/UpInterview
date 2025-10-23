@@ -287,7 +287,7 @@ const InterviewDetail = () => {
           <div className="px-4 sm:px-0">
             <Breadcrumb
               items={[
-                { label: "Interviews", path: "/interviewList" },
+                { label: "Interviews", path: "/interviews" },
                 { label: "Error" },
               ]}
             />
@@ -323,7 +323,7 @@ const InterviewDetail = () => {
           <div className="px-4 sm:px-0">
             <Breadcrumb
               items={[
-                { label: "Interviews", path: "/interviewList" },
+                { label: "Interviews", path: "/interviews" },
                 { label: "Not Found" },
               ]}
             />
@@ -337,7 +337,7 @@ const InterviewDetail = () => {
               </p>
               <div className="mt-6">
                 <Link
-                  to="/interviewList"
+                  to="/interviews"
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                 >
                   Back to Interviews
@@ -505,7 +505,7 @@ const InterviewDetail = () => {
   const breadcrumbItems = [
     {
       label: "Interviews",
-      path: "/interviewList",
+      path: "/interviews",
     },
     {
       label: candidate?.LastName || "Interview",
@@ -532,7 +532,7 @@ const InterviewDetail = () => {
         <div>
           <div className="flex items-center mb-4">
             <Link
-              to="/interviewList"
+              to="/interviews"
               className="text-gray-800 flex items-center mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-1" />

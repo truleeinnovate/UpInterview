@@ -277,14 +277,14 @@ export const validateInterviewForm = (formData, isReady) => {
   }
 
   // Expertise Level validation - Made optional
-  if (formData.ExpertiseLevel_ConductingInterviews && formData.ExpertiseLevel_ConductingInterviews.trim() === '') {
-    errors.ExpertiseLevel_ConductingInterviews = "Please select a valid expertise level";
-  }
+  // if (formData.ExpertiseLevel_ConductingInterviews && formData.ExpertiseLevel_ConductingInterviews.trim() === '') {
+  //   errors.ExpertiseLevel_ConductingInterviews = "Please select a valid expertise level";
+  // }
 
   // Hourly Rate validation - Made optional
-  if (formData.hourlyRate && (Number(formData.hourlyRate) < 20 || Number(formData.hourlyRate) > 500)) {
-    errors.hourlyRate = "Hourly rate must be between $20 and $500 if provided";
-  }
+  // if (formData.hourlyRate && (Number(formData.hourlyRate) < 20 || Number(formData.hourlyRate) > 500)) {
+  //   errors.hourlyRate = "Hourly rate must be between $20 and $500 if provided";
+  // }
 
   // No-Show Policy validation - Made optional
   if (formData.NoShowPolicy && formData.NoShowPolicy.trim() === '') {
@@ -311,9 +311,15 @@ export const validateInterviewForm = (formData, isReady) => {
   }
 
   // Mock Interview validation - Made optional
-  if (formData.interviewFormatWeOffer?.includes("mock") && formData.expectedRatePerMockInterview) {
-    if (Number(formData.expectedRatePerMockInterview) < 1) {
-      errors.expectedRatePerMockInterview = "Rate must be a positive number";
+  // if (formData.interviewFormatWeOffer?.includes("mock") && formData.expectedRatePerMockInterview) {
+  //   if (Number(formData.expectedRatePerMockInterview) < 1) {
+  //     errors.expectedRatePerMockInterview = "Rate must be a positive number";
+  //   }
+  // }
+    // FIXED: Mock Interview validation - Check if discount is required but missing
+  if (formData.interviewFormatWeOffer?.includes("mock")) {
+    if (!formData.mock_interview_discount) {
+      errors.mock_interview_discount = "Mock interview discount is required ";
     }
   }
 

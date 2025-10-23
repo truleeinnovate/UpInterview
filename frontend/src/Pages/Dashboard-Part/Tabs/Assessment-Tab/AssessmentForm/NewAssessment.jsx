@@ -152,11 +152,11 @@ const [startDate, setStartDate] = useState(() => {
   // Load basic assessment data
   useEffect(() => {
     if (isEditing && assessment) {
-      
+
       const matchedPosition = positionData.find(
         (pos) => pos._id === assessment?.Position
       );
-      
+
       setFormData({
         AssessmentTitle: assessment.AssessmentTitle || "",
         Position: assessment.Position || "",
@@ -403,7 +403,7 @@ const [startDate, setStartDate] = useState(() => {
         `${config.REACT_APP_API_URL}/assessments/validate/${currentTab}`,
         assessmentData
       );
-      
+
       if (!response.data.success) {
         return { errors: response.data.errors || newErrors };
       }
@@ -660,7 +660,7 @@ const [startDate, setStartDate] = useState(() => {
       // 🧠 Action after save
       if (actionType === "close") {
         console.log("🛑 Closing form after save");
-        navigate("/assessments-template");
+        navigate("/assessment-templates");
       } else if (actionType === "next") {
         const tabOrder = ["Basicdetails", "Details", "Questions", "Candidates"];
         const currentIndex = tabOrder.indexOf(currentTab);
@@ -1260,8 +1260,8 @@ const [startDate, setStartDate] = useState(() => {
 
   // changes made by shashank on [08/01/2025] addedSections onSectionAdded
   const [sectionName, setSectionName] = useState("");
- 
- 
+
+
 //   const handleAddSection = (closeAddSectionPopup) => {
 //     // const validateErrors = {};
 //     // if (!sectionName.trim()) {
@@ -1277,11 +1277,11 @@ const [startDate, setStartDate] = useState(() => {
 //     // Generate section name (Section1, Section2, etc.)
 //   const sectionNumber = addedSections.length + 1;
 //   const newSectionName = `Section ${sectionNumber}`;
-  
+
 //   // Check if section name already exists (in case of deletions)
 //   let finalSectionName = newSectionName;
 //   let counter = 1;
-  
+
 //   while (addedSections.map(each => each.SectionName).includes(finalSectionName)) {
 //     finalSectionName = `Section${sectionNumber + counter}`;
 //     counter++;
@@ -1314,7 +1314,7 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
   // If it's auto-creation in non-edit mode, use default naming
   if (isAutoCreate) {
     const defaultSectionName = "Section 1";
-    
+
     handleSectionAdded({
       SectionName: defaultSectionName,
       Questions: [],
@@ -1332,30 +1332,30 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
   // Generate section name (Section1, Section2, etc.) - ONLY for manual creation
   const sectionNumber = addedSections.length + 1;
   const newSectionName = `Section ${sectionNumber}`;
-  
+
   // Check if section name already exists (in case of deletions)
   let finalSectionName = newSectionName;
   let counter = 1;
-  
+
   while (addedSections.map(each => each.SectionName).includes(finalSectionName)) {
     finalSectionName = `Section ${sectionNumber + counter}`;
     counter++;
   }
 
   console.log(finalSectionName);
-  
+
   handleSectionAdded({
     SectionName: finalSectionName,
     Questions: [],
   });
   setSectionName("");
-  
+
   // Close the popup if it exists
   if (closeAddSectionPopup) {
     closeAddSectionPopup();
   }
 };
-  
+
 
   // const updateQuestionsInAddedSectionFromQuestionBank = (
   //   sectionName,
@@ -1386,30 +1386,30 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
       question: question ? 'has question' : 'no question',
       questionIdToRemove
     });
-  
+
     setAddedSections((prevSections) => {
       const updatedSections = prevSections.map((section) => {
         if (section.SectionName === sectionName) {
           let updatedQuestions = [...(section.Questions || [])];
-          
+
           if (questionIdToRemove) {
             // Remove the question
             const initialLength = updatedQuestions.length;
             updatedQuestions = updatedQuestions.filter(q => {
               if (!q) return false;
-              
+
               // Try multiple ID properties
               const id = q.questionId || q._id || q.id;
               if (!id) {
                 console.warn('Question without ID found:', q);
                 return false;
               }
-              
+
               return id !== questionIdToRemove;
             });
-            
+
             console.log(`🗑️ Removed question ${questionIdToRemove}. ${initialLength} → ${updatedQuestions.length} questions`);
-          } 
+          }
           else if (question) {
             // Add the question (with duplicate check)
             const existingQuestionId = question.questionId || question._id;
@@ -1418,7 +1418,7 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
               const qId = q.questionId || q._id;
               return qId === existingQuestionId;
             });
-            
+
             if (!isDuplicate) {
               updatedQuestions.push(question);
               console.log(`✅ Added question ${existingQuestionId}`);
@@ -1426,7 +1426,7 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
               console.warn(`⚠️ Duplicate question ${existingQuestionId} not added`);
             }
           }
-          
+
           return {
             ...section,
             Questions: updatedQuestions,
@@ -1434,7 +1434,7 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
         }
         return section;
       });
-      
+
       console.log("📊 Final sections state:", updatedSections);
       return updatedSections;
     });
@@ -1444,7 +1444,7 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
   const navigate = useNavigate();
 
   const NavigateToAssessmentList = () => {
-    navigate("/assessments-template");
+    navigate("/assessment-templates");
   };
 
   const TabFooter = ({ currentTab }) => {

@@ -10,14 +10,14 @@ const {
   getContactsByOrganizationId, // SUPER ADMIN added by ashok
   updateContactStatus,
 } = require("../controllers/contactController");
-
+const loggingService = require('../middleware/loggingService.js');
 const router = express.Router();
 
 router.get("/contacts", getAllContacts);
 // router.get('/contacts', fetchContacts);
 router.post("/contacts", createContact);
 router.patch("/contacts/:id", updateContact);
-router.patch("/contact-detail/:id", updateContactsDetails);
+router.patch("/contact-detail/:id",loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, updateContactsDetails);
 router.get("/uniqe-contacts/owner/:ownerId", getUniqueContactsByOwnerId);
 
 router.get("/contacts/owner/:ownerId", getContactsByOwnerId);

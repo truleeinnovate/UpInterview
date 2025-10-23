@@ -542,6 +542,8 @@ const BasicDetailsEditPage = ({
       portfolioUrl: formData.portfolioUrl.trim() || "",
       id: formData.id,
       roleId: selectedCurrentRoleId || formData.roleId,
+      contactId: profileData?.contactId,
+      ownerId: profileData?._id,
     };
 
     try {

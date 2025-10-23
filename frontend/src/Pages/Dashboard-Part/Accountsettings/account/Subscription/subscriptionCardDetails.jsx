@@ -109,6 +109,7 @@ const SubscriptionCardDetails = () => {
     createSubscription,
     verifySubscriptionPayment,
     refetchSubscription,
+    forceRefreshSubscription,
   } = useSubscription();
 
   const location = useLocation();
@@ -194,14 +195,12 @@ const SubscriptionCardDetails = () => {
         userType: userType || planDetails.user?.userType || "",
       }));
 
-      // Calculate the initial total - DO NOT apply discount for payment
-      // Discounts are only for display purposes in frontend
+      // Calculate the initial total - NO discount applied (fixed at 0)
       const price = defaultMembershipType === "annual" ? annual : monthly;
-      
-      // DO NOT subtract discount from price - use full price for payment
       const initialTotal = Math.max(0, price);
-      console.log("Initial total calculation (without discount):", {
+      console.log("Initial total calculation (no discount):", {
         price,
+        discount: 0, // Fixed at 0 for now
         initialTotal,
       });
 
@@ -256,6 +255,7 @@ const SubscriptionCardDetails = () => {
       // Ensure totalAmount is a valid number and properly formatted
       const amountToCharge = parseFloat(totalPaid) || 0;
       console.log("Creating order with amount:", amountToCharge, "INR");
+      console.log("Discount values - Fixed at 0 for both monthly and annual");
 
       // Create order data object
       const orderData = {
@@ -264,8 +264,8 @@ const SubscriptionCardDetails = () => {
           // Ensure prices are numbers
           monthlyPrice: parseFloat(planDetails.monthlyPrice) || 0,
           annualPrice: parseFloat(planDetails.annualPrice) || 0,
-          monthDiscount: parseFloat(planDetails.monthDiscount) || 0,
-          annualDiscount: parseFloat(planDetails.annualDiscount) || 0,
+          monthDiscount: 0, // Fixed at 0 for now
+          annualDiscount: 0, // Fixed at 0 for now 
           razorpayPlanIds: planDetails.razorpayPlanIds || {},
         },
         ownerId,
@@ -406,35 +406,65 @@ const SubscriptionCardDetails = () => {
                     verifyResponse.message?.toLowerCase().includes("success")
                   ) {
 
-                    // 1) Quick refetch to refresh cache immediately
+                    // 1) Add a small delay to ensure backend has processed the payment
+                    await new Promise(r => setTimeout(r, 1000));
+
+                    // 2) Force refresh with complete cache invalidation
                     try {
-                      await refetchSubscription();
+                      // Use forceRefreshSubscription to completely bypass cache
+                      const result = await forceRefreshSubscription();
+                      console.log('Initial force refresh result:', result);
                     } catch (e) {
-                      console.warn('Refetch subscription failed (non-blocking):', e?.message);
+                      console.warn('Initial force refresh failed:', e?.message);
                     }
 
-                    // 2) Wait for webhook completion (ACTIVE + receipt/invoice), up to 60s
+                    // 3) Wait for webhook completion (ACTIVE + receipt/invoice), up to 60s
                     try {
                       const timeoutMs = 60000; // max wait 60s
                       const pollMs = 2000; // poll every 2s
                       const start = Date.now();
                       let isReady = false;
+                      let attempts = 0;
+                      
                       while (Date.now() - start < timeoutMs) {
-                        const result = await refetchSubscription();
-                        const fresh = result?.data || result; // TanStack Query returns { data }
+                        attempts++;
+                        console.log(`Polling attempt ${attempts}...`);
+                        
+                        // Force complete cache refresh each time
+                        const result = await forceRefreshSubscription();
+                        const fresh = result?.data || result;
+                        
+                        console.log('Subscription status:', fresh?.status);
+                        console.log('Has receipt/invoice:', !!(fresh?.receiptId || fresh?.invoiceId));
+                        console.log('Full subscription data:', fresh);
+                        
                         const isActive = (fresh?.status || '').toLowerCase() === 'active';
                         const hasDocs = !!(fresh?.receiptId || fresh?.invoiceId);
+                        
                         if (isActive && hasDocs) {
                           isReady = true;
+                          console.log('Subscription is ready with active status and documents!');
                           break;
                         }
+                        
+                        // Wait before next poll
                         await new Promise(r => setTimeout(r, pollMs));
                       }
+                      
                       if (!isReady) {
-                        console.warn('Webhook not confirmed within timeout. Proceeding to success page.');
+                        const latestData = await forceRefreshSubscription();
+                        console.warn('Webhook not confirmed within timeout. Current subscription data:', latestData);
                       }
                     } catch (e) {
-                      console.warn('Error while waiting for webhook completion (non-blocking):', e?.message);
+                      console.warn('Error while waiting for webhook completion:', e?.message);
+                    }
+                    
+                    // 4) Final force refresh before navigation to ensure latest data
+                    try {
+                      await forceRefreshSubscription();
+                      console.log('Final force refresh completed before navigation');
+                    } catch (e) {
+                      console.warn('Final force refresh failed:', e?.message);
                     }
                     
                     // 3) Navigate to success page after webhook wait
@@ -711,7 +741,7 @@ const SubscriptionCardDetails = () => {
 
                   <div>
                     <span className="text-sm font-semibold">
-                      {planDetails.annualBadge}
+                      {planDetails.annualDiscount}%
                     </span>
                   </div>
                 </div>

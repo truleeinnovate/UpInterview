@@ -498,7 +498,7 @@ const verifyPayment = async (req, res) => {
                             discount = billingCycle === 'monthly' ? 0 : pricing.discount;
 
                             // Calculate total amount
-                            totalAmount = price - discount
+                            totalAmount = price //-discount
 
                            // console.log(`Price: ${price}, Discount: ${discount}, Total: ${totalAmount}`);
                         }
@@ -2672,7 +2672,7 @@ const createRecurringSubscription = async (req, res) => {
             if (pricingInfo) {
                 price = pricingInfo.price;
                 currency = pricingInfo.currency || 'INR';
-                discount = membershipType === 'monthly' ? 0 : pricingInfo.discount;
+                //discount = membershipType === 'monthly' ? 0 : pricingInfo.discount;
 
                 // Calculate discount if applicable
                 // console.log(`plan discount ${pricingInfo.discount}`)
@@ -2687,7 +2687,7 @@ const createRecurringSubscription = async (req, res) => {
                 // Calculate total amount after discount
                 // console.log(discount)
                 // console.log(price - discount)
-                totalAmount = price - discount;
+                totalAmount = price;
 
                // console.log(`Pricing details: Price: ${price}, Discount: ${discount}, Total: ${totalAmount}, Currency: ${currency}`);
             } else {
