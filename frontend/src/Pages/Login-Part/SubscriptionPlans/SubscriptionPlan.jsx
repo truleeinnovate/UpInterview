@@ -1,3 +1,5 @@
+// v1.0.0 - Venkatesh - Added subscription status check to prevent already-subscribed users from accessing subscription plans page
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -102,6 +104,21 @@ const SubscriptionPlan = () => {
     // tenantId,
     // ownerId,
   });
+
+  // Check if user already has an active subscription and redirect
+  useEffect(() => {
+    // Skip check if user is explicitly upgrading
+    if (isUpgrading) {
+      return;
+    }
+
+    // Check if subscription data is loaded and user has an active subscription
+    if (!isSubscriptionLoading && subscriptionData && subscriptionData.status === 'active') {
+      // User already has an active subscription, redirect to home
+      console.log('User already has active subscription, redirecting to home...');
+      navigate('/home', { replace: true });
+    }
+  }, [subscriptionData, isSubscriptionLoading, isUpgrading, navigate]);
 
   const toggleBilling = () => setIsAnnual(!isAnnual);
 
@@ -226,7 +243,7 @@ const SubscriptionPlan = () => {
         {loading ? (
           <SubscriptionPlansSkeleton />
         ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-1 gap-6 items-stretch sm:mb-5">
+        <div className="grid grid-cols-3 sm:grid-cols-1 gap-6 items-stretch mb-5 ">
           {plans.map((plan) => {
             // Get actual price
             const actualPrice = isAnnual ? plan.annualPrice : plan.monthlyPrice;
@@ -260,10 +277,10 @@ const SubscriptionPlan = () => {
             return (
             <div
               key={plan.name}
-              className={`shadow-lg rounded-2xl relative transition-all duration-300 flex flex-col h-full ${
+              className={`shadow-xl rounded-2xl relative transition-all duration-300 flex flex-col h-full ${
                   isHighlighted(plan)
                   ? "-translate-y-2 md:-translate-y-3 z-10 bg-[#217989] text-white transform scale-[1.02]"
-                  : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
+                  : "bg-gray-50 text-[#217989] hover:shadow-xl hover:-translate-y-1"
                 }`}
               onMouseEnter={() => setHoveredPlan(plan.name)}
               onMouseLeave={() => setHoveredPlan(null)}
@@ -310,7 +327,7 @@ const SubscriptionPlan = () => {
               </div>
 
               {/* Price Section */}
-              <div className="text-start mb-4">
+              <div className="text-start mb-6">
                 {shouldShowLimitedOffer ? (
                   // Monthly plans for organizations - Show strikethrough and Limited-Time Offer
                   <div>
