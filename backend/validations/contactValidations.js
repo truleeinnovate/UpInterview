@@ -88,14 +88,14 @@ const Joi = require("joi");
   technologies: Joi.array().min(1).messages({
     "array.min": "At least one technology is required",
   }),
-  hourlyRate: Joi.alternatives().try(
-    Joi.number().min(20).max(500),
-    Joi.string().allow('').empty('')
-  ).messages({
-    "number.base": "Hourly rate must be a number",
-    "number.min": "Hourly rate must be between $20 and $500",
-    "number.max": "Hourly rate must be between $20 and $500",
-  }).optional(),
+  // hourlyRate: Joi.alternatives().try(
+  //   Joi.number().min(20).max(500),
+  //   Joi.string().allow('').empty('')
+  // ).messages({
+  //   "number.base": "Hourly rate must be a number",
+  //   "number.min": "Hourly rate must be between $20 and $500",
+  //   "number.max": "Hourly rate must be between $20 and $500",
+  // }).optional(),
   NoShowPolicy: Joi.string().allow('').empty('').optional().messages({
     "string.empty": "Please select a no-show policy",
   }),
@@ -109,7 +109,7 @@ const Joi = require("joi");
     "string.min": "Bio must be at least 150 characters",
     "string.max": "Bio cannot exceed 500 characters",
   }),
-  expectedRatePerMockInterview: Joi.alternatives().when("interviewFormatWeOffer", {
+  mock_interview_discount: Joi.alternatives().when("interviewFormatWeOffer", {
     is: Joi.array().items(Joi.string()).has("mock"),
     then: Joi.alternatives().try(
       Joi.number().min(1),
