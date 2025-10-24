@@ -3,6 +3,7 @@
 // v1.0.2 - Ashraf - fixed api issue.add tansak
 // v1.0.3 - Ashok - Added popup to view all Interview requests and made it as common code
 // v1.0.4 - Ashok - Added dynamic text for button at request cards
+// v1.0.5 - Ashok - Fixed minor UI issues
 
 import React, { useState, useEffect } from "react";
 import {
@@ -604,8 +605,8 @@ const InterviewRequests = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
             </div>
           ) : requests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 bg-white/80 rounded-lg border border-gray-200 text-center">
-              <Inbox className="text-gray-400 mb-4 w-4 h-4" />
+            <div className="flex flex-col items-center justify-center h-full py-8 mx-4 mb-8 bg-white/80 rounded-lg text-center">
+              <Inbox className="text-gray-400 mb-4 w-6 h-6" />
               <h4 className="text-lg font-semibold">No Requests Yet</h4>
               <p className="text-gray-500 text-sm mt-2">
                 Looks good! You have no pending interview requests at the

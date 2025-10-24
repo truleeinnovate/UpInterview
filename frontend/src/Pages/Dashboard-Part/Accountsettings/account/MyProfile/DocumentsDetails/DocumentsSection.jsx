@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - Commented File Upload and Write Text buttons
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -542,7 +543,7 @@ export function DocumentsSection({ documents, onUpdate, externalData = null }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h4 className="font-medium text-gray-900">Cover Letter</h4>
-        <div className="flex items-center space-x-2">
+        {/* <div className="flex items-center space-x-2">
           <button
             onClick={() => handleCoverLetterTypeChange("file")}
             className={`px-3 py-1 text-sm rounded-md ${
@@ -564,7 +565,7 @@ export function DocumentsSection({ documents, onUpdate, externalData = null }) {
           >
             Write Text
           </button>
-        </div>
+        </div> */}
       </div>
 
       {documents?.coverLetter?.type === "text" ? (
@@ -686,12 +687,12 @@ export function DocumentsSection({ documents, onUpdate, externalData = null }) {
         <h4 className="text-sm font-medium text-custom-blue mb-2">
           Document Guidelines
         </h4>
-        <ul className="text-sm text-custom-blue space-y-1">
-          <li>• Upload documents in PDF, DOC, or DOCX format</li>
-          <li>• Maximum file size: 5MB per document</li>
-          <li>• Keep your resume updated with latest experience</li>
-          <li>• Tailor your cover letter for specific positions</li>
-          <li>• Use clear, professional formatting</li>
+        <ul className="text-sm text-custom-blue space-y-1 list-disc pl-4">
+          <li>Upload documents in PDF, DOC, or DOCX format</li>
+          <li>Maximum file size: 5MB per document</li>
+          <li>Keep your resume updated with latest experience</li>
+          <li>Tailor your cover letter for specific positions</li>
+          <li>Use clear, professional formatting</li>
         </ul>
       </div>
 
