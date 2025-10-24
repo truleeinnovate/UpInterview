@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - commented cover letter validation and fixed resume validation issue
+// v1.0.1 - Ashok - fixed issue when there is no file uploaded for resume
 
 const Joi = require("joi");
 
@@ -109,7 +110,7 @@ function validateIndividualSignup(step, data) {
       industry: data.industry,
       yearsOfExperience: data.yearsOfExperience,
       location: data.location,
-      resume: data.resume.filename,
+      resume: data.resume?.filename,
       // coverLetter: data.coverLetter.filename,
     };
   } else if (step === 2) {
