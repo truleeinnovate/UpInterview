@@ -210,13 +210,9 @@ const EditInterviewDetails = ({
   const [formData, setFormData] = useState({
     PreviousExperienceConductingInterviews: "",
     PreviousExperienceConductingInterviewsYears: "",
-    ExpertiseLevel_ConductingInterviews: "",
-    hourlyRate: "",
-    expectedRatePerMockInterview: "",
     mock_interview_discount: "",
     Technology: [],
     skills: [],
-    NoShowPolicy: "",
     professionalTitle: "",
     bio: "",
     interviewFormatWeOffer: [],
@@ -335,26 +331,17 @@ const EditInterviewDetails = ({
 
     // Create the form data with proper rate visibility
     const newFormData = {
-      PreviousExperienceConductingInterviews:
-        profileData?.previousExperienceConductingInterviews ||  
-        profileData?.PreviousExperienceConductingInterviews || "" ,
+      PreviousExperienceConductingInterviews: profileData?.PreviousExperienceConductingInterviews || "" ,
       // If experience is "no", keep years empty; otherwise use the parsed value
       PreviousExperienceConductingInterviewsYears:
-        profileData?.previousExperienceConductingInterviews === "no" 
+        profileData?.previousExperienceConductingInterviews === "no"
           ? ""
           : years || 1,
-          
-      ExpertiseLevel_ConductingInterviews:
-        profileData?.expertiseLevelConductingInterviews || "",
-      hourlyRate: profileData?.hourlyRate || "",
-      expectedRatePerMockInterview:
-        profileData?.expectedRatePerMockInterview || "",
       mock_interview_discount: profileData?.mock_interview_discount || "",
       Technology: Array.isArray(profileData?.technologies)
         ? profileData.technologies
         : [],
       skills: Array.isArray(profileData?.skills) ? profileData.skills : [],
-      NoShowPolicy: profileData?.noShowPolicy || "",
       professionalTitle: profileData?.professionalTitle || "",
       bio: profileData?.bio || "",
       interviewFormatWeOffer: Array.isArray(profileData?.interviewFormatWeOffer || profileData?.InterviewFormatWeOffer)
@@ -405,7 +392,6 @@ const EditInterviewDetails = ({
     }
 
     // Set other UI states
-    setIsMockInterviewSelected(!!profileData?.expectedRatePerMockInterview);
     setSelectedSkills(
       Array.isArray(profileData?.skills) ? profileData.skills : []
     );
@@ -577,18 +563,6 @@ const EditInterviewDetails = ({
     }));
   };
 
-  const handleNoShow = (e) => {
-    const { value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      NoShowPolicy: value,
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      NoShowPolicy: "",
-    }));
-  };
-
   const handleCloseModal = () => {
     if (from === "users") {
       setInterviewEditOpen(false);
@@ -598,7 +572,7 @@ const EditInterviewDetails = ({
     }
   };
 
-  
+
 
   // API call to save all changes
   const handleSave = async (e) => {
@@ -610,58 +584,22 @@ const EditInterviewDetails = ({
     }
 
     console.log("formData before validation:", formData);
-  
+
 
     const validationErrors = validateInterviewForm(formData, isReady);
     console.log("validationErrors:", validationErrors);
     setErrors(validationErrors);
 
     if (!isEmptyObject(validationErrors)) {
-      return; // Prevent submission if there are errors
+      return;
     }
 
     console.log("form", formData, typeof Number(formData.hourlyRate));
 
-    const cleanFormData = {
-      PreviousExperienceConductingInterviews: String(
-        formData.PreviousExperienceConductingInterviews?.trim() || ""
-      ).trim(),
-      PreviousExperienceConductingInterviewsYears: String(
-        formData.PreviousExperienceConductingInterviewsYears || ""
-      ).trim(),
-      ExpertiseLevel_ConductingInterviews: String(
-        formData.ExpertiseLevel_ConductingInterviews || ""
-      ).trim(),
-      hourlyRate: Number(formData.hourlyRate) || "",
-      technologies: Array.isArray(formData.Technology)
-        ? formData.Technology
-        : [],
-      skills: Array.isArray(formData.skills) ? formData.skills : [],
-      NoShowPolicy: String(formData.NoShowPolicy || "").trim(),
-      InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
-      expectedRatePerMockInterview: formData.interviewFormatWeOffer.includes(
-        "mock"
-      )
-        ? formData.expectedRatePerMockInterview
-        : "",
-      mock_interview_discount: formData.interviewFormatWeOffer.includes("mock")
-        ? formData.mock_interview_discount
-        : "",
-      professionalTitle: String(formData.professionalTitle || "").trim(),
-      bio: String(formData.bio || "").trim(),
-      id: formData.id,
-      yearsOfExperience: formData.yearsOfExperience,
-      rates: formData.rates,
-    };
-    // v1.0.3 <--------------------------------------------
     setLoading(true);
-    // v1.0.3 -------------------------------------------->
     try {
-      // Both contexts use the same endpoint since outsource interviewers are Contact records
-      // Determine the correct ID to use for the update
       let updateId;
       if (from === "outsource-interviewer") {
-        // For outsource interviewers, profileData is the Contact object
         if (!profileData || !profileData._id) {
           console.error("Profile data not loaded or missing ID:", {
             profileData,
@@ -695,19 +633,11 @@ const EditInterviewDetails = ({
                     formData.PreviousExperienceConductingInterviewsYears || "1"
                 ).trim()
             }),
-            ExpertiseLevel_ConductingInterviews: String(
-                formData.ExpertiseLevel_ConductingInterviews || ""
-            ).trim(),
-            hourlyRate: Number(formData.hourlyRate) || "",
             technologies: Array.isArray(formData.Technology)
                 ? formData.Technology
                 : [],
             skills: Array.isArray(formData.skills) ? formData.skills : [],
-            NoShowPolicy: String(formData.NoShowPolicy || "").trim(),
             InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
-            expectedRatePerMockInterview: formData.interviewFormatWeOffer.includes("mock")
-                ? formData.expectedRatePerMockInterview
-                : "",
             mock_interview_discount: formData.interviewFormatWeOffer.includes("mock")
                 ? formData.mock_interview_discount
                 : "",
@@ -740,7 +670,7 @@ const EditInterviewDetails = ({
                 }
                 updateId = profileData.contactId; // Use contactId for regular users
             }
-            
+
             const response = await updateContactDetail.mutateAsync({
                 resolvedId: updateId,
                 data: cleanFormData,
@@ -1147,7 +1077,7 @@ const EditInterviewDetails = ({
             {/* Technology Selection */}
             <div className="space-y-4">
               <DropdownWithSearchField
-              
+
               disabled = {from !== "outsource-interviewer"}
                 value={selectedCandidates[0]?.TechnologyMasterName || ""}
                 options={services.map((tech) => ({
@@ -1437,7 +1367,7 @@ const EditInterviewDetails = ({
                           <div className="relative">
                             <IncreaseAndDecreaseField
                               name="junior_usd"
-                              
+
                       disabled = {from !== "outsource-interviewer"}
                               value={formData.rates?.junior?.usd || ""}
                               onChange={handleRateChange("junior", "usd")}
@@ -1745,7 +1675,6 @@ const EditInterviewDetails = ({
                 )}
               </div>
 
-              {/* Expected Rate Per Mock Interview */}
               {formData.interviewFormatWeOffer?.includes("mock") && (
                 <div>
                   <div className="p-4 rounded-lg border border-gray-200">
@@ -1824,7 +1753,7 @@ const EditInterviewDetails = ({
                                 }
                               : null
                           }
-                          
+
                           onChange={(selected) => {
                             if (selected?.value === "custom") {
                               setShowCustomDiscount(true);
@@ -1874,37 +1803,6 @@ const EditInterviewDetails = ({
                   </div>
                 </div>
               )}
-
-              {/* No-Show Policy */}
-              {/* {isReady && ( */}
-              {/* <div>
-                                <p className="text-gray-900 text-sm font-medium leading-6 rounded-lg mb-1">
-                                    Policy for No-Show Cases <span className="text-red-500">*</span>
-                                </p>
-                                <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-1 text-sm sm:text-xs">
-                                    {["25%", "50%", "75%", "100%"].map((policy) => (
-                                        <label key={policy} className="inline-flex items-center">
-                                            <input
-                                                type="radio"
-                                                name="NoShowPolicy"
-                                                value={policy}
-                                                checked={formData.NoShowPolicy === policy}
-                                                onChange={handleNoShow}
-                                                className="form-radio text-gray-600"
-                                            />
-                                            <span className="ml-2">
-                                                Charge {policy} without rescheduling
-                                            </span>
-                                        </label>
-                                    ))}
-                                </div>
-                                {errors.NoShowPolicy && (
-                                    <p className="text-red-500 text-sm sm:text-xs mt-2">
-                                        {errors.NoShowPolicy}
-                                    </p>
-                                )}
-                            </div> */}
-              {/* // )} */}
 
               {/* Professional Title */}
               <div className="sm:col-span-6 col-span-2">

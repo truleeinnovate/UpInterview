@@ -49,7 +49,7 @@ const Interviewers = () => {
         if (response.data.success) {
           setInterviews(response.data.data);
           console.log("INTERVIEW ROUNDS DATA ==============> : ", response.data.data);
-          
+
           // Debug: Check organization types in the data
           const orgTypes = response.data.data.reduce((acc, round) => {
             const type = round.organizationType || 'undefined';
@@ -58,7 +58,7 @@ const Interviewers = () => {
           }, {});
           console.log("Organization Types Distribution (frontend):", orgTypes);
           console.log("Organization Types Distribution (backend):", response.data.typeDistribution);
-          
+
           // Debug: Sample first 3 rounds
           console.log("Sample rounds:", response.data.data.slice(0, 3).map(r => ({
             id: r._id,
@@ -161,12 +161,12 @@ const Interviewers = () => {
 
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
-    
+
     const filtered = dataToUse.filter((round) => {
       // Filter by organization/individual using organizationType field
       const matchesType = selectedType === "all"
         ? true  // Show all types
-        : selectedType === "organization" 
+        : selectedType === "organization"
         ? round?.organizationType === "organization"  // Only show organization type
         : round?.organizationType === "individual"; // Show individual type
 
@@ -190,10 +190,10 @@ const Interviewers = () => {
 
       return matchesType && matchesSearchQuery && matchesStatus;
     });
-    
+
     // Debug logging
     console.log(`FilteredData: selectedType=${selectedType}, total=${dataToUse.length}, filtered=${filtered.length}`);
-    
+
     return filtered;
   };
 
@@ -220,69 +220,6 @@ const Interviewers = () => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
   };
-
-  // v1.0.0 <-----------------------------------------------------------------------------------
-  // Table Columns
-  // const tableColumns = [
-  //   {
-  //     key: "interviewNo",
-  //     header: "Interview ID",
-  //     render: (vale, row) => (
-  //       <span>{row?.interviewNo ? row?.interviewNo : "N/A"}</span>
-  //     ),
-  //   },
-
-  //   {
-  //     key: "name",
-  //     header: "Name",
-  //     render: (vale, row) => (
-  //       <span>
-  //         {row?.contactId?.firstName
-  //           ? row?.contactId?.firstName
-  //           : row?.contactId?.lastName}
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     key: "skills",
-  //     header: "Skills",
-  //     render: (value, row) => (
-  //       <span>
-  //         {row?.contactId?.skills?.length
-  //           ? row?.contactId?.skills.join(", ")
-  //           : "N/A"}
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     key: "experience",
-  //     header: "Experience",
-  //     render: (value, row) => (
-  //       <span>
-  //         {row?.contactId?.experience ? row?.contactId?.experience : "N/A"}
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     key: "rating",
-  //     header: "Rating",
-  //     render: (value, row) => <span>{row.rating ? row.rating : "N/A"}</span>,
-  //   },
-  //   {
-  //     key: "pricePerHour",
-  //     header: "Price/Hour",
-  //     render: (value, row) => (
-  //       <span>{row?.requestedRate?.hourlyRate || "N/A"}</span>
-  //     ),
-  //   },
-  //   {
-  //     key: "status",
-  //     header: "Status",
-  //     render: (value, row) => (
-  //       <StatusBadge status={capitalizeFirstLetter(row.status)} />
-  //     ),
-  //   },
-  // ];
 
   const tableColumns = [
     {
@@ -325,7 +262,7 @@ const Interviewers = () => {
         </div>
       ),
     },
-    
+
     {
       key: "status",
       header: "Status",
@@ -358,7 +295,7 @@ const Interviewers = () => {
         setIsPopupOpen(true);
       },
     },
-    
+
   ];
 
   // Kanban Columns Configuration
@@ -412,7 +349,7 @@ const Interviewers = () => {
         setIsPopupOpen(true);
       },
     },
-    
+
   ];
 
   // Render Actions for Kanban
@@ -438,10 +375,10 @@ const Interviewers = () => {
   const renderFilterContent = () => {
     // filters options matching InterviewRounds schema
     const statusOptions = [
-      "Draft", 
+      "Draft",
       "RequestSent",
-      "Scheduled", 
-      "InProgress", 
+      "Scheduled",
+      "InProgress",
       "Completed",
       "InCompleted",
       "Rescheduled",
@@ -612,7 +549,7 @@ const Interviewers = () => {
         </div>
       </div>
       {/* v1.0.0 -----------------------------------------------------------------------------------> */}
-      
+
       {/* Interview Details Sidebar */}
       <InterviewDetailsSidebar
         isOpen={isPopupOpen}
@@ -622,7 +559,7 @@ const Interviewers = () => {
         }}
         interviewData={selectedInterview}
       />
-      
+
       <Outlet />
     </>
   );

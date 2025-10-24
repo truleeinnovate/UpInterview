@@ -1,7 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MdOutlineCancel } from "react-icons/md";
 import TimezoneSelect from "react-timezone-select";
 import DatePicker from "react-datepicker";
 import {
@@ -15,14 +14,12 @@ import {
   FaUserTie,
   FaClock,
   FaLanguage,
-  // FaExternalLinkAlt,
   FaMapMarkerAlt,
   FaInfoCircle,
   FaTransgender,
 } from "react-icons/fa";
 import { GiCancel } from "react-icons/gi";
 import { IoIosCopy } from "react-icons/io";
-// import { IoArrowBack } from "react-icons/io5";
 import { useLocation } from "react-router-dom";
 import SidebarPopup from "../../SidebarPopup/SidebarPopup";
 
@@ -30,7 +27,6 @@ const ContactProfileDetails = () => {
   const location = useLocation();
   const contactData = location.state?.contactData;
   const [contact] = useState(contactData);
-  // const [isFullScreen, setIsFullScreen] = useState(false);
   const [activeTab, setActiveTab] = useState("Basic-Details");
 
   const handleNavigate = () => {
@@ -40,223 +36,25 @@ const ContactProfileDetails = () => {
     setActiveTab(tab);
   };
 
-  // const toggleFullScreen = () => {
-  //   setIsFullScreen(!isFullScreen);
-  // };
-
-  // const location = useLocation();
   useEffect(() => {
     document.title = "ContactProfileDetails";
   }, []);
   const navigate = useNavigate();
-  //----Availability---//
-
-  // const [availabilityError, setAvailabilityError] = useState("");
 
   const [errors, setErrors] = useState({
     Technology: "",
     Skill: "",
   });
 
-  // const validateStepOne = (formData, formData2) => {
-  //   const errors = {};
-
-  //   // Check for required fields
-  //   if (!formData.Name) errors.Name = "Name is required";
-  //   if (!formData.profileId) errors.profileId = "Profile ID is required";
-
-  //   // Check for email presence and validity
-  //   if (!formData.Email) {
-  //     errors.Email = "Email is required";
-  //   } else if (!validateEmail(formData.Email)) {
-  //     errors.Email = "Invalid email address";
-  //   }
-
-  //   // Check for phone presence and validity
-  //   if (!formData.Phone) {
-  //     errors.Phone = "Phone number is required";
-  //   } else if (!validatePhone(formData.Phone)) {
-  //     errors.Phone = "Invalid phone number";
-  //   }
-
-  //   if (!formData.LinkedinUrl) errors.LinkedinUrl = "LinkedIn URL is required";
-
-  //   // Check other required fields in formData2
-  //   if (!formData2.CurrentRole) errors.CurrentRole = "Current Role is required";
-  //   if (!formData2.industry) errors.industry = "Industry is required";
-  //   if (!formData2.Experience) errors.Experience = "Experience is required";
-  //   if (!formData2.location) errors.location = "Location is required";
-  //   if (!formData2.Introduction)
-  //     errors.Introduction = "Introduction is required";
-
-  //   return errors;
-  // };
-
-  // const validateEmail = (email) => {
-  //   const emailRegex = /^[^\s@]+@gmail\.com$/;
-  //   return emailRegex.test(email);
-  // };
-
-  // const validatePhone = (phone) => {
-  //   const phoneRegex = /^[6-9]\d{9}$/; // Indian phone number validation (starts with 6-9 and has 10 digits)
-  //   return phoneRegex.test(phone);
-  // };
-
-  // const validateStepTwo = () => {
-  //   const newErrors = {};
-
-  //   // Validate Technology
-  //   if (!formData3.Technology || formData3.Technology.length === 0) {
-  //     newErrors.Technology = "At least one Technology is required";
-  //   }
-
-  //   // Validate Skill
-  //   if (!formData3.Skill || formData3.Skill.length === 0) {
-  //     newErrors.Skill = "At least one Skill is required";
-  //   }
-
-  //   if (!formData3.previousExperience) {
-  //     newErrors.previousExperience = "Previous Experience is required";
-  //   }
-
-  //   // Validate expertiseLevel
-  //   if (!formData3.expertiseLevel) {
-  //     newErrors.expertiseLevel = "Expertise Level is required";
-  //   }
-
-  //   setErrors(newErrors); // Update errors state
-  //   return newErrors;
-  // };
-
-  // const validateStepThree = (formData4) => {
-  //   const errors = {};
-  //   if (!formData4.TimeZone) errors.TimeZone = "Time Zone is required";
-  //   if (!formData4.PreferredDuration)
-  //     errors.PreferredDuration = "Preferred Duration is required";
-
-  //   const hasValidTimeSlot = Object.values(times).some((dayTimes) =>
-  //     dayTimes.some((timeSlot) => timeSlot.startTime && timeSlot.endTime)
-  //   );
-
-  //   if (!hasValidTimeSlot) {
-  //     // setAvailabilityError(
-  //     //   "Please provide at least one valid start and end time."
-  //     // );
-  //     return errors;
-  //   } else {
-  //     // setAvailabilityError("");
-  //   }
-
-  //   return errors;
-  // };
-
-  // const [step] = useState(0);
-  // const handleNextStep = () => {
-  //   let currentErrors = {};
-
-  //   // Ensure that form data objects are defined and not null
-  //   const safeFormData = formData || {};
-  //   const safeFormData2 = formData2 || {};
-  //   const safeFormData3 = formData3 || {};
-  //   const safeFormData4 = formData4 || {};
-
-  //   if (step === 0) {
-  //     currentErrors = validateStepOne(safeFormData, safeFormData2);
-  //   } else if (step === 1) {
-  //     currentErrors = validateStepTwo();
-  //   } else if (step === 2) {
-  //     currentErrors = validateStepThree(safeFormData4);
-  //   }
-
-  //   if (Object.keys(currentErrors).length === 0) {
-  //     if (step < 3) {
-  //       // Adjust this to the total number of steps
-  //       setStep(step + 1);
-  //     }
-  //     setErrors({});
-  //   } else {
-  //     setErrors(currentErrors);
-  //   }
-  // };
-
-  // const [formData, setFormData] = useState({
-  //   Name: "",
-  //   profileId: "",
-  //   Email: "",
-  //   Phone: "",
-  //   LinkedinUrl: "",
-  // });
-
-  // const [formData2, setFormData2] = useState({
-  //   CurrentRole: "",
-  //   industry: "",
-  //   Experience: "",
-  //   location: "",
-  //   Introduction: "",
-  // });
-
-  // const [formData3] = useState({
-  //   Technology: [],
-  //   Skill: [],
-  //   previousExperience: "",
-  //   expertiseLevel: "",
-  // });
-
   const [formData4, setFormData4] = useState({
     TimeZone: "",
     PreferredDuration: "",
   });
 
-  // const handleChange = (e) => {
-  //   const { name, value } = e.target;
-
-  //   if (step === 0) {
-  //     setFormData((prevFormData) => ({
-  //       ...prevFormData,
-  //       [name]: value,
-  //     }));
-  //     setFormData2((prevFormData2) => ({
-  //       ...prevFormData2,
-  //       [name]: value,
-  //     }));
-  //     setErrors(
-  //       validateStepOne(
-  //         { ...formData, [name]: value },
-  //         { ...formData2, [name]: value }
-  //       )
-  //     );
-  //   } else if (step === 1) {
-  //     setFormData3((prevFormData3) => ({
-  //       ...prevFormData3,
-  //       [name]: value,
-  //     }));
-  //     setErrors(validateStepTwo(formData3));
-  //   } else if (step === 2) {
-  //     setFormData4((prevFormData4) => ({
-  //       ...prevFormData4,
-  //       [name]: value,
-  //     }));
-  //     // Check if name is "Experience", if so, do not set error for it
-  //     setErrors(validateStepThree(formData4, name === "Experience"));
-  //   }
-  //   // Add more else if conditions for additional steps if needed
-  // };
-
-  // const [day] = useState(null);
-
   const [showPopup, setShowPopup] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedDays, setSelectedDays] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);
-
-  // const handleDateChange = (date, index, key) => {
-  //   const newTimes = [...times[day]];
-  //   newTimes[index][key] = date.toISOString();
-  //   setTimes((prevTimes) => ({
-  //     ...prevTimes,
-  //     [day]: newTimes,
-  //   }));
-  // };
 
   const [times, setTimes] = useState({
     Sunday: [{ startTime: null, endTime: null }],
@@ -325,7 +123,6 @@ const ContactProfileDetails = () => {
     setErrors({ ...errors, TimeZone: "" });
   };
 
-  // Render Sidebar popup content
   const renderSidebarPopupContent = () => (
     <div className="">
       <div className={`bg-white`}>

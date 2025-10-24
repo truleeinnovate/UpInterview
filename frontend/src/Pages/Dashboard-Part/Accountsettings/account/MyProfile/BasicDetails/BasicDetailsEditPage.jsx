@@ -11,7 +11,6 @@ import {
   validateFormMyProfile,
 } from "../../../../../../utils/MyProfileValidations";
 import { useNavigate, useParams } from "react-router-dom";
-// import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { config } from "../../../../../../config";
 import {
   validateWorkEmail,
@@ -25,7 +24,6 @@ import {
   useUserProfile,
 } from "../../../../../../apiHooks/useUsers.js";
 import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
-
 import { toast } from "react-hot-toast";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useCallback } from "react";
@@ -34,11 +32,8 @@ import { uploadFile } from "../../../../../../apiHooks/imageApis.js";
 import { useRolesQuery } from "../../../../../../apiHooks/useRoles.js";
 import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { notify } from "../../../../../../services/toastService.js";
-// v1.0.1 <----------------------------------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 import { formatDateOfBirth } from "./BasicDetails.jsx";
-// v1.0.1 ---------------------------------------------------------------------------------------->
-// Shared form fields
 import {
   InputField,
   EmailField,
@@ -58,15 +53,14 @@ const BasicDetailsEditPage = ({
 }) => {
   const { data: organizationRoles } = useRolesQuery();
 
-  // const { usersRes } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
   const resolvedId = usersId || id;
 
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
+//   const authToken = Cookies.get("authToken");
+//   const tokenPayload = decodeJwt(authToken);
   // const userId = tokenPayload.userId;
-  const tenantId = tokenPayload.tenantId;
+//   const tenantId = tokenPayload.tenantId;
 
   const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
@@ -80,8 +74,7 @@ const BasicDetailsEditPage = ({
   const [originalProfileId, setOriginalProfileId] = useState("");
 
   // Fetch user profile for "my-profile" context
-  const { userProfile, isLoading, isError, error } = useUserProfile(
-    // from === "my-profile" ? resolvedId : null
+  const { userProfile, isLoading } = useUserProfile(
     resolvedId
   );
 
@@ -118,51 +111,6 @@ const BasicDetailsEditPage = ({
   const [fileError, setFileError] = useState("");
   const [isProfileRemoved, setIsProfileRemoved] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // useEffect(() => {
-  //   const fetchRoles = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `${config.REACT_APP_API_URL}/organization/roles/${tenantId}`
-  //       );
-  //       setCurrentRole(response.data);
-  //     } catch (error) {
-  //       console.error("Error fetching roles:", error);
-  //     }
-  //   };
-
-  //   if (tenantId) {
-  //     fetchRoles();
-  //   }
-  // }, [tenantId]);
-
-  //   console.log("formattedDate", formData);
-
-  //   v1.0.2 <----------------------------------------------------------------------------
-  //   const handleFileChange = async (e) => {
-  //     const selectedFile = e.target.files[0];
-  //     if (selectedFile) {
-  //       const error = await validateFile(selectedFile, "image");
-  //       if (error) {
-  //         setFileError(error);
-  //         return;
-  //       }
-  //       setFileError("");
-  //       setFile(selectedFile);
-  //       setFilePreview(URL.createObjectURL(selectedFile));
-  //     }
-  //   };
-
-  //   const handleDeleteImage = () => {
-  //     // if (window.confirm("Remove this image?")) {
-  //     setFile(null);
-  //     setFilePreview(null);
-  //     setIsProfileRemoved(true);
-  //     if (fileInputRef.current) {
-  //       fileInputRef.current.value = "";
-  //     }
-  //     // }
-  //   };
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
