@@ -1,4 +1,5 @@
 // v1.0.0 - Venkatesh - Added subscription status check to prevent already-subscribed users from accessing subscription plans page
+// v1.0.1 - Ashok - Fixed cards background color and grid layout for md screens
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -200,7 +201,7 @@ const SubscriptionPlan = () => {
     hoveredPlan ? hoveredPlan === plan.name : plan.isDefault;
 
   return (
-    <div className="h-full w-full flex justify-center items-center pt-3">
+    <div className="h-full w-full flex justify-center items-center pt-3 bg-gray-50">
       <div className="flex flex-col sm:px-[7%] px-[15%] md:px-[2%] rounded-lg">
         {/* Header Section */}
         <div className="text-center mb-8">
@@ -243,7 +244,7 @@ const SubscriptionPlan = () => {
         {loading ? (
           <SubscriptionPlansSkeleton />
         ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-1 gap-6 items-stretch mb-5 ">
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 grid-cols-3 gap-6 items-stretch mb-5 ">
           {plans.map((plan) => {
             // Get actual price
             const actualPrice = isAnnual ? plan.annualPrice : plan.monthlyPrice;
@@ -280,7 +281,7 @@ const SubscriptionPlan = () => {
               className={`shadow-xl rounded-2xl relative transition-all duration-300 flex flex-col h-full ${
                   isHighlighted(plan)
                   ? "-translate-y-2 md:-translate-y-3 z-10 bg-[#217989] text-white transform scale-[1.02]"
-                  : "bg-gray-50 text-[#217989] hover:shadow-xl hover:-translate-y-1"
+                  : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
                 }`}
               onMouseEnter={() => setHoveredPlan(plan.name)}
               onMouseLeave={() => setHoveredPlan(null)}
