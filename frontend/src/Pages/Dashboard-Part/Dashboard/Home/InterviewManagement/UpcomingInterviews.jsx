@@ -1,6 +1,7 @@
 // v1.0.0----------Venkatesh----------changes in candidate name and position first letter capital
 // v1.0.1 - Ashok - Improved responsiveness
 // v1.0.2 - Ashok - Fixed responsiveness issues
+// v1.0.3 - Ashok - Added meeting platform icons and styles
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +15,8 @@ import {
   Briefcase,
   Hash,
 } from "lucide-react";
+import { SiGooglemeet } from "react-icons/si";
+import { FaVideo } from "react-icons/fa";
 import { parse, isValid, isAfter, isToday, startOfDay } from "date-fns";
 import { useInterviews } from "../../../../../apiHooks/useInterviews";
 
@@ -200,21 +203,55 @@ const InterviewerSchedule = () => {
                   }`}
               >
                 <div className="space-y-4 w-full">
-                  <div className="grid grid-cols-1 items-center gap-2">
-                    {/* date and time */}
-                    <div className="flex items-center gap-2 w-full">
-                      <Calendar size={18} className="text-gray-400" />
-                      <p className="text-sm font-medium text-gray-800">
-                        {displayDateTime(round.dateTime)}
-                      </p>
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="grid grid-cols-1 items-center gap-2">
+                      {/* date and time */}
+                      <div className="flex items-center gap-2 w-full">
+                        <Calendar size={18} className="text-gray-400" />
+                        <p className="text-sm font-medium text-gray-800">
+                          {displayDateTime(round.dateTime)}
+                        </p>
+                      </div>
+                      {/* interview code */}
+                      <div className="flex items-center gap-2">
+                        <Hash size={18} className="text-gray-400" />
+                        <span className="text-xs font-medium text-custom-blue">
+                          {interviewCode}
+                        </span>
+                      </div>
                     </div>
-                    {/* interview code */}
-                    <div className="flex items-center gap-2">
-                      <Hash size={18} className="text-gray-400" />
-                      <span className="text-xs font-medium text-custom-blue">
-                        {interviewCode}
-                      </span>
-                    </div>
+                    <span className="inline-flex items-center gap-1.5 py-1 px-2.5 text-xs">
+                      {round?.meetPlatform === "googlemeet" ? (
+                        <div className="flex items-center gap-2 bg-green-50 text-gray-600 px-2 py-1 rounded-md">
+                          <SiGooglemeet className="w-5 h-5 text-green-600" />
+                          <strong className="text-green-600">
+                            Google Meet
+                          </strong>
+                        </div>
+                      ) : round?.meetPlatform === "zoom" ? (
+                        <div className="flex items-center gap-2 bg-blue-50 text-gray-600 py-1 px-2 rounded-md">
+                          <span className="inline-flex items-center">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 48 48"
+                              className="w-6 h-6"
+                            >
+                              <circle cx="24" cy="24" r="24" fill="#2D8CFF" />
+                              <path
+                                fill="#fff"
+                                d="M30.5 18.5v3.3l4-3.3v11l-4-3.3v3.3c0 1.1-.9 2-2 2h-9c-1.1 0-2-.9-2-2v-9c0-1.1.9-2 2-2h9c1.1 0 2 .9 2 2z"
+                              />
+                            </svg>
+                          </span>
+                          <strong className="text-blue-600">Zoom</strong>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 bg-gray-100 text-gray-600 px-2 py-2 rounded-md">
+                          <FaVideo className="w-6 h-4 text-gray-400" />
+                          <strong>Custom</strong>
+                        </div>
+                      )}
+                    </span>
                   </div>
                   <div className="grid grid-cols-1 items-center gap-2">
                     {/* candidate name and email */}
@@ -251,9 +288,9 @@ const InterviewerSchedule = () => {
                       <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
                         {round.interviewMode}
                       </span>
-                      <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
+                      {/* <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
                         {round?.meetPlatform}
-                      </span>
+                      </span> */}
                     </div>
                     {/* status */}
                     <div className="flex items-center gap-2">
