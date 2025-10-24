@@ -1,6 +1,6 @@
 // v1.0.0 - Ashok - removed show and hide toggle
 // v1.0.1 - Ashok - disabled outer scrollbar using hook for better user experience
-/* 
+/*
    v1.0.2 - Ashok - fixed z-index issue and added createPortal using this
    lets you render a React component into a different part of the DOM
    outside its parent hierarchy.
@@ -63,7 +63,7 @@ const RoundCard = ({
   isExpanded,
   onInitiateAction,
 }) => {
-  // console.log("round in the roound card page: ", round);
+  console.log("round in the roound card page: ", round);
   // const {
   //   assessmentData,
   //   // sectionQuestions,
@@ -690,7 +690,7 @@ const RoundCard = ({
 
 
   //     response = await updateInterviewRound(payload);
-  //     if  (response.status === "ok") {        
+  //     if  (response.status === "ok") {
   //       notify.success("Assessment link resend successfully");
   //     }
 
@@ -875,6 +875,7 @@ const RoundCard = ({
 
   // console.log("status", round.status);
   const permissions = getRoundPermissions(round.status);
+  console.log('round.status:-', round.status)
 
   // v1.0.4 -------------------------->
 
@@ -1502,7 +1503,7 @@ const RoundCard = ({
                     </>
                   )}
 
-                  
+
 {round?.roundTitle === "Assessment" && round?.status === "draft"  && (
                     <button
                     onClick={() => handleCreateAssessmentClick(round)}
@@ -1522,7 +1523,7 @@ const RoundCard = ({
                     </button>
                   )}
 
-                  
+
                   {canEdit && !['Completed', 'Cancelled', 'Rejected', 'Selected'].includes(round.status) && !actionInProgress && (
                     <button
                       onClick={onEdit}
@@ -1594,8 +1595,9 @@ const RoundCard = ({
                 <div className="mt-6 w-full flex gap-2 whitespace-nowrap sm:justify-start md:justify-start justify-end">
                   {/* Reschedule */}
                   {permissions.canReschedule &&
-                    round.interviewerType === "External" &&
-                    !round.isInstant && (
+                    // round.interviewerType === "External" &&
+                    // !round.isInstant &&
+                    (
                       <button
                         onClick={() => onEdit(round, { isReschedule: true })}
                         className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"

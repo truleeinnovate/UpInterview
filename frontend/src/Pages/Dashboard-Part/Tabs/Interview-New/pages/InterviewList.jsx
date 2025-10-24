@@ -632,7 +632,7 @@ function InterviewList() {
     //         isExternal: nextRound?.interviewerType === "external",
     //       })) || [];
     //       console.log("nextRoundInterviewers", nextRoundInterviewers);
-          
+
     //     return (
     //       <Tooltip
     //         label={nextRoundInterviewers
@@ -789,7 +789,7 @@ function InterviewList() {
   ];
 
   console.log("currentFilteredRows", currentFilteredRows);
-  
+
 
   // Table Actions Configuration
   const tableActions = [
@@ -1377,7 +1377,7 @@ function InterviewList() {
                           "Cancelled",
                           "RequestSent",
                           "Pending",
-                          "In Progress",
+                          "InProgress",
                         ].map((status) => (
                           <label
                             key={status}

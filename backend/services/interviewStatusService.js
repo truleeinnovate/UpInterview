@@ -23,11 +23,11 @@ const determineInterviewStatusFromRounds = (rounds) => {
   const hasActive = rounds.some(r =>
     ["InProgress", "Scheduled", "RequestSent", "Rescheduled"].includes(r.status)
   );
-  if (hasActive) return "In Progress";
+  if (hasActive) return "InProgress";
 
   // If some are mixed terminal/non-terminal → treat as In Progress
   const hasAnyTerminal = rounds.some(r => TERMINAL_ROUND_STATUSES.includes(r.status));
-  if (hasAnyTerminal) return "In Progress";
+  if (hasAnyTerminal) return "InProgress";
 
   return null;
 };
@@ -78,7 +78,7 @@ const processAllInterviews = async () => {
     console.log(`[CRON] Checking interviews at ${new Date().toLocaleTimeString()}`);
 
     const interviews = await Interview.find({
-      status: { $in: ["Draft", "In Progress", "Cancelled", "Rejected", "Selected"] }
+      status: { $in: ["Draft", "InProgress", "Cancelled", "Rejected", "Selected"] }
     });
 
     console.log(`[CRON] Found ${interviews.length} interviews to verify`);
