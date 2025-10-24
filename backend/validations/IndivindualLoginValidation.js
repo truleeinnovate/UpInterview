@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - commented cover letter validation and fixed resume validation issue
+
 const Joi = require("joi");
 
 // STEP 0: Basic details
@@ -39,7 +41,7 @@ const additionalDetailsSchema = Joi.object({
     "string.empty": "Location is required",
   }),
   resume: Joi.string().allow("", null),
-  coverLetter: Joi.string().allow("", null),
+  // coverLetter: Joi.string().allow("", null),
 });
 
 // STEP 2: Interview details
@@ -107,8 +109,8 @@ function validateIndividualSignup(step, data) {
       industry: data.industry,
       yearsOfExperience: data.yearsOfExperience,
       location: data.location,
-      resume: data.resume,
-      coverLetter: data.coverLetter,
+      resume: data.resume.filename,
+      // coverLetter: data.coverLetter.filename,
     };
   } else if (step === 2) {
     schema = interviewDetailsSchema;
