@@ -16,6 +16,7 @@ export const useRolesQuery = ({ filters = {}, fetchAllRoles = false } = {}) => {
       const response = await axios.get(`${config.REACT_APP_API_URL}/getAllRoles`);
       let allRoles = response.data;
 
+
       // Apply userType-based filtering
       let filteredRoles;
       if (userType === 'superAdmin') {
@@ -100,7 +101,7 @@ export const useRolesQuery = ({ filters = {}, fetchAllRoles = false } = {}) => {
     staleTime: 10 * 60 * 1000, // 10 minutes
     cacheTime: 30 * 60 * 1000, // 30 minutes
     retry: 2,
-    enabled: !!userType && !!tenantId, // Only run if userType and tenantId are available
+    enabled: !!userType && (userType === 'superAdmin' || !!tenantId), // Allow superAdmin without tenantId
     refetchOnWindowFocus: false, // Prevent refetch on focus
     refetchOnMount: false, // Prevent refetch on mount if cached
     refetchOnReconnect: false, // Prevent refetch on reconnect

@@ -117,7 +117,7 @@ exports.forgotPasswordSendEmail = async (req, res) => {
     // Replace placeholders
     const emailSubject = emailTemplate.subject
       .replace('{{actionType}}', actionType)
-      // .replace('{{companyName}}', process.env.COMPANY_NAME);
+      .replace('{{companyName}}', process.env.COMPANY_NAME);
 
     const emailBody = emailTemplate.body
       .replace(/{{actionType}}/g, actionType)
@@ -408,7 +408,7 @@ exports.requestEmailChangeVerification = async (req, res) => {
     
     // Replace placeholders
     const emailSubject = emailTemplate.subject
-      // .replace('{{companyName}}', process.env.COMPANY_NAME);
+      .replace('{{companyName}}', process.env.COMPANY_NAME);
 
     // const emailBody = emailTemplate.body
     //   .replace(/{{firstName}}/g, firstName || '')

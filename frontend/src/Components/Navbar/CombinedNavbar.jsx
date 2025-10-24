@@ -450,7 +450,7 @@ const CombinedNavbar = React.memo(() => {
     // });
 
     const outlineDropdownContent = (
-        <div className="absolute top-12 w-80 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
+        <div className="absolute top-12 w-60 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
             <div className="flex justify-between items-center px-4 py-2">
                 <h2 className="text-start font-medium text-custom-blue">
                     Help & Training
