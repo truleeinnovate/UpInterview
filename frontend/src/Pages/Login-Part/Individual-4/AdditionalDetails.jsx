@@ -469,29 +469,6 @@ const AdditionalDetails = ({
                 {coverLetterError}
               </p>
             </div>
-
-            {/* coverLetterdescription */}
-            {/* <div className="col-span-2 sm:col-span-2">
-              <p className="flex justify-center mb-3">(OR)</p>
-              <div>
-                <textarea
-                  name="coverLetterdescription"
-                  type="text"
-                  rows={5}
-                  id="coverLetterdescription"
-                  value={additionalDetailsData.coverLetterdescription}
-                  onChange={(e) =>
-                    handleInputChangeintro(e, "coverLetterdescription")
-                  }
-                  placeholder="I am a technical interviewer..."
-                  autoComplete="off"
-                  className="border p-2 focus:outline-none mb-3 w-full rounded-md border-gray-300 focus:border-black sm:placeholder:text-xs placeholder:text-sm"
-                />
-                <p className="text-gray-600 text-sm sm:text-xs float-right -mt-4">
-                  {additionalDetailsData.coverLetterdescription?.length}/2000
-                </p>
-              </div>
-            </div> */}
           </>
         )}
       </div>

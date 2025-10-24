@@ -38,7 +38,6 @@ const additionalDetailsSchema = Joi.object({
   location: Joi.string().required().messages({
     "string.empty": "Location is required",
   }),
-  coverLetterdescription: Joi.string().allow("", null),
   resume: Joi.string().allow("", null),
   coverLetter: Joi.string().allow("", null),
 });
@@ -58,13 +57,8 @@ const interviewDetailsSchema = Joi.object({
       "any.required": "Previous interview experience is required",
     }),
   previousInterviewExperienceYears: Joi.number().optional(),
-  hourlyRate: Joi.number().optional(),
   interviewFormatWeOffer: Joi.array().items(Joi.string()).min(1).required().messages({
     "array.min": "At least one interview format is required",
-  }),
-  expectedRatePerMockInterview: Joi.number().optional(),
-  noShowPolicy: Joi.string().required().messages({
-    "string.empty": "No-show policy is required",
   }),
   professionalTitle: Joi.string().trim().min(50).max(100).required().messages({
     "string.empty": "Professional title is required",
@@ -113,7 +107,6 @@ function validateIndividualSignup(step, data) {
       industry: data.industry,
       yearsOfExperience: data.yearsOfExperience,
       location: data.location,
-      coverLetterdescription: data.coverLetterdescription,
       resume: data.resume,
       coverLetter: data.coverLetter,
     };
@@ -124,10 +117,7 @@ function validateIndividualSignup(step, data) {
       technologies: data.technologies,
       previousInterviewExperience: data.PreviousExperienceConductingInterviews || data.previousInterviewExperience,
       previousInterviewExperienceYears: data.PreviousExperienceConductingInterviewsYears || data.previousInterviewExperienceYears,
-      hourlyRate: data.hourlyRate,
       interviewFormatWeOffer: data.InterviewFormatWeOffer || data.interviewFormatWeOffer,
-      expectedRatePerMockInterview: data.expectedRatePerMockInterview,
-      noShowPolicy: data.NoShowPolicy || data.noShowPolicy,
       professionalTitle: data.professionalTitle,
       bio: data.bio,
     };

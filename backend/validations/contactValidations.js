@@ -88,17 +88,6 @@ const Joi = require("joi");
   technologies: Joi.array().min(1).messages({
     "array.min": "At least one technology is required",
   }),
-  // hourlyRate: Joi.alternatives().try(
-  //   Joi.number().min(20).max(500),
-  //   Joi.string().allow('').empty('')
-  // ).messages({
-  //   "number.base": "Hourly rate must be a number",
-  //   "number.min": "Hourly rate must be between $20 and $500",
-  //   "number.max": "Hourly rate must be between $20 and $500",
-  // }).optional(),
-  NoShowPolicy: Joi.string().allow('').empty('').optional().messages({
-    "string.empty": "Please select a no-show policy",
-  }),
   professionalTitle: Joi.string().min(50).max(100).messages({
     "string.empty": "Professional Title is required",
     "string.min": "Professional Title must be at least 50 characters",
@@ -134,6 +123,6 @@ const Joi = require("joi");
 }).min(1).unknown(true); // require at least one field
 
 module.exports = {
-  
+
   contactPatchSchema,
 };

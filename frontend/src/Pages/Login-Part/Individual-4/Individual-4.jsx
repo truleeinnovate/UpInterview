@@ -143,8 +143,6 @@ const MultiStepForm = () => {
     interviewFormatWeOffer: [],
     PreviousExperienceConductingInterviews: "",
     PreviousExperienceConductingInterviewsYears: "",
-    hourlyRate: 0,
-    expectedRatePerMockInterview: 0,
     mock_interview_discount: "0",
     isMockInterviewSelected: false,
     bio: "",
@@ -308,7 +306,6 @@ const MultiStepForm = () => {
     industry: "",
     yearsOfExperience: "",
     location: "",
-    coverLetterdescription: "",
     resume: null,
     coverLetter: null,
   });
@@ -318,10 +315,7 @@ const MultiStepForm = () => {
     technologies: [],
     previousInterviewExperience: "",
     previousInterviewExperienceYears: "",
-    hourlyRate: "",
     interviewFormatWeOffer: [],
-    expectedRatePerMockInterview: "",
-    // noShowPolicy: "",
     bio: "",
     professionalTitle: "",
   });
@@ -361,7 +355,6 @@ const MultiStepForm = () => {
         industry: matchedContact.industry || "",
         yearsOfExperience: matchedContact.yearsOfExperience || "",
         location: matchedContact.location || "",
-        coverLetterdescription: matchedContact.coverLetterdescription || "",
         resume: matchedContact.resume || null,
         coverLetter: matchedContact.coverLetter || null,
       });
@@ -373,11 +366,7 @@ const MultiStepForm = () => {
           matchedContact.previousInterviewExperience || "",
         previousInterviewExperienceYears:
           matchedContact.previousInterviewExperienceYears || "",
-        hourlyRate: matchedContact.hourlyRate || "",
         interviewFormatWeOffer: matchedContact.interviewFormatWeOffer || [],
-        expectedRatePerMockInterview:
-          matchedContact.expectedRatePerMockInterview || "",
-        // noShowPolicy: matchedContact.noShowPolicy || "",
         bio: matchedContact.bio || "",
         professionalTitle: matchedContact.professionalTitle || "",
       });
@@ -707,7 +696,6 @@ const MultiStepForm = () => {
           industry: additionalDetailsData.industry,
           yearsOfExperience: additionalDetailsData.yearsOfExperience,
           location: additionalDetailsData.location,
-          coverLetterdescription: additionalDetailsData.coverLetterdescription,
           resume: additionalDetailsData.resume,
           coverLetter: additionalDetailsData.coverLetter,
         }),
@@ -718,11 +706,8 @@ const MultiStepForm = () => {
             interviewDetailsData.previousInterviewExperience,
           previousInterviewExperienceYears:
             interviewDetailsData.previousInterviewExperienceYears,
-          hourlyRate: Number(interviewDetailsData.hourlyRate) || 0,
           interviewFormatWeOffer:
             interviewDetailsData.interviewFormatWeOffer || [],
-          expectedRatePerMockInterview:
-            Number(interviewDetailsData.expectedRatePerMockInterview) || 0,
           bio: interviewDetailsData.bio,
           professionalTitle: interviewDetailsData.professionalTitle,
 
@@ -800,11 +785,8 @@ const MultiStepForm = () => {
           interviewDetailsData.previousInterviewExperience,
         previousInterviewExperienceYears:
           interviewDetailsData.previousInterviewExperienceYears,
-        hourlyRate: Number(interviewDetailsData.hourlyRate) || 0,
         interviewFormatWeOffer:
           interviewDetailsData.interviewFormatWeOffer || [],
-        expectedRatePerMockInterview:
-          Number(interviewDetailsData.expectedRatePerMockInterview) || 0,
 
         // New nested rates structure
         rates: {
@@ -849,10 +831,7 @@ const MultiStepForm = () => {
             interviewDetails.previousInterviewExperience,
           PreviousExperienceConductingInterviewsYears:
             interviewDetails.previousInterviewExperienceYears,
-          hourlyRate: interviewDetails.hourlyRate,
           InterviewFormatWeOffer: interviewDetails.interviewFormatWeOffer,
-          expectedRatePerMockInterview:
-            interviewDetails.expectedRatePerMockInterview,
 
           // New nested rates structure
           rates: interviewDetails.rates,
@@ -867,6 +846,7 @@ const MultiStepForm = () => {
           professionalTitle: interviewDetails.professionalTitle,
         },
         ...(availabilityData.length > 0 && { availabilityData }),
+        currentStep,
         isInternalInterviewer,
         isProfileCompleteStateOrg,
         ownerId: matchedContact.ownerId,

@@ -46,7 +46,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = nu
     // console.log("ownerId ownerId",ownerId);
 
     // Always call the hook to comply with React rules
-    const { userProfile } = useUserProfile(usersId ? usersId :"");
+    const { userProfile } = useUserProfile(usersId ? usersId : "");
 
     useEffect(() => {
         // Use external data if provided, otherwise use userProfile from hook
@@ -290,22 +290,13 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = nu
 
                     <div>
                         <p className="text-sm text-gray-500">Portfolio URL</p>
-                        <p 
-                         className="text-sm   hover:underline truncate min-w-0 flex-1"
+                        <p
+                            className="text-sm   hover:underline truncate min-w-0 flex-1"
                         // className="font-medium truncate sm:text-sm"
                         >
                             {contactData.portfolioUrl || "Not Provided"}
                         </p>
                     </div>
-
-                    {organization === true && (
-                        <div>
-                            <p className="text-sm text-gray-500">Role</p>
-                            <p className="font-medium truncate sm:text-sm">
-                                {contactData?.roleLabel || "Not Provided"}
-                            </p>
-                        </div>
-                    )}
 
                     {contactData.roleName === "Internal_Interviewer" && (
                         <div>
