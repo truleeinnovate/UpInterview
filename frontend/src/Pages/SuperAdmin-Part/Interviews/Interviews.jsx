@@ -35,6 +35,7 @@ const Interviewers = () => {
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState(null); // For view details
+  console.log("interviewData--",selectedInterview);
   const [interviews, setInterviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true); // Loading state
 

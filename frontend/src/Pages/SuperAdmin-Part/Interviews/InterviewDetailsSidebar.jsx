@@ -26,10 +26,10 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
       return;
     }
     
-    // Get interviewer contact ID from the transaction metadata or interview data
-    const interviewerContactId = interviewData.holdTransactionData?.metadata?.interviewerContactId 
-      || (interviewData.interviewers && interviewData.interviewers[0]?._id)
-      || (interviewData.interviewers && interviewData.interviewers[0]);
+    // Get interviewer's ownerId for wallet operations (wallet is tied to ownerId, not _id)
+    const interviewerContactId = interviewData.interviewers && interviewData.interviewers[0]?.ownerId
+    // console.log('Using interviewer ownerId for settlement:', interviewerContactId);
+    // console.log('Interviewer data:', interviewData.interviewers?.[0]);
     
     if (!interviewerContactId) {
       alert('Interviewer information not found');
@@ -52,7 +52,11 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
         body: JSON.stringify({
           roundId: interviewData._id,
           transactionId: interviewData.holdTransactionId,
-          interviewerContactId: interviewerContactId
+          interviewerContactId: interviewerContactId,
+          companyName: interviewData.position?.company || 'Company',
+          roundTitle: interviewData.roundTitle || `Round ${interviewData._id}`,
+          positionTitle: interviewData.position?.title || 'Position',
+          interviewerTenantId:interviewData.interviewers[0]?.tenantId
         })
       });
       

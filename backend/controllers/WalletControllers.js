@@ -14,7 +14,8 @@ const PushNotification = require("../models/PushNotifications");
 
 // Import payment push notification functions
 const {
-    createWalletTopupNotification
+    createWalletTopupNotification,
+    createInterviewSettlementNotification
 } = require('./PushNotificationControllers/pushNotificationPaymentController');
 const crypto = require("crypto");
 const https = require("https");
@@ -2124,9 +2125,9 @@ const settleInterviewPayment = async (req, res) => {
   session.startTransaction();
   
   try {
-    const { roundId, transactionId, interviewerContactId } = req.body;
+    const { roundId, transactionId, interviewerContactId, companyName, roundTitle, positionTitle, interviewerTenantId } = req.body;
     
-    console.log("[settleInterviewPayment] Starting settlement:", { roundId, transactionId, interviewerContactId });
+    console.log("[settleInterviewPayment] Starting settlement:", { roundId, transactionId, interviewerContactId, companyName, roundTitle });
     
     // Validate required fields
     if (!roundId || !transactionId || !interviewerContactId) {
@@ -2183,7 +2184,7 @@ const settleInterviewPayment = async (req, res) => {
         $set: {
           'transactions.$.type': 'debit',
           'transactions.$.status': 'completed',
-          'transactions.$.description': `Settled: ${holdTransaction.description}`,
+          'transactions.$.description': `Settled payment to interviewer for ${companyName || 'Company'} - ${roundTitle || 'Interview Round'}`,
           'transactions.$.metadata.settledAt': new Date(),
           'transactions.$.metadata.settlementStatus': 'completed'
         },
@@ -2215,24 +2216,13 @@ const settleInterviewPayment = async (req, res) => {
       if (!tenantId) {
         console.warn(`[settleInterviewPayment] Creating interviewer wallet without tenantId for ${interviewerContactId}`);
       }
-      
-      interviewerWallet = await WalletTopup.create([{
-        ownerId: interviewerContactId,
-        tenantId: tenantId || "default",
-        balance: 0,
-        holdAmount: 0,
-        walletCode: `WLT-${Date.now().toString().slice(-6)}`, // Generate a simple wallet code
-        transactions: []
-      }], { session });
-      interviewerWallet = interviewerWallet[0];
-      console.log(`[settleInterviewPayment] Created new wallet for interviewer ${interviewerContactId} with tenantId: ${tenantId || "default"}`);
     }
     
     // 5. Create credit transaction for interviewer
     const creditTransaction = {
       type: 'credit',
       amount: settlementAmount,
-      description: `Payment for interview round: ${holdTransaction.metadata?.roundId || roundId}`,
+      description: `Payment from ${companyName || 'Company'} - ${roundTitle || 'Interview Round'} for ${positionTitle || 'Position'}`,
       relatedInvoiceId: holdTransaction.relatedInvoiceId,
       status: 'completed',
       metadata: {
@@ -2241,7 +2231,10 @@ const settleInterviewPayment = async (req, res) => {
         originalTransactionId: transactionId,
         organizationWalletId: orgWallet._id.toString(),
         roundId: roundId,
-        settlementType: 'interview_payment'
+        settlementType: 'interview_payment',
+        companyName: companyName || 'Company',
+        roundTitle: roundTitle || 'Interview Round',
+        positionTitle: positionTitle || 'Position'
       },
       createdDate: new Date(),
       createdAt: new Date()
@@ -2271,7 +2264,26 @@ const settleInterviewPayment = async (req, res) => {
     
     console.log(`[settleInterviewPayment] Added ${settlementAmount} to interviewer wallet. New balance: ${updatedInterviewerWallet.balance}`);
     
-    // 7. Update the interview round to mark settlement
+    // 7. Send push notification to interviewer
+    try {
+      await createInterviewSettlementNotification(
+        interviewerContactId,
+        interviewerTenantId,
+        {
+          amount: settlementAmount,
+          companyName: companyName || 'Company',
+          roundTitle: roundTitle || 'Interview Round',
+          positionTitle: positionTitle || 'Position',
+          settlementCode: transactionId
+        }
+      );
+      console.log("[settleInterviewPayment] Push notification sent to interviewer");
+    } catch (notifErr) {
+      console.error("[settleInterviewPayment] Failed to send notification:", notifErr);
+      // Don't fail the settlement if notification fails
+    }
+    
+    // 8. Update the interview round to mark settlement
     
     // Try regular interview round first
     let roundUpdate = await InterviewRounds.findByIdAndUpdate(
