@@ -1,4 +1,6 @@
 // v1.0.0 - Ashok - fixed proper loading views
+// v1.0.1 - Ashok - adjusted table height to fit better in viewport and fixed style issues
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
@@ -25,9 +27,12 @@ import {
 // import { config } from "../../config.js";
 import { usePermissions } from "../../Context/PermissionsContext";
 // import { useQuery } from "@tanstack/react-query";
-import { useTenants,useTenantById } from "../../apiHooks/superAdmin/useTenants.js";
+import {
+  useTenants,
+  useTenantById,
+} from "../../apiHooks/superAdmin/useTenants.js";
 import DeleteConfirmModal from "../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
-import { notify } from "../../services/toastService.js"; 
+import { notify } from "../../services/toastService.js";
 
 function TenantsPage() {
   const [deleteTenant, setDeleteTenant] = useState(null);
@@ -235,6 +240,17 @@ function TenantsPage() {
       notify.error(error?.response?.data?.message || "Failed to delete tenant");
     }
   };
+
+  const formatStatus = (status = "") => {
+    return status
+      .toString()
+      .trim()
+      .replace(/[_\s-]+/g, " ") // replace underscores, hyphens, or multiple spaces with single space
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   // Table Columns
   const tableColumns = [
     {
@@ -316,9 +332,7 @@ function TenantsPage() {
     {
       key: "status",
       header: "Status",
-      render: (value, row) => (
-        <StatusBadge status={capitalizeFirstLetter(row.status)} />
-      ),
+      render: (value, row) => <StatusBadge status={formatStatus(row.status)} />,
     },
   ];
 
@@ -344,7 +358,7 @@ function TenantsPage() {
           },
         ]
       : []),
-      ...(superAdminPermissions?.Tenants?.Delete
+    ...(superAdminPermissions?.Tenants?.Delete
       ? [
           {
             key: "delete",
@@ -354,7 +368,7 @@ function TenantsPage() {
             onClick: (row) => {
               setDeleteTenant(row);
               setShowDeleteConfirmModal(true);
-            }
+            },
           },
         ]
       : []),
@@ -379,7 +393,7 @@ function TenantsPage() {
     {
       key: "status",
       header: "Status",
-      render: (value) => <StatusBadge status={capitalizeFirstLetter(value)} />,
+      render: (value) => <StatusBadge status={formatStatus(value)} />,
     },
   ];
 
@@ -432,7 +446,6 @@ function TenantsPage() {
           >
             <Trash className="w-4 h-4" />
           </button>
-          
         </>
       ) : (
         superAdminPermissions?.Tenants?.Edit && (
@@ -645,6 +658,7 @@ function TenantsPage() {
                     loading={isLoading}
                     actions={tableActions}
                     emptyState="No Tenants Found."
+                    customHeight="h-[calc(100vh-20rem)]"
                   />
                 </div>
               ) : (
@@ -686,16 +700,16 @@ function TenantsPage() {
         </main>
       </div>
       <Outlet />
-            {/* Ranjith added deleted functionality  */}
-            <DeleteConfirmModal
-              isOpen={showDeleteConfirmModal}
-              onClose={() => setShowDeleteConfirmModal(false)}
-              onConfirm={handleDeleteTenant }
-              title="Tenant"
-              // entityName={
-              //   deleteTenant?.FirstName + " " + deleteTenant?.LastName
-              // }
-            />
+      {/* Ranjith added deleted functionality  */}
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={() => setShowDeleteConfirmModal(false)}
+        onConfirm={handleDeleteTenant}
+        title="Tenant"
+        // entityName={
+        //   deleteTenant?.FirstName + " " + deleteTenant?.LastName
+        // }
+      />
     </div>
   );
 }

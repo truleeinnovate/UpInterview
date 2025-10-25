@@ -4,9 +4,8 @@
 // v1.0.3 - Ashok - Fixed issue in loading view
 
 import { motion } from "framer-motion";
-import { Calendar, Layers, Trash, Files } from "lucide-react";
+import { Calendar, Layers, Trash, Files, Eye, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { FaEye, FaPencilAlt } from "react-icons/fa";
 
 import { formatDateTime } from "../../utils/dateFormatter";
 
@@ -219,7 +218,7 @@ const KanbanView = ({
                             className="text-custom-blue hover:bg-custom-blue/80 p-2 rounded-lg"
                             title="View"
                           >
-                            <FaEye className="w-4 h-4" />
+                            <Eye className="w-4 h-4" />
                           </motion.button>
                         )}
                         {effectivePermissions.InterviewTemplates?.Edit &&
@@ -231,7 +230,7 @@ const KanbanView = ({
                               className="text-purple-500 hover:bg-purple-50 p-2 rounded-lg"
                               title="Edit"
                             >
-                              <FaPencilAlt className="w-4 h-4" />
+                              <Pencil className="w-4 h-4" />
                             </motion.button>
                           )}
                         {effectivePermissions.InterviewTemplates?.Delete &&

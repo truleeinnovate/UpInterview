@@ -7,8 +7,6 @@ import { useNavigate, Outlet } from "react-router-dom";
 
 // import axios from "axios";
 // import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
-// import { MdKeyboardArrowUp } from "react-icons/md";
-// import { MdKeyboardArrowDown } from "react-icons/md";
 import { motion } from "framer-motion";
 
 import Header from "../../../Shared/Header/Header.jsx";

@@ -1,10 +1,6 @@
 // v1.0.0 - Ashok - Fixed pagination border issue
 import { useState } from "react";
-import {
-  AiOutlineSearch,
-  AiOutlineCaretUp,
-  AiOutlineCaretDown,
-} from "react-icons/ai";
+import { Search, ChevronUp, ChevronDown } from "lucide-react";
 
 function DataTable({
   columns,
@@ -18,7 +14,6 @@ function DataTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(itemsPerPageOptions[0]);
-
 
   // Handle column sort
   const handleSort = (field) => {
@@ -72,7 +67,7 @@ function DataTable({
         <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-2">
           <div className="relative w-full sm:w-64 bg-red-500 border border-gray-300 rounded-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <AiOutlineSearch className="h-5 w-5 text-gray-400" />
+              <Search className="h-5 w-5 text-gray-400" />
             </div>
             <input
               type="text"
@@ -90,9 +85,9 @@ function DataTable({
             <div className="flex items-center">
               <span className="text-sm text-gray-700 mr-2">Show:</span>
               <select
-              // v1.0.0 <----------------------------------------------------------------------------------------------------------------------
+                // v1.0.0 <----------------------------------------------------------------------------------------------------------------------
                 className="focus:ring-primary-500 focus:border-custom-blue block sm:text-sm border border-gray-300 rounded-md px-2 py-1"
-              // v1.0.0 ---------------------------------------------------------------------------------------------------------------------->
+                // v1.0.0 ---------------------------------------------------------------------------------------------------------------------->
                 value={itemsPerPage}
                 onChange={(e) => {
                   setItemsPerPage(Number(e.target.value));
@@ -134,9 +129,9 @@ function DataTable({
                         {sortField === column?.field && (
                           <span className="ml-1">
                             {sortDirection === "asc" ? (
-                              <AiOutlineCaretUp />
+                              <ChevronUp />
                             ) : (
-                              <AiOutlineCaretDown />
+                              <ChevronDown />
                             )}
                           </span>
                         )}

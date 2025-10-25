@@ -6,9 +6,8 @@
 // v1.0.3 - Ashok - changed dropdowns data from static to dynamic and disabled buttons based on mode
 // v1.0.6 - Ashok - modified code as based number of technologies in selected category create number of rates
 
-import { useState, useEffect, useRef } from "react";
-import { AiOutlinePlus, AiOutlineDelete } from "react-icons/ai";
-import { Minimize, Expand, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Minimize, Expand, X, Plus, Trash2 } from "lucide-react";
 // v1.0.0 <--------------------------------------
 import axios from "axios";
 import { config } from "../../../config";
@@ -578,7 +577,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                 }`}
                 // v1.0.0 -------------------------------------------------------------------------------------------------------------------------->
               >
-                <AiOutlinePlus className="mr-1" size={14} />
+                <Plus className="mr-1 h-4 w-4" />
                 Add Level
               </button>
             </div>
@@ -625,7 +624,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                         // v1.0.4 <-------------------------------------------------------------------------->
                         disabled={mode === "view"}
                       >
-                        <AiOutlineDelete size={16} />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     )} */}
                     {formData.levels.length > 1 && currentMode !== "view" && (
@@ -634,7 +633,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                         onClick={() => removeLevel(levelIndex)}
                         className="ml-4 p-2 text-red-600 hover:text-red-900 rounded-full hover:bg-red-50"
                       >
-                        <AiOutlineDelete size={16} />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     )}
 

@@ -37,7 +37,7 @@ const WithdrawalRequests = () => {
     status: [],
     mode: [],
     amountRange: { min: "", max: "" },
-    dateRange: { start: "", end: "" }
+    dateRange: { start: "", end: "" },
   });
   const filterIconRef = useRef(null);
   const ITEMS_PER_PAGE = 10;
@@ -54,31 +54,69 @@ const WithdrawalRequests = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState(null);
 
-  const { withdrawalRequests = [], isLoading, refetch } = useWithdrawalRequests();
+  const {
+    withdrawalRequests = [],
+    isLoading,
+    refetch,
+  } = useWithdrawalRequests();
   const { withdrawalRequest } = useWithdrawalRequestById(selectedRequestId);
 
-  // Statistics cards data  
+  // Statistics cards data
   const statistics = {
-    pending: (withdrawalRequests || []).filter(r => r.status === "pending").length,
-    processing: (withdrawalRequests || []).filter(r => r.status === "processing").length,
-    completed: (withdrawalRequests || []).filter(r => r.status === "completed").length,
-    failed: (withdrawalRequests || []).filter(r => r.status === "failed").length,
-    cancelled: (withdrawalRequests || []).filter(r => r.status === "cancelled").length,
+    pending: (withdrawalRequests || []).filter((r) => r.status === "pending")
+      .length,
+    processing: (withdrawalRequests || []).filter(
+      (r) => r.status === "processing"
+    ).length,
+    completed: (withdrawalRequests || []).filter(
+      (r) => r.status === "completed"
+    ).length,
+    failed: (withdrawalRequests || []).filter((r) => r.status === "failed")
+      .length,
+    cancelled: (withdrawalRequests || []).filter(
+      (r) => r.status === "cancelled"
+    ).length,
     // Calculate total amounts from ALL withdrawals (not just pending)
-    totalAmount: (withdrawalRequests || []).reduce((sum, r) => sum + (r.amount || 0), 0),
-    totalNetAmount: (withdrawalRequests || []).reduce((sum, r) => sum + (r.netAmount || 0), 0),
+    totalAmount: (withdrawalRequests || []).reduce(
+      (sum, r) => sum + (r.amount || 0),
+      0
+    ),
+    totalNetAmount: (withdrawalRequests || []).reduce(
+      (sum, r) => sum + (r.netAmount || 0),
+      0
+    ),
     // Calculate amounts by status for breakdown
-    pendingAmount: (withdrawalRequests || []).filter(r => r.status === "pending").reduce((sum, r) => sum + (r.amount || 0), 0),
-    processingAmount: (withdrawalRequests || []).filter(r => r.status === "processing").reduce((sum, r) => sum + (r.amount || 0), 0),
-    completedAmount: (withdrawalRequests || []).filter(r => r.status === "completed").reduce((sum, r) => sum + (r.amount || 0), 0),
-    failedAmount: (withdrawalRequests || []).filter(r => r.status === "failed").reduce((sum, r) => sum + (r.amount || 0), 0),
-    cancelledAmount: (withdrawalRequests || []).filter(r => r.status === "cancelled").reduce((sum, r) => sum + (r.amount || 0), 0),
+    pendingAmount: (withdrawalRequests || [])
+      .filter((r) => r.status === "pending")
+      .reduce((sum, r) => sum + (r.amount || 0), 0),
+    processingAmount: (withdrawalRequests || [])
+      .filter((r) => r.status === "processing")
+      .reduce((sum, r) => sum + (r.amount || 0), 0),
+    completedAmount: (withdrawalRequests || [])
+      .filter((r) => r.status === "completed")
+      .reduce((sum, r) => sum + (r.amount || 0), 0),
+    failedAmount: (withdrawalRequests || [])
+      .filter((r) => r.status === "failed")
+      .reduce((sum, r) => sum + (r.amount || 0), 0),
+    cancelledAmount: (withdrawalRequests || [])
+      .filter((r) => r.status === "cancelled")
+      .reduce((sum, r) => sum + (r.amount || 0), 0),
     // Calculate net amounts by status for breakdown
-    pendingNetAmount: (withdrawalRequests || []).filter(r => r.status === "pending").reduce((sum, r) => sum + (r.netAmount || 0), 0),
-    processingNetAmount: (withdrawalRequests || []).filter(r => r.status === "processing").reduce((sum, r) => sum + (r.netAmount || 0), 0),
-    completedNetAmount: (withdrawalRequests || []).filter(r => r.status === "completed").reduce((sum, r) => sum + (r.netAmount || 0), 0),
-    failedNetAmount: (withdrawalRequests || []).filter(r => r.status === "failed").reduce((sum, r) => sum + (r.netAmount || 0), 0),
-    cancelledNetAmount: (withdrawalRequests || []).filter(r => r.status === "cancelled").reduce((sum, r) => sum + (r.netAmount || 0), 0),
+    pendingNetAmount: (withdrawalRequests || [])
+      .filter((r) => r.status === "pending")
+      .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+    processingNetAmount: (withdrawalRequests || [])
+      .filter((r) => r.status === "processing")
+      .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+    completedNetAmount: (withdrawalRequests || [])
+      .filter((r) => r.status === "completed")
+      .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+    failedNetAmount: (withdrawalRequests || [])
+      .filter((r) => r.status === "failed")
+      .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+    cancelledNetAmount: (withdrawalRequests || [])
+      .filter((r) => r.status === "cancelled")
+      .reduce((sum, r) => sum + (r.netAmount || 0), 0),
   };
 
   // Debug logging to check what's being calculated
@@ -120,9 +158,7 @@ const WithdrawalRequests = () => {
 
   const handleModeToggle = (mode) => {
     setSelectedModes((prev) =>
-      prev.includes(mode)
-        ? prev.filter((m) => m !== mode)
-        : [...prev, mode]
+      prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]
     );
   };
 
@@ -149,11 +185,11 @@ const WithdrawalRequests = () => {
     setIsModeOpen(false);
     setIsAmountOpen(false);
     setIsDateOpen(false);
-    setSelectedFilters({ 
-      status: [], 
+    setSelectedFilters({
+      status: [],
       mode: [],
       amountRange: { min: "", max: "" },
-      dateRange: { start: "", end: "" }
+      dateRange: { start: "", end: "" },
     });
     setIsFilterActive(false);
   };
@@ -194,16 +230,16 @@ const WithdrawalRequests = () => {
   ];
 
   const getStatusIcon = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'pending':
+    switch (status?.toLowerCase()) {
+      case "pending":
         return <Clock className="h-4 w-4" />;
-      case 'processing':
+      case "processing":
         return <AlertCircle className="h-4 w-4" />;
-      case 'completed':
+      case "completed":
         return <CheckCircle className="h-4 w-4" />;
-      case 'failed':
+      case "failed":
         return <XCircle className="h-4 w-4" />;
-      case 'cancelled':
+      case "cancelled":
         return <AlertCircle className="h-4 w-4" />;
       default:
         return <Clock className="h-4 w-4" />;
@@ -211,20 +247,30 @@ const WithdrawalRequests = () => {
   };
 
   const getStatusColor = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'pending':
-        return 'yellow';
-      case 'processing':
-        return 'blue';
-      case 'completed':
-        return 'green';
-      case 'failed':
-        return 'red';
-      case 'cancelled':
-        return 'gray';
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return "yellow";
+      case "processing":
+        return "blue";
+      case "completed":
+        return "green";
+      case "failed":
+        return "red";
+      case "cancelled":
+        return "gray";
       default:
-        return 'gray';
+        return "gray";
     }
+  };
+
+  const formatStatus = (status = "") => {
+    return status
+      .toString()
+      .trim()
+      .replace(/[_\s-]+/g, " ") // replace underscores, hyphens, or multiple spaces with single space
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   const columns = [
@@ -244,7 +290,9 @@ const WithdrawalRequests = () => {
       header: "User",
       render: (value, row) => (
         <div className="flex flex-col">
-          <span className="font-medium">{row.bankAccountId?.accountHolderName || "N/A"}</span>
+          <span className="font-medium">
+            {row.bankAccountId?.accountHolderName || "N/A"}
+          </span>
           <span className="text-xs text-gray-500">ID: {row.ownerId}</span>
         </div>
       ),
@@ -257,7 +305,9 @@ const WithdrawalRequests = () => {
         <div className="flex flex-col">
           <div className="flex items-center">
             <IndianRupee className="h-3 w-3" />
-            <span className="font-medium">{row.amount?.toFixed(2) || "0.00"}</span>
+            <span className="font-medium">
+              {row.amount?.toFixed(2) || "0.00"}
+            </span>
           </div>
           <span className="text-xs text-gray-500">
             Net: ₹{row.netAmount?.toFixed(2) || "0.00"}
@@ -271,7 +321,9 @@ const WithdrawalRequests = () => {
       header: "Bank Account",
       render: (value, row) => (
         <div className="flex flex-col">
-          <span className="font-medium">{row.bankAccountId?.bankName || "N/A"}</span>
+          <span className="font-medium">
+            {row.bankAccountId?.bankName || "N/A"}
+          </span>
           <span className="text-xs text-gray-500">
             {row.bankAccountId?.maskedAccountNumber || "****"}
           </span>
@@ -285,11 +337,7 @@ const WithdrawalRequests = () => {
       render: (value, row) => (
         <div className="flex items-center space-x-2">
           {getStatusIcon(row.status)}
-          <StatusBadge 
-            status={row.status} 
-            text={row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : ''} 
-            color={getStatusColor(row.status)} 
-          />
+          <StatusBadge status={formatStatus(row.status)} />
         </div>
       ),
       sortable: true,
@@ -367,16 +415,20 @@ const WithdrawalRequests = () => {
     setCurrentPage(0); // Reset to first page when searching
   };
 
-  const filteredRequests = (withdrawalRequests || []).filter(request => {
+  const filteredRequests = (withdrawalRequests || []).filter((request) => {
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       if (
         !request.withdrawalCode?.toLowerCase().includes(query) &&
         !request.ownerId?.toLowerCase().includes(query) &&
-        !request.bankAccountId?.accountHolderName?.toLowerCase().includes(query) &&
+        !request.bankAccountId?.accountHolderName
+          ?.toLowerCase()
+          .includes(query) &&
         !request.bankAccountId?.bankName?.toLowerCase().includes(query) &&
-        !request.bankAccountId?.maskedAccountNumber?.toLowerCase().includes(query)
+        !request.bankAccountId?.maskedAccountNumber
+          ?.toLowerCase()
+          .includes(query)
       ) {
         return false;
       }
@@ -415,7 +467,7 @@ const WithdrawalRequests = () => {
       if (start && requestDate < new Date(start)) {
         return false;
       }
-      if (end && requestDate > new Date(end + 'T23:59:59')) {
+      if (end && requestDate > new Date(end + "T23:59:59")) {
         return false;
       }
     }
@@ -430,11 +482,17 @@ const WithdrawalRequests = () => {
     } else {
       // For Kanban view, calculate based on the status with most items
       const statusCounts = {
-        pending: filteredRequests.filter(r => r.status === "pending").length,
-        completed: filteredRequests.filter(r => r.status === "completed").length,
-        failed: filteredRequests.filter(r => r.status === "failed").length,
+        pending: filteredRequests.filter((r) => r.status === "pending").length,
+        completed: filteredRequests.filter((r) => r.status === "completed")
+          .length,
+        failed: filteredRequests.filter((r) => r.status === "failed").length,
       };
-      const maxCount = Math.max(statusCounts.pending, statusCounts.completed, statusCounts.failed, 0);
+      const maxCount = Math.max(
+        statusCounts.pending,
+        statusCounts.completed,
+        statusCounts.failed,
+        0
+      );
       return maxCount > 0 ? Math.ceil(maxCount / ITEMS_PER_PAGE) : 1;
     }
   };
@@ -464,20 +522,30 @@ const WithdrawalRequests = () => {
                 <p className="text-sm font-medium text-gray-600">Pending</p>
                 <Clock className="h-5 w-5 text-yellow-500" />
               </div>
-              <p className="text-3xl font-bold text-yellow-600 mb-1">{statistics.pending}</p>
+              <p className="text-3xl font-bold text-yellow-600 mb-1">
+                {statistics.pending}
+              </p>
               <div className="flex justify-between border-t pt-2 mt-2">
                 <p className="text-xs text-gray-500">Requested Amount:</p>
-                <p className="text-lg font-semibold text-gray-800">₹{statistics.pendingAmount.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  ₹{statistics.pendingAmount.toFixed(2)}
+                </p>
               </div>
-                <div className="flex justify-between">
-                  <p className="text-xs text-gray-500">Total Fees:</p>
-                  <p className="text-sm font-semibold text-gray-800">₹{(statistics.pendingAmount - statistics.pendingNetAmount).toFixed(2)}</p>
-                </div>
+              <div className="flex justify-between">
+                <p className="text-xs text-gray-500">Total Fees:</p>
+                <p className="text-sm font-semibold text-gray-800">
+                  ₹
+                  {(
+                    statistics.pendingAmount - statistics.pendingNetAmount
+                  ).toFixed(2)}
+                </p>
+              </div>
               <div className="flex justify-between">
                 <p className="text-xs text-gray-500 mt-1">Net Paid:</p>
-                <p className="text-lg font-semibold text-yellow-600">₹{statistics.pendingNetAmount.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-yellow-600">
+                  ₹{statistics.pendingNetAmount.toFixed(2)}
+                </p>
               </div>
-              
             </div>
           </div>
         </motion.div>
@@ -516,18 +584,29 @@ const WithdrawalRequests = () => {
                 <p className="text-sm font-medium text-gray-600">Completed</p>
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
-              <p className="text-3xl font-bold text-green-600 mb-1">{statistics.completed}</p>
+              <p className="text-3xl font-bold text-green-600 mb-1">
+                {statistics.completed}
+              </p>
               <div className="flex justify-between border-t pt-2 mt-2">
                 <p className="text-xs text-gray-500">Paid Amount:</p>
-                <p className="text-lg font-semibold text-gray-800">₹{statistics.completedAmount.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  ₹{statistics.completedAmount.toFixed(2)}
+                </p>
               </div>
-                <div className="flex justify-between">
-                  <p className="text-xs text-gray-500">Total Fees:</p>
-                  <p className="text-sm font-semibold text-gray-800">₹{(statistics.completedAmount - statistics.completedNetAmount).toFixed(2)}</p>
-                </div>
+              <div className="flex justify-between">
+                <p className="text-xs text-gray-500">Total Fees:</p>
+                <p className="text-sm font-semibold text-gray-800">
+                  ₹
+                  {(
+                    statistics.completedAmount - statistics.completedNetAmount
+                  ).toFixed(2)}
+                </p>
+              </div>
               <div className="flex justify-between">
                 <p className="text-xs text-gray-500 mt-1">Net Paid:</p>
-                <p className="text-lg font-semibold text-green-600">₹{statistics.completedNetAmount.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-green-600">
+                  ₹{statistics.completedNetAmount.toFixed(2)}
+                </p>
               </div>
             </div>
           </div>
@@ -545,20 +624,30 @@ const WithdrawalRequests = () => {
                 <p className="text-sm font-medium text-gray-600">Failed</p>
                 <XCircle className="h-5 w-5 text-red-500" />
               </div>
-              <p className="text-3xl font-bold text-red-600 mb-1">{statistics.failed}</p>
-               <div className="flex justify-between border-t pt-2 mt-2">
+              <p className="text-3xl font-bold text-red-600 mb-1">
+                {statistics.failed}
+              </p>
+              <div className="flex justify-between border-t pt-2 mt-2">
                 <p className="text-xs text-gray-500">Failed Amount:</p>
-                <p className="text-lg font-semibold text-gray-800">₹{statistics.failedAmount.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  ₹{statistics.failedAmount.toFixed(2)}
+                </p>
               </div>
-                <div className="flex justify-between">
-                  <p className="text-xs text-gray-500">Total Fees:</p>
-                  <p className="text-sm font-semibold text-gray-800">₹{(statistics.failedAmount - statistics.failedNetAmount).toFixed(2)}</p>
-                </div>
+              <div className="flex justify-between">
+                <p className="text-xs text-gray-500">Total Fees:</p>
+                <p className="text-sm font-semibold text-gray-800">
+                  ₹
+                  {(
+                    statistics.failedAmount - statistics.failedNetAmount
+                  ).toFixed(2)}
+                </p>
+              </div>
               <div className="flex justify-between">
                 <p className="text-xs text-gray-500 mt-1">Net Paid:</p>
-                <p className="text-lg font-semibold text-red-600">₹{statistics.failedNetAmount.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-red-600">
+                  ₹{statistics.failedNetAmount.toFixed(2)}
+                </p>
               </div>
-
             </div>
           </div>
         </motion.div>
@@ -594,79 +683,92 @@ const WithdrawalRequests = () => {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-sm font-medium text-gray-600">Total Requests</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Requests
+                </p>
                 <CreditCard className="h-5 w-5 text-custom-blue" />
               </div>
-              <p className="text-3xl font-bold text-custom-blue mb-1">{withdrawalRequests?.length || 0}</p>
+              <p className="text-3xl font-bold text-custom-blue mb-1">
+                {withdrawalRequests?.length || 0}
+              </p>
 
               <div className="flex justify-between border-t pt-2 mt-2">
                 <p className="text-xs text-gray-500">Total Requested:</p>
-                <p className="text-lg font-semibold text-gray-800">₹{statistics.totalAmount.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  ₹{statistics.totalAmount.toFixed(2)}
+                </p>
               </div>
-                <div className="flex justify-between">
-                  <p className="text-xs text-gray-500">Total Fees:</p>
-                  <p className="text-sm font-semibold text-gray-800">₹{(statistics.totalAmount - statistics.totalNetAmount).toFixed(2)}</p>
-                </div>
+              <div className="flex justify-between">
+                <p className="text-xs text-gray-500">Total Fees:</p>
+                <p className="text-sm font-semibold text-gray-800">
+                  ₹
+                  {(statistics.totalAmount - statistics.totalNetAmount).toFixed(
+                    2
+                  )}
+                </p>
+              </div>
               <div className="flex justify-between">
                 <p className="text-xs text-gray-500 mt-1">Net Paid:</p>
-                <p className="text-lg font-semibold text-custom-blue">₹{statistics.totalNetAmount.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-custom-blue">
+                  ₹{statistics.totalNetAmount.toFixed(2)}
+                </p>
               </div>
             </div>
           </div>
         </motion.div>
-
       </div>
 
       {/* Toolbar */}
       <div className="px-4">
-      <Toolbar
-        filterIconRef={filterIconRef}
-        view={view}
-        setView={setView}
-        searchQuery={searchQuery}
-        onSearch={(e) => handleSearch(e.target.value)}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPrevPage={() => setCurrentPage(Math.max(0, currentPage - 1))}
-        onNextPage={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-        onFilterClick={() => setFilterPopupOpen(!isFilterPopupOpen)}
-        isFilterActive={isFilterActive}
-        isFilterPopupOpen={isFilterPopupOpen}
-        dataLength={withdrawalRequests.length}
-        showViewToggles={true}
-        searchPlaceholder="Search By User, Bank..."
-      />
+        <Toolbar
+          filterIconRef={filterIconRef}
+          view={view}
+          setView={setView}
+          searchQuery={searchQuery}
+          onSearch={(e) => handleSearch(e.target.value)}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPrevPage={() => setCurrentPage(Math.max(0, currentPage - 1))}
+          onNextPage={() =>
+            setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
+          }
+          onFilterClick={() => setFilterPopupOpen(!isFilterPopupOpen)}
+          isFilterActive={isFilterActive}
+          isFilterPopupOpen={isFilterPopupOpen}
+          dataLength={withdrawalRequests.length}
+          showViewToggles={true}
+          searchPlaceholder="Search By User, Bank..."
+        />
       </div>
 
       {/* Main Content */}
-      
-        {view === "table" ? (
-          <TableView
-            data={filteredRequests.slice(
-              currentPage * ITEMS_PER_PAGE,
-              (currentPage + 1) * ITEMS_PER_PAGE
-            )}
-            columns={columns}
-            onRowClick={handleRowClick}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            isLoading={isLoading}
-            itemsPerPage={ITEMS_PER_PAGE}
-          />
-        ) : (
-          <KanbanView
-            withdrawalRequests={filteredRequests}
-            onCardClick={(request) => {
-              setSelectedRequestId(request._id);
-              setIsPopupOpen(true);
-            }}
-            isLoading={isLoading}
-            refetch={refetch}
-            currentPage={currentPage}
-            itemsPerPage={ITEMS_PER_PAGE}
-          />
-        )}
-      
+
+      {view === "table" ? (
+        <TableView
+          data={filteredRequests.slice(
+            currentPage * ITEMS_PER_PAGE,
+            (currentPage + 1) * ITEMS_PER_PAGE
+          )}
+          columns={columns}
+          onRowClick={handleRowClick}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          isLoading={isLoading}
+          itemsPerPage={ITEMS_PER_PAGE}
+        />
+      ) : (
+        <KanbanView
+          withdrawalRequests={filteredRequests}
+          onCardClick={(request) => {
+            setSelectedRequestId(request._id);
+            setIsPopupOpen(true);
+          }}
+          isLoading={isLoading}
+          refetch={refetch}
+          currentPage={currentPage}
+          itemsPerPage={ITEMS_PER_PAGE}
+        />
+      )}
 
       {/* Details Modal */}
       {isPopupOpen && selectedRequestId && (
@@ -693,14 +795,16 @@ const WithdrawalRequests = () => {
               status: selectedStatus,
               mode: selectedModes,
               amountRange: amountRange,
-              dateRange: dateRange
+              dateRange: dateRange,
             });
             setFilterPopupOpen(false);
             setIsFilterActive(
-              selectedStatus.length > 0 || 
-              selectedModes.length > 0 ||
-              amountRange.min || amountRange.max ||
-              dateRange.start || dateRange.end
+              selectedStatus.length > 0 ||
+                selectedModes.length > 0 ||
+                amountRange.min ||
+                amountRange.max ||
+                dateRange.start ||
+                dateRange.end
             );
             setCurrentPage(0); // Reset to first page when filters are applied
           }}
@@ -714,22 +818,33 @@ const WithdrawalRequests = () => {
                   onClick={menu.toggleOpen}
                   className="w-full flex justify-between items-center text-left py-4 px-1 hover:bg-gray-50 transition-colors"
                 >
-                  <span className="text-sm font-medium text-gray-900">{menu.title}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {menu.title}
+                  </span>
                   <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform ${menu.isOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 text-gray-400 transition-transform ${
+                      menu.isOpen ? "rotate-180" : ""
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
                 {menu.isOpen && (
                   <div className="px-1 pb-4">
-                    {menu.type === 'range' ? (
+                    {menu.type === "range" ? (
                       <div className="space-y-3 pt-2">
                         <div>
-                          <label className="text-xs text-gray-600 mb-1 block">{menu.content.min.label}</label>
+                          <label className="text-xs text-gray-600 mb-1 block">
+                            {menu.content.min.label}
+                          </label>
                           <input
                             type="number"
                             value={menu.content.min.value}
@@ -739,7 +854,9 @@ const WithdrawalRequests = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-gray-600 mb-1 block">{menu.content.max.label}</label>
+                          <label className="text-xs text-gray-600 mb-1 block">
+                            {menu.content.max.label}
+                          </label>
                           <input
                             type="number"
                             value={menu.content.max.value}
@@ -749,10 +866,12 @@ const WithdrawalRequests = () => {
                           />
                         </div>
                       </div>
-                    ) : menu.type === 'dateRange' ? (
+                    ) : menu.type === "dateRange" ? (
                       <div className="space-y-3 pt-2">
                         <div>
-                          <label className="text-xs text-gray-600 mb-1 block">{menu.content.start.label}</label>
+                          <label className="text-xs text-gray-600 mb-1 block">
+                            {menu.content.start.label}
+                          </label>
                           <input
                             type="date"
                             value={menu.content.start.value}
@@ -761,7 +880,9 @@ const WithdrawalRequests = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-gray-600 mb-1 block">{menu.content.end.label}</label>
+                          <label className="text-xs text-gray-600 mb-1 block">
+                            {menu.content.end.label}
+                          </label>
                           <input
                             type="date"
                             value={menu.content.end.value}
@@ -773,14 +894,19 @@ const WithdrawalRequests = () => {
                     ) : (
                       <div className="space-y-2 pt-2">
                         {menu.content.map((item, idx) => (
-                          <label key={idx} className="flex items-center space-x-3 py-1.5 cursor-pointer hover:bg-gray-50 rounded px-2">
+                          <label
+                            key={idx}
+                            className="flex items-center space-x-3 py-1.5 cursor-pointer hover:bg-gray-50 rounded px-2"
+                          >
                             <input
                               type="checkbox"
                               checked={item.checked}
                               onChange={item.onChange}
                               className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             />
-                            <span className="text-sm text-gray-700 capitalize">{item.label}</span>
+                            <span className="text-sm text-gray-700 capitalize">
+                              {item.label}
+                            </span>
                           </label>
                         ))}
                       </div>

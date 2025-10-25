@@ -16,25 +16,16 @@ import {
   GraduationCap,
   School,
   Mail,
-  ExternalLink,
-  X,
   Briefcase,
   User,
   Calendar,
-  Expand,
-  Minimize,
-  Eye,
+  Circle,
+  FileText,
 } from "lucide-react";
 // import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import Loading from "../../../../../Components/Loading";
 import { useCandidates } from "../../../../../apiHooks/useCandidates";
-import { FaGenderless } from "react-icons/fa";
-import { LiaGenderlessSolid } from "react-icons/lia";
-import { GrDocumentText } from "react-icons/gr";
-import { ReactComponent as FaEdit } from "../../../../../icons/FaEdit.svg";
-import classNames from "classnames";
 // v1.0.2 <------------------------------------------------------------------------
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.2 ------------------------------------------------------------------------->
@@ -47,7 +38,6 @@ const CandidateDetails = ({ mode, candidateId }) => {
   const { candidateData } = useCandidates();
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});
-  const [isFullScreen, setIsFullScreen] = useState(false);
   // const { id } = useParams();
   const params = useParams();
 
@@ -220,7 +210,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                   <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
-                        <LiaGenderlessSolid className="w-5 h-5 text-gray-500" />
+                        <Circle className="w-5 h-5 text-gray-500" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Gender</p>
@@ -336,7 +326,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                     <div className="flex items-center justify-between gap-3 w-full">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-custom-bg rounded-lg">
-                          <GrDocumentText className="w-5 h-5" />
+                          <FileText className="w-5 h-5" />
                         </div>
 
                         <div>
@@ -377,7 +367,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
 
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
-                        <GrDocumentText className="w-5 h-5" />
+                        <FileText className="w-5 h-5" />
                       </div>
 
                       <div>

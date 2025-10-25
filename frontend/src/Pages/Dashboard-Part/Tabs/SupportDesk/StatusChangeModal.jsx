@@ -1,6 +1,5 @@
 /* eslint-disable react/prop-types */
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { IoClose } from "react-icons/io5";
 import axios from "axios";
 import { config } from "../../../../config";
 import { Minimize, Expand, X } from "lucide-react";

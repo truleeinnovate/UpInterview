@@ -6,20 +6,6 @@
 // v1.0.3 - Venkatesh - ticket code and status in align center
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { MdOutlineCancel } from "react-icons/md";
-import { IoArrowBack } from "react-icons/io5";
-import {
-  FaExternalLinkAlt,
-  FaTicketAlt,
-  FaUser,
-  FaBuilding,
-  FaCalendarAlt,
-  FaTag,
-  FaFileAlt,
-  FaCircle,
-  FaCheckCircle,
-  FaExchangeAlt,
-} from "react-icons/fa";
 import { format, parseISO, isValid } from "date-fns";
 import StatusChangeModal from "./StatusChangeModal.jsx";
 import StatusHistory from "./StatusHistory.jsx";
@@ -27,7 +13,22 @@ import axios from "axios";
 import { config } from "../../../../config.js";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
-import { Minimize, Expand, X, Eye } from "lucide-react";
+import {
+  Minimize,
+  Expand,
+  X,
+  Eye,
+  XCircle,
+  Ticket,
+  User,
+  Building,
+  CalendarDays,
+  Tag,
+  FileText,
+  Circle,
+  CheckCircle,
+  Repeat,
+} from "lucide-react";
 // v1.0.1 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
@@ -250,7 +251,6 @@ function SupportDetails() {
             </h2>
           </div>
           <div className="flex items-center space-x-2">
-
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
@@ -273,20 +273,28 @@ function SupportDetails() {
 
       <div className="p-6">
         {/*<-------v1.0.3------*/}
-      <div className="flex items-center justify-center gap-2 mb-4">
-          
+        <div className="flex items-center justify-center gap-2 mb-4">
           <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
-            <FaTicketAlt className="w-8 h-8" />
+            <Ticket className="w-8 h-8" />
           </div>
           <div className="items-center text-center mb-4">
-        <h3 className="text-2xl font-bold text-gray-900">
-          {currentTicket?.ticketCode}
-        </h3>
-        <StatusBadge status={currentTicket?.status} text={currentTicket?.status ? currentTicket?.status.charAt(0).toUpperCase() + currentTicket?.status.slice(1) : "Not Provided"}/>{/*common status code add by Venkatesh*/}
-        {/*-------v1.0.3------>*/}
-        {/*-------v1.0.1-------------->*/}
-      </div>
-      </div>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {currentTicket?.ticketCode}
+            </h3>
+            <StatusBadge
+              status={currentTicket?.status}
+              text={
+                currentTicket?.status
+                  ? currentTicket?.status.charAt(0).toUpperCase() +
+                    currentTicket?.status.slice(1)
+                  : "Not Provided"
+              }
+            />
+            {/*common status code add by Venkatesh*/}
+            {/*-------v1.0.3------>*/}
+            {/*-------v1.0.1-------------->*/}
+          </div>
+        </div>
         {/* v1.0.2 -------------------------------------------------------------------> */}
 
         <div className="flex justify-between border-b border-gray-200">
@@ -306,18 +314,17 @@ function SupportDetails() {
               </button>
             ))}
             {/* ---v1.0.0------Venkatesh------add attachments tab--> */}
-            
           </nav>
           {(impersonatedUser_roleName === "Super_Admin" ||
-              impersonatedUser_roleName === "Support_Team") && (
-              <button
-                onClick={toggleStatusModal}
-                className="px-1 py-1 mb-1 bg-custom-blue text-xs w-24 whitespace-nowrap text-white hover:bg-custom-blue/90 rounded-md transition-colors"
-                title="Change Status"
-              >
-                Change Status
-              </button>
-            )}
+            impersonatedUser_roleName === "Support_Team") && (
+            <button
+              onClick={toggleStatusModal}
+              className="px-1 py-1 mb-1 bg-custom-blue text-xs w-24 whitespace-nowrap text-white hover:bg-custom-blue/90 rounded-md transition-colors"
+              title="Change Status"
+            >
+              Change Status
+            </button>
+          )}
         </div>
 
         {activeTab === "Details" ? (
@@ -349,7 +356,7 @@ function SupportDetails() {
                     >
                       {/* First circle has no tick */}
                       {index === 0 ? (
-                        <FaCircle
+                        <Circle
                           className={`${
                             isFullScreen
                               ? "h-5 w-5 rounded-full"
@@ -357,7 +364,7 @@ function SupportDetails() {
                           } text-teal-600  text-base`}
                         />
                       ) : index < currentStepIndex ? (
-                        <FaCheckCircle
+                        <CheckCircle
                           className={`${
                             isFullScreen
                               ? "h-5 w-5 rounded-full"
@@ -408,7 +415,7 @@ function SupportDetails() {
                 </div>
               ))}
             </div>
-{/* v1.0.2 <-------------------------------------------------------------------------------------- */}
+            {/* v1.0.2 <-------------------------------------------------------------------------------------- */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4 mt-2">
               <h4 className="text-lg font-semibold text-gray-800 mb-4">
                 Ticket Information
@@ -416,29 +423,31 @@ function SupportDetails() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
-                    <FaUser className="w-5 h-5 text-custom-blue" />
+                    <User className="w-5 h-5 text-custom-blue" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Contact</p>
                     <p className="text-gray-700">
-                      {currentTicket?.contact?.charAt(0).toUpperCase() + currentTicket?.contact?.slice(1) || "N/A"}
+                      {currentTicket?.contact?.charAt(0).toUpperCase() +
+                        currentTicket?.contact?.slice(1) || "N/A"}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
-                    <FaBuilding className="w-5 h-5 text-custom-blue" />
+                    <Building className="w-5 h-5 text-custom-blue" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Organization</p>
                     <p className="text-gray-700">
-                      {currentTicket?.organization?.charAt(0).toUpperCase() + currentTicket?.organization?.slice(1) || "N/A"}
+                      {currentTicket?.organization?.charAt(0).toUpperCase() +
+                        currentTicket?.organization?.slice(1) || "N/A"}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
-                    <FaTag className="w-5 h-5 text-custom-blue" />
+                    <Tag className="w-5 h-5 text-custom-blue" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Issue Type</p>
@@ -449,7 +458,7 @@ function SupportDetails() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
-                    <FaUser className="w-5 h-5 text-custom-blue" />
+                    <User className="w-5 h-5 text-custom-blue" />
                   </div>
                   <div className="flex items-start gap-16">
                     <div className="flex flex-col items-start">
@@ -479,7 +488,7 @@ function SupportDetails() {
                             {isUpdatingOwner ? (
                               <span>Saving...</span>
                             ) : (
-                              <FaCheckCircle className="w-5 h-5" />
+                              <CheckCircle className="w-5 h-5" />
                             )}
                           </button>
                           <button
@@ -487,7 +496,7 @@ function SupportDetails() {
                             className="text-red-600 hover:text-red-800 p-1"
                             disabled={isUpdatingOwner}
                           >
-                            <MdOutlineCancel className="w-5 h-5" />
+                            <XCircle className="w-5 h-5" />
                           </button>
                         </div>
                       ) : (
@@ -503,7 +512,7 @@ function SupportDetails() {
                           className="p-1 text-custom-blue hover:bg-blue-50 rounded-full transition-colors"
                           title="Change Owner"
                         >
-                          <FaExchangeAlt className="w-5 h-5 text-custom-blue" />
+                          <Repeat className="w-5 h-5 text-custom-blue" />
                         </button>
                       </div>
                     )}
@@ -511,7 +520,7 @@ function SupportDetails() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
-                    <FaCalendarAlt className="w-5 h-5 text-custom-blue" />
+                    <CalendarDays className="w-5 h-5 text-custom-blue" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Priority</p>
@@ -520,7 +529,6 @@ function SupportDetails() {
                     </p>
                   </div>
                 </div>
-                
               </div>
             </div>
 
@@ -530,7 +538,7 @@ function SupportDetails() {
               </h4>
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-custom-blue/10 rounded-lg mt-1">
-                  <FaFileAlt className="w-5 h-5 text-custom-blue" />
+                  <FileText className="w-5 h-5 text-custom-blue" />
                 </div>
                 <div className="flex-grow whitespace-pre-wrap break-words break-all">
                   <p className="text-gray-700 ">
@@ -538,7 +546,6 @@ function SupportDetails() {
                   </p>
                 </div>
               </div>
-              
             </div>
 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mt-4">
@@ -548,25 +555,30 @@ function SupportDetails() {
               <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
-                    <FaUser className="w-5 h-5 text-custom-blue" />
+                    <User className="w-5 h-5 text-custom-blue" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Created By</p>
                     <p className="text-gray-700">
-                      {currentTicket?.contact?.charAt(0).toUpperCase() + currentTicket?.contact?.slice(1) || "Unknown"},{" "}
-                      {formatDate(currentTicket?.createdAt)}
+                      {currentTicket?.contact?.charAt(0).toUpperCase() +
+                        currentTicket?.contact?.slice(1) || "Unknown"}
+                      , {formatDate(currentTicket?.createdAt)}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
-                    <FaUser className="w-5 h-5 text-custom-blue" />
+                    <User className="w-5 h-5 text-custom-blue" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Modified By</p>
                     <p className="text-gray-700">
-                      {currentTicket?.statusHistory?.[0]?.user.charAt(0).toUpperCase() + currentTicket?.statusHistory?.[0]?.user?.slice(1) || "Unknown"},{" "}
-                      {formatDate(currentTicket?.statusHistory?.[0]?.date)}
+                      {currentTicket?.statusHistory?.[0]?.user
+                        .charAt(0)
+                        .toUpperCase() +
+                        currentTicket?.statusHistory?.[0]?.user?.slice(1) ||
+                        "Unknown"}
+                      , {formatDate(currentTicket?.statusHistory?.[0]?.date)}
                     </p>
                   </div>
                 </div>
@@ -587,18 +599,21 @@ function SupportDetails() {
             </h4>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-blue/10 rounded-lg mt-1">
-                <FaFileAlt className="w-5 h-5 text-custom-blue" />
+                <FileText className="w-5 h-5 text-custom-blue" />
               </div>
               <div className="flex-grow whitespace-pre-wrap break-words break-all">
                 <p className="text-gray-700 truncate">
-                  {currentTicket?.attachment?.filename || "No attachment provided."}
+                  {currentTicket?.attachment?.filename ||
+                    "No attachment provided."}
                 </p>
               </div>
               {currentTicket?.attachment?.path && (
                 <button
                   type="button"
                   title="Preview Attachment"
-                  onClick={() => window.open(currentTicket?.attachment?.path, "_blank")}
+                  onClick={() =>
+                    window.open(currentTicket?.attachment?.path, "_blank")
+                  }
                   className="mt-1 p-2 hover:bg-gray-100 rounded-lg transition"
                 >
                   <Eye className="w-5 h-5 text-gray-600 hover:text-blue-600" />

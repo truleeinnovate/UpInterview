@@ -1,15 +1,18 @@
 import { useState } from "react";
-import {
-  AiOutlineDownload,
-  AiOutlineMail,
-  AiOutlineCreditCard,
-  AiOutlineBank,
-  AiOutlineUser,
-  AiOutlineKey,
-  AiOutlineShop,
-} from "react-icons/ai";
+
 import StatusBadge from "../common/StatusBadge";
-import { Minimize, Expand, X } from "lucide-react";
+import {
+  Minimize,
+  Expand,
+  X,
+  Download,
+  Mail,
+  CreditCard,
+  Landmark,
+  User,
+  Key,
+  Store,
+} from "lucide-react";
 
 function PaymentDetailsModal({ payment, onClose }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -62,7 +65,7 @@ function PaymentDetailsModal({ payment, onClose }) {
             <div className="space-y-4">
               <div>
                 <h4 className="text-sm font-medium text-gray-500 flex items-center">
-                  <AiOutlineCreditCard className="mr-2" />
+                  <CreditCard className="mr-2" />
                   Payment Information
                 </h4>
                 <div className="mt-2 space-y-2">
@@ -96,7 +99,7 @@ function PaymentDetailsModal({ payment, onClose }) {
 
               <div>
                 <h4 className="text-sm font-medium text-gray-500 flex items-center">
-                  <AiOutlineBank className="mr-2" />
+                  <Landmark className="mr-2" />
                   Gateway Details
                 </h4>
                 <div className="mt-2 space-y-2">
@@ -136,7 +139,7 @@ function PaymentDetailsModal({ payment, onClose }) {
 
               <div>
                 <h4 className="text-sm font-medium text-gray-500 flex items-center">
-                  <AiOutlineUser className="mr-2" />
+                  <User className="mr-2" />
                   Customer Information
                 </h4>
                 <div className="mt-2 space-y-2">
@@ -163,7 +166,7 @@ function PaymentDetailsModal({ payment, onClose }) {
             <div className="space-y-4">
               <div>
                 <h4 className="text-sm font-medium text-gray-500 flex items-center">
-                  <AiOutlineKey className="mr-2" />
+                  <Key className="mr-2" />
                   Transaction Details
                 </h4>
                 <div className="mt-2 space-y-2">
@@ -186,7 +189,7 @@ function PaymentDetailsModal({ payment, onClose }) {
 
               <div>
                 <h4 className="text-sm font-medium text-gray-500 flex items-center">
-                  <AiOutlineShop className="mr-2" />
+                  <Store className="mr-2" />
                   Subscription Details
                 </h4>
                 <div className="mt-2 space-y-2">
@@ -239,11 +242,11 @@ function PaymentDetailsModal({ payment, onClose }) {
 
           <div className="mt-6 flex justify-end space-x-3">
             <button className="btn-secondary flex items-center">
-              <AiOutlineDownload className="mr-2" />
+              <Download className="mr-2" />
               Download Receipt
             </button>
             <button className="btn-secondary flex items-center">
-              <AiOutlineMail className="mr-2" />
+              <Mail className="mr-2" />
               Email Receipt
             </button>
           </div>

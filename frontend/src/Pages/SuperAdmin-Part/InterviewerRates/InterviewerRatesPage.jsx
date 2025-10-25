@@ -2,14 +2,7 @@
 // v1.0.1 - Ashok - Changed category options from static to dynamic
 import { useState, useEffect, useMemo } from "react";
 import { Tab } from "../../../Components/SuperAdminComponents/common/Tab";
-import {
-  AiOutlineTable,
-  AiOutlineAppstore,
-  // AiOutlinePlus,
-  AiOutlineFilter,
-  AiOutlineExport,
-} from "react-icons/ai";
-import { Plus } from "lucide-react";
+import { Plus, Table, Layout, Filter, Share2 } from "lucide-react";
 import RatesTableView from "../../../Pages/SuperAdmin-Part/InterviewerRates/RatesTableView";
 import RatesKanbanView from "../../../Pages/SuperAdmin-Part/InterviewerRates/RatesKanbanView";
 import RateCardModal from "../../../Pages/SuperAdmin-Part/InterviewerRates/RateCardModal";
@@ -28,7 +21,8 @@ function InterviewerRatesPage() {
   }, []);
 
   // v1.0.1 <----------------------------------------------
-  const { technologies, loadTechnologies, isTechnologiesFetching } = useMasterData();
+  const { technologies, loadTechnologies, isTechnologiesFetching } =
+    useMasterData();
   // v1.0.1 ---------------------------------------------->
 
   const [activeView, setActiveView] = useState("table");
@@ -119,7 +113,7 @@ function InterviewerRatesPage() {
             size="sm"
             className="bg-gray-200 hover:bg-gray-300 text-gray-600  transition-colors"
           >
-            <AiOutlineFilter className="h-4 w-4 mr-1" />
+            <Filter className="h-4 w-4 mr-1" />
             Filter
           </Button>
           {/* <button className="flex items-center p-2 rounded-md bg-gray-300">
@@ -130,7 +124,7 @@ function InterviewerRatesPage() {
             size="sm"
             className="bg-gray-200 hover:bg-gray-300 text-gray-600  transition-colors"
           >
-            <AiOutlineExport className="h-4 w-4 mr-1" />
+            <Share2 className="h-4 w-4 mr-1" />
             Export
           </Button>
           {/* <button
@@ -158,13 +152,13 @@ function InterviewerRatesPage() {
             <Tab
               active={activeView === "table"}
               onClick={() => setActiveView("table")}
-              icon={<AiOutlineTable />}
+              icon={<Table className="h-4 w-4" />}
               label="Table View"
             />
             <Tab
               active={activeView === "kanban"}
               onClick={() => setActiveView("kanban")}
-              icon={<AiOutlineAppstore />}
+              icon={<Layout className="h-4 w-4" />}
               label="Kanban View"
             />
           </nav>

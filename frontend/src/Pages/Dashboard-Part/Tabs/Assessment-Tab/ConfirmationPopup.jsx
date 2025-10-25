@@ -1,12 +1,9 @@
-
-
 // // v1.0.0 - Ashok - Improved responsiveness
-
 
 // v1.0.1 - Ashok - UI polish: better spacing, rounded corners, shadow, transitions
 
-import React from 'react';
-import { HiOutlineExclamationCircle } from 'react-icons/hi';
+import React from "react";
+import { AlertCircle } from "lucide-react";
 
 const ConfirmationPopup = ({
   isOpen,
@@ -32,11 +29,11 @@ const ConfirmationPopup = ({
       <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all scale-100 hover:scale-[1.01]">
         <div className="text-center">
           {/* Made icon slightly larger + margin adjustments */}
-          <HiOutlineExclamationCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
-          
+          <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
+
           {/* Title: bold, darker gray */}
           <h3 className="mb-3 text-xl font-semibold text-gray-800">{title}</h3>
-          
+
           {/* Message: softer gray + better readability */}
           <p className="mb-6 text-sm text-gray-600">{message}</p>
 
@@ -75,11 +72,7 @@ const ConfirmationPopup = ({
 
 export default ConfirmationPopup;
 
-
-
 // import React from 'react';
-// import { HiOutlineExclamationCircle } from 'react-icons/hi';
-
 // const ConfirmationPopup = ({
 //   isOpen,
 //   title,

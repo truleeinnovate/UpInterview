@@ -1,8 +1,7 @@
 import React from "react";
 import Popup from "reactjs-popup";
-import { IoCodeSlash } from "react-icons/io5";
-import { RxText } from "react-icons/rx";
-import { IoIosCloseCircleOutline } from "react-icons/io";
+
+import { Code, Type, XCircle } from "lucide-react";
 
 const CustomQuestionPopup = ({
   closePlusPopup,
@@ -44,7 +43,7 @@ const CustomQuestionPopup = ({
                     closePlusPopup();
                   }}
                 >
-                  <IoIosCloseCircleOutline />
+                  <XCircle className="h-4 w-4" />
                 </button>
               </div>
               <form className="h-[70vh]  m-auto w-[90%] flex flex-col gap-12">
@@ -65,8 +64,8 @@ const CustomQuestionPopup = ({
                         placeholder="Enter your question"
                       />
 
-                      <span>{<RxText />}</span>
-                      <span>{<IoCodeSlash />}</span>
+                      <span>{<Type className="h-4 w-4" />}</span>
+                      <span>{<Code className="h-4 w-4" />}</span>
                     </div>
                     <div>
                       {interviewQuestionErr.question && (
@@ -94,8 +93,8 @@ const CustomQuestionPopup = ({
                           placeholder="Enter your answer"
                         />
 
-                        <span>{<RxText />}</span>
-                        <span>{<IoCodeSlash />}</span>
+                        <span>{<Type />}</span>
+                        <span>{<Code className="h-4 w-4" />}</span>
                       </div>
                       <div>
                         {interviewQuestionErr.answer && (
@@ -141,7 +140,6 @@ const CustomQuestionPopup = ({
             </div>
           </div>
         )}
-        
       </Popup>
     </div>
   );

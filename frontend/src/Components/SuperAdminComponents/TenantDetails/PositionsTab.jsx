@@ -1,130 +1,130 @@
-import { useState } from 'react'
-import DataTable from '../common/DataTable'
-import StatusBadge from '../common/StatusBadge'
-import { AiOutlinePlus, AiOutlineFilter, AiOutlineEdit, AiOutlineEye } from 'react-icons/ai'
+import { useState } from "react";
+import DataTable from "../common/DataTable";
+import StatusBadge from "../common/StatusBadge";
+import { Plus, Filter, Edit, Eye } from "lucide-react";
 
 function PositionsTab() {
   const [positions] = useState([
     {
       id: 1,
-      title: 'Senior Frontend Developer',
-      department: 'Engineering',
-      location: 'San Francisco, CA',
-      type: 'Full-time',
-      status: 'active',
+      title: "Senior Frontend Developer",
+      department: "Engineering",
+      location: "San Francisco, CA",
+      type: "Full-time",
+      status: "active",
       candidates: 12,
       interviews: 5,
-      createdAt: '2025-06-01T10:00:00Z',
-      updatedAt: '2025-06-02T14:30:00Z'
+      createdAt: "2025-06-01T10:00:00Z",
+      updatedAt: "2025-06-02T14:30:00Z",
     },
     {
       id: 2,
-      title: 'Product Manager',
-      department: 'Product',
-      location: 'Remote',
-      type: 'Full-time',
-      status: 'active',
+      title: "Product Manager",
+      department: "Product",
+      location: "Remote",
+      type: "Full-time",
+      status: "active",
       candidates: 8,
       interviews: 3,
-      createdAt: '2025-06-01T11:30:00Z',
-      updatedAt: '2025-06-02T13:15:00Z'
+      createdAt: "2025-06-01T11:30:00Z",
+      updatedAt: "2025-06-02T13:15:00Z",
     },
     {
       id: 3,
-      title: 'DevOps Engineer',
-      department: 'Engineering',
-      location: 'New York, NY',
-      type: 'Full-time',
-      status: 'paused',
+      title: "DevOps Engineer",
+      department: "Engineering",
+      location: "New York, NY",
+      type: "Full-time",
+      status: "paused",
       candidates: 5,
       interviews: 2,
-      createdAt: '2025-05-30T09:00:00Z',
-      updatedAt: '2025-06-01T16:45:00Z'
+      createdAt: "2025-05-30T09:00:00Z",
+      updatedAt: "2025-06-01T16:45:00Z",
     },
     {
       id: 4,
-      title: 'UX Designer',
-      department: 'Design',
-      location: 'Los Angeles, CA',
-      type: 'Contract',
-      status: 'draft',
+      title: "UX Designer",
+      department: "Design",
+      location: "Los Angeles, CA",
+      type: "Contract",
+      status: "draft",
       candidates: 0,
       interviews: 0,
-      createdAt: '2025-06-02T08:30:00Z',
-      updatedAt: '2025-06-02T08:30:00Z'
-    }
-  ])
+      createdAt: "2025-06-02T08:30:00Z",
+      updatedAt: "2025-06-02T08:30:00Z",
+    },
+  ]);
 
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' }
-    return new Date(dateString).toLocaleDateString('en-US', options)
-  }
+    const options = { year: "numeric", month: "short", day: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-US", options);
+  };
 
   const columns = [
     {
-      field: 'title',
-      header: 'Position',
+      field: "title",
+      header: "Position",
       render: (row) => (
         <div>
           <div className="font-medium text-gray-900">{row.title}</div>
           <div className="text-sm text-gray-500">{row.department}</div>
         </div>
-      )
+      ),
     },
     {
-      field: 'location',
-      header: 'Location'
+      field: "location",
+      header: "Location",
     },
     {
-      field: 'type',
-      header: 'Type'
+      field: "type",
+      header: "Type",
     },
     {
-      field: 'status',
-      header: 'Status',
-      render: (row) => <StatusBadge status={row.status} />
+      field: "status",
+      header: "Status",
+      render: (row) => <StatusBadge status={row.status} />,
     },
     {
-      field: 'candidates',
-      header: 'Candidates',
+      field: "candidates",
+      header: "Candidates",
       render: (row) => (
         <div className="text-center">
           <div className="font-medium">{row.candidates}</div>
           <div className="text-xs text-gray-500">Total</div>
         </div>
-      )
+      ),
     },
     {
-      field: 'interviews',
-      header: 'Interviews',
+      field: "interviews",
+      header: "Interviews",
       render: (row) => (
         <div className="text-center">
           <div className="font-medium">{row.interviews}</div>
           <div className="text-xs text-gray-500">Scheduled</div>
         </div>
-      )
+      ),
     },
     {
-      field: 'updatedAt',
-      header: 'Last Updated',
-      render: (row) => formatDate(row.updatedAt)
+      field: "updatedAt",
+      header: "Last Updated",
+      render: (row) => formatDate(row.updatedAt),
     },
     {
-      field: 'actions',
-      header: 'Actions',
+      field: "actions",
+      header: "Actions",
       sortable: false,
       render: (row) => (
         <div className="flex space-x-2">
           <button className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50">
-            <AiOutlineEye size={18} />
+            <Eye className="mr-2 h-4 w-4" />
           </button>
           <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
-            <AiOutlineEdit size={18} />
+            <Edit className="mr-2 h-4 w-4" />
           </button>
         </div>
-      )
-    }
-  ]
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -132,11 +132,11 @@ function PositionsTab() {
         <h3 className="text-lg font-medium text-gray-900">Positions</h3>
         <div className="flex space-x-2">
           <button className="btn-secondary">
-            <AiOutlineFilter className="mr-2" />
+            <Filter className="mr-2 h-4 w-4" />
             Filter
           </button>
           <button className="btn-primary">
-            <AiOutlinePlus className="mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Add Position
           </button>
         </div>
@@ -150,7 +150,7 @@ function PositionsTab() {
         <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
           <div className="text-xs text-gray-500">Active</div>
           <div className="text-xl font-semibold">
-            {positions.filter(p => p.status === 'active').length}
+            {positions.filter((p) => p.status === "active").length}
           </div>
         </div>
         <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
@@ -176,7 +176,7 @@ function PositionsTab() {
         />
       </div>
     </div>
-  )
+  );
 }
 
-export default PositionsTab
+export default PositionsTab;
