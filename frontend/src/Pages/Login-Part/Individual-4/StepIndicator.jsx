@@ -51,7 +51,7 @@ const StepIndicator = ({ currentStep, showLimitedSteps, isInternalInterviewer, c
                                             ? 'bg-orange-500 text-white scale-110 ring-2 ring-orange-100'  // In progress: Orange
                                             : completedArray[index]
                                                 ? 'bg-custom-blue text-white'  // Completed: Custom blue
-                                                : 'bg-yellow-100 text-yellow-700 ring-2 ring-yellow-200'  // Not completed: Light yellow
+                                                : 'bg-yellow-50 text-yellow-500 ring-2 ring-yellow-100'  // Not completed: Light yellow
                                         }
                   `}
                                 >

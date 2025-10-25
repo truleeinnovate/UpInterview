@@ -347,7 +347,7 @@ const AdditionalDetails = ({
           <>
             {/* Resume Section */}
             <div className="sm:col-span-2 col-span-2">
-              <div>
+              <div className="mb-3">
                 {/* v1.0.1 <----------------------------------------------------- */}
                 {/* v1.0.3 <----------------------------------------------------- */}
                 <label
@@ -387,17 +387,17 @@ const AdditionalDetails = ({
               </div>
               {resumeName && (
                 // v1.0.1 <-------------------------------------------------------------
-                <div className="border mt-2 flex items-center justify-between gap-2 px-2 rounded-md xl:max-w-md 2xl:max-w-md">
+                <div className="border flex items-center justify-between px-4 py-2 rounded-md xl:max-w-md 2xl:max-w-md">
                   <div className="min-w-0">
-                    <span className="text-sm block truncate text-gray-600">
+                    <span className="text-md block truncate text-gray-600">
                       {resumeName}
                     </span>
                   </div>
                   <button
-                    className="text-red-500 flex-shrink-0"
+                    className="text-red-500 flex-shrink-0 -mt-1"
                     onClick={() => handleRemoveFile("resume")}
                   >
-                    <span className="text-xl">×</span>
+                    <span className="text-2xl">×</span>
                   </button>
                 </div>
               )}
