@@ -359,6 +359,41 @@ const createPaymentReminderNotification = async (ownerId, tenantId, reminderDeta
   }
 };
 
+/**
+ * Create interview payment settlement notification for interviewer
+ */
+const createInterviewSettlementNotification = async (ownerId, tenantId, settlementDetails) => {
+  try {
+    const { amount, companyName, roundTitle, positionTitle, settlementCode } = settlementDetails;
+    
+    const notification = await PushNotification.create({
+      ownerId,
+      tenantId,
+      title: "Interview Payment Received 💵",
+      message: `You have received ₹${amount} from ${companyName} for conducting ${roundTitle} - ${positionTitle}.`,
+      type: "payment",
+      category: "interview_settlement",
+      unread: true,
+      metadata: {
+        amount,
+        companyName: companyName || 'Company',
+        roundTitle: roundTitle || 'Interview Round',
+        positionTitle: positionTitle || 'Position',
+        settlementCode: settlementCode || 'N/A',
+        settlementDate: new Date(),
+        status: 'completed',
+        paymentType: 'interview_settlement'
+      }
+    });
+
+    console.log(`[PAYMENT NOTIFICATION] Interview settlement notification created for ${ownerId}:`, notification._id);
+    return notification;
+  } catch (error) {
+    console.error('[PAYMENT NOTIFICATION] Error creating interview settlement notification:', error);
+    return null;
+  }
+};
+
 module.exports = {
   createPaymentSuccessNotification,
   createPaymentFailedNotification,
@@ -369,5 +404,6 @@ module.exports = {
   createSubscriptionHaltedNotification,
   createPaymentMethodUpdatedNotification,
   createInvoiceGeneratedNotification,
-  createPaymentReminderNotification
+  createPaymentReminderNotification,
+  createInterviewSettlementNotification
 };

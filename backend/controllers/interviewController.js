@@ -2080,8 +2080,8 @@ const updateInterviewStatusController = async (req, res) => {
 // Get all interview rounds for super admin
 const getAllInterviewRounds = async (req, res) => {
     try {
-        // Fetch all interview rounds with populated data (filter for internal interviews only)
-        const interviewRounds = await InterviewRounds.find({ interviewerType: 'Internal' })
+        // Fetch all interview rounds with populated data (filter for External interviews only)
+        const interviewRounds = await InterviewRounds.find({ interviewerType: 'External' })
             .populate({
                 path: 'interviewId',
                 select: 'interviewCode candidateId positionId status tenantId ownerId createdAt',
@@ -2096,7 +2096,7 @@ const getAllInterviewRounds = async (req, res) => {
                     }
                 ]
             })
-            .populate('interviewers', 'firstName lastName email _id')
+            .populate('interviewers', 'firstName lastName email _id ownerId tenantId')
             .lean() // Add lean for better performance
             .sort({ _id: -1 }); // Latest first
         
