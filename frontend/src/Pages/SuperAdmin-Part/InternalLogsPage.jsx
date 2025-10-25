@@ -2,8 +2,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
-// import { AiOutlineDownload } from "react-icons/ai";
-
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
@@ -17,7 +15,6 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-// import { AiOutlineDownload, AiOutlineMail } from "react-icons/ai";
 // import axios from "axios";
 // import { config } from "../../config.js";
 import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";

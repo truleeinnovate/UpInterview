@@ -1,6 +1,5 @@
 // /* eslint-disable react/prop-types */
 // import React from "react";
-// import { IoClose } from "react-icons/io5";
 // import axios from "axios";
 // import toast from "react-hot-toast";
 // import { config } from "../../config";
@@ -151,147 +150,179 @@
 // v1.0.2  -  Venkatesh   -  Changed rating input to use InputField component for consistency
 /* eslint-disable react/prop-types */
 import React, { useState } from "react";
-import { IoClose } from "react-icons/io5";
+import { X } from "lucide-react";
 import { useUpdateInterviewerFeedback } from "../../apiHooks/superAdmin/useOutsourceInterviewers";
 import DropdownSelect from "../../Components/Dropdowns/DropdownSelect";
 import InputField from "../../Components/FormFields/InputField";
 import DescriptionField from "../../Components/FormFields/DescriptionField";
 
 const FeedbackStatusChangeModal = ({
-    showStatusModal,
-    statusOptions,
-    newStatus,
-    setNewStatus,
-    interviewer,
-    onClose,
+  showStatusModal,
+  statusOptions,
+  newStatus,
+  setNewStatus,
+  interviewer,
+  onClose,
 }) => {
-    const { mutate, isPending } = useUpdateInterviewerFeedback();
-    const [fieldErrors, setFieldErrors] = useState({ rating: "" });
+  const { mutate, isPending } = useUpdateInterviewerFeedback();
+  const [fieldErrors, setFieldErrors] = useState({ rating: "" });
 
-    // Map backend status values to display labels
-    const statusDisplayMap = {
-        "new": "New",
-        "underReview": "Under Review",
-        "approved": "Approved",
-        "rejected": "Rejected",
-        "suspended": "Suspended"
+  // Map backend status values to display labels
+  const statusDisplayMap = {
+    new: "New",
+    underReview: "Under Review",
+    approved: "Approved",
+    rejected: "Rejected",
+    suspended: "Suspended",
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+
+    // Remove rating validation - make it optional
+    setFieldErrors({ rating: "" });
+
+    const payload = {
+      contactId: interviewer._id,
+      givenBy: interviewer._id,
+      status: newStatus.status,
+      rating: newStatus.rating ? Number(newStatus.rating) : undefined,
+      comments: newStatus.comments,
     };
 
-    const handleFormSubmit = (e) => {
-        e.preventDefault();
+    mutate(payload, {
+      onSuccess: () => {
+        onClose();
+      },
+    });
+  };
 
-        // Remove rating validation - make it optional
-        setFieldErrors({ rating: "" });
+  return (
+    showStatusModal && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
+        <div className="bg-white w-1/2 md:w-2/3 lg:w-1/2 h-full flex flex-col">
+          {/* Header (matches Candidate form look) */}
+          <div className="flex justify-between items-center p-4 h-16">
+            <h2 className="text-2xl text-custom-blue font-semibold">
+              Change Status
+            </h2>
+            <button onClick={onClose}>
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-        const payload = {
-            contactId: interviewer._id,
-            givenBy: interviewer._id,
-            status: newStatus.status,
-            rating: newStatus.rating ? Number(newStatus.rating) : undefined,
-            comments: newStatus.comments,
-        };
-
-        mutate(payload, {
-            onSuccess: () => {
-                onClose();
-            },
-        });
-    };
-
-    return (
-        showStatusModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
-                <div className="bg-white w-1/2 md:w-2/3 lg:w-1/2 h-full flex flex-col">
-                    {/* Header (matches Candidate form look) */}
-                    <div className="flex justify-between items-center p-4 h-16">
-                        <h2 className="text-2xl text-custom-blue font-semibold">Change Status</h2>
-                        <button onClick={onClose}>
-                            <IoClose size={20} />
-                        </button>
-                    </div>
-
-                    {/* Form Body - scrollable */}
-                    <form id="feedback-status-change-form" onSubmit={handleFormSubmit} className="p-6 flex-1 overflow-auto">
-                        {/* Status (optional) */}
-                        <div className="mb-4 grid items-center gap-4">
-                            <label className="block text-sm font-medium text-gray-700">Select New Status</label>
-                            <DropdownSelect
-                                value={newStatus.status ? { value: newStatus.status, label: statusDisplayMap[newStatus.status] || newStatus.status } : null}
-                                onChange={(opt) => setNewStatus({ ...newStatus, status: opt?.value || "" })}
-                                options={statusOptions.map((s) => ({ value: s, label: statusDisplayMap[s] || s }))}
-                                placeholder="Select status"
-                                isSearchable={false}
-                                menuPortalTarget={document.body}
-                            />
-                        </div>
-
-                        {/* Rating (optional) - v1.0.2: Using InputField component */}
-                        <div className="mb-4">
-                            <InputField
-                                type="number"
-                                name="rating"
-                                label={
-                                    <>
-                                        Rating <span className="text-gray-400 text-xs">(0-10)</span>
-                                    </>
-                                }
-                                value={typeof newStatus.rating === "number" ? newStatus.rating : ""}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    if (value === "") {
-                                        setNewStatus({ ...newStatus, rating: "" });
-                                        setFieldErrors({ ...fieldErrors, rating: "" });
-                                    } else {
-                                        // Allow decimal values with max 1 decimal place
-                                        const numValue = parseFloat(value);
-                                        if (!isNaN(numValue)) {
-                                            // Clamp between 0 and 10
-                                            const clampedValue = Math.max(0, Math.min(10, numValue));
-                                            // Round to 1 decimal place
-                                            const roundedValue = Math.round(clampedValue * 10) / 10;
-                                            setNewStatus({ ...newStatus, rating: roundedValue });
-                                            setFieldErrors({ ...fieldErrors, rating: "" });
-                                        }
-                                    }
-                                }}
-                                step="0.1"
-                                min="0"
-                                max="10"
-                                placeholder="Enter rating (e.g., 4.6)"
-                                error={fieldErrors.rating}
-                            />
-                        </div>
-
-                        {/* Notes */}
-                        <div className="mb-4 grid items-start gap-4">
-                            <label className="block text-sm font-medium text-gray-700">Notes</label>
-                            <DescriptionField
-                                name="comments"
-                                value={newStatus.comments || ""}
-                                onChange={(e) => setNewStatus({ ...newStatus, comments: e.target.value })}
-                                label=""
-                                rows={8}
-                                maxLength={250}
-                                placeholder="Enter your notes here..."
-                            />
-                        </div>
-                    </form>
-
-                    {/* Footer pinned at modal bottom */}
-                    <div className="w-full flex justify-end gap-4 p-4 bg-white">
-                        <button
-                            type="submit"
-                            form="feedback-status-change-form"
-                            disabled={isPending}
-                            className={`px-4 py-2 text-white rounded-md ${isPending ? "bg-gray-400 cursor-not-allowed" : "bg-custom-blue hover:bg-custom-blue"}`}
-                        >
-                            {isPending ? "Saving..." : "Save"}
-                        </button>
-                    </div>
-                </div>
+          {/* Form Body - scrollable */}
+          <form
+            id="feedback-status-change-form"
+            onSubmit={handleFormSubmit}
+            className="p-6 flex-1 overflow-auto"
+          >
+            {/* Status (optional) */}
+            <div className="mb-4 grid items-center gap-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Select New Status
+              </label>
+              <DropdownSelect
+                value={
+                  newStatus.status
+                    ? {
+                        value: newStatus.status,
+                        label:
+                          statusDisplayMap[newStatus.status] ||
+                          newStatus.status,
+                      }
+                    : null
+                }
+                onChange={(opt) =>
+                  setNewStatus({ ...newStatus, status: opt?.value || "" })
+                }
+                options={statusOptions.map((s) => ({
+                  value: s,
+                  label: statusDisplayMap[s] || s,
+                }))}
+                placeholder="Select status"
+                isSearchable={false}
+                menuPortalTarget={document.body}
+              />
             </div>
-        )
-    );
+
+            {/* Rating (optional) - v1.0.2: Using InputField component */}
+            <div className="mb-4">
+              <InputField
+                type="number"
+                name="rating"
+                label={
+                  <>
+                    Rating <span className="text-gray-400 text-xs">(0-10)</span>
+                  </>
+                }
+                value={
+                  typeof newStatus.rating === "number" ? newStatus.rating : ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "") {
+                    setNewStatus({ ...newStatus, rating: "" });
+                    setFieldErrors({ ...fieldErrors, rating: "" });
+                  } else {
+                    // Allow decimal values with max 1 decimal place
+                    const numValue = parseFloat(value);
+                    if (!isNaN(numValue)) {
+                      // Clamp between 0 and 10
+                      const clampedValue = Math.max(0, Math.min(10, numValue));
+                      // Round to 1 decimal place
+                      const roundedValue = Math.round(clampedValue * 10) / 10;
+                      setNewStatus({ ...newStatus, rating: roundedValue });
+                      setFieldErrors({ ...fieldErrors, rating: "" });
+                    }
+                  }
+                }}
+                step="0.1"
+                min="0"
+                max="10"
+                placeholder="Enter rating (e.g., 4.6)"
+                error={fieldErrors.rating}
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="mb-4 grid items-start gap-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Notes
+              </label>
+              <DescriptionField
+                name="comments"
+                value={newStatus.comments || ""}
+                onChange={(e) =>
+                  setNewStatus({ ...newStatus, comments: e.target.value })
+                }
+                label=""
+                rows={8}
+                maxLength={250}
+                placeholder="Enter your notes here..."
+              />
+            </div>
+          </form>
+
+          {/* Footer pinned at modal bottom */}
+          <div className="w-full flex justify-end gap-4 p-4 bg-white">
+            <button
+              type="submit"
+              form="feedback-status-change-form"
+              disabled={isPending}
+              className={`px-4 py-2 text-white rounded-md ${
+                isPending
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-custom-blue hover:bg-custom-blue"
+              }`}
+            >
+              {isPending ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  );
 };
 
 export default FeedbackStatusChangeModal;

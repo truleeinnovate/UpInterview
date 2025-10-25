@@ -1,14 +1,10 @@
 // v1.0.0 - Ashok - Improved code and added API call for fetching rate cards
 // v1.0.1 - Ashok - Added delete button to implement delete action
 // v1.0.2 - Ashok - Handled more items to display for technology
+
 import { useEffect, useState } from "react";
 import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge";
-import {
-  AiOutlineEdit,
-  AiOutlineEye,
-  AiOutlineDelete,
-  AiOutlinePlus,
-} from "react-icons/ai";
+import { Pencil, Eye, Trash, Plus } from "lucide-react";
 import axios from "axios";
 import { config } from "../../../config";
 // v1.0.1 <------------------------------------------------------------
@@ -369,7 +365,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
             className="p-1 text-teal-600 hover:text-teal-900 rounded hover:bg-teal-50"
             title="View Details"
           >
-            <AiOutlineEye size={14} />
+            <Eye className="h-4 w-4" />
           </button>
           {/* v1.0.1 <---------------------------------------------------------------------- */}
           <button
@@ -377,7 +373,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
             className="p-1 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-50"
             title="Edit Rate Card"
           >
-            <AiOutlineEdit size={14} />
+            <Pencil className="h-4 w-4" />
           </button>
           {/* v1.0.1 ----------------------------------------------------------------------> */}
           <button
@@ -385,7 +381,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
             className="p-1 text-red-600 hover:text-red-900 rounded hover:bg-red-50"
             title="Delete Rate Card"
           >
-            <AiOutlineDelete size={14} />
+            <Trash className="h-4 w-4" />
           </button>
           {/* v1.0.0 ------------------------------------------------------------------------> */}
         </div>
@@ -483,7 +479,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
                   className="p-2 text-teal-600 hover:text-teal-900 rounded-full hover:bg-white"
                   title="Add Rate Card"
                 >
-                  <AiOutlinePlus size={16} />
+                  <Plus className="h-4 w-4" />
                 </button>
               </div>
 

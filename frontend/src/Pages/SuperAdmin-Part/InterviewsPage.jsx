@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
 import DataTable from "../../Components/SuperAdminComponents/common/DataTable";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
-import {
-  AiOutlineFilter,
-  AiOutlineEye,
-  AiOutlinePlayCircle,
-  AiOutlineBug,
-} from "react-icons/ai";
+import { Filter, Eye, PlayCircle, Bug } from "lucide-react";
 
 function InterviewsPage() {
   useEffect(() => {
@@ -167,15 +162,15 @@ function InterviewsPage() {
       render: (row) => (
         <div className="flex space-x-2">
           <button className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50">
-            <AiOutlineEye size={18} />
+            <Eye className="h-4 w-4" />
           </button>
           {row.recordingAvailable && (
             <button className="p-2 text-success-500 hover:text-success-700 rounded-full hover:bg-success-50">
-              <AiOutlinePlayCircle size={18} />
+              <PlayCircle className="h-4 w-4" />
             </button>
           )}
           <button className="p-2 text-error-500 hover:text-error-700 rounded-full hover:bg-error-50">
-            <AiOutlineBug size={18} />
+            <Bug className="h-4 w-4" />
           </button>
         </div>
       ),
@@ -188,7 +183,7 @@ function InterviewsPage() {
         <h1 className="text-2xl font-bold text-gray-900">Interviews</h1>
         <div className="flex space-x-2">
           <button className="btn-secondary">
-            <AiOutlineFilter className="mr-2" />
+            <Filter className="mr-2 h-4 w-4" />
             Filter
           </button>
         </div>

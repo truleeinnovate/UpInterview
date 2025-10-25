@@ -3,8 +3,6 @@
 // FeedbackFormModal.jsx
 import React, { useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { Expand, Minimize } from "lucide-react";
-import { IoMdClose } from "react-icons/io";
 import CandidateMiniTab from "./MiniTabs/Candidate";
 import InterviewsMiniTabComponent from "./MiniTabs/Interviews";
 import FeedbackForm from "../../../videoCall/FeedbackForm";
@@ -25,7 +23,6 @@ const FeedbackFormModal = () => {
   const { state } = location;
   const { mode = "view", feedback } = state || {};
 
-  const [isFullScreen, setIsFullScreen] = useState(true);
   const [activeTab, setActiveTab] = useState(1);
   const isEditMode = mode === "edit";
 

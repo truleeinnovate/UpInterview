@@ -13,21 +13,18 @@ import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../../Components/SuperAdminComponents/Billing/Payment/Kanban.jsx";
 import {
   Eye,
-  // Mail,
-  // UserCircle,
+  Mail,
   Pencil,
   ChevronUp,
   ChevronDown,
+  Download,
+  CreditCard,
+  Landmark,
+  User,
+  Key,
+  Store,
 } from "lucide-react";
-import {
-  AiOutlineDownload,
-  AiOutlineMail,
-  AiOutlineCreditCard,
-  AiOutlineBank,
-  AiOutlineUser,
-  AiOutlineKey,
-  AiOutlineShop,
-} from "react-icons/ai";
+
 // import axios from "axios";
 // import { config } from "../../../config.js";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
@@ -38,7 +35,6 @@ import {
 // v1.0.0 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.0 -------------------------------------------------------------------------
-
 
 function PaymentsTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
@@ -466,9 +462,9 @@ function PaymentsTable({ organizationId, viewMode }) {
 
   // Render PopupContent
   // v1.0.0 <-------------------------------------------------------------------------
-  const PopupContent = ({payment}) => {
+  const PopupContent = ({ payment }) => {
     useScrollLock(true);
-  // v1.0.0 -------------------------------------------------------------------------
+    // v1.0.0 -------------------------------------------------------------------------
     return (
       <div className="px-4">
         <div className="rounded-sm px-4 w-full">
@@ -507,7 +503,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <div>
                       <h4 className="text-sm font-medium text-gray-500 flex items-center">
-                        <AiOutlineCreditCard className="mr-2" />
+                        <CreditCard className="mr-2" />
                         Payment Information
                       </h4>
                       <div className="mt-2 space-y-2">
@@ -539,7 +535,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <h4 className="text-sm font-medium text-gray-500 flex items-center">
-                      <AiOutlineBank className="mr-2" />
+                      <Landmark className="mr-2" />
                       Gateway Details
                     </h4>
                     <div className="mt-2 space-y-2">
@@ -586,7 +582,7 @@ function PaymentsTable({ organizationId, viewMode }) {
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                   <h4 className="text-sm font-medium text-gray-500 flex items-center">
-                    <AiOutlineUser className="mr-2" />
+                    <User className="mr-2" />
                     Customer Information
                   </h4>
                   <div className="mt-2 space-y-2">
@@ -611,7 +607,7 @@ function PaymentsTable({ organizationId, viewMode }) {
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                   <h4 className="text-sm font-medium text-gray-500 flex items-center">
-                    <AiOutlineKey className="mr-2" />
+                    <Key className="mr-2" />
                     Transaction Details
                   </h4>
                   <div className="mt-2 space-y-2">
@@ -638,7 +634,7 @@ function PaymentsTable({ organizationId, viewMode }) {
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                   <h4 className="text-sm font-medium text-gray-500 flex items-center">
-                    <AiOutlineShop className="mr-2" />
+                    <Store className="mr-2" />
                     Subscription Details
                   </h4>
                   <div className="mt-2 space-y-2">
@@ -695,11 +691,11 @@ function PaymentsTable({ organizationId, viewMode }) {
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                   <div className="mt-6 flex justify-end space-x-3">
                     <button className="btn-secondary flex items-center">
-                      <AiOutlineDownload className="mr-2" />
+                      <Download className="mr-2" />
                       Download Receipt
                     </button>
                     <button className="btn-secondary flex items-center">
-                      <AiOutlineMail className="mr-2" />
+                      <Mail className="mr-2" />
                       Email Receipt
                     </button>
                   </div>
@@ -821,9 +817,9 @@ function PaymentsTable({ organizationId, viewMode }) {
             payment={selectedPayment}
             onClose={() => setIsPopupOpen(null)}
           >
-          {/* v1.0.1 <------------------------------------------ */}
-          <PopupContent payment={selectedPayment} />
-          {/* v1.0.1 ------------------------------------------> */}
+            {/* v1.0.1 <------------------------------------------ */}
+            <PopupContent payment={selectedPayment} />
+            {/* v1.0.1 ------------------------------------------> */}
           </SidebarPopup>
         )}
       </div>

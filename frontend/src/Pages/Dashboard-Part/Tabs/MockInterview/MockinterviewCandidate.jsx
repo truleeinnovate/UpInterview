@@ -1,13 +1,9 @@
 // v1.0.0 - Ashok - fixed z-index at popup
 
 import Modal from "react-modal";
-import { ExternalLink, X, GraduationCap } from "lucide-react";
+import { ExternalLink, X, GraduationCap, Building  } from "lucide-react";
 // import Loading from '../../../../Components/Loading';
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
-// v1.0.0 <-------------------------------------------------------------------
-import { FaUniversity } from "react-icons/fa";
-import { MdHomeWork } from "react-icons/md";
-// v1.0.0 ------------------------------------------------------------------->
 Modal.setAppElement("#root");
 
 const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
@@ -140,7 +136,7 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-custom-bg rounded-lg">
-                      <MdHomeWork className="w-5 h-5" />
+                      <Building className="w-5 h-5" />
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Role</p>

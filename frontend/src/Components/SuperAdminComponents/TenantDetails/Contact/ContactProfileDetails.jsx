@@ -4,22 +4,22 @@ import { useNavigate } from "react-router-dom";
 import TimezoneSelect from "react-timezone-select";
 import DatePicker from "react-datepicker";
 import {
-  FaMinus,
-  FaPlus,
-  FaUserAlt,
-  FaIdCard,
-  FaEnvelope,
-  FaPhone,
-  FaLinkedin,
-  FaUserTie,
-  FaClock,
-  FaLanguage,
-  FaMapMarkerAlt,
-  FaInfoCircle,
-  FaTransgender,
-} from "react-icons/fa";
-import { GiCancel } from "react-icons/gi";
-import { IoIosCopy } from "react-icons/io";
+  X,
+  Copy,
+  Minus,
+  Plus,
+  User,
+  CreditCard,
+  Mail,
+  Phone,
+  Linkedin,
+  Globe,
+  MapPin,
+  Info,
+  Users,
+  Factory,
+  Briefcase,
+} from "lucide-react";
 import { useLocation } from "react-router-dom";
 import SidebarPopup from "../../SidebarPopup/SidebarPopup";
 
@@ -193,7 +193,7 @@ const ContactProfileDetails = () => {
               <div className="grid grid-cols-2 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaUserAlt className="text-gray-500" />
+                    <User className="h-5 w-5 text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">First Name</div>
                 </div>
@@ -207,7 +207,7 @@ const ContactProfileDetails = () => {
               <div className="grid grid-cols-2 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaUserAlt className="text-gray-500" />
+                    <User className="h-5 w-5 text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">Last Name</div>
                 </div>
@@ -221,7 +221,7 @@ const ContactProfileDetails = () => {
               <div className="grid grid-cols-2 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaIdCard className="text-gray-500" />
+                    <CreditCard className="h-5 w-5 text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">User Id</div>
                 </div>
@@ -235,7 +235,7 @@ const ContactProfileDetails = () => {
               <div className="grid grid-cols-2 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaTransgender className="text-gray-500" />
+                    <Users className="h-5 w-5 text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">Gender</div>
                 </div>
@@ -248,7 +248,7 @@ const ContactProfileDetails = () => {
               <div className="grid grid-cols-2 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaEnvelope className="text-gray-500" />
+                    <Mail className="h-5 w-5 text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">Email Address</div>
                 </div>
@@ -268,7 +268,7 @@ const ContactProfileDetails = () => {
               <div className="grid grid-cols-2 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaPhone className="text-gray-500" />
+                    <Phone className="h-5 w-5 text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">Phone Number</div>
                 </div>
@@ -288,7 +288,7 @@ const ContactProfileDetails = () => {
               <div className="grid grid-cols-2 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaLinkedin className="text-gray-500" />
+                    <Linkedin className="h-5 w-5 text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">LinkedIn URL</div>
                 </div>
@@ -317,7 +317,7 @@ const ContactProfileDetails = () => {
               <div className="flex justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaUserTie className="text-gray-500" />
+                    <Briefcase className="h-5 w-5 text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">Current Role</div>
                 </div>
@@ -331,7 +331,7 @@ const ContactProfileDetails = () => {
               <div className="flex justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaLanguage className="text-gray-500" />
+                    <Factory className="h-5 w-5 text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">Industry</div>
                 </div>
@@ -345,7 +345,7 @@ const ContactProfileDetails = () => {
               <div className="flex justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaClock className="text-gray-500" />
+                    <Globe className="h-5 w-5 text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">Years Of Experience</div>
                 </div>
@@ -359,7 +359,7 @@ const ContactProfileDetails = () => {
               <div className="flex justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaMapMarkerAlt className="text-gray-500" />
+                    <MapPin className="text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">Location</div>
                 </div>
@@ -373,7 +373,7 @@ const ContactProfileDetails = () => {
               <div className="flex justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
-                    <FaInfoCircle className="text-gray-500" />
+                    <Info className="h-5 w-5 text-gray-500" />
                   </div>
                   <div className="font-medium text-sm">Introduction</div>
                 </div>
@@ -561,7 +561,7 @@ const ContactProfileDetails = () => {
                                 {/* minus */}
                                 <div className="mr-5">
                                   <span>
-                                    <FaMinus className="text-2xl" />
+                                    <Minus className="text-2xl" />
                                   </span>
                                 </div>
                                 {/* end time */}
@@ -600,8 +600,8 @@ const ContactProfileDetails = () => {
                               {timeSlot.startTime &&
                               timeSlot.endTime &&
                               timeSlot.startTime !== "unavailable" ? (
-                                <GiCancel
-                                  className="text-2xl cursor-pointer"
+                                <X
+                                  className="h-4 w-4 text-2xl cursor-pointer"
                                   onClick={() =>
                                     handleRemoveTimeSlot(day, index)
                                   }
@@ -617,15 +617,15 @@ const ContactProfileDetails = () => {
                       </div>
                       {/* plus */}
                       <div>
-                        <FaPlus
-                          className="text-2xl cursor-pointer mx-5"
+                        <Plus
+                          className="h-4 w-4 cursor-pointer mx-5"
                           onClick={() => handleAddTimeSlot(day)}
                         />
                       </div>
                       {/* copy */}
                       <div className="relative">
-                        <IoIosCopy
-                          className="text-2xl cursor-pointer"
+                        <Copy
+                          className="h-4 w-4 text-2xl cursor-pointer"
                           onClick={() => handleCopy(day)}
                         />
                         {showPopup && selectedDay === day && (
@@ -641,8 +641,8 @@ const ContactProfileDetails = () => {
                               <h2 className="text-lg font-semibold mb-2 mr-2">
                                 Duplicate Time Entries
                               </h2>
-                              <GiCancel
-                                className="text-2xl cursor-pointer"
+                              <X
+                                className="h-4 w-4 text-2xl cursor-pointer"
                                 onClick={() => setShowPopup(false)}
                               />
                             </div>

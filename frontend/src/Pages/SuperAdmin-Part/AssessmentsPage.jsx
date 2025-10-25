@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
 import DataTable from "../../Components/SuperAdminComponents/common/DataTable";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
-import {
-  AiOutlinePlus,
-  AiOutlineFilter,
-  AiOutlineEye,
-  AiOutlineEdit,
-} from "react-icons/ai";
+import { Plus, Filter, Eye, Pencil } from "lucid-react";
 
 function AssessmentsPage() {
   useEffect(() => {
@@ -132,10 +127,10 @@ function AssessmentsPage() {
       render: (row) => (
         <div className="flex space-x-2">
           <button className="p-2 text-primary-600 hover:text-primary-900 rounded-full hover:bg-primary-50">
-            <AiOutlineEye size={18} />
+            <Eye className="h-4 w-4" />
           </button>
           <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50">
-            <AiOutlineEdit size={18} />
+            <Pencil className="h-4 w-4" />
           </button>
         </div>
       ),
@@ -148,11 +143,11 @@ function AssessmentsPage() {
         <h1 className="text-2xl font-bold text-gray-900">Assessments</h1>
         <div className="flex space-x-2">
           <button className="btn-secondary">
-            <AiOutlineFilter className="mr-2" />
+            <Filter className="mr-2 h-4 w-4" />
             Filter
           </button>
           <button className="btn-primary">
-            <AiOutlinePlus className="mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Create Assessment
           </button>
         </div>

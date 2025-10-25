@@ -4,7 +4,7 @@ import { Outlet } from "react-router-dom";
 import MetricsOverview from "../../Components/SuperAdminComponents/Dashboard/MetricsOverview";
 import RecentActivity from "../../Components/SuperAdminComponents/Dashboard/RecentActivity";
 import TenantMetricsChart from "../../Components/SuperAdminComponents/Dashboard/TenantMetricsChart";
-import { AiOutlineWarning } from "react-icons/ai";
+import { AlertTriangle } from "lucide-react";
 
 function Dashboard() {
   // const { user, hasRole } = useAuth();
@@ -18,7 +18,7 @@ function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <div className="flex items-center">
-            <AiOutlineWarning className="text-yellow-500 mr-2" size={24} />
+            <AlertTriangle className="text-yellow-500 mr-2 h-5 w-5" />
             <h3 className="text-sm font-medium text-yellow-800">
               System Health
             </h3>
@@ -200,8 +200,8 @@ function Dashboard() {
 
       <MetricsOverview />
 
-      { renderSuperAdminContent()}
-      { renderSupportContent()}
+      {renderSuperAdminContent()}
+      {renderSupportContent()}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
         <TenantMetricsChart />

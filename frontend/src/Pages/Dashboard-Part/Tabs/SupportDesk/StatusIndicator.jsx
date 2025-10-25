@@ -1,14 +1,24 @@
 /* eslint-disable react/prop-types */
-import { FaCheckCircle, FaCircle } from "react-icons/fa";
+import { CheckCircle, Circle } from "lucide-react";
 
 function StatusIndicator({ currentStatus }) {
-  const statusSteps = ["", "New", "Assigned", "Inprogress", "Resolved", "Close"];
+  const statusSteps = [
+    "",
+    "New",
+    "Assigned",
+    "Inprogress",
+    "Resolved",
+    "Close",
+  ];
   const currentStepIndex = statusSteps.indexOf(currentStatus);
 
   return (
     <div className="flex justify-center items-center w-full  mx-auto mt-8 mb-8">
       {statusSteps.map((step, index) => (
-        <div key={step || `step-${index}`} className="flex items-center flex-1 last:flex-initial">
+        <div
+          key={step || `step-${index}`}
+          className="flex items-center flex-1 last:flex-initial"
+        >
           <div className="flex flex-col items-center relative">
             {/* Status Circle */}
             <div
@@ -24,9 +34,9 @@ function StatusIndicator({ currentStatus }) {
             >
               {/* First circle has no tick */}
               {index === 0 ? (
-                <FaCircle className="text-teal-600 h-5 w-5 text-base" />
+                <Circle className="text-teal-600 h-5 w-5 text-base" />
               ) : index < currentStepIndex ? (
-                <FaCheckCircle className="text-teal-600 h-5 w-5 text-base" />
+                <CheckCircle className="text-teal-600 h-5 w-5 text-base" />
               ) : index === currentStepIndex ? (
                 <div className="h-5 w-5 rounded-full bg-orange-500"></div>
               ) : (

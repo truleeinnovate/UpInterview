@@ -29,12 +29,6 @@ import {
   // User,
   // Calendar,
 } from "lucide-react";
-// import { LiaGenderlessSolid } from "react-icons/lia";
-// import {
-//   AiOutlineDownload,
-//   AiOutlineMail,
-//   AiOutlineEdit,
-// } from "react-icons/ai";
 // import axios from "axios";
 // import { config } from "../../../config.js";
 import AddInvoiceForm from "./Invoice/AddInvoiceForm.jsx";

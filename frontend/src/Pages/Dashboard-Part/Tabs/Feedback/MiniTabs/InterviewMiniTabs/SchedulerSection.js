@@ -5,11 +5,8 @@
 /* eslint-disable no-lone-blocks */
 import React, { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { FaAngleDown, FaAngleUp, FaTrash } from "react-icons/fa";
 import Popup from "reactjs-popup";
-import { SlLike } from "react-icons/sl";
-import { SlDislike } from "react-icons/sl";
-import { IoIosCloseCircleOutline } from "react-icons/io";
+import { ThumbsUp, ThumbsDown, XCircle } from "lucide-react";
 
 // Define dislike options
 const dislikeOptions = [
@@ -390,7 +387,7 @@ const SchedulerSectionComponent = ({
             <div className="flex justify-between items-center mb-2">
               <h1>Tell us more :</h1>
               <button onClick={() => setDislikeQuestionId(null)}>
-                <IoIosCloseCircleOutline />
+                <XCircle className="h-4 w-4" />
               </button>
             </div>
             <ul className="flex flex-wrap gap-3">
@@ -564,7 +561,7 @@ const SchedulerSectionComponent = ({
                       }`}
                       onClick={() => handleLikeToggle(question._id)}
                     >
-                      <SlLike />
+                      <ThumbsUp className="h-4 w-4" />
                     </span>
                     <span
                       // className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
@@ -576,7 +573,7 @@ const SchedulerSectionComponent = ({
                       style={{ cursor: "pointer" }}
                       onClick={() => handleDislikeToggle(question._id)}
                     >
-                      <SlDislike />
+                      <ThumbsDown className="h-4 w-4" />
                     </span>
                   </>
                 )}

@@ -1,4 +1,4 @@
-import { FaCheckCircle, FaCircle } from "react-icons/fa";
+import { CheckCircle, Circle } from "lucide-react";
 
 function InterviewStatusIndicator({ currentStatus, isExpanded }) {
   const getStatusSteps = (status) => {
@@ -6,7 +6,10 @@ function InterviewStatusIndicator({ currentStatus, isExpanded }) {
     if (status === "approved") {
       return baseSteps;
     } else if (status === "rejected" || status === "suspended") {
-      return [...baseSteps.slice(0, 3), status === "rejected" ? "Rejected" : "Suspended"];
+      return [
+        ...baseSteps.slice(0, 3),
+        status === "rejected" ? "Rejected" : "Suspended",
+      ];
     } else {
       return [...baseSteps.slice(0, 3), "Pending"];
     }
@@ -14,11 +17,11 @@ function InterviewStatusIndicator({ currentStatus, isExpanded }) {
 
   // Map lowercase status to display format
   const statusDisplayMap = {
-    "new": "New",
-    "underReview": "Under Review",
-    "approved": "Approved",
-    "rejected": "Rejected",
-    "suspended": "Suspended"
+    new: "New",
+    underReview: "Under Review",
+    approved: "Approved",
+    rejected: "Rejected",
+    suspended: "Suspended",
   };
 
   const displayStatus = statusDisplayMap[currentStatus] || currentStatus;
@@ -56,13 +59,17 @@ function InterviewStatusIndicator({ currentStatus, isExpanded }) {
               }`}
             >
               {index === 0 ? (
-                <FaCircle className={`text-custom-blue ${iconSize}`} />
+                <Circle className={`h-4 w-4 text-custom-blue ${iconSize}`} />
               ) : isFinalRed && index === statusSteps.length - 1 ? (
-                <FaCheckCircle className={`text-red-600 ${iconSize}`} />
+                <CheckCircle className={`h-4 w-4 text-red-600 ${iconSize}`} />
               ) : currentStatus === "approved" && index > 0 ? (
-                <FaCheckCircle className={`text-custom-blue ${iconSize}`} />
+                <CheckCircle
+                  className={`h-4 w-4 text-custom-blue ${iconSize}`}
+                />
               ) : index < currentStepIndex ? (
-                <FaCheckCircle className={`text-custom-blue ${iconSize}`} />
+                <CheckCircle
+                  className={`h-4 w-4 text-custom-blue ${iconSize}`}
+                />
               ) : index === currentStepIndex ? (
                 <div className={`${iconSize} rounded-full bg-orange-500`} />
               ) : (

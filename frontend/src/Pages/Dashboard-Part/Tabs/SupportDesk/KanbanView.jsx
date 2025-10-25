@@ -5,10 +5,9 @@
 // v1.0.2 - Ashok - Improved kanban
 
 import { motion } from "framer-motion";
-import { FaEye, FaPencilAlt } from "react-icons/fa";
 import { format, isValid, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { Briefcase } from "lucide-react";
+import { Eye, Edit, Briefcase } from "lucide-react";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 import { formatDateTime } from "../../../../utils/dateFormatter";
 
@@ -246,7 +245,7 @@ const KanbanView = ({
                           title="View Details"
                           className="p-2 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
                         >
-                          <FaEye className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </motion.button>
                         {(effectiveRole === "Admin" ||
                           effectivePermissions_RoleName ===
@@ -265,7 +264,7 @@ const KanbanView = ({
                             title="Edit Ticket"
                             className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors"
                           >
-                            <FaPencilAlt className="w-4 h-4" />
+                            <Edit className="w-4 h-4" />
                           </motion.button>
                         )}
                       </>

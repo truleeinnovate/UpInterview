@@ -7,18 +7,19 @@
 import React, {
   useState,
   useEffect,
-  useRef,
-  useCallback,
   useMemo,
 } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
-import { FaTrash, FaPlus } from "react-icons/fa";
-import { FileText, Plus, Trash2, X, Video } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  FileText,
+  Plus,
+  X,
+  Video,
+  ThumbsUp,
+  ThumbsDown,
+  XCircle,
+} from "lucide-react";
 import Popup from "reactjs-popup";
-import { SlLike } from "react-icons/sl";
-import { SlDislike } from "react-icons/sl";
-import { IoIosCloseCircleOutline } from "react-icons/io";
 import QuestionBank from "../Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx";
 import { config } from "../../config.js";
 import Cookies from "js-cookie";
@@ -763,7 +764,7 @@ const FeedbackForm = ({
             <div className="flex justify-between items-center mb-2">
               <h1>Tell us more :</h1>
               <button onClick={() => setDislikeQuestionId(null)}>
-                <IoIosCloseCircleOutline />
+                <XCircle className="h-4 w-4" />
               </button>
             </div>
             <ul className="flex flex-wrap gap-3">
@@ -1581,7 +1582,7 @@ const FeedbackForm = ({
                   title="Add Question from Question Bank"
                   // disabled={decodedData?.schedule}
                 >
-                  <FaPlus className="text-sm" />
+                  <Plus className="text-sm" />
                   <span>Add</span>
                   <span className="sm:hidden inline">Question</span>
                 </button>
@@ -1647,7 +1648,7 @@ const FeedbackForm = ({
                           }
                           disabled={!isViewMode}
                         >
-                          <SlLike />
+                          <ThumbsUp className="h-4 w-4" />
                         </span>
                         <span
                           className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
@@ -1663,7 +1664,7 @@ const FeedbackForm = ({
                           }
                           disabled={!isViewMode}
                         >
-                          <SlDislike />
+                          <ThumbsDown className="h-4 w-4" />
                         </span>
                       </div>
                       <div>
@@ -1764,7 +1765,7 @@ const FeedbackForm = ({
                             )
                           }
                         >
-                          <SlLike />
+                          <ThumbsUp className="h-4 w-4" />
                         </span>
                         <span
                           className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
@@ -1779,7 +1780,7 @@ const FeedbackForm = ({
                             )
                           }
                         >
-                          <SlDislike />
+                          <ThumbsDown className="h-4 w-4" />
                         </span>
                       </div>
                     </div>

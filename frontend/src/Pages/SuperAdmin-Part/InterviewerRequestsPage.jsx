@@ -508,6 +508,16 @@ function InterviewerRequestsPage() {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
+  const formatStatus = (status = "") => {
+    return status
+      .toString()
+      .trim()
+      .replace(/[_\s-]+/g, " ") // replace underscores, hyphens, or multiple spaces with single space
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   const tableColumns = [
     {
       key: "name",
@@ -558,7 +568,7 @@ function InterviewerRequestsPage() {
     {
       key: "status",
       header: "Status",
-      render: (value, row) => <StatusBadge status={row.status} />,
+      render: (value, row) => <StatusBadge status={formatStatus(row.status)} />,
     },
     {
       key: "appliedDate",
