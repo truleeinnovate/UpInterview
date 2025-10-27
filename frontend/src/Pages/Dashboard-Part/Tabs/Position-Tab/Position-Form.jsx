@@ -7,6 +7,7 @@
 // v1.0.4 - Ashok - Fixed style issue
 // v1.0.5 - Ranjith - rounds shown as horizontal stepper pathway
 // v1.0.6 - Ashok - Reduced horizontal padding (style issue)
+// v1.0.7 - Ashok - Improved scroll functionality
 
 import { useEffect, useState, useRef } from "react";
 import AssessmentDetails from "./AssessmentType";
@@ -222,7 +223,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     .filter((t) => t?.rounds?.length > 0 && t?.status === "active")
     .map((t) => ({ value: t._id, label: t.title }));
 
-
   // Generic change handler for shared form fields + live cross-field validation
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -402,8 +402,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       setIsEdit(true);
       console.log("selectedPosition", selectedPosition);
       const matchingTemplate = templatesData.find(
-        (template) =>
-          template.title === selectedPosition?.selectedTemplete
+        (template) => template.title === selectedPosition?.selectedTemplete
       );
       //setPositionId(id);
 
@@ -505,11 +504,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       setShowSkillValidation(true);
     }
 
+    setErrors({});
+
     if (!skipValidation) {
       const { formIsValid, newErrors } = validateForm(
         dataToSubmit,
-        entries,
-        dataToSubmit.rounds
+        entries || [],
+        dataToSubmit.rounds || []
       );
       console.log("formIsValid", formIsValid);
       console.log("newErrors", newErrors);
@@ -529,7 +530,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // ...dataToSubmit,
       Location: dataToSubmit.Location,
       title: dataToSubmit.title,
-      NoofPositions: dataToSubmit?.NoofPositions ? parseInt(dataToSubmit?.NoofPositions) : null,
+      NoofPositions: dataToSubmit?.NoofPositions
+        ? parseInt(dataToSubmit?.NoofPositions)
+        : null,
       companyname: dataToSubmit.companyName,
       ...(dataToSubmit.minexperience && {
         minexperience: parseInt(dataToSubmit.minexperience),
@@ -558,7 +561,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // ✅ fix naming mismatch (backend expects selectedTemplete)
       templateId: dataToSubmit.template?._id || null,
       rounds: dataToSubmit?.template?.rounds || [],
-      type: dataToSubmit?.template?.type || ""
+      type: dataToSubmit?.template?.type || "",
     };
     console.log("basicdetails", basicdetails);
 

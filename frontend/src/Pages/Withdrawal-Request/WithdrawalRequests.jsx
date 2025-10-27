@@ -744,18 +744,21 @@ const WithdrawalRequests = () => {
       {/* Main Content */}
 
       {view === "table" ? (
-        <TableView
-          data={filteredRequests.slice(
-            currentPage * ITEMS_PER_PAGE,
-            (currentPage + 1) * ITEMS_PER_PAGE
-          )}
-          columns={columns}
-          onRowClick={handleRowClick}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          isLoading={isLoading}
-          itemsPerPage={ITEMS_PER_PAGE}
-        />
+        <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+          <TableView
+            data={filteredRequests.slice(
+              currentPage * ITEMS_PER_PAGE,
+              (currentPage + 1) * ITEMS_PER_PAGE
+            )}
+            columns={columns}
+            onRowClick={handleRowClick}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            isLoading={isLoading}
+            itemsPerPage={ITEMS_PER_PAGE}
+            customHeight="h-[calc(100vh-20.8rem)]"
+          />
+        </div>
       ) : (
         <KanbanView
           withdrawalRequests={filteredRequests}

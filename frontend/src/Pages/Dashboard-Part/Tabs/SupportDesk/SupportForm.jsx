@@ -6,6 +6,7 @@
 // v1.0.3 - Ashraf - Added subject field,changed description length to 1000,modified issues types added more types
 // v1.0.4 - Ashok - Improved responsiveness and added common code for popup
 // v1.0.5 - Ashok - Fixed style issues
+// v1.0.6 - Ashok - Commented scroll to first error function call temporarily
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
@@ -232,10 +233,10 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
 
         setErrors(newErrors);
         if (!isValid) {
-            scrollToFirstError(newErrors, fieldRefsMap);
+            // scrollToFirstError(newErrors, fieldRefsMap);
         }
         return isValid;
-    }, [selectedIssue, otherIssue, description, subject, fieldRefsMap]);
+    }, [selectedIssue, otherIssue, description, subject]);
 
     const toggleFullWidth = () => {
         setIsFullWidth(!isFullWidth);

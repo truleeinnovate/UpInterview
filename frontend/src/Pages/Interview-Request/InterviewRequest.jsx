@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - changed some fields at table and added cards at top section
+// v1.0.1 - Ashok - commented top two sections and adjusted table height
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
@@ -381,16 +382,16 @@ const InternalRequest = () => {
     //   icon: <requestCircle className="w-4 h-4 text-purple-600" />,
     //   onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
     // },
-    ...(superAdminPermissions?.InterviewRequest?.Edit
-      ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => navigate(`edit/${row._id}`),
-          },
-        ]
-      : []),
+    // ...(superAdminPermissions?.InterviewRequest?.Edit
+    //   ? [
+    //       {
+    //         key: "edit",
+    //         label: "Edit",
+    //         icon: <Pencil className="w-4 h-4 text-green-600" />,
+    //         onClick: (row) => navigate(`edit/${row._id}`),
+    //       },
+    //     ]
+    //   : []),
     // {
     //   key: "resend-link",
     //   label: "Resend Link",
@@ -431,16 +432,16 @@ const InternalRequest = () => {
         ]
       : []),
 
-    ...(superAdminPermissions?.InterviewRequest?.Edit
-      ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => navigate(`edit/${row._id}`),
-          },
-        ]
-      : []),
+    // ...(superAdminPermissions?.InterviewRequest?.Edit
+    //   ? [
+    //       {
+    //         key: "edit",
+    //         label: "Edit",
+    //         icon: <Pencil className="w-4 h-4 text-green-600" />,
+    //         onClick: (row) => navigate(`edit/${row._id}`),
+    //       },
+    //     ]
+    //   : []),
     // {
     //   key: "login-as-user",
     //   label: "Login as User",
@@ -715,7 +716,7 @@ const InternalRequest = () => {
       <div className="fixed top-12 right-0 left-0 sm:top-8 md:top-8 lg:top-12 xl:top-12 2xl:top-12">
         <div className="flex flex-col justify-between p-4 w-full">
           {/* v1.0.0 <--------------------------------------------------------------------------- */}
-          <main className="flex justify-between items-center">
+          {/* <main className="flex justify-between items-center">
             <div className="flex flex-col items-center w-full">
               <div className="flex self-end rounded-lg border border-gray-300 p-1 mb-4 mt-2">
                 <button
@@ -785,7 +786,7 @@ const InternalRequest = () => {
                 }
               </div>
             </div>
-          </main>
+          </main> */}
           {/* v1.0.0 --------------------------------------------------------------------------------> */}
           <div className="mt-3">
             <span className="text-2xl font-semibold text-custom-blue">
@@ -812,7 +813,7 @@ const InternalRequest = () => {
             filterIconRef={filterIconRef} // Pass ref to Toolbar
           />
         </div>
-        <div className="fixed left-0 right-0 mx-auto z-10 sm:top-96 md:top-96 lg:top-80 xl:top-80 2xl:top-80">
+        <div className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
           <div className="sm:px-0">
             <motion.div className="bg-white">
               {view === "table" ? (

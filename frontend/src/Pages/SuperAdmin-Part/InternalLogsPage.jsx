@@ -733,13 +733,13 @@ function InternalLogsPage() {
             </button>
           </div> */}
         </div>
-       
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Logs</div>
             <div className="text-xl font-semibold">{logs?.length}</div>
           </div>
-           {/* v1.0.0 <---------------------------------------------------------------------------------------------------------------------- */}
+          {/* v1.0.0 <---------------------------------------------------------------------------------------------------------------------- */}
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Success</div>
             <div className="text-xl font-semibold text-success-600">
@@ -787,13 +787,14 @@ function InternalLogsPage() {
             <motion.div className="bg-white">
               <div className="relative w-full">
                 {view === "table" ? (
-                  <div className="w-full">
+                  <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                     <TableView
                       data={currentFilteredRows}
                       columns={tableColumns}
                       loading={isLoading}
                       actions={tableActions}
                       emptyState="No logs found."
+                      customHeight="h-[calc(100vh-16.5rem)]"
                     />
                   </div>
                 ) : (
