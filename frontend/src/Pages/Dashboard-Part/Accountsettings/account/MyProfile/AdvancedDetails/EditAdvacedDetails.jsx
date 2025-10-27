@@ -90,17 +90,17 @@ const EditAdvacedDetails = ({
 
   // Get the appropriate profile data based on context
   const profileData = useMemo(() => {
-    if (from === "outsource-interviewer") {
-      // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
-      // Try to find the interviewer by matching the contactId._id with resolvedId
-      const interviewer = outsourceInterviewers?.find(
-        (i) => i.contactId?._id === resolvedId
-      );
-      // Return the Contact object which has the actual profile data
-      return interviewer?.contactId || null;
-    }
+    // if (from === "outsource-interviewer") {
+    //   // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
+    //   // Try to find the interviewer by matching the contactId._id with resolvedId
+    //   const interviewer = outsourceInterviewers?.find(
+    //     (i) => i.contactId?._id === resolvedId
+    //   );
+    //   // Return the Contact object which has the actual profile data
+    //   return interviewer?.contactId || null;
+    // }
     return userProfile;
-  }, [from, outsourceInterviewers, resolvedId, userProfile]);
+  }, [from,  resolvedId, userProfile]);
 
   const isLoading =
     from === "my-profile" ? isUserLoading : !outsourceInterviewers;
@@ -155,7 +155,7 @@ const EditAdvacedDetails = ({
   };
 
   const handleCloseModal = () => {
-    if (from === "users") {
+    if (from === "users" || from === "outsource-interviewer") {
       setAdvacedEditOpen(false);
     } else {
       // navigate(`${basePath}/my-profile/advanced`);
@@ -195,20 +195,18 @@ const EditAdvacedDetails = ({
       let updateId;
       if (from === "outsource-interviewer") {
         // For outsource interviewers, profileData is the Contact object
-        if (!profileData || !profileData._id) {
-          console.error("Profile data not loaded or missing ID:", {
-            profileData,
-          });
+        if (!profileData || !profileData?.contactId) {
+      
           notify.error(
             "Profile data is not loaded. Please wait and try again."
           );
           setLoading(false);
           return;
         }
-        updateId = profileData._id;
+        updateId = profileData?.contactId;
       } else {
         // For regular users (my-profile), profileData is the User object with a contactId field
-        if (!profileData || !profileData.contactId) {
+        if (!profileData || !profileData?.contactId) {
           console.error("Profile data not loaded or missing contactId:", {
             profileData,
           });
@@ -218,7 +216,7 @@ const EditAdvacedDetails = ({
           setLoading(false);
           return;
         }
-        updateId = profileData.contactId; // Use contactId for regular users
+        updateId = profileData?.contactId; // Use contactId for regular users
       }
 
       const response = await updateContactDetail.mutateAsync({
@@ -251,7 +249,7 @@ const EditAdvacedDetails = ({
         console.error("Error saving changes:", error);
         setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
       }
-      // console.error("Error updating advanced details:", error);
+  
     } finally {
       setLoading(false);
     }

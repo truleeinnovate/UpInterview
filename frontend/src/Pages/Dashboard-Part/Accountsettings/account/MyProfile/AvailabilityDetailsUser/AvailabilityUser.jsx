@@ -15,7 +15,7 @@ const AvailabilityUser = ({
   setAvailabilityEditOpen,
   isFullScreen,
   onEditClick,
-  externalData = null
+  // externalData = null
 }) => {
   // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
@@ -43,9 +43,7 @@ const AvailabilityUser = ({
   const { userProfile } = useUserProfile(usersId ? usersId :"");
   
   // Use external data if provided for the availability hook
-  const availabilityId = externalData 
-    ? (externalData?.contactId || externalData?._id)
-    : (userProfile?.contactId || userProfile?._id);
+  const availabilityId =  userProfile?.contactId || userProfile?._id;
     
   const {
     availability,
@@ -61,12 +59,13 @@ const AvailabilityUser = ({
 
   useEffect(() => {
     // Use external data if provided, otherwise use userProfile from hook
-    if (externalData) {
-      setContactData(externalData);
-    } else if (userProfile && userProfile._id) {
+    // if (externalData) {
+    //   setContactData(externalData);
+    // } else
+       if (userProfile && userProfile._id) {
       setContactData(userProfile);
     }
-  }, [ownerId, userProfile, externalData]);
+  }, [ownerId, userProfile,mode]);
 
   useEffect(() => {
     if (!availability) return;
@@ -235,7 +234,7 @@ const AvailabilityUser = ({
               return;
             }
             
-            if (mode === "users") {
+            if (mode === "users" || mode === "outsource") {
               // Pass availability data to the parent component
               if (onEditClick) {
                 onEditClick({
@@ -247,21 +246,23 @@ const AvailabilityUser = ({
                 });
               }
               setAvailabilityEditOpen(true);
-            } else if (externalData) {
-              // Navigate to outsource interviewer edit page
-              navigate(
-                `/outsource-interviewers/edit/availability/${editId}`,
-                {
-                  state: {
-                    availabilityData: availability,
-                    userProfile: externalData,
-                    times: times,
-                    selectedTimezone: selectedTimezone,
-                    selectedOption: selectedOption,
-                  },
-                }
-              );
-            } else {
+            } 
+            // else if (externalData) {
+            //   // Navigate to outsource interviewer edit page
+            //   navigate(
+            //     `/outsource-interviewers/edit/availability/${editId}`,
+            //     {
+            //       state: {
+            //         availabilityData: availability,
+            //         userProfile: externalData,
+            //         times: times,
+            //         selectedTimezone: selectedTimezone,
+            //         selectedOption: selectedOption,
+            //       },
+            //     }
+            //   );
+            // } 
+            else {
               // Navigate to my profile edit page
               navigate(
                 `/account-settings/my-profile/availability-edit/${editId}`,

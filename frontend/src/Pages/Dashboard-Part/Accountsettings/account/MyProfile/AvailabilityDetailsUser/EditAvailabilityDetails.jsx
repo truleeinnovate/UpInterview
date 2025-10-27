@@ -224,7 +224,7 @@ const EditAvailabilityDetails = ({
       }
     };
     fetchData();
-  }, [resolvedId, outsourceInterviewers,from, userProfile, availabilityDataFromProps]);
+  }, [resolvedId,from, userProfile, availabilityDataFromProps]);
 
   const handleOptionClick = (option) => {
     setFormData((prev) => ({
@@ -248,10 +248,8 @@ const EditAvailabilityDetails = ({
     }));
   };
 
-  const [isFullScreen, setIsFullScreen] = useState(false);
-
   const handleCloseModal = () => {
-    if (from === "users") {
+    if (from === "users" || from === "outsource-interviewer") {
       setAvailabilityEditOpen(false);
     } else {
       // navigate('/account-settings/my-profile/availability');
@@ -311,7 +309,7 @@ const EditAvailabilityDetails = ({
       let updateId;
       if (from === "outsource-interviewer") {
         // For outsource interviewers, profileData is the Contact object
-        if (!profileData || !profileData._id) {
+        if (!profileData || !profileData?.contactId) {
           console.error("Profile data not loaded or missing ID:", {
             profileData,
           });
@@ -320,10 +318,10 @@ const EditAvailabilityDetails = ({
           );
           return;
         }
-        updateId = profileData._id;
+        updateId = profileData?.contactId;
       } else {
         // For regular users (my-profile), profileData is the User object with a contactId field
-        if (!profileData || !profileData.contactId) {
+        if (!profileData || !profileData?.contactId) {
           console.error("Profile data not loaded or missing contactId:", {
             profileData,
           });
@@ -332,7 +330,7 @@ const EditAvailabilityDetails = ({
           );
           return;
         }
-        updateId = profileData.contactId; // Use contactId for regular users
+        updateId = profileData?.contactId; // Use contactId for regular users
       }
 
       const response = await updateContactDetail.mutateAsync({

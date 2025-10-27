@@ -162,12 +162,14 @@ const formatKey = contactData?.interviewFormatWeOffer ? 'interviewFormatWeOffer'
               return;
             }
 
-            if (mode === "users") {
+            if (mode === "users" || mode === "outsource") {
               setInterviewEditOpen(true);
-            } else if (externalData) {
-              // Navigate to outsource interviewer edit page
-              navigate(`/outsource-interviewers/edit/interview/${editId}`);
-            } else {
+            } 
+            // else if (externalData) {
+            //   // Navigate to outsource interviewer edit page
+            //   navigate(`/outsource-interviewers/edit/interview/${editId}`);
+            // }
+             else {
               // Navigate to my profile edit page
               navigate(`/account-settings/my-profile/interview-edit/${editId}`);
             }

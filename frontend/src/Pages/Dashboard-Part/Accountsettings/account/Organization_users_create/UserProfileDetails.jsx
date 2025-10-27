@@ -7,7 +7,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { X, ArrowLeft, Edit2, Minus, Minimize, Expand } from "lucide-react";
 import Modal from "react-modal";
 import classNames from "classnames";
 // v1.0.0 <--------------------------------------------------------------
@@ -24,10 +23,7 @@ import BasicDetailsEditPage from "../MyProfile/BasicDetails/BasicDetailsEditPage
 import EditAdvacedDetails from "../MyProfile/AdvancedDetails/EditAdvacedDetails";
 import EditInterviewDetails from "../MyProfile/InterviewDetails/EditInterviewDetails";
 import EditAvailabilityDetails from "../MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails";
-import {
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
-} from "@heroicons/react/24/outline";
+
 // import ConfirmationModal from './ConfirmModel';
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 
@@ -77,7 +73,7 @@ const ConfirmationModal = ({
 Modal.setAppElement("#root");
 
 const UserProfileDetails = ({ type }) => {
-  console.log("type in UserProfileDetails", type);
+
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -95,7 +91,6 @@ const UserProfileDetails = ({ type }) => {
   const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
   const [availabilityData, setAvailabilityData] = useState(null);
 
-  console.log("userData", userData);
 
   useEffect(() => {
     document.title = "User Profile Details";
@@ -119,7 +114,7 @@ const UserProfileDetails = ({ type }) => {
   };
 
   const handleAvailabilityEditClick = (data) => {
-    console.log("Availability edit clicked with data:", data);
+   
     setAvailabilityData(data);
     setAvailabilityEditOpen(true);
   };
@@ -184,7 +179,7 @@ const UserProfileDetails = ({ type }) => {
         { id: "advanced", label: "Advanced Details" },
       ];
 
-  console.log("userData", userData);
+
 
   const renderBasicDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
