@@ -79,17 +79,21 @@ const EditAvailabilityDetails = ({
 
   // Get the appropriate profile data based on context
   const profileData = useMemo(() => {
-    if (from === "outsource-interviewer") {
-      // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
-      // Try to find the interviewer by matching the contactId._id with resolvedId
-      const interviewer = outsourceInterviewers?.find(
-        (i) => i.contactId?._id === resolvedId
-      );
-      // Return the Contact object which has the actual profile data
-      return interviewer?.contactId || null;
-    }
+    // if (from === "outsource-interviewer") {
+    //   // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
+    //   // Try to find the interviewer by matching the contactId._id with resolvedId
+    //   const interviewer = outsourceInterviewers?.find(
+    //     (i) => i.contactId?._id === resolvedId
+    //   );
+    //   // Return the Contact object which has the actual profile data
+    //   return interviewer?.contactId || null;
+    // }
     return userProfile;
-  }, [from, outsourceInterviewers, resolvedId, userProfile]);
+  }, [from, resolvedId, userProfile]);
+  console.log("profileData resolvedId", resolvedId);
+
+ console.log("profileData EditAvailabilityDetails", profileData);
+ console.log("availabilityDataFromProps EditAvailabilityDetails", userProfile);
 
   // const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
@@ -105,6 +109,8 @@ const EditAvailabilityDetails = ({
   //   Saturday: [{ startTime: null, endTime: null }],
   //   Sunday: [{ startTime: null, endTime: null }],
   // };
+  
+  
   const [times, setTimes] = useState({
     Sun: [{ startTime: null, endTime: null }],
     Mon: [{ startTime: null, endTime: null }],
@@ -183,9 +189,10 @@ const EditAvailabilityDetails = ({
           }
 
           if (availabilityDataFromProps.selectedOption) {
-            durationData = availabilityDataFromProps.selectedOption;
+            durationData = availabilityDataFromProps.selectedOption ;
           }
         } else {
+          console.log("Using original logic",userProfileData);
           // Fallback to original logic
           const days = userProfileData?.availability?.[0]?.availability || [];
           if (Array.isArray(days)) {
@@ -217,7 +224,7 @@ const EditAvailabilityDetails = ({
       }
     };
     fetchData();
-  }, [resolvedId, userProfile, availabilityDataFromProps]);
+  }, [resolvedId, outsourceInterviewers,from, userProfile, availabilityDataFromProps]);
 
   const handleOptionClick = (option) => {
     setFormData((prev) => ({

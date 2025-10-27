@@ -267,9 +267,9 @@ const EditInterviewDetails = ({
     try {
       const token = localStorage.getItem("token");
       const baseUrl = process.env.REACT_APP_API_URL || "";
-       const slug = techName
-                .replace(/\s+/g, '')  // Remove spaces
-                .replace(/[^a-zA-Z0-9]/g, '');  // Remove special chars if any (optional, adjust as needed)
+      const slug = techName
+        .replace(/\s+/g, '')  // Remove spaces
+        .replace(/[^a-zA-Z0-9]/g, '');  // Remove special chars if any (optional, adjust as needed)
 
       const encodedTech = encodeURIComponent(slug);
       const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
@@ -650,25 +650,23 @@ const EditInterviewDetails = ({
         console.log("cleanFormData", cleanFormData);
 
         try {
-            // Both contexts use the same endpoint since outsource interviewers are Contact records
-            // Determine the correct ID to use for the update
-            let updateId;
-            if (from === "outsource-interviewer") {
-                // For outsource interviewers, profileData is the Contact object
-                if (!profileData || !profileData._id) {
-                    console.error("Profile data not loaded or missing ID:", { profileData });
-                    notify.error("Profile data is not loaded. Please wait and try again.");
-                    return;
-                }
-                updateId = profileData._id;
-            } else {
-                // For regular users (my-profile), profileData is the User object with a contactId field
-                if (!profileData || !profileData.contactId) {
-                    console.error("Profile data not loaded or missing contactId:", { profileData });
-                    notify.error("Profile data is not loaded. Please wait and try again.");
-                    return;
-                }
-                updateId = profileData.contactId; // Use contactId for regular users
+          // Both contexts use the same endpoint since outsource interviewers are Contact records
+          // Determine the correct ID to use for the update
+          let updateId;
+          if (from === "outsource-interviewer") {
+            // For outsource interviewers, profileData is the Contact object
+            if (!profileData || !profileData._id) {
+              console.error("Profile data not loaded or missing ID:", { profileData });
+              notify.error("Profile data is not loaded. Please wait and try again.");
+              return;
+            }
+            updateId = profileData._id;
+          } else {
+            // For regular users (my-profile), profileData is the User object with a contactId field
+            if (!profileData || !profileData.contactId) {
+              console.error("Profile data not loaded or missing contactId:", { profileData });
+              notify.error("Profile data is not loaded. Please wait and try again.");
+              return;
             }
 
             const response = await updateContactDetail.mutateAsync({
@@ -688,22 +686,23 @@ const EditInterviewDetails = ({
                     onSuccess();
                 }
             }
+          }
         } catch (error) {
-            console.error("Error updating interview details:", error);
+          console.error("Error updating interview details:", error);
 
-            if (error.response) {
-                if (error.response.status === 400) {
-                    const backendErrors = error.response.data.errors || {};
-                    console.log("backendErrors", backendErrors);
-                    setErrors(backendErrors);
-                } else {
-                    notify.error("Error updating interview details. Please try again.");
-                    setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
-                }
+          if (error.response) {
+            if (error.response.status === 400) {
+              const backendErrors = error.response.data.errors || {};
+              console.log("backendErrors", backendErrors);
+              setErrors(backendErrors);
             } else {
-                notify.error("Network error. Please check your connection and try again.");
-                setErrors((prev) => ({ ...prev, form: "Network error" }));
+              notify.error("Error updating interview details. Please try again.");
+              setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
             }
+          } else {
+            notify.error("Network error. Please check your connection and try again.");
+            setErrors((prev) => ({ ...prev, form: "Network error" }));
+          }
         }
       }
     } catch (error) {
@@ -866,13 +865,11 @@ const EditInterviewDetails = ({
       const numValue = parseInt(numericValue, 10);
 
       if (numValue < minRate) {
-        error = `Rate cannot be less than ${
-          currency === "inr" ? "₹" : "$"
-        }${minRate}`;
+        error = `Rate cannot be less than ${currency === "inr" ? "₹" : "$"
+          }${minRate}`;
       } else if (numValue > maxRate) {
-        error = `Rate cannot exceed ${
-          currency === "inr" ? "₹" : "$"
-        }${maxRate}`;
+        error = `Rate cannot exceed ${currency === "inr" ? "₹" : "$"
+          }${maxRate}`;
       }
     }
 
@@ -1350,9 +1347,8 @@ const EditInterviewDetails = ({
                                 <span>
                                   Range: ${getRateRanges("Junior").usd.min}-$
                                   {getRateRanges("Junior").usd.max} (
-                                  {`₹${getRateRanges("Junior").inr.min}–${
-                                    getRateRanges("Junior").inr.max
-                                  }`}
+                                  {`₹${getRateRanges("Junior").inr.min}–${getRateRanges("Junior").inr.max
+                                    }`}
                                   )
                                 </span>
                               )}
@@ -1397,7 +1393,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.junior?.inr || ""}
                               onChange={handleRateChange("junior", "inr")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Junior")?.inr?.min || 0}
                               max={getRateRanges("Junior")?.inr?.max || 100000}
                               inputProps={{
@@ -1434,9 +1430,8 @@ const EditInterviewDetails = ({
                                 <span>
                                   Range: ${getRateRanges("Mid-Level").usd.min}-$
                                   {getRateRanges("Mid-Level").usd.max} (
-                                  {`₹${getRateRanges("Mid-Level").inr.min}–${
-                                    getRateRanges("Mid-Level").inr.max
-                                  }`}
+                                  {`₹${getRateRanges("Mid-Level").inr.min}–${getRateRanges("Mid-Level").inr.max
+                                    }`}
                                   )
                                 </span>
                               )}
@@ -1454,7 +1449,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.mid?.usd || ""}
                               onChange={handleRateChange("mid", "usd")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Mid-Level")?.usd?.min || 0}
                               max={getRateRanges("Mid-Level")?.usd?.max || 1000}
                               inputProps={{
@@ -1480,7 +1475,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.mid?.inr || ""}
                               onChange={handleRateChange("mid", "inr")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Mid-Level")?.inr?.min || 0}
                               max={
                                 getRateRanges("Mid-Level")?.inr?.max || 100000
@@ -1519,9 +1514,8 @@ const EditInterviewDetails = ({
                                 <span>
                                   Range: ${getRateRanges("Senior").usd.min}-$
                                   {getRateRanges("Senior").usd.max} (
-                                  {`₹${getRateRanges("Senior").inr.min}–${
-                                    getRateRanges("Senior").inr.max
-                                  }`}
+                                  {`₹${getRateRanges("Senior").inr.min}–${getRateRanges("Senior").inr.max
+                                    }`}
                                   )
                                 </span>
                               )}
@@ -1539,7 +1533,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.senior?.usd || ""}
                               onChange={handleRateChange("senior", "usd")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Senior")?.usd?.min || 0}
                               max={getRateRanges("Senior")?.usd?.max || 1000}
                               inputProps={{
@@ -1565,7 +1559,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.senior?.inr || ""}
                               onChange={handleRateChange("senior", "inr")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Senior")?.inr?.min || 0}
                               max={getRateRanges("Senior")?.inr?.max || 100000}
                               inputProps={{
@@ -1587,9 +1581,8 @@ const EditInterviewDetails = ({
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
                   {showJuniorLevel
-                    ? `Based on your ${expYears} year${
-                        expYears === 1 ? "" : "s"
-                      } of experience, we're showing the most relevant experience levels.`
+                    ? `Based on your ${expYears} year${expYears === 1 ? "" : "s"
+                    } of experience, we're showing the most relevant experience levels.`
                     : "Set competitive rates based on candidate experience levels."}
                   {!showSeniorLevel && (
                     <span className="block mt-1">
@@ -1742,12 +1735,12 @@ const EditInterviewDetails = ({
                         </div>
                       ) : (
                         <>
-                        <DropdownSelect
-                          id="mock_interview_discount"
-                          name="mock_interview_discount"
-                          value={
-                            formData.mock_interview_discount
-                              ? {
+                          <DropdownSelect
+                            id="mock_interview_discount"
+                            name="mock_interview_discount"
+                            value={
+                              formData.mock_interview_discount
+                                ? {
                                   value: formData.mock_interview_discount,
                                   label: `${formData.mock_interview_discount}% discount`,
                                 }
@@ -1773,27 +1766,47 @@ const EditInterviewDetails = ({
                                 },
                               });
                             }
-                          }}
-                          options={[
-                            { value: "10", label: "10% discount" },
-                            { value: "20", label: "20% discount" },
-                            { value: "30", label: "30% discount" },
-                            {
-                              value: "custom",
-                              label: "Add custom percentage...",
-                            },
-                          ]}
-                          placeholder="Select discount percentage"
-                          className="w-full"
-                          classNamePrefix="select"
-                          isClearable={true}
-                        />
+
+                            onChange={(selected) => {
+                              if (selected?.value === "custom") {
+                                setShowCustomDiscount(true);
+                                setCustomDiscountValue("");
+                              } else if (selected) {
+                                handleChangeforExp({
+                                  target: {
+                                    name: "mock_interview_discount",
+                                    value: selected.value,
+                                  },
+                                });
+                              } else {
+                                handleChangeforExp({
+                                  target: {
+                                    name: "mock_interview_discount",
+                                    value: "",
+                                  },
+                                });
+                              }
+                            }}
+                            options={[
+                              { value: "10", label: "10% discount" },
+                              { value: "20", label: "20% discount" },
+                              { value: "30", label: "30% discount" },
+                              {
+                                value: "custom",
+                                label: "Add custom percentage...",
+                              },
+                            ]}
+                            placeholder="Select discount percentage"
+                            className="w-full"
+                            classNamePrefix="select"
+                            isClearable={true}
+                          />
                           {errors.mock_interview_discount && (
-                          <p className="text-red-500 text-xs mt-1">
-                            {errors.mock_interview_discount}
-                          </p>
-                        )}
-                      </>
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.mock_interview_discount}
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                     <p className="mt-1.5 text-xs text-custom-blue">
@@ -1852,12 +1865,11 @@ const EditInterviewDetails = ({
 
                   {formData.professionalTitle?.length > 0 && (
                     <p
-                      className={`text-xs ${
-                        formData.professionalTitle.length < 50 ||
-                        errors.professionalTitle
+                      className={`text-xs ${formData.professionalTitle.length < 50 ||
+                          errors.professionalTitle
                           ? "text-red-500"
                           : "text-gray-500"
-                      }`}
+                        }`}
                     >
                       {formData.professionalTitle.length}/100
                     </p>

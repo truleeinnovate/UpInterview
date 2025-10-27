@@ -470,6 +470,7 @@ const updateContactsDetails = async (req, res) => {
         const { error } = contactPatchSchema.validate(req.body, {
             abortEarly: false,
         });
+        console.log("error contactPatchSchema", error);
 
         if (error) {
             const errors = {};
@@ -487,6 +488,7 @@ const updateContactsDetails = async (req, res) => {
 
         const contactId = req.params.id;
         const { availability, yearsOfExperience, ...contactData } = req.body;
+        console.log("contactData", req.body);
 
         const contactFound = await Contacts.findById(contactId).lean();
         if (!contactFound) {
@@ -668,6 +670,7 @@ const updateContactsDetails = async (req, res) => {
         //     fieldMessage: fieldMessages,
         //     history: changes,
         // };
+        console.log("finalContact", finalContact);
 
         // Add log data
         res.locals.logData = {
@@ -685,9 +688,6 @@ const updateContactsDetails = async (req, res) => {
             message: "Contact updated successfully",
             data: finalContact,
         });
-
-
-
 
     } catch (err) {
         console.error("❌ Error updating contact:", err);
