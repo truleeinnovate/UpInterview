@@ -11,6 +11,11 @@ const { CreateOrGetVideoCallingSettings } = require('./VideoCallingSettingContro
 
 // Function to handle subscription creation
 const createSubscriptionControllers = async (req, res) => {
+
+  //   // Set up logging context
+  // res.locals.loggedByController = true;
+  // res.locals.processName = "Create Subscription";
+
   try {
     const { planDetails, userDetails, status, totalAmount } = req.body;
 
@@ -37,12 +42,7 @@ const createSubscriptionControllers = async (req, res) => {
       return res.status(404).json({ message: 'Subscription plan not found.' });
     }
 
-    // Debug logging to verify correct plan is found
-    // console.log("Found plan details:", {
-    //   id: plan._id,
-    //   name: plan.name,
-    //   subscriptionPlanId: subscriptionPlanId
-    // });
+   
 
     let wallet = await Wallet.findOne({ ownerId: userDetails.ownerId });
 
@@ -87,6 +87,31 @@ const createSubscriptionControllers = async (req, res) => {
         }
         nextBillingDate = new Date(endDate);
       }
+
+
+        // Update subscription details
+      const subscriptionChanges = [];
+      
+      // // Track changes for logging
+      // const trackChange = (field, oldValue, newValue) => {
+      //   if (oldValue !== newValue) {
+      //     subscriptionChanges.push({
+      //       fieldName: field,
+      //       oldValue,
+      //       newValue
+      //     });
+      //   }
+      // };
+
+      //  trackChange('subscriptionPlanId', existingSubscription.subscriptionPlanId, subscriptionPlanId);
+      // trackChange('selectedBillingCycle', existingSubscription.selectedBillingCycle, userDetails.membershipType);
+      // trackChange('price', existingSubscription.price, pricing);
+      // trackChange('discount', existingSubscription.discount, discount);
+      // trackChange('startDate', existingSubscription.startDate, startDate);
+      // trackChange('totalAmount', existingSubscription.totalAmount, calculatedTotalAmount);
+      // trackChange('endDate', existingSubscription.endDate, endDate);
+      // trackChange('nextBillingDate', existingSubscription.nextBillingDate, nextBillingDate);
+      // trackChange('status', existingSubscription.status, status);
       
       // Update subscription details
       existingSubscription.subscriptionPlanId = subscriptionPlanId;
@@ -123,6 +148,21 @@ const createSubscriptionControllers = async (req, res) => {
         await existingInvoice.save();
         //console.log("Updated existing invoice with plan name:", existingInvoice.planName);
       }
+
+      // Add log data for subscription update
+      // res.locals.logData = {
+      //   tenantId: userDetails?.tenantId || "",
+      //   ownerId: userDetails?.ownerId || "",
+      //   processName: "Update Subscription",
+      //   requestBody: req.body,
+      //   status: "success",
+      //   message: "Subscription updated successfully",
+      //   responseBody: {
+      //     subscription: existingSubscription,
+      //     invoiceId: existingInvoice?._id
+      //   },
+      //   changes: subscriptionChanges
+      // };
 
       return res.status(200).json({
         message: 'Subscription and invoice successfully updated.',
@@ -244,6 +284,25 @@ const createSubscriptionControllers = async (req, res) => {
       console.log(`Created subscription with status: ${status}`);
       console.log({ invoiceId: invoice._id });
 
+
+       // Add log data for new subscription creation
+      // res.locals.logData = {
+      //   tenantId: userDetails?.tenantId || "",
+      //   ownerId: userDetails?.ownerId || "",
+      //   processName: "Create Subscription",
+      //   requestBody: req.body,
+      //   status: "success",
+      //   message: `Subscription successfully created with status: ${status}`,
+      //   responseBody: {
+      //     subscription,
+      //     invoiceId: invoice._id
+      //   },
+      //   responseBody: {
+      //     subscription,
+      //     invoiceId: invoice._id
+      //   },
+      // };
+
       return res.status(200).json({
         message: `Subscription successfully created with status: ${status}`,
         subscription,
@@ -262,6 +321,10 @@ const createSubscriptionControllers = async (req, res) => {
 };
 
 const updateCustomerSubscriptionControllers = async (req, res) => {
+   // Set up logging context
+  // res.locals.loggedByController = true;
+  // res.locals.processName = "Update Customer Subscription";
+
   try {
     const { planDetails, cardDetails, totalPaid, status, transactionId } = req.body;
 
@@ -301,6 +364,27 @@ const updateCustomerSubscriptionControllers = async (req, res) => {
       const requiredPayment = pricing - discount;
       if (totalPaid >= (pricing - discount)) {
 
+
+         // Track invoice changes
+        // const invoiceChanges = [];
+        // const trackInvoiceChange = (field, oldValue, newValue) => {
+        //   if (oldValue !== newValue) {
+        //     invoiceChanges.push({
+        //       fieldName: field,
+        //       oldValue,
+        //       newValue
+        //     });
+        //   }
+        // };
+
+        // // Update the invoice
+        // trackInvoiceChange('status', invoice.status, status);
+        // trackInvoiceChange('planName', invoice.planName, planDetails.planName);
+        // trackInvoiceChange('amountPaid', invoice.amountPaid, totalPaid);
+        // trackInvoiceChange('endDate', invoice.endDate, endDate);
+        // trackInvoiceChange('startDate', invoice.startDate, new Date());
+        // trackInvoiceChange('outstandingAmount', invoice.outstandingAmount, 0);
+
         // console.log("status",status);
         // Update the invoice
         invoice.status = status;
@@ -330,6 +414,28 @@ const updateCustomerSubscriptionControllers = async (req, res) => {
         const subscription = await CustomerSubscription.findOne({ ownerId: cardDetails.ownerId });
 
         if (subscription) {
+
+
+            // Track subscription changes
+          // const subscriptionChanges = [];
+          // const trackSubscriptionChange = (field, oldValue, newValue) => {
+          //   if (oldValue !== newValue) {
+          //     subscriptionChanges.push({
+          //       fieldName: field,
+          //       oldValue,
+          //       newValue
+          //     });
+          //   }
+          // };
+
+          // trackSubscriptionChange('endDate', subscription.endDate, endDate);
+          // trackSubscriptionChange('receiptId', subscription.receiptId, receipt._id);
+          // trackSubscriptionChange('status', subscription.status, 'active');
+          // trackSubscriptionChange('startDate', subscription.startDate, new Date());
+          // trackSubscriptionChange('features', JSON.stringify(subscription.features), JSON.stringify(features));
+
+
+
           subscription.endDate = endDate ? endDate : null;
           subscription.receiptId = receipt._id;
           subscription.status = 'active';
@@ -337,22 +443,90 @@ const updateCustomerSubscriptionControllers = async (req, res) => {
 
           subscription.features = features;
           await subscription.save();
-        }
 
-        return res.status(200).json({
+
+             // Combine all changes for logging
+          const allChanges = [...invoiceChanges, ...subscriptionChanges];
+          console.log("all changes",allChanges);
+
+          // Add log data for successful subscription update
+        //  let response = res.locals.logData = {
+        //     tenantId: cardDetails?.tenantId || "",
+        //     ownerId: cardDetails?.ownerId || "",
+        //     processName: "Update Customer Subscription",
+        //     requestBody: req.body,
+        //     status: "success",
+        //     message: "Subscription successfully updated and payment processed",
+        //     responseBody: {
+        //       subscription,
+        //       invoice,
+        //       receipt
+        //     },
+        //     changes: allChanges
+        //   };
+        //   console.log("response",response);
+
+          return res.status(200).json({
           message: 'Subscription successfully updated and payment processed.',
           subscription,
           invoice,
           receipt,
         });
+
+        } else {
+          // Add log data for subscription not found
+          // res.locals.logData = {
+          //   tenantId: cardDetails?.tenantId || "",
+          //   ownerId: cardDetails?.ownerId || "",
+          //   processName: "Update Customer Subscription",
+          //   requestBody: req.body,
+          //   status: "error",
+          //   message: "Subscription not found for user"
+          // };
+
+          return res.status(404).json({ message: 'Subscription not found for user.' });
+        }
+
+        
       } else {
+       
+         // Add log data for insufficient payment
+        // res.locals.logData = {
+        //   tenantId: cardDetails?.tenantId || "",
+        //   ownerId: cardDetails?.ownerId || "",
+        //   processName: "Update Customer Subscription",
+        //   requestBody: req.body,
+        //   status: "error",
+        //   message: `Insufficient payment. Required: ${requiredPayment}, Paid: ${totalPaid}`
+        // };
+       
         return res.status(400).json({ message: 'Insufficient payment. Payment failed.' });
       }
     } else {
+
+        // Add log data for invalid payment status
+      // res.locals.logData = {
+      //   tenantId: cardDetails?.tenantId || "",
+      //   ownerId: cardDetails?.ownerId || "",
+      //   processName: "Update Customer Subscription",
+      //   requestBody: req.body,
+      //   status: "error",
+      //   message: `Invalid payment status: ${status}`
+      // };
+
       return res.status(400).json({ message: 'Invalid payment status.' });
     }
   } catch (error) {
     console.error('Error updating subscription:', error);
+     // Log error details
+    res.locals.logData = {
+      tenantId: req.body?.cardDetails?.tenantId || "",
+      ownerId: req.body?.cardDetails?.ownerId || "",
+      processName: "Update Customer Subscription",
+      requestBody: req.body,
+      message: error.message,
+      status: "error",
+    };
     res.status(500).json({ message: 'An error occurred.', error });
   }
 };
@@ -369,6 +543,15 @@ const getAllCustomerSubscription = async (req, res) => {
 
   } catch (error) {
     console.error('Error creating/updating subscription:', error);
+      // Log error details
+    res.locals.logData = {
+      tenantId: req.body?.userDetails?.tenantId || "",
+      ownerId: req.body?.userDetails?.ownerId || "",
+      processName: "Create Subscription",
+      requestBody: req.body,
+      message: error.message,
+      status: "error",
+    };
     res.status(500).json({ message: 'An error occurred.', error });
   }
 }

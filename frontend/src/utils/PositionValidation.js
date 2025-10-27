@@ -58,9 +58,16 @@ export const validateForm = (formData, entries, rounds) => {
     formIsValid = false;
   }
 
-  // Validate experience range
+   // Validate experience range
   if (formData.minexperience && formData.maxexperience) {
-    if (parseInt(formData.minexperience) > parseInt(formData.maxexperience)) {
+    const minExp = parseInt(formData.minexperience);
+    const maxExp = parseInt(formData.maxexperience);
+    
+    if (minExp === maxExp) {
+      errors.minexperience = "Min and Max Experience cannot be equal";
+      errors.maxexperience = "Max and Min Experience cannot be equal";
+      formIsValid = false;
+    } else if (minExp > maxExp) {
       errors.minexperience = "Min Experience cannot be greater than Max";
       errors.maxexperience = "Max Experience cannot be less than Min";
       formIsValid = false;
@@ -86,15 +93,22 @@ export const validateForm = (formData, entries, rounds) => {
     }
   }
 
-  // Validate relationship between min and max salary
-  if (formData.minSalary && formData.maxSalary) {
-    if (parseInt(formData.minSalary) > parseInt(formData.maxSalary)) {
-      errors.minsalary = "Minimum Salary cannot be greater than Maximum";
-      errors.maxsalary = "Maximum Salary cannot be less than Minimum";
-      formIsValid = false;
+// Validate relationship between min and max salary
+    if (formData.minSalary && formData.maxSalary) {
+      const minSalary = parseInt(formData.minSalary);
+      const maxSalary = parseInt(formData.maxSalary);
+      
+      if (minSalary === maxSalary) {
+        errors.minsalary = "Minimum and Maximum Salary cannot be equal";
+        errors.maxsalary = "Maximum and Minimum Salary cannot be equal";
+        formIsValid = false;
+      } else if (minSalary > maxSalary) {
+        errors.minsalary = "Minimum Salary cannot be greater than Maximum";
+        errors.maxsalary = "Maximum Salary cannot be less than Minimum";
+        formIsValid = false;
+      }
     }
   }
-}
 
   if (!formData.jobDescription || !formData.jobDescription.trim()) {
     errors.jobDescription = "Job Description is required";

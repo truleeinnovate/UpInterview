@@ -102,37 +102,7 @@ const InterviewerSectionComponent = ({
   ////<---v1.0.2-----
   // Merge persisted feedback into interviewer questions without overwriting current UI state
   const questionsWithFeedback = React.useMemo(() => {
-    //   const baseArray = [...(interviewerSectionData || []), ...(filteredInterviewerQuestions || [])];
-    // //  console.log("baseArray",baseArray);
-
-    //   // De-duplicate by question id
-    //   const mapById = new Map();
-    //   baseArray.forEach((q) => {
-    //     const key = q.questionId || q._id;
-    //     if (!key) return;
-    //     if (!mapById.has(key)) mapById.set(key, q);
-    //   });
-    //   const baseQuestions = Array.from(mapById.values());
-    //   // Restrict to only interviewer-added questions
-    //   const interviewerIdSet = new Set(
-    //     (filteredInterviewerQuestions || [])
-    //       .map((qq) => qq.questionId || qq._id)
-    //       .filter(Boolean)
-    //   );
-    //   console.log("baseQuestions",baseQuestions);
-
-    //   const baseQuestionsFiltered = baseQuestions.filter((q) => {
-    //     const id = q.questionId || q._id;
-    //     console.log("id",id);
-    //     console.log("interviewerIdSet",q);
-
-    //     if (interviewerIdSet.size > 0) {
-    //       return !!id && interviewerIdSet.has(id);
-    //     }
-    //     const addedBy = q.addedBy || q.snapshot?.addedBy;
-    //     return addedBy === "interviewer";
-    //   });
-    //   console.log("feedbackData",feedbackData);
+  
     const existingQuestions = filteredInterviewerQuestions || [];
 
     // Get newly added questions from interviewerSectionData that are not in existing questions
@@ -144,21 +114,33 @@ const InterviewerSectionComponent = ({
     //   });
 
     // });
-    const newlyAddedQuestions = (interviewerSectionData || []).filter(
-      (newQ) => {
-        const newId = newQ.questionId || newQ._id || newQ.id;
-        const isNotDuplicate = !existingQuestions.some((existingQ) => {
-          const existingId =
-            existingQ.questionId || existingQ._id || existingQ.id;
-          return existingId === newId;
-        });
-        const isAddedByInterviewer =
-          (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
-        return isNotDuplicate && isAddedByInterviewer;
-      }
-    );
+      const newlyAddedQuestions = (interviewerSectionData || []).filter(
+    (newQ) => {
+      const newId = newQ.questionId || newQ._id || newQ.id;
+      const isNotDuplicate = !existingQuestions.some((existingQ) => {
+        const existingId = existingQ.questionId || existingQ._id || existingQ.id;
+        return existingId === newId;
+      });
+      const isAddedByInterviewer = (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
+      return isNotDuplicate && isAddedByInterviewer;
+    }
+  );
+    // const newlyAddedQuestions = (interviewerSectionData || []).filter(
+    //   (newQ) => {
+    //     const newId = newQ.questionId || newQ._id || newQ.id;
+    //     const isNotDuplicate = !existingQuestions.some((existingQ) => {
+    //       const existingId =
+    //         existingQ.questionId || existingQ._id || existingQ.id;
+    //       return existingId === newId;
+    //     });
+    //     const isAddedByInterviewer =
+    //       (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
+    //     return isNotDuplicate && isAddedByInterviewer;
+    //   }
+    // );
 
     // Combine both arrays
+    
     const allCombinedQuestions = [...existingQuestions, ...newlyAddedQuestions];
 
     const shouldApplyFeedback =
@@ -224,6 +206,7 @@ const InterviewerSectionComponent = ({
     isEditMode,
     isViewMode,
     feedbackData,
+    isAddMode,
     interviewerSectionData,
     filteredInterviewerQuestions,
   ]);
@@ -238,18 +221,44 @@ const InterviewerSectionComponent = ({
   // );
 
   // Fixed version:
-  const [interviewerSection, setInterviewerSection] = useState(() => {
-    if (isEditMode) {
-      // In edit mode, use the questions with feedback data
-      return questionsWithFeedback || [];
-    } else if (isAddMode) {
-      // In add mode, start with empty array or existing data
-      return interviewerSectionData || [];
-    } else {
-      // View mode or other cases
-      return questionsWithFeedback || [];
-    }
-  });
+  // const [interviewerSection, setInterviewerSection] = useState(() => {
+  //   if (isEditMode) {
+  //     // In edit mode, use the questions with feedback data
+  //     return questionsWithFeedback || [];
+  //   } else if (isAddMode) {
+  //     // In add mode, start with empty array or existing data
+  //     return interviewerSectionData || [];
+  //   } else {
+  //     // View mode or other cases
+  //     return questionsWithFeedback || [];
+  //   }
+  // });
+
+  // Fixed version of useState initialization
+// const [interviewerSection, setInterviewerSection] = useState(() => {
+//   if (isEditMode || isViewMode) {
+//     // In edit/view mode, use the questions with feedback data
+//     return questionsWithFeedback || [];
+//   } else if (isAddMode) {
+//     // In add mode, start with existing data or empty array
+//     return interviewerSectionData || [];
+//   } else {
+//     // Default case
+//     return [];
+//   }
+// });
+
+// Enhanced state initialization
+const [interviewerSection, setInterviewerSection] = useState(() => {
+  // For initial load, use the data that's already passed in
+  if (interviewerSectionData && interviewerSectionData.length > 0) {
+    return interviewerSectionData;
+  }
+  if ((isEditMode || isViewMode) && questionsWithFeedback && questionsWithFeedback.length > 0) {
+    return questionsWithFeedback;
+  }
+  return [];
+});
 
   // const [interviewerSection, setInterviewerSection] = useState(() => {
   //   return isAddMode || isEditMode ? questionsWithFeedback : [];
@@ -269,15 +278,34 @@ const InterviewerSectionComponent = ({
   //----v1.0.1--->
 
   // Add this useEffect to sync data
-  useEffect(() => {
-    if (isEditMode && questionsWithFeedback) {
+  // useEffect(() => {
+  //   if (isEditMode && questionsWithFeedback) {
+  //     setInterviewerSection(questionsWithFeedback);
+  //     // Also update the parent data if needed
+  //     if (setInterviewerSectionData) {
+  //       setInterviewerSectionData(questionsWithFeedback);
+  //     }
+  //   }
+  // }, [questionsWithFeedback, isEditMode, setInterviewerSectionData]);
+
+
+// REPLACE with this stable version:
+useEffect(() => {
+  // Only update if we're in edit/view mode and have questions with feedback
+  if ((isEditMode || isViewMode) && questionsWithFeedback && questionsWithFeedback.length > 0) {
+    const currentIds = interviewerSection.map(q => q.questionId || q.id).sort().join(',');
+    const newIds = questionsWithFeedback.map(q => q.questionId || q.id).sort().join(',');
+    
+    // Only update if the data has actually changed
+    if (currentIds !== newIds) {
       setInterviewerSection(questionsWithFeedback);
-      // Also update the parent data if needed
-      if (setInterviewerSectionData) {
-        setInterviewerSectionData(questionsWithFeedback);
-      }
     }
-  }, [questionsWithFeedback, isEditMode, setInterviewerSectionData]);
+  }
+}, [questionsWithFeedback, isEditMode, isViewMode]);
+
+
+
+
 
   useEffect(() => {
     if (interviewerSection.length > 0 && selectedQuestion === null) {
@@ -333,7 +361,9 @@ const InterviewerSectionComponent = ({
       if (questionExists) {
         return prev.map((q) =>
           (q.questionId || q.id) === questionId
-            ? { ...q, note: notes, notesBool: true }
+            ? { ...q, note: notes, notesBool: true,
+               ...(isEditMode && { isEdited: true }) // Mark as edited in edit mode
+             }
             : q
         );
       } else {
@@ -349,6 +379,8 @@ const InterviewerSectionComponent = ({
               questionId: questionId,
               note: notes,
               notesBool: true,
+                addedBy: 'interviewer',
+            ...(isEditMode && { isEdited: true })
             },
           ];
         }
@@ -480,49 +512,46 @@ const InterviewerSectionComponent = ({
 
   // Function to handle delete note
 
-  const updateQuestionsInAddedSectionFromQuestionBank = (questions) => {
-    console.log("Updating questions from question bank:", questions);
+ const updateQuestionsInAddedSectionFromQuestionBank = (questions) => {
+  console.log("Updating questions from question bank:", questions);
 
-    if (questions && questions.length > 0) {
-      const newQuestions = questions.map((question, index) => ({
-        id: Date.now() + index,
-        question: question.question || question.title || "N/A",
-        expectedAnswer: question.expectedAnswer || question.answer || "N/A",
-        category: question.category || "N/A",
-        difficulty: question.difficulty || "N/A",
-        mandatory: question.mandatory || false,
-        isAnswered: "Not Answered",
-        notesBool: false,
-        note: "",
-        // Add edit mode specific fields
-        ...(isEditMode && {
-          isEdited: true, // Flag to track edited questions
-          originalData: question, // Keep original data for reference
-        }),
-      }));
+  if (questions && questions.length > 0) {
+    const newQuestions = questions.map((question, index) => ({
+      id: question._id || `qb-${Date.now()}-${index}`, // Use question ID if available
+      questionId: question._id, // Store the original question ID
+      question: question.question || question.title || "N/A",
+      expectedAnswer: question.expectedAnswer || question.answer || "N/A",
+      category: question.category || "N/A",
+      difficulty: question.difficulty || "N/A",
+      mandatory: question.mandatory || false,
+      isAnswered: "Not Answered",
+      notesBool: false,
+      note: "",
+      addedBy: 'interviewer',
+      // Edit mode specific fields
+      ...((isEditMode || isAddMode) && {
+        isEdited: true,
+        originalData: question,
+      }),
+    }));
 
-      if (isEditMode) {
-        // In edit mode, append to existing questions
-        setInterviewerSection((prev) => [...prev, ...newQuestions]);
-      } else {
-        // In add mode, replace or append based on your requirement
-        setInterviewerSection((prev) => [...prev, ...newQuestions]);
-      }
+    // Update local state
+    setInterviewerSection((prev) => {
+      const existingIds = new Set(prev.map(q => q.questionId || q.id));
+      const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q.questionId || q.id));
+      return [...prev, ...uniqueNewQuestions];
+    });
 
-      // Update parent data
-      const newQuestionsData = newQuestions.map((q) => ({
-        ...q,
-        isAnswered: "Not Answered",
-        isLiked: "",
-        whyDislike: "",
-        notesBool: false,
-        note: "",
-      }));
-
-      setInterviewerSectionData((prev) => [...prev, ...newQuestionsData]);
-      setIsQuestionBankOpen(false);
-    }
-  };
+    // Update parent data - this should trigger the parent to re-render properly
+    setInterviewerSectionData((prev) => {
+      const existingIds = new Set(prev.map(q => q.questionId || q.id));
+      const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q.questionId || q.id));
+      return [...prev, ...uniqueNewQuestions];
+    });
+    
+    setIsQuestionBankOpen(false);
+  }
+};
 
   // const onClickDeleteNote = (id) => {
   //   setInterviewerSectionData((prev) =>
@@ -550,7 +579,9 @@ const InterviewerSectionComponent = ({
       if (questionExists) {
         return prev.map((q) =>
           (q.questionId || q.id) === questionId
-            ? { ...q, isAnswered: value }
+            ? { ...q, isAnswered: value,
+                    ...(isEditMode && { isEdited: true }) // Mark as edited
+             }
             : q
         );
       } else {
@@ -571,6 +602,8 @@ const InterviewerSectionComponent = ({
                 originalQuestion.interviewerFeedback?.dislikeReason || "",
               note: originalQuestion.interviewerFeedback?.note || "",
               notesBool: !!originalQuestion.interviewerFeedback?.note,
+               addedBy: 'interviewer',
+            ...(isEditMode && { isEdited: true })
             },
           ];
         }
@@ -796,7 +829,7 @@ const InterviewerSectionComponent = ({
                   id={`isAnswered-${each.questionId || each.id}-${option}`}
                   onChange={(e) =>
                     onChangeRadioInput(
-                      each.questionId || each.id,
+                      each.questionId || each._id,
                       e.target.value
                     )
                   }
@@ -833,7 +866,7 @@ const InterviewerSectionComponent = ({
               The questions listed below are interviewer's choice.
             </p>
           </div>
-          {isViewMode || isEditMode || decodedData?.schedule ? (
+          {isViewMode  || decodedData?.schedule ? (
             <div></div>
           ) : (
             <div className="flex items-center gap-2">
@@ -869,7 +902,7 @@ const InterviewerSectionComponent = ({
                 </div>
                 <h3 className="sm:text-sm font-semibold text-gray-800 mb-2">
                   {question.snapshot?.questionText ||
-                    question.question ||
+                    question?.question ||
                     "N/A"}
                 </h3>
                 {/* {question.expectedAnswer && ( */}

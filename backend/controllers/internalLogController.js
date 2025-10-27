@@ -2,7 +2,9 @@
 const InternalLog = require("../models/InternalLog");
 
 exports.createLog = async (logDetails) => {
+   console.log("logDetails", logDetails);
   try {
+   console.log("logDetails", logDetails);
     const log = new InternalLog(logDetails);
     await log.save();
     return log;

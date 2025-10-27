@@ -271,9 +271,9 @@ const EditInterviewDetails = ({
     try {
       const token = localStorage.getItem("token");
       const baseUrl = process.env.REACT_APP_API_URL || "";
-       const slug = techName
-                .replace(/\s+/g, '')  // Remove spaces
-                .replace(/[^a-zA-Z0-9]/g, '');  // Remove special chars if any (optional, adjust as needed)
+      const slug = techName
+        .replace(/\s+/g, '')  // Remove spaces
+        .replace(/[^a-zA-Z0-9]/g, '');  // Remove special chars if any (optional, adjust as needed)
 
       const encodedTech = encodeURIComponent(slug);
       const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
@@ -336,14 +336,14 @@ const EditInterviewDetails = ({
     // Create the form data with proper rate visibility
     const newFormData = {
       PreviousExperienceConductingInterviews:
-        profileData?.previousExperienceConductingInterviews ||  
-        profileData?.PreviousExperienceConductingInterviews || "" ,
+        profileData?.previousExperienceConductingInterviews ||
+        profileData?.PreviousExperienceConductingInterviews || "",
       // If experience is "no", keep years empty; otherwise use the parsed value
       PreviousExperienceConductingInterviewsYears:
-        profileData?.previousExperienceConductingInterviews === "no" 
+        profileData?.previousExperienceConductingInterviews === "no"
           ? ""
           : years || 1,
-          
+
       ExpertiseLevel_ConductingInterviews:
         profileData?.expertiseLevelConductingInterviews || "",
       hourlyRate: profileData?.hourlyRate || "",
@@ -598,7 +598,7 @@ const EditInterviewDetails = ({
     }
   };
 
-  
+
 
   // API call to save all changes
   const handleSave = async (e) => {
@@ -610,7 +610,7 @@ const EditInterviewDetails = ({
     }
 
     console.log("formData before validation:", formData);
-  
+
 
     const validationErrors = validateInterviewForm(formData, isReady);
     console.log("validationErrors:", validationErrors);
@@ -687,93 +687,95 @@ const EditInterviewDetails = ({
         console.log("form", formData, typeof Number(formData.hourlyRate));
 
         const cleanFormData = {
-            PreviousExperienceConductingInterviews: String(
-                formData.PreviousExperienceConductingInterviews?.trim() || ""
-            ).trim(),
-            ...(formData.PreviousExperienceConductingInterviews === 'yes' && {
-                PreviousExperienceConductingInterviewsYears: String(
-                    formData.PreviousExperienceConductingInterviewsYears || "1"
-                ).trim()
-            }),
-            ExpertiseLevel_ConductingInterviews: String(
-                formData.ExpertiseLevel_ConductingInterviews || ""
-            ).trim(),
-            hourlyRate: Number(formData.hourlyRate) || "",
-            technologies: Array.isArray(formData.Technology)
-                ? formData.Technology
-                : [],
-            skills: Array.isArray(formData.skills) ? formData.skills : [],
-            NoShowPolicy: String(formData.NoShowPolicy || "").trim(),
-            InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
-            expectedRatePerMockInterview: formData.interviewFormatWeOffer.includes("mock")
-                ? formData.expectedRatePerMockInterview
-                : "",
-            mock_interview_discount: formData.interviewFormatWeOffer.includes("mock")
-                ? formData.mock_interview_discount
-                : "",
-            professionalTitle: String(formData.professionalTitle || "").trim(),
-            bio: String(formData.bio || "").trim(),
-            id: formData.id,
-            yearsOfExperience: formData.yearsOfExperience,
-            rates: formData.rates
+          PreviousExperienceConductingInterviews: String(
+            formData.PreviousExperienceConductingInterviews?.trim() || ""
+          ).trim(),
+          ...(formData.PreviousExperienceConductingInterviews === 'yes' && {
+            PreviousExperienceConductingInterviewsYears: String(
+              formData.PreviousExperienceConductingInterviewsYears || "1"
+            ).trim()
+          }),
+          ExpertiseLevel_ConductingInterviews: String(
+            formData.ExpertiseLevel_ConductingInterviews || ""
+          ).trim(),
+          hourlyRate: Number(formData.hourlyRate) || "",
+          technologies: Array.isArray(formData.Technology)
+            ? formData.Technology
+            : [],
+          skills: Array.isArray(formData.skills) ? formData.skills : [],
+          NoShowPolicy: String(formData.NoShowPolicy || "").trim(),
+          InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
+          expectedRatePerMockInterview: formData.interviewFormatWeOffer.includes("mock")
+            ? formData.expectedRatePerMockInterview
+            : "",
+          mock_interview_discount: formData.interviewFormatWeOffer.includes("mock")
+            ? formData.mock_interview_discount
+            : "",
+          professionalTitle: String(formData.professionalTitle || "").trim(),
+          bio: String(formData.bio || "").trim(),
+          id: formData.id,
+          yearsOfExperience: formData.yearsOfExperience,
+          rates: formData.rates,
+          contactId: userProfile?.contactId,
+          ownerId: userProfile?._id,
         };
         console.log("cleanFormData", cleanFormData);
 
         try {
-            // Both contexts use the same endpoint since outsource interviewers are Contact records
-            // Determine the correct ID to use for the update
-            let updateId;
-            if (from === "outsource-interviewer") {
-                // For outsource interviewers, profileData is the Contact object
-                if (!profileData || !profileData._id) {
-                    console.error("Profile data not loaded or missing ID:", { profileData });
-                    notify.error("Profile data is not loaded. Please wait and try again.");
-                    return;
-                }
-                updateId = profileData._id;
-            } else {
-                // For regular users (my-profile), profileData is the User object with a contactId field
-                if (!profileData || !profileData.contactId) {
-                    console.error("Profile data not loaded or missing contactId:", { profileData });
-                    notify.error("Profile data is not loaded. Please wait and try again.");
-                    return;
-                }
-                updateId = profileData.contactId; // Use contactId for regular users
+          // Both contexts use the same endpoint since outsource interviewers are Contact records
+          // Determine the correct ID to use for the update
+          let updateId;
+          if (from === "outsource-interviewer") {
+            // For outsource interviewers, profileData is the Contact object
+            if (!profileData || !profileData._id) {
+              console.error("Profile data not loaded or missing ID:", { profileData });
+              notify.error("Profile data is not loaded. Please wait and try again.");
+              return;
             }
-            
-            const response = await updateContactDetail.mutateAsync({
-                resolvedId: updateId,
-                data: cleanFormData,
-            });
-            // Invalidate the query to refetch the updated data
-            await queryClient.invalidateQueries(["userProfile", resolvedId]);
-
-            console.log("response cleanFormData", response);
-
-            if (response.status === 200) {
-                notify.success("Updated Interview Details Successfully");
-                // Only close the modal after successful update
-                handleCloseModal();
-                if (usersId && onSuccess) {
-                    onSuccess();
-                }
+            updateId = profileData._id;
+          } else {
+            // For regular users (my-profile), profileData is the User object with a contactId field
+            if (!profileData || !profileData.contactId) {
+              console.error("Profile data not loaded or missing contactId:", { profileData });
+              notify.error("Profile data is not loaded. Please wait and try again.");
+              return;
             }
+            updateId = profileData.contactId; // Use contactId for regular users
+          }
+
+          const response = await updateContactDetail.mutateAsync({
+            resolvedId: updateId,
+            data: cleanFormData,
+          });
+          // Invalidate the query to refetch the updated data
+          await queryClient.invalidateQueries(["userProfile", resolvedId]);
+
+          console.log("response cleanFormData", response);
+
+          if (response.status === 200) {
+            notify.success("Updated Interview Details Successfully");
+            // Only close the modal after successful update
+            handleCloseModal();
+            if (usersId && onSuccess) {
+              onSuccess();
+            }
+          }
         } catch (error) {
-            console.error("Error updating interview details:", error);
+          console.error("Error updating interview details:", error);
 
-            if (error.response) {
-                if (error.response.status === 400) {
-                    const backendErrors = error.response.data.errors || {};
-                    console.log("backendErrors", backendErrors);
-                    setErrors(backendErrors);
-                } else {
-                    notify.error("Error updating interview details. Please try again.");
-                    setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
-                }
+          if (error.response) {
+            if (error.response.status === 400) {
+              const backendErrors = error.response.data.errors || {};
+              console.log("backendErrors", backendErrors);
+              setErrors(backendErrors);
             } else {
-                notify.error("Network error. Please check your connection and try again.");
-                setErrors((prev) => ({ ...prev, form: "Network error" }));
+              notify.error("Error updating interview details. Please try again.");
+              setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
             }
+          } else {
+            notify.error("Network error. Please check your connection and try again.");
+            setErrors((prev) => ({ ...prev, form: "Network error" }));
+          }
         }
       }
     } catch (error) {
@@ -936,13 +938,11 @@ const EditInterviewDetails = ({
       const numValue = parseInt(numericValue, 10);
 
       if (numValue < minRate) {
-        error = `Rate cannot be less than ${
-          currency === "inr" ? "₹" : "$"
-        }${minRate}`;
+        error = `Rate cannot be less than ${currency === "inr" ? "₹" : "$"
+          }${minRate}`;
       } else if (numValue > maxRate) {
-        error = `Rate cannot exceed ${
-          currency === "inr" ? "₹" : "$"
-        }${maxRate}`;
+        error = `Rate cannot exceed ${currency === "inr" ? "₹" : "$"
+          }${maxRate}`;
       }
     }
 
@@ -1147,8 +1147,8 @@ const EditInterviewDetails = ({
             {/* Technology Selection */}
             <div className="space-y-4">
               <DropdownWithSearchField
-              
-              disabled = {from !== "outsource-interviewer"}
+
+                disabled={from !== "outsource-interviewer"}
                 value={selectedCandidates[0]?.TechnologyMasterName || ""}
                 options={services.map((tech) => ({
                   value: tech.TechnologyMasterName,
@@ -1420,9 +1420,8 @@ const EditInterviewDetails = ({
                                 <span>
                                   Range: ${getRateRanges("Junior").usd.min}-$
                                   {getRateRanges("Junior").usd.max} (
-                                  {`₹${getRateRanges("Junior").inr.min}–${
-                                    getRateRanges("Junior").inr.max
-                                  }`}
+                                  {`₹${getRateRanges("Junior").inr.min}–${getRateRanges("Junior").inr.max
+                                    }`}
                                   )
                                 </span>
                               )}
@@ -1437,8 +1436,8 @@ const EditInterviewDetails = ({
                           <div className="relative">
                             <IncreaseAndDecreaseField
                               name="junior_usd"
-                              
-                      disabled = {from !== "outsource-interviewer"}
+
+                              disabled={from !== "outsource-interviewer"}
                               value={formData.rates?.junior?.usd || ""}
                               onChange={handleRateChange("junior", "usd")}
                               label=""
@@ -1467,7 +1466,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.junior?.inr || ""}
                               onChange={handleRateChange("junior", "inr")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Junior")?.inr?.min || 0}
                               max={getRateRanges("Junior")?.inr?.max || 100000}
                               inputProps={{
@@ -1504,9 +1503,8 @@ const EditInterviewDetails = ({
                                 <span>
                                   Range: ${getRateRanges("Mid-Level").usd.min}-$
                                   {getRateRanges("Mid-Level").usd.max} (
-                                  {`₹${getRateRanges("Mid-Level").inr.min}–${
-                                    getRateRanges("Mid-Level").inr.max
-                                  }`}
+                                  {`₹${getRateRanges("Mid-Level").inr.min}–${getRateRanges("Mid-Level").inr.max
+                                    }`}
                                   )
                                 </span>
                               )}
@@ -1524,7 +1522,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.mid?.usd || ""}
                               onChange={handleRateChange("mid", "usd")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Mid-Level")?.usd?.min || 0}
                               max={getRateRanges("Mid-Level")?.usd?.max || 1000}
                               inputProps={{
@@ -1550,7 +1548,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.mid?.inr || ""}
                               onChange={handleRateChange("mid", "inr")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Mid-Level")?.inr?.min || 0}
                               max={
                                 getRateRanges("Mid-Level")?.inr?.max || 100000
@@ -1589,9 +1587,8 @@ const EditInterviewDetails = ({
                                 <span>
                                   Range: ${getRateRanges("Senior").usd.min}-$
                                   {getRateRanges("Senior").usd.max} (
-                                  {`₹${getRateRanges("Senior").inr.min}–${
-                                    getRateRanges("Senior").inr.max
-                                  }`}
+                                  {`₹${getRateRanges("Senior").inr.min}–${getRateRanges("Senior").inr.max
+                                    }`}
                                   )
                                 </span>
                               )}
@@ -1609,7 +1606,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.senior?.usd || ""}
                               onChange={handleRateChange("senior", "usd")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Senior")?.usd?.min || 0}
                               max={getRateRanges("Senior")?.usd?.max || 1000}
                               inputProps={{
@@ -1635,7 +1632,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.senior?.inr || ""}
                               onChange={handleRateChange("senior", "inr")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Senior")?.inr?.min || 0}
                               max={getRateRanges("Senior")?.inr?.max || 100000}
                               inputProps={{
@@ -1657,9 +1654,8 @@ const EditInterviewDetails = ({
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
                   {showJuniorLevel
-                    ? `Based on your ${expYears} year${
-                        expYears === 1 ? "" : "s"
-                      } of experience, we're showing the most relevant experience levels.`
+                    ? `Based on your ${expYears} year${expYears === 1 ? "" : "s"
+                    } of experience, we're showing the most relevant experience levels.`
                     : "Set competitive rates based on candidate experience levels."}
                   {!showSeniorLevel && (
                     <span className="block mt-1">
@@ -1813,58 +1809,58 @@ const EditInterviewDetails = ({
                         </div>
                       ) : (
                         <>
-                        <DropdownSelect
-                          id="mock_interview_discount"
-                          name="mock_interview_discount"
-                          value={
-                            formData.mock_interview_discount
-                              ? {
+                          <DropdownSelect
+                            id="mock_interview_discount"
+                            name="mock_interview_discount"
+                            value={
+                              formData.mock_interview_discount
+                                ? {
                                   value: formData.mock_interview_discount,
                                   label: `${formData.mock_interview_discount}% discount`,
                                 }
-                              : null
-                          }
-                          
-                          onChange={(selected) => {
-                            if (selected?.value === "custom") {
-                              setShowCustomDiscount(true);
-                              setCustomDiscountValue("");
-                            } else if (selected) {
-                              handleChangeforExp({
-                                target: {
-                                  name: "mock_interview_discount",
-                                  value: selected.value,
-                                },
-                              });
-                            } else {
-                              handleChangeforExp({
-                                target: {
-                                  name: "mock_interview_discount",
-                                  value: "",
-                                },
-                              });
+                                : null
                             }
-                          }}
-                          options={[
-                            { value: "10", label: "10% discount" },
-                            { value: "20", label: "20% discount" },
-                            { value: "30", label: "30% discount" },
-                            {
-                              value: "custom",
-                              label: "Add custom percentage...",
-                            },
-                          ]}
-                          placeholder="Select discount percentage"
-                          className="w-full"
-                          classNamePrefix="select"
-                          isClearable={true}
-                        />
+
+                            onChange={(selected) => {
+                              if (selected?.value === "custom") {
+                                setShowCustomDiscount(true);
+                                setCustomDiscountValue("");
+                              } else if (selected) {
+                                handleChangeforExp({
+                                  target: {
+                                    name: "mock_interview_discount",
+                                    value: selected.value,
+                                  },
+                                });
+                              } else {
+                                handleChangeforExp({
+                                  target: {
+                                    name: "mock_interview_discount",
+                                    value: "",
+                                  },
+                                });
+                              }
+                            }}
+                            options={[
+                              { value: "10", label: "10% discount" },
+                              { value: "20", label: "20% discount" },
+                              { value: "30", label: "30% discount" },
+                              {
+                                value: "custom",
+                                label: "Add custom percentage...",
+                              },
+                            ]}
+                            placeholder="Select discount percentage"
+                            className="w-full"
+                            classNamePrefix="select"
+                            isClearable={true}
+                          />
                           {errors.mock_interview_discount && (
-                          <p className="text-red-500 text-xs mt-1">
-                            {errors.mock_interview_discount}
-                          </p>
-                        )}
-                      </>
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.mock_interview_discount}
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                     <p className="mt-1.5 text-xs text-custom-blue">
@@ -1954,12 +1950,11 @@ const EditInterviewDetails = ({
 
                   {formData.professionalTitle?.length > 0 && (
                     <p
-                      className={`text-xs ${
-                        formData.professionalTitle.length < 50 ||
-                        errors.professionalTitle
+                      className={`text-xs ${formData.professionalTitle.length < 50 ||
+                          errors.professionalTitle
                           ? "text-red-500"
                           : "text-gray-500"
-                      }`}
+                        }`}
                     >
                       {formData.professionalTitle.length}/100
                     </p>
