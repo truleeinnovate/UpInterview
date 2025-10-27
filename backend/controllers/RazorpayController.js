@@ -68,6 +68,10 @@ const razorpay = new Razorpay({
 
 // Verify Razorpay payment signature
 const verifyPayment = async (req, res) => {
+
+    // // Set up logging context at the start
+    // res.locals.loggedByController = true;
+    // res.locals.processName = 'Verify Payment';
     try {
         // console.log('Received payment verification request:', JSON.stringify(req.body, null, 2));
 
@@ -226,7 +230,7 @@ const verifyPayment = async (req, res) => {
         );
 
         if (existingPayment) {
-           // console.log('Found existing payment record, updating with verified payment details');
+            // console.log('Found existing payment record, updating with verified payment details');
             // Update existing payment record
             existingPayment.razorpayPaymentId = razorpay_payment_id;
             existingPayment.razorpaySignature = razorpay_signature;
@@ -382,8 +386,8 @@ const verifyPayment = async (req, res) => {
             // Save the payment card record
             try {
                 await paymentCard.save();
-               // console.log('Successfully saved payment card details');
-                
+                // console.log('Successfully saved payment card details');
+
                 // Create payment method updated notification for new cards
                 if (cardIndex === -1 && cardInfo?.last4) {
                     try {
@@ -500,7 +504,7 @@ const verifyPayment = async (req, res) => {
                             // Calculate total amount
                             totalAmount = price //-discount
 
-                           // console.log(`Price: ${price}, Discount: ${discount}, Total: ${totalAmount}`);
+                            // console.log(`Price: ${price}, Discount: ${discount}, Total: ${totalAmount}`);
                         }
                     }
 
@@ -518,7 +522,7 @@ const verifyPayment = async (req, res) => {
                     invoice.endDate = endDate;
 
                     await invoice.save();
-                   // console.log('Invoice updated to paid status:', invoice._id);
+                    // console.log('Invoice updated to paid status:', invoice._id);
                 } else {
                     console.log('No invoice to update, continuing with payment verification');
                 }
@@ -556,7 +560,7 @@ const verifyPayment = async (req, res) => {
                     });
 
                     await receipt.save();
-                   // console.log('Receipt created successfully:', receipt._id);
+                    // console.log('Receipt created successfully:', receipt._id);
 
                     // Update subscription with receipt ID only if receipt was created
                     customerSubscription.receiptId = receipt._id;
@@ -586,7 +590,7 @@ const verifyPayment = async (req, res) => {
                     const tenant = await Tenant.findById(customerSubscription.tenantId);
                     if (tenant) {
                         tenant.status = 'active';
-                        
+
                         // Handle bandwidth limit - convert "unlimited" to 0 (which represents unlimited in the system)
                         const bandwidthFeature = features.find(feature => feature?.name === 'Bandwidth');
                         let bandwidthLimit = bandwidthFeature?.limit ?? tenant.usersBandWidth ?? 0;
@@ -594,7 +598,7 @@ const verifyPayment = async (req, res) => {
                             bandwidthLimit = 0; // 0 represents unlimited bandwidth
                         }
                         tenant.usersBandWidth = Number(bandwidthLimit) || 0;
-                        
+
                         // Handle users limit - convert "unlimited" to 0 (which represents unlimited in the system)
                         const usersFeature = features.find(feature => feature?.name === 'Users');
                         let usersLimit = usersFeature?.limit ?? tenant.totalUsers ?? 0;
@@ -602,64 +606,64 @@ const verifyPayment = async (req, res) => {
                             usersLimit = 0; // 0 represents unlimited users
                         }
                         tenant.totalUsers = Number(usersLimit) || 0;
-                        
+
                         await tenant.save();
 
-                    const user = await Users.findById(customerSubscription.ownerId);
-                    // active user
-                    if (user) {
-                        user.status ='active'
-                        await user.save();
-                    }
+                        const user = await Users.findById(customerSubscription.ownerId);
+                        // active user
+                        if (user) {
+                            user.status = 'active'
+                            await user.save();
+                        }
 
-                    // 2️⃣ Call function to create or get default Zoom settings
-                    const videoSettingsResponse = await CreateOrGetVideoCallingSettings(customerSubscription.tenantId, ownerId); 
-                    console.log(videoSettingsResponse);
+                        // 2️⃣ Call function to create or get default Zoom settings
+                        const videoSettingsResponse = await CreateOrGetVideoCallingSettings(customerSubscription.tenantId, ownerId);
+                        console.log(videoSettingsResponse);
 
                         // Create Usage document only once per billing period after payment verification
                         try {
                             const now = new Date();
                             const usageBillingCycle = (membershipType || 'monthly').toLowerCase();
-                            
+
                             // Check if Usage already exists for current billing period
                             const existingUsage = await Usage.findOne({ tenantId, ownerId });
-                            
+
                             // Helper function to check if we're in the same billing period
                             const isInSameBillingPeriod = (usage) => {
                                 if (!usage || !usage.fromDate || !usage.toDate) return false;
-                                
+
                                 const nowMoment = moment(now);
                                 const fromMoment = moment(usage.fromDate);
                                 const toMoment = moment(usage.toDate);
-                                
+
                                 // Check if current date is within the existing usage period
                                 if (nowMoment.isBetween(fromMoment, toMoment, null, '[]')) {
                                     return true;
                                 }
-                                
+
                                 // For monthly: check if we're in the same month and year
                                 if (usageBillingCycle.includes('month')) {
-                                    return nowMoment.year() === fromMoment.year() && 
-                                           nowMoment.month() === fromMoment.month();
+                                    return nowMoment.year() === fromMoment.year() &&
+                                        nowMoment.month() === fromMoment.month();
                                 }
-                                
+
                                 // For annual: check if we're in the same year cycle
                                 if (usageBillingCycle.includes('year') || usageBillingCycle.includes('annual')) {
                                     return nowMoment.year() === fromMoment.year();
                                 }
-                                
+
                                 return false;
                             };
-                            
+
                             // Only create Usage if it doesn't exist for current billing period
                             if (!existingUsage || !isInSameBillingPeriod(existingUsage)) {
                                 const usageAttributes = features
                                     .filter(f => ['Assessments', 'Internal_Interviews', 'Question_Bank_Access', 'Bandwidth'].includes(f?.name))
                                     .map(f => ({
                                         entitled: Number(f?.limit) || 0,
-                                        type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' : 
-                                              f?.name === 'Question_Bank_Access' ? 'Question Bank Access' :
-                                              f?.name === 'Bandwidth' ? 'User Bandwidth' : f?.name,
+                                        type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' :
+                                            f?.name === 'Question_Bank_Access' ? 'Question Bank Access' :
+                                                f?.name === 'Bandwidth' ? 'User Bandwidth' : f?.name,
                                         utilized: 0,
                                         remaining: Number(f?.limit) || 0,
                                     }));
@@ -744,7 +748,7 @@ const verifyPayment = async (req, res) => {
                             ) {
                                 txns[i].status = 'completed';
                                 updatedTransaction = true;
-                               // console.log('Updated pending transaction to completed status');
+                                // console.log('Updated pending transaction to completed status');
                                 break;
                             }
                         }
@@ -793,7 +797,7 @@ const verifyPayment = async (req, res) => {
                         ) {
                             txns[i].status = 'completed';
                             updatedTransaction = true;
-                           // console.log('Updated pending transaction to completed status');
+                            // console.log('Updated pending transaction to completed status');
                             break;
                         }
                     }
@@ -826,24 +830,49 @@ const verifyPayment = async (req, res) => {
         }
 
         console.log('Payment verification completed, all records updated');
-        
+
         // Create payment success push notification
         try {
             const plan = await SubscriptionPlan.findOne({ planId: planId });
             const paymentAmount = razorpayPayment?.amount ? razorpayPayment.amount / 100 : 0;
-            
+
             await createPaymentSuccessNotification(ownerId, tenantId, {
                 amount: paymentAmount,
                 planName: plan?.name || 'Subscription',
                 billingCycle: membershipType || 'monthly',
                 paymentCode: existingPayment?.paymentCode || 'N/A'
             });
-            
+
             console.log('[PAYMENT] Success notification created for payment verification');
         } catch (notificationError) {
             console.error('[PAYMENT] Error creating payment success notification:', notificationError);
             // Don't fail the payment if notification fails
         }
+        // const responseBody = {
+        //     message: 'Payment verified and processed successfully',
+        //     transactionId: razorpay_payment_id,
+        //     status: 'paid'
+        // };
+
+        // // Success logging - Ensure processName is always included
+        // res.locals.logData = {
+        //     tenantId: req.body.tenantId,
+        //     ownerId: req.body.ownerId,
+        //     processName: 'Verify Payment', // Always include processName
+        //     status: 'success',
+        //     message: 'Payment verified successfully',
+        //     paymentId: razorpay_payment_id,
+        //     subscriptionId: razorpay_subscription_id,
+        //     amount: razorpayPayment?.amount ? razorpayPayment.amount / 100 : 0,
+        //     planName: subPlan?.name,
+        //     requestBody: {
+        //         razorpay_payment_id: razorpay_payment_id,
+        //         razorpay_subscription_id: razorpay_subscription_id
+        //     },
+        //     responseBody: responseBody,
+        // };
+
+
 
         return res.status(200).json({
             message: 'Payment verified and processed successfully',
@@ -852,6 +881,22 @@ const verifyPayment = async (req, res) => {
         });
     } catch (error) {
         console.error('Error verifying payment:', error);
+
+        // Error logging - Ensure processName is always included
+        // res.locals.logData = {
+        //     tenantId: req.body.tenantId,
+        //     ownerId: req.body.ownerId,
+        //     processName: 'Verify Payment', // Always include processName
+        //     status: 'error',
+        //     message: error.message,
+        //     stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+        //     requestBody: {
+        //         razorpay_payment_id: req.body.razorpay_payment_id,
+        //         razorpay_subscription_id: req.body.razorpay_subscription_id
+        //     },
+
+        //     //  responseMessage: responseBody.message
+        // };
         return res.status(500).json({
             message: 'Error verifying payment',
             error: error.message,
@@ -862,7 +907,14 @@ const verifyPayment = async (req, res) => {
 
 // Full webhook handler for processing Razorpay events
 const handleWebhook = async (req, res) => {
+    // Set up logging context
+    // res.locals.loggedByController = true;
+    // res.locals.processName = 'Payment Webhook';
+
     try {
+
+
+
         // console.log('============== SUBSCRIPTION WEBHOOK RECEIVED ==============');
         // console.log('Timestamp:', new Date().toISOString());
 
@@ -963,34 +1015,72 @@ const handleWebhook = async (req, res) => {
             console.log('Status:', payload.status);
         }
 
+        console.log("Full webhook body payload", payload)
+
+
         // Handle different events
         // if ((event === 'payment.captured' || event === 'payment.authorized') && payload) {
         //     await handlePaymentAuthorized(payload);
         // } else
         if (event === 'subscription.authenticated' && payload) {
-            await handleSubscriptionAuthenticated(payload);
+            await handleSubscriptionAuthenticated(payload,res);
         } else if (event === 'subscription.activated' && payload) {
-            await handleSubscriptionActivated(payload);
+            await handleSubscriptionActivated(payload,res);
         } else if (event === 'subscription.charged' && payload) {
             // Enrich payload with payment entity and contains array so downstream can extract paymentId
             const paymentEntity = req.body.payload?.payment?.entity || req.body.payload?.payment;
             const enrichedPayload = { ...payload, payment: paymentEntity, contains: req.body.contains };
-            await handleSubscriptionCharged(enrichedPayload);
+            await handleSubscriptionCharged(enrichedPayload,res);
         } else if (event === 'payment.failed' && payload) {
-            await handlePaymentFailed(payload);
+            await handlePaymentFailed(payload,res);
         } else if (event === 'subscription.halted' && payload) {
-            await handleSubscriptionHalted(payload);
+            await handleSubscriptionHalted(payload,res);
         } else if (event === 'subscription.cancelled' && payload) {
-            await handleSubscriptionCancelled(payload);
+            await handleSubscriptionCancelled(payload,res);
         } else if (event === 'subscription.updated' && payload) {
             await handleSubscriptionUpdated(payload);
         } else {
-           console.log('Unhandled webhook event:', event);
+            console.log('Unhandled webhook event:', event);
         }
+
+        // // Success logging for each event type
+        // res.locals.logData = {
+        //     tenantId: req?.body?.payload?.subscription?.entity?.notes?.tenantId || "",
+        //     ownerId: req?.body?.payload?.subscription?.entity?.notes?.ownerId || "",
+        //     processName: 'Payment Webhook', // Always include processName
+        //     status: 'success',
+        //     message: `Webhook ${req.body.event} processed successfully`,
+        //     event: req.body.event,
+        //     entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+        //     requestBody: {
+        //         event: req.body.event,
+        //         entity_id: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id
+        //     },
+        //     responseBody: {
+        //         received: true
+        //     }
+        // };
 
         res.status(200).json({ received: true });
     } catch (error) {
         console.error('Error processing webhook:', error);
+        // Error logging - Ensure responseError is a string, not object
+        // res.locals.logData = {
+        //     tenantId: req?.body?.payload?.subscription?.entity?.notes?.tenantId || "",
+        //     ownerId: req?.body?.payload?.subscription?.entity?.notes?.ownerId || "",
+        //     processName: 'Payment Webhook',
+        //     status: 'error',
+        //     message: error.message,
+        //     stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+        //     responseError: error.message, // Store only the message as string
+        //     requestBody: {
+        //         event: req.body?.event,
+        //         entity_id: req.body?.payload?.payment?.entity?.id || req.body?.payload?.subscription?.entity?.id
+        //     },
+        //     responseBody: {
+        //         error: 'Webhook processing failed'
+        //     }
+        // };
         res.status(500).json({ error: 'Webhook processing failed' });
     }
 };
@@ -1115,7 +1205,12 @@ const handleWebhook = async (req, res) => {
 //     }
 // };
 
-const handleSubscriptionAuthenticated = async (subscription) => {
+const handleSubscriptionAuthenticated = async (subscription,res) => {
+
+    // Set up logging context
+    // res.locals.loggedByController = true;
+    // res.locals.processName = 'Subscription Authenticated';
+
     try {
         console.log('Handling subscription.authenticated event');
 
@@ -1138,7 +1233,7 @@ const handleSubscriptionAuthenticated = async (subscription) => {
         }
 
         // Update subscription status in database
-        const ownerId = notes.ownerId;
+        const ownerId = notes.ownerId || "";
         const tenantId = notes.tenantId || '';
 
         if (!ownerId) {
@@ -1170,8 +1265,40 @@ const handleSubscriptionAuthenticated = async (subscription) => {
             existingSubscription.updatedAt = new Date();
 
             await existingSubscription.save();
-           // console.log('Updated existing subscription record');
+            // console.log('Updated existing subscription record');
+
+            // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: tenantId || "",
+            //     ownerId: ownerId || "",
+            //     processName: 'Subscription Authenticated', // Always include processName
+            //     status: 'success',
+            //     message: `Subscription Authenticated processed successfully`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         existingSubscription
+            //     }
+            // };
+
         } else {
+            //  res.locals.logData = {
+            //     tenantId: tenantId || "",
+            //     ownerId: ownerId || "",
+            //     processName: 'Subscription Authenticated', // Always include processName
+            //     status: 'Not Found',
+            //     message: `No existing subscription found`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: 'No existing subscription found'
+                
+            // };
             console.log('No existing subscription found');
         }
 
@@ -1179,12 +1306,32 @@ const handleSubscriptionAuthenticated = async (subscription) => {
 
         // Nothing more to do in this handler function, the main webhook handler will respond
     } catch (error) {
+         // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: subscription?.notes?.tenantId || "",
+            //     ownerId: subscription?.notes?.ownerId || "",
+            //      processName: 'Subscription Authenticated', // Always include processName
+            //     status: 'error',
+            //     message: `Subscription Authenticated processed Failed`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         error
+            //     }
+            // };
         console.error('Error in handleSubscriptionAuthenticated:', error);
     }
 };
 
 // Handle subscription.activated event
-const handleSubscriptionActivated = async (subscription) => {
+const handleSubscriptionActivated = async (subscription,res) => {
+    
+    // Set up logging context
+    // res.locals.loggedByController = true;
+    // res.locals.processName = 'Subscription Activated';
     try {
         console.log('Handling subscription.activated event');
 
@@ -1216,7 +1363,7 @@ const handleSubscriptionActivated = async (subscription) => {
             return;
         }
 
-       console.log(`Updating subscription for user ${ownerId} with activated Razorpay subscription ID ${subscriptionId}`);
+        console.log(`Updating subscription for user ${ownerId} with activated Razorpay subscription ID ${subscriptionId}`);
 
         // Find the customer subscription in database
         const existingSubscription = await CustomerSubscription.findOne({
@@ -1243,6 +1390,24 @@ const handleSubscriptionActivated = async (subscription) => {
 
             await existingSubscription.save();
             //console.log('Updated existing subscription to active status');
+
+             // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: subscription?.notes?.tenantId || "",
+            //     ownerId: subscription?.notes?.ownerId || "",
+            //     processName: 'Subscription Activated', // Always include processName
+            //     status: 'success',
+            //     message: `Subscription Activated processed successfully`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         existingSubscription
+            //     }
+            // };
+
         } else {
             // Create a new subscription record if it doesn't exist
             const startDate = new Date();
@@ -1263,17 +1428,56 @@ const handleSubscriptionActivated = async (subscription) => {
             });
 
             await newSubscription.save();
+
+             // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: tenantId || "",
+            //     ownerId: ownerId || "",
+            //     processName: 'Subscription Activated', // Always include processName
+            //     status: 'success',
+            //     message: `Subscription Activated processed successfully`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         newSubscription
+            //     }
+            // };
+
+
             console.log('Created new active subscription record');
         }
 
         console.log(`Updated subscription status for user ${ownerId} to active`);
     } catch (error) {
         console.error('Error in handleSubscriptionActivated:', error);
+        // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: subscription?.notes?.tenantId || "",
+            //     ownerId: subscription?.notes?.ownerId || "",
+            //     processName: 'Subscription Activated', // Always include processName
+            //     status: 'error',
+            //     message: `Subscription Activated processed Failed`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         error
+            //     }
+            // };
     }
 };
 
 // Handle payment.failed event
-const handlePaymentFailed = async (payment) => {
+const handlePaymentFailed = async (payment,res) => {
+
+     // Set up logging context
+    // res.locals.loggedByController = true;
+    // res.locals.processName = 'Subscription Payment Failed';
     try {
         //console.log('Processing payment failed event for:', payment.id);
 
@@ -1282,6 +1486,9 @@ const handlePaymentFailed = async (payment) => {
             console.log('Not a subscription payment, skipping subscription update');
             return;
         }
+
+        console.log("payment failed",payment);
+        
 
         // Find the subscription in our database
         const customerSubscription = await CustomerSubscription.findOne({
@@ -1362,6 +1569,25 @@ const handlePaymentFailed = async (payment) => {
         customerSubscription.invoiceId = invoice._id;
         await customerSubscription.save();
 
+           // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId:customerSubscription?.tenantId || "",
+            //     ownerId: customerSubscription?.ownerId || "",
+            //     processName: 'Subscription Authenticated', // Always include processName
+            //     status: 'success',
+            //     message: `Subscription Authenticated processed successfully`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         payment
+            //     },
+            //     responseBody: {
+            //         customerSubscription,
+            //         failedPayment
+            //     }
+            // };
+
+
         //console.log('Updated subscription with failed payment information');
 
         // Create payment failed push notification
@@ -1380,11 +1606,30 @@ const handlePaymentFailed = async (payment) => {
 
     } catch (error) {
         console.error('Error handling payment failed event:', error);
+         // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: req?.body?.payload?.subscription?.entity?.notes?.tenantId || "",
+            //     ownerId: req?.body?.payload?.subscription?.entity?.notes?.ownerId || "",
+            //     processName: 'Subscription Failed', // Always include processName
+            //     status: 'error',
+            //     message: `Subscription Failed processed Failed`,
+            //     event: req.body.event,
+            //     entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         payment
+            //     },
+            //     responseBody: {
+            //         error
+            //     }
+            // };
     }
 };
 
 // Handle subscription.halted event
-const handleSubscriptionHalted = async (subscription) => {
+const handleSubscriptionHalted = async (subscription,res) => {
+    // Set up logging context
+    // res.locals.loggedByController = true;
+    // res.locals.processName = 'Subscription Halted';
     try {
         console.log('Processing subscription halted event for:', subscription.id);
 
@@ -1403,6 +1648,23 @@ const handleSubscriptionHalted = async (subscription) => {
         customerSubscription.endReason = subscription.pause_reason || 'Payment failures';
         await customerSubscription.save();
 
+            // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: subscription?.notes?.tenantId || "",
+            //     ownerId: subscription?.notes?.ownerId || "",
+            //     processName: 'Subscription Halted', // Always include processName
+            //     status: 'success',
+            //     message: `Subscription Halted processed successfully`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         customerSubscription
+            //     }
+            // };
+
         //console.log('Updated subscription status to halted');
 
         // Create subscription halted push notification
@@ -1420,11 +1682,32 @@ const handleSubscriptionHalted = async (subscription) => {
 
     } catch (error) {
         console.error('Error handling subscription halted event:', error);
+         // Success logging for each event type
+            // res.locals.logData = {
+            //    tenantId: subscription?.notes?.tenantId || "",
+            //     ownerId: subscription?.notes?.ownerId || "",
+            //     processName: 'Subscription Halted', // Always include processName
+            //     status: 'error',
+            //     message: `Subscription Halted processed Failed`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         error
+            //     }
+            // };
     }
 };
 
 // Handle subscription.cancelled event from Razorpay webhooks
-const handleSubscriptionCancelled = async (subscription) => {
+const handleSubscriptionCancelled = async (subscription,res) => {
+
+    // Set up logging context
+    // res.locals.loggedByController = true;
+    // res.locals.processName = 'Subscription Cancelled';
+
     try {
         console.log('Processing in razorpay subscription cancelled webhook for:', subscription.id);
 
@@ -1463,7 +1746,27 @@ const handleSubscriptionCancelled = async (subscription) => {
             invoice.status = 'cancelled';
             await invoice.save();
         }
+
         
+            // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: subscription?.notes?.tenantId || "",
+            //     ownerId: subscription?.notes?.ownerId || "",
+            //     processName: 'Subscription Cancelled', // Always include processName
+            //     status: 'success',
+            //     message: `Subscription Cancelled processed successfully`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         customerSubscription,
+            //         invoice
+            //     }
+            // };
+
+
         // Create subscription cancelled push notification
         try {
             const plan = await SubscriptionPlan.findById(customerSubscription.subscriptionPlanId || customerSubscription.planId);
@@ -1478,11 +1781,32 @@ const handleSubscriptionCancelled = async (subscription) => {
         }
     } catch (error) {
         console.error('Error handling subscription cancellation webhook:', error);
+        // Success logging for each event type
+            // res.locals.logData = {
+            //    tenantId: subscription?.notes?.tenantId || "",
+            //     ownerId: subscription?.notes?.ownerId || "",
+            //     processName: 'Subscription Cancelled', // Always include processName
+            //     status: 'error',
+            //     message: `Subscription Cancelled processed Failed`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         error
+            //     }
+            // };
     }
 };
 
 // Handle subscription.updated event from Razorpay webhooks
-const handleSubscriptionUpdated = async (subscription) => {
+const handleSubscriptionUpdated = async (subscription,res) => {
+
+    // Set up logging context
+    // res.locals.loggedByController = true;
+    // res.locals.processName = 'Subscription Updated';
+
     try {
         console.log('Processing in razorpay subscription updated webhook for:', subscription.id);
 
@@ -1530,7 +1854,7 @@ const handleSubscriptionUpdated = async (subscription) => {
 
         // If no match found, try a more flexible search
         if (!newPlan) {
-           // console.log('No exact match found, trying case-insensitive search...');
+            // console.log('No exact match found, trying case-insensitive search...');
             // Get all plans
             for (const plan of allPlans) {
                 if (plan.razorpayPlanIds) {
@@ -1571,7 +1895,7 @@ const handleSubscriptionUpdated = async (subscription) => {
         // First check if the customerSubscription already has a membershipType
         if (customerSubscription.membershipType) {
             membershipType = customerSubscription.membershipType;
-           // console.log('Using existing membership type from subscription record:', membershipType);
+            // console.log('Using existing membership type from subscription record:', membershipType);
         }
         // Then check if it has selectedBillingCycle which might have been set during the update
         else if (customerSubscription.selectedBillingCycle) {
@@ -1580,7 +1904,7 @@ const handleSubscriptionUpdated = async (subscription) => {
         }
         // Next try to determine from the razorpayPlanIds structure if available
         else if (newPlan.razorpayPlanIds && typeof newPlan.razorpayPlanIds === 'object') {
-           // console.log('Plan has razorpayPlanIds structure:', JSON.stringify(newPlan.razorpayPlanIds));
+            // console.log('Plan has razorpayPlanIds structure:', JSON.stringify(newPlan.razorpayPlanIds));
 
             // Case insensitive comparison for more robust matching
             const lowerRazorpayPlanId = razorpayPlanId.toLowerCase();
@@ -1592,7 +1916,7 @@ const handleSubscriptionUpdated = async (subscription) => {
                 //console.log('Determined this is a monthly plan by ID match');
             } else if (lowerAnnualPlanId && lowerRazorpayPlanId === lowerAnnualPlanId) {
                 membershipType = 'annual';
-               // console.log('Determined this is an annual plan by ID match');
+                // console.log('Determined this is an annual plan by ID match');
             } else {
                 // If structure exists but no match, use fallback
                 membershipType = subscription.period === 'yearly' ? 'annual' : 'monthly';
@@ -1600,7 +1924,7 @@ const handleSubscriptionUpdated = async (subscription) => {
             }
         } else {
             // If razorpayPlanIds doesn't exist or isn't structured as expected
-           // console.log('Plan does not have expected razorpayPlanIds structure, using fallback');
+            // console.log('Plan does not have expected razorpayPlanIds structure, using fallback');
             membershipType = subscription.period === 'yearly' ? 'annual' : 'monthly';
             console.log('Using fallback method to determine plan type:', membershipType);
         }
@@ -1608,7 +1932,7 @@ const handleSubscriptionUpdated = async (subscription) => {
         // Finally, check the period directly from Razorpay as ultimate fallback
         if (!membershipType && subscription.period) {
             membershipType = subscription.period === 'yearly' ? 'annual' : 'monthly';
-           // console.log('Determined plan type from Razorpay period:', membershipType);
+            // console.log('Determined plan type from Razorpay period:', membershipType);
         }
 
         //console.log('Using membership type:', membershipType);
@@ -1645,7 +1969,7 @@ const handleSubscriptionUpdated = async (subscription) => {
                 } else {
                     updatedTotalAmount = updatedPrice - monthlyPricing.discount;
                 }
-               console.log('Monthly pricing found:', { price: updatedPrice, totalAmount: updatedTotalAmount });
+                console.log('Monthly pricing found:', { price: updatedPrice, totalAmount: updatedTotalAmount });
             }
         }
 
@@ -1653,7 +1977,7 @@ const handleSubscriptionUpdated = async (subscription) => {
         if (updatedPrice > 0) {
             customerSubscription.price = updatedPrice;
             customerSubscription.totalAmount = updatedTotalAmount;
-           // console.log('Updated subscription with new price and totalAmount');
+            // console.log('Updated subscription with new price and totalAmount');
         } else {
             console.log('No valid pricing found for the membership type:', membershipType);
         }
@@ -1698,6 +2022,24 @@ const handleSubscriptionUpdated = async (subscription) => {
         }
 
         await existingInvoice.save();
+
+         // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: subscription?.notes?.tenantId || "",
+            //     ownerId: subscription?.notes?.ownerId || "",
+            //     processName: 'Subscription Updated', // Always include processName
+            //     status: 'success',
+            //     message: `Subscription Updated processed successfully`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         customerSubscription,
+            //         existingInvoice
+            //     }
+            // };
         // console.log('Updated invoice metadata for subscription update (no payment applied)');
 
         //  Do not create receipts on subscription.updated; handled in subscription.charged
@@ -1705,6 +2047,23 @@ const handleSubscriptionUpdated = async (subscription) => {
 
     } catch (error) {
         console.error('Error handling subscription update webhook:', error);
+        // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: subscription?.notes?.tenantId || "",
+            //     ownerId: subscription?.notes?.ownerId || "",
+            //     processName: 'Subscription Updated', // Always include processName
+            //     status: 'error',
+            //     message: `Subscription Updated processed Failed`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         error
+            //     }
+            // };
+
     }
 }
 
@@ -1712,7 +2071,11 @@ const handleSubscriptionUpdated = async (subscription) => {
 
 
 // Handle subscription.charged event - occurs when a subscription payment is successful
-const handleSubscriptionCharged = async (subscription) => {
+const handleSubscriptionCharged = async (subscription,res) => {
+
+    // res.locals.loggedByController = true;
+    // res.locals.processName = "Subscription Charged";
+
     try {
         // Debug check to ensure helper functions are available
         // console.log('Helper functions in handleSubscriptionCharged:', {
@@ -1720,6 +2083,7 @@ const handleSubscriptionCharged = async (subscription) => {
         //     createReceipt: typeof createReceipt === 'function',
         //     calculateEndDate: typeof calculateEndDate === 'function'
         // });
+
 
         console.log('Processing subscription charged event for:', subscription.id);
         console.log('Subscription details:', JSON.stringify(subscription, null, 2));
@@ -1893,7 +2257,7 @@ const handleSubscriptionCharged = async (subscription) => {
         let billingEndDate = calculateEndDate(customerSubscription.selectedBillingCycle);
 
         // Find existing invoice for this subscription
-       console.log('Looking for existing invoice for subscription:', customerSubscription._id);
+        console.log('Looking for existing invoice for subscription:', customerSubscription._id);
         let invoice = await Invoicemodels.findOne({ _id: customerSubscription.invoiceId });
 
         if (invoice) {
@@ -1909,7 +2273,7 @@ const handleSubscriptionCharged = async (subscription) => {
             invoice.startDate = new Date();
             invoice.endDate = billingEndDate;
             invoice.dueDate = billingEndDate;
-            
+
             await invoice.save();
             console.log('Updated existing invoice:', invoice._id);
         } else {
@@ -1952,15 +2316,15 @@ const handleSubscriptionCharged = async (subscription) => {
             console.log('Created new invoice as fallback:', invoice._id);
         }
 
-       console.log('Creating receipt with amount:', amount);
+        console.log('Creating receipt with amount:', amount);
 
         // Check if we have a valid payment ID to use as transaction ID
         if (!paymentId) {
             console.error('Missing payment ID - cannot create receipt without a valid transaction ID');
-           console.log('Skipping receipt creation until a valid payment ID is available');
+            console.log('Skipping receipt creation until a valid payment ID is available');
             return; // Exit the function early if we don't have a valid payment ID
         }
-       console.log('Using payment ID as transaction ID for receipt:', paymentId);
+        console.log('Using payment ID as transaction ID for receipt:', paymentId);
 
         // Fetch payment details to update payment method/card info for recurring payments
         try {
@@ -2003,7 +2367,7 @@ const handleSubscriptionCharged = async (subscription) => {
                             isDefault: true
                         });
                         await paymentCard.save();
-                      console.log('Saved new payment card from subscription.charged');
+                        console.log('Saved new payment card from subscription.charged');
                     } else {
                         console.log('No token present; skipping new PaymentCard creation to satisfy schema');
                     }
@@ -2040,7 +2404,7 @@ const handleSubscriptionCharged = async (subscription) => {
                     paymentCard.lastPaymentDate = new Date();
                     paymentCard.lastPaymentId = paymentId;
                     await paymentCard.save();
-                   console.log('Updated payment card from subscription.charged');
+                    console.log('Updated payment card from subscription.charged');
                 }
             } else {
                 console.log('No card/token details available in fetched payment for subscription.charged');
@@ -2078,7 +2442,7 @@ const handleSubscriptionCharged = async (subscription) => {
         });
 
         await receipt.save();
-       console.log('Receipt created successfully:', receipt._id);
+        console.log('Receipt created successfully:', receipt._id);
 
         // Use the billing end date we already calculated
         // This avoids redeclaring variables
@@ -2104,7 +2468,7 @@ const handleSubscriptionCharged = async (subscription) => {
             };
 
             await payment.save();
-           console.log('Payment record updated:', payment._id);
+            console.log('Payment record updated:', payment._id);
         }
 
         // Get the new end date from subscription or use our calculated billing end date
@@ -2131,27 +2495,27 @@ const handleSubscriptionCharged = async (subscription) => {
         // create usage
 
         const features = subscriptionPlan.features;
-        console.log('features:',features);
+        console.log('features:', features);
 
         const tenant = await Tenant.findById(customerSubscription.tenantId);
-            tenant.status = 'active';
-            
-            // Handle bandwidth limit - convert "unlimited" to 0 (which represents unlimited in the system)
-            const bandwidthFeature = features.find(feature => feature.name === 'Bandwidth');
-            let bandwidthLimit = bandwidthFeature?.limit ?? tenant.usersBandWidth ?? 0;
-            if (bandwidthLimit === 'unlimited' || bandwidthLimit === 'Unlimited') {
-                bandwidthLimit = 0; // 0 represents unlimited bandwidth
-            }
-            tenant.usersBandWidth = Number(bandwidthLimit) || 0;
-            
-            // Handle users limit - convert "unlimited" to 0 (which represents unlimited in the system)
-            const usersFeature = features.find(feature => feature.name === 'Users');
-            let usersLimit = usersFeature?.limit ?? tenant.totalUsers ?? 0;
-            if (usersLimit === 'unlimited' || usersLimit === 'Unlimited') {
-                usersLimit = 0; // 0 represents unlimited users
-            }
-            tenant.totalUsers = Number(usersLimit) || 0;
-            
+        tenant.status = 'active';
+
+        // Handle bandwidth limit - convert "unlimited" to 0 (which represents unlimited in the system)
+        const bandwidthFeature = features.find(feature => feature.name === 'Bandwidth');
+        let bandwidthLimit = bandwidthFeature?.limit ?? tenant.usersBandWidth ?? 0;
+        if (bandwidthLimit === 'unlimited' || bandwidthLimit === 'Unlimited') {
+            bandwidthLimit = 0; // 0 represents unlimited bandwidth
+        }
+        tenant.usersBandWidth = Number(bandwidthLimit) || 0;
+
+        // Handle users limit - convert "unlimited" to 0 (which represents unlimited in the system)
+        const usersFeature = features.find(feature => feature.name === 'Users');
+        let usersLimit = usersFeature?.limit ?? tenant.totalUsers ?? 0;
+        if (usersLimit === 'unlimited' || usersLimit === 'Unlimited') {
+            usersLimit = 0; // 0 represents unlimited users
+        }
+        tenant.totalUsers = Number(usersLimit) || 0;
+
         await tenant.save();
 
         // Create or update Usage document only once per billing period
@@ -2162,32 +2526,32 @@ const handleSubscriptionCharged = async (subscription) => {
 
         // Check if Usage already exists for current billing period
         let activeUsage = await Usage.findOne({ tenantId: tenantIdForUsage, ownerId: ownerIdForUsage });
-        
+
         // Helper function to check if we're in the same billing period
         const isInSameBillingPeriod = (usage) => {
             if (!usage || !usage.fromDate || !usage.toDate) return false;
-            
+
             const now = new Date();
             const nowMoment = moment(now);
             const fromMoment = moment(usage.fromDate);
             const toMoment = moment(usage.toDate);
-            
+
             // Check if current date is within the existing usage period
             if (nowMoment.isBetween(fromMoment, toMoment, null, '[]')) {
                 return true;
             }
-            
+
             // For monthly: check if we're in the same month and year
             if (billingCycle === 'monthly') {
-                return nowMoment.year() === fromMoment.year() && 
-                       nowMoment.month() === fromMoment.month();
+                return nowMoment.year() === fromMoment.year() &&
+                    nowMoment.month() === fromMoment.month();
             }
-            
+
             // For annual: check if we're in the same year cycle
             if (billingCycle === 'annual' || billingCycle === 'yearly') {
                 return nowMoment.year() === fromMoment.year();
             }
-            
+
             return false;
         };
 
@@ -2197,9 +2561,9 @@ const handleSubscriptionCharged = async (subscription) => {
                 .filter(f => ['Assessments', 'Internal_Interviews', 'Question_Bank_Access', 'Bandwidth'].includes(f?.name))
                 .map(f => ({
                     entitled: Number(f?.limit) || 0,
-                    type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' : 
-                          f?.name === 'Question_Bank_Access' ? 'Question Bank Access' :
-                          f?.name === 'Bandwidth' ? 'User Bandwidth' : f?.name,
+                    type: f?.name === 'Internal_Interviews' ? 'Internal Interviews' :
+                        f?.name === 'Question_Bank_Access' ? 'Question Bank Access' :
+                            f?.name === 'Bandwidth' ? 'User Bandwidth' : f?.name,
                     utilized: 0,
                     remaining: Number(f?.limit) || 0,
                 }));
@@ -2282,8 +2646,49 @@ const handleSubscriptionCharged = async (subscription) => {
             console.error('[PAYMENT] Error creating subscription charged notification:', notificationError);
         }
 
+         // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: subscription?.notes?.tenantId || "",
+            //     ownerId: subscription?.notes?.ownerId || "",
+            //       processName: 'Subscription Charged', // Always include processName
+            //     status: 'success',
+            //     message: `Subscription Charged processed successfully`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //         customerSubscription,
+            //         payment,
+            //         receipt,
+            //         invoice
+            //     }
+            // };
+
+
+
     } catch (error) {
         console.error('Error handling subscription charged event:', error);
+
+         // Success logging for each event type
+            // res.locals.logData = {
+            //     tenantId: subscription?.notes?.tenantId || "",
+            //     ownerId: subscription?.notes?.ownerId || "",
+            //     processName: 'Subscription Charged', // Always include processName
+            //     status: 'error',
+            //     message: `Subscription Charged processed successfully`,
+            //     // event: req.body.event,
+            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+            //     requestBody: {
+            //         subscription
+            //     },
+            //     responseBody: {
+            //        error
+            //     }
+            // };
+
+        throw error;
     }
 };
 
@@ -2296,7 +2701,7 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
             throw new Error('Owner ID is required for customer creation');
         }
 
-       // console.log(`Creating/retrieving customer for owner ID: ${ownerId}`);
+        // console.log(`Creating/retrieving customer for owner ID: ${ownerId}`);
 
         // First check if we already have a Razorpay customer ID for this user
         try {
@@ -2306,7 +2711,7 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
             if (!userEmail) {
                 console.log('No email provided in user profile, will create new customer');
             } else {
-               // console.log('Looking for existing customer with email:', userEmail);
+                // console.log('Looking for existing customer with email:', userEmail);
 
                 // Check existing payment records
                 const existingPayment = await Payment.findOne({
@@ -2323,8 +2728,8 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
                             console.log('Found existing customer ID with matching email:', existingPayment.razorpayCustomerId);
                             return existingPayment.razorpayCustomerId;
                         } else {
-                          console.log(`Email mismatch: Found ${existingRazorpayCustomer.email} but user provided ${userEmail}`);
-                          //  console.log('Creating new customer with correct email');
+                            console.log(`Email mismatch: Found ${existingRazorpayCustomer.email} but user provided ${userEmail}`);
+                            //  console.log('Creating new customer with correct email');
                             // Will continue to create a new customer
                         }
                     } catch (razorpayError) {
@@ -2347,11 +2752,11 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
                             const existingRazorpayCustomer = await razorpay.customers.fetch(cardWithCustomer.razorpayCustomerId);
 
                             if (existingRazorpayCustomer.email === userEmail) {
-                               console.log('Found existing customer ID in card records with matching email:', cardWithCustomer.razorpayCustomerId);
+                                console.log('Found existing customer ID in card records with matching email:', cardWithCustomer.razorpayCustomerId);
                                 return cardWithCustomer.razorpayCustomerId;
                             } else {
-                              console.log(`Email mismatch: Found ${existingRazorpayCustomer.email} but user provided ${userEmail}`);
-                              console.log('Creating new customer with correct email');
+                                console.log(`Email mismatch: Found ${existingRazorpayCustomer.email} but user provided ${userEmail}`);
+                                console.log('Creating new customer with correct email');
                                 // Will continue to create a new customer
                             }
                         } catch (razorpayError) {
@@ -2402,7 +2807,7 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
         customerName = customerName || `Customer ${ownerId.substring(0, 8)}`;
 
         // Create customer in Razorpay with the best available information
-      //  console.log(`Creating customer with name: ${customerName}, email: ${customerEmail || 'Not provided'}, phone: ${customerPhone || 'Not provided'}`);
+        //  console.log(`Creating customer with name: ${customerName}, email: ${customerEmail || 'Not provided'}, phone: ${customerPhone || 'Not provided'}`);
 
         const customerData = {
             name: customerName,
@@ -2447,7 +2852,7 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
                 });
                 if (updatedAny) {
                     await cardDetails.save();
-                   console.log('Updated card subdocuments with customer ID');
+                    console.log('Updated card subdocuments with customer ID');
                 }
             }
         } catch (updateError) {
@@ -2473,7 +2878,7 @@ const getOrCreateSubscriptionPlan = async (planDetails, membershipType) => {
         // Check if we have existing Razorpay plan IDs stored in the database
         if (planDetails.razorpayPlanIds && planDetails.razorpayPlanIds[membershipType]) {
             const existingPlanId = planDetails.razorpayPlanIds[membershipType];
-           // console.log(`Using existing Razorpay plan ID for ${membershipType}: ${existingPlanId}`);
+            // console.log(`Using existing Razorpay plan ID for ${membershipType}: ${existingPlanId}`);
 
             try {
                 // Verify the plan exists in Razorpay
@@ -2483,7 +2888,7 @@ const getOrCreateSubscriptionPlan = async (planDetails, membershipType) => {
                 return existingPlan;
             } catch (fetchError) {
                 console.error(`Error fetching existing plan ${existingPlanId}:`, fetchError);
-               // console.log('Will create a new plan as fallback');
+                // console.log('Will create a new plan as fallback');
                 // Continue to create a new plan if fetch fails
             }
         }
@@ -2506,6 +2911,9 @@ const getOrCreateSubscriptionPlan = async (planDetails, membershipType) => {
 
 // Helper function for creating recurring subscriptions
 const createRecurringSubscription = async (req, res) => {
+    // Set up logging context
+    res.locals.loggedByController = true;
+    res.locals.processName = 'Create Recurring Subscription';
     try {
         const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 
@@ -2533,11 +2941,13 @@ const createRecurringSubscription = async (req, res) => {
             });
         }
 
+
+
         // 1. Create/Get customer
         let customerId;
         try {
             customerId = await createCustomer(userProfile, ownerId, tenantId);
-           // console.log('Customer ID obtained:', customerId);
+            // console.log('Customer ID obtained:', customerId);
         } catch (customerError) {
             console.error('Error creating customer:', customerError);
 
@@ -2549,7 +2959,7 @@ const createRecurringSubscription = async (req, res) => {
 
                 // Try to fetch the existing customer by email
                 try {
-                   // console.log('Customer already exists, trying to fetch by email:', userProfile.email);
+                    // console.log('Customer already exists, trying to fetch by email:', userProfile.email);
 
                     // Instead of limiting to 10 customers, let's search more thoroughly
                     // First try to fetch up to 100 customers to have a better chance of finding the match
@@ -2557,17 +2967,17 @@ const createRecurringSubscription = async (req, res) => {
                         count: 100
                     });
 
-                   // console.log(`Searching through ${customers.items.length} customers for email: ${userProfile.email}`);
+                    // console.log(`Searching through ${customers.items.length} customers for email: ${userProfile.email}`);
 
                     // Find the customer with matching email
                     const existingCustomer = customers.items.find(c => c.email === userProfile.email);
 
                     if (existingCustomer && existingCustomer.id) {
-                       // console.log('Found existing customer with matching email:', existingCustomer.id);
+                        // console.log('Found existing customer with matching email:', existingCustomer.id);
                         customerId = existingCustomer.id; // Return the customer ID with matching email
                     } else {
-                       console.log('Could not find existing customer with email:', userProfile.email);
-                       // console.log('Will create a new customer with the correct email');
+                        console.log('Could not find existing customer with email:', userProfile.email);
+                        // console.log('Will create a new customer with the correct email');
                         // Continue to create a new customer with the correct email
                         // No error returned here, we'll just create a new customer
                     }
@@ -2645,7 +3055,7 @@ const createRecurringSubscription = async (req, res) => {
             });
         }
 
-       // console.log('Found subscription plan:', plandata.name);
+        // console.log('Found subscription plan:', plandata.name);
 
         // 2. Get the correct Razorpay plan ID based on billing cycle
         const razorpayPlanId = plandata.razorpayPlanIds?.[membershipType];
@@ -2657,7 +3067,7 @@ const createRecurringSubscription = async (req, res) => {
             });
         }
 
-       // console.log(`Using existing Razorpay plan ID for ${membershipType}: ${razorpayPlanId}`);
+        // console.log(`Using existing Razorpay plan ID for ${membershipType}: ${razorpayPlanId}`);
 
         // 3. Extract pricing information from the plan
         let price = 0;
@@ -2689,7 +3099,7 @@ const createRecurringSubscription = async (req, res) => {
                 // console.log(price - discount)
                 totalAmount = price;
 
-               // console.log(`Pricing details: Price: ${price}, Discount: ${discount}, Total: ${totalAmount}, Currency: ${currency}`);
+                // console.log(`Pricing details: Price: ${price}, Discount: ${discount}, Total: ${totalAmount}, Currency: ${currency}`);
             } else {
                 console.error(`No pricing found for billing cycle: ${membershipType}`);
                 return res.status(400).json({
@@ -2708,7 +3118,7 @@ const createRecurringSubscription = async (req, res) => {
         // 4. Create subscription - handle errors gracefully
         let subscription;
         try {
-           // console.log('Creating subscription with plan_id:', razorpayPlanId, 'customer_id:', customerId);
+            // console.log('Creating subscription with plan_id:', razorpayPlanId, 'customer_id:', customerId);
             subscription = await razorpay.subscriptions.create({
                 plan_id: razorpayPlanId,
                 customer_id: customerId,
@@ -2721,7 +3131,7 @@ const createRecurringSubscription = async (req, res) => {
                     membershipType
                 }
             });
-          //  console.log('Subscription created successfully:', subscription.id);
+            //  console.log('Subscription created successfully:', subscription.id);
         } catch (subscriptionError) {
             console.error('Error creating subscription:', subscriptionError);
             return res.status(500).json({
@@ -2731,37 +3141,37 @@ const createRecurringSubscription = async (req, res) => {
             });
         }
 
-// 5. Create or update CustomerSubscription record
-let customerSubscription;
-try {
-    // Check if a subscription already exists for this user
-    const existingSubscription = await CustomerSubscription.findOne({ ownerId: ownerId });
-
-    if (!existingSubscription) {
-        // console.log('No existing subscription found; creating new CustomerSubscription for owner:', ownerId);
-        // Create a pending invoice required by CustomerSubscription schema
-        let invoiceDoc = null;
+        // 5. Create or update CustomerSubscription record
+        let customerSubscription;
         try {
-            invoiceDoc = await createInvoice(
-                tenantId,
-                ownerId,
-                plandata.name,
-                planId,
-                totalAmount,
-                { membershipType },
-                'created',
-                discount,
-                'subscription'
-            );
-        } catch (invErr) {
-            console.error('Failed to create invoice for new subscription:', invErr);
-            return res.status(500).json({
-                status: 'error',
-                message: 'Failed to create invoice for subscription'
-            });
-        }
+            // Check if a subscription already exists for this user
+            const existingSubscription = await CustomerSubscription.findOne({ ownerId: ownerId });
 
-            
+            if (!existingSubscription) {
+                // console.log('No existing subscription found; creating new CustomerSubscription for owner:', ownerId);
+                // Create a pending invoice required by CustomerSubscription schema
+                let invoiceDoc = null;
+                try {
+                    invoiceDoc = await createInvoice(
+                        tenantId,
+                        ownerId,
+                        plandata.name,
+                        planId,
+                        totalAmount,
+                        { membershipType },
+                        'created',
+                        discount,
+                        'subscription'
+                    );
+                } catch (invErr) {
+                    console.error('Failed to create invoice for new subscription:', invErr);
+                    return res.status(500).json({
+                        status: 'error',
+                        message: 'Failed to create invoice for subscription'
+                    });
+                }
+
+
 
                 // Build features from plan if available
                 const featureList = Array.isArray(plandata?.features)
@@ -2873,6 +3283,39 @@ try {
             // };
         }
 
+        // const responseBody = {
+        //     subscriptionId: subscription.id,
+        //     razorpayKeyId: razorpay.key_id, // Use the actual Razorpay key_id from the instance
+        //     amount: totalAmount,
+        //     currency: 'INR', // Use INR for compatibility with Razorpay
+        //     isSubscription: true,
+        //     subscriptionStatus: subscription.status,
+        //     authLink: subscription.short_url || '#', // URL for payment authorization
+        //     isMockSubscription: subscription.id.startsWith('sub_mock_'), // Flag for test mode
+        //     orderId: order.id // Use the actual order ID for Razorpay checkout
+        // }
+
+        // // Success logging - Ensure processName is always included
+        // res.locals.logData = {
+        //     tenantId: req?.body?.tenantId || "",
+        //     ownerId: req?.body?.ownerId || "",
+        //     processName: 'Create Recurring Subscription', // Always include processName
+        //     status: 'success',
+        //     message: 'Subscription created successfully',
+        //     subscriptionId: subscription.id,
+        //     razorpayPlanId: razorpayPlanId,
+        //     amount: totalAmount,
+        //     customerId: customerId,
+        //     requestBody: {
+        //         planId: req.body.planId,
+        //         membershipType: req.body.membershipType,
+        //         tenantId: req.body.tenantId
+        //     },
+        //     responseBody: responseBody,
+        // };
+
+    
+
         // console.log('Returning subscription data to frontend, amount:', price);
         return res.status(200).json({
             subscriptionId: subscription.id,
@@ -2886,7 +3329,23 @@ try {
             orderId: order.id // Use the actual order ID for Razorpay checkout
         });
     } catch (error) {
-        console.error('Error creating recurring subscription:', error);
+        // console.error('Error creating recurring subscription:', error);
+
+        // Error logging - Ensure processName is always included
+        // res.locals.logData = {
+        //     tenantId: req?.body?.tenantId || "",
+        //     ownerId: req?.body?.ownerId || "",
+        //     processName: 'Create Recurring Subscription', // Always include processName
+        //     status: 'error',
+        //     message: error.message,
+        //     stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+        //     requestBody: {
+        //         planId: req.body.planId,
+        //         membershipType: req.body.membershipType,
+        //         tenantId: req.body.tenantId
+        //     }
+        // };
+
         return res.status(500).json({
             status: 'error',
             message: 'Error creating subscription',

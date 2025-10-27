@@ -33,6 +33,8 @@ const formatInterviewType = (type) => {
     case_study: "Case Study",
   };
 
+  
+
   return (
     formatMap[type] ||
     type
@@ -139,6 +141,9 @@ const InterviewUserDetails = ({
   const showMidLevel = expYears >= 4;
   const showSeniorLevel = expYears >= 7;
 
+
+// With this:
+const formatKey = contactData?.interviewFormatWeOffer ? 'interviewFormatWeOffer' : 'InterviewFormatWeOffer';
   return (
     <div className="mx-2">
       <div
@@ -157,12 +162,14 @@ const InterviewUserDetails = ({
               return;
             }
 
-            if (mode === "users") {
+            if (mode === "users" || mode === "outsource") {
               setInterviewEditOpen(true);
-            } else if (externalData) {
-              // Navigate to outsource interviewer edit page
-              navigate(`/outsource-interviewers/edit/interview/${editId}`);
-            } else {
+            } 
+            // else if (externalData) {
+            //   // Navigate to outsource interviewer edit page
+            //   navigate(`/outsource-interviewers/edit/interview/${editId}`);
+            // }
+             else {
               // Navigate to my profile edit page
               navigate(`/account-settings/my-profile/interview-edit/${editId}`);
             }
@@ -294,8 +301,8 @@ const InterviewUserDetails = ({
           <div className="space-y-2">
             <p className="text-sm text-gray-500">Interview Formats</p>
             <div className="flex flex-wrap gap-2">
-              {contactData?.interviewFormatWeOffer?.length > 0 ? (
-                contactData.interviewFormatWeOffer.map((format, index) => (
+              {contactData?.[formatKey]?.length > 0 ? (
+                contactData?.[formatKey]?.map((format, index) => (
                   <span
                     key={index}
                     className="px-2 py-1 bg-blue-50 text-custom-blue rounded-full text-xs"

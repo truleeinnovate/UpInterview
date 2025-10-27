@@ -18,16 +18,26 @@ import AdvancedDetails from "../Dashboard-Part/Accountsettings/account/MyProfile
 import InterviewUserDetails from "../Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails";
 import AvailabilityUser from "../Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser";
 import { DocumentsSection } from "../Dashboard-Part/Accountsettings/account/MyProfile/DocumentsDetails/DocumentsSection";
+import BasicDetailsEditPage from "../Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage";
+import { useCustomContext } from "../../Context/Contextfetch";
+import EditAdvacedDetails from "../Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails";
+import EditInterviewDetails from "../Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails";
+import EditAvailabilityDetails from "../Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails";
 
 const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     const interviewer = selectedInterviewersData.contactId;
-    console.log('interviewer', interviewer)
-    const { outsourceInterviewers } = useOutsourceInterviewers();
 
+    const { outsourceInterviewers } = useOutsourceInterviewers();
+    const { refetchUsers } = useCustomContext();
     // Removed unused states as we're using MyProfile components now
     const [activeTab, setActiveTab] = useState("Basic Details");
-
     const [isExpanded, setIsExpanded] = useState(false);
+    const [basicEditOpen, setBasicEditOpen] = useState(false);
+    const [advacedEditOpen, setAdvacedEditOpen] = useState(false);
+    const [interviewEditOpen, setInterviewEditOpen] = useState(false);
+    const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
+    const [availabilityData, setAvailabilityData] = useState(null);
+
 
     // Documents state for DocumentsSection component
     const [documents, setDocuments] = useState({
@@ -38,6 +48,36 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     const toggleExpand = () => {
         setIsExpanded(!isExpanded);
     };
+
+    const handleBasicEditSuccess = () => {
+        refetchUsers(); // Refresh the users data in context
+    };
+
+
+    const handleAdvacedEditSuccess = () => {
+        refetchUsers(); // Refresh the users data in context
+    };
+
+    const handleInterviewEditSuccess = () => {
+        refetchUsers(); // Refresh the users data in context
+    };
+
+    const handleAvailabilityEditSuccess = () => {
+        refetchUsers(); // Refresh the users data in context
+        setAvailabilityData(null); // Clear the availability data
+    };
+
+     const handleAvailabilityEditClick = (data) => {
+    setAvailabilityData(data);
+    setAvailabilityEditOpen(true);
+  };
+
+
+     const handleAvailabilityEditClose = () => {
+    setAvailabilityEditOpen(false);
+    setAvailabilityData(null); // Clear the availability data
+  };
+
 
     // fetching feedback
     const interviewerId = interviewer?._id;
@@ -141,7 +181,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                                 </h2>
                             </div>
                             <div className="flex space-x-2">
-                            <button
+                                <button
                                     className="bg-custom-blue text-white text-sm px-3 py-1 lg:px-6 xl:px-6 2xl:px-6 lg:py-2 xl:py-2 2xl:py-2 rounded-md hover:bg-custom-blue ml-4"
                                     onClick={handleChangeStatus}
                                 >
@@ -279,25 +319,27 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                             <div>
                                 {activeTab === "Basic Details" && (
                                     <BasicDetailsTab
-                                        mode="view"
-                                        usersId={interviewer?._id}
+                                        mode="outsource"
+                                        usersId={interviewer?.ownerId}
                                         type="interviewer"
-                                        externalData={interviewer}
+                                        setBasicEditOpen={setBasicEditOpen}
+                                    // externalData={interviewer}
                                     />
                                 )}
                                 {activeTab === "Advanced Details" && (
                                     <AdvancedDetails
-                                        mode="view"
-                                        usersId={interviewer?._id}
-                                        type="interviewer"
-                                        externalData={interviewer}
+                                        mode="outsource"
+                                        usersId={interviewer?.ownerId}
+                                        setAdvacedEditOpen={setAdvacedEditOpen}
+                                        onSuccess={handleAdvacedEditSuccess}
                                     />
                                 )}
                                 {activeTab === "Interview Details" && (
                                     <InterviewUserDetails
-                                        mode="view"
-                                        usersId={interviewer?._id}
-                                        externalData={interviewer}
+                                        mode="outsource"
+                                        usersId={interviewer?.ownerId}
+                                        setInterviewEditOpen={setInterviewEditOpen}
+                                        onSuccess={handleInterviewEditSuccess}
                                     />
                                 )}
                                 {activeTab === "Documents Details" && (
@@ -309,9 +351,11 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                                 )}
                                 {activeTab === "Availability Details" && (
                                     <AvailabilityUser
-                                        mode="view"
-                                        usersId={interviewer?._id}
-                                        externalData={interviewer}
+                                        mode="outsource"
+                                        usersId={interviewer?.ownerId}
+                                        setAvailabilityEditOpen={setAvailabilityEditOpen}
+                                         onEditClick={handleAvailabilityEditClick}
+                                        // availabilityData={availabilityData}
                                     />
                                 )}
                                 {activeTab === "Feedback" && (
@@ -363,6 +407,43 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                         />
                     )}
                 </div>
+                {basicEditOpen && (
+                    <BasicDetailsEditPage
+                        from="outsource-interviewer"
+                        usersId={interviewer?.ownerId}
+                        setBasicEditOpen={setBasicEditOpen}
+                        onSuccess={handleBasicEditSuccess}
+                    />
+                )}
+
+                {advacedEditOpen && (
+                    <EditAdvacedDetails
+                        from="outsource-interviewer"
+                        usersId={interviewer?.ownerId}
+                        setAdvacedEditOpen={setAdvacedEditOpen}
+                        onSuccess={handleAdvacedEditSuccess}
+                    />
+                )}
+
+                {interviewEditOpen && (
+                    <EditInterviewDetails
+                        from="outsource-interviewer"
+                        usersId={interviewer?.ownerId}
+                        setInterviewEditOpen={setInterviewEditOpen}
+                        onSuccess={handleInterviewEditSuccess}
+                    />
+                )}
+
+                {availabilityEditOpen && (
+                    <EditAvailabilityDetails
+                        from="outsource-interviewer"
+                        usersId={interviewer?.ownerId}
+                        setAvailabilityEditOpen={handleAvailabilityEditClose}
+                        onSuccess={handleAvailabilityEditSuccess}
+                        availabilityData={availabilityData}
+                    />
+                )}
+
             </div>
         </>
     );

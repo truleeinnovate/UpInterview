@@ -73,6 +73,7 @@ export const useUpdateContactDetail = () => {
 
   return useMutation({
     mutationFn: ({ resolvedId, data }) =>
+     
       axios.patch(`${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`, data),
 
     onSuccess: (response, { data }) => {

@@ -1,37 +1,3 @@
-// const mongoose = require('mongoose');
-
-// const permissionGroupSchema = new mongoose.Schema({
-//   objectName: {
-//     type: String,
-//     required: true
-//   },
-//   permissions: {
-//     type: Map,
-//     of: Boolean,
-//     required: true
-//   }
-// });
-
-// const rolesPermissionObjectSchema = new mongoose.Schema({
-//   label: {
-//     type: String,
-//     required: true
-//   },
-//   roleName: {
-//     type: String,
-//     required: true
-//   },
-//   objects: [permissionGroupSchema],
-//   level: {
-//     type: Number
-//   }
-// }, {
-//   timestamps: true
-// });
-
-// const RolesPermissionObject = mongoose.model('RolesPermissionObject', rolesPermissionObjectSchema);
-
-// module.exports = RolesPermissionObject;
 
 
 // models/RolesPermissionObject.js
@@ -52,6 +18,9 @@ const RolesPermissionObjectSchema = new Schema({
   roleType: { type: String, enum: ['organization', 'individual', 'internal'], required: true },
   description: { type: String },
   //internal type means super admin,support team
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 }, { timestamps: true });
 
 module.exports = mongoose.models.RolesPermissionObject ||

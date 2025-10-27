@@ -66,17 +66,17 @@ const EditInterviewDetails = ({
 
   // Get the appropriate profile data based on context
   const profileData = useMemo(() => {
-    if (from === "outsource-interviewer") {
-      // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
-      // Try to find the interviewer by matching the contactId._id with resolvedId
-      const interviewer = outsourceInterviewers?.find(
-        (i) => i.contactId?._id === resolvedId
-      );
-      // Return the Contact object which has the actual profile data
-      return interviewer?.contactId || null;
-    }
+    // if (from === "outsource-interviewer") {
+    //   // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
+    //   // Try to find the interviewer by matching the contactId._id with resolvedId
+    //   const interviewer = outsourceInterviewers?.find(
+    //     (i) => i.contactId?._id === resolvedId
+    //   );
+    //   // Return the Contact object which has the actual profile data
+    //   return interviewer?.contactId || null;
+    // }
     return userProfile;
-  }, [from, outsourceInterviewers, resolvedId, userProfile]);
+  }, [from,  resolvedId, userProfile]);
 
   const updateContactDetail = useUpdateContactDetail();
   const queryClient = useQueryClient();
@@ -192,7 +192,6 @@ const EditInterviewDetails = ({
 
   const { skills, loadSkills, isSkillsFetching } = useMasterData();
 
-  console.log("profileData", profileData);
   // State for form errors and loading
   const [errors, setErrors] = useState({});
   const [isReady, setIsReady] = useState(false);
@@ -228,7 +227,6 @@ const EditInterviewDetails = ({
   const [initialFormData, setInitialFormData] = useState(null);
   const bioLength = formData.bio?.length || 0;
 
-  // console.log("userId Interview Details", from);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -267,9 +265,9 @@ const EditInterviewDetails = ({
     try {
       const token = localStorage.getItem("token");
       const baseUrl = process.env.REACT_APP_API_URL || "";
-       const slug = techName
-                .replace(/\s+/g, '')  // Remove spaces
-                .replace(/[^a-zA-Z0-9]/g, '');  // Remove special chars if any (optional, adjust as needed)
+      const slug = techName
+        .replace(/\s+/g, '')  // Remove spaces
+        .replace(/[^a-zA-Z0-9]/g, '');  // Remove special chars if any (optional, adjust as needed)
 
       const encodedTech = encodeURIComponent(slug);
       const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
@@ -281,7 +279,7 @@ const EditInterviewDetails = ({
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("response.data", response);
+     
 
       if (response.data) {
         const rateCardsData = Array.isArray(response.data)
@@ -290,11 +288,7 @@ const EditInterviewDetails = ({
         setRateCards(rateCardsData);
       }
     } catch (error) {
-      console.error("Error fetching rate cards:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
+   
       setRateCards([]);
     }
   }, []);
@@ -312,10 +306,8 @@ const EditInterviewDetails = ({
 
     // Calculate which levels should be visible based on years of experience
     const years =
-      parseInt(profileData?.previousExperienceConductingInterviewsYears || profileData?.PreviousExperienceConductingInterviewsYears) || 0;
-    console.log("Years of experience for rate calculation:", years);
-
-    console.log("Profile data:", profileData);
+      parseInt(profileData?.previousExperienceConductingInterviewsYears ) || 0;
+   
     // Show Junior if years <= 6 (0-6 years)
     const shouldShowJunior = years <= 6;
     // Show Mid if years >= 3 AND years <= 9 (3-9 years)
@@ -323,15 +315,10 @@ const EditInterviewDetails = ({
     // Show Senior if years >= 6 (6+ years)
     const shouldShowSenior = years >= 6;
 
-    console.log("Rate visibility:", {
-      junior: shouldShowJunior,
-      mid: shouldShowMid,
-      senior: shouldShowSenior,
-    });
 
     // Create the form data with proper rate visibility
     const newFormData = {
-      PreviousExperienceConductingInterviews: profileData?.PreviousExperienceConductingInterviews || "" ,
+      PreviousExperienceConductingInterviews: profileData?.previousExperienceConductingInterviews || "" ,
       // If experience is "no", keep years empty; otherwise use the parsed value
       PreviousExperienceConductingInterviewsYears:
         profileData?.previousExperienceConductingInterviews === "no"
@@ -367,7 +354,7 @@ const EditInterviewDetails = ({
         },
       },
     };
-    console.log("profileData", profileData);
+
 
     // Set initial form data for comparison
     setInitialFormData(newFormData);
@@ -398,7 +385,7 @@ const EditInterviewDetails = ({
     setIsReady(profileData?.IsReadyForMockInterviews === "yes");
     setErrors({});
 
-    console.log("Form data initialized:", newFormData);
+
   }, [resolvedId, profileData, expYears, fetchRateCards]);
 
   const handleBioChange = (e) => {
@@ -434,7 +421,7 @@ const EditInterviewDetails = ({
   };
 
   const handleRadioChange = (value) => {
-    // console.log("handleRadioChange called with:", value);
+  
     setFormData((prev) => {
       // When changing to "yes", ensure years has a valid value (minimum 1)
       let yearsValue = prev.PreviousExperienceConductingInterviewsYears;
@@ -457,7 +444,7 @@ const EditInterviewDetails = ({
         PreviousExperienceConductingInterviews: value,
         PreviousExperienceConductingInterviewsYears: yearsValue,
       };
-      // console.log("Updated formData:", newFormData);
+  
       return newFormData;
     });
     setErrors((prevErrors) => ({
@@ -564,7 +551,7 @@ const EditInterviewDetails = ({
   };
 
   const handleCloseModal = () => {
-    if (from === "users") {
+    if (from === "users" || from === "outsource-interviewer") {
       setInterviewEditOpen(false);
     } else {
       // navigate('/account-settings/my-profile/interview', { replace: true })
@@ -583,35 +570,23 @@ const EditInterviewDetails = ({
       return;
     }
 
-    console.log("formData before validation:", formData);
+
 
 
     const validationErrors = validateInterviewForm(formData, isReady);
-    console.log("validationErrors:", validationErrors);
+    // console.log("validationErrors:", validationErrors);
     setErrors(validationErrors);
 
     if (!isEmptyObject(validationErrors)) {
       return;
     }
 
-    console.log("form", formData, typeof Number(formData.hourlyRate));
+    // console.log("form", formData, typeof Number(formData.hourlyRate));
 
     setLoading(true);
     try {
-      let updateId;
-      if (from === "outsource-interviewer") {
-        if (!profileData || !profileData._id) {
-          console.error("Profile data not loaded or missing ID:", {
-            profileData,
-          });
-          notify.error(
-            "Profile data is not loaded. Please wait and try again."
-          );
-          return;
-        }
-        updateId = profileData._id;
-      } else {
-        // For regular users (my-profile), profileData is the User object with a contactId field
+  
+     
         if (!profileData || !profileData.contactId) {
           console.error("Profile data not loaded or missing contactId:", {
             profileData,
@@ -622,7 +597,7 @@ const EditInterviewDetails = ({
           return;
         }
 
-        console.log("form", formData, typeof Number(formData.hourlyRate));
+        // console.log("form", formData, typeof Number(formData.hourlyRate));
 
         const cleanFormData = {
             PreviousExperienceConductingInterviews: String(
@@ -645,40 +620,30 @@ const EditInterviewDetails = ({
             bio: String(formData.bio || "").trim(),
             id: formData.id,
             yearsOfExperience: formData.yearsOfExperience,
-            rates: formData.rates
+            rates: formData.rates,
+            tenantId:profileData?.tenantId,
+            ownerId:profileData?._id,
+
         };
-        console.log("cleanFormData", cleanFormData);
+      
 
         try {
-            // Both contexts use the same endpoint since outsource interviewers are Contact records
-            // Determine the correct ID to use for the update
-            let updateId;
-            if (from === "outsource-interviewer") {
-                // For outsource interviewers, profileData is the Contact object
-                if (!profileData || !profileData._id) {
-                    console.error("Profile data not loaded or missing ID:", { profileData });
-                    notify.error("Profile data is not loaded. Please wait and try again.");
-                    return;
-                }
-                updateId = profileData._id;
-            } else {
-                // For regular users (my-profile), profileData is the User object with a contactId field
-                if (!profileData || !profileData.contactId) {
-                    console.error("Profile data not loaded or missing contactId:", { profileData });
-                    notify.error("Profile data is not loaded. Please wait and try again.");
-                    return;
-                }
-                updateId = profileData.contactId; // Use contactId for regular users
+       
+            if (!profileData || !profileData?.contactId) {
+              console.error("Profile data not loaded or missing contactId:", { profileData });
+              notify.error("Profile data is not loaded. Please wait and try again.");
+              return;
             }
+   
 
             const response = await updateContactDetail.mutateAsync({
-                resolvedId: updateId,
+                resolvedId: profileData?.contactId ,
                 data: cleanFormData,
             });
             // Invalidate the query to refetch the updated data
             await queryClient.invalidateQueries(["userProfile", resolvedId]);
 
-            console.log("response cleanFormData", response);
+          
 
             if (response.status === 200) {
                 notify.success("Updated Interview Details Successfully");
@@ -688,24 +653,25 @@ const EditInterviewDetails = ({
                     onSuccess();
                 }
             }
+          // }
         } catch (error) {
-            console.error("Error updating interview details:", error);
+          console.error("Error updating interview details:", error);
 
-            if (error.response) {
-                if (error.response.status === 400) {
-                    const backendErrors = error.response.data.errors || {};
-                    console.log("backendErrors", backendErrors);
-                    setErrors(backendErrors);
-                } else {
-                    notify.error("Error updating interview details. Please try again.");
-                    setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
-                }
+          if (error.response) {
+            if (error.response.status === 400) {
+              const backendErrors = error.response.data.errors || {};
+              console.log("backendErrors", backendErrors);
+              setErrors(backendErrors);
             } else {
-                notify.error("Network error. Please check your connection and try again.");
-                setErrors((prev) => ({ ...prev, form: "Network error" }));
+              notify.error("Error updating interview details. Please try again.");
+              setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
             }
+          } else {
+            notify.error("Network error. Please check your connection and try again.");
+            setErrors((prev) => ({ ...prev, form: "Network error" }));
+          }
         }
-      }
+      // }
     } catch (error) {
       console.error("Error updating interview details:", error);
 
@@ -732,11 +698,11 @@ const EditInterviewDetails = ({
   };
 
   const addSkill = (skillName) => {
-    console.log("addSkill called with:", skillName);
+   
     const trimmedSkill = skillName.trim();
-    console.log("Trimmed skill:", trimmedSkill);
+ 
     if (!trimmedSkill) {
-      console.log("Empty skill name, returning");
+      
       return;
     }
 
@@ -746,22 +712,17 @@ const EditInterviewDetails = ({
         (typeof s === "object" ? s.SkillName : s).toLowerCase() ===
         trimmedSkill.toLowerCase()
     );
-    console.log(
-      "Skill exists check:",
-      skillExists,
-      "Current skills:",
-      selectedSkills
-    );
+    
 
     if (!skillExists) {
       const newSkill = {
         _id: Math.random().toString(36).substr(2, 9),
         SkillName: trimmedSkill,
       };
-      console.log("Creating new skill object:", newSkill);
+   
 
       const updatedSkills = [...selectedSkills, newSkill];
-      console.log("Updated skills array:", updatedSkills);
+
 
       setSelectedSkills(updatedSkills);
       setFormData((prev) => ({
@@ -769,7 +730,7 @@ const EditInterviewDetails = ({
         skills: updatedSkills.map((s) => s?.SkillName || s).filter(Boolean),
       }));
       setErrors((prev) => ({ ...prev, skills: "" }));
-      console.log("Skill added successfully");
+ 
     } else {
       notify.error("Skill already exists");
     }
@@ -810,17 +771,13 @@ const EditInterviewDetails = ({
 
   const handleYearsOfExperienceChange = (e) => {
     const years = parseInt(e.target.value) || 0;
-    console.log("Years of experience changed to:", years);
+  
 
     const shouldShowJunior = years <= 6;
     const shouldShowMid = years >= 3 && years <= 9;
     const shouldShowSenior = years >= 6;
 
-    console.log("Updated rate visibility:", {
-      junior: shouldShowJunior,
-      mid: shouldShowMid,
-      senior: shouldShowSenior,
-    });
+
 
     setFormData((prev) => ({
       ...prev,
@@ -866,13 +823,11 @@ const EditInterviewDetails = ({
       const numValue = parseInt(numericValue, 10);
 
       if (numValue < minRate) {
-        error = `Rate cannot be less than ${
-          currency === "inr" ? "₹" : "$"
-        }${minRate}`;
+        error = `Rate cannot be less than ${currency === "inr" ? "₹" : "$"
+          }${minRate}`;
       } else if (numValue > maxRate) {
-        error = `Rate cannot exceed ${
-          currency === "inr" ? "₹" : "$"
-        }${maxRate}`;
+        error = `Rate cannot exceed ${currency === "inr" ? "₹" : "$"
+          }${maxRate}`;
       }
     }
 
@@ -930,7 +885,7 @@ const EditInterviewDetails = ({
   };
 
   const handleTechnologyChange = (selectedValue) => {
-    console.log("handleTechnologyChange called with:", selectedValue);
+
 
     if (selectedValue) {
       // Find the technology from services or create a temporary one
@@ -976,7 +931,7 @@ const EditInterviewDetails = ({
             },
           },
         };
-        console.log("Updated formData with new technology:", newFormData);
+     
         return newFormData;
       });
 
@@ -1000,8 +955,7 @@ const EditInterviewDetails = ({
           console.error("Error fetching rate cards:", error);
         });
     } else {
-      // Clear selection if no value is selected
-      console.log("No value selected, clearing selection");
+    
       setSelectedCandidates([]);
       setFormData((prev) => ({
         ...prev,
@@ -1019,12 +973,7 @@ const EditInterviewDetails = ({
     }
   };
 
-  // // Add useEffect to log state changes
-  // useEffect(() => {
-  //     console.log('selectedCandidates state:', selectedCandidates);
-  //     console.log('formData.Technology state:', formData.Technology);
-  //     console.log('errors state:', errors);
-  // }, [selectedCandidates, formData.Technology, errors]);
+
 
   // Clamp rates when rateCards change
   useEffect(() => {
@@ -1072,7 +1021,8 @@ const EditInterviewDetails = ({
       {/* v1.0.3 -------------------------------------------------------------------------------------------------> */}
 
       <div className="sm:p-0 p-6">
-        <form className="space-y-6 pb-2" onSubmit={handleSave}>
+        <form className="space-y-6 pb-2"> 
+          {/* //  onSubmit={handleSave} */}
           <div className="grid grid-cols-1 gap-4">
             {/* Technology Selection */}
             <div className="space-y-4">
@@ -1100,27 +1050,7 @@ const EditInterviewDetails = ({
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="relative" ref={skillsPopupRef}>
-                  {/* <DropdownWithSearchField
-                                        value=""
-                                        options={skills?.map(skill => ({
-                                            value: skill.SkillName,
-                                            label: skill.SkillName
-                                        })) || []}
-                                        name="skills"
-                                        label="Select Skills"
-                                        error={errors.skills}
-                                        required={true}
-                                        onChange={(e) => {
-                                            if (e.target.value && formData.skills.length < 10) {
-                                                const skill = skills?.find(s => s.SkillName === e.target.value);
-                                                if (skill) {
-                                                    handleSelectSkill(skill);
-                                                }
-                                            }
-                                        }}
-                                        onMenuOpen={loadSkills}
-                                        loading={isSkillsFetching}
-                                    /> */}
+            
                   <DropdownWithSearchField
                     ref={skillsInputRef}
                     value={null}
@@ -1151,23 +1081,18 @@ const EditInterviewDetails = ({
                       }
                     }}
                     onKeyDown={(e) => {
-                      console.log(
-                        "Key pressed:",
-                        e.key,
-                        "Value:",
-                        e.target?.value
-                      );
+                      
 
                       // Handle the create action from the dropdown
                       if (e.key === "Enter" && e.target?.action === "create") {
                         const newSkill = e.target.value?.trim();
                         if (newSkill) {
-                          console.log("Adding new skill:", newSkill);
+                         
                           addSkill(newSkill);
 
                           // Clear the input field and close the dropdown
                           setTimeout(() => {
-                            console.log("Attempting to close dropdown");
+                          
                             // Blur any active element to close dropdowns
                             if (document.activeElement) {
                               document.activeElement.blur();
@@ -1178,7 +1103,7 @@ const EditInterviewDetails = ({
                               // Clear react-select value
                               if (skillsInputRef.current.select) {
                                 skillsInputRef.current.select.clearValue();
-                                console.log("React-select value cleared");
+                               
                               }
 
                               // Find and clear the input
@@ -1264,7 +1189,7 @@ const EditInterviewDetails = ({
                         "yes"
                       }
                       onChange={(e) => {
-                        // console.log("Radio changed to:", e.target.value);
+                       
                         handleRadioChange(e.target.value);
                       }}
                       className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
@@ -1280,7 +1205,7 @@ const EditInterviewDetails = ({
                         formData.PreviousExperienceConductingInterviews === "no"
                       }
                       onChange={(e) => {
-                        // console.log("Radio changed to:", e.target.value);
+                     
                         handleRadioChange(e.target.value);
                       }}
                       className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
@@ -1296,7 +1221,7 @@ const EditInterviewDetails = ({
               </div>
 
               {/* Conditional Experience Years */}
-              {/* {console.log('Rendering years of experience input, current value:', formData.PreviousExperienceConductingInterviewsYears)} */}
+              
               {formData.PreviousExperienceConductingInterviews === "yes" && (
                 <div className="w-1/2">
                   <InputField
@@ -1350,9 +1275,8 @@ const EditInterviewDetails = ({
                                 <span>
                                   Range: ${getRateRanges("Junior").usd.min}-$
                                   {getRateRanges("Junior").usd.max} (
-                                  {`₹${getRateRanges("Junior").inr.min}–${
-                                    getRateRanges("Junior").inr.max
-                                  }`}
+                                  {`₹${getRateRanges("Junior").inr.min}–${getRateRanges("Junior").inr.max
+                                    }`}
                                   )
                                 </span>
                               )}
@@ -1397,7 +1321,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.junior?.inr || ""}
                               onChange={handleRateChange("junior", "inr")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Junior")?.inr?.min || 0}
                               max={getRateRanges("Junior")?.inr?.max || 100000}
                               inputProps={{
@@ -1434,9 +1358,8 @@ const EditInterviewDetails = ({
                                 <span>
                                   Range: ${getRateRanges("Mid-Level").usd.min}-$
                                   {getRateRanges("Mid-Level").usd.max} (
-                                  {`₹${getRateRanges("Mid-Level").inr.min}–${
-                                    getRateRanges("Mid-Level").inr.max
-                                  }`}
+                                  {`₹${getRateRanges("Mid-Level").inr.min}–${getRateRanges("Mid-Level").inr.max
+                                    }`}
                                   )
                                 </span>
                               )}
@@ -1454,7 +1377,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.mid?.usd || ""}
                               onChange={handleRateChange("mid", "usd")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Mid-Level")?.usd?.min || 0}
                               max={getRateRanges("Mid-Level")?.usd?.max || 1000}
                               inputProps={{
@@ -1480,7 +1403,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.mid?.inr || ""}
                               onChange={handleRateChange("mid", "inr")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Mid-Level")?.inr?.min || 0}
                               max={
                                 getRateRanges("Mid-Level")?.inr?.max || 100000
@@ -1519,9 +1442,8 @@ const EditInterviewDetails = ({
                                 <span>
                                   Range: ${getRateRanges("Senior").usd.min}-$
                                   {getRateRanges("Senior").usd.max} (
-                                  {`₹${getRateRanges("Senior").inr.min}–${
-                                    getRateRanges("Senior").inr.max
-                                  }`}
+                                  {`₹${getRateRanges("Senior").inr.min}–${getRateRanges("Senior").inr.max
+                                    }`}
                                   )
                                 </span>
                               )}
@@ -1539,7 +1461,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.senior?.usd || ""}
                               onChange={handleRateChange("senior", "usd")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Senior")?.usd?.min || 0}
                               max={getRateRanges("Senior")?.usd?.max || 1000}
                               inputProps={{
@@ -1565,7 +1487,7 @@ const EditInterviewDetails = ({
                               value={formData.rates?.senior?.inr || ""}
                               onChange={handleRateChange("senior", "inr")}
                               label=""
-                                 disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               min={getRateRanges("Senior")?.inr?.min || 0}
                               max={getRateRanges("Senior")?.inr?.max || 100000}
                               inputProps={{
@@ -1587,9 +1509,8 @@ const EditInterviewDetails = ({
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
                   {showJuniorLevel
-                    ? `Based on your ${expYears} year${
-                        expYears === 1 ? "" : "s"
-                      } of experience, we're showing the most relevant experience levels.`
+                    ? `Based on your ${expYears} year${expYears === 1 ? "" : "s"
+                    } of experience, we're showing the most relevant experience levels.`
                     : "Set competitive rates based on candidate experience levels."}
                   {!showSeniorLevel && (
                     <span className="block mt-1">
@@ -1675,7 +1596,7 @@ const EditInterviewDetails = ({
                 )}
               </div>
 
-              {formData.interviewFormatWeOffer?.includes("mock") && (
+                        {formData.interviewFormatWeOffer?.includes("mock") && (
                 <div>
                   <div className="p-4 rounded-lg border border-gray-200">
                     <label
@@ -1753,7 +1674,7 @@ const EditInterviewDetails = ({
                                 }
                               : null
                           }
-
+ 
                           onChange={(selected) => {
                             if (selected?.value === "custom") {
                               setShowCustomDiscount(true);
@@ -1852,12 +1773,11 @@ const EditInterviewDetails = ({
 
                   {formData.professionalTitle?.length > 0 && (
                     <p
-                      className={`text-xs ${
-                        formData.professionalTitle.length < 50 ||
-                        errors.professionalTitle
+                      className={`text-xs ${formData.professionalTitle.length < 50 ||
+                          errors.professionalTitle
                           ? "text-red-500"
                           : "text-gray-500"
-                      }`}
+                        }`}
                     >
                       {formData.professionalTitle.length}/100
                     </p>
@@ -1905,6 +1825,9 @@ const EditInterviewDetails = ({
               </div>
             </div>
 
+          </div>
+        </form>
+        
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
@@ -1915,13 +1838,12 @@ const EditInterviewDetails = ({
               </button>
               <button
                 type="submit"
+                 onClick={handleSave}
                 className="px-4 py-2 bg-custom-blue text-white rounded-lg"
               >
                 Save Changes
               </button>
             </div>
-          </div>
-        </form>
       </div>
     </SidebarPopup>
   );

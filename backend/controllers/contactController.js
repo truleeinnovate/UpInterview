@@ -470,6 +470,7 @@ const updateContactsDetails = async (req, res) => {
         const { error } = contactPatchSchema.validate(req.body, {
             abortEarly: false,
         });
+        console.log("error contactPatchSchema", error);
 
         if (error) {
             const errors = {};
@@ -477,6 +478,7 @@ const updateContactsDetails = async (req, res) => {
                 const field = err.context.key;
                 errors[field] = err.message;
             });
+            console.log("errors contactPatchSchema", errors);
 
             return res.status(400).json({
                 status: "error",
@@ -485,8 +487,35 @@ const updateContactsDetails = async (req, res) => {
             });
         }
 
-        const contactId = req.params.id;
+        // const contactId = req.params.id;
+        // const contactId =  req.params.id || req.body.contactId;
+
+        // const contactId = new mongoose.Types.ObjectId(req.params.id || req.body.id || req.body.contactId);
+
+         // FIX: Proper ObjectId handling
+        let contactId;
+        const idParam = req.params.id || req.body.id || req.body.contactId;
+        console.log("idParam", idParam);
+        if (idParam) {
+            if (mongoose.Types.ObjectId.isValid(idParam)) {
+                contactId = new mongoose.Types.ObjectId(idParam);
+            } else {
+                console.log("Invalid contact ID format");
+                return res.status(400).json({
+                    status: "error",
+                    message: "Invalid contact ID format"
+                });
+            }
+        } else {
+            return res.status(400).json({
+                status: "error", 
+                message: "Contact ID is required"
+            });
+        }
+console.log("contactId yearsOfExperience", contactId);
+
         const { availability, yearsOfExperience, ...contactData } = req.body;
+        console.log("contactData", req.body);
 
         const contactFound = await Contacts.findById(contactId).lean();
         if (!contactFound) {
@@ -668,6 +697,7 @@ const updateContactsDetails = async (req, res) => {
         //     fieldMessage: fieldMessages,
         //     history: changes,
         // };
+        console.log("finalContact", finalContact);
 
         // Add log data
         res.locals.logData = {
@@ -685,9 +715,6 @@ const updateContactsDetails = async (req, res) => {
             message: "Contact updated successfully",
             data: finalContact,
         });
-
-
-
 
     } catch (err) {
         console.error("❌ Error updating contact:", err);

@@ -56,12 +56,6 @@ const BasicDetailsEditPage = ({
   const { id } = useParams();
   const navigate = useNavigate();
   const resolvedId = usersId || id;
-
-//   const authToken = Cookies.get("authToken");
-//   const tokenPayload = decodeJwt(authToken);
-  // const userId = tokenPayload.userId;
-//   const tenantId = tokenPayload.tenantId;
-
   const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
 
@@ -83,26 +77,21 @@ const BasicDetailsEditPage = ({
 
   // Get the appropriate profile data based on context
   const profileData = useMemo(() => {
-    if (from === "outsource-interviewer") {
-      // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
-      // Try to find the interviewer by matching the contactId._id with resolvedId
-      const interviewer = outsourceInterviewers?.find(
-        (i) => i.contactId?._id === resolvedId
-      );
-      console.log("Looking for Contact ID:", resolvedId);
-      console.log("Found interviewer:", interviewer);
-      console.log("ContactId object:", interviewer?.contactId);
-      // Return the Contact object which has the actual profile data
-      return interviewer?.contactId || null;
-    }
+    // if (from === "outsource-interviewer") {
+    //   // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
+    //   // Try to find the interviewer by matching the contactId._id with resolvedId
+    //   const interviewer = outsourceInterviewers?.find(
+    //     (i) => i.contactId?._id === resolvedId
+    //   );
+
+    //   // Return the Contact object which has the actual profile data
+    //   return interviewer?.contactId || null;
+    // }
     return userProfile;
-  }, [from, outsourceInterviewers, resolvedId, userProfile]);
+  }, [from,  resolvedId, userProfile]);
 
   // Role dropdown state
   const [currentRole, setCurrentRole] = useState([]);
-
-  console.log("profileData BasicDetailsEditPage", profileData);
-
   const [selectedCurrentRoleId, setSelectedCurrentRoleId] = useState("");
 
   const [file, setFile] = useState(null);
@@ -356,18 +345,7 @@ const BasicDetailsEditPage = ({
     }
   };
 
-  // const handleProfileIdValidation = async (profileId) => {
-
-  //   console.log("profileId",profileId);
-
-  //   if (profileId !== originalProfileId) {
-  //     const error = await validateProfileId(profileId, checkProfileIdExists);
-  //     setErrors(prev => ({
-  //       ...prev,
-  //       profileId: error || ''
-  //     }));
-  //   }
-  // };
+ 
 
   const handleProfileIdValidation = async (profileId) => {
     // console.log("profileId", profileId);
@@ -400,7 +378,7 @@ const BasicDetailsEditPage = ({
   };
 
   const handleCloseModal = () => {
-    if (from === "users") {
+    if (from === "users" || from === "outsource-interviewer") {
       setBasicEditOpen(false);
     } else {
       // navigate(`${basePath}/my-profile/basic`, { replace: true });
@@ -427,7 +405,7 @@ const BasicDetailsEditPage = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     // v1.0.1 <--------------------------
-    setLoading(true);
+    
     // v1.0.1 -------------------------->
     //   if (formData.profileId !== originalProfileId) {
     //   const profileIdError = await validateProfileId(formData.profileId, checkProfileIdExists);
@@ -477,6 +455,8 @@ const BasicDetailsEditPage = ({
       return;
     }
 
+  
+
     const cleanFormData = {
       email: formData.email.trim() || "",
       firstName: formData.firstName.trim() || "",
@@ -495,6 +475,7 @@ const BasicDetailsEditPage = ({
     };
 
     try {
+        setLoading(true);
       if (formData.email !== originalEmail) {
         const exists = await checkEmailExists(formData.email);
         if (exists) {
@@ -526,7 +507,7 @@ const BasicDetailsEditPage = ({
           let updateId;
           if (from === "outsource-interviewer") {
             // For outsource interviewers, profileData is the Contact object
-            if (!profileData || !profileData._id) {
+            if (!profileData || !profileData?.contactId) {
               console.error(
                 "Profile data not loaded or missing ID for email update:",
                 { profileData }
@@ -537,10 +518,10 @@ const BasicDetailsEditPage = ({
               setLoading(false);
               return;
             }
-            updateId = profileData._id;
+            updateId = profileData?.contactId;
           } else {
             // For regular users (my-profile), profileData is the User object with a contactId field
-            if (!profileData || !profileData.contactId) {
+            if (!profileData || !profileData?.contactId) {
               console.error(
                 "Profile data not loaded or missing contactId for email update:",
                 { profileData }
@@ -551,7 +532,7 @@ const BasicDetailsEditPage = ({
               setLoading(false);
               return;
             }
-            updateId = profileData.contactId; // Use contactId for regular users
+            updateId = profileData?.contactId; // Use contactId for regular users
           }
 
           if (!updateId) {
@@ -604,7 +585,7 @@ const BasicDetailsEditPage = ({
         let updateId;
         if (from === "outsource-interviewer") {
           // For outsource interviewers, profileData is the Contact object
-          if (!profileData || !profileData._id) {
+          if (!profileData || !profileData?.contactId) {
             console.error("Profile data not loaded or missing ID:", {
               profileData,
             });
@@ -614,10 +595,10 @@ const BasicDetailsEditPage = ({
             setLoading(false);
             return;
           }
-          updateId = profileData._id;
+          updateId = profileData?.contactId;
         } else {
           // For regular users (my-profile), profileData is the User object with a contactId field
-          if (!profileData || !profileData.contactId) {
+          if (!profileData || !profileData?.contactId) {
             console.error("Profile data not loaded or missing contactId:", {
               profileData,
             });
@@ -627,7 +608,7 @@ const BasicDetailsEditPage = ({
             setLoading(false);
             return;
           }
-          updateId = profileData.contactId; // Use contactId for regular users
+          updateId = profileData?.contactId; // Use contactId for regular users
         }
 
         if (!updateId) {
@@ -641,14 +622,7 @@ const BasicDetailsEditPage = ({
           return;
         }
 
-        console.log("Update ID determination:", {
-          from,
-          profileData,
-          profileDataId: profileData?._id,
-          resolvedId,
-          updateId,
-        });
-
+        
         const response = await updateContactDetail.mutateAsync({
           resolvedId: updateId,
           data: cleanFormData,
@@ -799,6 +773,9 @@ const BasicDetailsEditPage = ({
   // v1.0.1 <------------------------------------------------------------------------------
   // v1.0.2 <------------------------------------------------------------------------------------
   // derive the selected image object to pass to child
+  
+  
+  
   const displaySelectedImage =
     !isProfileRemoved && !filePreview ? profileData?.imageData ?? null : null;
   // v1.0.2 ------------------------------------------------------------------------------------>
@@ -935,8 +912,8 @@ const BasicDetailsEditPage = ({
                 label="LinkedIn"
                 name="linkedinUrl"
                 required
-                disabled={true}
-                className="bg-gray-100"
+                // disabled={true}
+                // className="bg-gray-100"
               />
             </div>
 

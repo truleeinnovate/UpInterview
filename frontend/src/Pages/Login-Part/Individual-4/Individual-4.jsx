@@ -4,7 +4,7 @@
 // v1.0.3 - Ashok - Fixed style issue
 // v1.0.4 - [Your Name] - Added notify.error for validation failures across all steps
 // v1.0.5 - [Your Name] - Fixed dynamic expected length in parent phone validation to match PhoneField
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import { parsePhoneNumberFromString, getCountries, getCountryCallingCode, getExampleNumber } from "libphonenumber-js";
@@ -42,8 +42,8 @@ const FooterButtons = ({
                     onClick={onPrev}
                     disabled={isSubmitting}
                     className={`border ${isSubmitting
-                            ? "border-gray-300 text-gray-300 cursor-not-allowed"
-                            : "border-custom-blue text-custom-blue hover:bg-gray-50"
+                        ? "border-gray-300 text-gray-300 cursor-not-allowed"
+                        : "border-custom-blue text-custom-blue hover:bg-gray-50"
                         } rounded px-6 sm:px-3 py-1 transition-colors duration-200`}
                 >
                     Prev
@@ -55,8 +55,8 @@ const FooterButtons = ({
                 onClick={onNext}
                 disabled={isSubmitting}
                 className={`px-6 sm:px-3 py-1.5 rounded text-white flex items-center justify-center min-w-24 ${isSubmitting
-                        ? "bg-custom-blue/60 cursor-not-allowed"
-                        : "bg-custom-blue hover:bg-custom-blue/90"
+                    ? "bg-custom-blue/60 cursor-not-allowed"
+                    : "bg-custom-blue hover:bg-custom-blue/90"
                     } transition-colors duration-200`}
                 type="button"
             >
@@ -424,17 +424,105 @@ const MultiStepForm = () => {
         }, 1000); // check every second (or use context instead)
         return () => clearInterval(interval);
     }, [authToken]);
-    const handleNextStep = async () => {
+
+    const [rateCards, setRateCards] = useState([]);
+
+    const fetchRateCardsMemoized = useCallback(async (techName) => {
+        if (!techName) return;
+        console.log('1')
+
         try {
+            const token = localStorage.getItem('token');
+            const baseUrl = process.env.REACT_APP_API_URL || '';
+            // const encodedTech = encodeURIComponent(techName);
+            // Derive the 'name' slug from TechnologyMasterName (e.g., "Help Desk Technician" -> "HelpDeskTechnician")
+            const slug = techName
+                .replace(/\s+/g, '')  // Remove spaces
+                .replace(/[^a-zA-Z0-9]/g, '');  // Remove special chars if any (optional, adjust as needed)
+
+            const encodedSlug = encodeURIComponent(slug);
+
+            const apiUrl = `${baseUrl}/rate-cards/technology/${encodedSlug}`;
+
+            const response = await axios.get(apiUrl, {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data) {
+                const rateCardsData = Array.isArray(response.data) ? response.data : [response.data];
+                setRateCards(rateCardsData);
+            }
+        } catch (error) {
+            console.error('Error fetching rate cards:', {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
+            setRateCards([]);
+        }
+    }, []);
+
+    const fetchRateCards = useCallback((technologyName) => {
+        return fetchRateCardsMemoized(technologyName);
+    }, [fetchRateCardsMemoized]);
+
+    const getRateRanges = (level) => {
+        if (!rateCards.length) return null;
+
+        const rateCard = rateCards.find(card =>
+            card.levels.some(lvl => lvl.level === level)
+        );
+
+        if (!rateCard) return null;
+
+        const levelData = rateCard.levels.find(lvl => lvl.level === level);
+        if (!levelData || !levelData.rateRange) return null;
+
+        return levelData.rateRange;
+    }
+
+    // Helper function to find the first nested error message
+    const findNestedError = (errorObj) => {
+        if (!errorObj) return null;
+
+        // Check if it's a string error
+        if (typeof errorObj === 'string') return errorObj;
+
+        // If it's an object, recursively check its values
+        for (const key in errorObj) {
+            if (errorObj.hasOwnProperty(key)) {
+                const nestedError = findNestedError(errorObj[key]);
+                if (nestedError) return nestedError;
+            }
+        }
+        return null;
+    }
+
+    // Add a ref to track form submission state
+    const isSubmittingRef = React.useRef(false);
+
+    const handleNextStep = async () => {
+        // Prevent multiple submissions
+        if (isSubmittingRef.current) {
+            console.log('Form submission already in progress');
+            return;
+        }
+
+        try {
+            isSubmittingRef.current = true;
             setIsSubmitting(true);
-            let isValid = false;
             const currentErrors = {};
+            let isValid = true; // Initialize isValid at the start
             // Validate current step
             if (currentStep === 0) {
                 if (!basicDetailsData.lastName)
                     currentErrors.lastName = "Last name is required";
                 if (!basicDetailsData.email) currentErrors.email = "Email is required";
-                if(!basicDetailsData.phone) {
+                if (!basicDetailsData.phone) {
                     currentErrors.phone = "Phone number is required";
                 } else {
                     const fullNumber = `${basicDetailsData.countryCode}${basicDetailsData.phone.replace(/\D/g, "")}`;
@@ -448,8 +536,17 @@ const MultiStepForm = () => {
                 }
                 if (!basicDetailsData.linkedinUrl)
                     currentErrors.linkedinUrl = "LinkedIn URL is required";
+                // Check if there are any errors in the nested rates object
+                const hasNestedErrors = currentErrors.rates &&
+                    Object.values(currentErrors.rates).some(rate =>
+                        rate && typeof rate === 'object' && Object.values(rate).some(Boolean)
+                    );
+
+                // Update isValid based on current errors
+                isValid = Object.keys(currentErrors).length === 0 && !hasNestedErrors;
+
+                // Set errors and update validation state
                 setErrors((prev) => ({ ...prev, ...currentErrors }));
-                isValid = Object.keys(currentErrors).length === 0;
             } else if (currentStep === 1) {
                 if (!additionalDetailsData.currentRole)
                     currentErrors.currentRole = "Current role is required";
@@ -472,95 +569,128 @@ const MultiStepForm = () => {
                 }
                 // v1.0.1 ---------------------------------------------------------------------------------------------->
                 // v1.0.0 ---------------------------------------------------------------------------------------------->
+                // Check if there are any errors in the nested rates object
+                const hasNestedErrors = currentErrors.rates &&
+                    Object.values(currentErrors.rates).some(rate =>
+                        rate && typeof rate === 'object' && Object.values(rate).some(Boolean)
+                    );
+
+                // Update isValid based on current errors
+                isValid = Object.keys(currentErrors).length === 0 && !hasNestedErrors;
+
+                // Set errors and update validation state
                 setErrors((prev) => ({ ...prev, ...currentErrors }));
-                isValid = Object.keys(currentErrors).length === 0;
             } else if (currentStep === 2) {
-                const expYears =
-                    parseInt(additionalDetailsData.yearsOfExperience, 10) || 0;
-                const showJuniorLevel = expYears > 0 && expYears <= 6; // Show junior for 0-6 years
-                const showMidLevel = expYears > 3; // Show mid for 4+ years
-                const showSeniorLevel = expYears > 6; // Show senior for 7+ years
-                const validSkills =
-                    interviewDetailsData.skills?.filter((skill) => skill !== null) || [];
-                if (validSkills.length === 0)
-                    currentErrors.skills = "Skills are required";
-                if (!interviewDetailsData.technologies?.length)
-                    currentErrors.technologies = "Technologies are required";
+                const expYears = parseInt(additionalDetailsData.yearsOfExperience, 10) || 0;
+                const showJuniorLevel = expYears > 0 && expYears <= 6;
+                const showMidLevel = expYears > 3;
+                const showSeniorLevel = expYears > 6;
+
+                const validSkills = interviewDetailsData.skills?.filter((skill) => skill !== null) || [];
+                if (validSkills.length === 0) currentErrors.skills = "Skills are required";
+                if (!interviewDetailsData.technologies?.length) currentErrors.technologies = "Technologies are required";
                 if (!interviewDetailsData.previousInterviewExperience) {
-                    currentErrors.previousInterviewExperience =
-                        "Previous interview experience is required";
-                } else if (
-                    interviewDetailsData.previousInterviewExperience === "yes" &&
-                    !interviewDetailsData.previousInterviewExperienceYears
-                ) {
-                    currentErrors.previousInterviewExperienceYears =
-                        "Please specify years of experience";
+                    currentErrors.previousInterviewExperience = "Previous interview experience is required";
+                } else if (interviewDetailsData.previousInterviewExperience === "yes" && !interviewDetailsData.previousInterviewExperienceYears) {
+                    currentErrors.previousInterviewExperienceYears = "Please specify years of experience";
                 }
-                // interview format validation
-                if (
-                    !interviewDetailsData.interviewFormatWeOffer ||
-                    interviewDetailsData.interviewFormatWeOffer.length === 0
-                ) {
-                    currentErrors.interviewFormatWeOffer =
-                        "At least one interview format is required";
-                }
-                // mock discount validation
-                if (interviewDetailsData.interviewFormatWeOffer?.includes("mock")) {
-                    if (
-                        !interviewDetailsData.mock_interview_discount ||
-                        interviewDetailsData.mock_interview_discount.trim() === ""
-                    ) {
-                        currentErrors.mock_interview_discount =
-                            "Mock interview discount is required";
+
+                // Add range validation for rates
+                const { rates = {} } = interviewDetailsData;
+
+                // Validate junior level rates if visible
+                if (showJuniorLevel) {
+                    const juniorRange = getRateRanges('Junior');
+                    if (!rates.junior?.usd) {
+                        currentErrors.rates = currentErrors.rates || {};
+                        currentErrors.rates.junior = currentErrors.rates.junior || {};
+                        currentErrors.rates.junior.usd = "USD rate is required";
+                    } else if (juniorRange?.usd) {
+                        const usdValue = parseFloat(rates.junior.usd);
+                        if (usdValue < juniorRange.usd.min || usdValue > juniorRange.usd.max) {
+                            currentErrors.rates = currentErrors.rates || {};
+                            currentErrors.rates.junior = currentErrors.rates.junior || {};
+                            currentErrors.rates.junior.usd = `USD rate must be between ${juniorRange.usd.min} and ${juniorRange.usd.max}`;
+                        }
+                    }
+
+                    if (!rates.junior?.inr) {
+                        currentErrors.rates = currentErrors.rates || {};
+                        currentErrors.rates.junior = currentErrors.rates.junior || {};
+                        currentErrors.rates.junior.inr = "INR rate is required";
                     } else {
-                        // Additional validation for the discount value
-                        const discountValue = parseInt(
-                            interviewDetailsData.mock_interview_discount,
-                            10
-                        );
-                        if (
-                            isNaN(discountValue) ||
-                            discountValue < 10 ||
-                            discountValue > 99
-                        ) {
-                            currentErrors.mock_interview_discount =
-                                "Discount must be between 10 and 99";
+                        const inrValue = parseFloat(rates.junior.inr);
+                        if (juniorRange?.inr) {
+                            if (inrValue < juniorRange.inr.min || inrValue > juniorRange.inr.max) {
+                                currentErrors.rates = currentErrors.rates || {};
+                                currentErrors.rates.junior = currentErrors.rates.junior || {};
+                                currentErrors.rates.junior.inr = `INR rate must be between ${juniorRange.inr.min} and ${juniorRange.inr.max}`;
+                            }
                         }
                     }
                 }
-                // Validate hourly rates for visible levels
-                const { rates = {} } = interviewDetailsData;
-                // Check junior level rates if visible
-                if (showJuniorLevel) {
-                    if (!rates.junior?.usd || !rates.junior?.inr) {
-                        currentErrors.rates = currentErrors.rates || {};
-                        currentErrors.rates.junior = currentErrors.rates.junior || {};
-                        if (!rates.junior?.usd)
-                            currentErrors.rates.junior.usd = "USD rate is required";
-                        if (!rates.junior?.inr)
-                            currentErrors.rates.junior.inr = "INR rate is required";
-                    }
-                }
-                // Check mid level rates if visible
+
+                // Validate mid level rates if visible
                 if (showMidLevel) {
-                    if (!rates.mid?.usd || !rates.mid?.inr) {
+                    const midRange = getRateRanges('Mid-Level');
+                    if (!rates.mid?.usd) {
                         currentErrors.rates = currentErrors.rates || {};
                         currentErrors.rates.mid = currentErrors.rates.mid || {};
-                        if (!rates.mid?.usd)
-                            currentErrors.rates.mid.usd = "USD rate is required";
-                        if (!rates.mid?.inr)
-                            currentErrors.rates.mid.inr = "INR rate is required";
+                        currentErrors.rates.mid.usd = "USD rate is required";
+                    } else if (midRange?.usd) {
+                        const usdValue = parseFloat(rates.mid.usd);
+                        if (usdValue < midRange.usd.min || usdValue > midRange.usd.max) {
+                            currentErrors.rates = currentErrors.rates || {};
+                            currentErrors.rates.mid = currentErrors.rates.mid || {};
+                            currentErrors.rates.mid.usd = `USD rate must be between ${midRange.usd.min} and ${midRange.usd.max}`;
+                        }
+                    }
+
+                    if (!rates.mid?.inr) {
+                        currentErrors.rates = currentErrors.rates || {};
+                        currentErrors.rates.mid = currentErrors.rates.mid || {};
+                        currentErrors.rates.mid.inr = "INR rate is required";
+                    } else {
+                        const inrValue = parseFloat(rates.mid.inr);
+                        if (midRange?.inr) {
+                            if (inrValue < midRange.inr.min || inrValue > midRange.inr.max) {
+                                currentErrors.rates = currentErrors.rates || {};
+                                currentErrors.rates.mid = currentErrors.rates.mid || {};
+                                currentErrors.rates.mid.inr = `INR rate must be between ${midRange.inr.min} and ${midRange.inr.max}`;
+                            }
+                        }
                     }
                 }
-                // Check senior level rates if visible
+
+                // Validate senior level rates if visible  
                 if (showSeniorLevel) {
-                    if (!rates.senior?.usd || !rates.senior?.inr) {
+                    const seniorRange = getRateRanges('Senior');
+                    if (!rates.senior?.usd) {
                         currentErrors.rates = currentErrors.rates || {};
                         currentErrors.rates.senior = currentErrors.rates.senior || {};
-                        if (!rates.senior?.usd)
-                            currentErrors.rates.senior.usd = "USD rate is required";
-                        if (!rates.senior?.inr)
-                            currentErrors.rates.senior.inr = "INR rate is required";
+                        currentErrors.rates.senior.usd = "USD rate is required";
+                    } else if (seniorRange?.usd) {
+                        const usdValue = parseFloat(rates.senior.usd);
+                        if (usdValue < seniorRange.usd.min || usdValue > seniorRange.usd.max) {
+                            currentErrors.rates = currentErrors.rates || {};
+                            currentErrors.rates.senior = currentErrors.rates.senior || {};
+                            currentErrors.rates.senior.usd = `USD rate must be between ${seniorRange.usd.min} and ${seniorRange.usd.max}`;
+                        }
+                    }
+
+                    if (!rates.senior?.inr) {
+                        currentErrors.rates = currentErrors.rates || {};
+                        currentErrors.rates.senior = currentErrors.rates.senior || {};
+                        currentErrors.rates.senior.inr = "INR rate is required";
+                    } else {
+                        const inrValue = parseFloat(rates.senior.inr);
+                        if (seniorRange?.inr) {
+                            if (inrValue < seniorRange.inr.min || inrValue > seniorRange.inr.max) {
+                                currentErrors.rates = currentErrors.rates || {};
+                                currentErrors.rates.senior = currentErrors.rates.senior || {};
+                                currentErrors.rates.senior.inr = `INR rate must be between ${seniorRange.inr.min} and ${seniorRange.inr.max}`;
+                            }
+                        }
                     }
                 }
                 if (!interviewDetailsData.professionalTitle?.trim()) {
@@ -578,24 +708,99 @@ const MultiStepForm = () => {
                     currentErrors.bio =
                         "Professional bio must be at least 150 characters";
                 }
+                // Check if there are any errors in the nested rates object
+                const hasNestedErrors = currentErrors.rates &&
+                    Object.values(currentErrors.rates).some(rate =>
+                        rate && typeof rate === 'object' && Object.values(rate).some(Boolean)
+                    );
+
+                // Update isValid based on current errors
+                isValid = Object.keys(currentErrors).length === 0 && !hasNestedErrors;
+
+                // Set errors and update validation state
                 setErrors((prev) => ({ ...prev, ...currentErrors }));
-                isValid = Object.keys(currentErrors).length === 0;
             } else if (currentStep === 3) {
                 if (!availabilityDetailsData.timeZone)
                     currentErrors.timeZone = "Timezone is required";
                 if (!availabilityDetailsData.preferredDuration)
                     currentErrors.preferredDuration = "Preferred duration is required";
+                // Check if there are any errors in the nested rates object
+                if (interviewDetailsData.previousInterviewExperience === true &&
+                    !interviewDetailsData.previousInterviewExperienceYears) {
+                    currentErrors.previousInterviewExperienceYears = 'Years of experience is required';
+                    isValid = false;
+                }
+                const hasNestedErrors = currentErrors.rates &&
+                    Object.values(currentErrors.rates).some(rate =>
+                        rate && typeof rate === 'object' && Object.values(rate).some(Boolean)
+                    );
+
+                // Update isValid based on current errors
+                isValid = Object.keys(currentErrors).length === 0 && !hasNestedErrors;
+
+                // Set errors and update validation state
                 setErrors((prev) => ({ ...prev, ...currentErrors }));
-                isValid = Object.keys(currentErrors).length === 0;
             } else {
                 isValid = true;
             }
-            if (!isValid) {
-                console.log("Validation failed. Errors:", currentErrors);
-                notify.error("Please fill in all required fields before proceeding."); // 👈 v1.0.4: Added general error notification for all steps
+            // Enhanced debug logging
+            console.log('Current Errors:', JSON.stringify(currentErrors, null, 2));
+
+            // Check for any errors, including nested ones
+            const hasAnyErrors = (errors, path = '') => {
+                if (!errors) {
+                    console.log(`No errors at path: ${path}`);
+                    return false;
+                }
+                if (typeof errors === 'string') {
+                    console.log(`Found error at ${path}:`, errors);
+                    return true;
+                }
+
+                return Object.entries(errors).some(([key, value]) => {
+                    const currentPath = path ? `${path}.${key}` : key;
+                    if (value && (typeof value === 'string' || hasAnyErrors(value, currentPath))) {
+                        console.log(`Error found in ${currentPath}:`, value);
+                        return true;
+                    }
+                    return false;
+                });
+            };
+
+            const hasErrors = hasAnyErrors(currentErrors) || !isValid;
+            console.log('Has errors?', hasErrors, 'isValid:', isValid, 'Errors:', JSON.stringify(currentErrors, null, 2));
+
+            if (hasErrors) {
+                console.log("Validation failed. Full error object:", JSON.stringify(currentErrors, null, 2));
+
+                // Show specific error message for rate validation if it exists
+                const rateError = findNestedError(currentErrors.rates || {});
+                if (rateError) {
+                    console.log('Rate validation error:', rateError);
+                    notify.error(rateError);
+                } else {
+                    // Find and show the first error message if available
+                    const firstError = findNestedError(currentErrors);
+                    const errorToShow = firstError || "Please fill in all required fields correctly before proceeding.";
+                    console.log('Showing error to user:', errorToShow);
+                    notify.error(errorToShow);
+                }
+
+                // Reset submission state
+                isSubmittingRef.current = false;
                 setIsSubmitting(false);
+                console.log('Form submission prevented due to validation errors');
+                return false;
+            }
+
+            console.log('All validations passed, proceeding to next step');
+            // return true;
+            // Only proceed if there are no validation errors
+            if (hasErrors) {
+                console.log('Validation errors found, not proceeding to next step');
                 return;
             }
+
             // Calculate the updated completion status
             const currentStepKey = [
                 "basicDetails",
@@ -940,10 +1145,12 @@ const MultiStepForm = () => {
             }
         } catch (error) {
             console.error("Error in handleNextStep:", error);
-            notify.error("An error occurred. Please try again.");
-        } finally {
+            isSubmittingRef.current = false;
             setIsSubmitting(false);
-            setFormLoading(false);
+        } finally {
+            // Ensure we always reset the submission state
+            isSubmittingRef.current = false;
+            setIsSubmitting(false);
         }
     };
     const handlePrevStep = () => {
