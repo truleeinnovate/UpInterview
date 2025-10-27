@@ -435,7 +435,7 @@ const OrganizationRequest = () => {
       <div className="fixed top-12 sm:top-12 md:top-12 left-0 right-0">
         <div className="flex justify-between p-4">
           <div>
-            <span className="text-lg font-semibold text-custom-blue">
+            <span className="sm:text-xl md:text-xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-semibold text-custom-blue">
               Organization Request
             </span>
           </div>

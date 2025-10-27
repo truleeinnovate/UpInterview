@@ -348,16 +348,16 @@ function TenantsPage() {
           },
         ]
       : []),
-    ...(superAdminPermissions?.Tenants?.Edit
-      ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => navigate(`edit/${row._id}`),
-          },
-        ]
-      : []),
+    // ...(superAdminPermissions?.Tenants?.Edit
+    //   ? [
+    //       {
+    //         key: "edit",
+    //         label: "Edit",
+    //         icon: <Pencil className="w-4 h-4 text-green-600" />,
+    //         onClick: (row) => navigate(`edit/${row._id}`),
+    //       },
+    //     ]
+    //   : []),
     ...(superAdminPermissions?.Tenants?.Delete
       ? [
           {
@@ -425,7 +425,7 @@ function TenantsPage() {
           >
             <UserCircle className="w-4 h-4" />
           </button> */}
-          <button
+          {/* <button
             onClick={(e) => {
               e.stopPropagation();
               onEdit ? onEdit(item) : navigate(`edit/${item._id}`);
@@ -434,7 +434,7 @@ function TenantsPage() {
             title="Edit"
           >
             <Pencil className="w-4 h-4" />
-          </button>
+          </button> */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -645,7 +645,7 @@ function TenantsPage() {
           <div className="sm:px-0">
             <motion.div className="bg-white">
               {view === "table" ? (
-                <div className="w-full mb-8 bg-red">
+                <div className="w-full mb-8">
                   <TableView
                     data={
                       selectedType === "all"

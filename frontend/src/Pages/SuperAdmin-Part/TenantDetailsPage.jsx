@@ -91,12 +91,15 @@ function TenantDetailsPage() {
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-25 backdrop-blur-sm">
       <div
-        className={`absolute top-0 right-0 h-full bg-white z-50 overflow-hidden ${
+        // className={`absolute top-0 right-0 h-full bg-white z-50 overflow-hidden transition-all duration-300 ${
+        //   viewMode === "collapsed" ? "w-[50vw]" : "w-full"
+        // }`}
+        className={`absolute top-0 right-0 h-full bg-white z-50 overflow-hidden transition-[width] duration-300 ease-in-out will-change-[width] ${
           viewMode === "collapsed" ? "w-[50vw]" : "w-full"
         }`}
       >
         {/* Fixed Header */}
-        <div className="sticky top-0 bg-white z-50 px-3 py-6">
+        <div className="px-6 py-6">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-custom-blue">Tenant</h1>
             <div className="flex space-x-2">
@@ -124,29 +127,17 @@ function TenantDetailsPage() {
 
         {/* v1.0.0 <-------------------------------------------------------------------- */}
         {/* Scrollable Tabs + Content */}
-        <div className="overflow-y-auto h-[calc(100%-112px)] px-4 pt-4 pb-8 relative">
+        <div className="relative">
           {isLoading && !tenant ? (
-            <div>
+            <div className="flex items-center justify-center h-[70vh]">
               <Loader message="Loading tenant details..." />
             </div>
           ) : (
             <div>
-              <div className="flex flex-col mb-4">
-                <h1 className="text-xl font-bold text-gray-700 mb-2">
-                  {tenant?.tenant?.firstName || "Tenant"}
-                </h1>
-                <div className="text-sm text-gray-500">
-                  <span className="text-gray-700 font-semibold text-sm">
-                    {capitalizeFirstLetter(tenant?.tenant?.company) || "N/A"}
-                  </span>{" "}
-                  {tenant?.tenant?.userCount} • Created At -{" "}
-                  {new Date(tenant?.tenant?.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-              <div className="bg-white shadow-card overflow-hidden">
+              <div className="bg-white overflow-hidden">
                 {/* Tabs */}
                 <div className="border-b border-gray-200">
-                  <nav className="flex -mb-px overflow-x-auto">
+                  <nav className="flex -mb-px overflow-x-auto gap-3">
                     <Tab
                       active={activeTab === "overview"}
                       onClick={() => setActiveTab("overview")}
@@ -181,7 +172,8 @@ function TenantDetailsPage() {
                 </div>
 
                 {/* Tab Content */}
-                <div className="relative w-full pt-4">
+                {/* <div className="relative w-full pt-4"> */}
+                <div className="relative w-full overflow-y-auto h-[calc(100vh-8.6rem)] [scrollbar-width:thin] pl-4 pb-10">
                   {activeTab === "overview" && (
                     <OverviewTab tenant={tenant?.tenant} viewMode={viewMode} />
                   )}

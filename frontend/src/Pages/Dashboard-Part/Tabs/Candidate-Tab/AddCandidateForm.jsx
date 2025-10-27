@@ -11,6 +11,7 @@
 // v1.0.6 - Ashok - Improved responsiveness and added sidebarPopup common code to popup to modal
 // v1.0.7 - Ashok - Fixed issues in responsiveness
 // v1.0.8 - Ashok - Fixed responsiveness issues
+// v1.0.9 - Ashok - Fixed scroll to first error field issue
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { format } from "date-fns";
@@ -307,10 +308,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry
       );
       setEntries(updatedEntries);
@@ -477,12 +478,12 @@ const AddCandidateForm = ({
       [name]: errorMessage,
       ...(name === "CurrentExperience" && formData.RelevantExperience
         ? {
-          RelevantExperience: getErrorMessage(
-            "RelevantExperience",
-            formData.RelevantExperience,
-            nextFormData
-          ),
-        }
+            RelevantExperience: getErrorMessage(
+              "RelevantExperience",
+              formData.RelevantExperience,
+              nextFormData
+            ),
+          }
         : {}),
     }));
   };
@@ -531,7 +532,7 @@ const AddCandidateForm = ({
     resetResume();
     // -------------------------------------------------------------------------->
     setAllSelectedSkills([]);
-    setShowSkillValidation(false);  // Reset validation flag
+    setShowSkillValidation(false); // Reset validation flag
   };
 
   const handleClose = () => {
@@ -573,10 +574,12 @@ const AddCandidateForm = ({
     // Show skills validation when submit is attempted
     setShowSkillValidation(true);
 
+    setErrors({});
+
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
       entries,
-      errors
+      {} // always start fresh
     );
 
     if (!formIsValid) {
@@ -710,8 +713,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save candidate"
+          error.message ||
+          "Failed to save candidate"
       );
 
       if (error.response?.data?.errors) {
@@ -932,7 +935,7 @@ const AddCandidateForm = ({
                     // error={errors.Gender}
                     containerRef={fieldRefs.Gender}
                     label="Gender"
-                  // required
+                    // required
                   />
                 </div>
                 {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -1179,8 +1182,9 @@ const AddCandidateForm = ({
                   type="button"
                   onClick={handleClose}
                   disabled={isMutationLoading}
-                  className={`sm:px-2 sm:py-1 md:px-2 md:py-1 lg:px-6 lg:py-2 xl:px-6 xl:py-2 2xl:px-6 2xl:py-2 sm:text-sm text-custom-blue border border-custom-blue rounded-lg transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                  className={`sm:px-2 sm:py-1 md:px-2 md:py-1 lg:px-6 lg:py-2 xl:px-6 xl:py-2 2xl:px-6 2xl:py-2 sm:text-sm text-custom-blue border border-custom-blue rounded-lg transition-colors ${
+                    isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
                   Cancel
                 </button>

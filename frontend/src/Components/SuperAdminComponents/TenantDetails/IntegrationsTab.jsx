@@ -1,7 +1,7 @@
 import StatusBadge from "../common/StatusBadge";
 import { useState } from "react";
 
-function IntegrationsTab({ viewMode }) {
+function IntegrationsTab({ isFullscreen = false }) {
   const [webhooks] = useState([
     {
       id: 1,
@@ -31,13 +31,11 @@ function IntegrationsTab({ viewMode }) {
 
   return (
     <div className="space-y-6">
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
-       */}
       <div
         className={`w-full ${
-          viewMode === "collapsed"
+          isFullscreen
             ? "flex flex-col gap-6"
-            : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6"
+            : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6"
         }`}
       >
         <div className="bg-white rounded-lg shadow-sm p-6">
