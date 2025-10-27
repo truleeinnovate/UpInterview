@@ -7,22 +7,16 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-// import { MdOutlineCancel } from "react-icons/md";
-// import { IoArrowBack } from "react-icons/io5";
-
 import {
-  // FaExternalLinkAlt,
-  // FaEdit,
-  FaTicketAlt,
-  FaUser,
-  FaBuilding,
-  // FaCalendarAlt,
-  FaTag,
-  FaFileAlt,
-  FaHistory,
-  FaInfoCircle,
-} from "react-icons/fa";
-import { Minimize, Expand, X, Eye } from "lucide-react";
+  Eye,
+  Ticket,
+  User,
+  Building,
+  Tag,
+  FileText,
+  History,
+  Info,
+} from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 // v1.0.0 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
@@ -34,6 +28,8 @@ import Activity from "../CommonCode-AllTabs/Activity";
 //const validReopenStatus = ["resolved", "cancel"];
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { formatDateTime } from "../../../../utils/dateFormatter";
+
+
 const SupportViewPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -120,7 +116,7 @@ const SupportViewPage = () => {
             }`}
             onClick={() => setActiveTab("details")}
           >
-            <FaInfoCircle className="w-4 h-4" />
+            <Info className="w-4 h-4" />
             Details
           </button>
           <button
@@ -131,7 +127,7 @@ const SupportViewPage = () => {
             }`}
             onClick={() => setActiveTab("activity")}
           >
-            <FaHistory className="w-4 h-4" />
+            <History className="w-4 h-4" />
             Activity
           </button>
         </div>
@@ -143,12 +139,12 @@ const SupportViewPage = () => {
         <div className="sm:px-0 p-6">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
-              <FaTicketAlt className="w-8 h-8" />
+              <Ticket className="w-6 h-6" />
             </div>
             <div className="items-center text-center">
               {/* v1.0.4 <---------------------------------------------------------------- */}
               <h3 className="sm:text-xl md:text-xl lg:text-xl xl:text-2xl 2xl:text-2xl font-bold text-gray-900">
-              {/* v1.0.4 ----------------------------------------------------------------> */}
+                {/* v1.0.4 ----------------------------------------------------------------> */}
                 {ticketData?.ticketCode}
               </h3>
               <StatusBadge
@@ -183,7 +179,7 @@ const SupportViewPage = () => {
               {/* v1.0.2 - Ashraf - Added subject field */}
               <div className="flex items-center gap-3 col-span-1">
                 <div className="p-2 bg-custom-bg rounded-lg">
-                  <FaFileAlt className="w-5 h-5 text-gray-500" />
+                  <FileText className="w-5 h-5 text-gray-500" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Subject</p>
@@ -195,7 +191,7 @@ const SupportViewPage = () => {
               {/* v1.0.2 - Ashraf - Added subject field */}
               <div className="flex items-center gap-3 col-span-1">
                 <div className="p-2 bg-custom-bg rounded-lg">
-                  <FaTag className="w-5 h-5 text-gray-500" />
+                  <Tag className="w-5 h-5 text-gray-500" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Issue Type</p>
@@ -206,7 +202,7 @@ const SupportViewPage = () => {
               </div>
               <div className="flex items-center gap-3 col-span-1">
                 <div className="p-2 bg-custom-bg rounded-lg">
-                  <FaUser className="w-5 h-5 text-gray-500" />
+                  <User className="w-5 h-5 text-gray-500" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Contact</p>
@@ -218,7 +214,7 @@ const SupportViewPage = () => {
               </div>
               <div className="flex items-center gap-3 col-span-1">
                 <div className="p-2 bg-custom-bg rounded-lg">
-                  <FaBuilding className="w-5 h-5 text-gray-500" />
+                  <Building className="w-5 h-5 text-gray-500" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Organization</p>
@@ -237,7 +233,7 @@ const SupportViewPage = () => {
             </h4>
             <div className="flex items-start gap-3">
               <div className="p-2 bg-custom-bg rounded-lg mt-1">
-                <FaFileAlt className="w-5 h-5 text-gray-500" />
+                <FileText className="w-5 h-5 text-gray-500" />
               </div>
               <div className="flex-grow whitespace-pre-wrap break-words break-all">
                 <p className="text-gray-700">
@@ -254,7 +250,7 @@ const SupportViewPage = () => {
               </h4>
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-custom-bg rounded-lg mt-1">
-                  <FaFileAlt className="w-5 h-5 text-gray-500" />
+                  <FileText className="w-5 h-5 text-gray-500" />
                 </div>
                 <div className="flex-1">
                   <p className="text-gray-700 whitespace-pre-wrap">
@@ -272,7 +268,7 @@ const SupportViewPage = () => {
               </h4>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-custom-bg rounded-lg">
-                  <FaFileAlt className="w-5 h-5 text-gray-500" />
+                  <FileText className="w-5 h-5 text-gray-500" />
                 </div>
 
                 <div className="flex-1">
@@ -336,7 +332,7 @@ const SupportViewPage = () => {
             <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-custom-bg rounded-lg">
-                  <FaUser className="w-5 h-5 text-gray-500" />
+                  <User className="w-5 h-5 text-gray-500" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Created By</p>
@@ -349,7 +345,7 @@ const SupportViewPage = () => {
               </div>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-custom-bg rounded-lg">
-                  <FaUser className="w-5 h-5 text-gray-500" />
+                  <User className="w-5 h-5 text-gray-500" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Modified By</p>

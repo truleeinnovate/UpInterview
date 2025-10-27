@@ -125,7 +125,8 @@ exports.forgotPasswordSendEmail = async (req, res) => {
       .replace(/{{actionDescription}}/g, actionDescription)
       .replace(/{{actionButtonText}}/g, actionButtonText)
       .replace(/{{actionLink}}/g, actionLink)
-      .replace(/{{companyName}}/g, process.env.COMPANY_NAME);
+      .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
 
     await sendEmail(email, emailSubject, emailBody);
 
@@ -195,7 +196,8 @@ cron.schedule('0 0 * * *', async () => {
 
         const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
 
-        const emailSubject = emailTemplateSubmitted.subject.replace('{{companyName}}', process.env.COMPANY_NAME);
+        const emailSubject = emailTemplateSubmitted.subject;
+        // .replace('{{companyName}}', process.env.COMPANY_NAME);
         const emailBody = emailTemplateSubmitted.body
           .replace(/{{userName}}/g, userName)
           .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
@@ -311,7 +313,9 @@ const sendVerificationEmail = async ({ type, to, data }) => {
     const emailBody = emailTemplate.body
       .replace(/{{verificationLink}}/g, verificationLink)
       .replace(/{{firstName}}/g, firstName || '')
-      .replace(/{{lastName}}/g, lastName || '');
+      .replace(/{{lastName}}/g, lastName || '')
+      .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
 
     // Call sendEmail with correct parameters
     const emailResult = await sendEmail(
@@ -423,7 +427,9 @@ exports.requestEmailChangeVerification = async (req, res) => {
       .replace(/{{lastName}}/g, user.lastName || '')
       .replace(/{{oldEmail}}/g, oldEmail)
       .replace(/{{newEmail}}/g, newEmail)
-      .replace(/{{actionLink}}/g, verificationLink);
+      .replace(/{{actionLink}}/g, verificationLink)
+      .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
 
 
       // console.log("verificationLink",verificationLink);
@@ -547,12 +553,17 @@ exports.resendVerification = async (req, res) => {
 // when organization request is approved
 exports.sendApprovalEmail = async ({ to, data }) => {
   try {
-    const { email, userId, firstName, lastName, actionLink } = data;
+    const { email, userId,tenantId, firstName, lastName, actionLink } = data;
 
     // Validate email
     if (!email || typeof email !== 'string') {
       throw new Error('Invalid email address');
     }
+    const tenant = await Tenant.findById(tenantId);
+    if (!tenant) {
+      throw new Error('Tenant not found');
+    }
+    const orgCompanyName = tenant.company;
 
     // Get email template
     const emailTemplate = await emailTemplateModel.findOne({
@@ -567,14 +578,18 @@ exports.sendApprovalEmail = async ({ to, data }) => {
 
     // Replace placeholders in email subject and body
     const emailSubject = emailTemplate.subject
-      .replace('{{companyName}}', process.env.COMPANY_NAME);
+      .replace('{{orgCompanyName}}', orgCompanyName);
 
     const emailBody = emailTemplate.body
       .replace(/{{firstName}}/g, firstName || '')
       .replace(/{{lastName}}/g, lastName || '')
       .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
       .replace(/{{actionLink}}/g, actionLink)
-      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
+      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
+      .replace(/{{orgCompanyName}}/g,orgCompanyName)
+      .replace(/{{companyName}}/g, process.env.COMPANY_NAME);
+
+
 
     // Send email
     const emailResult = await sendEmail(

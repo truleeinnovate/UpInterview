@@ -462,7 +462,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
           </div>
           
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-3 pt-4 border-t">
+          <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
               onClick={onClose}

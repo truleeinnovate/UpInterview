@@ -3355,157 +3355,117 @@ const createRecurringSubscription = async (req, res) => {
 };
 
 // Verify subscription payment after redirect from Razorpay
-const verifySubscription = async (req, res) => {
-    // Set up logging context
-    // res.locals.loggedByController = true;
-    // res.locals.processName = 'Verify Subscription';
+// const verifySubscription = async (req, res) => {
+//     try {
+//         const { razorpay_payment_id, razorpay_subscription_id, razorpay_signature } = req.body;
 
-    try {
+//         // Verify the payment signature
+//         const text = razorpay_payment_id + "|" + razorpay_subscription_id;
+//         const generated_signature = crypto
+//             .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+//             .update(text)
+//             .digest('hex');
 
-        // // Set initial log data
-        // res.locals.logData = {
-        //     processName: 'Verify Subscription',
-        //     requestBody: {
-        //         razorpay_payment_id: req.body.razorpay_payment_id,
-        //         razorpay_subscription_id: req.body.razorpay_subscription_id
-        //     },
-        //     status: 'processing'
-        // };
+//         // console.log('Signature verification:', {
+//         //     generated: generated_signature,
+//         //     received: razorpay_signature
+//         // });
 
-        const { razorpay_payment_id, razorpay_subscription_id, razorpay_signature } = req.body;
+//         if (generated_signature !== razorpay_signature) {
+//             console.error('Invalid signature for subscription:', {
+//                 paymentId: razorpay_payment_id,
+//                 subscriptionId: razorpay_subscription_id
+//             });
+//             return res.status(400).json({
+//                 status: 'error',
+//                 message: 'Invalid signature'
+//             });
+//         }
 
-        // Verify the payment signature
-        const text = razorpay_payment_id + "|" + razorpay_subscription_id;
-        const generated_signature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-            .update(text)
-            .digest('hex');
+//         // Update payment record with subscription details
+//         const payment = await Payment.findOneAndUpdate(
+//             { razorpayPaymentId: razorpay_payment_id },
+//             {
+//                 status: 'captured',
+//                 razorpaySubscriptionId: razorpay_subscription_id,
+//                 updatedAt: new Date()
+//             },
+//             { new: true }
+//         );
 
-        // console.log('Signature verification:', {
-        //     generated: generated_signature,
-        //     received: razorpay_signature
-        // });
+//         if (!payment) {
+//             console.error('Payment record not found for ID:', razorpay_payment_id);
+//             return res.status(404).json({
+//                 status: 'error',
+//                 message: 'Payment record not found'
+//             });
+//         }
 
+//         // Get subscription details from database
+//         const subscription = await CustomerSubscription.findOne({
+//             razorpaySubscriptionId: razorpay_subscription_id
+//         });
 
-        if (generated_signature !== razorpay_signature) {
-            console.error('Invalid signature for subscription:', {
-                paymentId: razorpay_payment_id,
-                subscriptionId: razorpay_subscription_id
-            });
-            // res.locals.logData = {
-            //     ...res.locals.logData,
-            //     status: 'signature_error',
-            //     message: 'Invalid signature for subscription'
-            // };
-            return res.status(400).json({
-                status: 'error',
-                message: 'Invalid signature'
-            });
-        }
+//         if (!subscription) {
+//             console.error('Subscription not found for ID:', razorpay_subscription_id);
+//             return res.status(404).json({
+//                 status: 'error',
+//                 message: 'Subscription not found'
+//             });
+//         }
 
-        // Update payment record with subscription details
-        const payment = await Payment.findOneAndUpdate(
-            { razorpayPaymentId: razorpay_payment_id },
-            {
-                status: 'captured',
-                razorpaySubscriptionId: razorpay_subscription_id,
-                updatedAt: new Date()
-            },
-            { new: true }
-        );
+//         // Update subscription status
+//         subscription.status = SUBSCRIPTION_STATUSES.ACTIVE;
+//         subscription.lastPaymentId = razorpay_payment_id;
+//         subscription.lastPaymentDate = new Date();
+//         await subscription.save();
 
-        if (!payment) {
-            console.error('Payment record not found for ID:', razorpay_payment_id);
-            return res.status(404).json({
-                status: 'error',
-                message: 'Payment record not found'
-            });
-        }
+//         // Create receipt data
+//         const receiptData = {
+//             tenantId: subscription.tenantId,
+//             ownerId: subscription.ownerId,
+//             subscriptionId: subscription._id,
+//             amount: payment.amount,
+//             currency: payment.currency || 'USD',
+//             paymentMethod: payment.paymentMethod || 'card',
+//             transactionId: razorpay_payment_id,
+//             status: 'completed',
+//             paymentDate: new Date()
+//         };
 
-        // Get subscription details from database
-        const subscription = await CustomerSubscription.findOne({
-            razorpaySubscriptionId: razorpay_subscription_id
-        });
+//         // Add card details if available
+//         if (payment.cardDetails?.last4) {
+//             receiptData.cardNumber = payment.cardDetails.last4;
+//         }
 
-        if (!subscription) {
-            console.error('Subscription not found for ID:', razorpay_subscription_id);
-            return res.status(404).json({
-                status: 'error',
-                message: 'Subscription not found'
-            });
-        }
+//         // Create receipt
+//         const receipt = await createReceipt(receiptData);
 
-        // Update subscription status
-        subscription.status = SUBSCRIPTION_STATUSES.ACTIVE;
-        subscription.lastPaymentId = razorpay_payment_id;
-        subscription.lastPaymentDate = new Date();
-        await subscription.save();
+//         // Return success response
+//         return res.json({
+//             status: 'success',
+//             message: 'Subscription verified successfully',
+//             paymentId: razorpay_payment_id,
+//             subscriptionId: razorpay_subscription_id
+//         });
 
-        // Create receipt data
-        const receiptData = {
-            tenantId: subscription.tenantId,
-            ownerId: subscription.ownerId,
-            subscriptionId: subscription._id,
-            amount: payment.amount,
-            currency: payment.currency || 'USD',
-            paymentMethod: payment.paymentMethod || 'card',
-            transactionId: razorpay_payment_id,
-            status: 'completed',
-            paymentDate: new Date()
-        };
-
-        // Add card details if available
-        if (payment.cardDetails?.last4) {
-            receiptData.cardNumber = payment.cardDetails.last4;
-        }
-
-        // Create receipt
-        const receipt = await createReceipt(receiptData);
-
-
-
-
-        // Success logging
-        // res.locals.logData = {
-        //     ...res.locals.logData,
-        //     status: 'success',
-        //     message: 'Subscription verified successfully',
-        //     paymentId: razorpay_payment_id,
-        //     subscriptionId: razorpay_subscription_id
-        // };
-
-        // Return success response
-        return res.json({
-            status: 'success',
-            message: 'Subscription verified successfully',
-            paymentId: razorpay_payment_id,
-            subscriptionId: razorpay_subscription_id
-        });
-
-    } catch (error) {
-        console.error('Error in verifySubscription:', {
-            error: error.message,
-            stack: error.stack,
-            body: req.body
-        });
-        // Error logging
-        // res.locals.logData = {
-        //     ...res.locals.logData,
-        //     status: 'error',
-        //     message: error.message,
-        //     stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        // };
-        return res.status(500).json({
-            status: 'error',
-            message: 'Failed to verify subscription',
-            error: error.message
-        });
-    }
-};
+//     } catch (error) {
+//         console.error('Error in verifySubscription:', {
+//             error: error.message,
+//             stack: error.stack,
+//             body: req.body
+//         });
+//         return res.status(500).json({
+//             status: 'error',
+//             message: 'Failed to verify subscription',
+//             error: error.message
+//         });
+//     }
+// };
 
 module.exports = {
     verifyPayment,
     createRecurringSubscription,
-    verifySubscription,
+    //verifySubscription,
     handleWebhook
 };

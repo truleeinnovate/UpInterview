@@ -14,6 +14,7 @@ import "./subscription-animations.css";
 import { useSubscription } from "../../../../../apiHooks/useSubscription";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
+import { notify } from "../../../../../services/toastService";
 
 // Helper function to format date as dd-mm-yy
 const formatDate = (dateStr) => {
@@ -142,6 +143,11 @@ const Subscription = () => {
   const [selectedPlanForDowngrade, setSelectedPlanForDowngrade] =
     useState(null);
   const [loadingPlanId, setLoadingPlanId] = useState(null);
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
+  const [selectedPlanForRenewal, setSelectedPlanForRenewal] = useState(null);
+
+  // Check if subscription is expired
+  const isSubscriptionExpired = subscriptionData?.status === "expired";
 
   // Helper to get numeric price for a plan given billing cycle
   const getPlanPrice = (plan, cycle) => {
@@ -364,6 +370,26 @@ const Subscription = () => {
   const isHighlighted = (plan) =>
     hoveredPlan ? hoveredPlan === plan.name : plan.isDefault;
 
+  // Handle subscription renewal
+  const handleRenewalConfirm = async () => {
+    if (!selectedPlanForRenewal) return;
+    
+    try {
+      setShowRenewalModal(false);
+      await submitPlans(selectedPlanForRenewal);
+      notify.success("🎉 Subscription renewed successfully!");
+    } catch (error) {
+      console.error("Renewal error:", error);
+      toast.error("Failed to renew subscription. Please try again.");
+    }
+  };
+
+  // Handle plan selection for renewal
+  const handleRenewalPlanSelection = (plan) => {
+    setSelectedPlanForRenewal(plan);
+    setShowRenewalModal(true);
+  };
+
   return (
     <>
       {/* v1.0.2 <--------------------------------------------------- */}
@@ -381,14 +407,17 @@ const Subscription = () => {
 
             {!loading &&
               subscriptionData &&
-              subscriptionData.status === "active" &&
-              subscriptionData.planName !== "Free" &&
-              subscriptionData?.razorpaySubscriptionId && (
+              (subscriptionData.status === "active" || isSubscriptionExpired) &&
+              subscriptionData.planName !== "Free" && (
                 <button
-                  onClick={() => setShowCancelModal(true)}
-                  className={`bg-custom-blue hover:bg-custom-blue/80 py-2 px-4 rounded-lg text-white`}
+                  onClick={() => isSubscriptionExpired ? setShowRenewalModal(true) : setShowCancelModal(true)}
+                  className={`${
+                    isSubscriptionExpired 
+                      ? 'bg-green-600 hover:bg-green-700 animate-pulse' 
+                      : 'bg-custom-blue hover:bg-custom-blue/80'
+                  } py-2 px-4 rounded-lg text-white transition-all duration-300 font-semibold`}
                 >
-                  Cancel Subscription
+                  {isSubscriptionExpired ? "🔄 Renew Subscription" : "Cancel Subscription"}
                 </button>
               )}
           </div>
@@ -406,17 +435,29 @@ const Subscription = () => {
                 <h3 className="text-base sm:text-sm md:text-xl font-medium">{`Current Plan: ${subscriptionData?.planName ? subscriptionData?.planName : "Plan Name Not Available"} (${subscriptionData?.selectedBillingCycle ? subscriptionData?.selectedBillingCycle : "Billing Cycle Not Available"})`}</h3>
                 <p className="text-gray-600 mt-1 sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base">
                   {/* v1.0.2 <------------------------------------------------------- */}
-                  Next billing date:{" "}
-                  {subscriptionData.nextBillingDate
-                    ? formatDate(subscriptionData.nextBillingDate)
-                    : "N/A"}
+                  {isSubscriptionExpired ? (
+                    <>
+                      <span className="text-red-600 font-semibold">⚠️ Subscription Expired</span> on {subscriptionData.endDate ? formatDate(subscriptionData.endDate) : "N/A"}
+                    </>
+                  ) : (
+                    <>
+                      Next billing date:{" "}
+                      {subscriptionData.nextBillingDate
+                        ? formatDate(subscriptionData.nextBillingDate)
+                        : "N/A"}
+                    </>
+                  )}
                 </p>
               </div>
               <span
                 className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${
                   subscriptionData.status === "active"
                     ? "bg-green-100 text-green-800"
-                    : "bg-yellow-100 text-yellow-800"
+                    : subscriptionData.status === "expired"
+                      ? "bg-red-100 text-red-800 animate-pulse"
+                      : subscriptionData.status === "cancelled"
+                        ? "bg-gray-100 text-gray-800"
+                        : "bg-yellow-100 text-yellow-800"
                 }`}
               >
                 {subscriptionData.status
@@ -561,7 +602,7 @@ const Subscription = () => {
                     </div>
 
                     {/* Price Section */}
-                    <div className="text-start mb-2">
+                    <div className="text-start mb-4">
                       {shouldShowLimitedOffer ? (
                         // Monthly plans for organizations - Show strikethrough and Limited-Time Offer
                         <div>
@@ -683,12 +724,14 @@ const Subscription = () => {
 
                     {/* Button Section */}
                     <button
-                      onClick={() => !isEnterprise && submitPlans(plan)}
+                      onClick={() => !isEnterprise && (isSubscriptionExpired ? handleRenewalPlanSelection(plan) : submitPlans(plan))}
                       className={`w-full font-semibold py-2.5 mt-auto rounded-lg text-sm
                 ${
                   isHighlighted(plan)
                     ? "bg-white text-custom-blue"
-                    : "text-white bg-custom-blue"
+                    : isSubscriptionExpired 
+                      ? "text-white bg-green-600 hover:bg-green-700 animate-pulse"
+                      : "text-white bg-custom-blue"
                 }
                 ${
                   isEnterprise
@@ -777,6 +820,8 @@ const Subscription = () => {
                       </span>
                     ) : isEnterprise ? (
                       "Contact Sales"
+                    ) : isSubscriptionExpired ? (
+                      "🔄 Renew"
                     ) : subscriptionData.status === "cancelled" ? (
                       "Choose"
                     ) : subscriptionData.subscriptionPlanId === plan.planId &&
@@ -981,6 +1026,94 @@ const Subscription = () => {
                   Downgrade
                 </button>
               </div>
+            </div>
+          </div>,
+          document.body
+        )}
+      
+      {/* Renewal Subscription Modal */}
+      {showRenewalModal &&
+        createPortal(
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full m-4 animate-slide-in">
+              <div className="flex items-center mb-4">
+                <div className="bg-green-100 rounded-full p-3 mr-3 animate-pulse">
+                  <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd"/>
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-custom-blue">
+                  Renew Your Subscription
+                </h2>
+              </div>
+              
+              {selectedPlanForRenewal ? (
+                <>
+                  <div className="mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <p className="text-sm text-gray-700 mb-2">
+                      You're about to renew:
+                    </p>
+                    <p className="font-semibold text-lg text-green-700">
+                      {selectedPlanForRenewal.name} Plan
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {isAnnual ? "Annual" : "Monthly"} billing - ₹
+                      {isAnnual 
+                        ? selectedPlanForRenewal.annualPrice?.toLocaleString('en-IN')
+                        : selectedPlanForRenewal.monthlyPrice?.toLocaleString('en-IN')
+                      }
+                      /{isAnnual ? "year" : "month"}
+                    </p>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <p className="text-sm text-gray-600">
+                      ✨ Your subscription will be activated immediately after successful payment.
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-4">
+                    <button
+                      onClick={() => {
+                        setShowRenewalModal(false);
+                        setSelectedPlanForRenewal(null);
+                      }}
+                      className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition duration-150"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleRenewalConfirm}
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-150 flex items-center animate-pulse"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                          </svg>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          🔄 Renew Now
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-gray-600 mb-4">Please select a plan from below to renew your subscription.</p>
+                  <button
+                    onClick={() => setShowRenewalModal(false)}
+                    className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition duration-150"
+                  >
+                    Select a Plan
+                  </button>
+                </div>
+              )}
             </div>
           </div>,
           document.body

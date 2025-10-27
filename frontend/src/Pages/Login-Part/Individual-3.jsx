@@ -355,7 +355,7 @@ const Popup = ({ onClose, onConfirm }) => {
                 {/* Content */}
                 <div className="space-y-6">
                     <div className="text-center">
-                        <h3 className="text-xl font-semibold text-gray-800 mb-2">Interviewer Type</h3>
+                        {/* <h3 className="text-xl font-semibold text-gray-800 mb-2">Interviewer Type</h3> */}
                         <p className="text-gray-600">Do you want to be an outsource interviewer (freelancer)?</p>
                     </div>
 

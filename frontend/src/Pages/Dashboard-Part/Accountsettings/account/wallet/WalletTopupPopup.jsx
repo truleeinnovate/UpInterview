@@ -200,7 +200,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
     }
   };
 
-  const predefinedAmounts = [100, 500, 1000, 5000];
+  const predefinedAmounts = [1000, 2000, 5000, 10000];
 
 
 

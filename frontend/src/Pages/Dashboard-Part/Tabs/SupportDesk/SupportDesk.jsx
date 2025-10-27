@@ -10,7 +10,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Eye, MoreVertical, Pencil, Plus } from "lucide-react";
+import { Eye, MoreVertical, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
@@ -33,7 +33,6 @@ import { useMediaQuery } from "react-responsive";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.4 ----------------------------------------------------------->
 import { formatDateTime } from "../../../../utils/dateFormatter";
-import { FaEye, FaPencilAlt } from "react-icons/fa";
 
 // v1.0.6 <---------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -619,7 +618,7 @@ function SupportDesk() {
       {
         key: "view",
         label: "View Details",
-        icon: <FaEye className="w-4 h-4 text-blue-600" />,
+        icon: <Eye className="w-4 h-4 text-blue-600" />,
         onClick: () =>
           navigate(
             effectivePermissions_RoleName === "Admin" ||
@@ -637,7 +636,7 @@ function SupportDesk() {
             {
               key: "edit",
               label: "Edit Ticket",
-              icon: <FaPencilAlt className="w-4 h-4 text-green-600" />,
+              icon: <Pencil className="w-4 h-4 text-green-600" />,
               onClick: () =>
                 navigate(`/support-desk/edit-ticket/${ticket._id}`, {
                   state: { ticketData: ticket },

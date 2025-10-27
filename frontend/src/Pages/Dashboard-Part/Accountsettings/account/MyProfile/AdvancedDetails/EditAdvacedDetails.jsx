@@ -116,7 +116,6 @@ const EditAdvacedDetails = ({
     industry: "",
     yearsOfExperience: "",
     location: "",
-    // coverLetterdescription: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -131,7 +130,6 @@ const EditAdvacedDetails = ({
         industry: profileData.industry || "",
         yearsOfExperience: profileData.yearsOfExperience || "",
         location: profileData.location || "",
-        // coverLetterdescription: profileData.coverLetterdescription || "",
         id: profileData._id,
       });
       // setResumeName(profileData?.resume?.filename);
@@ -185,7 +183,6 @@ const EditAdvacedDetails = ({
         ? Number(formData.yearsOfExperience)
         : 0,
       location: formData.location?.trim() || "",
-      // coverLetterdescription: formData.coverLetterdescription?.trim() || "",
       // skills: formData.skills
       id: formData.id,
     };

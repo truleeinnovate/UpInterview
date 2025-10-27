@@ -5,7 +5,7 @@
 // v1.0.3  -  Ashok  -  Added new controller to get all interviews
 // v1.0.4  -  Ranjith  -  fixed new update api in updateInterviewRound and interview seprated the patch and post call
 // v1.0.5  -  Venkatesh - Fetch wallet transaction data in getAllInterviewRounds and return settlement status
-
+//<-v1.0.6---Venkatesh---Fixed updateInterviewStatus function import
 
 const mongoose = require("mongoose");
 const { Interview } = require("../models/Interview/Interview.js");
@@ -25,7 +25,10 @@ const Wallet = require("../models/WalletTopup");
 const {
     sendInterviewRoundEmails,
 } = require("./EmailsController/interviewEmailController");
-const { updateInterviewStatus, TERMINAL_STATUSES } = require('../services/interviewStatusService');
+
+// <---v1.0.6-----
+const { updateInterviewStatusCore } = require('../services/interviewStatusService');
+// -----v1.0.6---->
 // Import usage service for internal interview tracking
 const { 
     checkInternalInterviewUsageLimit, 
@@ -324,12 +327,11 @@ const createInterview = async (req, res) => {
             .select("interviewCode")
             .lean();
 
-        let nextNumber = 50001; // Start from 50001
+        let nextNumber = 1; // Start from 50001
         if (lastInterview && lastInterview.interviewCode) {
             const match = lastInterview.interviewCode.match(/INT-(\d+)/);
             if (match) {
-                const lastNumber = parseInt(match[1], 10);
-                nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
+                nextNumber = parseInt(match[1], 10);
             }
         }
         interviewData.interviewCode = `INT-${String(nextNumber).padStart(
@@ -2035,6 +2037,8 @@ const checkInternalInterviewUsage = async (req, res) => {
     }
 };
 
+//<-v1.0.6---Venkatesh---Fixed updateInterviewStatus controller to use direct Interview model update
+// <---v1.0.6-----
 const updateInterviewStatusController = async (req, res) => {
     try {
         const { interviewId, status } = req.params;
@@ -2048,21 +2052,26 @@ const updateInterviewStatusController = async (req, res) => {
             });
         }
 
-        // Update the interview status service call
-        const updatedInterview = await updateInterviewStatus(interviewId, status);
-
-        if (!updatedInterview) {
-            return res.status(400).json({
+        // Find and update the interview
+        const interview = await Interview.findById(interviewId);
+        
+        if (!interview) {
+            return res.status(404).json({
                 success: false,
-                message: 'Could not update interview status. Check if all rounds are in a terminal state.'
+                message: 'Interview not found'
             });
         }
 
+        // Update the status
+        interview.status = status;
+        
         // If there's a reason, update it
         if (reason) {
-            updatedInterview.completionReason = reason;
-            await updatedInterview.save();
+            interview.completionReason = reason;
         }
+
+        // Save the updated interview
+        const updatedInterview = await interview.save();
 
         res.status(200).json({
             success: true,
@@ -2077,12 +2086,13 @@ const updateInterviewStatusController = async (req, res) => {
         });
     }
 };
+// -----v1.0.6---->
 
 // Get all interview rounds for super admin
 const getAllInterviewRounds = async (req, res) => {
     try {
-        // Fetch all interview rounds with populated data (filter for internal interviews only)
-        const interviewRounds = await InterviewRounds.find({ interviewerType: 'Internal' })
+        // Fetch all interview rounds with populated data (filter for External interviews only)
+        const interviewRounds = await InterviewRounds.find({ interviewerType: 'External' })
             .populate({
                 path: 'interviewId',
                 select: 'interviewCode candidateId positionId status tenantId ownerId createdAt',
@@ -2097,7 +2107,7 @@ const getAllInterviewRounds = async (req, res) => {
                     }
                 ]
             })
-            .populate('interviewers', 'firstName lastName email _id')
+            .populate('interviewers', 'firstName lastName email _id ownerId tenantId')
             .lean() // Add lean for better performance
             .sort({ _id: -1 }); // Latest first
         

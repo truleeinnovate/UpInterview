@@ -6,15 +6,13 @@ import React, { useState } from "react";
 import QuestionBank from "../../QuestionBank-Tab/QuestionBank";
 import { ReactComponent as MdMoreVert } from "../../../../../icons/MdMoreVert.svg";
 import {
-  MdOutlineKeyboardArrowDown,
-  MdOutlineKeyboardArrowUp,
-} from "react-icons/md";
-import {
-  PlusIcon,
-  CheckCircleIcon,
-  PencilIcon,
-} from "@heroicons/react/24/outline";
-import { Edit2, X } from "lucide-react";
+  X,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  CheckCircle,
+  Edit,
+} from "lucide-react";
 
 const AssessmentQuestionsTab = ({
   assessmentId,
@@ -83,7 +81,7 @@ const AssessmentQuestionsTab = ({
   const handlePopupToggle = (section = null) => {
     setIsQuestionPopup(!isQuestionPopup);
     setSelectedSection(section);
-    setActiveMenu(null)
+    setActiveMenu(null);
   };
 
   //   // <---------------------- v1.0.1
@@ -190,15 +188,13 @@ const AssessmentQuestionsTab = ({
                 className="flex truncate items-center gap-2 rounded-lg sm:px-2 px-4 py-2 bg-custom-blue text-white text-sm font-medium hover:bg-custom-blue/90 transition-colors shadow-sm"
                 // onClick={() => handleAddSection()}
                 onClick={() =>
-                  handleAddSection(() =>
-                    setIsAddQuestionModalOpen(false)
-                  )
+                  handleAddSection(() => setIsAddQuestionModalOpen(false))
                 }
                 // onClick={() =>
                 //   setIsAddQuestionModalOpen(!isAddQuestionModalOpen)
                 // }
               >
-                <PlusIcon className="w-4 h-4" />
+                <Plus className="w-4 h-4" />
                 Add Section
               </button>
 
@@ -269,7 +265,7 @@ const AssessmentQuestionsTab = ({
                 onClick={() => setSidebarOpen(true)}
                 className="truncate flex items-center gap-2 rounded-lg px-4 py-2 bg-white border border-custom-blue text-custom-blue text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm"
               >
-                <PencilIcon className="w-4 h-4" />
+                <Edit className="w-4 h-4" />
                 Edit Pass Score
               </button>
             )}
@@ -313,16 +309,16 @@ const AssessmentQuestionsTab = ({
                       </h3>
 
                       <button
-                      className="flex items-center gap-1 sm:mt-3 text-sm text-blue-500 hover:text-blue-600 font-medium sm:px-0 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
-                      onClick={() => {
-                        openEditSection(
-                          sectionIndex,
-                          addedSections[sectionIndex].SectionName
-                        );
-                        setActiveMenu(null)
-                      }}
-                    >
-                      <PencilIcon className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
+                        className="flex items-center gap-1 sm:mt-3 text-sm text-blue-500 hover:text-blue-600 font-medium sm:px-0 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                        onClick={() => {
+                          openEditSection(
+                            sectionIndex,
+                            addedSections[sectionIndex].SectionName
+                          );
+                          setActiveMenu(null);
+                        }}
+                      >
+                        <Edit className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
                       </button>
                     </div>
 
@@ -330,7 +326,7 @@ const AssessmentQuestionsTab = ({
                       className="flex items-center gap-1 sm:mt-3 text-sm text-custom-blue hover:text-custom-blue/90 font-medium sm:px-0 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
                       onClick={() => handlePopupToggle(section)}
                     >
-                      <PlusIcon className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
+                      <Plus className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
                       Add Questions
                     </button>
 
@@ -381,7 +377,7 @@ const AssessmentQuestionsTab = ({
                           </span>
                         </div>
                         <div className="flex items-center space-x-2 bg-blue-50 px-3 py-1.5 rounded-lg">
-                          <CheckCircleIcon className="w-4 h-4 text-custom-blue" />
+                          <CheckCircle className="w-4 h-4 text-custom-blue" />
                           <span className="text-sm font-medium text-custom-blue">
                             Pass: {passScores[section.SectionName] || "0"}
                           </span>
@@ -408,14 +404,12 @@ const AssessmentQuestionsTab = ({
                       //   setActiveMenu(null);
                       //   toggleArrow1(sectionIndex);
                       // }}
-                      onClick={() =>
-                         
-                        toggleArrow1(sectionIndex)}
+                      onClick={() => toggleArrow1(sectionIndex)}
                     >
                       {toggleStates[sectionIndex] ? (
-                        <MdOutlineKeyboardArrowUp className="text-xl" />
+                        <ChevronUp className="h-5 w-5" />
                       ) : (
-                        <MdOutlineKeyboardArrowDown className="text-xl" />
+                        <ChevronDown className="h-5 w-5" />
                       )}
                     </button>
                   </div>
@@ -435,7 +429,7 @@ const AssessmentQuestionsTab = ({
                         setActiveMenu(null);
                       }}
                     >
-                      <PencilIcon className="w-4 h-4" />
+                      <Edit className="w-4 h-4" />
                       Edit Section
                     </button>
                     <button

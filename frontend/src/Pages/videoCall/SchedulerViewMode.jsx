@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { SlLike, SlDislike } from "react-icons/sl";
-import { FileText } from "lucide-react";
+import { FileText, ThumbsUp, ThumbsDown } from "lucide-react";
 
 export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
   const {
@@ -8,7 +7,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
     interviewRound,
     position,
     feedbacks = [],
-    interviewQuestions = {}
+    interviewQuestions = {},
   } = feedbackData || {};
 
   // Track which feedback is active
@@ -20,13 +19,13 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
     overallImpression = {},
     skills = [],
     generalComments = "",
-    questionFeedback = []
+    questionFeedback = [],
   } = activeFeedback;
 
   // Combine preselected + interviewer-added questions
   const allQuestions = [
     ...(interviewQuestions.preselectedQuestions || []),
-    ...(interviewQuestions.interviewerAddedQuestions || [])
+    ...(interviewQuestions.interviewerAddedQuestions || []),
   ];
 
   // Build question details map
@@ -39,7 +38,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
   // Merge question feedback
   const questionsWithDetails = questionFeedback.map((qf) => ({
     ...qf,
-    snapshot: questionDetailsMap[qf.questionId] || {}
+    snapshot: questionDetailsMap[qf.questionId] || {},
   }));
 
   const renderStarRating = (rating) => (
@@ -203,7 +202,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
                           : ""
                       }
                     >
-                      <SlLike />
+                      <ThumbsUp className="h-4 w-4" />
                     </span>
                     <span
                       className={
@@ -212,7 +211,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
                           : ""
                       }
                     >
-                      <SlDislike />
+                      <ThumbsDown className="h-4 w-4" />
                     </span>
                   </div>
 
@@ -270,10 +269,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
   );
 };
 
-
-// import { SlLike } from "react-icons/sl";
-// import { SlDislike } from "react-icons/sl";
-// import { FileText } from "lucide-react";
+// import { FileText, ThumbsUp, ThumbsDown } from "lucide-react";
 
 // export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
 //   // Extract data from feedbackData structure
@@ -289,7 +285,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
 
 //   // Get the first feedback (since there may be multiple)
 //   const feedback = feedbacks.length > 0 ? feedbacks[0] : {};
-  
+
 //   // Extract feedback details
 //   const {
 //     overallImpression = {},
@@ -376,7 +372,6 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
 //           </div>
 //         </div>
 
-        
 //         <div className="bg-gray-50 p-4 rounded-lg">
 //           <h4 className="font-medium text-gray-700 mb-2">Interview Details</h4>
 //           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -488,10 +483,10 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
 
 //                   <div className="flex items-center gap-2 mt-2">
 //                     <span className={question.interviewerFeedback?.liked === "liked" ? "text-green-700" : ""}>
-//                       <SlLike />
+//                       <ThumbsUp />
 //                     </span>
 //                     <span className={question.interviewerFeedback?.liked === "disliked" ? "text-red-500" : ""}>
-//                       <SlDislike />
+//                       <ThumbsDown />
 //                     </span>
 //                   </div>
 

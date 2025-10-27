@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Tab } from "../../Components/SuperAdminComponents/common/Tab";
-import { AiOutlineDollar, AiOutlineFileText } from "react-icons/ai";
+import { File, FileText, Banknote } from "lucide-react";
 import PaymentsTable from "../../Components/SuperAdminComponents/Billing/PaymentsTable";
 import ReceiptsTable from "../../Components/SuperAdminComponents/Billing/ReceiptsTable";
 import InvoicesTable from "../../Components/SuperAdminComponents/Billing/InvoicesTable";
@@ -31,19 +31,19 @@ function BillingPage({ organizationId, viewMode }) {
               <Tab
                 active={activeTab === "invoices"}
                 onClick={() => setActiveTab("invoices")}
-                icon={<AiOutlineFileText />}
+                icon={<File className="h-5 w-5" />}
                 label="Invoices"
               />
               <Tab
                 active={activeTab === "payments"}
                 onClick={() => setActiveTab("payments")}
-                icon={<AiOutlineDollar />}
+                icon={<Banknote className="h-5 w-5" />}
                 label="Payments"
               />
               <Tab
                 active={activeTab === "receipts"}
                 onClick={() => setActiveTab("receipts")}
-                icon={<AiOutlineFileText />}
+                icon={<FileText className="h-5 w-5" />}
                 label="Receipts"
               />
             </nav>

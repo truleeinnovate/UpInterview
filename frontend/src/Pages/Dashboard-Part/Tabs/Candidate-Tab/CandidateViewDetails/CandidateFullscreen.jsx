@@ -1,5 +1,6 @@
 // v1.0.0 ------ Venkatesh--- added skills width to full and skills added in column wise
 // v1.0.1 - Ashok - fixed displaying profile pic and added resume filed
+
 import Modal from "react-modal";
 import {
   Phone,
@@ -10,17 +11,14 @@ import {
   Briefcase,
   Calendar,
   User,
+  Circle,
+  Edit,
+  FileText,
 } from "lucide-react";
 // import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCandidates } from "../../../../../apiHooks/useCandidates";
-import Loading from "../../../../../Components/Loading";
-import { LiaGenderlessSolid } from "react-icons/lia";
-import { ReactComponent as FaEdit } from "../../../../../icons/FaEdit.svg";
-// v1.0.1 <----------------------------------------------------------------
-import { GrDocumentText } from "react-icons/gr";
-// v1.0.1 ---------------------------------------------------------------->
 
 Modal.setAppElement("#root");
 
@@ -70,7 +68,7 @@ const CandidateFullscreen = () => {
             className=" hover:bg-gray-100 rounded-lg transition-colors"
             title="Edit"
           >
-            <FaEdit className="w-5 h-5 text-gray-500 hover:text-custom-blue" />
+            <Edit className="w-5 h-5 text-gray-500 hover:text-custom-blue" />
           </button>
 
           <button
@@ -181,7 +179,7 @@ const CandidateFullscreen = () => {
                   <div className="grid grid-cols-2 gap-6">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
-                        <LiaGenderlessSolid className="w-5 h-5 text-gray-500" />
+                        <Circle className="w-5 h-5 text-gray-500" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Gender</p>
@@ -289,7 +287,7 @@ const CandidateFullscreen = () => {
                     <div className="flex items-center justify-between gap-3 w-full">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-custom-bg rounded-lg">
-                          <GrDocumentText className="w-5 h-5" />
+                          <FileText className="w-5 h-5" />
                         </div>
 
                         <div>

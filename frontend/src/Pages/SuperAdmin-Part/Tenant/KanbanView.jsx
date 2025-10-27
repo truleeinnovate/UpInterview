@@ -1,11 +1,6 @@
-import { motion } from "framer-motion";
-import { format, isValid, parseISO } from "date-fns";
+// v1.0.0 - Ashok - fixed style issues
 
-// const formatDate = (dateString) => {
-//   if (!dateString) return "N/A";
-//   const date = parseISO(dateString);
-//   return isValid(date) ? format(date, "MMM dd, yyyy") : "N/A";
-// };
+import { motion } from "framer-motion";
 
 const capitalizeFirstLetter = (str) =>
   str?.charAt(0)?.toUpperCase() + str?.slice(1);
@@ -23,10 +18,10 @@ const KanbanView = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full h-[calc(100vh-9rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
+      className="w-full h-[calc(100vh-20rem)] bg-gray-50 rounded-xl px-6 pb-12 overflow-y-auto"
     >
-      <div className="h-full w-full">
-        <div className="flex items-center justify-between mb-6">
+      <div className="w-full mt-4">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-semibold text-gray-800">All Tenants</h3>
           <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
             {tenants?.length || 0} Tenants
@@ -45,7 +40,7 @@ const KanbanView = ({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
-                className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full"
+                className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col"
               >
                 {/* Header: Avatar, Title, Subtitle */}
                 <div className="flex justify-between items-start mb-4 gap-2">

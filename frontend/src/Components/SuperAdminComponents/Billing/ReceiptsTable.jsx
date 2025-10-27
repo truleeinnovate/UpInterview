@@ -13,21 +13,13 @@ import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../../Components/SuperAdminComponents/Billing/Receipt/Kanban.jsx";
 import {
   Eye,
-  // Mail,
-  // UserCircle,
+  Mail,
+  Download,
   Pencil,
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import {
-  AiOutlineDownload,
-  AiOutlineMail,
-  // AiOutlineCreditCard,
-  // AiOutlineBank,
-  // AiOutlineUser,
-  // AiOutlineKey,
-  // AiOutlineShop,
-} from "react-icons/ai";
+
 // import axios from "axios";
 // import { config } from "../../../config.js";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
@@ -463,9 +455,9 @@ function ReceiptsTable({ organizationId, viewMode }) {
 
   // Render Popup content
   // v1.0.0 <-------------------------------------------------------------------------
-  const PopupContent = ({receipt}) => {
+  const PopupContent = ({ receipt }) => {
     useScrollLock(true);
-  // v1.0.0 ------------------------------------------------------------------------->
+    // v1.0.0 ------------------------------------------------------------------------->
     return (
       <div className="px-4">
         <div className="rounded-sm px-4 w-full">
@@ -599,11 +591,11 @@ function ReceiptsTable({ organizationId, viewMode }) {
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                   <div className="mt-6 flex justify-end space-x-3">
                     <button className="btn-secondary flex items-center">
-                      <AiOutlineDownload className="mr-2" />
+                      <Download className="mr-2" />
                       Download Receipt
                     </button>
                     <button className="btn-secondary flex items-center">
-                      <AiOutlineMail className="mr-2" />
+                      <Mail className="mr-2" />
                       Email Receipt
                     </button>
                   </div>

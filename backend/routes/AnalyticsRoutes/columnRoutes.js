@@ -18,19 +18,19 @@ router.use(tenantMiddleware);
 // =============================================================================
 
 // GET /api/columns/:reportType - Get column configuration for report type
-router.get('/:reportType', 
+router.get('/:reportType',
   userPermissionMiddleware('reports', 'read'),
   getColumnConfiguration
 );
 
 // POST /api/columns/save - Save column configuration
-router.post('/save', 
+router.post('/save',
   userPermissionMiddleware('reports', 'update'),
   saveColumnConfiguration
 );
 
 // DELETE /api/columns/:reportType/reset - Reset column configuration to default
-router.delete('/:reportType/reset', 
+router.delete('/:reportType/reset',
   userPermissionMiddleware('reports', 'update'),
   resetColumnConfiguration
 );
@@ -40,13 +40,13 @@ router.delete('/:reportType/reset',
 // =============================================================================
 
 // GET /api/columns/dashboard/layout - Get dashboard layout
-router.get('/dashboard/layout', 
+router.get('/dashboard/layout',
   userPermissionMiddleware('dashboard', 'read'),
   getDashboardLayout
 );
 
 // POST /api/columns/dashboard/layout - Save dashboard layout
-router.post('/dashboard/layout', 
+router.post('/dashboard/layout',
   userPermissionMiddleware('dashboard', 'update'),
   saveDashboardLayout
 );
@@ -56,12 +56,12 @@ router.post('/dashboard/layout',
 // =============================================================================
 
 // GET /api/columns/available/:reportType - Get available columns for report type
-router.get('/available/:reportType', 
+router.get('/available/:reportType',
   userPermissionMiddleware('reports', 'read'),
   async (req, res) => {
     try {
       const { reportType } = req.params;
-      
+
       const availableColumns = {
         interview: [
           { key: 'id', label: 'ID', type: 'text', description: 'Unique interview identifier' },
@@ -140,7 +140,7 @@ router.get('/available/:reportType',
           { key: 'region', label: 'Region', type: 'text', description: 'Geographic region' }
         ]
       };
-      
+
       res.json({
         success: true,
         data: availableColumns[reportType] || []
@@ -156,19 +156,19 @@ router.get('/available/:reportType',
 );
 
 // POST /api/columns/grouping/save - Save grouping configuration
-router.post('/grouping/save', 
+router.post('/grouping/save',
   userPermissionMiddleware('reports', 'update'),
   async (req, res) => {
     try {
       const { reportType, grouping } = req.body;
-      
+
       const config = await ColumnConfiguration.findOneAndUpdate(
-        addTenantFilter(req, { 
+        addTenantFilter(req, {
           userId: req.currentUser.userId,
-          reportType 
+          reportType
         }),
-        { 
-          $set: { 
+        {
+          $set: {
             grouping: {
               enabled: grouping.enabled || false,
               column: grouping.column || '',
@@ -178,13 +178,13 @@ router.post('/grouping/save',
             }
           }
         },
-        { 
-          new: true, 
-          upsert: true, 
-          runValidators: true 
+        {
+          new: true,
+          upsert: true,
+          runValidators: true
         }
       );
-      
+
       res.json({
         success: true,
         data: config,
@@ -201,19 +201,19 @@ router.post('/grouping/save',
 );
 
 // GET /api/columns/grouping/:reportType - Get grouping configuration
-router.get('/grouping/:reportType', 
+router.get('/grouping/:reportType',
   userPermissionMiddleware('reports', 'read'),
   async (req, res) => {
     try {
       const { reportType } = req.params;
-      
+
       const config = await ColumnConfiguration.findOne(
-        addTenantFilter(req, { 
+        addTenantFilter(req, {
           userId: req.currentUser.userId,
-          reportType 
+          reportType
         })
       ).select('grouping').lean();
-      
+
       const grouping = config?.grouping || {
         enabled: false,
         column: '',
@@ -221,7 +221,7 @@ router.get('/grouping/:reportType',
         showGroupCounts: true,
         sortGroups: 'asc'
       };
-      
+
       res.json({
         success: true,
         data: grouping

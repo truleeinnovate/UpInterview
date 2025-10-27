@@ -153,8 +153,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Calendar, Layers } from "lucide-react";
-import { FaEye, FaPencilAlt } from "react-icons/fa";
+import { Calendar, Layers, Eye, Pencil } from "lucide-react";
 import { formatDateTime } from "../../../utils/dateFormatter";
 
 const KanbanView = ({
@@ -276,7 +275,7 @@ const KanbanView = ({
                         className="text-custom-blue hover:bg-custom-blue/80 p-2 rounded-lg"
                         title="View"
                       >
-                        <FaEye className="w-4 h-4" />
+                        <Eye className="w-4 h-4" />
                       </button>
                     )}
                     {effectivePermissions?.InterviewTemplates?.Edit && (
@@ -285,7 +284,7 @@ const KanbanView = ({
                         className="text-purple-500 hover:bg-purple-50 p-2 rounded-lg"
                         title="Edit"
                       >
-                        <FaPencilAlt className="w-4 h-4" />
+                        <Pencil className="w-4 h-4" />
                       </button>
                     )}
                   </div>

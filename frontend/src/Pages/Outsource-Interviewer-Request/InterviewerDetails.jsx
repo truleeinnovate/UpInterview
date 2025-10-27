@@ -28,7 +28,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     const [activeTab, setActiveTab] = useState("Basic Details");
 
     const [isExpanded, setIsExpanded] = useState(false);
-    
+
     // Documents state for DocumentsSection component
     const [documents, setDocuments] = useState({
         resume: interviewer?.resume || null,
@@ -48,11 +48,6 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
             .filter((item) => item.contactId?._id === interviewerId)
             .reverse();
     }, [interviewerId, outsourceInterviewers]);
-
-    // No-Show policy UI removed; mapping helper not needed
-
-    // const [expertiseLevel, setExpertiseLevel] = useState('mid-level');
-    // No-Show policy state removed
 
     const [showStatusModal, setShowStatusModal] = useState(false);
 
@@ -265,7 +260,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                                                 key={tab}
                                                 onClick={() => setActiveTab(tab)}
                                                 className={`
-                                                    flex-shrink-0 
+                                                    flex-shrink-0
                                                     sm:w-1/3 md:w-auto
                                                     lg:w-auto xl:w-auto 2xl:w-auto
                                                     text-center py-4 sm:px-0 px-2 border-b-2 font-medium text-sm
@@ -283,37 +278,37 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                             </div>
                             <div>
                                 {activeTab === "Basic Details" && (
-                                    <BasicDetailsTab 
-                                        mode="view" 
-                                        usersId={interviewer?._id} 
+                                    <BasicDetailsTab
+                                        mode="view"
+                                        usersId={interviewer?._id}
                                         type="interviewer"
                                         externalData={interviewer}
                                     />
                                 )}
                                 {activeTab === "Advanced Details" && (
-                                    <AdvancedDetails 
+                                    <AdvancedDetails
                                         mode="view"
                                         usersId={interviewer?._id}
                                         type="interviewer"
                                         externalData={interviewer}
-                                    />  
+                                    />
                                 )}
                                 {activeTab === "Interview Details" && (
-                                    <InterviewUserDetails 
+                                    <InterviewUserDetails
                                         mode="view"
                                         usersId={interviewer?._id}
                                         externalData={interviewer}
                                     />
                                 )}
                                 {activeTab === "Documents Details" && (
-                                    <DocumentsSection 
-                                        documents={documents} 
+                                    <DocumentsSection
+                                        documents={documents}
                                         onUpdate={setDocuments}
                                         externalData={interviewer}
                                     />
                                 )}
                                 {activeTab === "Availability Details" && (
-                                    <AvailabilityUser 
+                                    <AvailabilityUser
                                         mode="view"
                                         usersId={interviewer?._id}
                                         externalData={interviewer}

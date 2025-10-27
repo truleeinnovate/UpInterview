@@ -266,7 +266,7 @@ const PositionSlideDetails = () => {
               </div>
 
               {/* {position.rounds?.length === 0
-                // && template.rounds?.length === 0  
+                // && template.rounds?.length === 0
                 && (
                   <div className="mb-1 sm:mb-4 rounded-xl border mt-2 border-yellow-300 bg-yellow-50 p-4 sm:p-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -332,7 +332,7 @@ const PositionSlideDetails = () => {
                       {position?.minexperience +
                         " - " +
                         position?.maxexperience +
-                        " years" || "Not Disclosed"}
+                        " Years" || "Not Disclosed"}
                     </p>
                   </div>
                 </div>
@@ -364,7 +364,7 @@ const PositionSlideDetails = () => {
                   {/* {position?.skills ? (
                     position.skills.map((skill, index) => (
                       <>
-                        
+
                         <div className="flex gap-2 justify-center w-full px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100">
                           <span
                             key={index}
@@ -385,7 +385,7 @@ const PositionSlideDetails = () => {
                             {skill.expertise}
                           </span>
                         </div>
-                        
+
                       </>
                     ))
                   ) : (

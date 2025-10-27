@@ -2,7 +2,7 @@ const express = require('express');
 const razorpayRouter = express.Router();
 const { 
     verifyPayment, 
-    verifySubscription, 
+    //verifySubscription, 
     handleWebhook,
     createRecurringSubscription
 } = require('../controllers/RazorpayController.js');
@@ -17,7 +17,7 @@ razorpayRouter.post('/payment/create-subscription',loggingService.internalLoggin
 razorpayRouter.post('/payment/verify',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware,  verifyPayment);
 
 // Verify subscription after redirect from Razorpay
-razorpayRouter.post('/payment/verify-subscription',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, verifySubscription);
+//razorpayRouter.post('/payment/verify-subscription', verifySubscription);
 
 // Webhook endpoint for Razorpay events
 razorpayRouter.post('/payment-webhook',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, handleWebhook);

@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 
 function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onViewPosition, effectivePermissions, loading }) {
   // Group interviews by status
-  const inProgressInterviews = interviews?.filter(interview => 
-    interview.status === 'In Progress' || 
-    interview.status === 'Scheduled' || 
-    interview.status === 'Rescheduled' || 
+  const inProgressInterviews = interviews?.filter(interview =>
+    interview.status === 'InProgress' ||
+    interview.status === 'Scheduled' ||
+    interview.status === 'Rescheduled' ||
     interview.status === 'Draft'
   ) || [];
   const completedInterviews = interviews?.filter(interview => interview.status === 'Completed') || [];
@@ -30,13 +30,13 @@ function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onV
 
   if (loading) {
     return (
-      <motion.div 
+      <motion.div
         className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6"
         variants={container}
         initial="hidden"
         animate="show"
       >
-        {['In Progress', 'Completed', 'Cancelled'].map((status, colIndex) => (
+        {['InProgress', 'Completed', 'Cancelled'].map((status, colIndex) => (
           <motion.div
             key={status}
             className="bg-secondary/50 rounded-lg p-4 border border-border"
@@ -77,18 +77,18 @@ function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onV
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6"
       variants={container}
       initial="hidden"
       animate="show"
     >
-      <motion.div 
+      <motion.div
         className="bg-secondary/50 rounded-lg p-4 border border-border"
         variants={item}
       >
         <div className="flex items-center mb-4">
-          <h3 className="text-lg font-medium text-foreground">In Progress</h3>
+          <h3 className="text-lg font-medium text-foreground">InProgress</h3>
           <span className="ml-2 bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 text-xs font-medium px-2.5 py-0.5 rounded-full">
             {inProgressInterviews.length}
           </span>
@@ -96,8 +96,8 @@ function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onV
         <div className="space-y-4">
           {inProgressInterviews.length > 0 ? (
             inProgressInterviews.map(interview => (
-              <InterviewCard 
-                key={interview._id} 
+              <InterviewCard
+                key={interview._id}
                 interview={interview}
                 onView={onView}
                 onViewInterview={onViewInterview}
@@ -113,8 +113,8 @@ function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onV
           )}
         </div>
       </motion.div>
-      
-      <motion.div 
+
+      <motion.div
         className="bg-secondary/50 rounded-lg p-4 border border-border"
         variants={item}
       >
@@ -127,8 +127,8 @@ function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onV
         <div className="space-y-4">
           {completedInterviews.length > 0 ? (
             completedInterviews.map(interview => (
-              <InterviewCard 
-                key={interview._id} 
+              <InterviewCard
+                key={interview._id}
                 interview={interview}
                 onView={onView}
                 onViewInterview={onViewInterview}
@@ -144,8 +144,8 @@ function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onV
           )}
         </div>
       </motion.div>
-      
-      <motion.div 
+
+      <motion.div
         className="bg-secondary/50 rounded-lg p-4 border border-border"
         variants={item}
       >
@@ -158,8 +158,8 @@ function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onV
         <div className="space-y-4">
           {cancelledInterviews.length > 0 ? (
             cancelledInterviews.map(interview => (
-              <InterviewCard 
-                key={interview._id} 
+              <InterviewCard
+                key={interview._id}
                 interview={interview}
                 onView={onView}
                 onViewInterview={onViewInterview}

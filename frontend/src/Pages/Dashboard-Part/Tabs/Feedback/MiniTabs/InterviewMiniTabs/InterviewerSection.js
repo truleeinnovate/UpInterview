@@ -8,12 +8,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { FaTrash, FaPlus } from "react-icons/fa";
 import Popup from "reactjs-popup";
-import { SlLike } from "react-icons/sl";
-import { SlDislike } from "react-icons/sl";
-import { IoIosCloseCircleOutline } from "react-icons/io";
-import { X } from "lucide-react";
+import { X, Plus, ThumbsUp, ThumbsDown, XCircle } from "lucide-react";
 import QuestionBank from "../../../../Tabs/QuestionBank-Tab/QuestionBank.jsx";
 
 const dislikeOptions = [
@@ -743,7 +739,7 @@ useEffect(() => {
             <div className="flex justify-between items-center mb-2">
               <h1>Tell us more :</h1>
               <button onClick={() => setDislikeQuestionId(null)}>
-                <IoIosCloseCircleOutline />
+                <XCircle className="h-4 w-4" />
               </button>
             </div>
             <ul className="flex flex-wrap gap-3">
@@ -875,7 +871,7 @@ useEffect(() => {
                 onClick={openQuestionBank}
                 title="Add Question from Question Bank"
               >
-                <FaPlus className="text-sm" />
+                <Plus className="h-4 w-4" />
                 <span>Add</span>
                 <span className="sm:hidden inline">Question</span>
               </button>
@@ -953,7 +949,7 @@ useEffect(() => {
                             )
                           }
                         >
-                          <SlLike />
+                          <ThumbsUp className="h-4 w-4" />
                         </span>
                         <span
                           className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
@@ -968,7 +964,7 @@ useEffect(() => {
                             )
                           }
                         >
-                          <SlDislike />
+                          <ThumbsDown className="h-4 w-4" />
                         </span>
                       </>
                     )}
@@ -1028,7 +1024,7 @@ useEffect(() => {
             // Empty state when no questions are present
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
               <div className="text-gray-500 mb-4">
-                <FaPlus className="mx-auto text-4xl mb-2" />
+                <Plus className="mx-auto h-5 w-5 mb-2" />
                 <p className="text-lg font-medium">
                   No interviewer questions found
                 </p>

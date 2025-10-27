@@ -1,4 +1,4 @@
-import { AiOutlineInfoCircle } from "react-icons/ai";
+import { Info } from "lucide-react";
 
 function Card({
   title,
@@ -27,8 +27,8 @@ function Card({
             {title}
           </h3>
           {description && (
-            <div className="flex items-center mt-1">
-              <AiOutlineInfoCircle className="text-gray-400 mr-1 flex-shrink-0" />
+            <div className="flex items-center gap-2 mt-1">
+              <Info className="text-gray-400 flex-shrink-0 h-5 w-5" />
               <p className="text-xs sm:text-sm md:text-sm lg:text-sm xl:text-sm 2xl:text-sm text-gray-500 line-clamp-2">
                 {description}
               </p>

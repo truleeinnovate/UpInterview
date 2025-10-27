@@ -9,7 +9,6 @@ import InterviewQuestions from "./InterviewQuestions";
 import AssignmentQuestions from "./AssignmentQuestions";
 import axios from "axios";
 import { config } from "../../../config";
-import { FaChevronLeft, FaChevronRight, FaChevronDown } from "react-icons/fa";
 import QuestionBankManagerForm from "./QuestionBankManagerForm";
 import { notify } from "../../../services/toastService";
 import SidebarPopup from "../../../Components/Shared/SidebarPopup/SidebarPopup";
@@ -19,6 +18,9 @@ import {
   X,
   ArrowUpAZ,
   ArrowDownZA,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown
 } from "lucide-react";
 import DeleteConfirmModal from "../../Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal";
 // v1.0.3 <--------------------------------------------------------------------------
@@ -46,7 +48,7 @@ const CustomDropdown = ({ value, onChange, options }) => {
         className="px-3 py-2 border rounded-lg flex items-center justify-between gap-2 text-sm w-32 bg-white"
       >
         {options.find((opt) => opt.value === value)?.label}
-        <FaChevronDown
+        <ChevronDown
           className={`text-custom-blue transition-transform ${
             open ? "rotate-180" : ""
           }`}
@@ -468,7 +470,7 @@ const QuestionBankManager = () => {
               disabled={page === 1 || totalPages === 0}
               className="p-2 rounded-lg border disabled:opacity-50"
             >
-              <FaChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-5 w-5" />
             </button>
 
             <span className="text-sm font-medium">
@@ -480,7 +482,7 @@ const QuestionBankManager = () => {
               disabled={page === totalPages || totalPages === 0}
               className="p-2 rounded-lg border disabled:opacity-50"
             >
-              <FaChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-5 w-5" />
             </button>
           </div>
         </div>

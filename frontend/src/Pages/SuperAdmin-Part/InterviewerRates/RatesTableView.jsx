@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import DataTable from "../../../Components/SuperAdminComponents/common/DataTable";
 import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge";
-import { AiOutlineEdit, AiOutlineEye, AiOutlineDelete } from "react-icons/ai";
+import { Pencil, Eye, Trash } from "lucide-react";
 import axios from "axios";
 import { config } from "../../../config";
 // v1.0.1 <------------------------------------------------------------
@@ -372,14 +372,14 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
             className="p-2 text-teal-600 hover:text-teal-900 rounded-full hover:bg-teal-50"
             title="View Details"
           >
-            <AiOutlineEye size={18} />
+            <Eye className="h-4 w-4" />
           </button>
           <button
             onClick={() => onEdit(row)}
             className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-50"
             title="Edit Rate Card"
           >
-            <AiOutlineEdit size={18} />
+            <Pencil className="h-4 w-4" />
           </button>
           {/* v1.0.1 <------------------------------------------------------------------------ */}
           <button
@@ -387,7 +387,7 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
             className="p-2 text-red-600 hover:text-red-900 rounded-full hover:bg-red-50"
             title="Delete Rate Card"
           >
-            <AiOutlineDelete size={18} />
+            <Trash className="h-4 w-4" />
           </button>
           {/* v1.0.1 ------------------------------------------------------------------------> */}
           {/* v1.0.0 <------------------------------------------------------------------- */}
@@ -454,7 +454,10 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
               <p className="mt-2 text-sm text-gray-600">
                 Are you sure you want to delete{" "}
                 {/* v1.0.2 <-------------------------------------------------------- */}
-                <span className="font-medium">{deleteTarget?.technology[0]}</span>?
+                <span className="font-medium">
+                  {deleteTarget?.technology[0]}
+                </span>
+                ?
                 {/* v1.0.2 --------------------------------------------------------> */}
                 This action cannot be undone.
               </p>

@@ -520,7 +520,8 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     // Fetch interview with candidate details
     const interview = await Interview.findById(interviewId)
       .populate('candidateId')
-      .populate('ownerId');
+      .populate('ownerId')
+      .populate('positionId', 'title');
     if (!interview) {
       const error = {
         success: false,
@@ -532,8 +533,10 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       return error;
     }
 
+    const position = interview.positionId?.title || 'Not Assigned';
+
     // Fetch tenant details for company name and address
-    const tenant = await Tenant.findOne({ tenantId: interview.tenantId });
+    const tenant = await Tenant.findById(interview.tenantId);
     const tenantCompanyName = tenant?.company || companyName;
     const address = tenant?.offices?.[0]?.address || 'To be provided';
 
@@ -619,6 +622,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     const dateTime = round.dateTime || 'To be scheduled';
     const duration = round.duration || '60 minutes';
     const instructions = round.instructions || 'Please arrive on time.';
+    // const position = round.positionId.title || 'No Position';
 
     const notifications = [];
     const emailPromises = [];
@@ -626,8 +630,12 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     // Handle Face-to-Face interviews
     if (isFaceToFace) {
       // Get face-to-face template
+
+      const templateCategory = tenant.type === 'individual'
+        ? 'interview_face_to_face_individual'
+        : 'interview_face_to_face';
       const faceToFaceTemplate = await emailTemplateModel.findOne({
-        category: 'interview_face_to_face',
+        category: templateCategory,
         isSystemTemplate: true,
         isActive: true
       });
@@ -636,18 +644,22 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       if (faceToFaceTemplate && candidateEmail) {
         const candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
         const emailSubject = faceToFaceTemplate.subject
-          .replace('{{companyName}}', tenantCompanyName)
+          // .replace('{{companyName}}', tenantCompanyName)
           .replace('{{roundTitle}}', roundTitle);
 
         const emailBody = faceToFaceTemplate.body
-          .replace('{{recipientName}}', candidateName)
-          .replace('{{companyName}}', tenantCompanyName)
-          .replace('{{roundTitle}}', roundTitle)
-          .replace('{{dateTime}}', dateTime)
-          .replace('{{duration}}', duration)
-          .replace('{{address}}', address)
-          .replace('{{instructions}}', instructions)
-          .replace('{{supportEmail}}', supportEmail);
+          .replace(/{{recipientName}}/g, candidateName)
+          .replace(/{{companyName}}/g, companyName)
+          .replace(/{{roundTitle}}/g, roundTitle)
+          .replace(/{{dateTime}}/g, dateTime)
+          .replace(/{{duration}}/g, duration)
+          .replace(/{{address}}/g, address)
+          .replace(/{{instructions}}/g, instructions)
+          .replace(/{{supportEmail}}/g, supportEmail)
+          .replace(/{{orgCompanyName}}/g, tenantCompanyName)
+          .replace(/{{position}}/g, position);//we can add postion because face face dont have mock
+
+
 
         emailPromises.push(
           sendEmail(candidateEmail, emailSubject, emailBody)
@@ -686,18 +698,20 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         for (const interviewer of interviewerEmails) {
           const interviewerName = [interviewer.firstName, interviewer.lastName].filter(Boolean).join(' ') || 'Interviewer';
           const emailSubject = faceToFaceTemplate.subject
-            .replace('{{companyName}}', tenantCompanyName)
+            // .replace('{{companyName}}', tenantCompanyName)
             .replace('{{roundTitle}}', roundTitle);
 
           const emailBody = faceToFaceTemplate.body
-            .replace('{{recipientName}}', interviewerName)
-            .replace('{{companyName}}', tenantCompanyName)
-            .replace('{{roundTitle}}', roundTitle)
-            .replace('{{dateTime}}', dateTime)
-            .replace('{{duration}}', duration)
-            .replace('{{address}}', address)
-            .replace('{{instructions}}', instructions)
-            .replace('{{supportEmail}}', supportEmail);
+            .replace(/{{recipientName}}/g, interviewerName)
+            .replace(/{{companyName}}/g, companyName)
+            .replace(/{{roundTitle}}/g, roundTitle)
+            .replace(/{{dateTime}}/g, dateTime)
+            .replace(/{{duration}}/g, duration)
+            .replace(/{{address}}/g, address)
+            .replace(/{{instructions}}/g, instructions)
+            .replace(/{{supportEmail}}/g, supportEmail)
+            .replace(/{{orgCompanyName}}/g, tenantCompanyName)
+            .replace(/{{position}}/g, position);//we can add postion because face face dont have mock
 
           emailPromises.push(
             sendEmail(interviewer.email, emailSubject, emailBody)
@@ -736,18 +750,20 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       if (faceToFaceTemplate && schedulerEmail) {
         const schedulerName = [scheduler?.firstName, scheduler?.lastName].filter(Boolean).join(' ') || 'Scheduler';
         const emailSubject = faceToFaceTemplate.subject
-          .replace('{{companyName}}', tenantCompanyName)
+          // .replace('{{companyName}}', tenantCompanyName)
           .replace('{{roundTitle}}', roundTitle);
 
         const emailBody = faceToFaceTemplate.body
-          .replace('{{recipientName}}', schedulerName)
-          .replace('{{companyName}}', tenantCompanyName)
-          .replace('{{roundTitle}}', roundTitle)
-          .replace('{{dateTime}}', dateTime)
-          .replace('{{duration}}', duration)
-          .replace('{{address}}', address)
-          .replace('{{instructions}}', instructions)
-          .replace('{{supportEmail}}', supportEmail);
+          .replace(/{{recipientName}}/g, schedulerName)
+          .replace(/{{companyName}}/g, companyName)
+          .replace(/{{roundTitle}}/g, roundTitle)
+          .replace(/{{dateTime}}/g, dateTime)
+          .replace(/{{duration}}/g, duration)
+          .replace(/{{address}}/g, address)
+          .replace(/{{instructions}}/g, instructions)
+          .replace(/{{supportEmail}}/g, supportEmail)
+          .replace(/{{orgCompanyName}}/g, tenantCompanyName)
+          .replace(/{{position}}/g, position);//we can add postion because face face dont have mock
 
         emailPromises.push(
           sendEmail(schedulerEmail, emailSubject, emailBody)
@@ -782,20 +798,32 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       }
     } else {
       // Non-Face-to-Face (Online) interviews
+      const templateCategory = tenant.type === 'individual'
+        ? 'interview_candidate_invite_individual'
+        : 'interview_candidate_invite';
+
       const candidateTemplate = await emailTemplateModel.findOne({
-        category: 'interview_candidate_invite',
+        category: templateCategory,
         isSystemTemplate: true,
         isActive: true
       });
+      const templateCategory1 = tenant.type === 'individual'
+        ? 'interview_interviewer_invite_individual'
+        : 'interview_interviewer_invite';
+
 
       const interviewerTemplate = await emailTemplateModel.findOne({
-        category: 'interview_interviewer_invite',
+        category: templateCategory1,
         isSystemTemplate: true,
         isActive: true
       });
 
+      const templateCategory2 = tenant.type === 'individual'
+        ? 'interview_scheduler_notification_individual'
+        : 'interview_scheduler_notification';
+
       const schedulerTemplate = await emailTemplateModel.findOne({
-        category: 'interview_scheduler_notification',
+        category: templateCategory2,
         isSystemTemplate: true,
         isActive: true
       });
@@ -813,18 +841,22 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace('{{roundTitle}}', roundTitle);
 
         let emailBody = candidateTemplate.body
-          .replace('{{candidateName}}', candidateName)
-          .replace('{{companyName}}', tenantCompanyName)
-          .replace('{{roundTitle}}', roundTitle)
-          .replace('{{interviewMode}}', interviewMode)
-          .replace('{{dateTime}}', dateTime)
-          .replace('{{duration}}', duration)
-          .replace('{{instructions}}', instructions)
-          .replace('{{supportEmail}}', supportEmail);
+          .replace(/{{candidateName}}/g, candidateName)
+          .replace(/{{companyName}}/g, companyName)
+          .replace(/{{roundTitle}}/g, roundTitle)
+          .replace(/{{interviewMode}}/g, interviewMode)
+          .replace(/{{dateTime}}/g, dateTime)
+          .replace(/{{duration}}/g, duration)
+          .replace(/{{instructions}}/g, instructions)
+          .replace(/{{supportEmail}}/g, supportEmail)
+          .replace(/{{orgCompanyName}}/g, tenantCompanyName)
+          .replace(/{{position}}/g, position);
+
+
 
         if (meetingLink && meetingLink.length > 0) {
           const candidateUrl = `${baseUrl}?candidate=true&meeting=${encodeURIComponent(encryptedMeetingLink)}&round=${encodeURIComponent(encryptedRoundId)}`;
-          emailBody = emailBody.replace('{{meetingLink}}', candidateUrl);
+          emailBody = emailBody.replace(/{{meetingLink}}/g, candidateUrl);
         } else {
           emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
         }
@@ -869,13 +901,18 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             .replace('{{roundTitle}}', roundTitle);
 
           let emailBody = interviewerTemplate.body
-            .replace('{{companyName}}', tenantCompanyName)
-            .replace('{{roundTitle}}', roundTitle)
-            .replace('{{interviewMode}}', interviewMode)
-            .replace('{{dateTime}}', dateTime)
-            .replace('{{duration}}', duration)
-            .replace('{{instructions}}', instructions)
-            .replace('{{supportEmail}}', supportEmail);
+            .replace(/{{companyName}}/g, companyName)
+            .replace(/{{roundTitle}}/g, roundTitle)
+            .replace(/{{interviewMode}}/g, interviewMode)
+            .replace(/{{dateTime}}/g, dateTime)
+            .replace(/{{duration}}/g, duration)
+            .replace(/{{instructions}}/g, instructions)
+            .replace(/{{supportEmail}}/g, supportEmail)
+            .replace(/{{orgCompanyName}}/g, tenantCompanyName)
+            .replace(/{{position}}/g, position);
+
+
+          const meetingLink = round.meetingId;
 
           if (meetingLink && meetingLink.length > 0) {
             const encryptedInterviewerId = encryptData(interviewer._id);
@@ -923,26 +960,29 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       if (schedulerTemplate && schedulerEmail) {
         const candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
         const emailSubject = schedulerTemplate.subject
-          .replace('{{companyName}}', tenantCompanyName)
-          .replace('{{roundTitle}}', roundTitle);
+          .replace(/{{companyName}}/g, tenantCompanyName)
+          .replace(/{{roundTitle}}/g, roundTitle);
 
         let emailBody = schedulerTemplate.body
-          .replace('{{companyName}}', tenantCompanyName)
-          .replace('{{roundTitle}}', roundTitle)
-          .replace('{{candidateName}}', candidateName)
-          .replace('{{interviewMode}}', interviewMode)
-          .replace('{{dateTime}}', dateTime)
-          .replace('{{duration}}', duration)
-          .replace('{{instructions}}', instructions)
-          .replace('{{supportEmail}}', supportEmail);
+          .replace(/{{companyName}}/g, companyName)
+          .replace(/{{roundTitle}}/g, roundTitle)
+          .replace(/{{candidateName}}/g, candidateName)
+          .replace(/{{interviewMode}}/g, interviewMode)
+          .replace(/{{dateTime}}/g, dateTime)
+          .replace(/{{duration}}/g, duration)
+          .replace(/{{instructions}}/g, instructions)
+          .replace(/{{supportEmail}}/g, supportEmail)
+          .replace(/{{orgCompanyName}}/g, tenantCompanyName)
+          .replace(/{{position}}/g, position);
+
 
         if (meetingLink && meetingLink.length > 0) {
           const encryptedSchedulerId = encryptData(scheduler?._id);
           const encryptedSchedulerOwnerId = encryptData(scheduler?.ownerId);
           const schedulerLink = `${baseUrl}?scheduler=true&meeting=${encodeURIComponent(encryptedMeetingLink)}&round=${encodeURIComponent(encryptedRoundId)}&schedulertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
-          emailBody = emailBody.replace('{{meetingLink}}', schedulerLink);
+          emailBody = emailBody.replace(/{{meetingLink}}/g, schedulerLink);
         } else {
-          emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
+          emailBody = emailBody.replace(/{{meetingLink}}/g, 'Meeting link will be provided later');
         }
 
         emailPromises.push(
@@ -1142,9 +1182,17 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
     }
 
+    const tenant = await Tenant.findById(interview.tenantId);
+    const orgCompanyName = tenant.company;
+
+    // Determine which template to use based on type
+    const templateCategory = tenant.type === 'individual'
+      ? 'outsource_interview_request_individual'
+      : 'outsource_interview_request';
+
     // Get outsource interview request email template
     const outsourceRequestTemplate = await emailTemplateModel.findOne({
-      category: 'outsource_interview_request',
+      category: templateCategory,
       isSystemTemplate: true,
       isActive: true
     });
@@ -1200,24 +1248,29 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       const instructions = round.instructions || 'Please review the interview request and accept if you are available.';
 
       const emailSubject = outsourceRequestTemplate.subject
-        .replace('{{companyName}}', companyName)
+        // .replace('{{companyName}}', companyName)
         .replace('{{roundTitle}}', roundTitleText)
         .replace('{{candidateName}}', candidateName);
 
       let emailBody = outsourceRequestTemplate.body
-        .replace('{{companyName}}', companyName)
-        .replace('{{roundTitle}}', roundTitleText)
-        .replace('{{candidateName}}', candidateName)
-        .replace('{{interviewerName}}', interviewerName)
-        .replace('{{interviewMode}}', interviewMode)
-        .replace('{{dateTime}}', dateTimeText)
-        .replace('{{duration}}', durationText)
-        .replace('{{instructions}}', instructions)
-        .replace('{{supportEmail}}', supportEmail);
+        .replace(/{{companyName}}/g, companyName)
+        .replace(/{{roundTitle}}/g, roundTitleText)
+        .replace(/{{candidateName}}/g, candidateName)
+        .replace(/{{interviewerName}}/g, interviewerName)
+        .replace(/{{interviewMode}}/g, interviewMode)
+        .replace(/{{dateTime}}/g, dateTimeText)
+        .replace(/{{duration}}/g, durationText)
+        .replace(/{{instructions}}/g, instructions)
+        .replace(/{{supportEmail}}/g, supportEmail)
+        .replace(/{{orgCompanyName}}/g, orgCompanyName)
+
+
+      //didnt add position because mock dont have postion
+
 
       // Add dashboard link for outsource interviewers to accept/decline
       const dashboardLink = `${config.REACT_APP_API_URL_FRONTEND}/home`;
-      emailBody = emailBody.replace('{{dashboardLink}}', dashboardLink);
+      emailBody = emailBody.replace(/{{dashboardLink}}/g, dashboardLink);
 
       emailPromises.push(
         sendEmail(interviewer.email, emailSubject, emailBody)

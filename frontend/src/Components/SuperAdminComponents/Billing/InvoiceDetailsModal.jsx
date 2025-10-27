@@ -1,11 +1,6 @@
 import { useState } from "react";
-import {
-  AiOutlineDownload,
-  AiOutlineMail,
-  AiOutlineEdit,
-} from "react-icons/ai";
 import StatusBadge from "../common/StatusBadge";
-import { Minimize, Expand, X } from "lucide-react";
+import { Minimize, Expand, X, Download, Mail, Edit } from "lucide-react";
 
 function InvoiceDetailsModal({ invoice, onClose }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -192,16 +187,16 @@ function InvoiceDetailsModal({ invoice, onClose }) {
           <div className="mt-6 flex justify-end space-x-3">
             {invoice.status === "pending" && (
               <button className="btn-secondary flex items-center">
-                <AiOutlineEdit className="mr-2" />
+                <Edit className="mr-2" />
                 Edit Invoice
               </button>
             )}
             <button className="btn-secondary flex items-center">
-              <AiOutlineDownload className="mr-2" />
+              <Download className="mr-2" />
               Download PDF
             </button>
             <button className="btn-secondary flex items-center">
-              <AiOutlineMail className="mr-2" />
+              <Mail className="mr-2" />
               Send Invoice
             </button>
           </div>

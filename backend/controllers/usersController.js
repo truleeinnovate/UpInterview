@@ -206,7 +206,6 @@ const getUsers = async (req, res) => {
 //             ? `${contact.firstName} ${contact.lastName}`
 //             : `${user.firstName} ${user.lastName}`,
 //           role: contact?.currentRole || (isInternal ? 'Internal Interviewer' : 'Freelance Interviewer'),
-//           specialization: contact?.expertiseLevel || 'Unknown',
 //           rating: 4.8, // Placeholder; replace with actual data if available
 //           completedInterviews: contact?.PreviousExperienceConductingInterviewsYears
 //             ? parseInt(contact.PreviousExperienceConductingInterviewsYears) * 50
@@ -660,22 +659,11 @@ const getUsersByTenant = async (req, res) => {
                 gender: contact.gender || '',
                 phone: contact.phone || '',
                 status: user.status || '',
-                expectedRatePerMockInterview: contact.expectedRatePerMockInterview || '',
                 // <<<<<<< Ranjith
                 yearsOfExperience: contact?.yearsOfExperience || '',
                 roleId: role?._id || '',
                 roleName: role?.roleName || '',
                 label: role?.label || '',
-                // =======
-                //         roleId: user?.roleId?.roleId || "",
-                //         roleName: user?.roleId?.roleName || "",
-                //         label: user?.roleId?.label || "",
-                // >>>>>>> main
-                // =======
-                //         roleId: users.roleId || '',
-                //         roleName: users.roleName || '',
-                //         label: users.label || '',
-                // >>>>>>> main
                 imageData: contact.imageData || null,
                 createdAt: user.createdAt || contact.createdAt,
                 status: user.status || "",
@@ -683,24 +671,19 @@ const getUsersByTenant = async (req, res) => {
                 profileId: contact.profileId || "",
                 linkedinUrl: contact.linkedinUrl || "",
                 portfolioUrl: contact.portfolioUrl || "",
-                hourlyRate: contact.hourlyRate || "",
                 currentRole: contact.currentRole || "",
                 industry: contact.industry || "",
                 experienceYears: contact.experienceYears || "",
                 location: contact.location || "",
                 resumePdf: contact.resumePdf || "",
                 coverLetter: contact.coverLetter || "",
-                coverLetterDescription: contact.coverLetterdescription || "",
                 professionalTitle: contact.professionalTitle || "",
                 bio: contact.bio || "",
                 interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
-                noShowPolicy: contact.NoShowPolicy || "",
                 previousExperienceConductingInterviews:
                     contact.PreviousExperienceConductingInterviews || "",
                 previousExperienceConductingInterviewsYears:
                     contact.PreviousExperienceConductingInterviewsYears || "",
-                expertiseLevelConductingInterviews:
-                    contact.ExpertiseLevel_ConductingInterviews || "",
                 technologies: contact.technologies || [],
                 skills: contact.skills || [],
                 timeZone: contact.timeZone || "",
@@ -770,31 +753,25 @@ const getUniqueUserByOwnerId = async (req, res) => {
             profileId: contact.profileId || "",
             linkedinUrl: contact.linkedinUrl || "",
             portfolioUrl: contact.portfolioUrl || "",
-            hourlyRate: contact.hourlyRate || "",
             currentRole: contact.currentRole || "",
             industry: contact.industry || "",
             experienceYears: contact.experienceYears || "",
             location: contact.location || "",
             resume: contact.resume || "",
             coverLetter: contact.coverLetter || "",
-            coverLetterdescription: contact.coverLetterdescription || "",
             professionalTitle: contact.professionalTitle || "",
             bio: contact.bio || "",
             interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
-            noShowPolicy: contact.NoShowPolicy || "",
             previousExperienceConductingInterviews:
                 contact.PreviousExperienceConductingInterviews || "",
             previousExperienceConductingInterviewsYears:
                 contact.PreviousExperienceConductingInterviewsYears || "",
-            expertiseLevelConductingInterviews:
-                contact.ExpertiseLevel_ConductingInterviews || "",
             technologies: contact.technologies || [],
             skills: contact.skills || [],
             timeZone: contact.timeZone || "",
             preferredDuration: contact.preferredDuration || "",
             availability: contact.availability || [],
             dateOfBirth: contact.dateOfBirth || '',
-            expectedRatePerMockInterview: contact.expectedRatePerMockInterview || '',
             mock_interview_discount: contact.mock_interview_discount || '',
             isMockInterviewSelected: contact.isMockInterviewSelected || false,
             rates: contact.rates || null

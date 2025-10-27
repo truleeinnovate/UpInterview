@@ -159,7 +159,7 @@ exports.afterSubscribePlan = async (req, res) => {
 
     // Step 4: Replace Template Placeholders
     const emailSubject = emailTemplate.subject
-      .replace('{{planName}}', planName)
+      // .replace('{{planName}}', planName)
       .replace('{{companyName}}', process.env.COMPANY_NAME);
 
     const formattedStartDate = new Date(startDate).toLocaleDateString('en-IN');
@@ -362,7 +362,7 @@ cron.schedule('0 0 * * *', async () => {
 
         const emailSubject = emailTemplateIncomplete.subject
           .replace('{{planName}}', planName)
-          .replace('{{companyName}}', process.env.COMPANY_NAME);
+          // .replace('{{companyName}}', process.env.COMPANY_NAME);
 
         const emailBody = emailTemplateIncomplete.body
           .replace(/{{userName}}/g, userName)
@@ -431,7 +431,7 @@ cron.schedule('0 0 * * *', async () => {
 
         const emailSubject = emailTemplateRenewal.subject
           .replace('{{planName}}', planName)
-          .replace('{{companyName}}', process.env.COMPANY_NAME)
+          // .replace('{{companyName}}', process.env.COMPANY_NAME)
           .replace('{{nextBillingDate}}', formattedBillingDate);
 
         const emailBody = emailTemplateRenewal.body

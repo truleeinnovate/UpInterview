@@ -1,6 +1,8 @@
 // v1.0.0----------Venkatesh----------changes in candidate name and position first letter capital
 // v1.0.1 - Ashok - Improved responsiveness
 // v1.0.2 - Ashok - Fixed responsiveness issues
+// v1.0.3 - Ashok - Added meeting platform icons and styles
+// v1.0.4 - Ashok - Changed react icons to svg for better customization
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -200,21 +202,128 @@ const InterviewerSchedule = () => {
                   }`}
               >
                 <div className="space-y-4 w-full">
-                  <div className="grid grid-cols-1 items-center gap-2">
-                    {/* date and time */}
-                    <div className="flex items-center gap-2 w-full">
-                      <Calendar size={18} className="text-gray-400" />
-                      <p className="text-sm font-medium text-gray-800">
-                        {displayDateTime(round.dateTime)}
-                      </p>
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="grid grid-cols-1 items-center gap-2">
+                      {/* date and time */}
+                      <div className="flex items-center gap-2 w-full">
+                        <Calendar size={18} className="text-gray-400" />
+                        <p className="text-sm font-medium text-gray-800">
+                          {displayDateTime(round.dateTime)}
+                        </p>
+                      </div>
+                      {/* interview code */}
+                      <div className="flex items-center gap-2">
+                        <Hash size={18} className="text-gray-400" />
+                        <span className="text-xs font-medium text-custom-blue">
+                          {interviewCode}
+                        </span>
+                      </div>
                     </div>
-                    {/* interview code */}
-                    <div className="flex items-center gap-2">
-                      <Hash size={18} className="text-gray-400" />
-                      <span className="text-xs font-medium text-custom-blue">
-                        {interviewCode}
-                      </span>
-                    </div>
+                    <span className="inline-flex items-center gap-1.5 py-1 px-2.5 text-xs">
+                      {round?.meetPlatform === "googlemeet" ? (
+                        <div className="flex items-center gap-2 bg-green-50 text-gray-600 px-2 py-1 rounded-md">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 48 48"
+                            className="h-6 w-6"
+                          >
+                            <g fill="none" fill-rule="evenodd">
+                              {/* <!-- Top face (yellow) - taller --> */}
+                              <rect
+                                x="8"
+                                y="12"
+                                width="32"
+                                height="12"
+                                rx="4"
+                                ry="4"
+                                fill="#ffe70b"
+                              />
+
+                              {/* <!-- Bottom face (green) --> */}
+                              <rect
+                                x="8"
+                                y="24"
+                                width="32"
+                                height="12"
+                                rx="4"
+                                ry="4"
+                                fill="#34A853"
+                              />
+
+                              {/* <!-- Left side (blue) --> */}
+                              <rect
+                                x="8"
+                                y="12"
+                                width="4"
+                                height="24"
+                                rx="2"
+                                ry="2"
+                                fill="#4285F4"
+                              />
+
+                              {/* <!-- Right side (green same as head) --> */}
+                              <rect
+                                x="36"
+                                y="12"
+                                width="4"
+                                height="24"
+                                rx="2"
+                                ry="2"
+                                fill="#34A853"
+                              />
+
+                              {/* <!-- Camera lens / inner rectangle (white) --> */}
+                              <rect
+                                x="12"
+                                y="16"
+                                width="24"
+                                height="16"
+                                rx="3"
+                                ry="3"
+                                fill="#ffffff"
+                              />
+
+                              {/* <!-- Triangle / camera play icon (wider & taller) --> */}
+                              <path fill="#00f829" d="M36 20l14-4v18l-14-4z" />
+                            </g>
+                          </svg>
+
+                          <strong className="text-green-600">
+                            Google Meet
+                          </strong>
+                        </div>
+                      ) : round?.meetPlatform === "zoom" ? (
+                        <div className="flex items-center gap-2 bg-blue-50 text-gray-600 py-1 px-2 rounded-md">
+                          <span className="inline-flex items-center">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 48 48"
+                              className="w-6 h-6"
+                            >
+                              <circle cx="24" cy="24" r="24" fill="#2D8CFF" />
+                              <path
+                                fill="#fff"
+                                d="M30.5 18.5v3.3l4-3.3v11l-4-3.3v3.3c0 1.1-.9 2-2 2h-9c-1.1 0-2-.9-2-2v-9c0-1.1.9-2 2-2h9c1.1 0 2 .9 2 2z"
+                              />
+                            </svg>
+                          </span>
+                          <strong className="text-blue-600">Zoom</strong>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 bg-gray-100 text-gray-600 px-2 py-1 rounded-md">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="#9e9e9e"
+                            className="w-6 h-6"
+                          >
+                            <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z" />
+                          </svg>
+
+                          <strong>Custom</strong>
+                        </div>
+                      )}
+                    </span>
                   </div>
                   <div className="grid grid-cols-1 items-center gap-2">
                     {/* candidate name and email */}
@@ -251,9 +360,9 @@ const InterviewerSchedule = () => {
                       <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
                         {round.interviewMode}
                       </span>
-                      <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
+                      {/* <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
                         {round?.meetPlatform}
-                      </span>
+                      </span> */}
                     </div>
                     {/* status */}
                     <div className="flex items-center gap-2">

@@ -4,14 +4,15 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Tab } from "../../Components/SuperAdminComponents/common/Tab";
 import {
-  // AiOutlineLeft,
-  AiOutlineTeam,
-  AiOutlineFile,
-  AiOutlineApi,
-  AiOutlineFolder,
-  AiOutlineContacts,
-} from "react-icons/ai";
-import { Minimize, Expand, X } from "lucide-react";
+  Minimize,
+  Expand,
+  X,
+  Users,
+  File,
+  Server,
+  Folder,
+  User,
+} from "lucide-react";
 
 import OverviewTab from "../../Components/SuperAdminComponents/TenantDetails/OverviewTab";
 import UsersTab from "../../Components/SuperAdminComponents/TenantDetails/UsersTab";
@@ -149,31 +150,31 @@ function TenantDetailsPage() {
                     <Tab
                       active={activeTab === "overview"}
                       onClick={() => setActiveTab("overview")}
-                      icon={<AiOutlineFile />}
+                      icon={<File className="h-4 w-4" />}
                       label="Overview"
                     />
                     <Tab
                       active={activeTab === "contact"}
                       onClick={() => setActiveTab("contact")}
-                      icon={<AiOutlineContacts />}
+                      icon={<User className="h-4 w-4" />}
                       label="Contact"
                     />
                     <Tab
                       active={activeTab === "users"}
                       onClick={() => setActiveTab("users")}
-                      icon={<AiOutlineTeam />}
+                      icon={<Users className="h-4 w-4" />}
                       label="Users"
                     />
                     <Tab
                       active={activeTab === "integrations"}
                       onClick={() => setActiveTab("integrations")}
-                      icon={<AiOutlineApi />}
+                      icon={<Server className="h-4 w-4" />}
                       label="Integrations"
                     />
                     <Tab
                       active={activeTab === "billing"}
                       onClick={() => setActiveTab("billing")}
-                      icon={<AiOutlineFolder />}
+                      icon={<Folder className="h-4 w-4" />}
                       label="Billing"
                     />
                   </nav>

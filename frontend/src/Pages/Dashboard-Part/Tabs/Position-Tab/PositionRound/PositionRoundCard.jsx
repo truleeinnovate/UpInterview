@@ -28,7 +28,6 @@ import {
   Expand,
   Minimize,
 } from "lucide-react";
-// import { FaChevronUp, FaSearch } from 'react-icons/fa';
 // import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
 
@@ -41,7 +40,6 @@ import { config } from "../../../../../config";
 import { useAssessments } from "../../../../../apiHooks/useAssessments";
 import { usePositions } from "../../../../../apiHooks/usePositions";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
-import { IoArrowBack } from "react-icons/io5";
 import Activity from "../../CommonCode-AllTabs/Activity";
 // v1.0.4 <------------------------------------------------------------------------
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";

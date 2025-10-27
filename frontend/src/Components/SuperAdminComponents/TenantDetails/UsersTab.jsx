@@ -2,15 +2,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge";
-import {
-  AiOutlineUser,
-  AiOutlineLock,
-  AiOutlineMail,
-  AiOutlineKey,
-  AiOutlineClose,
-  AiOutlineWarning,
-} from "react-icons/ai";
-import { FaLinkedin } from "react-icons/fa";
 import Header from "../../Shared/Header/Header.jsx";
 import Toolbar from "../../Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
@@ -27,13 +18,17 @@ import {
   Calendar,
   ChevronUp,
   ChevronDown,
+  Lock,
+  Key,
+  X,
+  AlertTriangle,
+  Linkedin,
+  Circle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import TableView from "../../Shared/Table/TableView.jsx";
 // import KanbanView from "../../Shared/Kanban/KanbanView.jsx";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
-import { LiaGenderlessSolid } from "react-icons/lia";
-import { FaCircle } from "react-icons/fa";
 import { config } from "../../../config.js";
 import AuthCookieManager, {
   // setAuthCookies,
@@ -199,12 +194,12 @@ function UsersTab({ users, viewMode }) {
           tenantId: data.tenantId,
           organization: data.isOrganization,
         });
-        
+
         // Verify cookie state with retries
         let verified = false;
         const maxRetries = 3;
         for (let i = 0; i < maxRetries && !verified; i++) {
-          await new Promise(resolve => setTimeout(resolve, 2000)); // 2s delay
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // 2s delay
           const verifyAuthToken = getAuthToken();
           const verifyImpersonationToken = getImpersonationToken();
           // console.log("🔍 Cookie state:", AuthCookieManager.debugCookieState());
@@ -219,11 +214,11 @@ function UsersTab({ users, viewMode }) {
             });
           }
         }
-        
+
         if (!verified) {
           throw new Error("Failed to verify cookie state after retries");
         }
-        
+
         await refreshPermissions(true); // Force refresh permissions
         navigate("/home");
         setTimeout(() => window.location.reload(), 500);
@@ -284,7 +279,7 @@ function UsersTab({ users, viewMode }) {
     {
       key: "login-as-user",
       label: "Login as User",
-      icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
+      icon: <User className="w-4 h-4 text-blue-600" />,
       onClick: (row) => {
         console.log("🖱️ Login as User button clicked for user:", {
           userId: row._id,
@@ -475,7 +470,7 @@ function UsersTab({ users, viewMode }) {
                         <div className="grid grid-cols-2 gap-6">
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-custom-bg rounded-lg">
-                              <LiaGenderlessSolid className="w-5 h-5 text-gray-500" />
+                              <Circle className="w-5 h-5 text-gray-500" />
                             </div>
                             <div>
                               <p className="text-sm text-gray-500">Gender</p>
@@ -488,7 +483,7 @@ function UsersTab({ users, viewMode }) {
                         <div className="grid grid-cols-2 gap-6">
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-custom-bg rounded-lg">
-                              <FaCircle className="w-5 h-5 text-gray-300" />
+                              <Circle className="w-5 h-5 text-gray-300" />
                             </div>
                             <div>
                               <p className="text-sm text-gray-500">Status</p>
@@ -552,7 +547,7 @@ function UsersTab({ users, viewMode }) {
 
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-custom-bg rounded-lg">
-                            <FaLinkedin className="w-5 h-5 text-gray-500" />
+                            <Linkedin className="w-5 h-5 text-gray-500" />
                           </div>
                           {user?.contact?.linkedinUrl ? (
                             <a
@@ -824,14 +819,14 @@ function UsersTab({ users, viewMode }) {
                 className="text-gray-400 hover:text-gray-500"
               >
                 <span className="sr-only">Close</span>
-                <AiOutlineClose size={20} />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
                 <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-                  <AiOutlineUser />
+                  <User className="h-5 w-5" />
                   <span>User Details</span>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
@@ -848,7 +843,7 @@ function UsersTab({ users, viewMode }) {
 
               <div>
                 <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-                  <AiOutlineLock />
+                  <Lock className="h-5 w-5" />
                   <span>Login Options</span>
                 </div>
                 <div className="space-y-3">
@@ -866,15 +861,15 @@ function UsersTab({ users, viewMode }) {
                       handleLoginAsUser(selectedUser._id);
                     }}
                   >
-                    <AiOutlineUser />
+                    <User className="h-5 w-5" />
                     <span>Login as User</span>
                   </button>
                   <button className="w-full btn-secondary flex items-center justify-center space-x-2">
-                    <AiOutlineMail />
+                    <Mail className="h-5 w-5" />
                     <span>Send Login Link</span>
                   </button>
                   <button className="w-full btn-secondary flex items-center justify-center space-x-2">
-                    <AiOutlineKey />
+                    <Key className="h-5 w-5" />
                     <span>Generate Temporary Password</span>
                   </button>
                 </div>
@@ -882,7 +877,7 @@ function UsersTab({ users, viewMode }) {
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
                 <div className="flex items-start space-x-2">
-                  <AiOutlineWarning className="flex-shrink-0 mt-0.5" />
+                  <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <p>
                     Logging in as another user will be logged in the audit
                     trail. Use this feature responsibly.

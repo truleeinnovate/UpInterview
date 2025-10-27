@@ -1,10 +1,6 @@
 import { useState } from "react";
-import {
-  AiOutlineDownload,
-  AiOutlineMail,
-} from "react-icons/ai";
 import StatusBadge from "../common/StatusBadge";
-import { Minimize, Expand, X } from "lucide-react";
+import { Minimize, Expand, X, Download, Mail } from "lucide-react";
 
 function ReceiptDetailsModal({ receipt, onClose }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -148,11 +144,11 @@ function ReceiptDetailsModal({ receipt, onClose }) {
 
           <div className="mt-6 flex justify-end space-x-3">
             <button className="btn-secondary flex items-center">
-              <AiOutlineDownload className="mr-2" />
+              <Download className="mr-2" />
               Download Receipt
             </button>
             <button className="btn-secondary flex items-center">
-              <AiOutlineMail className="mr-2" />
+              <Mail className="mr-2" />
               Email Receipt
             </button>
           </div>

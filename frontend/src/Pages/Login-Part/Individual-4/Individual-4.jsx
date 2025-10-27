@@ -1,9 +1,13 @@
 // v1.0.0 - Ashok - Made resume as mandatory field
 // v1.0.1 - Ashok - Made resume mandatory for freelancers only
-
+// v1.0.2 - Venkatesh - Added subscription status check before redirecting to subscription-plans, redirect to home if already subscribed
+// v1.0.3 - Ashok - Fixed style issue
+// v1.0.4 - [Your Name] - Added notify.error for validation failures across all steps
+// v1.0.5 - [Your Name] - Fixed dynamic expected length in parent phone validation to match PhoneField
 import React, { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
+import { parsePhoneNumberFromString, getCountries, getCountryCallingCode, getExampleNumber } from "libphonenumber-js";
 import { useNavigate, useLocation } from "react-router-dom";
 import StepIndicator from "./StepIndicator.jsx";
 import BasicDetails from "./BasicDetails.jsx";
@@ -19,7 +23,7 @@ import { useIndividualLogin } from "../../../apiHooks/useIndividualLogin";
 import { uploadFile } from "../../../apiHooks/imageApis.js";
 import Cookies from "js-cookie";
 import { notify } from "../../../services/toastService.js";
-
+import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode.js";
 const FooterButtons = ({
     onNext,
     onPrev,
@@ -30,7 +34,6 @@ const FooterButtons = ({
 }) => {
     const lastStep = isInternalInterviewer ? 3 : isFreelancer ? 3 : 1;
     const isLastStep = currentStep === lastStep;
-
     return (
         <div className="flex justify-between space-x-3 mt-4 mb-4 sm:text-sm">
             {currentStep > 0 ? (
@@ -39,8 +42,8 @@ const FooterButtons = ({
                     onClick={onPrev}
                     disabled={isSubmitting}
                     className={`border ${isSubmitting
-                        ? "border-gray-300 text-gray-300 cursor-not-allowed"
-                        : "border-custom-blue text-custom-blue hover:bg-gray-50"
+                            ? "border-gray-300 text-gray-300 cursor-not-allowed"
+                            : "border-custom-blue text-custom-blue hover:bg-gray-50"
                         } rounded px-6 sm:px-3 py-1 transition-colors duration-200`}
                 >
                     Prev
@@ -52,8 +55,8 @@ const FooterButtons = ({
                 onClick={onNext}
                 disabled={isSubmitting}
                 className={`px-6 sm:px-3 py-1.5 rounded text-white flex items-center justify-center min-w-24 ${isSubmitting
-                    ? "bg-custom-blue/60 cursor-not-allowed"
-                    : "bg-custom-blue hover:bg-custom-blue/90"
+                        ? "bg-custom-blue/60 cursor-not-allowed"
+                        : "bg-custom-blue hover:bg-custom-blue/90"
                     } transition-colors duration-200`}
                 type="button"
             >
@@ -90,16 +93,22 @@ const FooterButtons = ({
         </div>
     );
 };
-
 const MultiStepForm = () => {
     const navigate = useNavigate();
     const location = useLocation();
-
+    // Helper function to get ISO2 from country calling code
+    const getIso2FromCode = (callingCode) => {
+        for (const iso2 of getCountries()) {
+            if (getCountryCallingCode(iso2) === callingCode) {
+                return iso2;
+            }
+        }
+        return null;
+    };
     // Initialize all form states with proper structure
     const [currentStep, setCurrentStep] = useState(
         location.state?.currentStep || 0
     );
-
     // Basic Details
     const [basicDetails, setBasicDetails] = useState({
         firstName: "",
@@ -113,7 +122,6 @@ const MultiStepForm = () => {
         linkedinUrl: "",
         portfolioUrl: "",
     });
-
     // Additional Details
     const [additionalDetails, setAdditionalDetails] = useState({
         currentRole: "",
@@ -125,7 +133,6 @@ const MultiStepForm = () => {
         isResumeRemoved: false,
         isCoverLetterRemoved: false,
     });
-
     // Interview Details
     const [interviewDetails, setInterviewDetails] = useState({
         skills: [],
@@ -138,101 +145,92 @@ const MultiStepForm = () => {
         interviewFormatWeOffer: [],
         PreviousExperienceConductingInterviews: "",
         PreviousExperienceConductingInterviewsYears: "",
-        hourlyRate: 0,
-        expectedRatePerMockInterview: 0,
         mock_interview_discount: "0",
         isMockInterviewSelected: false,
         bio: "",
         professionalTitle: "",
     });
-
     // Availability Details
     const [availabilityDetails, setAvailabilityDetails] = useState({
         timeZone: "",
         preferredDuration: "",
         availability: [],
     });
-
     // Local state for file uploads
-    //   const [file, setFile] = useState(null);
-    //   const [filePreview, setFilePreview] = useState('');
-    //   const [isProfileRemoved, setIsProfileRemoved] = useState(false);
-    //   const [resumeFile, setResumeFile] = useState(null);
-    //   const [coverLetterFile, setCoverLetterFile] = useState(null);
-    //   const [isResumeRemoved, setIsResumeRemoved] = useState(false);
-    //   const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
-
+    // const [file, setFile] = useState(null);
+    // const [filePreview, setFilePreview] = useState('');
+    // const [isProfileRemoved, setIsProfileRemoved] = useState(false);
+    // const [resumeFile, setResumeFile] = useState(null);
+    // const [coverLetterFile, setCoverLetterFile] = useState(null);
+    // const [isResumeRemoved, setIsResumeRemoved] = useState(false);
+    // const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
     // Other state variables
-    //   const [selectedTechnologyies, setSelectedTechnologyies] = useState([]);
-    //   const [selectedSkills, setSelectedSkills] = useState([]);
-    //   const [previousInterviewExperience, setPreviousInterviewExperience] = useState('');
-    //   const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
-    //   const [times, setTimes] = useState({
-    //     Sun: [{ startTime: null, endTime: null }],
-    //     Mon: [{ startTime: null, endTime: null }],
-    //     Tue: [{ startTime: null, endTime: null }],
-    //     Wed: [{ startTime: null, endTime: null }],
-    //     Thu: [{ startTime: null, endTime: null }],
-    //     Fri: [{ startTime: null, endTime: null }],
-    //     Sat: [{ startTime: null, endTime: null }],
-    //   });
-
-    //   // Save form data to local storage whenever it changes
-    //   useEffect(() => {
-    //     const formData = {
-    //       basicDetails,
-    //       additionalDetails,
-    //       interviewDetails,
-    //       availabilityDetails,
-    //       currentStep,
-    //     };
-    //     localStorage.setItem("interviewerFormData", JSON.stringify(formData));
-    //   }, [
-    //     basicDetails,
-    //     additionalDetails,
-    //     interviewDetails,
-    //     availabilityDetails,
-    //     currentStep,
-    //   ]);
-
-    //   // Load form data from local storage on component mount
-    //   useEffect(() => {
-    //     const savedFormData = localStorage.getItem("interviewerFormData");
-    //     if (savedFormData) {
-    //       const {
-    //         basicDetails: savedBasicDetails,
-    //         additionalDetails: savedAdditionalDetails,
-    //         interviewDetails: savedInterviewDetails,
-    //         availabilityDetails: savedAvailabilityDetails,
-    //         currentStep: savedCurrentStep,
-    //       } = JSON.parse(savedFormData);
-
-    //       if (savedBasicDetails)
-    //         setBasicDetails((prev) => ({ ...prev, ...savedBasicDetails }));
-    //       if (savedAdditionalDetails)
-    //         setAdditionalDetails((prev) => ({
-    //           ...prev,
-    //           ...savedAdditionalDetails,
-    //         }));
-    //       if (savedInterviewDetails)
-    //         setInterviewDetails((prev) => ({
-    //           ...prev,
-    //           ...savedInterviewDetails,
-    //           // Ensure rates structure is maintained
-    //           rates: {
-    //             ...prev.rates,
-    //             ...(savedInterviewDetails.rates || {}),
-    //           },
-    //         }));
-    //       if (savedAvailabilityDetails)
-    //         setAvailabilityDetails((prev) => ({
-    //           ...prev,
-    //           ...savedAvailabilityDetails,
-    //         }));
-    //       if (savedCurrentStep !== undefined) setCurrentStep(savedCurrentStep);
-    //     }
-    //   }, []);
-
+    // const [selectedTechnologyies, setSelectedTechnologyies] = useState([]);
+    // const [selectedSkills, setSelectedSkills] = useState([]);
+    // const [previousInterviewExperience, setPreviousInterviewExperience] = useState('');
+    // const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
+    // const [times, setTimes] = useState({
+    // Sun: [{ startTime: null, endTime: null }],
+    // Mon: [{ startTime: null, endTime: null }],
+    // Tue: [{ startTime: null, endTime: null }],
+    // Wed: [{ startTime: null, endTime: null }],
+    // Thu: [{ startTime: null, endTime: null }],
+    // Fri: [{ startTime: null, endTime: null }],
+    // Sat: [{ startTime: null, endTime: null }],
+    // });
+    // // Save form data to local storage whenever it changes
+    // useEffect(() => {
+    // const formData = {
+    // basicDetails,
+    // additionalDetails,
+    // interviewDetails,
+    // availabilityDetails,
+    // currentStep,
+    // };
+    // localStorage.setItem("interviewerFormData", JSON.stringify(formData));
+    // }, [
+    // basicDetails,
+    // additionalDetails,
+    // interviewDetails,
+    // availabilityDetails,
+    // currentStep,
+    // ]);
+    // // Load form data from local storage on component mount
+    // useEffect(() => {
+    // const savedFormData = localStorage.getItem("interviewerFormData");
+    // if (savedFormData) {
+    // const {
+    // basicDetails: savedBasicDetails,
+    // additionalDetails: savedAdditionalDetails,
+    // interviewDetails: savedInterviewDetails,
+    // availabilityDetails: savedAvailabilityDetails,
+    // currentStep: savedCurrentStep,
+    // } = JSON.parse(savedFormData);
+    // if (savedBasicDetails)
+    // setBasicDetails((prev) => ({ ...prev, ...savedBasicDetails }));
+    // if (savedAdditionalDetails)
+    // setAdditionalDetails((prev) => ({
+    // ...prev,
+    // ...savedAdditionalDetails,
+    // }));
+    // if (savedInterviewDetails)
+    // setInterviewDetails((prev) => ({
+    // ...prev,
+    // ...savedInterviewDetails,
+    // // Ensure rates structure is maintained
+    // rates: {
+    // ...prev.rates,
+    // ...(savedInterviewDetails.rates || {}),
+    // },
+    // }));
+    // if (savedAvailabilityDetails)
+    // setAvailabilityDetails((prev) => ({
+    // ...prev,
+    // ...savedAvailabilityDetails,
+    // }));
+    // if (savedCurrentStep !== undefined) setCurrentStep(savedCurrentStep);
+    // }
+    // }, []);
     const {
         Freelancer,
         profession,
@@ -245,19 +243,15 @@ const MultiStepForm = () => {
     } = location.state || {};
     const { isProfileCompleteStateOrg, roleName, contactEmailFromOrg } =
         location.state || {};
-
     const { matchedContact, loading: contactLoading } = useIndividualLogin(
         linkedIn_email,
         isProfileCompleteStateOrg,
         contactEmailFromOrg
     );
-
     const [formLoading, setFormLoading] = useState(false);
-
     useEffect(() => {
         setFormLoading(contactLoading);
     }, [contactLoading]);
-
     const [selectedTimezone, setSelectedTimezone] = useState({});
     const [errors, setErrors] = useState({});
     const [file, setFile] = useState(null);
@@ -267,14 +261,12 @@ const MultiStepForm = () => {
         useState("");
     const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
     const [selectedTechnologyies, setSelectedTechnologyies] = useState([]);
-
     const [completionStatus, setCompletionStatus] = useState({
         basicDetails: false,
         additionalDetails: false,
         interviewDetails: false,
         availabilityDetails: false,
     });
-
     const [times, setTimes] = useState({
         Sun: [{ startTime: null, endTime: null }],
         Mon: [{ startTime: null, endTime: null }],
@@ -284,7 +276,6 @@ const MultiStepForm = () => {
         Fri: [{ startTime: null, endTime: null }],
         Sat: [{ startTime: null, endTime: null }],
     });
-
     const [basicDetailsData, setBasicDetailsData] = useState({
         firstName: "",
         lastName: "",
@@ -297,36 +288,28 @@ const MultiStepForm = () => {
         dateOfBirth: "",
         gender: "",
     });
-
     const [additionalDetailsData, setAdditionalDetailsData] = useState({
         currentRole: "",
         industry: "",
         yearsOfExperience: "",
         location: "",
-        coverLetterdescription: "",
         resume: null,
         coverLetter: null,
     });
-
     const [interviewDetailsData, setInterviewDetailsData] = useState({
         skills: [],
         technologies: [],
         previousInterviewExperience: "",
         previousInterviewExperienceYears: "",
-        hourlyRate: "",
         interviewFormatWeOffer: [],
-        expectedRatePerMockInterview: "",
-        // noShowPolicy: "",
         bio: "",
         professionalTitle: "",
     });
-
     const [availabilityDetailsData, setAvailabilityDetailsData] = useState({
         timeZone: "",
         preferredDuration: "",
         availability: "",
     });
-
     const [resumeFile, setResumeFile] = useState(null);
     const [coverLetterFile, setCoverLetterFile] = useState(null);
     const [isProfileRemoved, setIsProfileRemoved] = useState(false);
@@ -334,7 +317,6 @@ const MultiStepForm = () => {
     const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [yearsOfExperience, setYearsOfExperience] = useState(0);
-
     useEffect(() => {
         if (matchedContact) {
             setBasicDetailsData({
@@ -350,17 +332,14 @@ const MultiStepForm = () => {
                 dateOfBirth: matchedContact.dateOfBirth || "",
                 gender: matchedContact.gender || "",
             });
-
             setAdditionalDetailsData({
                 currentRole: matchedContact.currentRole || "",
                 industry: matchedContact.industry || "",
                 yearsOfExperience: matchedContact.yearsOfExperience || "",
                 location: matchedContact.location || "",
-                coverLetterdescription: matchedContact.coverLetterdescription || "",
                 resume: matchedContact.resume || null,
                 coverLetter: matchedContact.coverLetter || null,
             });
-
             setInterviewDetailsData({
                 skills: matchedContact.skills || [],
                 technologies: matchedContact.technologies || [],
@@ -368,21 +347,15 @@ const MultiStepForm = () => {
                     matchedContact.previousInterviewExperience || "",
                 previousInterviewExperienceYears:
                     matchedContact.previousInterviewExperienceYears || "",
-                hourlyRate: matchedContact.hourlyRate || "",
                 interviewFormatWeOffer: matchedContact.interviewFormatWeOffer || [],
-                expectedRatePerMockInterview:
-                    matchedContact.expectedRatePerMockInterview || "",
-                // noShowPolicy: matchedContact.noShowPolicy || "",
                 bio: matchedContact.bio || "",
                 professionalTitle: matchedContact.professionalTitle || "",
             });
-
             setAvailabilityDetailsData({
                 timeZone: matchedContact.timeZone || "",
                 preferredDuration: matchedContact.preferredDuration || "",
                 availability: matchedContact.availability || "",
             });
-
             setCompletionStatus(
                 matchedContact.completionStatus || {
                     basicDetails: false,
@@ -391,15 +364,12 @@ const MultiStepForm = () => {
                     availabilityDetails: false,
                 }
             );
-
             if (matchedContact.imageData?.path) {
                 setFilePreview(matchedContact.imageData.path);
             }
-
             if (linkedInData?.pictureUrl) {
                 setFilePreview(linkedInData.pictureUrl);
             }
-
             // Update selectedSkills and times if available
             setSelectedSkills(matchedContact.skills || []);
             if (
@@ -437,17 +407,13 @@ const MultiStepForm = () => {
             setFilePreview(linkedInData.pictureUrl || filePreview);
         }
     }, [matchedContact, linkedInData]);
-
     const showLimitedSteps =
         isProfileCompleteStateOrg && roleName !== "Internal_Interviewer";
     const isInternalInterviewer = roleName === "Internal_Interviewer";
-
     // v1.0.1 <------------------------------------------------------------------------------------------
     const requiresResume = Boolean(Freelancer) && !isInternalInterviewer;
     // v1.0.1 ------------------------------------------------------------------------------------------>
-
     const [authToken, setAuthToken] = useState(Cookies.get("authToken"));
-
     useEffect(() => {
         // Keep token synced if cookie changes later
         const interval = setInterval(() => {
@@ -456,29 +422,32 @@ const MultiStepForm = () => {
                 setAuthToken(token);
             }
         }, 1000); // check every second (or use context instead)
-
         return () => clearInterval(interval);
     }, [authToken]);
-
     const handleNextStep = async () => {
         try {
             setIsSubmitting(true);
             let isValid = false;
             const currentErrors = {};
-
             // Validate current step
             if (currentStep === 0) {
                 if (!basicDetailsData.lastName)
                     currentErrors.lastName = "Last name is required";
                 if (!basicDetailsData.email) currentErrors.email = "Email is required";
-                if (!basicDetailsData.phone) {
+                if(!basicDetailsData.phone) {
                     currentErrors.phone = "Phone number is required";
-                } else if (!/^\d{10}$/.test(basicDetailsData.phone)) {
-                    currentErrors.phone = "Phone number must be 10 digits";
+                } else {
+                    const fullNumber = `${basicDetailsData.countryCode}${basicDetailsData.phone.replace(/\D/g, "")}`;
+                    const phoneNumber = parsePhoneNumberFromString(fullNumber);
+                    if (!phoneNumber || !phoneNumber.isValid()) {
+                        // 👈 v1.0.5: Dynamic expected length matching PhoneField
+                        const iso2 = getIso2FromCode(basicDetailsData.countryCode);
+                        const expectedLength = iso2 ? (getExampleNumber(iso2)?.nationalNumber?.length || 15) : 15;
+                        currentErrors.phone = `Invalid phone number for ${basicDetailsData.countryCode} (expected ${expectedLength} digits)`;
+                    }
                 }
                 if (!basicDetailsData.linkedinUrl)
                     currentErrors.linkedinUrl = "LinkedIn URL is required";
-
                 setErrors((prev) => ({ ...prev, ...currentErrors }));
                 isValid = Object.keys(currentErrors).length === 0;
             } else if (currentStep === 1) {
@@ -493,7 +462,7 @@ const MultiStepForm = () => {
                 // v1.0.0 <----------------------------------------------------------------------------------------------
                 // v1.0.1 <----------------------------------------------------------------------------------------------
                 // if (!additionalDetailsData.resume && !resumeFile) {
-                //   currentErrors.resume = "Resume is required";
+                // currentErrors.resume = "Resume is required";
                 // }
                 // New — require only when requiresResume is true
                 if (requiresResume) {
@@ -503,7 +472,6 @@ const MultiStepForm = () => {
                 }
                 // v1.0.1 ---------------------------------------------------------------------------------------------->
                 // v1.0.0 ---------------------------------------------------------------------------------------------->
-
                 setErrors((prev) => ({ ...prev, ...currentErrors }));
                 isValid = Object.keys(currentErrors).length === 0;
             } else if (currentStep === 2) {
@@ -512,7 +480,6 @@ const MultiStepForm = () => {
                 const showJuniorLevel = expYears > 0 && expYears <= 6; // Show junior for 0-6 years
                 const showMidLevel = expYears > 3; // Show mid for 4+ years
                 const showSeniorLevel = expYears > 6; // Show senior for 7+ years
-
                 const validSkills =
                     interviewDetailsData.skills?.filter((skill) => skill !== null) || [];
                 if (validSkills.length === 0)
@@ -529,7 +496,6 @@ const MultiStepForm = () => {
                     currentErrors.previousInterviewExperienceYears =
                         "Please specify years of experience";
                 }
-
                 // interview format validation
                 if (
                     !interviewDetailsData.interviewFormatWeOffer ||
@@ -538,7 +504,6 @@ const MultiStepForm = () => {
                     currentErrors.interviewFormatWeOffer =
                         "At least one interview format is required";
                 }
-
                 // mock discount validation
                 if (interviewDetailsData.interviewFormatWeOffer?.includes("mock")) {
                     if (
@@ -563,10 +528,8 @@ const MultiStepForm = () => {
                         }
                     }
                 }
-
                 // Validate hourly rates for visible levels
                 const { rates = {} } = interviewDetailsData;
-
                 // Check junior level rates if visible
                 if (showJuniorLevel) {
                     if (!rates.junior?.usd || !rates.junior?.inr) {
@@ -578,7 +541,6 @@ const MultiStepForm = () => {
                             currentErrors.rates.junior.inr = "INR rate is required";
                     }
                 }
-
                 // Check mid level rates if visible
                 if (showMidLevel) {
                     if (!rates.mid?.usd || !rates.mid?.inr) {
@@ -590,7 +552,6 @@ const MultiStepForm = () => {
                             currentErrors.rates.mid.inr = "INR rate is required";
                     }
                 }
-
                 // Check senior level rates if visible
                 if (showSeniorLevel) {
                     if (!rates.senior?.usd || !rates.senior?.inr) {
@@ -602,7 +563,6 @@ const MultiStepForm = () => {
                             currentErrors.rates.senior.inr = "INR rate is required";
                     }
                 }
-
                 if (!interviewDetailsData.professionalTitle?.trim()) {
                     currentErrors.professionalTitle = "Professional title is required";
                 } else if (interviewDetailsData.professionalTitle.length < 50) {
@@ -612,14 +572,12 @@ const MultiStepForm = () => {
                     currentErrors.professionalTitle =
                         "Professional title cannot exceed 100 characters";
                 }
-
                 if (!interviewDetailsData.bio?.trim()) {
                     currentErrors.bio = "Professional bio is required";
                 } else if (interviewDetailsData.bio.length < 150) {
                     currentErrors.bio =
                         "Professional bio must be at least 150 characters";
                 }
-
                 setErrors((prev) => ({ ...prev, ...currentErrors }));
                 isValid = Object.keys(currentErrors).length === 0;
             } else if (currentStep === 3) {
@@ -627,19 +585,17 @@ const MultiStepForm = () => {
                     currentErrors.timeZone = "Timezone is required";
                 if (!availabilityDetailsData.preferredDuration)
                     currentErrors.preferredDuration = "Preferred duration is required";
-
                 setErrors((prev) => ({ ...prev, ...currentErrors }));
                 isValid = Object.keys(currentErrors).length === 0;
             } else {
                 isValid = true;
             }
-
             if (!isValid) {
                 console.log("Validation failed. Errors:", currentErrors);
+                notify.error("Please fill in all required fields before proceeding."); // 👈 v1.0.4: Added general error notification for all steps
                 setIsSubmitting(false);
                 return;
             }
-
             // Calculate the updated completion status
             const currentStepKey = [
                 "basicDetails",
@@ -649,11 +605,9 @@ const MultiStepForm = () => {
             ][currentStep];
             const isLastStep =
                 currentStep === (isInternalInterviewer ? 3 : Freelancer ? 3 : 1);
-
             // Calculate years of experience for rate visibility
             const expYears =
                 parseInt(additionalDetailsData.yearsOfExperience, 10) || 0;
-
             // Create the updated completion status
             const updatedCompletionStatus = {
                 ...completionStatus,
@@ -667,11 +621,9 @@ const MultiStepForm = () => {
                     }
                     : {}),
             };
-
             // Update local state
             setCompletionStatus(updatedCompletionStatus);
             setFormLoading(true);
-
             const userData = {
                 firstName: basicDetailsData.firstName,
                 lastName: basicDetailsData.lastName,
@@ -683,7 +635,6 @@ const MultiStepForm = () => {
                         currentStep === (isInternalInterviewer ? 3 : Freelancer ? 3 : 1),
                 }),
             };
-
             const contactData = {
                 ...(currentStep >= 0 && {
                     firstName: basicDetailsData.firstName,
@@ -702,7 +653,6 @@ const MultiStepForm = () => {
                     industry: additionalDetailsData.industry,
                     yearsOfExperience: additionalDetailsData.yearsOfExperience,
                     location: additionalDetailsData.location,
-                    coverLetterdescription: additionalDetailsData.coverLetterdescription,
                     resume: additionalDetailsData.resume,
                     coverLetter: additionalDetailsData.coverLetter,
                 }),
@@ -713,14 +663,10 @@ const MultiStepForm = () => {
                         interviewDetailsData.previousInterviewExperience,
                     previousInterviewExperienceYears:
                         interviewDetailsData.previousInterviewExperienceYears,
-                    hourlyRate: Number(interviewDetailsData.hourlyRate) || 0,
                     interviewFormatWeOffer:
                         interviewDetailsData.interviewFormatWeOffer || [],
-                    expectedRatePerMockInterview:
-                        Number(interviewDetailsData.expectedRatePerMockInterview) || 0,
                     bio: interviewDetailsData.bio,
                     professionalTitle: interviewDetailsData.professionalTitle,
-
                     // New nested rates structure
                     rates: {
                         junior: {
@@ -739,7 +685,6 @@ const MultiStepForm = () => {
                             isVisible: expYears > 6, // Show senior if experience > 6 years
                         },
                     },
-
                     mock_interview_discount:
                         interviewDetailsData.mock_interview_discount || "0",
                     isMockInterviewSelected: Boolean(
@@ -754,17 +699,14 @@ const MultiStepForm = () => {
                 completionStatus: updatedCompletionStatus,
                 _id: contactId,
             };
-
             const tenantData = {
                 isProfileCompletedForTenant: currentStep === (Freelancer ? 3 : 1),
             };
-
             Object.keys(contactData).forEach((key) => {
                 if (contactData[key] === undefined) {
                     delete contactData[key];
                 }
             });
-
             const availabilityData =
                 (isInternalInterviewer || Freelancer) && currentStep === 3
                     ? Object.keys(times)
@@ -784,7 +726,6 @@ const MultiStepForm = () => {
                         }))
                         .filter((dayData) => dayData.timeSlots.length > 0)
                     : [];
-
             // Prepare interview details with proper type conversion
             const interviewDetails = {
                 skills: (interviewDetailsData.skills || []).filter(
@@ -795,12 +736,8 @@ const MultiStepForm = () => {
                     interviewDetailsData.previousInterviewExperience,
                 previousInterviewExperienceYears:
                     interviewDetailsData.previousInterviewExperienceYears,
-                hourlyRate: Number(interviewDetailsData.hourlyRate) || 0,
                 interviewFormatWeOffer:
                     interviewDetailsData.interviewFormatWeOffer || [],
-                expectedRatePerMockInterview:
-                    Number(interviewDetailsData.expectedRatePerMockInterview) || 0,
-
                 // New nested rates structure
                 rates: {
                     junior: {
@@ -819,20 +756,17 @@ const MultiStepForm = () => {
                         isVisible: Boolean(interviewDetailsData.rates?.senior?.isVisible),
                     },
                 },
-
                 // Mock interview data
                 mock_interview_discount:
                     interviewDetailsData.mock_interview_discount || "0",
                 isMockInterviewSelected: Boolean(
                     interviewDetailsData.isMockInterviewSelected
                 ),
-
                 // Other fields
                 bio: interviewDetailsData.bio,
                 professionalTitle: interviewDetailsData.professionalTitle,
                 yearsOfExperience: additionalDetailsData.yearsOfExperience,
             };
-
             const requestData = {
                 userData,
                 contactData: {
@@ -844,30 +778,24 @@ const MultiStepForm = () => {
                         interviewDetails.previousInterviewExperience,
                     PreviousExperienceConductingInterviewsYears:
                         interviewDetails.previousInterviewExperienceYears,
-                    hourlyRate: interviewDetails.hourlyRate,
                     InterviewFormatWeOffer: interviewDetails.interviewFormatWeOffer,
-                    expectedRatePerMockInterview:
-                        interviewDetails.expectedRatePerMockInterview,
-
                     // New nested rates structure
                     rates: interviewDetails.rates,
-
                     // Mock interview data
                     mock_interview_discount: interviewDetails.mock_interview_discount,
                     isMockInterviewSelected: interviewDetails.isMockInterviewSelected,
-
                     // Add yearsOfExperience for backend calculation
                     yearsOfExperience: interviewDetails.yearsOfExperience,
                     bio: interviewDetails.bio,
                     professionalTitle: interviewDetails.professionalTitle,
                 },
                 ...(availabilityData.length > 0 && { availabilityData }),
+                currentStep,
                 isInternalInterviewer,
                 isProfileCompleteStateOrg,
                 ownerId: matchedContact.ownerId,
                 tenantData,
             };
-
             const response = await axios.post(
                 `${config.REACT_APP_API_URL}/Individual/Signup`,
                 requestData,
@@ -878,17 +806,13 @@ const MultiStepForm = () => {
                     },
                 }
             );
-
             // if( currentStep === 3 ){
-            //   if(response.data.success === true){
-
-            //   }
+            // if(response.data.success === true){
             // }
-
+            // }
             if (response.data.token) {
                 await clearAllAuth();
                 await setAuthCookies({ authToken: response.data.token });
-
                 // Update contact status to 'underReview' if this is the last step
                 if (currentStep === (isInternalInterviewer || Freelancer ? 3 : 1)) {
                     try {
@@ -910,12 +834,9 @@ const MultiStepForm = () => {
                         // Don't block the user flow if status update fails
                     }
                 }
-
                 // update state immediately after setting cookie
                 // setAuthToken(response.data.token);
-
                 // console.log("✅ Updated authToken in state:", response.data.token);
-
                 // CUSTOM PROFILE PIC OR LINKEDIN PROFILE PIC
                 if (
                     currentStep === 0 &&
@@ -924,7 +845,6 @@ const MultiStepForm = () => {
                         (linkedInData?.pictureUrl && !filePreview))
                 ) {
                     let profileFile = null;
-
                     if (file) {
                         profileFile = file;
                     } else if (
@@ -942,27 +862,22 @@ const MultiStepForm = () => {
                             console.error("Failed to fetch LinkedIn image", err);
                         }
                     }
-
                     const newContactId = contactId || response.data.contactId;
-
                     if (isProfileRemoved && !profileFile) {
                         await uploadFile(null, "image", "contact", newContactId); // DELETE
                     } else if (profileFile instanceof File) {
                         await uploadFile(profileFile, "image", "contact", newContactId); // UPLOAD
                     }
                 }
-
                 // RESUME AND COVER LETTER UPLOAD
                 if (currentStep >= 1) {
                     const newContactId = contactId || response.data.contactId;
-
                     // Resume
                     if (isResumeRemoved && !resumeFile) {
                         await uploadFile(null, "resume", "contact", newContactId); // DELETE
                     } else if (resumeFile instanceof File) {
                         await uploadFile(resumeFile, "resume", "contact", newContactId);
                     }
-
                     // Cover Letter
                     if (isCoverLetterRemoved && !coverLetterFile) {
                         await uploadFile(null, "coverLetter", "contact", newContactId); // DELETE
@@ -975,38 +890,62 @@ const MultiStepForm = () => {
                         );
                     }
                 }
-
                 if (currentStep < (isInternalInterviewer ? 3 : Freelancer ? 3 : 1)) {
                     setCurrentStep(currentStep + 1);
                 } else {
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         if (isProfileCompleteStateOrg) {
                             navigate("/home");
                             // if( currentStep === 3 ){
                             notify.success("Individual Signup Successfully");
                             // }
                         } else {
-                            navigate("/subscription-plans");
-                            // if( currentStep === 3 ){
-                            notify.success("Individual Signup Successfully");
-                            // }
+                            // Check if user has an active subscription before navigating
+                            try {
+                                const authToken = Cookies.get("authToken");
+                                const tokenPayload = decodeJwt(authToken);
+                                const ownerId = tokenPayload?.userId;
+                                if (ownerId) {
+                                    const res = await axios.get(
+                                        `${config.REACT_APP_API_URL}/subscription-plans/user/${ownerId}`,
+                                        { headers: { Authorization: `Bearer ${authToken}` } }
+                                    );
+                                    const subscription = res?.data?.customerSubscription?.[0];
+                                    if (subscription && subscription.status === "active") {
+                                        // User already has an active subscription, go to home
+                                        navigate("/home");
+                                        notify.success("Welcome back!");
+                                    } else {
+                                        // No active subscription, go to subscription plans
+                                        navigate("/subscription-plans");
+                                        notify.success("Individual Signup Successfully");
+                                    }
+                                } else {
+                                    // If no ownerId, default to subscription plans
+                                    navigate("/subscription-plans");
+                                    notify.success("Individual Signup Successfully");
+                                }
+                            } catch (error) {
+                                console.error("Error checking subscription:", error);
+                                // On error, navigate to subscription plans as fallback
+                                navigate("/subscription-plans");
+                                notify.success("Individual Signup Successfully");
+                            }
                         }
                     }, 2000);
                 }
             }
-
             if (isLastStep) {
-                localStorage.removeItem('interviewerFormData');
+                localStorage.removeItem("interviewerFormData");
             }
-
         } catch (error) {
             console.error("Error in handleNextStep:", error);
+            notify.error("An error occurred. Please try again.");
         } finally {
             setIsSubmitting(false);
             setFormLoading(false);
         }
     };
-
     const handlePrevStep = () => {
         if (currentStep === 0) {
             navigate("/select-profession", {
@@ -1018,26 +957,37 @@ const MultiStepForm = () => {
     };
     // const authToken = Cookies.get("authToken");
     // console.log("authToken--- to check ", authToken);
-
-    const [resumeName, setResumeName] = useState('');
-    const [coverLetterName, setCoverLetterName] = useState('');
-
+    const [resumeName, setResumeName] = useState("");
+    const [coverLetterName, setCoverLetterName] = useState("");
     // Add this: Comprehensive save effect
     useEffect(() => {
         const formData = {
             currentStep,
             // Top-level
-            basicDetails, additionalDetails, interviewDetails, availabilityDetails,
+            basicDetails,
+            additionalDetails,
+            interviewDetails,
+            availabilityDetails,
             // Sub-states
-            basicDetailsData, additionalDetailsData, interviewDetailsData, availabilityDetailsData,
+            basicDetailsData,
+            additionalDetailsData,
+            interviewDetailsData,
+            availabilityDetailsData,
             completionStatus,
             times,
-            selectedSkills, previousInterviewExperience, isMockInterviewSelected, selectedTechnologyies,
+            selectedSkills,
+            previousInterviewExperience,
+            isMockInterviewSelected,
+            selectedTechnologyies,
             yearsOfExperience,
             // File metadata only (names/paths, not File objects)
             filePreview, // URL string
-            resumeName: resumeFile?.name || additionalDetailsData.resume?.filename || '',
-            coverLetterName: coverLetterFile?.name || additionalDetailsData.coverLetter?.filename || '',
+            resumeName:
+                resumeFile?.name || additionalDetailsData.resume?.filename || "",
+            coverLetterName:
+                coverLetterFile?.name ||
+                additionalDetailsData.coverLetter?.filename ||
+                "",
             // Exclude actual File objects like file, resumeFile, coverLetterFile (non-serializable)
             // Add others as needed: selectedTimezone, etc.
             selectedTimezone,
@@ -1045,18 +995,27 @@ const MultiStepForm = () => {
         localStorage.setItem("interviewerFormData", JSON.stringify(formData));
     }, [
         currentStep,
-        basicDetails, additionalDetails, interviewDetails, availabilityDetails,
-        basicDetailsData, additionalDetailsData, interviewDetailsData, availabilityDetailsData,
+        basicDetails,
+        additionalDetails,
+        interviewDetails,
+        availabilityDetails,
+        basicDetailsData,
+        additionalDetailsData,
+        interviewDetailsData,
+        availabilityDetailsData,
         completionStatus,
         times,
-        selectedSkills, previousInterviewExperience, isMockInterviewSelected, selectedTechnologyies,
+        selectedSkills,
+        previousInterviewExperience,
+        isMockInterviewSelected,
+        selectedTechnologyies,
         yearsOfExperience,
         filePreview,
-        resumeFile, coverLetterFile, // For names only; will stringify name if present
+        resumeFile,
+        coverLetterFile, // For names only; will stringify name if present
         selectedTimezone,
         // Add any other changing states
     ]);
-
     // Load effect - expand to sub-states
     useEffect(() => {
         const savedFormData = localStorage.getItem("interviewerFormData");
@@ -1064,37 +1023,65 @@ const MultiStepForm = () => {
             const parsed = JSON.parse(savedFormData);
             // Merge with care: Don't overwrite API data if not edited, but for simplicity, merge all
             setCurrentStep(parsed.currentStep || 0);
-
             // Top-level
-            if (parsed.basicDetails) setBasicDetails(prev => ({ ...prev, ...parsed.basicDetails }));
-            if (parsed.additionalDetails) setAdditionalDetails(prev => ({ ...prev, ...parsed.additionalDetails }));
-            if (parsed.interviewDetails) setInterviewDetails(prev => ({ ...prev, ...parsed.interviewDetails }));
-            if (parsed.availabilityDetails) setAvailabilityDetails(prev => ({ ...prev, ...parsed.availabilityDetails }));
-
+            if (parsed.basicDetails)
+                setBasicDetails((prev) => ({ ...prev, ...parsed.basicDetails }));
+            if (parsed.additionalDetails)
+                setAdditionalDetails((prev) => ({
+                    ...prev,
+                    ...parsed.additionalDetails,
+                }));
+            if (parsed.interviewDetails)
+                setInterviewDetails((prev) => ({
+                    ...prev,
+                    ...parsed.interviewDetails,
+                }));
+            if (parsed.availabilityDetails)
+                setAvailabilityDetails((prev) => ({
+                    ...prev,
+                    ...parsed.availabilityDetails,
+                }));
             // Sub-states
-            if (parsed.basicDetailsData) setBasicDetailsData(prev => ({ ...prev, ...parsed.basicDetailsData }));
-            if (parsed.additionalDetailsData) setAdditionalDetailsData(prev => ({ ...prev, ...parsed.additionalDetailsData }));
-            if (parsed.interviewDetailsData) setInterviewDetailsData(prev => ({ ...prev, ...parsed.interviewDetailsData }));
-            if (parsed.availabilityDetailsData) setAvailabilityDetailsData(prev => ({ ...prev, ...parsed.availabilityDetailsData }));
-
+            if (parsed.basicDetailsData)
+                setBasicDetailsData((prev) => ({
+                    ...prev,
+                    ...parsed.basicDetailsData,
+                }));
+            if (parsed.additionalDetailsData)
+                setAdditionalDetailsData((prev) => ({
+                    ...prev,
+                    ...parsed.additionalDetailsData,
+                }));
+            if (parsed.interviewDetailsData)
+                setInterviewDetailsData((prev) => ({
+                    ...prev,
+                    ...parsed.interviewDetailsData,
+                }));
+            if (parsed.availabilityDetailsData)
+                setAvailabilityDetailsData((prev) => ({
+                    ...prev,
+                    ...parsed.availabilityDetailsData,
+                }));
             if (parsed.completionStatus) setCompletionStatus(parsed.completionStatus);
             if (parsed.times) setTimes(parsed.times);
             if (parsed.selectedSkills) setSelectedSkills(parsed.selectedSkills);
             // if (parsed.previousInterviewExperience) setPreviousInterviewExperience(parsed.previousInterviewExperience);
             // if (parsed.isMockInterviewSelected) setIsMockInterviewSelected(parsed.isMockInterviewSelected);
-            if (parsed.selectedTechnologyies) setSelectedTechnologyies(parsed.selectedTechnologyies);
-            if (parsed.yearsOfExperience !== undefined) setYearsOfExperience(parsed.yearsOfExperience);
+            if (parsed.selectedTechnologyies)
+                setSelectedTechnologyies(parsed.selectedTechnologyies);
+            if (parsed.yearsOfExperience !== undefined)
+                setYearsOfExperience(parsed.yearsOfExperience);
             if (parsed.filePreview) setFilePreview(parsed.filePreview);
             if (parsed.selectedTimezone) setSelectedTimezone(parsed.selectedTimezone);
-
             // File names (show in UI, but require re-select on submit)
             if (parsed.resumeName) setResumeName(parsed.resumeName); // Assuming you add [resumeName, setResumeName] state
             if (parsed.coverLetterName) setCoverLetterName(parsed.coverLetterName);
-
             // After loading, update errors or validation if needed
-
             if (parsed.interviewDetailsData) {
-                setInterviewDetailsData(prev => ({ ...prev, ...parsed.interviewDetailsData }));
+                setInterviewDetailsData((prev) => ({
+                    ...prev,
+                    ...parsed.interviewDetailsData,
+                }));
             }
             if (parsed.previousInterviewExperience) {
                 setPreviousInterviewExperience(parsed.previousInterviewExperience);
@@ -1102,21 +1089,21 @@ const MultiStepForm = () => {
             if (parsed.isMockInterviewSelected) {
                 setIsMockInterviewSelected(parsed.isMockInterviewSelected);
             }
-
             // After setting interviewDetailsData, check for mock to sync isMockInterviewSelected
-            if (parsed.interviewDetailsData?.interviewFormatWeOffer?.includes('mock')) {
+            if (
+                parsed.interviewDetailsData?.interviewFormatWeOffer?.includes("mock")
+            ) {
                 setIsMockInterviewSelected(true);
             }
         }
     }, []); // Empty dep: Run once on mount
-
     return (
         <>
             {/* Removed loading overlay and spinner */}
             <form>
                 <div className="min-h-screen bg-gray-50">
                     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between items-center">
+                        <div className="flex sm:flex-col md:flex-col justify-between items-center sm:pt-8 md:pt-8">
                             <h1 className="text-2xl font-bold text-gray-900">
                                 Create Profile
                             </h1>
@@ -1145,7 +1132,6 @@ const MultiStepForm = () => {
                                         setIsProfileRemoved={setIsProfileRemoved}
                                     />
                                 )}
-
                                 {currentStep === 1 && (
                                     <AdditionalDetails
                                         errors={errors}
@@ -1170,7 +1156,6 @@ const MultiStepForm = () => {
                                     // v1.0.1 ------------------------------------------------------->
                                     />
                                 )}
-
                                 {(Freelancer || isInternalInterviewer) && !showLimitedSteps && (
                                     <>
                                         {currentStep === 2 && (
@@ -1198,7 +1183,6 @@ const MultiStepForm = () => {
                                                     }`}
                                             />
                                         )}
-
                                         {currentStep === 3 && (
                                             <AvailabilityDetails
                                                 selectedTimezone={selectedTimezone}
@@ -1215,7 +1199,6 @@ const MultiStepForm = () => {
                                 )}
                             </div>
                         </div>
-
                         <FooterButtons
                             onNext={handleNextStep}
                             onPrev={handlePrevStep}
@@ -1230,5 +1213,4 @@ const MultiStepForm = () => {
         </>
     );
 };
-
 export default MultiStepForm;

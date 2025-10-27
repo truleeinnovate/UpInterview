@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import Card from "../common/Card";
-import {
-  AiOutlineTeam,
-  AiOutlineCalendar,
-  // AiOutlineFile,
-  AiOutlineCheckSquare,
-  AiOutlineCustomerService,
-  AiOutlineUserSwitch,
-} from "react-icons/ai";
 import axios from "axios";
 import { config } from "../../../config";
+import {
+  Users,
+  Calendar,
+  CheckSquare,
+  Headphones,
+  UserCog,
+} from "lucide-react";
 
 function MetricsOverview() {
   const [metrics, setMetrics] = useState([
@@ -17,7 +16,7 @@ function MetricsOverview() {
       title: "Total Interviews",
       value: "0",
       description: "Across all tenants",
-      icon: <AiOutlineCalendar size={24} />,
+      icon: <Calendar size={24} />,
       trend: "up",
       trendValue: "0%",
       endpoint: `${config.REACT_APP_API_URL}/interview/all-interviews`,
@@ -26,7 +25,7 @@ function MetricsOverview() {
       title: "Active Assessments",
       value: "0",
       description: "Live assessment sessions",
-      icon: <AiOutlineCheckSquare size={24} />,
+      icon: <CheckSquare size={24} />,
       trend: "up",
       trendValue: "0%",
       endpoint: `${config.REACT_APP_API_URL}/assessments/all-assessments`,
@@ -35,7 +34,7 @@ function MetricsOverview() {
       title: "Platform Users",
       value: "0",
       description: "Total registered users",
-      icon: <AiOutlineTeam size={24} />,
+      icon: <Users size={24} />,
       trend: "up",
       trendValue: "0%",
       endpoint: `${config.REACT_APP_API_URL}/users/platform-users`,
@@ -44,7 +43,7 @@ function MetricsOverview() {
       title: "Outsource Interviews",
       value: "0",
       description: "Active freelance interviews",
-      icon: <AiOutlineUserSwitch size={24} />,
+      icon: <UserCog size={24} />,
       trend: "up",
       trendValue: "0%",
       endpoint: `${config.REACT_APP_API_URL}/outsourceInterviewers/all-interviews`,
@@ -53,7 +52,7 @@ function MetricsOverview() {
       title: "Support Tickets",
       value: "0",
       description: "Unresolved tickets",
-      icon: <AiOutlineCustomerService size={24} />,
+      icon: <Headphones size={24} />,
       trend: "down",
       trendValue: "0%",
       endpoint: `${config.REACT_APP_API_URL}/all-tickets`,
@@ -111,13 +110,6 @@ export default MetricsOverview;
 
 // import { useEffect, useState } from "react";
 // import Card from "../common/Card";
-// import {
-//   AiOutlineTeam,
-//   AiOutlineCalendar,
-//   AiOutlineCheckSquare,
-//   AiOutlineCustomerService,
-//   AiOutlineUserSwitch,
-// } from "react-icons/ai";
 // import axios from "axios";
 // import { config } from "../../../config";
 

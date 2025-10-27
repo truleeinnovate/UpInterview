@@ -9,8 +9,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { shareAssessmentAPI } from "./AssessmentShareAPI.jsx";
-import { IoMdClose } from "react-icons/io";
-import { FiX } from "react-icons/fi";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
@@ -19,7 +17,7 @@ import { useCandidates } from "../../../../apiHooks/useCandidates";
 import Loading from "../../../../Components/Loading.js";
 // <------------------------------- v1.0.0
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 // ------------------------------ v1.0.0 >
 // <---------------------- v1.0.1
 import { useAssessments } from "../../../../apiHooks/useAssessments.js";
@@ -514,7 +512,7 @@ const ShareAssessment = ({
                 className=" transition-colors p-1 rounded-full"
                 onClick={onCloseshare}
               >
-                <IoMdClose className="text-2xl" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
@@ -630,7 +628,7 @@ const ShareAssessment = ({
                   isMulti={true}
                   loading={loading}
                 />
-                
+
                 {/* Select All checkbox outside dropdown */}
                 <div className="mt-2">
                   <label className="flex items-center space-x-2 cursor-pointer">
@@ -652,7 +650,9 @@ const ShareAssessment = ({
                         }
                       }}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      disabled={!candidateData || candidateData.length === 0 || loading}
+                      disabled={
+                        !candidateData || candidateData.length === 0 || loading
+                      }
                     />
                     <span className="text-sm font-medium text-gray-700">
                       Select All Candidates
@@ -691,7 +691,7 @@ const ShareAssessment = ({
                               }
                               className="ml-2 text-blue-600 hover:text-blue-800 p-0.5 rounded-full hover:bg-blue-100"
                             >
-                              <FiX size={14} />
+                              <X className="h-4 w-4" />
                             </button>
                           </div>
                         ))}

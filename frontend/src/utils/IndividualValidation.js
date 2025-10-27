@@ -76,13 +76,10 @@ export const validateSteps = (step, params, setErrors, checkProfileIdExists, che
   }
 
   if (step === 2) {
-    const { selectedCandidates, selectedSkills, InterviewPreviousExperience, expertiseLevel, formData2 } = params;
+    const { selectedCandidates, selectedSkills, InterviewPreviousExperience, formData2 } = params;
     errors.technologies = !selectedCandidates.length ? 'Technology is required' : '';
     errors.skills = !selectedSkills.length ? 'Skill is required' : '';
     errors.previousInterviewExperience = !InterviewPreviousExperience ? 'Previous Experience is required' : '';
-    errors.expertiseLevel_ConductingInterviews = !expertiseLevel ? 'Expertise Level is required' : '';
-    errors.hourlyRate = !formData2.hourlyRate ? 'Hourly rate is required' : '';
-    errors.noShowPolicy = !formData2.noShowPolicy ? "No-show policy selection is required" : "";
 
     // Validate bio: optional, but if non-empty, must be >= 20 characters
     if (formData2.bio && formData2.bio.length < 20) {
@@ -90,21 +87,17 @@ export const validateSteps = (step, params, setErrors, checkProfileIdExists, che
     } else if (formData2.bio && formData2.bio.length > 500) {
       errors.bio = 'Bio cannot exceed 500 characters';
     }
-    
+
     // Validate Interview Previous Experience Years if "Yes" is selected
     if (InterviewPreviousExperience === "yes") {
       errors.previousInterviewExperienceYears = !formData2.previousInterviewExperienceYears ? 'Experience years is required' : '';
     }
-    
+
     // Validate Mock Interview Fields Only if "Yes" is Selected
     console.log("Interview Format We Offer:", formData2.interviewFormatWeOffer);
-  if (formData2.interviewFormatWeOffer.includes("mock")) {
-    errors.expectedRatePerMockInterview = !formData2.expectedRatePerMockInterview 
-      ? "Expected rate is required" 
-      : "";
+
   } else {
     // Reset values when "No" is selected
-    formData2.expectedRatePerMockInterview = "";
   }
 
 

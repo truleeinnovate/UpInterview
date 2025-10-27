@@ -16,7 +16,7 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type, externalData
   const [contactData, setContactData] = useState({});
 
   const ownerId = AuthCookieManager.getCurrentUserId();
-     
+
 
   // Always call the hook to comply with React rules
   const { userProfile } = useUserProfile(usersId ? usersId :"");
@@ -63,7 +63,7 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type, externalData
               console.error("No ID available for editing");
               return;
             }
-            
+
             if (mode === "users") {
               setAdvacedEditOpen(true);
             } else if (externalData) {
@@ -147,27 +147,6 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type, externalData
                   ))}
                 </div>
               </div> */}
-
-        {/*  Cover Letter Description */}
-        {contactData.coverLetterdescription ? (
-          // <div className="flex flex-col">
-          <div
-            className={`flex flex-col ${
-              mode === "users" ? "w-full" : "max-w-3xl"
-            } break-words`}
-          >
-            <span className="text-sm text-gray-500">
-              Cover Letter Description
-            </span>
-
-            {/* <p className="text-gray-800 text-sm sm:text-xs float-right mt-1 font-medium"> */}
-            <p className="text-gray-800 text-sm sm:text-xs mt-1 font-medium whitespace-pre-line break-words">
-              {contactData.coverLetterdescription}
-            </p>
-          </div>
-        ) : (
-          ""
-        )}
       </div>
     </div>
   );

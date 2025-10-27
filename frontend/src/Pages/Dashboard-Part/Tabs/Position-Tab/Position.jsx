@@ -596,7 +596,7 @@ const PositionTab = () => {
       key: "experience",
       header: "Experience",
       render: (value, row) =>
-        `${row.minexperience || "N/A"} - ${row.maxexperience || "N/A"} years`,
+        `${row.minexperience || "N/A"} - ${row.maxexperience || "N/A"} Years`,
     },
     {
       key: "rounds",

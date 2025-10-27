@@ -10,7 +10,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-import { IoArrowBack } from "react-icons/io5";
 import {
     Minimize,
     Expand,

@@ -9,25 +9,26 @@ import axios from "axios";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 // v1.0.0 <--------------------------------------------------------------------------------
 import {
-  AiOutlineUser,
-  AiOutlineCalendar,
-  AiOutlineCheckCircle,
-  AiOutlineEdit,
-  AiOutlineInfoCircle,
-  AiOutlineWarning,
-  AiOutlineSync,
-  AiOutlineFilter,
-  AiOutlineDown,
-  AiOutlineDollar,
-  AiOutlineEnvironment,
-  AiOutlineMail,
-  AiOutlinePhone,
-  AiOutlineStar,
-  AiOutlineUserAdd,
-  AiOutlineTag,
-  AiOutlineLink,
-  AiOutlineClockCircle,
-} from "react-icons/ai";
+  User,
+  Calendar,
+  CheckCircle,
+  Edit,
+  Info,
+  AlertTriangle,
+  RefreshCw,
+  Filter,
+  ChevronDown,
+  DollarSign,
+  MapPin,
+  Mail,
+  Phone,
+  Star,
+  UserPlus,
+  Tag,
+  Link,
+  Clock,
+} from "lucide-react";
+
 import { config } from "../../../../config";
 
 function Activity({ parentId, parentId2, mode }) {
@@ -36,10 +37,7 @@ function Activity({ parentId, parentId2, mode }) {
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  console.log("parentId, parentId2, mode",
-    parentId, parentId2, mode
-  );
-  
+  console.log("parentId, parentId2, mode", parentId, parentId2, mode);
 
   // Close filters when clicking outside
   useEffect(() => {
@@ -101,8 +99,7 @@ function Activity({ parentId, parentId2, mode }) {
         const response = await axios.get(`${config.REACT_APP_API_URL}/feeds`, {
           params: { parentId },
         });
-        console.log("response",response);
-        
+        console.log("response", response);
 
         // Check if response has data
         if (
@@ -174,27 +171,25 @@ function Activity({ parentId, parentId2, mode }) {
           action.name === "candidate_created" ||
           action.name === "position_created"
         ) {
-          return <AiOutlineUserAdd className="text-blue-500" size={24} />;
+          return <UserPlus className="text-blue-500 h-4 w-4" />;
         }
-        return <AiOutlineInfoCircle className="text-blue-500" size={24} />;
+        return <Info className="text-blue-500 h-4 w-4" />;
       case "alert":
-        return <AiOutlineWarning className="text-red-500" size={24} />;
+        return <AlertTriangle className="text-red-500 h-4 w-4" />;
       case "update":
         switch (action.name) {
           case "assessment_completed":
-            return (
-              <AiOutlineCheckCircle className="text-green-500" size={24} />
-            );
+            return <CheckCircle className="text-green-500 h-4 w-4" />;
           case "interview_scheduled":
-            return <AiOutlineCalendar className="text-purple-500" size={24} />;
+            return <Calendar className="text-purple-500 h-4 w-4" />;
           case "candidate_updated":
           case "position_updated":
-            return <AiOutlineEdit className="text-orange-500" size={24} />;
+            return <Edit className="text-orange-500 h-4 w-4" />;
           default:
-            return <AiOutlineSync className="text-green-500" size={24} />;
+            return <RefreshCw className="text-green-500 h-4 w-4" />;
         }
       default:
-        return <AiOutlineInfoCircle className="text-gray-500" size={24} />;
+        return <Info className="text-gray-500 h-4 w-4" />;
     }
   };
 
@@ -293,29 +288,29 @@ function Activity({ parentId, parentId2, mode }) {
   const getFieldIcon = (fieldName) => {
     switch (fieldName) {
       case "status":
-        return <AiOutlineTag className="text-gray-400" />;
+        return <Tag className="text-gray-400" />;
       case "expectedSalary":
       case "minSalary":
       case "maxSalary":
-        return <AiOutlineDollar className="text-gray-400" />;
+        return <DollarSign className="text-gray-400" />;
       case "email":
       case "Email":
-        return <AiOutlineMail className="text-gray-400" />;
+        return <Mail className="text-gray-400" />;
       case "location":
       case "Location":
-        return <AiOutlineEnvironment className="text-gray-400" />;
+        return <MapPin className="text-gray-400" />;
       case "yearsOfExperience":
       case "minexperience":
       case "maxexperience":
       case "CurrentExperience":
       case "RelevantExperience":
-        return <AiOutlineStar className="text-gray-400" />;
+        return <Star className="text-gray-400 h-4 w-4" />;
       case "skills":
-        return <AiOutlineTag className="text-gray-400" />;
+        return <Tag className="text-gray-400 h-4 w-4" />;
       case "Phone":
-        return <AiOutlinePhone className="text-gray-400" />;
+        return <Phone className="text-gray-400 h-4 w-4" />;
       default:
-        return <AiOutlineEdit className="text-gray-400" />;
+        return <Edit className="text-gray-400 h-4 w-4" />;
     }
   };
 
@@ -330,7 +325,7 @@ function Activity({ parentId, parentId2, mode }) {
             key={index}
             className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
           >
-            <AiOutlineTag className="mr-1" size={12} />
+            <Tag className="mr-1 h-4 w-4" />
             {skill.skill || skill}
             {skill.experience && (
               <span className="ml-1 text-blue-600">({skill.experience})</span>
@@ -538,7 +533,7 @@ function Activity({ parentId, parentId2, mode }) {
                                 )}
                               />
                             </span>
-                            <AiOutlineSync className="text-gray-400 flex-shrink-0" />
+                            <RefreshCw className="text-gray-400 flex-shrink-0" />
                             <span className="px-3 py-1.5 sm:text-xs rounded bg-white border border-gray-200 text-gray-900 font-medium min-w-[100px] text-center">
                               <ResponsiveText
                                 value={formatValue(
@@ -556,7 +551,7 @@ function Activity({ parentId, parentId2, mode }) {
                               value={formatValue(fieldName, feed?.history[index]?.oldValue)} 
                             />
                           </span>
-                          <AiOutlineSync className="text-gray-400 flex-shrink-0" />
+                          <RefreshCw className="text-gray-400 flex-shrink-0" />
                           <span className="px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-900 font-medium min-w-[100px] text-center">
                             <ResponsiveText 
                               value={formatValue(fieldName, feed?.history[index]?.newValue)} 
@@ -577,25 +572,25 @@ function Activity({ parentId, parentId2, mode }) {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center space-x-2">
-                <AiOutlineCalendar className="text-gray-400" />
+                <Calendar className="text-gray-400 h-4 w-4 " />
                 <span className="text-gray-600">Scheduled for:</span>
                 <span className="font-medium">
                   {new Date(metadata?.scheduledFor)?.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                <AiOutlineClockCircle className="text-gray-400" />
+                <Clock className="text-gray-400 h-4 w-4 " />
                 <span className="text-gray-600">Duration:</span>
                 <span className="font-medium">{metadata?.duration}</span>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <AiOutlineUser className="text-gray-400" />
+              <User className="text-gray-400" />
               <span className="text-gray-600">Interviewer:</span>
               <span className="font-medium">{metadata?.interviewer}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <AiOutlineLink className="text-gray-400" />
+              <Link className="text-gray-400 h-4 w-4" />
               <span className="text-gray-600">Location:</span>
               <span className="font-medium">{metadata?.location}</span>
             </div>
@@ -612,13 +607,13 @@ function Activity({ parentId, parentId2, mode }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <AiOutlineTag className="text-gray-400" />
+                <Tag className="text-gray-400 h-4 w-4" />
                 <span className="text-gray-600">
                   {metadata?.assessmentName}
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                <AiOutlineClockCircle className="text-gray-400" />
+                <Clock className="text-gray-400 h-4 w-4" />
                 <span className="text-gray-600">Time spent:</span>
                 <span className="font-medium">{metadata?.timeSpent}</span>
               </div>
@@ -694,10 +689,10 @@ function Activity({ parentId, parentId2, mode }) {
                 setShowFilters(!showFilters);
               }}
             >
-              <AiOutlineFilter />
+              <Filter className="h-4 w-4" />
               <span>Filter</span>
-              <AiOutlineDown
-                className={`transition-transform ${
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${
                   showFilters ? "rotate-180" : ""
                 }`}
               />
@@ -767,7 +762,9 @@ function Activity({ parentId, parentId2, mode }) {
                           {getFeedIcon(feed.feedType, feed?.action)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className={`sm:text-xs font-medium ${styles.text} truncate`}>
+                          <h4
+                            className={`sm:text-xs font-medium ${styles.text} truncate`}
+                          >
                             {feed.parentObject === "Position" &&
                             mode === "round" &&
                             feed?.action?.name === "position_created"
@@ -780,7 +777,7 @@ function Activity({ parentId, parentId2, mode }) {
                           </h4>
                           <div className="flex flex-wrap items-center mt-1 gap-2 text-sm text-gray-500">
                             <div className="flex items-center">
-                              <AiOutlineUser className="mr-1 flex-shrink-0" />
+                              <User className="mr-1 flex-shrink-0" />
                               <span className="sm:text-xs truncate">
                                 {feed?.metadata?.changedBy || "System"}
                               </span>

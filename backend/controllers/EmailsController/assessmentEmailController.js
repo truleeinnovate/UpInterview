@@ -27,10 +27,11 @@ const config = require("../../config");
 const {
   createAssessmentScheduledNotification,
 } = require('../PushNotificationControllers/pushNotificationAssessmentController');
-const { 
+const {
   validateScheduledAssessment,
   //validateCandidateAssessment 
 } = require("../../validations/assessmentValidation.js");
+const Tenant = require("../../models/Tenant");
 
 
 
@@ -145,7 +146,7 @@ exports.resendAssessmentLink = async (req, res) => {
 
     // Handle both single and multiple candidate assessment IDs
     let candidateAssessmentIdArray = [];
-    
+
     if (candidateAssessmentIds && Array.isArray(candidateAssessmentIds)) {
       // Multiple candidates
       candidateAssessmentIdArray = candidateAssessmentIds;
@@ -185,15 +186,15 @@ exports.resendAssessmentLink = async (req, res) => {
     const results = [];
     let successCount = 0;
     let failureCount = 0;
-    console.log("candidateAssessmentIdArray",candidateAssessmentIdArray)
+    console.log("candidateAssessmentIdArray", candidateAssessmentIdArray)
 
     for (const candidateAssessmentId of candidateAssessmentIdArray) {
-      console.log("candidateAssessmentId",candidateAssessmentId)
+      console.log("candidateAssessmentId", candidateAssessmentId)
       try {
         const candidateAssessment = await CandidateAssessment.findById(candidateAssessmentId)
           .populate('candidateId')
           .populate('scheduledAssessmentId');
-          console.log("candidateAssessment",candidateAssessment)
+        console.log("candidateAssessment", candidateAssessment)
 
         if (!candidateAssessment) {
           results.push({
@@ -402,26 +403,26 @@ exports.shareAssessment = async (req, res) => {
 
     const assessmentDuration = assessment.assessmentDuration || 60; // Default to 60 minutes if not set
 
-     // <---------------------- v1.0.0
+    // <---------------------- v1.0.0
 
     // Generate assessment ID and create schedule assessment without session
     // Use a simpler approach that doesn't require sorting by scheduledAssessmentCode
     // <---------------------- v1.0.1
-    const scheduleCount = await ScheduleAssessment.countDocuments({ 
+    const scheduleCount = await ScheduleAssessment.countDocuments({
       organizationId,
       scheduledAssessmentCode: { $exists: true, $ne: null }
     });
-    
+
     // Generate the new code with 5-digit padding based on count
     const nextNumber = scheduleCount + 1;
     let scheduledAssessmentCode = `ASMT-${String(nextNumber).padStart(5, '0')}`;
 
     // Check if this code already exists (in case of concurrent requests)
-    const existingCode = await ScheduleAssessment.findOne({ 
+    const existingCode = await ScheduleAssessment.findOne({
       organizationId,
-      scheduledAssessmentCode 
+      scheduledAssessmentCode
     });
-    
+
     if (existingCode) {
       // If code exists, try with a higher number
       const newNextNumber = nextNumber + 1;
@@ -429,23 +430,23 @@ exports.shareAssessment = async (req, res) => {
     }
     // <---------------------- v1.0.1
 
-     // <---------------------- v1.0.0
+    // <---------------------- v1.0.0
 
-      // Validate the scheduled assessment data
-      const { errors, isValid } = validateScheduledAssessment({
-        assessmentId,
-        organizationId,
-        expiryAt,
-        createdBy: userId
-      });
+    // Validate the scheduled assessment data
+    const { errors, isValid } = validateScheduledAssessment({
+      assessmentId,
+      organizationId,
+      expiryAt,
+      createdBy: userId
+    });
 
     let savedScheduleAssessment;
 
     if (!isValid) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: "Validation failed", 
-        errors 
+        message: "Validation failed",
+        errors
       });
     } else {
       const scheduleAssessment = new ScheduleAssessment({
@@ -513,9 +514,16 @@ exports.shareAssessment = async (req, res) => {
 
     const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments);
 
+    const tenant = await Tenant.findById(organizationId);
+    const orgCompanyName = tenant.company;
+
+    const templateCategory = tenant.type === 'individual'
+      ? 'assessment_invite_individual'
+      : 'assessment_invite';
+
     // Process emails without session
     const emailTemplate = await emailTemplateModel.findOne({
-      category: 'assessment_invite',
+      category: templateCategory,
       isSystemTemplate: true,
       isActive: true
     });
@@ -571,14 +579,19 @@ exports.shareAssessment = async (req, res) => {
         timeZoneName: 'short'
       });
 
-      const emailSubject = emailTemplate.subject.replace('{{companyName}}', companyName);
+      const emailSubject = emailTemplate.subject.replace(/{{orgCompanyName}}/g, orgCompanyName);
       const emailBody = emailTemplate.body
-        .replace('{{candidateName}}', candidateName)
-        .replace('{{companyName}}', companyName)
-        .replace('{{expiryDate}}', formattedExpiryDate)
-        .replace('{{assessmentLink}}', link)
-        .replace('{{assessmentDuration}}', assessmentDuration)
-        .replace('{{supportEmail}}', supportEmail);
+        .replace(/{{candidateName}}/g, candidateName)
+        .replace(/{{companyName}}/g, companyName)
+        .replace(/{{expiryDate}}/g, formattedExpiryDate)
+        .replace(/{{assessmentLink}}/g, link)
+        .replace(/{{assessmentDuration}}/g, assessmentDuration)
+        .replace(/{{supportEmail}}/g, supportEmail)
+        .replace(/{{orgCompanyName}}/g, orgCompanyName)
+        .replace(/{{title}}/g, assessment.AssessmentTitle)
+
+
+
 
       // Queue email sends
       emailPromises.push(
