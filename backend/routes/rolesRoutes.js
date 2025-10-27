@@ -1,15 +1,3 @@
-// const { saveRole, getRolesByOrganization, updateRole, getAllRoles } = require('../controllers/rolesController');
-
-// const router = require('express').Router();
-
-// router.post('/rolesdata', saveRole);
-// router.get('/rolesdata', getRolesByOrganization); 
-// router.patch('/rolesdata/:id', updateRole);
-
-// router.get('/getAllRoles',getAllRoles)
-
-// module.exports = router;
-
 
 const express = require('express');
 const router = express.Router();
@@ -17,21 +5,6 @@ const RolesPermissionObject = require('../models/RolesPermissionObject');
 const RoleOverrides = require('../models/RoleOverrides');
 const { getAllRoles } = require('../controllers/rolesController');
 router.get('/getAllRoles',getAllRoles)
-// router.get('/roles/:id', async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { tenantId } = req.query;
-
-//     const role = await RolesPermissionObject.findOne({ _id: id, tenantId });
-//     if (!role) {
-//       return res.status(404).json({ message: 'Role not found' });
-//     }
-//     res.json(role);
-//   } catch (error) {
-//     console.error('Error fetching role:', error);
-//     res.status(500).json({ message: 'Server error' });
-//   }
-// });
 
 router.post('/roles', async (req, res) => {
   try { 
@@ -50,8 +23,8 @@ router.patch('/roles/:id', async (req, res) => {
     const { id } = req.params;
     const roleData = req.body;
     const updatedRole = await RolesPermissionObject.findOneAndUpdate(
-      { _id: id, tenantId: roleData.tenantId },
-      { $set: roleData },
+      { _id: id },
+      { $set: roleData},
       { new: true }
     );
     if (!updatedRole) {

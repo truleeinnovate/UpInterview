@@ -169,7 +169,6 @@ const ProtectedRoute = ({ children }) => {
     useEffect(() => {
         const checkAuthAndRedirect = async () => {
             try {
-                console.log('type', loginType);
                 // SIMPLE CHECK: Just check if tokens exist in cookies
                 const hasAuthToken = !!AuthCookieManager.getAuthToken();
                 const hasImpersonationToken = !!AuthCookieManager.getImpersonationToken();

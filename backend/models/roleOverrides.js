@@ -5,7 +5,7 @@ const roleOverridesSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Tenant',
     required: true,
-  },
+  },//here we dont have owner id
   roleName: {
     type: String,
     required: true,
