@@ -26,38 +26,25 @@ export const formatDateOfBirth = (dateString) => {
     });
 };
 
-const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = null }) => {
-    // const { usersRes } = useCustomContext();
+const BasicDetails = ({ mode, usersId, setBasicEditOpen, type}) => {
+
 
     const [contactData, setContactData] = useState({});
-
-    // console.log("contactData in BasicDetails", contactData);
-
     const navigate = useNavigate();
     const location = useLocation();
     const ownerId = AuthCookieManager.getCurrentUserId();
     const authToken = Cookies.get("authToken");
 
     const tokenPayload = decodeJwt(authToken);
-
-
-    const organization = tokenPayload.organization;
-
-    // console.log("ownerId ownerId",ownerId);
-
     // Always call the hook to comply with React rules
     const { userProfile } = useUserProfile(usersId ? usersId : "");
 
     useEffect(() => {
-        // Use external data if provided, otherwise use userProfile from hook
-        if (externalData) {
-            setContactData(externalData);
-        } else if (userProfile) {
+        if (userProfile) {
             setContactData(userProfile);
         }
-    }, [userProfile, usersId, externalData]);
+    }, [userProfile, usersId, mode]);
 
-    // console.log("USER PROFILE: ", userProfile);
 
     const handleResendEmailVerification = async () => {
         try {
@@ -100,10 +87,6 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = nu
             notify.error("Failed to send password reset email");
         }
     };
-    // console.log("contactData handleResendPasswordChange", contactData);
-
-
-
 
 
     return (
@@ -139,16 +122,17 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type, externalData = nu
                     onClick={() => {
                         const editId = contactData?._id || ownerId || usersId;
                         if (!editId) {
-                            console.error("No ID available for editing");
                             return;
                         }
 
-                        if (mode === "users") {
+                        if (mode === "users" || mode === "outsource") {
                             setBasicEditOpen(true);
-                        } else if (externalData) {
-                            // Navigate to outsource interviewer edit page
-                            navigate(`/outsource-interviewers/edit/basic/${editId}`);
-                        } else {
+                        } 
+                        // else if (externalData) {
+                        //     // Navigate to outsource interviewer edit page
+                        //     navigate(`/outsource-interviewers/edit/basic/${editId}`);
+                        // }
+                         else {
                             // Navigate to my profile edit page
                             navigate(`/account-settings/my-profile/basic-edit/${editId}`);
                         }
