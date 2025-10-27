@@ -1668,7 +1668,7 @@ const EditInterviewDetails = ({
                 )}
               </div>
 
-              {formData.interviewFormatWeOffer?.includes("mock") && (
+                        {formData.interviewFormatWeOffer?.includes("mock") && (
                 <div>
                   <div className="p-4 rounded-lg border border-gray-200">
                     <label
@@ -1735,18 +1735,18 @@ const EditInterviewDetails = ({
                         </div>
                       ) : (
                         <>
-                          <DropdownSelect
-                            id="mock_interview_discount"
-                            name="mock_interview_discount"
-                            value={
-                              formData.mock_interview_discount
-                                ? {
+                        <DropdownSelect
+                          id="mock_interview_discount"
+                          name="mock_interview_discount"
+                          value={
+                            formData.mock_interview_discount
+                              ? {
                                   value: formData.mock_interview_discount,
                                   label: `${formData.mock_interview_discount}% discount`,
                                 }
                               : null
                           }
-
+ 
                           onChange={(selected) => {
                             if (selected?.value === "custom") {
                               setShowCustomDiscount(true);
@@ -1766,47 +1766,27 @@ const EditInterviewDetails = ({
                                 },
                               });
                             }
-
-                            onChange={(selected) => {
-                              if (selected?.value === "custom") {
-                                setShowCustomDiscount(true);
-                                setCustomDiscountValue("");
-                              } else if (selected) {
-                                handleChangeforExp({
-                                  target: {
-                                    name: "mock_interview_discount",
-                                    value: selected.value,
-                                  },
-                                });
-                              } else {
-                                handleChangeforExp({
-                                  target: {
-                                    name: "mock_interview_discount",
-                                    value: "",
-                                  },
-                                });
-                              }
-                            }}
-                            options={[
-                              { value: "10", label: "10% discount" },
-                              { value: "20", label: "20% discount" },
-                              { value: "30", label: "30% discount" },
-                              {
-                                value: "custom",
-                                label: "Add custom percentage...",
-                              },
-                            ]}
-                            placeholder="Select discount percentage"
-                            className="w-full"
-                            classNamePrefix="select"
-                            isClearable={true}
-                          />
+                          }}
+                          options={[
+                            { value: "10", label: "10% discount" },
+                            { value: "20", label: "20% discount" },
+                            { value: "30", label: "30% discount" },
+                            {
+                              value: "custom",
+                              label: "Add custom percentage...",
+                            },
+                          ]}
+                          placeholder="Select discount percentage"
+                          className="w-full"
+                          classNamePrefix="select"
+                          isClearable={true}
+                        />
                           {errors.mock_interview_discount && (
-                            <p className="text-red-500 text-xs mt-1">
-                              {errors.mock_interview_discount}
-                            </p>
-                          )}
-                        </>
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.mock_interview_discount}
+                          </p>
+                        )}
+                      </>
                       )}
                     </div>
                     <p className="mt-1.5 text-xs text-custom-blue">

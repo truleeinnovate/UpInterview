@@ -434,6 +434,7 @@ const BasicDetails = ({
                 {/* Phone Number */}
                 <div className="sm:col-span-6 w-full">
                     <PhoneField
+                        
                         countryCodeOptions={countryCodeOptions}
                         countryCodeValue={basicDetailsData.countryCode}
                         onCountryCodeChange={(e) => handleInputChange(e, "countryCode")}
