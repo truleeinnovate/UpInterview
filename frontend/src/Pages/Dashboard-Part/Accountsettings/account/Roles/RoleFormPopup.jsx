@@ -26,6 +26,8 @@ import {
 import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 import Loading from "../../../../../Components/Loading";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+import { notify } from "../../../../../services/toastService";
+
 
 // Set app element for accessibility
 Modal.setAppElement("#root");
@@ -37,7 +39,12 @@ const RoleFormPopup = ({ onSave, onClose }) => {
     isError,
     error,
   } = useRolesQuery();
+  const authToken = AuthCookieManager.getAuthToken();
+  const tokenPayload = decodeJwt(authToken);
+  const tenantId = tokenPayload.tenantId;
   const userType = AuthCookieManager.getUserType();
+  const currentUserId = AuthCookieManager.getCurrentUserId();//using current user id because to get both user or imperson based on user type
+
 
   const {
     effectivePermissions,
@@ -54,9 +61,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
   // <-------------------------------v1.0.1
   const editMode = !!id && id !== "create";
   // ------------------------------v1.0.1 >
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
-  const tenantId = tokenPayload.tenantId;
+
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   // v1.0.4 <----------------------------------------------------------------
@@ -515,9 +520,9 @@ const RoleFormPopup = ({ onSave, onClose }) => {
         objects: prev.objects.map((obj) =>
           obj.objectName === objectName
             ? {
-                ...obj,
-                permissions: obj.permissions.filter((p) => p !== permission),
-              }
+              ...obj,
+              permissions: obj.permissions.filter((p) => p !== permission),
+            }
             : obj
         ),
       }));
@@ -686,7 +691,8 @@ const RoleFormPopup = ({ onSave, onClose }) => {
           roleName: formData.roleName,
           description: formData.description,
           level: formData.level,
-          tenantId: tenantId,
+          tenantId,
+          ownerId: currentUserId,
           roleType: formData.roleType || "internal",
           objects: formData.objects.map((obj) => ({
             objectName: obj.objectName,
@@ -717,6 +723,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                 console.log("Server response (update):", data);
                 if (onSave) onSave(data);
                 navigate("/account-settings/roles");
+                notify.success("Role updated successfully");
               },
               onError: (error) => {
                 console.error("Error updating role:", error);
@@ -730,12 +737,13 @@ const RoleFormPopup = ({ onSave, onClose }) => {
               console.log("Server response (create):", data);
               if (onSave) onSave(data);
               navigate("/account-settings/roles");
+              notify.success("Role created successfully");
             },
             onError: (error) => {
               console.error("Error creating role:", error);
             },
           });
-         
+
           // const response = await axios.post(
           //   `${config.REACT_APP_API_URL}/roles`,
           //   roleData
@@ -803,6 +811,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
             console.log("Server response (update):", response.data);
             if (response.data && onSave) {
               onSave(response.data);
+              notify.success("Role override updated successfully");
             }
           } else {
             const response = await axios.post(
@@ -812,6 +821,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
             console.log("Server response (create):", response.data);
             if (response.data && onSave) {
               onSave(response.data);
+              notify.success("Role override created successfully");
             }
           }
         } else {
@@ -822,6 +832,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
           console.log("Server response (create):", response.data);
           if (response.data && onSave) {
             onSave(response.data);
+            notify.success("Role override created successfully");
           }
         }
       }
@@ -1258,9 +1269,8 @@ const RoleFormPopup = ({ onSave, onClose }) => {
             </button>
             <button
               type="submit"
-              className={`text-sm ml-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200${
-                userType === "superAdmin" ? " font-semibold" : ""
-              }`}
+              className={`text-sm ml-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200${userType === "superAdmin" ? " font-semibold" : ""
+                }`}
             >
               {editMode ? "Save Changes" : "Create Role"}
             </button>
