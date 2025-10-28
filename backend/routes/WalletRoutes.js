@@ -21,15 +21,15 @@ const {
   failManualWithdrawal,
   getAllWithdrawalRequests
 } = require('../controllers/WalletControllers');
-
+const loggingService = require('../middleware/loggingService.js');
 const WalletRouter = express.Router();
 
 // Wallet Top-up Routes
 // POST /wallet/create-order - Create Razorpay order for wallet top-up
-WalletRouter.post('/create-order', createTopupOrder);
+WalletRouter.post('/create-order', loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware,   createTopupOrder);
 
 // POST /wallet/verify-payment - Verify payment and update wallet
-WalletRouter.post('/verify-payment', walletVerifyPayment);
+WalletRouter.post('/verify-payment', loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, walletVerifyPayment);
 
 // Bank Account Routes
 // POST /wallet/bank-accounts - Add a new bank account
@@ -40,7 +40,7 @@ WalletRouter.delete('/bank-accounts/:bankAccountId', deleteBankAccount);
 
 // Withdrawal Routes
 // POST /wallet/withdrawals - Create a new withdrawal request
-WalletRouter.post('/withdrawals', createWithdrawalRequest);
+WalletRouter.post('/withdrawals',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware,  createWithdrawalRequest);
 
 // GET /wallet/get-all-withdrawals-requests - Get all withdrawal requests (superadmin) - MOVED BEFORE parameterized routes
 WalletRouter.get('/get-all-withdrawals-requests', getAllWithdrawalRequests);

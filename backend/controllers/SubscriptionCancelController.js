@@ -119,6 +119,9 @@ const razorpay = new Razorpay({
  * @param {Object} res - Express response object
  */
 const cancelSubscription = async (req, res) => {
+  // Set up logging context
+  res.locals.loggedByController = true;
+  res.locals.processName = "Cancel Subscription";
   try {
     // Extract request data
     const { subscriptionId, razorpaySubscriptionId, ownerId } = req.body;
@@ -132,8 +135,16 @@ const cancelSubscription = async (req, res) => {
       await razorpay.subscriptions.cancel(razorpaySubscriptionId);
       console.log('Razorpay subscription cancelled in subscriptioncancelcontroller:', razorpaySubscriptionId);
     } catch (razorpayError) {
-      console.error('Error cancelling Razorpay subscription:', razorpayError);
-      return res.status(400).json({ message: 'Failed to cancel Razorpay subscription' });
+      console.error("❌ Error cancelling Razorpay subscription:", razorpayError);
+      res.locals.logData = {
+        ownerId,
+        processName: "Cancel Subscription",
+        status: "error",
+        message: "Failed to cancel Razorpay subscription",
+        requestBody: req.body,
+        error: razorpayError.message,
+      };
+       return res.status(400).json({ message: 'Failed to cancel Razorpay subscription' });
     }
 
     // Step 2: Update local subscription status and related records
@@ -240,6 +251,20 @@ const cancelSubscription = async (req, res) => {
       }
     }
 
+       // STEP 5: Structured log data for centralized tracking
+    res.locals.logData = {
+      tenantId: updatedSubscription?.tenantId || "",
+      ownerId,
+      processName: "Cancel Subscription",
+      requestBody: req.body,
+      status: "success",
+      message: "Subscription cancelled successfully",
+      responseBody: {
+        cancelled: true,
+        subscription: updatedSubscription?._id || null,
+      },
+    };
+
     // Return success response with updated subscription (if available)
     return res.status(200).json({
       message: 'Subscription cancelled successfully',
@@ -248,6 +273,17 @@ const cancelSubscription = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in subscription cancellation:', error);
+      res.locals.logData = {
+      tenantId: updatedSubscription?.tenantId || "",
+      ownerId,
+      processName: "Cancel Subscription",
+      requestBody: req.body,
+      status: "error",
+      message: "Subscription cancelled error",
+      responseBody: {
+       error
+      },
+    };
     return res.status(500).json({ message: 'Error cancelling subscription', error: error.message });
   }
 };

@@ -22,6 +22,10 @@ import {
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import SidebarPopup from "../../SidebarPopup/SidebarPopup";
+import BasicDetails from "../../../../Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails";
+import AdvancedDetails from "../../../../Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails";
+import InterviewUserDetails from "../../../../Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails";
+import AvailabilityUser from "../../../../Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser";
 
 const ContactProfileDetails = () => {
   const location = useLocation();
@@ -130,41 +134,37 @@ const ContactProfileDetails = () => {
           <div className="mx-8 pt-5  sm:hidden md:hidden">
             <p className="text-sm space-x-10">
               <span
-                className={`cursor-pointer ${
-                  activeTab === "Basic-Details"
-                    ? "text-custom-blue font-bold border-b-2 border-custom-blue"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
+                className={`cursor-pointer ${activeTab === "Basic-Details"
+                  ? "text-custom-blue font-bold border-b-2 border-custom-blue"
+                  : "text-gray-500 hover:text-gray-700"
+                  }`}
                 onClick={() => handleTabClick("Basic-Details")}
               >
                 Basic Details
               </span>
               <span
-                className={`cursor-pointer ${
-                  activeTab === "Additional-Details"
-                    ? "text-custom-blue font-semibold border-b-2 border-custom-blue"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
+                className={`cursor-pointer ${activeTab === "Additional-Details"
+                  ? "text-custom-blue font-semibold border-b-2 border-custom-blue"
+                  : "text-gray-500 hover:text-gray-700"
+                  }`}
                 onClick={() => handleTabClick("Additional-Details")}
               >
                 Additional Details
               </span>
               <span
-                className={`cursor-pointer ${
-                  activeTab === "Interview-Details"
-                    ? "text-custom-blue font-semibold border-b-2 border-custom-blue"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
+                className={`cursor-pointer ${activeTab === "Interview-Details"
+                  ? "text-custom-blue font-semibold border-b-2 border-custom-blue"
+                  : "text-gray-500 hover:text-gray-700"
+                  }`}
                 onClick={() => handleTabClick("Interview-Details")}
               >
                 Interview Details
               </span>
               <span
-                className={`cursor-pointer ${
-                  activeTab === "Availability"
-                    ? "text-custom-blue font-semibold border-b-2 border-custom-blue"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
+                className={`cursor-pointer ${activeTab === "Availability"
+                  ? "text-custom-blue font-semibold border-b-2 border-custom-blue"
+                  : "text-gray-500 hover:text-gray-700"
+                  }`}
                 onClick={() => handleTabClick("Availability")}
               >
                 Availability
@@ -188,587 +188,40 @@ const ContactProfileDetails = () => {
         </div>
 
         {activeTab === "Basic-Details" && (
-          <div className="mx-8 mt-7 grid grid-cols-4">
-            <div className="sm:col-span-4 md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3 sm:mt-[1rem]">
-              <div className="grid grid-cols-2 mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <User className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">First Name</div>
-                </div>
-                <div className="">
-                  <p className="text-gray-700 text-sm">
-                    {contact?.firstName || "N/A"}
-                  </p>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <User className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">Last Name</div>
-                </div>
-                <div className="">
-                  <p className="text-gray-700 text-sm">
-                    {contact.lastName || "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <CreditCard className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">User Id</div>
-                </div>
-                <div className="">
-                  <p className="text-gray-700 text-sm">
-                    {contact.tenantId || "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <Users className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">Gender</div>
-                </div>
-                <div className="">
-                  <p className="text-gray-700 text-sm">
-                    {contact.gender || "N/A"}
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <Mail className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">Email Address</div>
-                </div>
-                <div>
-                  {contact.email ? (
-                    <a
-                      href={`mailto:${contact.email}`}
-                      className="text-blue-600 text-sm truncate hover:underline"
-                    >
-                      {contact.email}
-                    </a>
-                  ) : (
-                    <p className="text-gray-700 text-sm">Not Provided</p>
-                  )}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <Phone className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">Phone Number</div>
-                </div>
-                <div>
-                  {contact.phone ? (
-                    <a
-                      href={`tel:${contact.phone}`}
-                      className="text-blue-600 text-sm hover:underline"
-                    >
-                      {contact.phone}
-                    </a>
-                  ) : (
-                    <p className="text-gray-700 text-sm">Not Provided</p>
-                  )}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <Linkedin className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">LinkedIn URL</div>
-                </div>
-                <div>
-                  {contact.linkedinUrl ? (
-                    <a
-                      href={contact.linkedinUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 text-sm truncate hover:underline"
-                    >
-                      {contact.linkedinUrl}
-                    </a>
-                  ) : (
-                    <p className="text-gray-700 text-sm">Not Provided</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <BasicDetails
+            mode="TenantsUser"
+            // type={type}
+            usersId={contact?.ownerId}
+          // setBasicEditOpen={setBasicEditOpen}
+          />
         )}
 
         {activeTab === "Additional-Details" && (
-          <div className="mx-8 mt-7 grid grid-cols-4">
-            <div className="sm:col-span-4 md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3 sm:mt-[1rem] space-y-6">
-              <div className="flex justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <Briefcase className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">Current Role</div>
-                </div>
-                <div className="w-1/3 sm:w-1/2">
-                  <p className="text-gray-700 text-sm">
-                    {contact.currentRole || "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <Factory className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">Industry</div>
-                </div>
-                <div className="w-1/3 sm:w-1/2">
-                  <p className="text-gray-700 text-sm">
-                    {contact.industry || "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <Globe className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">Years Of Experience</div>
-                </div>
-                <div className="w-1/3 sm:w-1/2">
-                  <p className="text-gray-700 text-sm">
-                    {contact.yearsOfExperience || "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <MapPin className="text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">Location</div>
-                </div>
-                <div className="w-1/3 sm:w-1/2">
-                  <p className="text-gray-700 text-sm">
-                    {contact.location || "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <Info className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div className="font-medium text-sm">Introduction</div>
-                </div>
-                <div className="w-1/3 sm:w-1/2">
-                  <p className="text-gray-700 text-sm">
-                    {contact.introduction || "N/A"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AdvancedDetails
+            mode="TenantsUser"
+            // type={type}
+            usersId={contact?.ownerId}
+          // setBasicEditOpen={setBasicEditOpen}
+          />
         )}
 
         {activeTab === "Interview-Details" && (
-          <div className="mx-8 mt-7 gap-4">
-            <div className="col-span-1 space-y-6">
-              <div className="mb-5">
-                <div className="font-medium">Technology</div>
-                <p className="text-gray-700">{contact.technology}</p>
-              </div>
-
-              <div className="mb-5">
-                <div className="font-medium">Skill</div>
-                <p className="text-gray-700">{contact.skill}</p>
-              </div>
-
-              <div className="font-normal mb-5">
-                <p className="text-gray-700">
-                  Do you have any previous experience conducting interviews?
-                </p>
-                <div className="flex items-center mt-5 gap-24">
-                  <label className="mr-10">
-                    <input
-                      type="radio"
-                      name="previousExperience"
-                      value="yes"
-                      checked={contact.previousExperience === "yes"}
-                      className="mr-1"
-                    />
-                    Yes
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name="previousExperience"
-                      value="no"
-                      checked={contact.previousExperience === "no"}
-                      className="mr-1"
-                    />
-                    No
-                  </label>
-                </div>
-              </div>
-
-              {contact.previousExperience === "yes" && (
-                <div className="ml-4 flex items-center mb-6">
-                  <label
-                    htmlFor="experienceYears"
-                    className="block text-sm text-gray-900 mr-6 "
-                  >
-                    How many years of experience do you have in conducting
-                    interviews? <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    id="experienceYears"
-                    name="experienceYears"
-                    min="1"
-                    max="15"
-                    value={contact.experienceYears}
-                    className="border-b focus:border-black focus:outline-none w-60"
-                  />
-                </div>
-              )}
-
-              <div className="font-normal mb-5">
-                <p className="text-gray-700">
-                  Choose your level of expertise (comfort) in conducting
-                  interviews
-                </p>
-                <div className="flex items-center mt-5 gap-24">
-                  <label>
-                    <input
-                      type="radio"
-                      name="expertiseLevel"
-                      value="junior"
-                      checked={contact.expertiseLevel === "junior"}
-                    />
-                    Junior (0-3 years)
-                  </label>
-
-                  <label>
-                    <input
-                      type="radio"
-                      name="expertiseLevel"
-                      value="Mid-Level"
-                      className="mr-1"
-                      checked={contact.expertiseLevel === "Mid-Level"}
-                    />
-                    Mid-Level (2-5 years)
-                  </label>
-                  <label className="mr-10">
-                    <input
-                      type="radio"
-                      name="expertiseLevel"
-                      value="Senior"
-                      className="mr-1"
-                      checked={contact.expertiseLevel === "Senior"}
-                    />
-                    Senior (5-8 years)
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name="expertiseLevel"
-                      value="Lead"
-                      className="mr-1"
-                      checked={contact.expertiseLevel === "Lead"}
-                    />
-                    Lead (8 years)
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
+          <InterviewUserDetails
+            mode="TenantsUser"
+            // type={type}
+            usersId={contact?.ownerId}
+          // setBasicEditOpen={setBasicEditOpen}
+          />
         )}
 
         {activeTab === "Availability" && (
-          <div className="mx-8 mt-7 grid grid-cols-1 gap-28 mb-5">
-            <div className="text-sm flex">
-              <div>
-                <div className="text-xl">
-                  <div className="font-medium">
-                    Availability &nbsp;
-                    <span className="text-red-500 -ml-3">*</span>
-                  </div>
-                </div>
-                {Object.keys(times).map((day) => (
-                  <div key={day}>
-                    <div className="flex justify-center space-y-8">
-                      <span className="w-24 mt-7">{day}</span>
-                      <div>
-                        {times[day].map((timeSlot, index) => (
-                          <div
-                            key={index}
-                            className={`flex items-center -mt-2 justify-center ${
-                              index > 0 ? "mt-5" : ""
-                            }`}
-                          >
-                            {timeSlot.startTime === "unavailable" ? (
-                              <span
-                                className="p-2 bg-slate-200 text-center w-32 mr-0"
-                                style={{ width: "287px" }}
-                              >
-                                Unavailable
-                              </span>
-                            ) : (
-                              <>
-                                {/* start time */}
-                                <div className="w-28 mr-5">
-                                  <div className="border-2 border-black">
-                                    <div className="flex justify-center">
-                                      <div className="text-center">
-                                        <DatePicker
-                                          selected={timeSlot.startTime}
-                                          onChange={(date) => {
-                                            const newTimes = [...times[day]];
-                                            newTimes[index].startTime = date;
-                                            setTimes((prevTimes) => ({
-                                              ...prevTimes,
-                                              [day]: newTimes,
-                                            }));
-                                          }}
-                                          showTimeSelect
-                                          showTimeSelectOnly
-                                          timeIntervals={15}
-                                          dateFormat="h:mm aa"
-                                          placeholderText="Start Time"
-                                          className="p-2 w-full"
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                                {/* minus */}
-                                <div className="mr-5">
-                                  <span>
-                                    <Minus className="text-2xl" />
-                                  </span>
-                                </div>
-                                {/* end time */}
-                                <div className="max-w-sm w-28">
-                                  <div className="border-2 border-black">
-                                    <div className="flex justify-center">
-                                      <div className="text-center">
-                                        <DatePicker
-                                          selected={timeSlot.endTime}
-                                          onChange={(date) => {
-                                            const newTimes = [...times[day]];
-                                            newTimes[index].endTime = date;
-                                            setTimes((prevTimes) => ({
-                                              ...prevTimes,
-                                              [day]: newTimes,
-                                            }));
-                                          }}
-                                          showTimeSelect
-                                          showTimeSelectOnly
-                                          timeIntervals={15}
-                                          dateFormat="h:mm aa"
-                                          placeholderText="End Time"
-                                          className="w-full p-2"
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </>
-                            )}
-                            {/* cancel */}
-                            <div
-                              className="ml-12"
-                              style={{ width: "24px", height: "24px" }}
-                            >
-                              {timeSlot.startTime &&
-                              timeSlot.endTime &&
-                              timeSlot.startTime !== "unavailable" ? (
-                                <X
-                                  className="h-4 w-4 text-2xl cursor-pointer"
-                                  onClick={() =>
-                                    handleRemoveTimeSlot(day, index)
-                                  }
-                                />
-                              ) : (
-                                <div
-                                  style={{ width: "24px", height: "24px" }}
-                                ></div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {/* plus */}
-                      <div>
-                        <Plus
-                          className="h-4 w-4 cursor-pointer mx-5"
-                          onClick={() => handleAddTimeSlot(day)}
-                        />
-                      </div>
-                      {/* copy */}
-                      <div className="relative">
-                        <Copy
-                          className="h-4 w-4 text-2xl cursor-pointer"
-                          onClick={() => handleCopy(day)}
-                        />
-                        {showPopup && selectedDay === day && (
-                          <div
-                            className="absolute bg-white p-4 rounded-lg w-72 shadow-md border"
-                            style={{
-                              top: "100%",
-                              transform: "translate(-90%, 10px)",
-                              zIndex: 1000,
-                            }}
-                          >
-                            <div className="flex justify-between">
-                              <h2 className="text-lg font-semibold mb-2 mr-2">
-                                Duplicate Time Entries
-                              </h2>
-                              <X
-                                className="h-4 w-4 text-2xl cursor-pointer"
-                                onClick={() => setShowPopup(false)}
-                              />
-                            </div>
-                            <div>
-                              {Object.keys(times).map((dayOption) => (
-                                <label key={dayOption} className="block">
-                                  <input
-                                    type="checkbox"
-                                    value={dayOption}
-                                    checked={selectedDays.includes(dayOption)}
-                                    disabled={dayOption === selectedDay}
-                                    onChange={(e) => {
-                                      const value = e.target.value;
-                                      setSelectedDays((prev) =>
-                                        prev.includes(value)
-                                          ? prev.filter(
-                                              (item) => item !== value
-                                            )
-                                          : [...prev, value]
-                                      );
-                                    }}
-                                    className="mr-2"
-                                  />
-                                  {dayOption}
-                                </label>
-                              ))}
-                            </div>
-                            <button
-                              onClick={handlePaste}
-                              className="mt-4 bg-blue-500 text-white py-1 px-4 rounded"
-                            >
-                              Duplicate
-                            </button>
-                            <button
-                              onClick={() => setShowPopup(false)}
-                              className="mt-4 ml-2 bg-gray-500 text-white py-1 px-4 rounded"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className=" mt-10">
-              {/* time zone */}
-              <div className="flex mb-5 overflow-visible">
-                <div>
-                  <label
-                    htmlFor="TimeZone"
-                    className="block text-sm font-medium leading-6 text-gray-900 w-20"
-                  >
-                    Time Zone <span className="text-red-500">*</span>
-                  </label>
-                </div>
-                <div className="flex-grow w-full overflow-visible">
-                  <div className="w-full overflow-visible">
-                    <TimezoneSelect
-                      value={selectedTimezone}
-                      onChange={handleTimezoneChange}
-                      className="TimezonePicker ml-5"
-                    />
-                    {errors.TimeZone && (
-                      <p className="text-red-500 text-sm ml-5">
-                        {errors.TimeZone}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              {/* preferred interview */}
-              <div className="bg-gray-50 border border-gray-500 text-gray-900 text-sm p-4 rounded-lg">
-                <p className="font-medium">Preferred Interview Duration</p>
-                {errors.PreferredDuration && (
-                  <p className="text-red-500 text-sm">
-                    {errors.PreferredDuration}
-                  </p>
-                )}
-                <ul className="flex mt-3 text-xs font-medium">
-                  <li
-                    className={`option hover:bg-gray-500 cursor-pointer inline-block py-1 px-4 border rounded-lg mr-10 ${
-                      selectedOption === "30"
-                        ? "bg-gray-700 text-white"
-                        : "bg-gray-300"
-                    }`}
-                    onClick={() => handleOptionSelection("30")}
-                  >
-                    30 mins
-                  </li>
-                  <li
-                    className={`option hover:bg-gray-500 cursor-pointer inline-block py-1 px-4 border rounded-lg mr-10 ${
-                      selectedOption === "60"
-                        ? "bg-gray-700 text-white"
-                        : "bg-gray-300"
-                    }`}
-                    onClick={() => handleOptionSelection("60")}
-                  >
-                    1 Hour
-                  </li>
-                  <li
-                    className={`option hover:bg-gray-500 cursor-pointer inline-block py-1 px-4 border rounded-lg mr-10 ${
-                      selectedOption === "90"
-                        ? "bg-gray-700 text-white"
-                        : "bg-gray-300"
-                    }`}
-                    onClick={() => handleOptionSelection("90")}
-                  >
-                    1:30 mins
-                  </li>
-                  <li
-                    className={`option hover:bg-gray-500 cursor-pointer inline-block py-1 px-4 border rounded-lg mr-10 ${
-                      selectedOption === "120"
-                        ? "bg-gray-700 text-white"
-                        : "bg-gray-300"
-                    }`}
-                    onClick={() => handleOptionSelection("120")}
-                  >
-                    2 Hours
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <AvailabilityUser
+            mode="TenantsUser"
+            // type={type}
+            usersId={contact?.ownerId}
+          // setBasicEditOpen={setBasicEditOpen}
+          />
         )}
       </div>
     </div>

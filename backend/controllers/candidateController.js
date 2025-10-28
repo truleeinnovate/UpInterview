@@ -20,7 +20,7 @@ const addCandidatePostCall = async (req, res) => {
 
   let newCandidate = null;
 
-  console.log("req.body", req.body);
+  // console.log("req.body", req.body);
 
   try {
 

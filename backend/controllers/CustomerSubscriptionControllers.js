@@ -12,9 +12,9 @@ const { CreateOrGetVideoCallingSettings } = require('./VideoCallingSettingContro
 // Function to handle subscription creation
 const createSubscriptionControllers = async (req, res) => {
 
-  //   // Set up logging context
-  // res.locals.loggedByController = true;
-  // res.locals.processName = "Create Subscription";
+    // Set up logging context
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Subscription";
 
   try {
     const { planDetails, userDetails, status, totalAmount } = req.body;
@@ -49,8 +49,8 @@ const createSubscriptionControllers = async (req, res) => {
     if (!wallet) {
         // ✅ Create a new Wallet only if it doesn't exist
         wallet = new Wallet({
-            tenantId: userDetails.tenantId,
-            ownerId: userDetails.ownerId,
+            tenantId: userDetails?.tenantId,
+            ownerId: userDetails?.ownerId,
             balance: 0, // Initial balance
             transactions: [] // Empty transactions
         });
@@ -92,26 +92,26 @@ const createSubscriptionControllers = async (req, res) => {
         // Update subscription details
       const subscriptionChanges = [];
       
-      // // Track changes for logging
-      // const trackChange = (field, oldValue, newValue) => {
-      //   if (oldValue !== newValue) {
-      //     subscriptionChanges.push({
-      //       fieldName: field,
-      //       oldValue,
-      //       newValue
-      //     });
-      //   }
-      // };
+      // Track changes for logging
+      const trackChange = (field, oldValue, newValue) => {
+        if (oldValue !== newValue) {
+          subscriptionChanges.push({
+            fieldName: field,
+            oldValue,
+            newValue
+          });
+        }
+      };
 
-      //  trackChange('subscriptionPlanId', existingSubscription.subscriptionPlanId, subscriptionPlanId);
-      // trackChange('selectedBillingCycle', existingSubscription.selectedBillingCycle, userDetails.membershipType);
-      // trackChange('price', existingSubscription.price, pricing);
-      // trackChange('discount', existingSubscription.discount, discount);
-      // trackChange('startDate', existingSubscription.startDate, startDate);
-      // trackChange('totalAmount', existingSubscription.totalAmount, calculatedTotalAmount);
-      // trackChange('endDate', existingSubscription.endDate, endDate);
-      // trackChange('nextBillingDate', existingSubscription.nextBillingDate, nextBillingDate);
-      // trackChange('status', existingSubscription.status, status);
+       trackChange('subscriptionPlanId', existingSubscription.subscriptionPlanId, subscriptionPlanId);
+      trackChange('selectedBillingCycle', existingSubscription.selectedBillingCycle, userDetails.membershipType);
+      trackChange('price', existingSubscription.price, pricing);
+      trackChange('discount', existingSubscription.discount, discount);
+      trackChange('startDate', existingSubscription.startDate, startDate);
+      trackChange('totalAmount', existingSubscription.totalAmount, calculatedTotalAmount);
+      trackChange('endDate', existingSubscription.endDate, endDate);
+      trackChange('nextBillingDate', existingSubscription.nextBillingDate, nextBillingDate);
+      trackChange('status', existingSubscription.status, status);
       
       // Update subscription details
       existingSubscription.subscriptionPlanId = subscriptionPlanId;
@@ -150,19 +150,19 @@ const createSubscriptionControllers = async (req, res) => {
       }
 
       // Add log data for subscription update
-      // res.locals.logData = {
-      //   tenantId: userDetails?.tenantId || "",
-      //   ownerId: userDetails?.ownerId || "",
-      //   processName: "Update Subscription",
-      //   requestBody: req.body,
-      //   status: "success",
-      //   message: "Subscription updated successfully",
-      //   responseBody: {
-      //     subscription: existingSubscription,
-      //     invoiceId: existingInvoice?._id
-      //   },
-      //   changes: subscriptionChanges
-      // };
+      res.locals.logData = {
+        tenantId: userDetails?.tenantId || "",
+        ownerId: userDetails?.ownerId || "",
+        processName: "Update Subscription",
+        requestBody: req.body,
+        status: "success",
+        message: "Subscription updated successfully",
+        responseBody: {
+          subscription: existingSubscription,
+          invoiceId: existingInvoice?._id
+        },
+        changes: subscriptionChanges
+      };
 
       return res.status(200).json({
         message: 'Subscription and invoice successfully updated.',
@@ -286,22 +286,22 @@ const createSubscriptionControllers = async (req, res) => {
 
 
        // Add log data for new subscription creation
-      // res.locals.logData = {
-      //   tenantId: userDetails?.tenantId || "",
-      //   ownerId: userDetails?.ownerId || "",
-      //   processName: "Create Subscription",
-      //   requestBody: req.body,
-      //   status: "success",
-      //   message: `Subscription successfully created with status: ${status}`,
-      //   responseBody: {
-      //     subscription,
-      //     invoiceId: invoice._id
-      //   },
-      //   responseBody: {
-      //     subscription,
-      //     invoiceId: invoice._id
-      //   },
-      // };
+      res.locals.logData = {
+        tenantId: userDetails?.tenantId || "",
+        ownerId: userDetails?.ownerId || "",
+        processName: "Create Subscription",
+        requestBody: req.body,
+        status: "success",
+        message: `Subscription successfully created with status: ${status}`,
+        responseBody: {
+          subscription,
+          invoiceId: invoice._id
+        },
+        responseBody: {
+          subscription,
+          invoiceId: invoice._id
+        },
+      };
 
       return res.status(200).json({
         message: `Subscription successfully created with status: ${status}`,
