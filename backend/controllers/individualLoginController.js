@@ -22,6 +22,8 @@ exports.individualLogin = async (req, res) => {
       // REMOVED: currentStep from here to avoid const reassignment conflict
     } = req.body;
 
+    console.log('contactData:-', contactData);
+
     // ADDED: Declare currentStep explicitly from req.body (reliable, with fallback)
     const currentStep = req.body.currentStep || 0;
     console.log('[individualLogin] Using explicit currentStep:', currentStep); // ADDED: Debug log
@@ -75,26 +77,32 @@ exports.individualLogin = async (req, res) => {
     }
     // ---------------- OUTSOURCE INTERVIEWER ----------------
     if (currentStep === 3 && userData.isFreelancer) {
-      await OutsourceInterviewer.updateOne(
-        { ownerId, contactId: savedContact._id },
-        {
-          $setOnInsert: {
-            requestedRate: { hourlyRate: contactData.hourlyRate },
-            feedback: [{
-              givenBy: ownerId,
-              rating: 4.5,
-              comments: "",
-              createdAt: new Date()
-            }],
-            status: 'underReview',
-            createdBy: ownerId,
-            currency: 'USD'
-          }
+      // Create a new OutsourceInterviewer document
+      const newInterviewer = new OutsourceInterviewer({
+        ownerId,
+        contactId: savedContact._id,
+        requestedRate: savedContact.rates || contactData.rates || { 
+          junior: { usd: 0, inr: 0, isVisible: true },
+          mid: { usd: 0, inr: 0, isVisible: true },
+          senior: { usd: 0, inr: 0, isVisible: true }
         },
-        { upsert: true }
-      );
-      console.log('[individualLogin] OutsourceInterviewer created/updated for freelancer on final step'); // ADDED: Confirm log
+        feedback: [{
+          givenBy: ownerId,
+          rating: 4.5,
+          comments: "",
+          createdAt: new Date()
+        }],
+        status: 'underReview',
+        createdBy: ownerId,
+        currency: 'INR'
+      });
+
+      // Save the new document
+      await newInterviewer.save();
+      console.log('newInterviewer', newInterviewer);
+      console.log('[individualLogin] New OutsourceInterviewer created for freelancer on final step');
     }
+
     // ---------------- TOKEN GENERATION ----------------
     const payload = {
       userId: savedUser._id.toString(),

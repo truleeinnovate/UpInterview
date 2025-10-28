@@ -18,10 +18,24 @@ const OutsourceInterviewerSchema = new mongoose.Schema({
     },
 
     requestedRate: {
-        hourlyRate: { type: Number }
+        junior: {
+            usd: { type: Number, default: 0 },
+            inr: { type: Number, default: 0 },
+            isVisible: { type: Boolean, default: false }
+        },
+        mid: {
+            usd: { type: Number, default: 0 },
+            inr: { type: Number, default: 0 },
+            isVisible: { type: Boolean, default: false }
+        },
+        senior: {
+            usd: { type: Number, default: 0 },
+            inr: { type: Number, default: 0 },
+            isVisible: { type: Boolean, default: false }
+        }
     },
-    finalRate: { type: Number }, // Final agreed rate per hour
-    currency: { type: String, default: 'USD' }, // Currency code (e.g., USD, EUR)
+    finalRate: { type: Number, default: 0 }, // Final agreed rate per hour
+    currency: { type: String, default: 'INR' }, // Currency code (e.g., USD, EUR)
 
     feedback: [{
         givenBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

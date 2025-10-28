@@ -429,7 +429,6 @@ const MultiStepForm = () => {
 
     const fetchRateCardsMemoized = useCallback(async (techName) => {
         if (!techName) return;
-        console.log('1')
 
         try {
             const token = localStorage.getItem('token');
@@ -508,7 +507,6 @@ const MultiStepForm = () => {
     const handleNextStep = async () => {
         // Prevent multiple submissions
         if (isSubmittingRef.current) {
-            console.log('Form submission already in progress');
             return;
         }
 
@@ -594,105 +592,72 @@ const MultiStepForm = () => {
                 } else if (interviewDetailsData.previousInterviewExperience === "yes" && !interviewDetailsData.previousInterviewExperienceYears) {
                     currentErrors.previousInterviewExperienceYears = "Please specify years of experience";
                 }
+                
+                // Validate interview formats
+                if (!interviewDetailsData.interviewFormatWeOffer?.length) {
+                    currentErrors.interviewFormatWeOffer = "Interview format is required";
+                }
+                
+                // Validate mock discount if mock interview is selected
+                const isMockSelected = interviewDetailsData.interviewFormatWeOffer?.includes('mock');
+                if (isMockSelected && (!interviewDetailsData.mock_interview_discount || isNaN(interviewDetailsData.mock_interview_discount) || 
+                    interviewDetailsData.mock_interview_discount < 0 || interviewDetailsData.mock_interview_discount > 100)) {
+                    currentErrors.mock_interview_discount = "Mock interview discount percentage is required";
+                }
 
-                // Add range validation for rates
+                // Check for existing rate errors that were set by handleRateBlur
                 const { rates = {} } = interviewDetailsData;
 
-                // Validate junior level rates if visible
+                // Check junior level rates if visible
                 if (showJuniorLevel) {
-                    const juniorRange = getRateRanges('Junior');
                     if (!rates.junior?.usd) {
                         currentErrors.rates = currentErrors.rates || {};
                         currentErrors.rates.junior = currentErrors.rates.junior || {};
                         currentErrors.rates.junior.usd = "USD rate is required";
-                    } else if (juniorRange?.usd) {
-                        const usdValue = parseFloat(rates.junior.usd);
-                        if (usdValue < juniorRange.usd.min || usdValue > juniorRange.usd.max) {
-                            currentErrors.rates = currentErrors.rates || {};
-                            currentErrors.rates.junior = currentErrors.rates.junior || {};
-                            currentErrors.rates.junior.usd = `USD rate must be between ${juniorRange.usd.min} and ${juniorRange.usd.max}`;
-                        }
                     }
-
                     if (!rates.junior?.inr) {
                         currentErrors.rates = currentErrors.rates || {};
                         currentErrors.rates.junior = currentErrors.rates.junior || {};
                         currentErrors.rates.junior.inr = "INR rate is required";
-                    } else {
-                        const inrValue = parseFloat(rates.junior.inr);
-                        if (juniorRange?.inr) {
-                            if (inrValue < juniorRange.inr.min || inrValue > juniorRange.inr.max) {
-                                currentErrors.rates = currentErrors.rates || {};
-                                currentErrors.rates.junior = currentErrors.rates.junior || {};
-                                currentErrors.rates.junior.inr = `INR rate must be between ${juniorRange.inr.min} and ${juniorRange.inr.max}`;
-                            }
-                        }
                     }
                 }
 
-                // Validate mid level rates if visible
+                // Check mid level rates if visible
                 if (showMidLevel) {
-                    const midRange = getRateRanges('Mid-Level');
                     if (!rates.mid?.usd) {
                         currentErrors.rates = currentErrors.rates || {};
                         currentErrors.rates.mid = currentErrors.rates.mid || {};
                         currentErrors.rates.mid.usd = "USD rate is required";
-                    } else if (midRange?.usd) {
-                        const usdValue = parseFloat(rates.mid.usd);
-                        if (usdValue < midRange.usd.min || usdValue > midRange.usd.max) {
-                            currentErrors.rates = currentErrors.rates || {};
-                            currentErrors.rates.mid = currentErrors.rates.mid || {};
-                            currentErrors.rates.mid.usd = `USD rate must be between ${midRange.usd.min} and ${midRange.usd.max}`;
-                        }
                     }
-
                     if (!rates.mid?.inr) {
                         currentErrors.rates = currentErrors.rates || {};
                         currentErrors.rates.mid = currentErrors.rates.mid || {};
                         currentErrors.rates.mid.inr = "INR rate is required";
-                    } else {
-                        const inrValue = parseFloat(rates.mid.inr);
-                        if (midRange?.inr) {
-                            if (inrValue < midRange.inr.min || inrValue > midRange.inr.max) {
-                                currentErrors.rates = currentErrors.rates || {};
-                                currentErrors.rates.mid = currentErrors.rates.mid || {};
-                                currentErrors.rates.mid.inr = `INR rate must be between ${midRange.inr.min} and ${midRange.inr.max}`;
-                            }
-                        }
                     }
                 }
 
-                // Validate senior level rates if visible  
+                // Check senior level rates if visible  
                 if (showSeniorLevel) {
-                    const seniorRange = getRateRanges('Senior');
                     if (!rates.senior?.usd) {
                         currentErrors.rates = currentErrors.rates || {};
                         currentErrors.rates.senior = currentErrors.rates.senior || {};
                         currentErrors.rates.senior.usd = "USD rate is required";
-                    } else if (seniorRange?.usd) {
-                        const usdValue = parseFloat(rates.senior.usd);
-                        if (usdValue < seniorRange.usd.min || usdValue > seniorRange.usd.max) {
-                            currentErrors.rates = currentErrors.rates || {};
-                            currentErrors.rates.senior = currentErrors.rates.senior || {};
-                            currentErrors.rates.senior.usd = `USD rate must be between ${seniorRange.usd.min} and ${seniorRange.usd.max}`;
-                        }
                     }
-
                     if (!rates.senior?.inr) {
                         currentErrors.rates = currentErrors.rates || {};
                         currentErrors.rates.senior = currentErrors.rates.senior || {};
                         currentErrors.rates.senior.inr = "INR rate is required";
-                    } else {
-                        const inrValue = parseFloat(rates.senior.inr);
-                        if (seniorRange?.inr) {
-                            if (inrValue < seniorRange.inr.min || inrValue > seniorRange.inr.max) {
-                                currentErrors.rates = currentErrors.rates || {};
-                                currentErrors.rates.senior = currentErrors.rates.senior || {};
-                                currentErrors.rates.senior.inr = `INR rate must be between ${seniorRange.inr.min} and ${seniorRange.inr.max}`;
-                            }
-                        }
                     }
                 }
+
+                // Check if there are any existing rate validation errors from handleRateBlur
+                if (errors.rates) {
+                    currentErrors.rates = {
+                        ...currentErrors.rates,
+                        ...errors.rates
+                    };
+                }
+
                 if (!interviewDetailsData.professionalTitle?.trim()) {
                     currentErrors.professionalTitle = "Professional title is required";
                 } else if (interviewDetailsData.professionalTitle.length < 50) {
@@ -708,6 +673,7 @@ const MultiStepForm = () => {
                     currentErrors.bio =
                         "Professional bio must be at least 150 characters";
                 }
+
                 // Check if there are any errors in the nested rates object
                 const hasNestedErrors = currentErrors.rates &&
                     Object.values(currentErrors.rates).some(rate =>
@@ -743,63 +709,105 @@ const MultiStepForm = () => {
             } else {
                 isValid = true;
             }
-            // Enhanced debug logging
-            console.log('Current Errors:', JSON.stringify(currentErrors, null, 2));
 
-            // Check for any errors, including nested ones
-            const hasAnyErrors = (errors, path = '') => {
-                if (!errors) {
-                    console.log(`No errors at path: ${path}`);
-                    return false;
-                }
-                if (typeof errors === 'string') {
-                    console.log(`Found error at ${path}:`, errors);
-                    return true;
-                }
+            // Add this function to check if there are any rate errors for the current step
+            const hasRateErrors = (errors, currentStep) => {
+                // Only check rate errors if we're on step 2 (interview details)
+                if (currentStep !== 2) return false;
 
-                return Object.entries(errors).some(([key, value]) => {
-                    const currentPath = path ? `${path}.${key}` : key;
-                    if (value && (typeof value === 'string' || hasAnyErrors(value, currentPath))) {
-                        console.log(`Error found in ${currentPath}:`, value);
-                        return true;
-                    }
-                    return false;
+                if (!errors.rates) return false;
+
+                return Object.values(errors.rates).some(levelErrors => {
+                    if (!levelErrors || typeof levelErrors !== 'object') return false;
+                    return Object.values(levelErrors).some(Boolean);
                 });
             };
 
-            const hasErrors = hasAnyErrors(currentErrors) || !isValid;
-            console.log('Has errors?', hasErrors, 'isValid:', isValid, 'Errors:', JSON.stringify(currentErrors, null, 2));
+            // Enhanced debug logging
+            console.log('Current Errors:', JSON.stringify(currentErrors, null, 2));
+            console.log('Existing Errors:', JSON.stringify(errors, null, 2));
 
-            if (hasErrors) {
-                console.log("Validation failed. Full error object:", JSON.stringify(currentErrors, null, 2));
+            // Check for any errors, including nested ones and existing rate errors
+            const hasAnyErrors = (errorObj) => {
+                if (!errorObj) return false;
 
-                // Show specific error message for rate validation if it exists
-                const rateError = findNestedError(currentErrors.rates || {});
-                if (rateError) {
-                    console.log('Rate validation error:', rateError);
-                    notify.error(rateError);
-                } else {
-                    // Find and show the first error message if available
-                    const firstError = findNestedError(currentErrors);
-                    const errorToShow = firstError || "Please fill in all required fields correctly before proceeding.";
-                    console.log('Showing error to user:', errorToShow);
-                    notify.error(errorToShow);
+                // If it's an object, check its values
+                if (typeof errorObj === 'object' && errorObj !== null) {
+                    // Special handling for rates object
+                    if ('rates' in errorObj) {
+                        // Check if any rate field has an actual error message
+                        const hasRateErrors = Object.values(errorObj.rates || {}).some(level =>
+                            level &&
+                            typeof level === 'object' &&
+                            Object.values(level).some(Boolean)
+                        );
+                        if (hasRateErrors) return true;
+                    }
+
+                    // Check all other fields (skip empty rate objects)
+                    return Object.entries(errorObj).some(([key, value]) => {
+                        // Skip empty rate objects
+                        if (key === 'rates' && value &&
+                            Object.values(value).every(level =>
+                                !level ||
+                                (typeof level === 'object' &&
+                                    Object.values(level).every(v => v === ''))
+                            )) {
+                            return false;
+                        }
+
+                        if (value && typeof value === 'object') {
+                            return hasAnyErrors(value);
+                        }
+                        return Boolean(value);
+                    });
                 }
 
-                // Reset submission state
-                isSubmittingRef.current = false;
-                setIsSubmitting(false);
-                console.log('Form submission prevented due to validation errors');
-                return false;
+                return Boolean(errorObj);
+            };
+
+            // In handleNextStep, replace the validation logic with:
+            const hasCurrentErrors = hasAnyErrors(currentErrors);
+            const hasExistingRateErrors = hasRateErrors(errors, currentStep);
+            const hasErrors = hasCurrentErrors || hasExistingRateErrors || !isValid;
+
+            console.log('Validation state:', {
+                hasCurrentErrors,
+                hasExistingRateErrors,
+                isValid,
+                currentErrors,
+                existingErrors: errors
+            });
+
+            if (hasErrors) {
+                // Only show error notification if there are actual error messages
+                const hasActualErrors = hasCurrentErrors || hasExistingRateErrors;
+
+                if (hasActualErrors) {
+                    console.log("Validation failed with errors:", JSON.stringify({
+                        currentErrors,
+                        existingErrors: errors
+                    }, null, 2));
+                    notify.error("Please complete all required fields before proceeding.");
+                }
+
+                // Update errors state but don't prevent navigation if it's just empty values
+                if (hasActualErrors) {
+                    setErrors(prev => ({
+                        ...prev,
+                        ...currentErrors,
+                        rates: {
+                            ...prev.rates,
+                            ...(currentErrors.rates || {})
+                        }
+                    }));
+                    return false;
+                }
             }
 
+            // If we get here, there are no blocking errors
             console.log('All validations passed, proceeding to next step');
             // return true;
-            // Only proceed if there are no validation errors
-            if (hasErrors) {
-                console.log('Validation errors found, not proceeding to next step');
-                return;
-            }
 
             // Calculate the updated completion status
             const currentStepKey = [
@@ -1162,8 +1170,6 @@ const MultiStepForm = () => {
             setCurrentStep((prevStep) => (prevStep - 1 >= 0 ? prevStep - 1 : 0));
         }
     };
-    // const authToken = Cookies.get("authToken");
-    // console.log("authToken--- to check ", authToken);
     const [resumeName, setResumeName] = useState("");
     const [coverLetterName, setCoverLetterName] = useState("");
     // Add this: Comprehensive save effect
