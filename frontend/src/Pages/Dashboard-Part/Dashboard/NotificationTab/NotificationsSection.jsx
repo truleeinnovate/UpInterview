@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - fixed z-index issue by wrapping the popup in the container div
 // v1.0.1 - Ashok - Disabled outer scrollbars of popups for better user experience
 // v1.0.2 - Ashok - Improved responsiveness
+// v1.0.3 - Ashok - Fixed "From" and "To" fields showing "Not Provided" when data is available
 
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -15,15 +16,17 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.1 ------------------------------------------------------------------->
 import { formatDateTime } from "../../../../utils/dateFormatter";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { useNotifications } from "../../../../apiHooks/notifications/useNotifications";
 
 const NotificationsSection = () => {
   const [activeTab, setActiveTab] = useState("email");
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
-  const [notificationsData, setNotificationsData] = useState({
-    email: [],
-    whatsapp: [],
-  });
+  // const [notificationsData, setNotificationsData] = useState({
+  //   email: [],
+  //   whatsapp: [],
+  // });
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -34,53 +37,64 @@ const NotificationsSection = () => {
   // v1.0.1 <------------------------------------------------------------
   useScrollLock(showAllNotifications || selectedNotification);
   // v1.0.1 ------------------------------------------------------------>
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/notifications/all?organizationId=${organization}&tenantId=${tenantId}&ownerId=${ownerId}`
-        );
+  // useEffect(() => {
+  //   const fetchNotifications = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/notifications/all?organizationId=${organization}&tenantId=${tenantId}&ownerId=${ownerId}`
+  //       );
 
-        // Process the flat array into categorized structure
-        const categorizedNotifications = {
-          email: [],
-          whatsapp: [],
-        };
+  //       // Process the flat array into categorized structure
+  //       const categorizedNotifications = {
+  //         email: [],
+  //         whatsapp: [],
+  //       };
 
-        // Map API response to the expected format for the UI
-        response.data.forEach((notification) => {
-          const processedNotification = {
-            id: notification._id,
-            _id: notification._id,
-            type: notification.notificationType.toLowerCase(),
-            subject: notification.title,
-            message: notification.body,
-            status: notification.status,
-            timestamp: formatDateTime(notification.createdAt),
-            priority: "medium", // Default priority if not provided
-            recipients: notification.toAddress || [],
-            cc: notification.cc || [],
-            attachments: [],
-            object: notification.object || { objectName: "", objectId: "" },
-          };
+  //       // Map API response to the expected format for the UI
+  //       response.data.forEach((notification) => {
+  //         const processedNotification = {
+  //           id: notification._id,
+  //           _id: notification._id,
+  //           type: notification.notificationType.toLowerCase(),
+  //           subject: notification.title,
+  //           message: notification.body,
+  //           status: notification.status,
+  //           timestamp: formatDateTime(notification.createdAt),
+  //           priority: "medium", // Default priority if not provided
+  //           recipients: notification.toAddress || [],
+  //           cc: notification.cc || [],
+  //           attachments: [],
+  //           object: notification.object || { objectName: "", objectId: "" },
+  //         };
 
-          if (notification.notificationType.toLowerCase() === "email") {
-            categorizedNotifications.email.push(processedNotification);
-          } else if (
-            notification.notificationType.toLowerCase() === "whatsapp"
-          ) {
-            categorizedNotifications.whatsapp.push(processedNotification);
-          }
-        });
+  //         if (notification.notificationType.toLowerCase() === "email") {
+  //           categorizedNotifications.email.push(processedNotification);
+  //         } else if (
+  //           notification.notificationType.toLowerCase() === "whatsapp"
+  //         ) {
+  //           categorizedNotifications.whatsapp.push(processedNotification);
+  //         }
+  //       });
 
-        setNotificationsData(categorizedNotifications);
-        // console.log('Processed notifications:', categorizedNotifications);
-      } catch (err) {
-        console.error("Error fetching notifications:", err);
-      }
-    };
-    fetchNotifications();
-  }, [organization, tenantId, ownerId]);
+  //       setNotificationsData(categorizedNotifications);
+  //       // console.log('Processed notifications:', categorizedNotifications);
+  //     } catch (err) {
+  //       console.error("Error fetching notifications:", err);
+  //     }
+  //   };
+  //   fetchNotifications();
+  // }, [organization, tenantId, ownerId]);
+
+  const { data, isLoading, isError } = useNotifications({
+    organization,
+    tenantId,
+    ownerId,
+  });
+
+  if (isLoading) return <div>Loading notifications...</div>;
+  if (isError) return <div>Error loading notifications</div>;
+
+  const currentNotifications = data?.[activeTab] || [];
 
   return (
     <>
@@ -131,9 +145,8 @@ const NotificationsSection = () => {
         </div>
 
         <div className="space-y-4">
-          {notificationsData[activeTab] &&
-          notificationsData[activeTab].length > 0 ? (
-            notificationsData[activeTab]
+          {currentNotifications && currentNotifications.length > 0 ? (
+            currentNotifications
               .slice(0, 3) // Limit to 3 notifications in the main view
               .map((notification) => (
                 <motion.div
@@ -144,7 +157,7 @@ const NotificationsSection = () => {
                 >
                   <div className="flex flex-row items-start gap-4">
                     <div className="flex-1 min-w-0 space-y-2">
-                      <div className="flex items-start justify-between">
+                      <div className="flex sm:flex-col items-start justify-between">
                         <div className="flex items-center space-x-2">
                           {notification.type === "email" ? (
                             <Mail
@@ -163,24 +176,16 @@ const NotificationsSection = () => {
                               : "WhatsApp Message"}
                           </span>
                         </div>
-                        <span
-                          className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                            notification.priority === "high"
-                              ? "bg-red-100 text-red-600"
-                              : "bg-yellow-100 text-yellow-600"
-                          }`}
-                        >
-                          {notification.priority?.charAt(0).toUpperCase() +
-                            notification.priority?.slice(1) || "Normal"}{" "}
-                          <span className="sm:hidden inline">Priority</span>
+                        <span className="text-xs text-gray-500 sm:mt-2">
+                          {formatDateTime(notification?.timestamp)}
                         </span>
                       </div>
-                      <p
+                      {/* <p
                         className="text-sm text-gray-600 line-clamp-2"
                         dangerouslySetInnerHTML={{
                           __html: notification.message,
                         }}
-                      ></p>
+                      ></p> */}
 
                       {/* Attachments Preview */}
                       {notification.attachments &&
@@ -199,12 +204,18 @@ const NotificationsSection = () => {
                           <>
                             <div className="flex items-start space-x-2">
                               <span className="font-medium flex-shrink-0">
+                                From:
+                              </span>
+                              <span className="truncate">
+                                {notification?.fromAddress || "Not Provided"}
+                              </span>
+                            </div>
+                            <div className="flex items-start space-x-2">
+                              <span className="font-medium flex-shrink-0">
                                 To:
                               </span>
                               <span className="truncate">
-                                {Array.isArray(notification.recipients)
-                                  ? notification.recipients.join(", ")
-                                  : notification.recipients}
+                                {notification?.toAddress || "Not Provided"}
                               </span>
                             </div>
                             {notification.cc && notification.cc.length > 0 && (
@@ -226,9 +237,21 @@ const NotificationsSection = () => {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end justify-between space-y-2">
+                  </div>
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center gap-3">
                       <span
-                        className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                        className={`px-2 py-1 rounded-xl text-xs font-medium ${
+                          notification.priority === "high"
+                            ? "bg-red-100 text-red-600"
+                            : "bg-yellow-100 text-yellow-600"
+                        }`}
+                      >
+                        {capitalizeFirstLetter(notification?.priority)}
+                        <span className="sm:hidden inline ml-1">Priority</span>
+                      </span>
+                      <span
+                        className={`px-2 py-1 rounded-xl text-xs font-medium ${
                           notification.status === "Success"
                             ? "bg-green-100 text-green-600"
                             : notification.status === "Failed"
@@ -236,21 +259,16 @@ const NotificationsSection = () => {
                             : "bg-blue-100 text-blue-600"
                         }`}
                       >
-                        {notification.status}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(notification.timestamp).toLocaleString(
-                          "en-CA"
-                        )}
+                        {capitalizeFirstLetter(notification?.status)}
                       </span>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-end">
                     <button
                       onClick={() => setSelectedNotification(notification)}
-                      className="flex items-center border border-gray-200 rounded-lg bg-gray-50 p-2 space-x-2 text-sm text-gray-600 hover:text-custom-blue transition-colors duration-300"
+                      className="flex items-center border border-gray-200 rounded-lg bg-gray-50 p-2 text-gray-600 hover:text-custom-blue transition-colors duration-300"
                     >
-                      <span className="text-sm font-medium">View Details</span>
+                      <span className="text-sm sm:text-xs font-medium">
+                        View Details
+                      </span>
                     </button>
                   </div>
                 </motion.div>
@@ -295,7 +313,7 @@ const NotificationsSection = () => {
       <AllNotificationsModal
         isOpen={showAllNotifications}
         onClose={() => setShowAllNotifications(false)}
-        notifications={notificationsData}
+        notifications={data}
       />
 
       <div>

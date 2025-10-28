@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Disabled outer scrollbar when popup is open for better user experience
 // v1.0.1 - Ashok - Improved responsiveness and added common to popup
 // v1.0.2 - Ashraf - Temporarily disabled WhatsApp tab and related logic
+// v1.0.3 - Ashok - fixed style issues and UI alignments
 
 /* eslint-disable no-case-declarations */
 /* eslint-disable react/prop-types */
@@ -20,6 +21,8 @@ import { format, isValid } from "date-fns";
 import NotificationDetailsModal from "./NotificationDetailsModal";
 import classNames from "classnames";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { formatDateTime } from "../../../../utils/dateFormatter";
 
 const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -212,7 +215,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center space-x-2 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50"
@@ -238,12 +241,15 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
               >
                 <RefreshCw size={20} />
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
 
         {/* Notifications List */}
-        <div className="overflow-y-auto" style={{ height: "calc(100vh - 230px)" }}>
+        <div
+          className="overflow-y-auto"
+          style={{ height: "calc(100vh - 230px)" }}
+        >
           <div className="sm:px-0 p-6 space-y-4">
             {filterNotifications().length > 0 ? (
               filterNotifications().map((notification) => (
@@ -253,64 +259,84 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                   animate={{ opacity: 1, y: 0 }}
                   className="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-all duration-300"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col items-start justify-between">
                     <div className="flex-1 min-w-0 space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Mail size={16} className="text-custom-blue" />
-                        <span className="text-sm font-medium text-gray-900 truncate">
-                          {notification.subject || "No Subject"}
-                        </span>
-                        <span
-                          className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                            notification.status.toLowerCase() === "success"
-                              ? "bg-green-100 text-green-600"
-                              : notification.status.toLowerCase() === "failed"
-                              ? "bg-red-100 text-red-600"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {notification.status}
-                        </span>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <Mail size={16} className="text-custom-blue" />
+                          <span className="text-sm font-medium text-gray-900 truncate">
+                            {capitalizeFirstLetter(notification?.subject) ||
+                              "No Subject"}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-3 mt-2">
+                          <span className="text-xs text-gray-500">
+                            {formatDateTime(notification?.timestamp)}
+                          </span>
+                        </div>
                       </div>
-                      <p
+                      {/* <p
                         className="sm:text-xs text-sm text-gray-600 line-clamp-2"
                         dangerouslySetInnerHTML={{
                           __html: notification.message,
                         }}
-                      ></p>
+                      ></p> */}
                       <div className="flex flex-col space-y-1 text-xs text-gray-500">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">From:</span>
+                          <span>
+                            {notification?.fromAddress || "Not Provided"}
+                          </span>
+                        </div>
                         <div className="flex items-center space-x-2">
                           <span className="font-medium">To:</span>
                           <span>
-                            {Array.isArray(notification.recipients)
-                              ? notification.recipients.join(", ")
-                              : notification.recipients}
+                            {notification?.toAddress || "Not Provided"}
                           </span>
                         </div>
                         {notification.cc && notification.cc.length > 0 && (
                           <div className="flex items-center space-x-2">
                             <span className="font-medium">CC:</span>
-                            <span>{notification.cc.join(", ")}</span>
+                            <span>{notification?.cc.join(", ")}</span>
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="text-xs text-gray-500">
-                          {formatDate(notification.timestamp)}
-                        </span>
-                        {notification.priority === "high" && (
-                          <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-600 rounded-lg">
-                            High Priority
-                          </span>
-                        )}
-                      </div>
                     </div>
-                    <div className="flex items-start justify-end sm:ml-4">
+                    <div className="flex items-center justify-between w-full mt-4">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`px-2 py-1 rounded-xl text-xs font-medium ${
+                            notification.priority === "high"
+                              ? "bg-red-100 text-red-600"
+                              : "bg-yellow-100 text-yellow-600"
+                          }`}
+                        >
+                          {capitalizeFirstLetter(notification?.priority) ||
+                            "Normal"}
+                          <span className="sm:hidden inline ml-1">
+                            Priority
+                          </span>
+                        </span>
+                        <span
+                          className={`px-2 py-1 rounded-xl text-xs font-medium ${
+                            notification.status === "Success"
+                              ? "bg-green-100 text-green-600"
+                              : notification.status === "Failed"
+                              ? "bg-red-100 text-red-600"
+                              : "bg-blue-100 text-blue-600"
+                          }`}
+                        >
+                          {capitalizeFirstLetter(notification?.status) ||
+                            "Unknown"}
+                        </span>
+                      </div>
                       <button
                         onClick={() => setSelectedNotification(notification)}
-                        className="flex items-center justify-center sm:border-0 border border-gray-200 font-medium rounded-lg md:ml-4 sm:text-custom-blue bg-gray-50 sm:py-1.5 p-2 text-sm text-gray-600 hover:text-custom-blue transition-colors duration-300"
+                        className="flex items-center justify-center sm:border-0 border border-gray-200 font-medium rounded-lg md:ml-4 sm:text-custom-blue bg-gray-50 sm:py-1.5 p-2 text-gray-600 hover:text-custom-blue transition-colors duration-300"
                       >
-                        <span className="sm:hidden inline">View Details</span>
+                        <span className="sm:hidden inline sm:text-xs text-sm">
+                          View Details
+                        </span>
                         <span className="inline md:hidden lg:hidden xl:hidden 2xl:hidden">
                           <Eye className="w-4 h-4" />
                         </span>
@@ -339,12 +365,13 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
           </div>
         </div>
       </SidebarPopup>
-
-      <NotificationDetailsModal
-        isOpen={!!selectedNotification}
-        onClose={() => setSelectedNotification(null)}
-        notification={selectedNotification}
-      />
+      <div>
+        <NotificationDetailsModal
+          isOpen={!!selectedNotification}
+          onClose={() => setSelectedNotification(null)}
+          notification={selectedNotification}
+        />
+      </div>
     </>
   );
 };
