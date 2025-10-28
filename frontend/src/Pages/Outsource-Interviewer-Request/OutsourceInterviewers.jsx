@@ -309,17 +309,17 @@ const OutsourceInterviewers = () => {
         );
       },
     },
-    {
-      key: "pricePerHour",
-      header: "Price/Hour",
-      render: (value, row) => (
-        <span>
-          {row?.requestedRate?.hourlyRate !== undefined
-            ? `$${row.requestedRate.hourlyRate}`
-            : "Not set"}
-        </span>
-      ),
-    },
+    // {
+    //   key: "pricePerHour",
+    //   header: "Price/Hour",
+    //   render: (value, row) => (
+    //     <span>
+    //       {row?.requestedRate?.hourlyRate !== undefined
+    //         ? `$${row.requestedRate.hourlyRate}`
+    //         : "Not set"}
+    //     </span>
+    //   ),
+    // },
     {
       key: "status",
       header: "Status",
