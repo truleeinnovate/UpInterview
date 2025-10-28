@@ -69,9 +69,9 @@ const razorpay = new Razorpay({
 // Verify Razorpay payment signature
 const verifyPayment = async (req, res) => {
 
-    // // Set up logging context at the start
-    // res.locals.loggedByController = true;
-    // res.locals.processName = 'Verify Payment';
+    // Set up logging context at the start
+    res.locals.loggedByController = true;
+    res.locals.processName = 'Verify Payment';
     try {
         // console.log('Received payment verification request:', JSON.stringify(req.body, null, 2));
 
@@ -103,18 +103,6 @@ const verifyPayment = async (req, res) => {
         }
 
 
-        // console.log('Extracted payment details:', {
-        //     razorpay_payment_id,
-        //     razorpay_order_id,
-        //     razorpay_subscription_id,
-        //     ownerId,
-        //     tenantId,
-        //     planId,
-        //     membershipType,
-        //     autoRenew,
-        //     invoiceId
-        // });
-
         if (!planId) {
             console.warn('No planId found in payment verification request');
         }
@@ -136,12 +124,7 @@ const verifyPayment = async (req, res) => {
             .update(body)
             .digest('hex');
 
-        // console.log('Signature verification:', {
-        //     isSubscription,
-        //     body,
-        //     generated: generated_signature,
-        //     received: razorpay_signature
-        // });
+    
 
         if (generated_signature !== razorpay_signature) {
             console.error('Signature verification failed', {
@@ -195,26 +178,19 @@ const verifyPayment = async (req, res) => {
                 };
             }
 
-            // console.log('Fetched payment details from Razorpay:', {
-            //     id: razorpayPayment.id,
-            //     status: razorpayPayment.status,
-            //     hasToken: !!razorpayPayment.token_id,
-            //     method: razorpayPayment.method,
-            //     card: cardInfo
-            // });
 
             // Check if this payment created a token (critical for recurring payments)
             if (razorpayPayment.token_id) {
                 tokenId = razorpayPayment.token_id;
-                console.log('🔑 Found token ID in payment:', tokenId);
+                // console.log('🔑 Found token ID in payment:', tokenId);
 
                 // If customer_id is available, store it too
                 if (razorpayPayment.customer_id) {
                     customerId = razorpayPayment.customer_id;
-                    console.log('👤 Found customer ID in payment:', customerId);
+                    // console.log('👤 Found customer ID in payment:', customerId);
                 }
             } else {
-                console.log('⚠️ No token found in payment - recurring payments will not work');
+                // console.log('⚠️ No token found in payment - recurring payments will not work');
             }
         } catch (razorpayError) {
             console.error('Error fetching payment from Razorpay:', razorpayError);
@@ -396,7 +372,7 @@ const verifyPayment = async (req, res) => {
                             cardBrand: cardBrand || 'Card',
                             isDefault: paymentCard.isDefault || false
                         });
-                        console.log('[PAYMENT] Payment method notification created');
+                        // console.log('[PAYMENT] Payment method notification created');
                     } catch (notificationError) {
                         console.error('[PAYMENT] Error creating payment method notification:', notificationError);
                     }
@@ -410,6 +386,8 @@ const verifyPayment = async (req, res) => {
             // Continue despite error - focus on subscription and invoice updates
         }
 
+            let invoice = null;
+            let receipt = null;
         // Update existing CustomerSubscription, Invoice
         try {
 
@@ -421,13 +399,13 @@ const verifyPayment = async (req, res) => {
             //console.log('Updating existing subscription records for payment:', razorpay_payment_id);
 
             // Get subscription plan details
-            console.log('Looking up subscription plan with ID:', planId);
+            // console.log('Looking up subscription plan with ID:', planId);
 
             if (!subPlan) {
                 console.warn(`Subscription plan not found with ID: ${planId}`);
                 return res.status(404).json({ error: 'Subscription plan not found' });
             }
-            console.log('Found subscription plan:', subPlan.name);
+            // console.log('Found subscription plan:', subPlan.name);
 
             // Calculate billing dates
             const startDate = new Date();
@@ -445,14 +423,14 @@ const verifyPayment = async (req, res) => {
                 console.warn('No invoiceId provided in the request. Payment verification will continue without invoice update.');
             }
 
-            let invoice = null;
+        
             if (invoiceId) {
                 try {
                     invoice = await Invoicemodels.findById(invoiceId);
                     if (invoice) {
-                        console.log('Found existing invoice:', invoice._id);
+                        // console.log('Found existing invoice:', invoice._id);
                     } else {
-                        console.warn(`No existing invoice found with ID: ${invoiceId}`);
+                        // console.warn(`No existing invoice found with ID: ${invoiceId}`);
                     }
                 } catch (invoiceError) {
                     console.error('Error finding invoice:', invoiceError);
@@ -544,7 +522,7 @@ const verifyPayment = async (req, res) => {
                     }
                     const receiptCode = `RCP-${String(nextNumber).padStart(5, '0')}`;
                     //console.log('Creating receipt for successful payment');
-                    const receipt = new Receipt({
+                     receipt = new Receipt({
                         receiptCode: receiptCode,
                         tenantId: tenantId,
                         ownerId: ownerId,
@@ -565,7 +543,7 @@ const verifyPayment = async (req, res) => {
                     // Update subscription with receipt ID only if receipt was created
                     customerSubscription.receiptId = receipt._id;
                 } else {
-                    console.log('Payment not successfully captured, skipping receipt creation');
+                    // console.log('Payment not successfully captured, skipping receipt creation');
                 }
                 customerSubscription.invoiceId = invoice && invoice._id ? invoice._id : null;
 
@@ -848,29 +826,41 @@ const verifyPayment = async (req, res) => {
             console.error('[PAYMENT] Error creating payment success notification:', notificationError);
             // Don't fail the payment if notification fails
         }
-        // const responseBody = {
-        //     message: 'Payment verified and processed successfully',
-        //     transactionId: razorpay_payment_id,
-        //     status: 'paid'
-        // };
 
-        // // Success logging - Ensure processName is always included
-        // res.locals.logData = {
-        //     tenantId: req.body.tenantId,
-        //     ownerId: req.body.ownerId,
-        //     processName: 'Verify Payment', // Always include processName
-        //     status: 'success',
-        //     message: 'Payment verified successfully',
-        //     paymentId: razorpay_payment_id,
-        //     subscriptionId: razorpay_subscription_id,
-        //     amount: razorpayPayment?.amount ? razorpayPayment.amount / 100 : 0,
-        //     planName: subPlan?.name,
-        //     requestBody: {
-        //         razorpay_payment_id: razorpay_payment_id,
-        //         razorpay_subscription_id: razorpay_subscription_id
-        //     },
-        //     responseBody: responseBody,
-        // };
+
+        
+        const responseBody = {
+            message: 'Payment verified and processed successfully',
+            transactionId: razorpay_payment_id,
+            status: 'paid',
+            subscriptionId: razorpay_subscription_id,
+            planId: planId,
+            amount: razorpayPayment?.amount ? razorpayPayment.amount / 100 : 0,
+            planName: subPlan?.name,
+            billingCycle: membershipType || 'monthly',
+            paymentCode : existingPayment?.paymentCode || 'N/A',
+            receiptId: receipt?._id,
+            invoiceId: invoice?._id
+        
+        };
+
+        // Success logging - Ensure processName is always included
+        res.locals.logData = {
+            tenantId: req.body.tenantId,
+            ownerId: req.body.ownerId,
+            processName: 'Verify Payment', // Always include processName
+            status: 'success',
+            message: 'Payment verified successfully',
+            paymentId: razorpay_payment_id,
+            subscriptionId: razorpay_subscription_id,
+            amount: razorpayPayment?.amount ? razorpayPayment.amount / 100 : 0,
+            planName: subPlan?.name,
+            requestBody: {
+                razorpay_payment_id: razorpay_payment_id,
+                razorpay_subscription_id: razorpay_subscription_id
+            },
+            responseBody: responseBody,
+        };
 
 
 
@@ -883,20 +873,20 @@ const verifyPayment = async (req, res) => {
         console.error('Error verifying payment:', error);
 
         // Error logging - Ensure processName is always included
-        // res.locals.logData = {
-        //     tenantId: req.body.tenantId,
-        //     ownerId: req.body.ownerId,
-        //     processName: 'Verify Payment', // Always include processName
-        //     status: 'error',
-        //     message: error.message,
-        //     stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-        //     requestBody: {
-        //         razorpay_payment_id: req.body.razorpay_payment_id,
-        //         razorpay_subscription_id: req.body.razorpay_subscription_id
-        //     },
-
-        //     //  responseMessage: responseBody.message
-        // };
+        res.locals.logData = {
+            tenantId: req.body.tenantId,
+            ownerId: req.body.ownerId,
+            processName: 'Verify Payment', // Always include processName
+            status: 'error',
+            message: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+            requestBody: {
+                razorpay_payment_id: req.body.razorpay_payment_id,
+                razorpay_subscription_id: req.body.razorpay_subscription_id
+            },
+   responseBody: error,
+            //  responseMessage: responseBody.message
+        };
         return res.status(500).json({
             message: 'Error verifying payment',
             error: error.message,
@@ -1330,8 +1320,8 @@ const handleSubscriptionAuthenticated = async (subscription,res) => {
 const handleSubscriptionActivated = async (subscription,res) => {
     
     // Set up logging context
-    // res.locals.loggedByController = true;
-    // res.locals.processName = 'Subscription Activated';
+    res.locals.loggedByController = true;
+    res.locals.processName = 'Subscription Plan Activated';
     try {
         console.log('Handling subscription.activated event');
 
@@ -1392,21 +1382,21 @@ const handleSubscriptionActivated = async (subscription,res) => {
             //console.log('Updated existing subscription to active status');
 
              // Success logging for each event type
-            // res.locals.logData = {
-            //     tenantId: subscription?.notes?.tenantId || "",
-            //     ownerId: subscription?.notes?.ownerId || "",
-            //     processName: 'Subscription Activated', // Always include processName
-            //     status: 'success',
-            //     message: `Subscription Activated processed successfully`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         subscription
-            //     },
-            //     responseBody: {
-            //         existingSubscription
-            //     }
-            // };
+            res.locals.logData = {
+                tenantId: subscription?.notes?.tenantId || "",
+                ownerId: subscription?.notes?.ownerId || "",
+                processName: 'Subscription Plan Activated', // Always include processName
+                status: 'success',
+                message: `Subscription Plan Activated processed successfully`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    subscription
+                },
+                responseBody: {
+                    existingSubscription
+                }
+            };
 
         } else {
             // Create a new subscription record if it doesn't exist
@@ -1430,21 +1420,21 @@ const handleSubscriptionActivated = async (subscription,res) => {
             await newSubscription.save();
 
              // Success logging for each event type
-            // res.locals.logData = {
-            //     tenantId: tenantId || "",
-            //     ownerId: ownerId || "",
-            //     processName: 'Subscription Activated', // Always include processName
-            //     status: 'success',
-            //     message: `Subscription Activated processed successfully`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         subscription
-            //     },
-            //     responseBody: {
-            //         newSubscription
-            //     }
-            // };
+            res.locals.logData = {
+                tenantId: tenantId || "",
+                ownerId: ownerId || "",
+                processName: 'Subscription Plan Activated', // Always include processName
+                status: 'success',
+                message: `Subscription Plan Activated processed successfully`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    subscription
+                },
+                responseBody: {
+                    newSubscription
+                }
+            };
 
 
             console.log('Created new active subscription record');
@@ -1454,21 +1444,21 @@ const handleSubscriptionActivated = async (subscription,res) => {
     } catch (error) {
         console.error('Error in handleSubscriptionActivated:', error);
         // Success logging for each event type
-            // res.locals.logData = {
-            //     tenantId: subscription?.notes?.tenantId || "",
-            //     ownerId: subscription?.notes?.ownerId || "",
-            //     processName: 'Subscription Activated', // Always include processName
-            //     status: 'error',
-            //     message: `Subscription Activated processed Failed`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         subscription
-            //     },
-            //     responseBody: {
-            //         error
-            //     }
-            // };
+            res.locals.logData = {
+                tenantId: subscription?.notes?.tenantId || "",
+                ownerId: subscription?.notes?.ownerId || "",
+                processName: 'Subscription Plan Activated', // Always include processName
+                status: 'error',
+                message: `Subscription Plan Activated processed Failed`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    subscription
+                },
+                responseBody: {
+                    error
+                }
+            };
     }
 };
 
@@ -1476,8 +1466,8 @@ const handleSubscriptionActivated = async (subscription,res) => {
 const handlePaymentFailed = async (payment,res) => {
 
      // Set up logging context
-    // res.locals.loggedByController = true;
-    // res.locals.processName = 'Subscription Payment Failed';
+    res.locals.loggedByController = true;
+    res.locals.processName = 'Subscription Payment Failed';
     try {
         //console.log('Processing payment failed event for:', payment.id);
 
@@ -1487,7 +1477,6 @@ const handlePaymentFailed = async (payment,res) => {
             return;
         }
 
-        console.log("payment failed",payment);
         
 
         // Find the subscription in our database
@@ -1570,22 +1559,22 @@ const handlePaymentFailed = async (payment,res) => {
         await customerSubscription.save();
 
            // Success logging for each event type
-            // res.locals.logData = {
-            //     tenantId:customerSubscription?.tenantId || "",
-            //     ownerId: customerSubscription?.ownerId || "",
-            //     processName: 'Subscription Authenticated', // Always include processName
-            //     status: 'success',
-            //     message: `Subscription Authenticated processed successfully`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         payment
-            //     },
-            //     responseBody: {
-            //         customerSubscription,
-            //         failedPayment
-            //     }
-            // };
+            res.locals.logData = {
+                tenantId:customerSubscription?.tenantId || "",
+                ownerId: customerSubscription?.ownerId || "",
+                processName: 'Subscription Authenticated', // Always include processName
+                status: 'success',
+                message: `Subscription Authenticated processed successfully`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    payment
+                },
+                responseBody: {
+                    customerSubscription,
+                    failedPayment
+                }
+            };
 
 
         //console.log('Updated subscription with failed payment information');
@@ -1607,29 +1596,29 @@ const handlePaymentFailed = async (payment,res) => {
     } catch (error) {
         console.error('Error handling payment failed event:', error);
          // Success logging for each event type
-            // res.locals.logData = {
-            //     tenantId: req?.body?.payload?.subscription?.entity?.notes?.tenantId || "",
-            //     ownerId: req?.body?.payload?.subscription?.entity?.notes?.ownerId || "",
-            //     processName: 'Subscription Failed', // Always include processName
-            //     status: 'error',
-            //     message: `Subscription Failed processed Failed`,
-            //     event: req.body.event,
-            //     entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         payment
-            //     },
-            //     responseBody: {
-            //         error
-            //     }
-            // };
+            res.locals.logData = {
+                tenantId: req?.body?.payload?.subscription?.entity?.notes?.tenantId || "",
+                ownerId: req?.body?.payload?.subscription?.entity?.notes?.ownerId || "",
+                processName: 'Subscription Failed', // Always include processName
+                status: 'error',
+                message: `Subscription Failed processed Failed`,
+                event: req.body.event,
+                entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    payment
+                },
+                responseBody: {
+                    error
+                }
+            };
     }
 };
 
 // Handle subscription.halted event
 const handleSubscriptionHalted = async (subscription,res) => {
     // Set up logging context
-    // res.locals.loggedByController = true;
-    // res.locals.processName = 'Subscription Halted';
+    res.locals.loggedByController = true;
+    res.locals.processName = 'Subscription Plan Halted';
     try {
         console.log('Processing subscription halted event for:', subscription.id);
 
@@ -1649,21 +1638,21 @@ const handleSubscriptionHalted = async (subscription,res) => {
         await customerSubscription.save();
 
             // Success logging for each event type
-            // res.locals.logData = {
-            //     tenantId: subscription?.notes?.tenantId || "",
-            //     ownerId: subscription?.notes?.ownerId || "",
-            //     processName: 'Subscription Halted', // Always include processName
-            //     status: 'success',
-            //     message: `Subscription Halted processed successfully`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         subscription
-            //     },
-            //     responseBody: {
-            //         customerSubscription
-            //     }
-            // };
+            res.locals.logData = {
+                tenantId: subscription?.notes?.tenantId || "",
+                ownerId: subscription?.notes?.ownerId || "",
+                processName: 'Subscription Plan Halted', // Always include processName
+                status: 'success',
+                message: `Subscription Plan Halted processed successfully`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    subscription
+                },
+                responseBody: {
+                    customerSubscription
+                }
+            };
 
         //console.log('Updated subscription status to halted');
 
@@ -1683,21 +1672,21 @@ const handleSubscriptionHalted = async (subscription,res) => {
     } catch (error) {
         console.error('Error handling subscription halted event:', error);
          // Success logging for each event type
-            // res.locals.logData = {
-            //    tenantId: subscription?.notes?.tenantId || "",
-            //     ownerId: subscription?.notes?.ownerId || "",
-            //     processName: 'Subscription Halted', // Always include processName
-            //     status: 'error',
-            //     message: `Subscription Halted processed Failed`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         subscription
-            //     },
-            //     responseBody: {
-            //         error
-            //     }
-            // };
+            res.locals.logData = {
+               tenantId: subscription?.notes?.tenantId || "",
+                ownerId: subscription?.notes?.ownerId || "",
+                processName: 'Subscription Plan Halted', // Always include processName
+                status: 'error',
+                message: `Subscription Plan Halted processed Failed`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    subscription
+                },
+                responseBody: {
+                    error
+                }
+            };
     }
 };
 
@@ -1705,8 +1694,8 @@ const handleSubscriptionHalted = async (subscription,res) => {
 const handleSubscriptionCancelled = async (subscription,res) => {
 
     // Set up logging context
-    // res.locals.loggedByController = true;
-    // res.locals.processName = 'Subscription Cancelled';
+    res.locals.loggedByController = true;
+    res.locals.processName = 'Subscription Plan Cancelled';
 
     try {
         console.log('Processing in razorpay subscription cancelled webhook for:', subscription.id);
@@ -1749,22 +1738,22 @@ const handleSubscriptionCancelled = async (subscription,res) => {
 
         
             // Success logging for each event type
-            // res.locals.logData = {
-            //     tenantId: subscription?.notes?.tenantId || "",
-            //     ownerId: subscription?.notes?.ownerId || "",
-            //     processName: 'Subscription Cancelled', // Always include processName
-            //     status: 'success',
-            //     message: `Subscription Cancelled processed successfully`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         subscription
-            //     },
-            //     responseBody: {
-            //         customerSubscription,
-            //         invoice
-            //     }
-            // };
+            res.locals.logData = {
+                tenantId: subscription?.notes?.tenantId || "",
+                ownerId: subscription?.notes?.ownerId || "",
+                processName: 'Subscription Plan Cancelled', // Always include processName
+                status: 'success',
+                message: `Subscription Plan Cancelled processed successfully`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    subscription
+                },
+                responseBody: {
+                    customerSubscription,
+                    invoice
+                }
+            };
 
 
         // Create subscription cancelled push notification
@@ -1782,21 +1771,21 @@ const handleSubscriptionCancelled = async (subscription,res) => {
     } catch (error) {
         console.error('Error handling subscription cancellation webhook:', error);
         // Success logging for each event type
-            // res.locals.logData = {
-            //    tenantId: subscription?.notes?.tenantId || "",
-            //     ownerId: subscription?.notes?.ownerId || "",
-            //     processName: 'Subscription Cancelled', // Always include processName
-            //     status: 'error',
-            //     message: `Subscription Cancelled processed Failed`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         subscription
-            //     },
-            //     responseBody: {
-            //         error
-            //     }
-            // };
+            res.locals.logData = {
+               tenantId: subscription?.notes?.tenantId || "",
+                ownerId: subscription?.notes?.ownerId || "",
+                processName: 'Subscription Plan Cancelled', // Always include processName
+                status: 'error',
+                message: `Subscription Plan Cancelled processed Failed`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    subscription
+                },
+                responseBody: {
+                    error
+                }
+            };
     }
 };
 
@@ -1804,8 +1793,8 @@ const handleSubscriptionCancelled = async (subscription,res) => {
 const handleSubscriptionUpdated = async (subscription,res) => {
 
     // Set up logging context
-    // res.locals.loggedByController = true;
-    // res.locals.processName = 'Subscription Updated';
+    res.locals.loggedByController = true;
+    res.locals.processName = 'Subscription Plan Updated';
 
     try {
         console.log('Processing in razorpay subscription updated webhook for:', subscription.id);
@@ -2024,22 +2013,22 @@ const handleSubscriptionUpdated = async (subscription,res) => {
         await existingInvoice.save();
 
          // Success logging for each event type
-            // res.locals.logData = {
-            //     tenantId: subscription?.notes?.tenantId || "",
-            //     ownerId: subscription?.notes?.ownerId || "",
-            //     processName: 'Subscription Updated', // Always include processName
-            //     status: 'success',
-            //     message: `Subscription Updated processed successfully`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         subscription
-            //     },
-            //     responseBody: {
-            //         customerSubscription,
-            //         existingInvoice
-            //     }
-            // };
+            res.locals.logData = {
+                tenantId: subscription?.notes?.tenantId || "",
+                ownerId: subscription?.notes?.ownerId || "",
+                processName: 'Subscription plan Updated', // Always include processName
+                status: 'success',
+                message: `Subscription plan Updated processed successfully`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    subscription
+                },
+                responseBody: {
+                    customerSubscription,
+                    existingInvoice
+                }
+            };
         // console.log('Updated invoice metadata for subscription update (no payment applied)');
 
         //  Do not create receipts on subscription.updated; handled in subscription.charged
@@ -2048,21 +2037,21 @@ const handleSubscriptionUpdated = async (subscription,res) => {
     } catch (error) {
         console.error('Error handling subscription update webhook:', error);
         // Success logging for each event type
-            // res.locals.logData = {
-            //     tenantId: subscription?.notes?.tenantId || "",
-            //     ownerId: subscription?.notes?.ownerId || "",
-            //     processName: 'Subscription Updated', // Always include processName
-            //     status: 'error',
-            //     message: `Subscription Updated processed Failed`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         subscription
-            //     },
-            //     responseBody: {
-            //         error
-            //     }
-            // };
+            res.locals.logData = {
+                tenantId: subscription?.notes?.tenantId || "",
+                ownerId: subscription?.notes?.ownerId || "",
+                processName: 'Subscription plan Updated', // Always include processName
+                status: 'error',
+                message: `Subscription plan Updated processed Failed`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    subscription
+                },
+                responseBody: {
+                    error
+                }
+            };
 
     }
 }
@@ -2073,8 +2062,8 @@ const handleSubscriptionUpdated = async (subscription,res) => {
 // Handle subscription.charged event - occurs when a subscription payment is successful
 const handleSubscriptionCharged = async (subscription,res) => {
 
-    // res.locals.loggedByController = true;
-    // res.locals.processName = "Subscription Charged";
+    res.locals.loggedByController = true;
+    res.locals.processName = "Subscription plan Charged Amount";
 
     try {
         // Debug check to ensure helper functions are available
@@ -2085,8 +2074,6 @@ const handleSubscriptionCharged = async (subscription,res) => {
         // });
 
 
-        console.log('Processing subscription charged event for:', subscription.id);
-        console.log('Subscription details:', JSON.stringify(subscription, null, 2));
 
         // Enhanced robustness: Try different ways to get the subscription ID
         const subscriptionId = subscription.id ||
@@ -2228,7 +2215,7 @@ const handleSubscriptionCharged = async (subscription,res) => {
         // Try multiple possible plan ID fields
         //let planId = subscription.notes?.planId || customerSubscription?.subscriptionPlanId;
         let planId = subscription.notes?.planId;
-        console.log('Using plan ID for lookup:', planId);
+     
 
         const subscriptionPlan = await SubscriptionPlan.findById(planId);
         console.log('Found subscription plan:', subscriptionPlan ? 'Yes' : 'No');
@@ -2647,24 +2634,25 @@ const handleSubscriptionCharged = async (subscription,res) => {
         }
 
          // Success logging for each event type
-            // res.locals.logData = {
-            //     tenantId: subscription?.notes?.tenantId || "",
-            //     ownerId: subscription?.notes?.ownerId || "",
-            //       processName: 'Subscription Charged', // Always include processName
-            //     status: 'success',
-            //     message: `Subscription Charged processed successfully`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         subscription
-            //     },
-            //     responseBody: {
-            //         customerSubscription,
-            //         payment,
-            //         receipt,
-            //         invoice
-            //     }
-            // };
+            res.locals.logData = {
+                tenantId: subscription?.notes?.tenantId || "",
+                ownerId: subscription?.notes?.ownerId || "",
+                  processName: 'Subscription plan Charged Amount', // Always include processName
+                status: 'success',
+                message: `Subscription plan Charged Amount processed successfully`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                      customerSubscription,
+                    payment,
+                    receipt,
+                    invoice
+                   
+                },
+                responseBody: {
+                   subscription
+                }
+            };
 
 
 
@@ -2672,21 +2660,21 @@ const handleSubscriptionCharged = async (subscription,res) => {
         console.error('Error handling subscription charged event:', error);
 
          // Success logging for each event type
-            // res.locals.logData = {
-            //     tenantId: subscription?.notes?.tenantId || "",
-            //     ownerId: subscription?.notes?.ownerId || "",
-            //     processName: 'Subscription Charged', // Always include processName
-            //     status: 'error',
-            //     message: `Subscription Charged processed successfully`,
-            //     // event: req.body.event,
-            //     // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-            //     requestBody: {
-            //         subscription
-            //     },
-            //     responseBody: {
-            //        error
-            //     }
-            // };
+            res.locals.logData = {
+                tenantId: subscription?.notes?.tenantId || "",
+                ownerId: subscription?.notes?.ownerId || "",
+                processName: 'Subscription plan Charged Amount', // Always include processName
+                status: 'error',
+                message: `Subscription Charged processed Failed`,
+                // event: req.body.event,
+                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                requestBody: {
+                    subscription
+                },
+                responseBody: {
+                   error
+                }
+            };
 
         throw error;
     }
