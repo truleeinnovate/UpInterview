@@ -1,4 +1,6 @@
 // v1.0.0 - Ashok - Added optional chaining to prevent errors
+// v1.0.1 - Ashok - Fixed skills display in table
+
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
@@ -254,17 +256,45 @@ const OutsourceInterviewers = () => {
         </span>
       ),
     },
+    // {
+    //   key: "skills",
+    //   header: "Skills",
+    //   render: (value, row) => (
+    //     <span>
+    //       {row?.contactId?.skills?.length
+    //         ? row?.contactId?.skills.join(", ")
+    //         : "N/A"}
+    //     </span>
+    //   ),
+    // },
     {
       key: "skills",
       header: "Skills",
-      render: (value, row) => (
-        <span>
-          {row?.contactId?.skills?.length
-            ? row?.contactId?.skills.join(", ")
-            : "N/A"}
-        </span>
-      ),
+      render: (value, row) => {
+        const skills = row?.contactId?.skills || [];
+
+        return skills.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {/* First skill badge */}
+            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+              {skills[0]?.length > 12
+                ? skills[0].slice(0, 12) + "..."
+                : skills[0]}
+            </span>
+
+            {/* "+N more" label if more than one skill */}
+            {skills.length > 1 && (
+              <span className="text-gray-500 text-xs">
+                +{skills.length - 1} more
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-gray-400 text-xs">N/A</span>
+        );
+      },
     },
+
     {
       key: "experience",
       header: "Experience",
