@@ -45,8 +45,6 @@ const razorpay = new Razorpay({
 const getWalletByOwnerId = async (req, res) => {
   try {
     const { ownerId } = req.params;
-    // Extract tenantId from query params or headers
-    const tenantId = req.query.tenantId || req.headers['x-tenant-id'] || req.body?.tenantId;
 
     // Validate ownerId
     if (!ownerId) {
@@ -56,19 +54,11 @@ const getWalletByOwnerId = async (req, res) => {
     // Find or create wallet
     let wallet = await WalletTopup.findOne({ ownerId });
 
-    // if (!wallet) {
-    //   // Log when creating wallet without tenantId
-    //   if (!tenantId) {
-    //     console.warn(`[getWalletByOwnerId] Creating wallet for ${ownerId} without tenantId`);
-    //   }
+    if (!wallet) {
+      // Log when creating wallet without tenantId
+        console.warn(`[getWalletByOwnerId] wallet for ${ownerId} not found`);
+      }
 
-    //   wallet = await WalletTopup.create({
-    //     ownerId,
-    //     tenantId: tenantId || "default",
-    //     balance: 0,
-    //     transactions: [],
-    //   });
-    // }
 
     res.status(200).json({ walletDetials: [wallet] });
   } catch (error) {
