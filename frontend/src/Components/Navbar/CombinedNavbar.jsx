@@ -896,7 +896,7 @@ const CombinedNavbar = React.memo(() => {
                         </button>
 
                         {dropdownState.requestsDropdown && (
-                          <div className="absolute left-0 top-10 z-50 w-56 bg-white rounded-md shadow-lg border ring-black transform transition-all duration-300 ease-in-out origin-top p-2 pr-6">
+                          <div className="absolute left-0 top-10 z-50 w-64 bg-white rounded-md shadow-lg border ring-black transform transition-all duration-300 ease-in-out origin-top p-2 pr-6">
                             <div className="flex flex-col min-w-[150px]">
                               {getRequestsDropdownItems().map(
                                 ({ path, label, permissionKey }) =>

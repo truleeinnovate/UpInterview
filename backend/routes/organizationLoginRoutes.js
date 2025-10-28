@@ -21,8 +21,10 @@ const {
   superAdminLoginAsUser,
   deleteTenantAndAssociatedData,
 } = require("../controllers/organizationLoginController");
+const loggingService = require('../middleware/loggingService.js');
 
-router.post("/Signup", registerOrganization);
+
+router.post("/Signup", loggingService.internalLoggingMiddleware, registerOrganization);
 router.post("/Login", loginOrganization);
 router.post("/reset-password", resetPassword);
 router.post("/new-user-Creation", organizationUserCreation);
