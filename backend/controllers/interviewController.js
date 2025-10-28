@@ -43,6 +43,7 @@ const {
     createInterviewRoundScheduledNotification,
     createInterviewStatusUpdateNotification,
 } = require("./PushNotificationControllers/pushNotificationInterviewController");
+const { MockInterviewRound } = require("../models/MockInterview/mockinterviewRound.js");
 
 // const createInterview = async (req, res) => {
 //   try {
@@ -2091,8 +2092,9 @@ const updateInterviewStatusController = async (req, res) => {
 // Get all interview rounds for super admin
 const getAllInterviewRounds = async (req, res) => {
     try {
+        const { type } = req.query || {};
         // Fetch all interview rounds with populated data (filter for External interviews only)
-        const interviewRounds = await InterviewRounds.find({ interviewerType: 'External' })
+        const interviewRounds = await (type === 'mock' ? MockInterviewRound : InterviewRounds).find({ interviewerType: 'External' })
             .populate({
                 path: 'interviewId',
                 select: 'interviewCode candidateId positionId status tenantId ownerId createdAt',

@@ -1,13 +1,13 @@
 // v1.0.0 - Ashok - Added button group for All, Organizations, Individuals
 import React from "react";
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import Toolbar from "../../../Components/Shared/Toolbar/Toolbar.jsx";
 import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import { useMediaQuery } from "react-responsive";
 import { motion } from "framer-motion";
 import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
-import { Eye, Pencil, ChevronUp, ChevronDown } from "lucide-react";
+import { Eye, ChevronUp, ChevronDown } from "lucide-react";
 import KanbanView from "./KanbanView.jsx";
 import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import InterviewDetailsSidebar from "./InterviewDetailsSidebar.jsx";
@@ -15,6 +15,7 @@ import InterviewDetailsSidebar from "./InterviewDetailsSidebar.jsx";
 import { config } from "../../../config.js";
 import axios from "axios";
 import { Tooltip } from "@mantine/core";
+import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect.jsx";
 // v1.0.0 ------------------------------------------------------------>
 
 const Interviewers = () => {
@@ -29,7 +30,7 @@ const Interviewers = () => {
     status: [],
     currentStatus: "",
   });
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null);
 
@@ -38,6 +39,7 @@ const Interviewers = () => {
   console.log("interviewData--",selectedInterview);
   const [interviews, setInterviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true); // Loading state
+  const [listType, setListType] = useState("interviews"); // interviews | mock
 
   // v1.0.0 --------------------------------------------->
   useEffect(() => {
@@ -45,7 +47,8 @@ const Interviewers = () => {
       try {
         setIsLoading(true); // Start loading
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/interview/interview-rounds`
+          `${config.REACT_APP_API_URL}/interview/interview-rounds`,
+          { params: { type: listType === "mock" ? "mock" : "interview" } }
         );
         if (response.data.success) {
           setInterviews(response.data.data);
@@ -77,7 +80,7 @@ const Interviewers = () => {
     };
 
     getInterviews();
-  }, []);
+  }, [listType]);
   // v1.0.0 --------------------------------------------->
 
   // v1.0.0 <---------------------------------------------
@@ -496,6 +499,20 @@ const Interviewers = () => {
             dataLength={dataToUse?.length}
             searchPlaceholder="Search interviews..."
             filterIconRef={filterIconRef} // Pass ref to Toolbar
+            startContent={
+              <div style={{ minWidth: 220 }}>
+                <DropdownSelect
+                  options={[
+                    { value: "interviews", label: "Interviews" },
+                    { value: "mock", label: "Mock Interviews" },
+                  ]}
+                  value={{ value: listType, label: listType === "mock" ? "Mock Interviews" : "Interviews" }}
+                  onChange={(opt) => setListType(opt?.value || "interviews")}
+                  placeholder="Select Type"
+                  menuPortalTarget={document.body}
+                />
+              </div>
+            }
           />
         </div>
 
