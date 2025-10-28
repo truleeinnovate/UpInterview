@@ -243,14 +243,41 @@ function SupportDetails() {
     <div
       className={`${isFullScreen ? "min-h-screen" : "h-full"} flex flex-col`}
     >
-      <div className="p-6">
+      <div className="px-4 py-5">
         <div className="flex justify-between items-center">
-          <div className="flex items-center">
+          <div className="flex-col items-center">
             <h2 className="text-2xl font-semibold text-custom-blue">
               Support Ticket Details
             </h2>
+            <div className="flex items-center text-center gap-2">
+            <h3 className="text-md font-medium text-custom-blue">
+              {currentTicket?.ticketCode}
+            </h3>
+            <StatusBadge
+              status={currentTicket?.status}
+              text={
+                currentTicket?.status
+                  ? currentTicket?.status.charAt(0).toUpperCase() +
+                    currentTicket?.status.slice(1)
+                  : "Not Provided"
+              }
+            />
+            {/*common status code add by Venkatesh*/}
+            {/*-------v1.0.3------>*/}
+            {/*-------v1.0.1-------------->*/}
+          </div>
           </div>
           <div className="flex items-center space-x-2">
+            {(impersonatedUser_roleName === "Super_Admin" ||
+            impersonatedUser_roleName === "Support_Team") && (
+            <button
+              onClick={toggleStatusModal}
+              className="px-1 py-2 mb-1 bg-custom-blue text-xs w-24 whitespace-nowrap text-white hover:bg-custom-blue/90 rounded-md transition-colors"
+              title="Change Status"
+            >
+              Change Status
+            </button>
+          )}
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
@@ -271,32 +298,8 @@ function SupportDetails() {
         </div>
       </div>
 
-      <div className="p-6">
-        {/*<-------v1.0.3------*/}
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
-            <Ticket className="w-8 h-8" />
-          </div>
-          <div className="items-center text-center mb-4">
-            <h3 className="text-2xl font-bold text-gray-900">
-              {currentTicket?.ticketCode}
-            </h3>
-            <StatusBadge
-              status={currentTicket?.status}
-              text={
-                currentTicket?.status
-                  ? currentTicket?.status.charAt(0).toUpperCase() +
-                    currentTicket?.status.slice(1)
-                  : "Not Provided"
-              }
-            />
-            {/*common status code add by Venkatesh*/}
-            {/*-------v1.0.3------>*/}
-            {/*-------v1.0.1-------------->*/}
-          </div>
-        </div>
-        {/* v1.0.2 -------------------------------------------------------------------> */}
-
+      <div className="px-4 pb-4">
+        
         <div className="flex justify-between border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {/* <----v1.0.0------Venkatesh------add attachments tab */}
@@ -315,16 +318,7 @@ function SupportDetails() {
             ))}
             {/* ---v1.0.0------Venkatesh------add attachments tab--> */}
           </nav>
-          {(impersonatedUser_roleName === "Super_Admin" ||
-            impersonatedUser_roleName === "Support_Team") && (
-            <button
-              onClick={toggleStatusModal}
-              className="px-1 py-1 mb-1 bg-custom-blue text-xs w-24 whitespace-nowrap text-white hover:bg-custom-blue/90 rounded-md transition-colors"
-              title="Change Status"
-            >
-              Change Status
-            </button>
-          )}
+          
         </div>
 
         {activeTab === "Details" ? (

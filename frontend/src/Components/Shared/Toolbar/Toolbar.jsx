@@ -29,7 +29,8 @@ const Toolbar = ({
   dataLength = 0,
   showViewToggles = true,
   searchPlaceholder = 'Search...',
-  filterIconRef
+  filterIconRef,
+  startContent
 }) => {
   // v1.0.0 <--------------------------------------------------------
   // v1.0.1 <-------------------------------------------------------------------
@@ -66,6 +67,12 @@ const Toolbar = ({
       )}
 
       <div className="flex items-center">
+        {/* Optional start content (e.g., dropdown) */}
+        {startContent && (
+          <div className="mr-3">
+            {startContent}
+          </div>
+        )}
         {/* Search Input */}
         <div className="sm:mt-0 flex justify-end w-full sm:w-auto">
           <div className="max-w-lg w-full">
