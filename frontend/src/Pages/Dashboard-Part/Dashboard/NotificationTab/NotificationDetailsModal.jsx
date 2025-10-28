@@ -16,6 +16,8 @@ import {
   Download,
   Paperclip,
 } from "lucide-react";
+import { formatDateTime } from "../../../../utils/dateFormatter";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const NotificationDetailsModal = ({
   notification,
@@ -23,7 +25,6 @@ const NotificationDetailsModal = ({
   onClose,
   showContentDetails,
 }) => {
-
   if (!isOpen || !notification) return null;
 
   const getNotificationIcon = () => {
@@ -93,9 +94,9 @@ const NotificationDetailsModal = ({
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white rounded-2xl shadow-xl w-[800px] max-w-full max-h-[90vh] overflow-hidden mx-4"
+        className="bg-white rounded-2xl shadow-xl w-[800px] max-w-full overflow-hidden mx-4"
       >
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4">
           <div className="flex flex-row items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-gray-100 rounded-lg">
@@ -121,17 +122,17 @@ const NotificationDetailsModal = ({
           </div>
         </div>
 
-        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-          <div className="space-y-6">
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+          <div className="">
             {/* Email Header */}
             {notification.type === "email" && (
-              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+              <div className="bg-gray-50 rounded-xl p-4">
                 <div className="flex sm:flex-col sm:items-start items-center justify-between">
                   <h3 className="sm:text-sm md:text-sm lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
-                    {notification.subject}
+                    {capitalizeFirstLetter(notification?.subject)}
                   </h3>
                   <span className="sm:text-xs sm:mt-2 text-sm text-gray-500">
-                    {new Date(notification.timestamp).toLocaleString("en-CA")}
+                    {formatDateTime(notification?.timestamp)}
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -140,7 +141,7 @@ const NotificationDetailsModal = ({
                       From:
                     </span>
                     <span className="text-sm text-gray-600">
-                      notifications@company.com
+                      {notification?.fromAddress || "Not Provided"}
                     </span>
                   </div>
                   <div className="flex items-start space-x-2">
@@ -148,9 +149,7 @@ const NotificationDetailsModal = ({
                       To:
                     </span>
                     <span className="text-sm text-gray-600 break-all">
-                      {Array.isArray(notification.recipients)
-                        ? notification.recipients.join(", ")
-                        : notification.recipients}
+                      {notification?.toAddress || "Not Provided"}
                     </span>
                   </div>
                   {notification.cc && notification.cc.length > 0 && (
@@ -168,11 +167,18 @@ const NotificationDetailsModal = ({
             )}
 
             {/* Message Body */}
-            <div className="bg-white rounded-xl">
-              <div className="prose max-w-none">
+            {/* <div className="bg-white rounded-xl">
+              <div className="sm:text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                 <div
-                  className="sm:text-sm text-gray-700 leading-relaxed whitespace-pre-line"
-                  dangerouslySetInnerHTML={{ __html: notification.message }}
+                  dangerouslySetInnerHTML={{ __html: notification?.message }}
+                ></div>
+              </div>
+            </div> */}
+            <div className="bg-white rounded-xl">
+              <div className="sm:text-sm text-gray-700 leading-normal">
+                <div
+                  className="[&_*]:m-0 [&_*]:p-0"
+                  dangerouslySetInnerHTML={{ __html: notification?.message }}
                 ></div>
               </div>
             </div>
@@ -216,7 +222,7 @@ const NotificationDetailsModal = ({
               )}
 
             {/* Status and Priority */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+            {/* <div className="flex items-center justify-between pt-4 border-t border-gray-100">
               <div className="flex items-center space-x-3">
                 <span
                   className={`px-2 py-1 text-xs font-medium rounded-lg ${
@@ -255,27 +261,27 @@ const NotificationDetailsModal = ({
                   </span>
                 )}
               </div>
-            </div>
+            </div> */}
 
             {/* Action Buttons */}
             <div className="flex flex-row items-center justify-end gap-3 pt-4">
               <div>
-                {notification.object.objectName === "interview" && (
+                {notification?.object?.objectName === "interview" && (
                   <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
                     View Interview Details
                   </button>
                 )}
-                {notification.object.objectName === "feedback" && (
+                {notification?.object?.objectName === "feedback" && (
                   <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
                     View Feedback
                   </button>
                 )}
-                {notification.object.objectName === "candidate" && (
+                {notification?.object?.objectName === "candidate" && (
                   <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
                     View Candidate Profile
                   </button>
                 )}
-                {notification.object.objectName === "assessment" && (
+                {notification?.object?.objectName === "assessment" && (
                   <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
                     View Assessment Details
                   </button>

@@ -1,6 +1,10 @@
 // v1.0.0 - Ashok - fixed an  unique "key" prop at recent activity
+// v1.0.1 - Ashok - Added some more fields and displayed based on type of tenant and color circle for features
+
 import { formatDate } from "../../../utils/dateUtils";
 import {
+  Briefcase,
+  Building,
   Building2,
   Calendar,
   CalendarDays,
@@ -9,6 +13,8 @@ import {
   CreditCard,
   Database,
   DollarSign,
+  Factory,
+  Globe2,
   Hash,
   Mail,
   MapPin,
@@ -19,6 +25,7 @@ import {
   UserCog,
   Users,
 } from "lucide-react";
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 function OverviewTab({ tenant, viewMode = "expanded" }) {
   const cardBase = "card border border-gray-200 p-4 bg-white rounded-lg";
@@ -28,10 +35,17 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
       ? "grid-cols-1"
       : "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3";
 
-  const capitalizeFirstLetter = (str) => {
-    if (typeof str !== "string" || !str) return "";
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
+  const InfoField = ({ icon: Icon, label, children }) => (
+    <div className="flex items-start gap-6">
+      <div className="p-2 bg-custom-bg rounded-lg">
+        <Icon className="w-5 h-5 text-gray-500" />
+      </div>
+      <div>
+        <span className="text-gray-500">{label}</span>
+        <p className="font-medium mt-0.5 text-gray-800">{children || "N/A"}</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className={`space-y-6 ${textSize} pb-6`}>
@@ -50,144 +64,137 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
             } gap-6 text-sm`}
           >
             {/* Name */}
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <User className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Name</span>
-                <p className="font-medium">
-                  {capitalizeFirstLetter(tenant?.firstName)}{" "}
-                  {capitalizeFirstLetter(tenant?.lastName)}
-                </p>
-              </div>
-            </div>
+            {(tenant?.firstName || tenant?.lastName) && (
+              <InfoField icon={User} label="Name">
+                <div className="flex items-center gap-1 font-medium">
+                  <span>{capitalizeFirstLetter(tenant?.firstName || "")}</span>
+                  <span>{capitalizeFirstLetter(tenant?.lastName || "")}</span>
+                </div>
+              </InfoField>
+            )}
 
             {/* Email */}
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Mail className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Email</span>
-                <p className="font-medium">{tenant?.email}</p>
-              </div>
-            </div>
+            {tenant?.email && (
+              <InfoField icon={Mail} label="Email">
+                {tenant.email}
+              </InfoField>
+            )}
 
-            {/* Phone */}
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Phone className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Phone</span>
-                <p className="font-medium">
-                  {tenant?.Phone || tenant?.phone || "Not Provided"}
-                </p>
-              </div>
-            </div>
+            {/* Phone (Org only) */}
+            {tenant?.type === "organization" && tenant?.phone && (
+              <InfoField icon={Phone} label="Phone">
+                {tenant.phone}
+              </InfoField>
+            )}
 
-            {/* Address */}
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <MapPin className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Address</span>
-                <p className="font-medium">
-                  {capitalizeFirstLetter(tenant?.address) || "Not Provided"}
-                </p>
-              </div>
-            </div>
+            {/* Job Title (Org only) */}
+            {tenant?.type === "organization" && tenant?.jobTitle && (
+              <InfoField icon={Briefcase} label="Job Title">
+                {capitalizeFirstLetter(tenant.jobTitle)}
+              </InfoField>
+            )}
+
+            {/* Company (Org only) */}
+            {tenant?.type === "organization" && tenant?.company && (
+              <InfoField icon={Factory} label="Company">
+                {capitalizeFirstLetter(tenant.company)}
+              </InfoField>
+            )}
+
+            {/* Employees (Org only) */}
+            {tenant?.type === "organization" && tenant?.employees && (
+              <InfoField icon={Users} label="Employees">
+                {tenant.employees}
+              </InfoField>
+            )}
+
+            {/* Country (Org only) */}
+            {tenant?.type === "organization" && tenant?.country && (
+              <InfoField icon={Globe2} label="Country">
+                {tenant.country}
+              </InfoField>
+            )}
+
+            {/* Offices (If Any) */}
+            {tenant?.offices?.length > 0 && (
+              <InfoField icon={Building} label="Offices">
+                <div className="font-medium mt-1 space-y-1">
+                  {tenant.offices.map((office, index) => (
+                    <p
+                      key={office.id || index}
+                      className="text-sm text-gray-800"
+                    >
+                      <span className="font-semibold">
+                        {office.type || `Office ${index + 1}`}:
+                      </span>{" "}
+                      {office.address
+                        ? `${office.address}, ${office.city}, ${office.state}, ${office.country} - ${office.zip}`
+                        : "Address not available"}
+                      {office.phone && (
+                        <span className="block text-gray-500 text-xs mt-0.5">
+                          <Phone className="w-4 h-4 inline-block mr-1" />
+                          {office.phone}
+                        </span>
+                      )}
+                    </p>
+                  ))}
+                </div>
+              </InfoField>
+            )}
+
+            {/* Address (if exists) */}
+            {tenant?.address && (
+              <InfoField icon={MapPin} label="Address">
+                {capitalizeFirstLetter(tenant.address)}
+              </InfoField>
+            )}
 
             {/* Type */}
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Building2 className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Type</span>
-                <p className="font-medium">
-                  {capitalizeFirstLetter(tenant?.type)}
-                </p>
-              </div>
-            </div>
+            <InfoField icon={Building2} label="Type">
+              {capitalizeFirstLetter(tenant?.type)}
+            </InfoField>
 
             {/* Status */}
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <CheckCircle className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Status</span>
-                <p className="font-medium">
-                  {capitalizeFirstLetter(tenant?.status) || "N/A"}
-                </p>
-              </div>
-            </div>
+            {tenant?.status && (
+              <InfoField icon={CheckCircle} label="Status">
+                {capitalizeFirstLetter(tenant.status)}
+              </InfoField>
+            )}
 
-            {/* Created & Updated */}
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Calendar className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Created At</span>
-                <p className="font-medium">{formatDate(tenant?.createdAt)}</p>
-              </div>
-            </div>
+            {/* Owner ID */}
+            {tenant?.ownerId && (
+              <InfoField icon={Hash} label="Owner ID">
+                {tenant.ownerId?.$oid || tenant.ownerId}
+              </InfoField>
+            )}
 
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Calendar className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Updated At</span>
-                <p className="font-medium">{formatDate(tenant?.updatedAt)}</p>
-              </div>
-            </div>
+            {/* Users Bandwidth */}
+            {tenant?.usersBandWidth && (
+              <InfoField icon={Database} label="Users Bandwidth">
+                {tenant.usersBandWidth} GB
+              </InfoField>
+            )}
 
-            {/* Created By & Owner */}
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <User className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Created By</span>
-                <p className="font-medium">{tenant?.createdBy || "System"}</p>
-              </div>
-            </div>
+            {/* Total Users */}
+            {tenant?.totalUsers !== undefined && (
+              <InfoField icon={Users} label="Total Users">
+                {tenant.totalUsers}
+              </InfoField>
+            )}
 
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Hash className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Owner ID</span>
-                <p className="font-medium">{tenant?.ownerId}</p>
-              </div>
-            </div>
+            {/* Created At */}
+            {tenant?.createdAt && (
+              <InfoField icon={Calendar} label="Created At">
+                {formatDate(tenant.createdAt)}
+              </InfoField>
+            )}
 
-            {/* Bandwidth & Users */}
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Database className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Users Bandwidth</span>
-                <p className="font-medium">{tenant?.usersBandWidth} GB</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-6">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Users className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <span className="text-gray-500">Total Users</span>
-                <p className="font-medium">{tenant?.totalUsers}</p>
-              </div>
-            </div>
+            {/* Updated At */}
+            {tenant?.updatedAt && (
+              <InfoField icon={Calendar} label="Updated At">
+                {formatDate(tenant.updatedAt)}
+              </InfoField>
+            )}
           </div>
         </div>
 
@@ -248,7 +255,8 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
               <div>
                 <span className="text-gray-500">Billing Cycle</span>
                 <p className="font-medium capitalize">
-                  {capitalizeFirstLetter(tenant?.selectedBillingCycle)}
+                  {capitalizeFirstLetter(tenant?.selectedBillingCycle) ||
+                    "Not Provided"}
                 </p>
               </div>
             </div>
@@ -296,7 +304,9 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
               </div>
               <div>
                 <span className="text-gray-500">Last Payment ID</span>
-                <p className="font-medium">{tenant?.lastPaymentId || "N/A"}</p>
+                <p className="font-medium">
+                  {tenant?.lastPaymentId || "Not Provided"}
+                </p>
               </div>
             </div>
 
@@ -306,7 +316,9 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
               </div>
               <div>
                 <span className="text-gray-500">Razorpay Customer ID</span>
-                <p className="font-medium">{tenant?.razorpayCustomerId}</p>
+                <p className="font-medium">
+                  {tenant?.razorpayCustomerId || "Not Provided"}
+                </p>
               </div>
             </div>
 
@@ -316,7 +328,9 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
               </div>
               <div>
                 <span className="text-gray-500">Razorpay Subscription</span>
-                <p className="font-medium">{tenant?.razorpaySubscriptionId}</p>
+                <p className="font-medium">
+                  {tenant?.razorpaySubscriptionId || "Not Provided"}
+                </p>
               </div>
             </div>
 
@@ -362,30 +376,30 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
         <div className={cardBase}>
           <h3 className="text-lg font-medium text-gray-900 mb-4">Features</h3>
           <div className="space-y-2">
-            {(tenant?.subscriptionPlan?.features || []).map(
-              ({ name, description, limit, _id }) => {
-                const enabled = !!limit && limit > 0;
-                return (
+            {tenant?.subscriptionPlan?.features?.length > 0 ? (
+              tenant.subscriptionPlan.features.map(
+                ({ name, description, limit, _id }) => (
                   <div key={_id} className="flex items-center">
+                    {/* Always green circle */}
                     <div
-                      className={`h-4 w-4 rounded-full mr-2 ${
-                        enabled ? "bg-green-500" : "bg-gray-400"
-                      }`}
+                      className="h-4 w-4 rounded-full mr-2 bg-green-500"
                       title={description}
                     ></div>
-                    <span
-                      className={enabled ? "text-gray-900" : "text-gray-500"}
-                    >
+
+                    {/* Always green text */}
+                    <span className="text-gray-900">
                       {name}
                       {limit !== undefined && (
-                        <span className="ml-2 text-sm text-gray-500 font-semibold">
+                        <span className="ml-2 text-sm text-green-600 font-semibold">
                           ({limit})
                         </span>
                       )}
                     </span>
                   </div>
-                );
-              }
+                )
+              )
+            ) : (
+              <p className="text-gray-500 font-medium">Not Features Provided</p>
             )}
           </div>
         </div>
