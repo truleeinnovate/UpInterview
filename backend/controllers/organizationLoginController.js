@@ -1387,8 +1387,6 @@ const registerOrganization = async (req, res) => {
       responseBody: JSON.parse(JSON.stringify(apiResponse)),
     };
 
-    console.log("logData", res.locals.logData);
-
     console.log("Organization registration completed successfully");
     res.status(201).json({
       message: "Organization created successfully",
