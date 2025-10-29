@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Converted notifications API to TanStack Query
+// v1.0.1 - Ashok - Enabled query only if tenantId and ownerId are present for individual
 
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -50,6 +51,7 @@ export const useNotifications = ({ organization, tenantId, ownerId }) => {
 
       return categorizedNotifications;
     },
-    enabled: !!organization && !!tenantId && !!ownerId,
+    // enabled: !!organization && !!tenantId && !!ownerId,
+    enabled: Boolean(tenantId && ownerId),
   });
 };

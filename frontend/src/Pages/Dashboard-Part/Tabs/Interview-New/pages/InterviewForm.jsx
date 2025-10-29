@@ -4,6 +4,7 @@
 // v1.0.3  -  Ashok    -  Disabled outer scrollbar when popup is open for better UX
 // v1.0.4  -  Ashok    -  Improved responsiveness
 // v1.0.6  -  Ranjith    -  Fixed issues at responsiveness
+// v1.0.7  -  Ashok    -  Z-index issue fixed when opening position form
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -139,7 +140,7 @@ const InterviewForm = () => {
   const interview = isEditing
     ? interviewData.find((interview) => interview._id === id)
     : null;
-  console.log('interview-----',interview);
+  console.log("interview-----", interview);
 
   // useEffect(() => {
   //   if (isEditing && interview) {
@@ -173,57 +174,65 @@ const InterviewForm = () => {
   //   }
   // }, [isEditing, interview, templatesData]);
 
-// v1.0.7  -  Your Name  -  Fixed template dropdown not showing selected value in edit mode
+  // v1.0.7  -  Your Name  -  Fixed template dropdown not showing selected value in edit mode
 
-useEffect(() => {
-  if (isEditing && interview && templatesData.length > 0) {
-    console.log("Interview data:", interview);
+  useEffect(() => {
+    if (isEditing && interview && templatesData.length > 0) {
+      console.log("Interview data:", interview);
 
-    setCandidateId(interview.candidateId?._id || "");
-    setPositionId(interview.positionId?._id || "");
+      setCandidateId(interview.candidateId?._id || "");
+      setPositionId(interview.positionId?._id || "");
 
-    // Fix for template - handle the nested object structure
-    if (interview.templateId) {
-      console.log("Template data:", interview.templateId);
+      // Fix for template - handle the nested object structure
+      if (interview.templateId) {
+        console.log("Template data:", interview.templateId);
 
-      let templateIdToSet = null;
+        let templateIdToSet = null;
 
-      if (typeof interview.templateId === 'object' && interview.templateId._id) {
-        templateIdToSet = interview.templateId._id;
-      } else if (typeof interview.templateId === 'string') {
-        templateIdToSet = interview.templateId;
-      }
-
-      // Verify template exists in templatesData
-      if (templateIdToSet) {
-        const templateExists = templatesData.some(t => t._id === templateIdToSet);
-        if (templateExists) {
-          // Use setTimeout to ensure state updates after component renders
-          setTimeout(() => {
-            setTemplateId(templateIdToSet);
-            console.log("Template ID set:", templateIdToSet);
-          }, 0);
-        } else {
-          console.warn("Template not found in templatesData:", templateIdToSet);
-          setTemplateId("");
+        if (
+          typeof interview.templateId === "object" &&
+          interview.templateId._id
+        ) {
+          templateIdToSet = interview.templateId._id;
+        } else if (typeof interview.templateId === "string") {
+          templateIdToSet = interview.templateId;
         }
-      }
-    } else {
-      setTemplateId("");
-    }
 
-    if (interview?.rounds && interview?.rounds.length > 0) {
-      setRounds(interview?.rounds);
-    } else {
-      setRounds([]);
+        // Verify template exists in templatesData
+        if (templateIdToSet) {
+          const templateExists = templatesData.some(
+            (t) => t._id === templateIdToSet
+          );
+          if (templateExists) {
+            // Use setTimeout to ensure state updates after component renders
+            setTimeout(() => {
+              setTemplateId(templateIdToSet);
+              console.log("Template ID set:", templateIdToSet);
+            }, 0);
+          } else {
+            console.warn(
+              "Template not found in templatesData:",
+              templateIdToSet
+            );
+            setTemplateId("");
+          }
+        }
+      } else {
+        setTemplateId("");
+      }
+
+      if (interview?.rounds && interview?.rounds.length > 0) {
+        setRounds(interview?.rounds);
+      } else {
+        setRounds([]);
+      }
     }
-  }
-}, [isEditing, interview, templatesData]);
+  }, [isEditing, interview, templatesData]);
 
   console.log("Render state:", {
     templateId,
     templatesDataLength: templatesData?.length,
-    selectedTemplate: templatesData?.find(t => t._id === templateId)?.title
+    selectedTemplate: templatesData?.find((t) => t._id === templateId)?.title,
   });
 
   useEffect(() => {
@@ -238,10 +247,8 @@ useEffect(() => {
         setRounds([]);
       }
 
-
       if (selectedPosition) {
         console.log("selectedPosition.rounds", selectedPosition);
-
 
         if (selectedPosition?.templateId) {
           setTemplateId(selectedPosition?.templateId);
@@ -291,8 +298,6 @@ useEffect(() => {
         setRounds(selectedTemplate.rounds);
         // toast.success("Rounds have been overridden by the template.");
       }
-
-
     }
   };
 
@@ -378,28 +383,27 @@ useEffect(() => {
   };
   // v1.0.6 <----------------------------------->
 
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto py-6 sm:px-4 lg:px-8">
-        <div className="px-4 sm:px-0">
+    <div className="bg-gray-50">
+      <main className="mx-auto sm:px-4 lg:px-8 px-[6%] pt-6">
+        <div className="px-4 sm:px-0 min-h-screen overflow-y-auto">
           <Breadcrumb
             items={[
               { label: "Interviews", path: "/interviews" },
               ...(isEditing && interview
                 ? [
-                  {
-                    label: candidateData?.LastName || "Interview",
-                    path: `/interviews/${id}`,
-                    status: interview.status,
-                  },
-                  { label: "Edit Interview", path: "" },
-                ]
+                    {
+                      label: candidateData?.LastName || "Interview",
+                      path: `/interviews/${id}`,
+                      status: interview.status,
+                    },
+                    { label: "Edit Interview", path: "" },
+                  ]
                 : [{ label: "New Interview", path: "" }]),
             ]}
           />
 
-          <div className="mt-4 bg-white shadow overflow sm:rounded-lg">
+          <div className="mt-4 bg-white shadow sm:rounded-lg">
             {/* v1.0.4 <----------------------------------- */}
             <div className="px-6 py-5 sm:px-4">
               {/* v1.0.4 -----------------------------------> */}
@@ -431,8 +435,9 @@ useEffect(() => {
                       options={[
                         ...(candidateData?.map((candidate) => ({
                           value: candidate._id,
-                          label: `${candidate.FirstName || ""} ${candidate.LastName || ""
-                            } (${candidate.Email || ""})`,
+                          label: `${candidate.FirstName || ""} ${
+                            candidate.LastName || ""
+                          } (${candidate.Email || ""})`,
                         })) || []),
                         {
                           value: "add_new",
@@ -493,10 +498,9 @@ useEffect(() => {
                   </div>
 
                   <div className="relative">
-
                     <DropdownWithSearchField
-                   key={`template-${templateId}-${positionId}`}
-                   // key={`template-${templateId}`}
+                      key={`template-${templateId}-${positionId}`}
+                      // key={`template-${templateId}`}
                       label="Interview Template"
                       name="templateId"
                       value={templateId || ""}
@@ -519,7 +523,7 @@ useEffect(() => {
                     />
                     {/* v1.0.1 -------------------> */}
 
-  {/* v1.0.6  -  Ranjith  -  rounds shown as horizontal stepper pathway   // v1.0.6 <-----------------------------------> */}
+                    {/* v1.0.6  -  Ranjith  -  rounds shown as horizontal stepper pathway   // v1.0.6 <-----------------------------------> */}
                     {/* Clear template button */}
                     {templateId && (
                       <button
@@ -532,20 +536,20 @@ useEffect(() => {
                         ×
                       </button>
                     )}
-
                   </div>
-
 
                   {rounds.length > 0 && (
                     <div className="mt-6">
-                      <p className="text-sm font-semibold text-gray-800 mb-4">Rounds Pathway</p>
+                      <p className="text-sm font-semibold text-gray-800 mb-4">
+                        Rounds Pathway
+                      </p>
                       <div className="flex items-center space-x-4 overflow-x-auto pb-2">
                         {rounds.map((round, index) => (
                           <React.Fragment key={index}>
                             <div
                               className={`flex items-center px-4 py-2 border rounded-lg shadow-sm min-w-[200px]  `}
 
-                            // ${index === rounds.length - 1 ? "bg-blue-50 border-blue-400" : "bg-white border-gray-200"}
+                              // ${index === rounds.length - 1 ? "bg-blue-50 border-blue-400" : "bg-white border-gray-200"}
                             >
                               {/* Step number circle */}
                               <div className="flex items-center justify-center w-6 h-6 rounded-full border border-gray-400 text-xs font-medium text-gray-600 mr-3">
@@ -567,7 +571,7 @@ useEffect(() => {
                     </div>
                   )}
 
- {/* v1.0.6  -  Ranjith  -  rounds shown as horizontal stepper pathway   // v1.0.6 <-----------------------------------> */}
+                  {/* v1.0.6  -  Ranjith  -  rounds shown as horizontal stepper pathway   // v1.0.6 <-----------------------------------> */}
 
                   <div className="flex justify-end space-x-3">
                     <button
@@ -628,7 +632,7 @@ useEffect(() => {
       {/* Position Modal */}
       {showPositionModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+          className="absolute top-0 left-0 w-full my-16 overflow-y-auto"
           onClick={(e) => handleModalBackdropClick(e, "position")}
         >
           <PositionForm
