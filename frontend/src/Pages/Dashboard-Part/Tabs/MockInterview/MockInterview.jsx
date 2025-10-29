@@ -644,7 +644,7 @@ const MockInterview = () => {
           <div className="sm:px-0">
             <Header
               title="Mock Interviews"
-              onAddClick={() => navigate("mock-interview-create")}
+              onAddClick={() => navigate("/mock-interview-create")}
               addButtonText="Add Interview"
               canCreate={effectivePermissions.MockInterviews?.Create}
             />
