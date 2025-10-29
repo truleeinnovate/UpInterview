@@ -38,6 +38,7 @@ import { useInterviewerDetails } from "../../utils/CommonFunctionRoundTemplates"
 import { Button } from "../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
 import { useAssessments } from "../../apiHooks/useAssessments";
 import { useInterviewTemplates } from "../../apiHooks/useInterviewTemplates";
+import { notify } from "../../services/toastService";
 
 const RoundCard = ({
   round,
@@ -58,10 +59,10 @@ const RoundCard = ({
       // v1.0.1 <----------------------------------------------------------------------
       setShowDeleteConfirmModal(false); // close the modal here
       // v1.0.1 ---------------------------------------------------------------------->
-      toast.success("Round deleted successfully");
+      notify.success("Round deleted successfully");
     } catch (error) {
       console.error("Error deleting round:", error);
-      toast.error("Failed to delete round");
+      notify.error("Failed to delete round");
     }
   };
 

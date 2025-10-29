@@ -32,6 +32,7 @@ import MyQuestionList from "./MyQuestionsListPopup.jsx";
 import { useNavigate } from "react-router-dom";
 import { Lock, Unlock } from "lucide-react";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
+import { notify } from "../../../../services/toastService.js";
 // v1.0.5 <-------------------------------------------------------
 // v1.0.5 ------------------------------------------------------->
 
@@ -512,7 +513,7 @@ const SuggestedQuestionsComponent = ({
   const handleToggle = (questionId, item) => {
     setMandatoryStatus((prev) => {
       const newStatus = !prev[questionId];
-      toast.success(
+      notify.success(
         `Question marked as ${newStatus ? "mandatory" : "optional"}`
       );
       if (handleToggleMandatory) {
@@ -579,7 +580,7 @@ const SuggestedQuestionsComponent = ({
         customizations: null,
       };
       updateQuestionsInAddedSectionFromQuestionBank(sectionName, questionToAdd);
-      toast.success("Question Added Successfully!");
+      notify.success("Question Added Successfully!");
     } else {
       try {
         const questionToAdd = {
@@ -593,7 +594,7 @@ const SuggestedQuestionsComponent = ({
         if (onAddQuestion) {
           onAddQuestion(questionToAdd);
         }
-        toast.success("Question Added Successfully!");
+        notify.success("Question Added Successfully!");
       } catch (error) {
         toast.error("Failed to add question");
         console.error("Error adding question:", error);
@@ -753,7 +754,7 @@ const SuggestedQuestionsComponent = ({
     if (type === "assessment") {
       // Remove question from assessment sections
       updateQuestionsInAddedSectionFromQuestionBank(sectionName, null, id);
-      toast.success("Question removed successfully!");
+      notify.success("Question removed successfully!");
 
       console.log("addedSections", addedSections);
     } else if (
@@ -762,7 +763,7 @@ const SuggestedQuestionsComponent = ({
     ) {
       handleRemoveQuestion(id);
       setMandatoryStatus((prev) => ({ ...prev, [id]: false }));
-      toast.success("Question removed successfully!");
+      notify.success("Question removed successfully!");
     } else {
       console.error("Failed to remove");
     }

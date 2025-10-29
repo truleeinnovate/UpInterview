@@ -13,6 +13,7 @@ import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../apiHooks/useUsers.js";
 import { useSubscription } from "../../../apiHooks/useSubscription";
 import Loading from '../../../Components/Loading.js';
+import { notify } from '../../../services/toastService.js';
 // import logo from "../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 
 
@@ -391,7 +392,7 @@ const CardDetails = () => {
                                             }
                                         });
 
-                                        toast.success("Payment successfully completed!");
+                                        notify.success("Payment successfully completed!");
                                         setProcessing(false);
 
                                         axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
