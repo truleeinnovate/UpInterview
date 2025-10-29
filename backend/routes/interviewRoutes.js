@@ -17,8 +17,7 @@ const {
   deleteInterview,
 } = require("../controllers/interviewController");
 
-// router.get('/', getAllInterviews);
-// router.get('/:id',getInterviewBasedOnInterviewId)
+ //  post call for interview page
 router.post("/", createInterview);
 
 //  Ranjith added patch call for interview update
@@ -40,6 +39,8 @@ router.get("/interviews", getAllInterviews);
 router.get("/interview-rounds", getAllInterviewRounds); // SUPER ADMIN - All interview rounds with details
 // v1.0.0 ------------------------------------------------------------->
 
+
+// Interview Status Update
 router.patch('/status/:interviewId/:status', updateInterviewStatus);
 
 // Check internal interview usage

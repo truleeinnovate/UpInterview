@@ -99,19 +99,7 @@ const AddCandidateForm = ({
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  // console.log("skills", skills);
-
-  // console.log("colleges", colleges);
-
-  // console.log("isCurrentRolesFetching", isCurrentRolesFetching);
-
-  // logger.log("qualifications", qualifications);
-
-  // logger.log("qualifications", currentRoles);
-
-  // console.log("qualifications", qualifications);
-
-  // console.log("currentRoles", currentRoles);
+  
 
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);

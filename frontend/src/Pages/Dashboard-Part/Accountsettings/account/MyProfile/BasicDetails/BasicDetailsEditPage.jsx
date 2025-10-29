@@ -6,6 +6,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import Modal from "react-modal";
 import axios from "axios";
+import { ReactComponent as FaPlus } from "../../../../../../icons/FaPlus.svg";
 import {
   isEmptyObject,
   validateFormMyProfile,
@@ -42,6 +43,7 @@ import {
   DateOfBirthField,
   ProfilePhotoUpload,
 } from "../../../../../../Components/FormFields";
+import LoadingButton from "../../../../../../Components/LoadingButton.jsx";
 Modal.setAppElement("#root");
 
 const BasicDetailsEditPage = ({
@@ -88,7 +90,7 @@ const BasicDetailsEditPage = ({
     //   return interviewer?.contactId || null;
     // }
     return userProfile;
-  }, [from,  resolvedId, userProfile]);
+  }, [from, resolvedId, userProfile]);
 
   // Role dropdown state
   const [currentRole, setCurrentRole] = useState([]);
@@ -345,7 +347,7 @@ const BasicDetailsEditPage = ({
     }
   };
 
- 
+
 
   const handleProfileIdValidation = async (profileId) => {
     // console.log("profileId", profileId);
@@ -405,7 +407,7 @@ const BasicDetailsEditPage = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     // v1.0.1 <--------------------------
-    
+
     // v1.0.1 -------------------------->
     //   if (formData.profileId !== originalProfileId) {
     //   const profileIdError = await validateProfileId(formData.profileId, checkProfileIdExists);
@@ -455,7 +457,7 @@ const BasicDetailsEditPage = ({
       return;
     }
 
-  
+
 
     const cleanFormData = {
       email: formData.email.trim() || "",
@@ -475,7 +477,7 @@ const BasicDetailsEditPage = ({
     };
 
     try {
-        setLoading(true);
+      setLoading(true);
       if (formData.email !== originalEmail) {
         const exists = await checkEmailExists(formData.email);
         if (exists) {
@@ -622,7 +624,7 @@ const BasicDetailsEditPage = ({
           return;
         }
 
-        
+
         const response = await updateContactDetail.mutateAsync({
           resolvedId: updateId,
           data: cleanFormData,
@@ -773,9 +775,9 @@ const BasicDetailsEditPage = ({
   // v1.0.1 <------------------------------------------------------------------------------
   // v1.0.2 <------------------------------------------------------------------------------------
   // derive the selected image object to pass to child
-  
-  
-  
+
+
+
   const displaySelectedImage =
     !isProfileRemoved && !filePreview ? profileData?.imageData ?? null : null;
   // v1.0.2 ------------------------------------------------------------------------------------>
@@ -783,12 +785,12 @@ const BasicDetailsEditPage = ({
   return (
     // v1.0.3 <---------------------------------------------------------
     <SidebarPopup title="Edit Basic Details" onClose={handleCloseModal}>
-    {/* v1.0.3 --------------------------------------------------------> */}
-      {loading && (
+      {/* v1.0.3 --------------------------------------------------------> */}
+      {/* {loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
         </div>
-      )}
+      )} */}
       <div className="sm:p-0 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {errors.form && (
@@ -912,8 +914,8 @@ const BasicDetailsEditPage = ({
                 label="LinkedIn"
                 name="linkedinUrl"
                 required
-                // disabled={true}
-                // className="bg-gray-100"
+              // disabled={true}
+              // className="bg-gray-100"
               />
             </div>
 
@@ -935,12 +937,17 @@ const BasicDetailsEditPage = ({
             >
               Cancel
             </button>
-            <button
+
+            <LoadingButton
               type="submit"
-              className="px-4 py-2 bg-custom-blue text-white rounded-lg"
+             
+              isLoading={loading }
+              loadingText="updating..."
             >
-              Save Changes
-            </button>
+              <FaPlus className="w-5 h-5 mr-1 sm:hidden" />  Save Changes
+            </LoadingButton>
+
+           
           </div>
         </form>
       </div>

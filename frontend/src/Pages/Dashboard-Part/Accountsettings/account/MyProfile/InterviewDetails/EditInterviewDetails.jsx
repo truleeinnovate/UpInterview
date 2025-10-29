@@ -12,9 +12,7 @@ import {
   isEmptyObject,
   validateInterviewForm,
 } from "../../../../../../utils/MyProfileValidations";
-
-import { ReactComponent as Technology } from "../../../../../../icons/technology.svg";
-import { ReactComponent as SkillIcon } from "../../../../../../icons/Skills.svg";
+import { ReactComponent as FaPlus } from "../../../../../../icons/FaPlus.svg";
 import { useNavigate, useParams } from "react-router-dom";
 import DropdownSelect from "../../../../../../Components/Dropdowns/DropdownSelect";
 import { useMasterData } from "../../../../../../apiHooks/useMasterData";
@@ -34,6 +32,7 @@ import {
   DescriptionField,
   InputField,
 } from "../../../../../../Components/FormFields";
+import LoadingButton from "../../../../../../Components/LoadingButton";
 // v1.0.2 ----------------------------------------------------------------------------------->
 
 const EditInterviewDetails = ({
@@ -76,7 +75,7 @@ const EditInterviewDetails = ({
     //   return interviewer?.contactId || null;
     // }
     return userProfile;
-  }, [from,  resolvedId, userProfile]);
+  }, [from, resolvedId, userProfile]);
 
   const updateContactDetail = useUpdateContactDetail();
   const queryClient = useQueryClient();
@@ -279,7 +278,7 @@ const EditInterviewDetails = ({
           Authorization: `Bearer ${token}`,
         },
       });
-     
+
 
       if (response.data) {
         const rateCardsData = Array.isArray(response.data)
@@ -288,7 +287,7 @@ const EditInterviewDetails = ({
         setRateCards(rateCardsData);
       }
     } catch (error) {
-   
+
       setRateCards([]);
     }
   }, []);
@@ -306,8 +305,8 @@ const EditInterviewDetails = ({
 
     // Calculate which levels should be visible based on years of experience
     const years =
-      parseInt(profileData?.previousExperienceConductingInterviewsYears ) || 0;
-   
+      parseInt(profileData?.previousExperienceConductingInterviewsYears) || 0;
+
     // Show Junior if years <= 6 (0-6 years)
     const shouldShowJunior = years <= 6;
     // Show Mid if years >= 3 AND years <= 9 (3-9 years)
@@ -318,7 +317,7 @@ const EditInterviewDetails = ({
 
     // Create the form data with proper rate visibility
     const newFormData = {
-      PreviousExperienceConductingInterviews: profileData?.previousExperienceConductingInterviews || "" ,
+      PreviousExperienceConductingInterviews: profileData?.previousExperienceConductingInterviews || "",
       // If experience is "no", keep years empty; otherwise use the parsed value
       PreviousExperienceConductingInterviewsYears:
         profileData?.previousExperienceConductingInterviews === "no"
@@ -421,7 +420,7 @@ const EditInterviewDetails = ({
   };
 
   const handleRadioChange = (value) => {
-  
+
     setFormData((prev) => {
       // When changing to "yes", ensure years has a valid value (minimum 1)
       let yearsValue = prev.PreviousExperienceConductingInterviewsYears;
@@ -444,7 +443,7 @@ const EditInterviewDetails = ({
         PreviousExperienceConductingInterviews: value,
         PreviousExperienceConductingInterviewsYears: yearsValue,
       };
-  
+
       return newFormData;
     });
     setErrors((prevErrors) => ({
@@ -585,92 +584,92 @@ const EditInterviewDetails = ({
 
     setLoading(true);
     try {
-  
-     
-        if (!profileData || !profileData.contactId) {
-          console.error("Profile data not loaded or missing contactId:", {
-            profileData,
-          });
-          notify.error(
-            "Profile data is not loaded. Please wait and try again."
-          );
+
+
+      if (!profileData || !profileData.contactId) {
+        console.error("Profile data not loaded or missing contactId:", {
+          profileData,
+        });
+        notify.error(
+          "Profile data is not loaded. Please wait and try again."
+        );
+        return;
+      }
+
+      // console.log("form", formData, typeof Number(formData.hourlyRate));
+
+      const cleanFormData = {
+        PreviousExperienceConductingInterviews: String(
+          formData.PreviousExperienceConductingInterviews?.trim() || ""
+        ).trim(),
+        ...(formData.PreviousExperienceConductingInterviews === 'yes' && {
+          PreviousExperienceConductingInterviewsYears: String(
+            formData.PreviousExperienceConductingInterviewsYears || "1"
+          ).trim()
+        }),
+        technologies: Array.isArray(formData.Technology)
+          ? formData.Technology
+          : [],
+        skills: Array.isArray(formData.skills) ? formData.skills : [],
+        InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
+        mock_interview_discount: formData.interviewFormatWeOffer.includes("mock")
+          ? formData.mock_interview_discount
+          : "",
+        professionalTitle: String(formData.professionalTitle || "").trim(),
+        bio: String(formData.bio || "").trim(),
+        id: formData.id,
+        yearsOfExperience: formData.yearsOfExperience,
+        rates: formData.rates,
+        tenantId: profileData?.tenantId,
+        ownerId: profileData?._id,
+
+      };
+
+
+      try {
+
+        if (!profileData || !profileData?.contactId) {
+          console.error("Profile data not loaded or missing contactId:", { profileData });
+          notify.error("Profile data is not loaded. Please wait and try again.");
           return;
         }
 
-        // console.log("form", formData, typeof Number(formData.hourlyRate));
 
-        const cleanFormData = {
-            PreviousExperienceConductingInterviews: String(
-                formData.PreviousExperienceConductingInterviews?.trim() || ""
-            ).trim(),
-            ...(formData.PreviousExperienceConductingInterviews === 'yes' && {
-                PreviousExperienceConductingInterviewsYears: String(
-                    formData.PreviousExperienceConductingInterviewsYears || "1"
-                ).trim()
-            }),
-            technologies: Array.isArray(formData.Technology)
-                ? formData.Technology
-                : [],
-            skills: Array.isArray(formData.skills) ? formData.skills : [],
-            InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
-            mock_interview_discount: formData.interviewFormatWeOffer.includes("mock")
-                ? formData.mock_interview_discount
-                : "",
-            professionalTitle: String(formData.professionalTitle || "").trim(),
-            bio: String(formData.bio || "").trim(),
-            id: formData.id,
-            yearsOfExperience: formData.yearsOfExperience,
-            rates: formData.rates,
-            tenantId:profileData?.tenantId,
-            ownerId:profileData?._id,
+        const response = await updateContactDetail.mutateAsync({
+          resolvedId: profileData?.contactId,
+          data: cleanFormData,
+        });
+        // Invalidate the query to refetch the updated data
+        await queryClient.invalidateQueries(["userProfile", resolvedId]);
 
-        };
-      
 
-        try {
-       
-            if (!profileData || !profileData?.contactId) {
-              console.error("Profile data not loaded or missing contactId:", { profileData });
-              notify.error("Profile data is not loaded. Please wait and try again.");
-              return;
-            }
-   
 
-            const response = await updateContactDetail.mutateAsync({
-                resolvedId: profileData?.contactId ,
-                data: cleanFormData,
-            });
-            // Invalidate the query to refetch the updated data
-            await queryClient.invalidateQueries(["userProfile", resolvedId]);
-
-          
-
-            if (response.status === 200) {
-                notify.success("Updated Interview Details Successfully");
-                // Only close the modal after successful update
-                handleCloseModal();
-                if (usersId && onSuccess) {
-                    onSuccess();
-                }
-            }
-          // }
-        } catch (error) {
-          console.error("Error updating interview details:", error);
-
-          if (error.response) {
-            if (error.response.status === 400) {
-              const backendErrors = error.response.data.errors || {};
-              console.log("backendErrors", backendErrors);
-              setErrors(backendErrors);
-            } else {
-              notify.error("Error updating interview details. Please try again.");
-              setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
-            }
-          } else {
-            notify.error("Network error. Please check your connection and try again.");
-            setErrors((prev) => ({ ...prev, form: "Network error" }));
+        if (response.status === 200) {
+          notify.success("Updated Interview Details Successfully");
+          // Only close the modal after successful update
+          handleCloseModal();
+          if (usersId && onSuccess) {
+            onSuccess();
           }
         }
+        // }
+      } catch (error) {
+        console.error("Error updating interview details:", error);
+
+        if (error.response) {
+          if (error.response.status === 400) {
+            const backendErrors = error.response.data.errors || {};
+            console.log("backendErrors", backendErrors);
+            setErrors(backendErrors);
+          } else {
+            notify.error("Error updating interview details. Please try again.");
+            setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
+          }
+        } else {
+          notify.error("Network error. Please check your connection and try again.");
+          setErrors((prev) => ({ ...prev, form: "Network error" }));
+        }
+      }
       // }
     } catch (error) {
       console.error("Error updating interview details:", error);
@@ -698,11 +697,11 @@ const EditInterviewDetails = ({
   };
 
   const addSkill = (skillName) => {
-   
+
     const trimmedSkill = skillName.trim();
- 
+
     if (!trimmedSkill) {
-      
+
       return;
     }
 
@@ -712,14 +711,14 @@ const EditInterviewDetails = ({
         (typeof s === "object" ? s.SkillName : s).toLowerCase() ===
         trimmedSkill.toLowerCase()
     );
-    
+
 
     if (!skillExists) {
       const newSkill = {
         _id: Math.random().toString(36).substr(2, 9),
         SkillName: trimmedSkill,
       };
-   
+
 
       const updatedSkills = [...selectedSkills, newSkill];
 
@@ -730,7 +729,7 @@ const EditInterviewDetails = ({
         skills: updatedSkills.map((s) => s?.SkillName || s).filter(Boolean),
       }));
       setErrors((prev) => ({ ...prev, skills: "" }));
- 
+
     } else {
       notify.error("Skill already exists");
     }
@@ -771,7 +770,7 @@ const EditInterviewDetails = ({
 
   const handleYearsOfExperienceChange = (e) => {
     const years = parseInt(e.target.value) || 0;
-  
+
 
     const shouldShowJunior = years <= 6;
     const shouldShowMid = years >= 3 && years <= 9;
@@ -931,7 +930,7 @@ const EditInterviewDetails = ({
             },
           },
         };
-     
+
         return newFormData;
       });
 
@@ -955,7 +954,7 @@ const EditInterviewDetails = ({
           console.error("Error fetching rate cards:", error);
         });
     } else {
-    
+
       setSelectedCandidates([]);
       setFormData((prev) => ({
         ...prev,
@@ -1013,22 +1012,22 @@ const EditInterviewDetails = ({
   return (
     <SidebarPopup title="Edit Interview Details" onClose={handleCloseModal}>
       {/* v1.0.3 <------------------------------------------------------------------------------------------------- */}
-      {loading && (
+      {/* {loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
         </div>
-      )}
+      )} */}
       {/* v1.0.3 -------------------------------------------------------------------------------------------------> */}
 
       <div className="sm:p-0 p-6">
-        <form className="space-y-6 pb-2"> 
+        <form className="space-y-6 pb-2">
           {/* //  onSubmit={handleSave} */}
           <div className="grid grid-cols-1 gap-4">
             {/* Technology Selection */}
             <div className="space-y-4">
               <DropdownWithSearchField
 
-              disabled = {from !== "outsource-interviewer"}
+                disabled={from !== "outsource-interviewer"}
                 value={selectedCandidates[0]?.TechnologyMasterName || ""}
                 options={services.map((tech) => ({
                   value: tech.TechnologyMasterName,
@@ -1050,7 +1049,7 @@ const EditInterviewDetails = ({
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="relative" ref={skillsPopupRef}>
-            
+
                   <DropdownWithSearchField
                     ref={skillsInputRef}
                     value={null}
@@ -1081,18 +1080,18 @@ const EditInterviewDetails = ({
                       }
                     }}
                     onKeyDown={(e) => {
-                      
+
 
                       // Handle the create action from the dropdown
                       if (e.key === "Enter" && e.target?.action === "create") {
                         const newSkill = e.target.value?.trim();
                         if (newSkill) {
-                         
+
                           addSkill(newSkill);
 
                           // Clear the input field and close the dropdown
                           setTimeout(() => {
-                          
+
                             // Blur any active element to close dropdowns
                             if (document.activeElement) {
                               document.activeElement.blur();
@@ -1103,7 +1102,7 @@ const EditInterviewDetails = ({
                               // Clear react-select value
                               if (skillsInputRef.current.select) {
                                 skillsInputRef.current.select.clearValue();
-                               
+
                               }
 
                               // Find and clear the input
@@ -1189,7 +1188,7 @@ const EditInterviewDetails = ({
                         "yes"
                       }
                       onChange={(e) => {
-                       
+
                         handleRadioChange(e.target.value);
                       }}
                       className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
@@ -1205,7 +1204,7 @@ const EditInterviewDetails = ({
                         formData.PreviousExperienceConductingInterviews === "no"
                       }
                       onChange={(e) => {
-                     
+
                         handleRadioChange(e.target.value);
                       }}
                       className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
@@ -1221,7 +1220,7 @@ const EditInterviewDetails = ({
               </div>
 
               {/* Conditional Experience Years */}
-              
+
               {formData.PreviousExperienceConductingInterviews === "yes" && (
                 <div className="w-1/2">
                   <InputField
@@ -1292,7 +1291,7 @@ const EditInterviewDetails = ({
                             <IncreaseAndDecreaseField
                               name="junior_usd"
 
-                      disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               value={formData.rates?.junior?.usd || ""}
                               onChange={handleRateChange("junior", "usd")}
                               label=""
@@ -1596,7 +1595,7 @@ const EditInterviewDetails = ({
                 )}
               </div>
 
-                        {formData.interviewFormatWeOffer?.includes("mock") && (
+              {formData.interviewFormatWeOffer?.includes("mock") && (
                 <div>
                   <div className="p-4 rounded-lg border border-gray-200">
                     <label
@@ -1663,58 +1662,58 @@ const EditInterviewDetails = ({
                         </div>
                       ) : (
                         <>
-                        <DropdownSelect
-                          id="mock_interview_discount"
-                          name="mock_interview_discount"
-                          value={
-                            formData.mock_interview_discount
-                              ? {
+                          <DropdownSelect
+                            id="mock_interview_discount"
+                            name="mock_interview_discount"
+                            value={
+                              formData.mock_interview_discount
+                                ? {
                                   value: formData.mock_interview_discount,
                                   label: `${formData.mock_interview_discount}% discount`,
                                 }
-                              : null
-                          }
- 
-                          onChange={(selected) => {
-                            if (selected?.value === "custom") {
-                              setShowCustomDiscount(true);
-                              setCustomDiscountValue("");
-                            } else if (selected) {
-                              handleChangeforExp({
-                                target: {
-                                  name: "mock_interview_discount",
-                                  value: selected.value,
-                                },
-                              });
-                            } else {
-                              handleChangeforExp({
-                                target: {
-                                  name: "mock_interview_discount",
-                                  value: "",
-                                },
-                              });
+                                : null
                             }
-                          }}
-                          options={[
-                            { value: "10", label: "10% discount" },
-                            { value: "20", label: "20% discount" },
-                            { value: "30", label: "30% discount" },
-                            {
-                              value: "custom",
-                              label: "Add custom percentage...",
-                            },
-                          ]}
-                          placeholder="Select discount percentage"
-                          className="w-full"
-                          classNamePrefix="select"
-                          isClearable={true}
-                        />
+
+                            onChange={(selected) => {
+                              if (selected?.value === "custom") {
+                                setShowCustomDiscount(true);
+                                setCustomDiscountValue("");
+                              } else if (selected) {
+                                handleChangeforExp({
+                                  target: {
+                                    name: "mock_interview_discount",
+                                    value: selected.value,
+                                  },
+                                });
+                              } else {
+                                handleChangeforExp({
+                                  target: {
+                                    name: "mock_interview_discount",
+                                    value: "",
+                                  },
+                                });
+                              }
+                            }}
+                            options={[
+                              { value: "10", label: "10% discount" },
+                              { value: "20", label: "20% discount" },
+                              { value: "30", label: "30% discount" },
+                              {
+                                value: "custom",
+                                label: "Add custom percentage...",
+                              },
+                            ]}
+                            placeholder="Select discount percentage"
+                            className="w-full"
+                            classNamePrefix="select"
+                            isClearable={true}
+                          />
                           {errors.mock_interview_discount && (
-                          <p className="text-red-500 text-xs mt-1">
-                            {errors.mock_interview_discount}
-                          </p>
-                        )}
-                      </>
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.mock_interview_discount}
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                     <p className="mt-1.5 text-xs text-custom-blue">
@@ -1774,9 +1773,9 @@ const EditInterviewDetails = ({
                   {formData.professionalTitle?.length > 0 && (
                     <p
                       className={`text-xs ${formData.professionalTitle.length < 50 ||
-                          errors.professionalTitle
-                          ? "text-red-500"
-                          : "text-gray-500"
+                        errors.professionalTitle
+                        ? "text-red-500"
+                        : "text-gray-500"
                         }`}
                     >
                       {formData.professionalTitle.length}/100
@@ -1798,24 +1797,9 @@ const EditInterviewDetails = ({
                   // onChange={handleBioChange}
                   onChange={(e) => {
                     handleBioChange(e);
-                    // Clear error when user starts typing
-                    // if (e.target.value.length >= 150) {
-                    //   setErrors(prev => ({ ...prev, bio: '' }));
-                    // }
-                  }}
-                  // onBlur={(e) => {
-                  //   const value = e.target.value.trim();
-                  //   if (!value) {
-                  //     setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
-                  //   } else if (value.length < 150) {
-                  //     setErrors(prev => ({ ...prev, bio: 'Professional bio must be at least 150 characters' }));
-                  //   } else {
-                  //     setErrors(prev => ({ ...prev, bio: '' }));
-                  //   }
-                  // }}
 
-                  // ${errors.bio ? 'border-red-500' : 'border-gray-300'
-                  //   }
+                  }}
+
                   required
                   placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
                   minLength={150}
@@ -1827,23 +1811,27 @@ const EditInterviewDetails = ({
 
           </div>
         </form>
-        
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                 onClick={handleSave}
-                className="px-4 py-2 bg-custom-blue text-white rounded-lg"
-              >
-                Save Changes
-              </button>
-            </div>
+
+        <div className="flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={handleCloseModal}
+            className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
+          >
+            Cancel
+          </button>
+
+          <LoadingButton
+            type="submit"
+            onClick={handleSave}
+            isLoading={loading}
+            loadingText="updating..."
+          >
+            <FaPlus className="w-5 h-5 mr-1 sm:hidden" />  Save Changes
+          </LoadingButton>
+
+      
+        </div>
       </div>
     </SidebarPopup>
   );
