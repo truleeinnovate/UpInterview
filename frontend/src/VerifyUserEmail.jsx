@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { config } from './config';
 import toast from 'react-hot-toast';
+import { notify } from './services/toastService';
 
 const VerifyUserEmail = () => {
   const [searchParams] = useSearchParams();
@@ -29,14 +30,14 @@ const VerifyUserEmail = () => {
 
         if (response.data.success) {
           setVerificationStatus('success');
-          toast.success('Email verified successfully!');
+         notify.success('Email verified successfully!');
           // Redirect after 3 seconds
           // setTimeout(() => {
           //   // navigate('/organization-login');
           // }, 5000);
         } else {
           setVerificationStatus('failed');
-          toast.error(response.data.message || 'Verification failed');
+          notify.error(response.data.message || 'Verification failed');
         }
       }
       catch (error) {

@@ -14,6 +14,7 @@ import Cookies from 'js-cookie';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 // v1.0.2 <-------------------------------------------------------------------------------
 import { useScrollLock } from '../../../../../apiHooks/scrollHook/useScrollLock.js';
+import { notify } from '../../../../../services/toastService.js';
 // v1.0.2 ------------------------------------------------------------------------------->
 
 const AssessmentActionPopup = ({ 
@@ -275,15 +276,15 @@ const AssessmentActionPopup = ({
 
         if (response.data.success) {
           if (selectedCandidates.length === 1) {
-            toast.success('Assessment link resent successfully');
+            notify.success('Assessment link resent successfully');
           } else {
             const { summary } = response.data;
-            toast.success(`Resent links to ${summary.successful} out of ${summary.total} candidates`);
+            notify.success(`Resent links to ${summary.successful} out of ${summary.total} candidates`);
           }
           onSuccess?.();
           onClose();
         } else {
-          toast.error(response.data.message || 'Failed to resend links');
+          notify.error(response.data.message || 'Failed to resend links');
         }
       }
 

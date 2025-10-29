@@ -4,6 +4,7 @@ import { config } from "../../config";
 import toast from "react-hot-toast";
 import { usePermissions } from "../../Context/PermissionsContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { notify } from "../../services/toastService";
 
 // Hook to get all outsource interviewers
 export const useOutsourceInterviewers = () => {
@@ -55,13 +56,13 @@ export const useUpdateInterviewerFeedback = () => {
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Feedback Updated Successfully!");
+      notify.success("Feedback Updated Successfully!");
       // Invalidate to refetch updated data
       queryClient.invalidateQueries(["outsourceInterviewers"]);
     },
     onError: (error) => {
       console.error("Error updating feedback:", error);
-      toast.error("Error updating feedback");
+      notify.error("Error updating feedback");
     },
   });
 };
@@ -81,14 +82,14 @@ export const useUpdateOutsourceInterviewer = () => {
       return response.data;
     },
     onSuccess: (response, { resolvedId }) => {
-      toast.success("Profile updated successfully!");
+      notify.success("Profile updated successfully!");
       // Invalidate to refetch updated data
       queryClient.invalidateQueries(["outsourceInterviewers"]);
       queryClient.invalidateQueries(["userProfile", resolvedId]);
     },
     onError: (error) => {
       console.error("Error updating interviewer profile:", error);
-      toast.error(error.response?.data?.message || "Error updating profile");
+      notify.error(error.response?.data?.message || "Error updating profile");
     },
   });
 };

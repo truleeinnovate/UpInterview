@@ -14,6 +14,7 @@ import { config } from "../../../../../config";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 import toast from "react-hot-toast";
+import { notify } from "../../../../../services/toastService";
 
 const DomainManagement = () => {
   const { checkPermission, isInitialized } = usePermissionCheck();
@@ -144,7 +145,7 @@ const DomainManagement = () => {
         setError(null);
 
         // Show success message
-        toast.success(
+        notify.success(
           `Subdomain activated successfully! Redirecting to ${newDomain.fullDomain}...`
         );
 

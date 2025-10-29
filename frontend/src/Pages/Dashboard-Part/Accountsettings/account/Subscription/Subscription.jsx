@@ -233,7 +233,7 @@ const Subscription = () => {
         };
         
         await createCustomerSubscription(payload);
-        toast.success("Free plan activated successfully!");
+        notify.success("Free plan activated successfully!");
         await refetchSubscription();
         await refetchPlans();
         return;

@@ -15,6 +15,7 @@ import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
 // <---------------------- v1.0.5
 import toast from 'react-hot-toast';
+import { notify } from '../services/toastService';
 // ------------------------------ v1.0.5 >
 
 export const useAssessments = (filters = {}) => {
@@ -138,7 +139,7 @@ export const useAssessments = (filters = {}) => {
       return response.data;
     },
     onSuccess: (data) => {
-      toast.success(data.message || 'Assessment extended successfully');
+      notify.success(data.message || 'Assessment extended successfully');
       // Invalidate all related queries to ensure data refresh
       queryClient.invalidateQueries({ queryKey: ['Assessments'] });
       queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });
@@ -148,7 +149,7 @@ export const useAssessments = (filters = {}) => {
       queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to extend assessment');
+      notify.error(error.response?.data?.message || 'Failed to extend assessment');
     },
   });
 
@@ -161,7 +162,7 @@ export const useAssessments = (filters = {}) => {
       return response.data;
     },
     onSuccess: (data) => {
-      toast.success(data.message || 'Assessment cancelled successfully');
+      notify.success(data.message || 'Assessment cancelled successfully');
       // Invalidate all related queries to ensure data refresh
       queryClient.invalidateQueries({ queryKey: ['Assessments'] });
       queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });
@@ -171,7 +172,7 @@ export const useAssessments = (filters = {}) => {
       queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to cancel assessment');
+      notify.error(error.response?.data?.message || 'Failed to cancel assessment');
     },
   });
 
@@ -183,7 +184,7 @@ export const useAssessments = (filters = {}) => {
       return response.data;
     },
     onSuccess: (data) => {
-      toast.success(data.message || 'Expiry check completed successfully');
+      notify.success(data.message || 'Expiry check completed successfully');
       // Invalidate all related queries to ensure data refresh
       queryClient.invalidateQueries({ queryKey: ['Assessments'] });
       queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });
@@ -193,7 +194,7 @@ export const useAssessments = (filters = {}) => {
       queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to check expired assessments');
+      notify.error(error.response?.data?.message || 'Failed to check expired assessments');
     },
   });
 
@@ -205,7 +206,7 @@ export const useAssessments = (filters = {}) => {
       return response.data;
     },
     onSuccess: (data) => {
-      toast.success(data.message || 'All schedule statuses updated successfully');
+      notify.success(data.message || 'All schedule statuses updated successfully');
       // Invalidate all related queries to ensure data refresh
       queryClient.invalidateQueries({ queryKey: ['Assessments'] });
       queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });

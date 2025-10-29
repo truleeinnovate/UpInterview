@@ -24,6 +24,7 @@ import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from "../../../../../config.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
+import { notify } from "../../../../../services/toastService.js";
 
 function AssessmentsTab({ assessment }) {
   // <-------------------------------v1.0.3
@@ -134,10 +135,10 @@ function AssessmentsTab({ assessment }) {
       );
 
       if (response.data.success) {
-        toast.success("Assessment link resent successfully");
+        notify.success("Assessment link resent successfully");
         // React Query will automatically refresh the data when needed
       } else {
-        toast.error(response.data.message || "Failed to resend link");
+        notify.error(response.data.message || "Failed to resend link");
       }
     } catch (error) {
       console.error("Error resending link:", error);

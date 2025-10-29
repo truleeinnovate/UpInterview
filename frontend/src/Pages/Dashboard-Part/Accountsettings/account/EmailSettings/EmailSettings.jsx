@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Cookies from "js-cookie";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { config } from '../../../../../config';
+import { notify } from '../../../../../services/toastService';
 
 function EmailSettings() {
 
@@ -114,10 +115,10 @@ Template Manager Team
       setSettings(savedSettings);
       setIsEditing(false);
       setEditedSettings(null);
-      toast.success('Email settings saved successfully!');
+      notify.success('Email settings saved successfully!');
     } catch (err) {
       setError(err.message);
-      toast.error('Failed to save email settings. Please try again.');
+      notify.error('Failed to save email settings. Please try again.');
     } finally {
       setIsLoading(false);
     }

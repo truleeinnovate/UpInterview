@@ -495,7 +495,7 @@ const BasicDetailsEditPage = ({
         const res = await requestEmailChange.mutateAsync(emailChangePayload);
 
         if (res.data.success) {
-          toast.success("Verification email sent to your new email address");
+          notify.success("Verification email sent to your new email address");
 
           const dataWithNewEmail = {
             ...cleanFormData,
