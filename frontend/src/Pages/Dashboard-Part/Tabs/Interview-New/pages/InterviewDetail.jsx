@@ -818,7 +818,7 @@ const InterviewDetail = () => {
                                             )}
                                             {/* v1.0.0 -------------------------------------------------------------------------------------------------------------> */}
 
-                                            {interview?.status === "InProgress" &&
+                                            {/* {interview?.status === "InProgress" &&
                                                 allRoundsCompleted && (
                                                     <button
                                                         onClick={() => setShowFinalFeedbackModal(true)}
@@ -827,9 +827,10 @@ const InterviewDetail = () => {
                                                         <FileText className="h-4 w-4 mr-1" />
                                                         Add Final Feedback
                                                     </button>
-                                                )}
+                                                )} */}
+                                                {/* we have to check like we need final feedback for interviews or not */}
 
-                                            {interview?.status === "Draft" && (
+                                            {interview?.status === "InProgress" && (
                                                 <button
                                                     onClick={handleCompleteClick}
                                                     className="inline-flex flex-shrink-0 items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -839,7 +840,7 @@ const InterviewDetail = () => {
                                                 </button>
                                             )}
 
-                                            {interview?.status === "Draft" && (
+                                            {interview?.status === "InProgress" && (
                                                 <button
                                                     // onClick={() => setIsModalOpen(true)}
                                                     onClick={handleCancelClick}
