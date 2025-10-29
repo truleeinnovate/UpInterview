@@ -788,7 +788,7 @@ const MultiStepForm = () => {
                         currentErrors,
                         existingErrors: errors
                     }, null, 2));
-                    notify.error("Please complete all required fields before proceeding.");
+                    notify.error("Please fill all required fields.");
                 }
 
                 // Update errors state but don't prevent navigation if it's just empty values
