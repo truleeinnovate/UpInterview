@@ -10,7 +10,7 @@ import SupportForm from '../../Dashboard-Part/Tabs/SupportDesk/SupportForm';
 const OrganizationSubmissionStatus = () => {
 
     const { data: allRequests = [], isLoading } = useAllReqForPaymentPendingPage();
-    console.log("allRequests", allRequests);
+    // console.log("allRequests", allRequests);
 
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
@@ -23,7 +23,7 @@ const OrganizationSubmissionStatus = () => {
         request.tenantId === organizationId
     );
 
-    console.log('Matching request:', userRequest);
+    // console.log('Matching request:', userRequest);
 
     const location = useLocation();
     const { status: statusFromLocation, organizationName, rejectionReason } = location.state || {};

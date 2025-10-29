@@ -310,7 +310,7 @@ const PositionSlideDetails = () => {
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
-                      <DollarSign className="w-4 h-4 text-custom-blue" />
+                      <span className="text-md text-custom-blue">₹</span>
                       <span className="text-sm">Salary Range</span>
                     </div>
                     <p className="text-sm font-medium text-gray-800">

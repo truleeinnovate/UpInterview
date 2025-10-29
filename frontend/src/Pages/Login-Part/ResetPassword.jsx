@@ -19,8 +19,8 @@ const ResetPassword = () => {
     const token = params.get("token");
     const userType = params.get("type");
 
-    console.log("Extracted token:", token); // Log the token
-  console.log("Extracted type:", userType); // Log the type
+  //   console.log("Extracted token:", token); // Log the token
+  // console.log("Extracted type:", userType); // Log the type
 
     if (token) setUserId(token);
     if (userType) setType(userType);

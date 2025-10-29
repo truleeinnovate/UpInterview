@@ -410,12 +410,12 @@ export const Organization = () => {
 
   const generateProfileId = (email) => {
     if (!email) return "";
-    console.log("generateProfileId input:", email); // Debug log
+    // console.log("generateProfileId input:", email); // Debug log
     return email; // Use full email as username
   };
 
   const handleProfileIdValidation = async (profileId) => {
-    console.log("handleProfileIdValidation profileId:", profileId); // Debug log
+    // console.log("handleProfileIdValidation profileId:", profileId); // Debug log
     if (!profileId) {
       setErrors((prev) => ({ ...prev, profileId: "" }));
       setSuggestedProfileId("");
@@ -428,13 +428,13 @@ export const Organization = () => {
       profileId,
       checkProfileIdExists
     );
-    console.log("profileIdError:", profileIdError); // Debug log
+    // console.log("profileIdError:", profileIdError); // Debug log
     setErrors((prev) => ({ ...prev, profileId: profileIdError }));
 
     if (profileIdError && profileIdError.includes("already taken")) {
       const [localPart, ...domainParts] = profileId.split("@");
       const domain = domainParts.join("@"); // Handle edge cases like user@sub@domain.com
-      console.log("localPart:", localPart, "domain:", domain); // Debug log
+      // console.log("localPart:", localPart, "domain:", domain); // Debug log
       if (!localPart || !domain) {
         setSuggestedProfileId("");
         setIsCheckingProfileId(false);
@@ -442,7 +442,7 @@ export const Organization = () => {
       }
       let suffixCharCode = 97; // 'a'
       let newProfileId = `${localPart}.a@${domain}`;
-      console.log("Initial suggestion:", newProfileId); // Debug log
+      // console.log("Initial suggestion:", newProfileId); // Debug log
 
       while (await checkProfileIdExists(newProfileId)) {
         suffixCharCode++;
@@ -454,9 +454,9 @@ export const Organization = () => {
         newProfileId = `${localPart}.${String.fromCharCode(
           suffixCharCode
         )}@${domain}`;
-        console.log("Next suggestion:", newProfileId); // Debug log
+        // console.log("Next suggestion:", newProfileId); // Debug log
       }
-      console.log("Final suggestedProfileId:", newProfileId); // Debug log
+      // console.log("Final suggestedProfileId:", newProfileId); // Debug log
       setSuggestedProfileId(newProfileId);
     } else {
       setSuggestedProfileId("");
