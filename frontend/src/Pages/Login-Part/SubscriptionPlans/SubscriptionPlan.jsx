@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js';
 import Cookies from "js-cookie";
 import { useSubscription } from '../../../apiHooks/useSubscription.js';
+import { notify } from "../../../services/toastService.js";
 
 // Loading Skeleton for Subscription Plans
 const SubscriptionPlansSkeleton = () => {
@@ -126,7 +127,7 @@ const SubscriptionPlan = () => {
   const submitPlans = async (plan) => {
 
     if (!plan) {
-      toast.success("No plan is selected");
+      notify.success("No plan is selected");
       return;
     }
     const totalAmount = isAnnual ? plan.annualPrice : plan.monthlyPrice;

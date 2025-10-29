@@ -10,6 +10,7 @@ import { config } from "../../../config";
 // v1.0.1 <------------------------------------------------------------
 import toast from "react-hot-toast";
 import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock";
+import { notify } from "../../../services/toastService";
 // v1.0.1 ------------------------------------------------------------>
 
 function RatesKanbanView({ filterCategory, onEdit, onView }) {
@@ -277,10 +278,10 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
       );
 
       setRateCards(rateCards.filter((card) => card._id !== deleteTarget._id));
-      toast.success("Rate card deleted successfully");
+      notify.success("Rate card deleted successfully");
       setDeleteTarget(null); // close modal
     } catch (error) {
-      toast.error("Failed to delete rate card");
+      notify.error("Failed to delete rate card");
       console.error("Error deleting rate card:", error);
     } finally {
       setLoading(false);

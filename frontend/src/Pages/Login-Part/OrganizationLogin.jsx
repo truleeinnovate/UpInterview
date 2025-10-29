@@ -22,6 +22,7 @@ import toast from "react-hot-toast";
 import { usePermissions } from "../../Context/PermissionsContext";
 
 import { Link } from "react-router-dom";
+import { notify } from "../../services/toastService.js";
 // import Layout from './Layout.jsx';
 
 const OrganizationLogin = () => {
@@ -46,7 +47,7 @@ const OrganizationLogin = () => {
         const query = new URLSearchParams(location.search);
         const verified = query.get("verified");
         if (verified === "true") {
-            toast.success("Email verified successfully!");
+            notify.success("Email verified successfully!");
             navigate("/organization-login");
             window.location.reload();
         }
@@ -94,15 +95,15 @@ const OrganizationLogin = () => {
                 { email }
             );
             if (response.data.success) {
-                toast.success("Verification email resent!");
+                notify.success("Verification email resent!");
                 setCountdown(60);
             } else {
-                toast.error(
+                notify.error(
                     response.data.message || "Failed to resend verification email"
                 );
             }
         } catch (error) {
-            toast.error(
+            notify.error(
                 error.response?.data?.message || "Failed to resend verification email"
             );
         } finally {

@@ -43,6 +43,7 @@ import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock"
 import Activity from "../../CommonCode-AllTabs/Activity";
 // v1.0.4 <------------------------------------------------------------------------
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { notify } from "../../../../../services/toastService";
 // v1.0.4 ------------------------------------------------------------------------>
 
 const PositionRoundCard = ({
@@ -71,10 +72,10 @@ const PositionRoundCard = ({
       // v1.0.1 <----------------------------------------------------------------------
       setShowDeleteConfirmModal(false); // close the modal here
       // v1.0.1 ---------------------------------------------------------------------->
-      toast.success("Round deleted successfully");
+      notify.success("Round deleted successfully");
     } catch (error) {
       console.error("Error deleting round:", error);
-      toast.error("Failed to delete round");
+      notify.error("Failed to delete round");
     }
   };
 
@@ -210,7 +211,7 @@ const PositionRoundCard = ({
       );
       console.log("Status updated:", response.data);
       // Show success toast
-      toast.success(`Round status updated to ${newStatus}`, {});
+      notify.success(`Round status updated to ${newStatus}`, {});
     } catch (error) {
       console.error("Error updating status:", error);
     }
