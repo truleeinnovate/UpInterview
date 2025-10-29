@@ -1827,7 +1827,7 @@ const EditInterviewDetails = ({
             isLoading={loading}
             loadingText="updating..."
           >
-            <FaPlus className="w-5 h-5 mr-1 sm:hidden" />  Save Changes
+              Save Changes
           </LoadingButton>
 
       
