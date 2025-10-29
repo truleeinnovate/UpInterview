@@ -33,8 +33,6 @@ const formatInterviewType = (type) => {
     case_study: "Case Study",
   };
 
-  
-
   return (
     formatMap[type] ||
     type
