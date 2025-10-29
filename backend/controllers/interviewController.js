@@ -322,27 +322,59 @@ const createInterview = async (req, res) => {
         //     return res.status(404).json({ message: "Interview not found" });
         //   }
         // } else {
-        // Generate interviewCode for new interview
-        const lastInterview = await Interview.findOne({ tenantId: orgId })
-            .sort({ _id: -1 })
-            .select("interviewCode")
-            .lean();
+        // Generate interviewCode for new interview with retry logic for uniqueness
+        let attempts = 0;
+        const maxAttempts = 5;
+        
 
-        let nextNumber = 1; // Start from 50001
-        if (lastInterview && lastInterview.interviewCode) {
-            const match = lastInterview.interviewCode.match(/INT-(\d+)/);
-            if (match) {
-                nextNumber = parseInt(match[1], 10);
+        while (attempts < maxAttempts) {
+            const lastInterview = await Interview.findOne({ tenantId: orgId })
+                .sort({ _id: -1 })
+                .select("interviewCode")
+                .lean();
+
+            let nextNumber = 1; // Start from 1
+            if (lastInterview && lastInterview.interviewCode) {
+                const match = lastInterview.interviewCode.match(/INT-(\d+)/);
+                if (match) {
+                    nextNumber = parseInt(match[1], 10) + 1; // INCREMENT the number to get next unique code
+                }
+            }
+            
+            // Add attempt offset to reduce collision probability
+            nextNumber = nextNumber + attempts;
+            
+            interviewData.interviewCode = `INT-${String(nextNumber).padStart(
+                5,
+                "0"
+            )}`;
+            interviewData.createdBy = userId;
+
+            try {
+                interview = new Interview(interviewData);
+                await interview.save();
+                console.log(`[INTERVIEW] Successfully created interview with code: ${interviewData.interviewCode}`);
+                break; // Success, exit the retry loop
+            } catch (error) {
+                attempts++;
+                
+                // Check if it's a duplicate key error
+                if (error.code === 11000 && error.keyPattern?.interviewCode) {
+                    console.log(`[INTERVIEW] Duplicate interview code detected: ${interviewData.interviewCode}, retrying... (attempt ${attempts}/${maxAttempts})`);
+                    
+                    if (attempts >= maxAttempts) {
+                        console.error('[INTERVIEW] Max retry attempts reached for generating unique interview code');
+                        return res.status(500).json({
+                            error: "Unable to generate unique interview code. Please try again."
+                        });
+                    }
+                    continue; // Retry with a new code
+                }
+                
+                // For other errors, throw them
+                throw error;
             }
         }
-        interviewData.interviewCode = `INT-${String(nextNumber).padStart(
-            5,
-            "0"
-        )}`;
-        interviewData.createdBy = userId;
-
-        interview = new Interview(interviewData);
-        await interview.save();
 
         // Create push notification for interview creation
         try {
