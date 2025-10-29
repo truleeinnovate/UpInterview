@@ -352,7 +352,7 @@ const EditAdvacedDetails = ({
       )} */}
       {/* v1.0.3 ---------------------------------------------------------------------------------------------------> */}
       <div className="flex flex-col justify-between h-full sm:p-0 p-6">
-        <form className="h-full space-y-6">
+        <div className="h-full space-y-6" >
           <div className="grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6">
             <div className="flex flex-col">
               <DropdownWithSearchField
@@ -413,7 +413,7 @@ const EditAdvacedDetails = ({
               />
             </div>
           </div>
-        </form>
+        </div>
         <div className="sticky bottom-0 bg-white pt-3">
           <div className="flex justify-end gap-3 pt-3 mr-2">
             <button
@@ -425,14 +425,15 @@ const EditAdvacedDetails = ({
             </button>
 
             <LoadingButton
+              onClick={handleSave}
               type="submit"
               isLoading={loading}
               loadingText="updating..."
             >
-              <FaPlus className="w-5 h-5 mr-1 sm:hidden" />  Save Changes
+              Save Changes
             </LoadingButton>
 
-            
+
           </div>
         </div>
       </div>
