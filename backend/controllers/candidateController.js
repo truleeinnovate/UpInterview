@@ -144,7 +144,7 @@ const addCandidatePostCall = async (req, res) => {
   }
 };
 
-// patch call 
+// patch call Candidate
 const updateCandidatePatchCall = async (req, res) => {
 
   res.locals.loggedByController = true;
@@ -281,7 +281,6 @@ const updateCandidatePatchCall = async (req, res) => {
       return res.status(404).json({ message: "Candidate not found after update" });
     }
 
-    console.log("updatedCandidate ", updatedCandidate);
     
 
 
@@ -348,12 +347,12 @@ const updateCandidatePatchCall = async (req, res) => {
 const getCandidates = async (req, res) => {
   try {
     const { tenantId, ownerId } = req.query;
-    // console.log('[getCandidates] Query params:', { tenantId, ownerId });
+  
     const query = tenantId ? { tenantId } : ownerId ? { ownerId } : {};
-    // console.log('[getCandidates] Mongo query:', query);
+  
 
     res.locals.loggedByController = true;
-    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
   //   const canCreate =
@@ -365,7 +364,7 @@ const getCandidates = async (req, res) => {
     //-----v1.0.1--->
 
     const candidates = await Candidate.find(query).lean();
-    console.log('[getCandidates] Candidates found:', candidates);
+  
     res.json(candidates);
   } catch (error) {
     console.error('[getCandidates] Error:', error.message);
@@ -375,20 +374,17 @@ const getCandidates = async (req, res) => {
 
 
 
-
-
-
 const getCandidateById = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!id) {
-      // console.log("❌ [getCandidateById] No ID provided");
+      
       return res.status(400).json({ message: "Candidate ID is required" });
     }
 
     res.locals.loggedByController = true;
-    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
   //   const canCreate =
@@ -400,8 +396,7 @@ const getCandidateById = async (req, res) => {
     //-----v1.0.1--->
 
     const candidate = await Candidate.findById(id).lean();
-    // console.log("✅ [getCandidateById] Candidate fetched:", candidate);
-
+   
     if (!candidate) {
       return res.status(404).json({ message: "Candidate not found" });
     }
@@ -426,8 +421,7 @@ const getCandidateById = async (req, res) => {
       }
     ]);
 
-    // console.log("📦 [getCandidateById] Candidate Positions:", candidatePositions);
-
+   
     const positionDetails = candidatePositions.map(pos => ({
       positionId: pos.positionId,
       status: pos.status,
@@ -459,8 +453,7 @@ const getCandidateById = async (req, res) => {
       appliedPositions: positionDetails || []
     };
 
-    console.log("candidate getCandidateById response",response);
-    
+  
     res.status(200).json(response);
   } catch (error) {
     console.error("🔥 [getCandidateById] Error:", error);

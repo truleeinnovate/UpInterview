@@ -6,23 +6,19 @@
 import React, { useEffect, useState, useMemo } from "react";
 import TimezoneSelect from "react-timezone-select"; // Make sure to install this package
 import { selectBaseStyles } from "../../../../../../Components/Dropdowns/DropdownSelect";
-import DatePicker from "react-datepicker";
+
 // import "react-datepicker/dist/react-datepicker.css";
 import "react-datepicker/dist/react-datepicker.css";
-import { Minus, Plus, Maximize, Minimize } from "lucide-react";
-import { X } from "lucide-react";
-import { Copy } from "lucide-react";
 
-import classNames from "classnames";
+import { ReactComponent as FaPlus } from "../../../../../../icons/FaPlus.svg";
 import Modal from "react-modal";
-import axios from "axios";
 import {
   isEmptyObject,
   validateAvailabilityForm,
 } from "../../../../../../utils/MyProfileValidations";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useCustomContext } from "../../../../../../Context/Contextfetch";
-import { config } from "../../../../../../config";
+
 import Availability from "../../../../Tabs/CommonCode-AllTabs/Availability";
 import {
   useUpdateContactDetail,
@@ -32,13 +28,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
 import { notify } from "../../../../../../services/toastService";
 // v1.0.1 <--------------------------------------------------------------------------------
-import {
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
-} from "@heroicons/react/24/outline";
+
 // v1.0.1 --------------------------------------------------------------------------------->
 // v1.0.2 <------------------------------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import LoadingButton from "../../../../../../Components/LoadingButton";
 // v1.0.2 ------------------------------------------------------------------------------------>
 
 Modal.setAppElement("#root");
@@ -79,15 +73,7 @@ const EditAvailabilityDetails = ({
 
   // Get the appropriate profile data based on context
   const profileData = useMemo(() => {
-    // if (from === "outsource-interviewer") {
-    //   // The ID in the URL is the Contact ID, not the OutsourceInterviewer ID
-    //   // Try to find the interviewer by matching the contactId._id with resolvedId
-    //   const interviewer = outsourceInterviewers?.find(
-    //     (i) => i.contactId?._id === resolvedId
-    //   );
-    //   // Return the Contact object which has the actual profile data
-    //   return interviewer?.contactId || null;
-    // }
+  
     return userProfile;
   }, [from, resolvedId, userProfile]);
   console.log("profileData resolvedId", resolvedId);
@@ -394,11 +380,7 @@ const EditAvailabilityDetails = ({
   return (
     <SidebarPopup title="Edit Availability Details" onClose={handleCloseModal}>
       {/* v1.0.3 <----------------------------------------------------------------------------------------------- */}
-      {loading && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
-        </div>
-      )}
+  
       {/* v1.0.3 <----------------------------------------------------------------------------------------------- */}
       <div className="sm:p-0 p-6">
         <div className="flex flex-col md:flex-col lg:flex-col xl:flex-col 2xl:flex-col md:gap-10 lg:gap-10 xl:gap-12 2xl:gap-12">
@@ -508,12 +490,20 @@ const EditAvailabilityDetails = ({
           >
             Cancel
           </button>
-          <button
+           <LoadingButton
+                        type="submit"
+                        onClick={handleSave}
+                        isLoading={loading }
+                        loadingText="updating..."
+                      >
+                          Save Changes
+                      </LoadingButton>
+          {/* <button
             onClick={handleSave}
             className="px-4 py-2 bg-custom-blue text-white rounded-lg "
           >
             Save Changes
-          </button>
+          </button> */}
         </div>
       </div>
     </SidebarPopup>

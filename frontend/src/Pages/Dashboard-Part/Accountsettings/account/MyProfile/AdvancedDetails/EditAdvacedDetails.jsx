@@ -37,8 +37,10 @@ import {
   DropdownWithSearchField,
   IncreaseAndDecreaseField,
 } from "../../../../../../Components/FormFields";
+import { ReactComponent as FaPlus } from "../../../../../../icons/FaPlus.svg";
 import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
+import LoadingButton from "../../../../../../Components/LoadingButton.jsx";
 // Skills.svg
 
 Modal.setAppElement("#root");
@@ -100,7 +102,7 @@ const EditAdvacedDetails = ({
     //   return interviewer?.contactId || null;
     // }
     return userProfile;
-  }, [from,  resolvedId, userProfile]);
+  }, [from, resolvedId, userProfile]);
 
   const isLoading =
     from === "my-profile" ? isUserLoading : !outsourceInterviewers;
@@ -196,7 +198,7 @@ const EditAdvacedDetails = ({
       if (from === "outsource-interviewer") {
         // For outsource interviewers, profileData is the Contact object
         if (!profileData || !profileData?.contactId) {
-      
+
           notify.error(
             "Profile data is not loaded. Please wait and try again."
           );
@@ -249,7 +251,7 @@ const EditAdvacedDetails = ({
         console.error("Error saving changes:", error);
         setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
       }
-  
+
     } finally {
       setLoading(false);
     }
@@ -280,9 +282,9 @@ const EditAdvacedDetails = ({
     () =>
       Array.isArray(industries)
         ? industries.map((i) => ({
-            value: i.IndustryName,
-            label: i.IndustryName,
-          }))
+          value: i.IndustryName,
+          label: i.IndustryName,
+        }))
         : [],
     [industries]
   );
@@ -291,9 +293,9 @@ const EditAdvacedDetails = ({
     () =>
       Array.isArray(locations)
         ? locations.map((l) => ({
-            value: l.LocationName,
-            label: l.LocationName,
-          }))
+          value: l.LocationName,
+          label: l.LocationName,
+        }))
         : [],
     [locations]
   );
@@ -343,14 +345,14 @@ const EditAdvacedDetails = ({
     <SidebarPopup title="Edit Advanced Details" onClose={handleCloseModal}>
       {/* v1.0.3 <--------------------------------------------------------------------------------------------------- */}
       {/* {loading && <Loading message="Loading..." />} */}
-      {loading && (
+      {/* {loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
         </div>
-      )}
+      )} */}
       {/* v1.0.3 ---------------------------------------------------------------------------------------------------> */}
       <div className="flex flex-col justify-between h-full sm:p-0 p-6">
-        <form className="h-full space-y-6">
+        <div className="h-full space-y-6" >
           <div className="grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6">
             <div className="flex flex-col">
               <DropdownWithSearchField
@@ -411,7 +413,7 @@ const EditAdvacedDetails = ({
               />
             </div>
           </div>
-        </form>
+        </div>
         <div className="sticky bottom-0 bg-white pt-3">
           <div className="flex justify-end gap-3 pt-3 mr-2">
             <button
@@ -421,13 +423,17 @@ const EditAdvacedDetails = ({
             >
               Cancel
             </button>
-            <button
-              type="submit"
+
+            <LoadingButton
               onClick={handleSave}
-              className="px-4 py-2 bg-custom-blue text-white rounded-lg"
+              type="submit"
+              isLoading={loading}
+              loadingText="updating..."
             >
               Save Changes
-            </button>
+            </LoadingButton>
+
+
           </div>
         </div>
       </div>

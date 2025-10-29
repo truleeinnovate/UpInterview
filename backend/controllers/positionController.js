@@ -6,214 +6,8 @@ const { validatePosition, validateRoundData, validateRoundPatchData, positionVal
 const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Interview } = require("../models/Interview/Interview.js");
 
-// const createPosition = async (req, res) => {
-//   res.locals.loggedByController = true;
-//   res.locals.processName = 'Create Position';
 
-//   if (!req.body.ownerId) {
-//     res.locals.responseData = {
-//       status: 'error',
-//       message: "OwnerId field is required",
-//     };
-//     return res.status(400).json(res.locals.responseData);
-//   }
-
-//   try {
-//     console.log("position data ", req.body);
-
-//     // const position = new Position({ ...req.body }); // Store all fields dynamically
-
-//     // Map request body to schema fields
-//     const positionData = {
-//       title: req.body.title || "",
-//       companyname: req.body.companyName || "",
-//       jobDescription: req.body.jobDescription || "",
-//       minexperience: req.body.minexperience || undefined,
-//       maxexperience: req.body.maxexperience || undefined,
-//       // selectedTemplete: req.body.template?._id || null,
-//       skills: req.body.skills || [],
-//       additionalNotes: req.body.additionalNotes || "",
-//       CreatedBy: req.body.ownerId || "",
-//       LastModifiedById: req.body.ownerId || "",
-//       ownerId: req.body.ownerId || "",
-//       tenantId: req.body.tenantId || "",
-//       minSalary: req.body.minSalary || "",
-//       maxSalary: req.body.maxSalary || "",
-//       NoofPositions: req.body.NoofPositions ? Number(req.body.NoofPositions) : undefined,
-//       Location: req.body.Location || "",
-//       rounds: [], // Initialize as empty array
-//       selectedTemplete: req.body.template.templateName || null
-//     };
-
-//     if (req.body.template && req.body.template.rounds) {
-//       positionData.rounds = req.body.template.rounds.map((round) => ({
-//         roundName: round.roundName || "",
-//         interviewMode: round.interviewMode || "",
-//         interviewType: round.interviewType || "",
-//         duration: round.duration || "",
-//         instructions: round.instructions || ""
-//       }));
-//     }
-
-//     // console.log("createPosition position",positionData);
-
-//     const position = new Position(positionData);
-//     const newPosition = await position.save();
-
-//     res.locals.feedData = {
-//       tenantId: req.body.tenantId,
-//       feedType: 'info',
-//       action: {
-//         name: 'position_created',
-//         description: `Position was created`,
-//       },
-//       ownerId: req.body.ownerId,
-//       parentId: newPosition._id,
-//       parentObject: 'Position',
-//       metadata: req.body,
-//       severity: res.statusCode >= 500 ? 'high' : 'low',
-//       message: `Position was created successfully`,
-//     };
-
-//     res.locals.logData = {
-//       tenantId: req.body.tenantId,
-//       ownerId: req.body.ownerId,
-//       processName: 'Create Position',
-//       requestBody: req.body,
-//       status: 'success',
-//       message: 'Position created successfully',
-//       responseBody: newPosition,
-//     };
-
-//     res.status(201).json({
-//       status: 'success',
-//       message: 'Position created successfully',
-//       data: newPosition,
-//     });
-//   } catch (error) {
-//     res.locals.logData = {
-//       tenantId: req.body.tenantId,
-//       ownerId: req.body.ownerId,
-//       processName: 'Create Position',
-//       requestBody: req.body,
-//       message: error.message,
-//       status: 'error',
-//     };
-
-//     res.status(500).json({
-//       status: 'error',
-//       message: error.message,
-//     });
-//   }
-// };
-
-// feed and log data added in this code but not saving the data in the database due to the error of owner is required
-// const createPosition = async (req, res) => {
-//   res.locals.loggedByController = true;
-//   res.locals.processName = 'Create Position';
-//   console.log("createPosition", req.body);
-
-//   if (!req.body.ownerId) {
-//     res.locals.responseData = {
-//       status: 'error',
-//       message: "OwnerId field is required",
-//     };
-//     return res.status(400).json(res.locals.responseData);
-//   }
-
-//   try {
-//     console.log("position data ", req.body);
-
-//     // Map request body to schema fields
-//     const positionData = {
-//       title: req.body.title || "",
-//       companyname: req.body.companyName || "",
-//       jobDescription: req.body.jobDescription || "",
-//       minexperience: req.body.minexperience || undefined,
-//       maxexperience: req.body.maxexperience || undefined,
-//       skills: req.body.skills || [],
-//       additionalNotes: req.body.additionalNotes || "",
-//       ownerId: req.body.ownerId || "",
-//       tenantId: req.body.tenantId || "",
-//       minSalary: req.body.minSalary || "",
-//       maxSalary: req.body.maxSalary || "",
-//       NoofPositions: req.body.NoofPositions ? Number(req.body.NoofPositions) : undefined,
-//       Location: req.body.Location || "",
-//       selectedTemplete: req.body.template?.templateName || null,
-//       createdBy: ownerId,
-//     };
-
-//     // Only add rounds if template exists and has rounds
-//     if (req.body.template && req.body.template.rounds && req.body.template.rounds.length > 0) {
-//       positionData.rounds = req.body.template.rounds.map(round => ({
-//         roundTitle: round.roundTitle || "",
-//         interviewMode: round.interviewMode || "",
-//         interviewerType: round.interviewerType || "",
-//         duration: round.interviewDuration ? round.interviewDuration.toString() : "",
-//         instructions: round.instructions || "",
-//         selectedInterviewersType: round.selectedInterviewersType || "",
-//         interviewers: round.interviewers || [],
-//         assessmentId: round.assessmentId || null,
-//         sequence: round.sequence || 0,
-//         questions: round.interviewQuestionsList ? round.interviewQuestionsList.map(q => ({
-//           questionId: q.questionId || null,
-//           snapshot: q.snapshot || null
-//         })) : []
-//       }));
-//     } else {
-//       positionData.rounds = [];
-//     }
-
-//     const position = new Position(positionData);
-//     const newPosition = await position.save();
-
-//     res.locals.feedData = {
-//       tenantId: req.body.tenantId,
-//       feedType: 'info',
-//       action: {
-//         name: 'position_created',
-//         description: `Position was created`,
-//       },
-//       ownerId: req.body.ownerId,
-//       parentId: newPosition._id,
-//       parentObject: 'Position',
-//       metadata: req.body,
-//       severity: res.statusCode >= 500 ? 'high' : 'low',
-//       message: `Position was created successfully`,
-//     };
-
-//     res.locals.logData = {
-//       tenantId: req.body.tenantId,
-//       ownerId: req.body.ownerId,
-//       processName: 'Create Position',
-//       requestBody: req.body,
-//       status: 'success',
-//       message: 'Position created successfully',
-//       responseBody: newPosition,
-//     };
-
-//     res.status(201).json({
-//       status: 'success',
-//       message: 'Position created successfully',
-//       data: newPosition,
-//     });
-//   } catch (error) {
-//     res.locals.logData = {
-//       tenantId: req.body.tenantId,
-//       ownerId: req.body.ownerId,
-//       processName: 'Create Position',
-//       requestBody: req.body,
-//       message: error.message,
-//       status: 'error',
-//     };
-
-//     res.status(500).json({
-//       status: 'error',
-//       message: error.message,
-//     });
-//   }
-// };
-
+//  post call for position
 const createPosition = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Create Position";
@@ -232,12 +26,9 @@ const createPosition = async (req, res) => {
     );
   }
 
-  // validate
+   // --- VALIDATE REQUEST BODY ---
   const { error } = schemaToUse.validate(req.body, { abortEarly: false });
 
-  // --- VALIDATE REQUEST BODY ---
-  // const { error } = positionValidationSchema.validate(req.body, { abortEarly: false });
-  // console.log("error found before",error);
 
   if (error) {
     const errors = {};
@@ -247,20 +38,7 @@ const createPosition = async (req, res) => {
     });
     return res.status(400).json({ status: "error", errors });
   }
-  // console.log("req.body",req.body);
 
-
-  // // --- Validate req.body using Joi ---
-  // const { error } = Position.validate(req.body, { abortEarly: false });
-  // if (error) {
-  //   const errors = {};
-  //   error.details.forEach((err) => {
-  //     errors[err.path.join(".")] = err.message;
-  //   });
-  //   return res.status(400).json({ status: "error", errors });
-  // }
-
-  // console.log("🔁 Incoming request to createPosition:", req.body);
 
   // Check if ownerId exists
   if (!req.body.ownerId) {
@@ -284,7 +62,6 @@ const createPosition = async (req, res) => {
   //-----v1.0.1--->
 
   try {
-    console.log("Position data received:", req.body);
 
     // Generate custom positionCode like POS-00001
     const lastPosition = await Position.findOne({ tenantId: req.body.tenantId })
@@ -356,12 +133,9 @@ const createPosition = async (req, res) => {
       positionData.rounds = [];
     }
 
-    // console.log("🛠️ Mapped Position Data:", positionData);
-
     // Save to database
     const position = new Position(positionData);
     const newPosition = await position.save();
-    // console.log("✅ Position saved to DB:", newPosition);
 
     // Feed and log data
     let feedData = res.locals.feedData = {

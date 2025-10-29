@@ -13,7 +13,9 @@ const loggingService = require('../middleware/loggingService.js');
 
 const router = express.Router();
 
+//  post call for position
 router.post('/', loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, createPosition);
+
 router.patch('/:id',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, updatePosition);
 router.post('/add-rounds',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, saveInterviewRoundPosition);
 router.patch('/update-round/:positionId/:roundId',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, updateInterviewRound);

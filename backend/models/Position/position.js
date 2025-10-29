@@ -56,8 +56,8 @@ const positionSchema = new mongoose.Schema(
     additionalNotes: String,
     rounds: [roundSchema],
     roundsModified: { type: Boolean, default: false },
-    ownerId: String,
-    tenantId: String,
+    // ownerId: String,
+    // tenantId: String,
     // added new feilds ranjith from here
     minSalary: String,
     maxSalary: String,

@@ -332,7 +332,7 @@ const PositionSlideDetails = () => {
                       {position?.minexperience +
                         " - " +
                         position?.maxexperience +
-                        " years" || "Not Disclosed"}
+                        " Years" || "Not Disclosed"}
                     </p>
                   </div>
                 </div>
