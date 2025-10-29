@@ -2093,27 +2093,44 @@ const updateInterviewStatusController = async (req, res) => {
 const getAllInterviewRounds = async (req, res) => {
     try {
         const { type } = req.query || {};
-        // Fetch all interview rounds with populated data (filter for External interviews only)
-        const interviewRounds = await (type === 'mock' ? MockInterviewRound : InterviewRounds).find({ interviewerType: 'External' })
-            .populate({
-                path: 'interviewId',
-                select: 'interviewCode candidateId positionId status tenantId ownerId createdAt',
-                populate: [
-                    {
-                        path: 'candidateId',
-                        select: 'FirstName LastName Email'
-                    },
-                    {
-                        path: 'positionId',
-                        select: 'title companyname Location'
-                    }
-                ]
-            })
-            .populate('interviewers', 'firstName lastName email _id ownerId tenantId')
-            .lean() // Add lean for better performance
-            .sort({ _id: -1 }); // Latest first
+        const isMock = type === 'mock';
         
-        //console.log(`[getAllInterviewRounds] Found ${interviewRounds.length} rounds`);
+        // Build the query based on interview type
+        let interviewRounds;
+        
+        if (isMock) {
+            // For mock interviews, populate mockInterviewId
+            interviewRounds = await MockInterviewRound.find({ interviewerType: 'External' })
+                .populate({
+                    path: 'mockInterviewId',
+                    select: 'mockInterviewCode candidateName Role technology higherQualification currentExperience tenantId ownerId createdAt'
+                })
+                .populate('interviewers', 'firstName lastName email _id ownerId tenantId')
+                .lean()
+                .sort({ _id: -1 });
+        } else {
+            // For regular interviews, populate interviewId
+            interviewRounds = await InterviewRounds.find({ interviewerType: 'External' })
+                .populate({
+                    path: 'interviewId',
+                    select: 'interviewCode candidateId positionId status tenantId ownerId createdAt',
+                    populate: [
+                        {
+                            path: 'candidateId',
+                            select: 'FirstName LastName Email'
+                        },
+                        {
+                            path: 'positionId',
+                            select: 'title companyname Location'
+                        }
+                    ]
+                })
+                .populate('interviewers', 'firstName lastName email _id ownerId tenantId')
+                .lean()
+                .sort({ _id: -1 });
+        }
+        
+        //console.log(`[getAllInterviewRounds] Type: ${isMock ? 'Mock' : 'Regular'}, Found ${interviewRounds.length} rounds`);
         
         // Check first few rounds for debugging
         // if (interviewRounds.length > 0) {
@@ -2126,14 +2143,18 @@ const getAllInterviewRounds = async (req, res) => {
 
         // Format the data for frontend
         const formattedRounds = await Promise.all(interviewRounds.map(async (round) => {
+            // Get the main interview/mock interview reference
+            const mainInterview = isMock ? round.mockInterviewId : round.interviewId;
+            
             // Get organization/tenant info
             let organizationType = 'individual'; // Default to individual
             let organizationName = 'Individual';
             
-            if (round.interviewId?.tenantId) {
+            const tenantId = mainInterview?.tenantId;
+            if (tenantId) {
                 try {
                     const Tenant = require('../models/Tenant');
-                    const tenant = await Tenant.findById(round.interviewId.tenantId);
+                    const tenant = await Tenant.findById(tenantId);
                     if (tenant) {
                         organizationType = tenant?.type;
                         // Use company name for organizations, or firstName + lastName for individuals
@@ -2199,11 +2220,53 @@ const getAllInterviewRounds = async (req, res) => {
                 }
             }
 
+            // Build the interview code based on type
+            let interviewCode = 'N/A';
+            if (isMock && mainInterview) {
+                interviewCode = `${mainInterview.mockInterviewCode}-${round.sequence}` || 'N/A';
+            } else if (!isMock && mainInterview) {
+                interviewCode = `${mainInterview.interviewCode}-${round.sequence}` || 'N/A';
+            }
+            
+            // Build candidate info based on type
+            let candidateInfo = null;
+            if (isMock && mainInterview) {
+                // Mock interviews have candidateName as string field
+                candidateInfo = {
+                    name: mainInterview.candidateName || 'Unknown',
+                    email: 'N/A' // Mock interviews don't have email
+                };
+            } else if (!isMock && mainInterview?.candidateId) {
+                // Regular interviews have candidateId as reference
+                candidateInfo = {
+                    name: `${mainInterview.candidateId.FirstName || ''} ${mainInterview.candidateId.LastName || ''}`.trim() || 'Unknown',
+                    email: mainInterview.candidateId.Email || 'N/A'
+                };
+            }
+            
+            // Build position/role info based on type
+            let positionInfo = null;
+            if (isMock && mainInterview) {
+                // Mock interviews have Role and technology fields
+                positionInfo = {
+                    title: mainInterview.Role || 'N/A',
+                    company: mainInterview.technology || 'N/A',
+                    location: 'N/A'
+                };
+            } else if (!isMock && mainInterview?.positionId) {
+                // Regular interviews have positionId reference
+                positionInfo = {
+                    title: mainInterview.positionId.title || 'N/A',
+                    company: mainInterview.positionId.companyname || 'N/A',
+                    location: mainInterview.positionId.Location || 'N/A'
+                };
+            }
+
             return {
                 // Core identifiers
                 _id: round._id,
-                interviewCode: `${round.interviewId?.interviewCode}-${round.sequence}` || 'N/A',
-                interviewId: round.interviewId?._id || null,
+                interviewCode: interviewCode,
+                interviewId: mainInterview?._id || null,
                 sequence: round.sequence || 1,
                 
                 // Round details
@@ -2257,16 +2320,12 @@ const getAllInterviewRounds = async (req, res) => {
                 updatedAt: round.updatedAt || null,
                 
                 // Related data from populated fields
-                candidate: round.interviewId?.candidateId ? {
-                    name: `${round.interviewId.candidateId.FirstName || ''} ${round.interviewId.candidateId.LastName || ''}`.trim() || 'Unknown',
-                    email: round.interviewId.candidateId.Email || 'N/A'
-                } : null,
-                position: round.interviewId?.positionId ? {
-                    title: round.interviewId.positionId.title || 'N/A',
-                    company: round.interviewId.positionId.companyname || 'N/A',
-                    location: round.interviewId.positionId.Location || 'N/A'
-                } : null,
-                interviewStatus: round.interviewId?.status || 'N/A'
+                candidate: candidateInfo,
+                position: positionInfo,
+                interviewStatus: mainInterview?.status || 'N/A',
+                
+                // Type indicator for frontend
+                dataType: isMock ? 'mock' : 'interview'
             };
         }));
 

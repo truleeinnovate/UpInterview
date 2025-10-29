@@ -46,6 +46,12 @@ const Interviewers = () => {
     const getInterviews = async () => {
       try {
         setIsLoading(true); // Start loading
+        
+        // Reset selectedType to "all" when switching to mock interviews
+        if (listType === "mock") {
+          setSelectedType("all");
+        }
+        
         const response = await axios.get(
           `${config.REACT_APP_API_URL}/interview/interview-rounds`,
           { params: { type: listType === "mock" ? "mock" : "interview" } }
@@ -167,8 +173,10 @@ const Interviewers = () => {
     if (!Array.isArray(dataToUse)) return [];
 
     const filtered = dataToUse.filter((round) => {
-      // Filter by organization/individual using organizationType field
-      const matchesType = selectedType === "all"
+      // Filter by organization/individual using organizationType field (only for regular interviews)
+      const matchesType = listType === "mock" 
+        ? true  // Don't filter mock interviews by organization type
+        : selectedType === "all"
         ? true  // Show all types
         : selectedType === "organization"
         ? round?.organizationType === "organization"  // Only show organization type
@@ -445,42 +453,45 @@ const Interviewers = () => {
           <div className="flex justify-between p-4">
             <div>
               <span className="text-2xl font-semibold text-custom-blue">
-                Interviews
+                {listType === "mock" ? "Mock Interviews" : "Interviews"}
               </span>
             </div>
           </div>
-          <div className="flex self-end rounded-lg border border-gray-300 p-1 mb-4 mr-4">
-            <button
-              className={`px-4 py-1 rounded-md text-sm ${
-                selectedType === "all"
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-              onClick={() => setSelectedType("all")}
-            >
-              All
-            </button>
-            <button
-              className={`px-4 py-1 rounded-md text-sm ${
-                selectedType === "organization"
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-              onClick={() => setSelectedType("organization")}
-            >
-              Organizations
-            </button>
-            <button
-              className={`px-4 py-1 rounded-md text-sm ${
-                selectedType === "individual"
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-              onClick={() => setSelectedType("individual")}
-            >
-              Individuals
-            </button>
-          </div>
+          {/* Only show organization/individual filter for regular interviews */}
+          {listType !== "mock" && (
+            <div className="flex self-end rounded-lg border border-gray-300 p-1 mb-4 mr-4">
+              <button
+                className={`px-4 py-1 rounded-md text-sm ${
+                  selectedType === "all"
+                    ? "bg-gray-100 text-gray-900"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+                onClick={() => setSelectedType("all")}
+              >
+                All
+              </button>
+              <button
+                className={`px-4 py-1 rounded-md text-sm ${
+                  selectedType === "organization"
+                    ? "bg-gray-100 text-gray-900"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+                onClick={() => setSelectedType("organization")}
+              >
+                Organizations
+              </button>
+              <button
+                className={`px-4 py-1 rounded-md text-sm ${
+                  selectedType === "individual"
+                    ? "bg-gray-100 text-gray-900"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+                onClick={() => setSelectedType("individual")}
+              >
+                Individuals
+              </button>
+            </div>
+          )}
         </div>
         <div className="fixed top-38 sm:top-42 md:top-46 left-0 right-0 px-4">
           {/* Toolbar */}
