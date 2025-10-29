@@ -184,16 +184,16 @@ const AddInvoiceForm = ({ mode }) => {
   const genderOptions = ["Male", "Female"];
   const experienceOptions = [
     "0-1 Years",
-    "1-2 years",
-    "2-3 years",
-    "3-4 years",
-    "4-5 years",
-    "5-6 years",
-    "6-7 years",
-    "7-8 years",
-    "8-9 years",
-    "9-10 years",
-    "10+ years",
+    "1-2 Years",
+    "2-3 Years",
+    "3-4 Years",
+    "4-5 Years",
+    "5-6 Years",
+    "6-7 Years",
+    "7-8 Years",
+    "8-9 Years",
+    "9-10 Years",
+    "10+ Years",
   ];
 
   const [formData, setFormData] = useState({

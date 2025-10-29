@@ -1,4 +1,6 @@
 // v1.0.0 - Ashok - Disabled outer scrollbar when the popup is open
+// v1.0.1 - Ashok - Adjusted heights of Table and Kanban
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge.jsx";
@@ -709,10 +711,10 @@ function PaymentsTable({ organizationId, viewMode }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="absolute md:mt-2 sm:mt-4 top-2 left-0 right-0 bg-background">
-        <div className="flex justify-between items-center px-4 mb-4">
-          <h2 className="text-lg font-medium text-custom-blue">Payments</h2>
+    <div>
+      <div className="bg-background">
+        <div className="px-4 mb-4 mt-2">
+          <h2 className="text-xl font-semibold text-custom-blue">Payments</h2>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
@@ -765,13 +767,14 @@ function PaymentsTable({ organizationId, viewMode }) {
             <motion.div className="bg-white">
               <div className="relative w-full">
                 {view === "table" ? (
-                  <div className="w-full">
+                  <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                     <TableView
                       data={currentFilteredRows}
                       columns={tableColumns}
                       loading={isLoading}
                       actions={tableActions}
                       emptyState="No payments found."
+                      customHeight="h-[calc(100vh-21.2rem)]"
                     />
                   </div>
                 ) : (

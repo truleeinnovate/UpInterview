@@ -112,14 +112,6 @@ const createInterview = async (req, res) => {
                 nextNumber = parseInt(match[1], 10);
             }
         }
-        interviewData.interviewCode = `INT-${String(nextNumber).padStart(
-            5,
-            "0"
-        )}`;
-        interviewData.createdBy = userId;
-
-        interview = new Interview(interviewData);
-        await interview.save();
 
         // Create push notification for interview creation
         try {

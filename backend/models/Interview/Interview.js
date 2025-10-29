@@ -18,7 +18,7 @@ const interviewSchema = new mongoose.Schema({
     tenantId: mongoose.Schema.Types.ObjectId,
     completionReason: String,
     // <------------------------------- v1.0.0
-    interviewCode: { type: String }, // <-- it will store INTV-00001, INTV-00002 -->
+    interviewCode: { type: String, unique: true, sparse: true }, // <-- it will store INT-00001, INT-00002 with unique constraint -->
     // ------------------------------ v1.0.0 >
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },

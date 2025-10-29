@@ -619,29 +619,34 @@ exports.shareAssessment = async (req, res) => {
         createdBy: userId,
         updatedBy: userId,
       });
-    }
 
-    // Save notifications without session
-    if (notifications.length > 0) {
-      await Notification.insertMany(notifications);
+      // Save notifications without session
+      // ✅ Save all notifications once at the end
+      if (notifications.length > 0) {
+        req.notificationData = notifications;
+        await notificationMiddleware(req, res, () => { });
+      }
+
     }
+    console.log("notifications", notifications)
+
 
     // Send emails outside transaction
     const emailResults = await Promise.all(emailPromises);
     const failedEmails = emailResults.filter(r => !r.success);
 
-    if (failedEmails.length > 0) {
-      console.error('Failed emails:', failedEmails);
-      await Notification.updateMany(
-        { toAddress: { $in: failedEmails.map(f => f.email) } },
-        { $set: { status: 'Failed', body: 'Failed to send email' } }
-      );
-    } else {
-      await Notification.updateMany(
-        { _id: { $in: notifications.map(n => n._id) } },
-        { $set: { status: 'Success' } }
-      );
-    }
+    // if (failedEmails.length > 0) {
+    //   console.error('Failed emails:', failedEmails);
+    //   await Notification.updateMany(
+    //     // { toAddress: { $in: failedEmails.map(f => f.email) } },
+    //     { $set: { status: 'Failed', body: 'Failed to send email' } }
+    //   );
+    // } else {
+    //   await Notification.updateMany(
+    //     { _id: { $in: notifications.map(n => n._id) } },
+    //     { $set: { status: 'Success' } }
+    //   );
+    // }
 
     return res.status(200).json({
       success: true,

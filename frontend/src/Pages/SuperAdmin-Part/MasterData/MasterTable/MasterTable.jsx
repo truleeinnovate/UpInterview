@@ -28,6 +28,7 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
+import { notify } from "../../../../services/toastService";
 // v1.0.0 ------------------------------------------------------------------------>
 
 const MasterTable = () => {
@@ -137,7 +138,7 @@ const MasterTable = () => {
           payload
         );
         console.log("Updated master:", res.data);
-        toast.success(`Master updated successfully!`);
+        notify.success(`Master updated successfully!`);
       } else {
         // Create new master
         const res = await axios.post(
@@ -145,7 +146,7 @@ const MasterTable = () => {
           payload
         );
         console.log("Created master:", res.data);
-        toast.success(`Master created successfully!`);
+        notify.success(`Master created successfully!`);
       }
 
       // Reset selected master
@@ -174,7 +175,7 @@ const MasterTable = () => {
         setMasterData((prev) => prev.filter((m) => m._id !== deleteTarget._id));
         setIsDeletePopupOpen(false);
         setDeleteTarget(null);
-        toast.success(`Master deleted successfully!`);
+        notify.success(`Master deleted successfully!`);
       }
     } catch (err) {
       console.error("Error deleting master:", err);

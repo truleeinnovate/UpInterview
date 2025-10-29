@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js';
 import Cookies from "js-cookie";
 import { useSubscription } from '../../../apiHooks/useSubscription.js';
+import { notify } from "../../../services/toastService.js";
 
 // Loading Skeleton for Subscription Plans
 const SubscriptionPlansSkeleton = () => {
@@ -116,7 +117,7 @@ const SubscriptionPlan = () => {
     // Check if subscription data is loaded and user has an active subscription
     if (!isSubscriptionLoading && subscriptionData && subscriptionData.status === 'active') {
       // User already has an active subscription, redirect to home
-      console.log('User already has active subscription, redirecting to home...');
+      // console.log('User already has active subscription, redirecting to home...');
       navigate('/home', { replace: true });
     }
   }, [subscriptionData, isSubscriptionLoading, isUpgrading, navigate]);
@@ -126,7 +127,7 @@ const SubscriptionPlan = () => {
   const submitPlans = async (plan) => {
 
     if (!plan) {
-      toast.success("No plan is selected");
+      notify.success("No plan is selected");
       return;
     }
     const totalAmount = isAnnual ? plan.annualPrice : plan.monthlyPrice;
@@ -149,16 +150,16 @@ const SubscriptionPlan = () => {
       totalAmount,
       status: user.userType === "individual" && plan.name === "Free" ? "active" : "pending",
     };
-    console.log("payload ----", payload);
+    // console.log("payload ----", payload);
     try {
       setIsSubmitting(true);
       const subscriptionResponse = await createCustomerSubscription(payload);
 
-      console.log(
-        "Payment and Subscription submitted successfully",
-        subscriptionResponse
-      );
-      console.log(organization, plan.name, "organization");
+      // console.log(
+      //   "Payment and Subscription submitted successfully",
+      //   subscriptionResponse
+      // );
+      // console.log(organization, plan.name, "organization");
       if (user.userType === "individual" && isFreePlan) {
         // Fire-and-forget emails; do not block navigation
         axios.post(`${config.REACT_APP_API_URL}/emails/subscription/free`, {
@@ -172,7 +173,7 @@ const SubscriptionPlan = () => {
         }).catch((err) => console.error('Email error (signup):', err));
 
         // Navigate immediately to home for Free plan
-        console.log("Navigating to /home after Free plan activation");
+        // console.log("Navigating to /home after Free plan activation");
         navigate("/home");
       } else {
         navigate("/payment-details", {

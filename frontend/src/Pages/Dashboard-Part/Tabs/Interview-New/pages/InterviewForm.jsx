@@ -4,6 +4,7 @@
 // v1.0.3  -  Ashok    -  Disabled outer scrollbar when popup is open for better UX
 // v1.0.4  -  Ashok    -  Improved responsiveness
 // v1.0.6  -  Ranjith    -  Fixed issues at responsiveness
+// v1.0.7  -  Ashok    -  Z-index issue fixed when opening position form
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -199,7 +200,7 @@ const InterviewForm = () => {
   console.log("Render state:", {
     templateId,
     templatesDataLength: templatesData?.length,
-    selectedTemplate: templatesData?.find(t => t._id === templateId)?.title
+    selectedTemplate: templatesData?.find((t) => t._id === templateId)?.title,
   });
 
   useEffect(() => {
@@ -214,10 +215,8 @@ const InterviewForm = () => {
         setRounds([]);
       }
 
-
       if (selectedPosition) {
         console.log("selectedPosition.rounds", selectedPosition);
-
 
         if (selectedPosition?.templateId) {
           setTemplateId(selectedPosition?.templateId);
@@ -267,8 +266,6 @@ const InterviewForm = () => {
         setRounds(selectedTemplate.rounds);
         // toast.success("Rounds have been overridden by the template.");
       }
-
-
     }
   };
 
@@ -354,24 +351,22 @@ const InterviewForm = () => {
   };
   // v1.0.6 <----------------------------------->
 
-  
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto py-6 sm:px-4 lg:px-8">
-        <div className="px-4 sm:px-0">
+    <div className="bg-gray-50">
+      <main className="mx-auto sm:px-4 lg:px-8 px-[6%] pt-6">
+        <div className="px-4 sm:px-0 min-h-screen overflow-y-auto">
           <Breadcrumb
             items={[
               { label: "Interviews", path: "/interviews" },
               ...(isEditing && interview
                 ? [
-                  {
-                    label: candidateData?.LastName || "Interview",
-                    path: `/interviews/${id}`,
-                    status: interview.status,
-                  },
-                  { label: "Edit Interview", path: "" },
-                ]
+                    {
+                      label: candidateData?.LastName || "Interview",
+                      path: `/interviews/${id}`,
+                      status: interview.status,
+                    },
+                    { label: "Edit Interview", path: "" },
+                  ]
                 : [{ label: "New Interview", path: "" }]),
             ]}
           />
@@ -448,8 +443,9 @@ const InterviewForm = () => {
                       options={[
                         ...(candidateData?.map((candidate) => ({
                           value: candidate._id,
-                          label: `${candidate.FirstName || ""} ${candidate.LastName || ""
-                            } (${candidate.Email || ""})`,
+                          label: `${candidate.FirstName || ""} ${
+                            candidate.LastName || ""
+                          } (${candidate.Email || ""})`,
                         })) || []),
                         {
                           value: "add_new",
@@ -510,7 +506,6 @@ const InterviewForm = () => {
                   </div>
 
                   <div className="relative">
-
                     <DropdownWithSearchField
                       key={`template-${templateId}-${positionId}`}
                       // key={`template-${templateId}`}
@@ -549,20 +544,20 @@ const InterviewForm = () => {
                         ×
                       </button>
                     )}
-
                   </div>
-
 
                   {rounds.length > 0 && (
                     <div className="mt-6">
-                      <p className="text-sm font-semibold text-gray-800 mb-4">Rounds Pathway</p>
+                      <p className="text-sm font-semibold text-gray-800 mb-4">
+                        Rounds Pathway
+                      </p>
                       <div className="flex items-center space-x-4 overflow-x-auto pb-2">
                         {rounds.map((round, index) => (
                           <React.Fragment key={index}>
                             <div
                               className={`flex items-center px-4 py-2 border rounded-lg shadow-sm min-w-[200px]  `}
 
-                            // ${index === rounds.length - 1 ? "bg-blue-50 border-blue-400" : "bg-white border-gray-200"}
+                              // ${index === rounds.length - 1 ? "bg-blue-50 border-blue-400" : "bg-white border-gray-200"}
                             >
                               {/* Step number circle */}
                               <div className="flex items-center justify-center w-6 h-6 rounded-full border border-gray-400 text-xs font-medium text-gray-600 mr-3">
@@ -645,7 +640,7 @@ const InterviewForm = () => {
       {/* Position Modal */}
       {showPositionModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+          className="absolute top-0 left-0 w-full my-16 overflow-y-auto"
           onClick={(e) => handleModalBackdropClick(e, "position")}
         >
           <PositionForm

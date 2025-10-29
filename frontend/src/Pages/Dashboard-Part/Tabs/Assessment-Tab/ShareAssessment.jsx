@@ -28,6 +28,7 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js"
 // v1.0.5 -------------------------------------------------------------------------->
 // Common Form Field Components
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField.jsx";
+import { notify } from "../../../../services/toastService.js";
 
 const ShareAssessment = ({
   isOpen,
@@ -375,9 +376,9 @@ const ShareAssessment = ({
     if (newCandidates.length > 0) {
       setSelectedCandidates([...selectedCandidates, ...newCandidates]);
       setErrors({ ...errors, Candidate: "" });
-      toast.success(`Added ${newCandidates.length} candidates`);
+      notify.success(`Added ${newCandidates.length} candidates`);
     } else {
-      toast.error("No new candidates to add from current view");
+      notify.error("No new candidates to add from current view");
     }
     setShowDropdownCandidate(false);
   };

@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Adjusted height
+
 import { motion } from "framer-motion";
 import { format, isValid, parseISO } from "date-fns";
 
@@ -24,9 +26,9 @@ const KanbanView = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full h-[calc(100vh-9rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
+      className="w-full h-[calc(100vh-21.2rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
     >
-      <div className="h-full w-full">
+      <div className="w-full">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold text-gray-800">All receipts</h3>
           <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">

@@ -39,6 +39,7 @@ import {
 } from "../../utils/workEmailValidation.js";
 
 import { Link } from "react-router-dom";
+import { notify } from "../../services/toastService.js";
 // import Layout from './Layout.jsx';
 
 export const Organization = () => {
@@ -116,7 +117,7 @@ export const Organization = () => {
     const query = new URLSearchParams(location.search);
     const verified = query.get("verified");
     if (verified === "true") {
-      toast.success("Email verified successfully!");
+      notify.success("Email verified successfully!");
       navigate("/organization-login");
       window.location.reload();
     }
@@ -300,10 +301,10 @@ export const Organization = () => {
       await setAuthCookies(token);
       setEmail(selectedEmail);
       setFormSubmitted(true);
-      toast.success("Verification email sent! Please check your inbox.");
+      notify.success("Verification email sent! Please check your inbox.");
       setCountdown(60);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
+      notify.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
@@ -318,15 +319,15 @@ export const Organization = () => {
         { email }
       );
       if (response.data.success) {
-        toast.success("Verification email resent!");
+        notify.success("Verification email resent!");
         setCountdown(60);
       } else {
-        toast.error(
+        notify.error(
           response.data.message || "Failed to resend verification email"
         );
       }
     } catch (error) {
-      toast.error(
+      notify.error(
         error.response?.data?.message || "Failed to resend verification email"
       );
     } finally {
@@ -410,12 +411,12 @@ export const Organization = () => {
 
   const generateProfileId = (email) => {
     if (!email) return "";
-    console.log("generateProfileId input:", email); // Debug log
+    // console.log("generateProfileId input:", email); // Debug log
     return email; // Use full email as username
   };
 
   const handleProfileIdValidation = async (profileId) => {
-    console.log("handleProfileIdValidation profileId:", profileId); // Debug log
+    // console.log("handleProfileIdValidation profileId:", profileId); // Debug log
     if (!profileId) {
       setErrors((prev) => ({ ...prev, profileId: "" }));
       setSuggestedProfileId("");
@@ -428,13 +429,13 @@ export const Organization = () => {
       profileId,
       checkProfileIdExists
     );
-    console.log("profileIdError:", profileIdError); // Debug log
+    // console.log("profileIdError:", profileIdError); // Debug log
     setErrors((prev) => ({ ...prev, profileId: profileIdError }));
 
     if (profileIdError && profileIdError.includes("already taken")) {
       const [localPart, ...domainParts] = profileId.split("@");
       const domain = domainParts.join("@"); // Handle edge cases like user@sub@domain.com
-      console.log("localPart:", localPart, "domain:", domain); // Debug log
+      // console.log("localPart:", localPart, "domain:", domain); // Debug log
       if (!localPart || !domain) {
         setSuggestedProfileId("");
         setIsCheckingProfileId(false);
@@ -442,7 +443,7 @@ export const Organization = () => {
       }
       let suffixCharCode = 97; // 'a'
       let newProfileId = `${localPart}.a@${domain}`;
-      console.log("Initial suggestion:", newProfileId); // Debug log
+      // console.log("Initial suggestion:", newProfileId); // Debug log
 
       while (await checkProfileIdExists(newProfileId)) {
         suffixCharCode++;
@@ -454,9 +455,9 @@ export const Organization = () => {
         newProfileId = `${localPart}.${String.fromCharCode(
           suffixCharCode
         )}@${domain}`;
-        console.log("Next suggestion:", newProfileId); // Debug log
+        // console.log("Next suggestion:", newProfileId); // Debug log
       }
-      console.log("Final suggestedProfileId:", newProfileId); // Debug log
+      // console.log("Final suggestedProfileId:", newProfileId); // Debug log
       setSuggestedProfileId(newProfileId);
     } else {
       setSuggestedProfileId("");

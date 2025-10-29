@@ -6,6 +6,7 @@ import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { config } from '../config';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
+import { notify } from '../services/toastService';
 
 const getUserContext = () => {
   const authToken = Cookies.get('authToken');
@@ -163,7 +164,7 @@ export const useSubscription = () => {
     },
     onSuccess: () => {
       toast.dismiss('subscription-update');
-      toast.success('Your subscription plan has been updated successfully!');
+      notify.success('Your subscription plan has been updated successfully!');
       queryClient.invalidateQueries(['subscription', ownerId]);
       queryClient.invalidateQueries(['subscriptionPlans', userType]);
     },
@@ -197,7 +198,7 @@ export const useSubscription = () => {
     },
     onSuccess: () => {
       toast.dismiss('subscription-cancel');
-      toast.success('Your subscription has been cancelled successfully!');
+      notify.success('Your subscription has been cancelled successfully!');
       queryClient.invalidateQueries(['subscription', ownerId]);
       queryClient.invalidateQueries(['subscriptionPlans', userType]);
       refetchSubscription();

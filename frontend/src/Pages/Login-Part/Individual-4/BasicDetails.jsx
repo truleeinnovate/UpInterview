@@ -91,7 +91,7 @@ const BasicDetails = ({
                 } else if (!/^[a-zA-Z0-9.]+$/.test(profileId)) {
                     errorMessage = "Only letters, numbers, and dots allowed";
                 } else {
-                    console.log("Profile ID is valid");
+                    // console.log("Profile ID is valid");
                 }
 
                 setErrors((prev) => ({ ...prev, profileId: errorMessage }));

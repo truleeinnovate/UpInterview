@@ -151,17 +151,17 @@ const SessionExpiration = () => {
                         }}
                     >
                         <h2 id="session-expired-title" className="text-lg font-semibold text-gray-900">
-                            Session Expired (401)
+                            Session Expired
                         </h2>
                         <p className="mt-2 text-sm text-gray-600">
-                            Required to provide Auth information
+                            Your login session has expired. Please login again.
                         </p>
                         <div className="mt-6 flex justify-end">
                             <button
                                 onClick={handleLogoutNow}
                                 className="inline-flex items-center rounded-md bg-custom-blue px-4 py-2 text-sm font-medium text-white hover:bg-custom-blue/90 focus:outline-none"
                             >
-                                Log In
+                                Log in
                             </button>
                         </div>
                     </div>

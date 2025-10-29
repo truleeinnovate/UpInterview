@@ -237,16 +237,16 @@ function OutsourcedInterviewerModal({
     const tokenPayload = decodeJwt(authToken);
     const userId = tokenPayload?.userId;
 
-    // console.log("navigatedfrom", {
-    //     onClose,
-    //     dateTime,
-    //     positionData,
-    //     candidateData,
-    //     onProceed,
-    //     skills,
-    //     technology,
-    //     navigatedfrom,
-    // })
+    console.log("navigatedfrom", {
+        onClose,
+        dateTime,
+        positionData,
+        candidateData,
+        onProceed,
+        skills,
+        technology,
+        navigatedfrom,
+    })
 
     const [searchTerm, setSearchTerm] = useState("");
     const [rateRange, setRateRange] = useState(["", ""]);
@@ -254,7 +254,7 @@ function OutsourcedInterviewerModal({
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [selectedInterviewer, setSelectedInterviewer] = useState(null);
     const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState(
-       previousSelectedInterviewers || []
+        previousSelectedInterviewers || []
     );
     const requestSentRef = useRef(false);
     const [filteredInterviewers, setFilteredInterviewers] = useState([]);
@@ -396,120 +396,127 @@ function OutsourcedInterviewerModal({
 
                     console.log("✅ Available Interviewers:", availableInterviewers.length);
 
-                    // ✅ Step 2: Split into tech-matched and non-tech-matched interviewers
-                    let techMatchedInterviewers = [];
-                    let nonTechMatchedInterviewers = [];
+                    // ✅ Step 2: Filter by Technology (from props)
+                    const techMatchedInterviewers = availableInterviewers.filter((interviewer) => {
+                        console.log("Interviewer Technology:", interviewer.contact?.technology);
+                        console.log("mock Technology:", technology);
+                        const interviewerTech = interviewer.contact?.technology?.toLowerCase()?.trim() || '';
+                        const candidateTech = technology?.toLowerCase()?.trim() || '';
 
-                    if (technology && Array.isArray(technology) && technology.length > 0) {
-                        console.log("🧩 Filtering interviewers by technology:", technology);
-                        const techLower = technology.map((t) => t.toLowerCase());
+                        // If no technology is specified for either, consider it a match
+                        if (!interviewerTech || !candidateTech) return true;
 
-                        techMatchedInterviewers = availableInterviewers.filter((interviewer) => {
-                            const interviewerTech = interviewer.contact?.technology || [];
-                            const interviewerTechLower = interviewerTech.map((t) => t.toLowerCase());
-                            const hasTechMatch = techLower.some((t) => interviewerTechLower.includes(t));
+                        return interviewerTech === candidateTech;
+                    });
 
-                            console.log(
-                                `💻 ${interviewer.contact?.firstName || "Unknown"} - Tech Match: ${hasTechMatch}`
-                            );
-                            return hasTechMatch;
-                        });
+                    const nonTechMatchedInterviewers = availableInterviewers.filter((interviewer) => {
+                        const interviewerTech = interviewer.contact?.technology?.toLowerCase()?.trim();
+                        const candidateTech = technology?.toLowerCase()?.trim();
+                        return interviewerTech !== candidateTech;
+                    });
 
-                        nonTechMatchedInterviewers = availableInterviewers.filter((interviewer) => {
-                            const interviewerTech = interviewer.contact?.technology || [];
-                            const interviewerTechLower = interviewerTech.map((t) => t.toLowerCase());
-                            const hasTechMatch = techLower.some((t) => interviewerTechLower.includes(t));
-                            return !hasTechMatch;
-                        });
-                    } else {
-                        console.log("ℹ️ No technology provided, skipping tech split");
-                        nonTechMatchedInterviewers = availableInterviewers;
-                    }
+                    console.log("✅ Technology Matched Interviewers:", techMatchedInterviewers.length);
+                    console.log("⚪ Non-Technology Matched Interviewers:", nonTechMatchedInterviewers.length);
 
                     // ✅ Step 3: Skill matching function
                     const calculateSkillMatches = (interviewersList, label) => {
-                        console.log(`\n🎯 Checking skill matches for group: ${label}`);
+                        console.log(`\n🔍 Checking Skill Matches for Group: ${label}`);
                         return interviewersList.map((interviewer, index) => {
                             console.log(
-                                `🧑 #${index + 1}: ${interviewer.contact?.firstName || "Unknown"}`
+                                `🧑 Interviewer #${index + 1}:`,
+                                interviewer.contact?.firstName || interviewer.contact?.UserName || "Unknown"
                             );
+                            console.log("👉 Interviewer's Skills:", interviewer.contact?.skills || []);
+
+                            if (!skills || !Array.isArray(skills)) {
+                                console.log("⚠️ skills prop is invalid or not an array:", skills);
+                                return { ...interviewer, matchedSkills: 0 };
+                            }
 
                             const interviewerSkills = interviewer.contact?.skills || [];
-                            const interviewerSkillsLower = interviewerSkills
-                                .map((s) => (typeof s === "string" ? s.toLowerCase() : s?.skill?.toLowerCase()))
-                                .filter(Boolean);
+                            const matchingSkills = interviewerSkills.filter((interviewerSkill) => {
+                                const interviewerSkillLower = typeof interviewerSkill === 'string'
+                                    ? interviewerSkill.toLowerCase()
+                                    : interviewerSkill?.skill?.toLowerCase();
 
-                            const matchingSkills =
-                                skills?.filter((requiredSkill) => {
-                                    const required = requiredSkill.skill?.toLowerCase();
-                                    return required && interviewerSkillsLower.includes(required);
-                                }) || [];
+                                return skills.some(skillItem => {
+                                    const requiredSkill = typeof skillItem === 'string'
+                                        ? skillItem.toLowerCase()
+                                        : skillItem?.skill?.toLowerCase();
+                                    return requiredSkill && interviewerSkillLower === requiredSkill;
+                                });
+                            });
 
+                            console.log("✅ Matching Skills Found:", matchingSkills);
                             const matchCount = matchingSkills.length;
-                            console.log(`✅ Matched Skills (${matchCount}):`, matchingSkills);
 
                             return { ...interviewer, matchedSkills: matchCount };
                         });
                     };
 
-                    // ✅ Step 4: Apply skill matching for both tech and non-tech groups
+                    // ✅ Step 4: Apply skill matching for both groups
                     const techMatchedWithSkills = calculateSkillMatches(techMatchedInterviewers, "Tech-Matched");
                     const nonTechMatchedWithSkills = calculateSkillMatches(nonTechMatchedInterviewers, "Non-Tech-Matched");
 
-                    // ✅ Step 5: Filter out those with zero skill matches
+                    // ✅ Step 5: Filter only those with at least one skill match
                     const techSkillFiltered = techMatchedWithSkills.filter((i) => i.matchedSkills > 0);
                     const nonTechSkillFiltered = nonTechMatchedWithSkills.filter((i) => i.matchedSkills > 0);
 
-                    // ✅ Step 6: Sort both by skill count descending
-                    const sortedTechSkillMatched = techSkillFiltered.sort((a, b) => b.matchedSkills - a.matchedSkills);
-                    const sortedSkillOnlyMatched = nonTechSkillFiltered.sort((a, b) => b.matchedSkills - a.matchedSkills);
+                    console.log("✅ Tech+Skill Matched Interviewers:", techSkillFiltered.length);
+                    console.log("✅ Skill-Only Matched Interviewers:", nonTechSkillFiltered.length);
 
-                    // ✅ Step 7: Merge both lists (tech+skill first, skill-only next)
-                    const combinedInterviewers = [...sortedTechSkillMatched, ...sortedSkillOnlyMatched];
-
-                    console.log("✅ Combined Sorted (Tech+Skill first):",
-                        combinedInterviewers.map((i) => ({
-                            name: i.contact?.firstName || "Unknown",
-                            matchedSkills: i.matchedSkills,
-                            technology: i.contact?.technology,
-                        }))
+                    // ✅ Step 6: Sort both lists by matched skill count (descending)
+                    const sortedTechSkillMatched = techSkillFiltered.sort(
+                        (a, b) => b.matchedSkills - a.matchedSkills
+                    );
+                    const sortedSkillOnlyMatched = nonTechSkillFiltered.sort(
+                        (a, b) => b.matchedSkills - a.matchedSkills
                     );
 
-                    // ✅ Step 8: Filter approved + offering mock
-                    const approvedInterviewers = combinedInterviewers.filter((interviewer) => {
+                    // ✅ Step 7: Merge both (tech+skill first, then skill-only)
+                    const combinedInterviewers = [...sortedTechSkillMatched, ...sortedSkillOnlyMatched];
+
+                    // ✅ Step 7.5: De-duplicate interviewers before final filtering
+                    const uniqueInterviewers = combinedInterviewers.filter(
+                        (interviewer, index, self) =>
+                            index === self.findIndex(i =>
+                                i.contact?._id === interviewer.contact?._id
+                            )
+                    );
+
+                    console.log(`✅ After de-duplication: ${uniqueInterviewers.length} unique interviewers`);
+
+                    // ✅ Step 8: Filter only approved interviewers who offer mock interviews
+                    const approvedInterviewers = uniqueInterviewers.filter((interviewer) => {
                         const isApproved = interviewer.contact?.status === "approved";
                         const offersMock = interviewer.contact?.InterviewFormatWeOffer?.includes("mock");
                         return isApproved && offersMock;
                     });
 
-                    // 🧠 Step: Filter by experience match (interviewer's experience >= candidate's experience)
+                    console.log(`✅ Approved Interviewers: ${approvedInterviewers.length}`);
+
+                    // ✅ Step 9: Experience filter
                     const experienceFiltered = approvedInterviewers.filter(interviewer => {
-                        const interviewerExp = parseFloat(currentExperience);
-                        const candidateExp = parseFloat(candidateExperience);
-
-                        // Include interviewer only if their experience >= candidate experience
-                        const isEligible = interviewerExp >= candidateExp;
-
-                        console.log(
-                            `🎓 Experience Check -> Interviewer: ${interviewer.contact?.firstName || "Unknown"} | ` +
-                            `InterviewerExp: ${interviewerExp} | CandidateExp: ${candidateExp} | Eligible: ${isEligible}`
-                        );
-
-                        return isEligible;
+                        const interviewerExp = parseFloat(interviewer.contact?.yearsOfExperience || 0);
+                        const candidateExp = parseFloat(candidateExperience || 0);
+                        return interviewerExp >= candidateExp;
                     });
 
-                    console.log(`✅ After experience filtering: ${experienceFiltered.length} interviewers remaining`);
+                    console.log(`✅ After experience filtering: ${experienceFiltered.length} interviewers`);
 
-                    // // ✅ Step 9: Remove logged-in user
-                    // const cleanedInterviewers = finalInterviewers.filter(
-                    //     (i) => i.contact?._id?.toString() !== userId?.toString()
-                    // );
+                    // ✅ Step 10: Final de-duplication (just in case)
+                    const finalInterviewers = experienceFiltered.filter(
+                        (interviewer, index, self) =>
+                            index === self.findIndex(i =>
+                                i.contact?._id === interviewer.contact?._id
+                            )
+                    );
 
-                    console.log("✅ Final mock-interview filtered interviewers:", experienceFiltered);
+                    console.log(`✅ Final unique interviewers: ${finalInterviewers.length}`);
 
-                    // ✅ Step 10: Update state
-                    setBaseInterviewers(experienceFiltered);
-                    setFilteredInterviewers(experienceFiltered);
+                    // ✅ Step 11: Update state with unique interviewers
+                    setBaseInterviewers(finalInterviewers);
+                    setFilteredInterviewers(finalInterviewers);
                     return;
                 }
 
@@ -921,7 +928,7 @@ function OutsourcedInterviewerModal({
         } else {
             const required = Number(requiredAmount || 0).toFixed(2);
             const currentBalance = Number(balance || 0).toFixed(2);
-            notify.error( `Your wallet balance is less than the highest interviewer hourly rate.\nRequired: $${required}\nPlease add funds to proceed.` );
+            notify.error(`Your wallet balance is less than the highest interviewer hourly rate.\nRequired: $${required}\nPlease add funds to proceed.`);
             setTimeout(() => setShowWalletModal(true), 1000);
         }
         //----v1.0.1----->
@@ -930,30 +937,30 @@ function OutsourcedInterviewerModal({
 
     const [isOpen, setIsOpen] = useState(false);
 
-  const [isRateApplied, setIsRateApplied] = useState(false);
+    const [isRateApplied, setIsRateApplied] = useState(false);
 
-  const handleApplyRateFilter = () => {
-    const minVal = parseInt(rateRange[0]) || 0;
-    const maxVal = parseInt(rateRange[1]) || Infinity;
+    const handleApplyRateFilter = () => {
+        const minVal = parseInt(rateRange[0]) || 0;
+        const maxVal = parseInt(rateRange[1]) || Infinity;
 
-    setAppliedRateRange([minVal, maxVal]);
+        setAppliedRateRange([minVal, maxVal]);
 
-    // If min is empty, visually show 0
-    setRateRange([
-      rateRange[0] === "" ? "0" : rateRange[0],
-      rateRange[1],
-    ]);
+        // If min is empty, visually show 0
+        setRateRange([
+            rateRange[0] === "" ? "0" : rateRange[0],
+            rateRange[1],
+        ]);
 
-    // ✅ Change button to "Clear"
-    setIsRateApplied(true);
-  };
+        // ✅ Change button to "Clear"
+        setIsRateApplied(true);
+    };
 
-  const handleClearRateFilter = () => {
-    // ✅ Reset everything
-    setRateRange(["", ""]);
-    setAppliedRateRange([0, Infinity]);
-    setIsRateApplied(false);
-  };
+    const handleClearRateFilter = () => {
+        // ✅ Reset everything
+        setRateRange(["", ""]);
+        setAppliedRateRange([0, Infinity]);
+        setIsRateApplied(false);
+    };
 
     return (
         <>
@@ -1047,58 +1054,58 @@ function OutsourcedInterviewerModal({
                                 </div>
                             </div>
 
-                                <div className="flex flex-col w-full">
-      <label className="flex text-sm font-medium text-gray-700 mb-1 md:mb-2">
-        Hourly Rate Range
-      </label>
+                            <div className="flex flex-col w-full">
+                                <label className="flex text-sm font-medium text-gray-700 mb-1 md:mb-2">
+                                    Hourly Rate Range
+                                </label>
 
-      <div className="flex justify-between">
-        <div className="flex items-center space-x-1.5 w-2/3">
-          {/* MIN Input */}
-          <input
-            type="number"
-            value={rateRange[0]}
-            onChange={(e) =>
-              setRateRange([e.target.value, rateRange[1]])
-            }
-            className="px-2 py-2 border border-gray-300 rounded-md w-full"
-            placeholder="Min"
-            min="0"
-          />
+                                <div className="flex justify-between">
+                                    <div className="flex items-center space-x-1.5 w-2/3">
+                                        {/* MIN Input */}
+                                        <input
+                                            type="number"
+                                            value={rateRange[0]}
+                                            onChange={(e) =>
+                                                setRateRange([e.target.value, rateRange[1]])
+                                            }
+                                            className="px-2 py-2 border border-gray-300 rounded-md w-full"
+                                            placeholder="Min"
+                                            min="0"
+                                        />
 
-          <span className="text-gray-500">-</span>
+                                        <span className="text-gray-500">-</span>
 
-          {/* MAX Input */}
-          <input
-            type="number"
-            value={rateRange[1]}
-            onChange={(e) =>
-              setRateRange([rateRange[0], e.target.value])
-            }
-            className="px-2 py-2 border border-gray-300 rounded-md w-full"
-            placeholder="Max"
-            min="0"
-          />
-        </div>
+                                        {/* MAX Input */}
+                                        <input
+                                            type="number"
+                                            value={rateRange[1]}
+                                            onChange={(e) =>
+                                                setRateRange([rateRange[0], e.target.value])
+                                            }
+                                            className="px-2 py-2 border border-gray-300 rounded-md w-full"
+                                            placeholder="Max"
+                                            min="0"
+                                        />
+                                    </div>
 
-        {/* ✅ Dynamic Button */}
-        {isRateApplied ? (
-          <button
-            className="px-5 py-1 ml-3 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm font-medium"
-            onClick={handleClearRateFilter}
-          >
-            Clear
-          </button>
-        ) : (
-          <button
-            className="px-5 py-1 ml-3 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 text-sm font-medium"
-            onClick={handleApplyRateFilter}
-          >
-            Apply
-          </button>
-        )}
-      </div>
-    </div>
+                                    {/* ✅ Dynamic Button */}
+                                    {isRateApplied ? (
+                                        <button
+                                            className="px-5 py-1 ml-3 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm font-medium"
+                                            onClick={handleClearRateFilter}
+                                        >
+                                            Clear
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="px-5 py-1 ml-3 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 text-sm font-medium"
+                                            onClick={handleApplyRateFilter}
+                                        >
+                                            Apply
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
 

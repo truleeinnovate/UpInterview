@@ -22,6 +22,7 @@ import toast from "react-hot-toast";
 import { usePermissions } from "../../Context/PermissionsContext";
 
 import { Link } from "react-router-dom";
+import { notify } from "../../services/toastService.js";
 // import Layout from './Layout.jsx';
 
 const OrganizationLogin = () => {
@@ -46,7 +47,7 @@ const OrganizationLogin = () => {
         const query = new URLSearchParams(location.search);
         const verified = query.get("verified");
         if (verified === "true") {
-            toast.success("Email verified successfully!");
+            notify.success("Email verified successfully!");
             navigate("/organization-login");
             window.location.reload();
         }
@@ -94,15 +95,15 @@ const OrganizationLogin = () => {
                 { email }
             );
             if (response.data.success) {
-                toast.success("Verification email resent!");
+                notify.success("Verification email resent!");
                 setCountdown(60);
             } else {
-                toast.error(
+                notify.error(
                     response.data.message || "Failed to resend verification email"
                 );
             }
         } catch (error) {
-            toast.error(
+            notify.error(
                 error.response?.data?.message || "Failed to resend verification email"
             );
         } finally {
@@ -231,7 +232,7 @@ const OrganizationLogin = () => {
 
             // Authenticate user
             const loginURL = `${config.REACT_APP_API_URL}/Organization/Login`;
-            console.log('Sending login request to:', loginURL);
+            // console.log('Sending login request to:', loginURL);
             const response = await axios.post(
                 loginURL,
                 {
@@ -240,15 +241,15 @@ const OrganizationLogin = () => {
                 },
                 { withCredentials: true }
             );
-            console.log('Login response received:', {
-                status: response.status,
-                data: {
-                    ...response.data,
-                    // Hide sensitive data in logs
-                    authToken: response.data.authToken ? '***TOKEN_RECEIVED***' : 'NO_TOKEN',
-                    impersonationToken: response.data.impersonationToken ? '***TOKEN_RECEIVED***' : 'NO_TOKEN'
-                }
-            });
+            // console.log('Login response received:', {
+            //     status: response.status,
+            //     data: {
+            //         ...response.data,
+            //         // Hide sensitive data in logs
+            //         authToken: response.data.authToken ? '***TOKEN_RECEIVED***' : 'NO_TOKEN',
+            //         impersonationToken: response.data.impersonationToken ? '***TOKEN_RECEIVED***' : 'NO_TOKEN'
+            //     }
+            // });
 
             const {
                 authToken,
@@ -265,15 +266,15 @@ const OrganizationLogin = () => {
                 subdomain,
                 subdomainStatus,
             } = response.data;
-            console.log('Login successful, processing response...');
-            console.log('Role Type:', roleType);
-            console.log('Is Email Verified:', isEmailVerified);
+            // console.log('Login successful, processing response...');
+            // console.log('Role Type:', roleType);
+            // console.log('Is Email Verified:', isEmailVerified);
 
-            console.log('Login successful, processing response...');
-            console.log('Role Type:', roleType);
-            console.log('Is Email Verified:', isEmailVerified);
-            console.log('User Status:', status);
-            console.log('Is Profile Completed:', isProfileCompleted);
+            // console.log('Login successful, processing response...');
+            // console.log('Role Type:', roleType);
+            // console.log('Is Email Verified:', isEmailVerified);
+            // console.log('User Status:', status);
+            // console.log('Is Profile Completed:', isProfileCompleted);
 
             // Handle internal users
             if (roleType === "internal") {
@@ -309,19 +310,19 @@ const OrganizationLogin = () => {
                 return;
             }
 
-            console.log('Checking subdomain redirection...');
-            console.log('Subdomain:', subdomain);
-            console.log('Subdomain Status:', subdomainStatus);
-            console.log('User Status for redirection:', status);
+            // console.log('Checking subdomain redirection...');
+            // console.log('Subdomain:', subdomain);
+            // console.log('Subdomain Status:', subdomainStatus);
+            // console.log('User Status for redirection:', status);
 
             // Handle subdomain redirection if applicable
             if (subdomain && subdomainStatus === 'active' && status === 'active') {
-                console.log('Subdomain redirection applicable...');
+                // console.log('Subdomain redirection applicable...');
                 const currentDomain = window.location.hostname;
                 const targetDomain = `${subdomain}.${config.REACT_APP_API_URL_FRONTEND}`;
 
                 if (!currentDomain.includes(subdomain)) {
-                    console.log('Redirecting to subdomain...');
+                    // console.log('Redirecting to subdomain...');
                     const protocol = window.location.protocol;
                     let targetPath = "/";
                     if (status === "active" && isProfileCompleted !== false) {
@@ -359,7 +360,7 @@ const OrganizationLogin = () => {
             await refreshPermissions();
 
             // Default navigation based on user status and organization request status
-            console.log('User status:', status);
+            // console.log('User status:', status);
 
             // Get user data from the login response
             const userData = response?.data;
@@ -368,7 +369,7 @@ const OrganizationLogin = () => {
                 case "submitted":
                     const requestResponse = await axios.get(`${config.REACT_APP_API_URL}/Organization/organization-request/${userData.tenantId}/${userData.ownerId}`);
                     const requestStatus = requestResponse.data.data.status;
-                    console.log('requestStatus:- ', requestStatus);
+                    // console.log('requestStatus:- ', requestStatus);
                     if (requestStatus === 'pending_review') {
                         navigate("/pending-approval");
                     } else if (requestStatus === 'in_contact' || requestStatus === 'rejected') {

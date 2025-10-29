@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
+import { notify } from "../services/toastService";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
@@ -58,7 +59,7 @@ export const useCreateWithdrawal = () => {
         queryClient.invalidateQueries(["withdrawalRequests", variables.ownerId]);
       }
       
-      toast.success(
+      notify.success(
         `Withdrawal request created successfully! ${
           data.withdrawalRequest?.withdrawalCode || ""
         }`
@@ -66,7 +67,7 @@ export const useCreateWithdrawal = () => {
     },
     onError: (error) => {
       const message = error.response?.data?.error || "Failed to create withdrawal request";
-      toast.error(message);
+      notify.error(message);
       console.error("Error creating withdrawal:", error);
     }
   });
@@ -88,11 +89,11 @@ export const useCancelWithdrawal = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries(["wallet"]);
       queryClient.invalidateQueries(["withdrawalRequests"]);
-      toast.success("Withdrawal request cancelled successfully!");
+      notify.success("Withdrawal request cancelled successfully!");
     },
     onError: (error) => {
       const message = error.response?.data?.error || "Failed to cancel withdrawal request";
-      toast.error(message);
+      notify.error(message);
       console.error("Error cancelling withdrawal:", error);
     }
   });
