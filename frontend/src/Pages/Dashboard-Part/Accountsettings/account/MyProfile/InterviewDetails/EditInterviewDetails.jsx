@@ -659,7 +659,7 @@ const EditInterviewDetails = ({
         if (error.response) {
           if (error.response.status === 400) {
             const backendErrors = error.response.data.errors || {};
-            console.log("backendErrors", backendErrors);
+            // console.log("backendErrors", backendErrors);
             setErrors(backendErrors);
           } else {
             notify.error("Error updating interview details. Please try again.");
@@ -677,7 +677,7 @@ const EditInterviewDetails = ({
       if (error.response) {
         if (error.response.status === 400) {
           const backendErrors = error.response.data.errors || {};
-          console.log("backendErrors", backendErrors);
+          // console.log("backendErrors", backendErrors);
           setErrors(backendErrors);
         } else {
           notify.error("Error updating interview details. Please try again.");
@@ -806,68 +806,95 @@ const EditInterviewDetails = ({
   // Enhanced rate change handler with exchange rate conversion
   const handleRateChange = (level, currency) => (e) => {
     const value = e.target.value;
-    const numericValue = value.replace(/\D/g, "");
 
-    const levelKey = level.charAt(0).toUpperCase() + level.slice(1);
-    const rateRange = getRateRanges(levelKey);
-
-    let error = "";
-
-    if (!numericValue) {
-      error = "This rate is required";
-    } else {
-      const minRate = rateRange?.[currency]?.min || 0;
-      const maxRate =
-        rateRange?.[currency]?.max || (currency === "inr" ? 100000 : 1000);
-      const numValue = parseInt(numericValue, 10);
-
-      if (numValue < minRate) {
-        error = `Rate cannot be less than ${currency === "inr" ? "₹" : "$"
-          }${minRate}`;
-      } else if (numValue > maxRate) {
-        error = `Rate cannot exceed ${currency === "inr" ? "₹" : "$"
-          }${maxRate}`;
-      }
-    }
-
-    setFormData((prev) => {
-      const updatedRates = {
-        ...prev.rates,
-        [level]: {
-          ...prev.rates?.[level],
-          [currency]: numericValue ? parseInt(numericValue, 10) : "",
-        },
-      };
-
-      // If USD is being updated, automatically update INR
-      if (currency === "usd" && numericValue) {
-        const inrValue = Math.round(parseInt(numericValue, 10) * exchangeRate);
-        updatedRates[level].inr = inrValue;
-      }
-
-      // If INR is being updated, automatically update USD
-      if (currency === "inr" && numericValue) {
-        const usdValue = Math.round(parseInt(numericValue, 10) / exchangeRate);
-        updatedRates[level].usd = usdValue;
-      }
-
-      return {
-        ...prev,
-        rates: updatedRates,
-      };
-    });
-
-    setErrors((prev) => ({
+    setFormData(prev => ({
       ...prev,
       rates: {
         ...prev.rates,
         [level]: {
           ...prev.rates?.[level],
-          [currency]: error,
-        },
-      },
+          [currency]: value
+        }
+      }
+    }));
+
+    // Clear errors when user starts typing (optional)
+    setErrors(prev => ({
+      ...prev,
+      rates: {
+        ...prev.rates,
+        [level]: {
+          ...prev.rates?.[level],
+          [currency]: ''
+        }
+      }
     }));
   };
+
+  // Add this new function for validation on blur
+  const handleRateBlur = (level, currency) => (e) => {
+    const value = e.target.value;
+    const range = getRateRanges(level.rangeKey);
+    let error = '';
+
+    if (value) {
+      const numValue = parseFloat(value);
+
+      if (isNaN(numValue)) {
+        error = 'Please enter a valid number';
+      } else if (numValue < 0) {
+        error = 'Rate cannot be negative';
+      } else if (range && range[currency]) {
+        const min = range[currency].min;
+        const max = range[currency].max;
+
+        if (numValue < min) {
+          error = `${currency.toUpperCase()} rate should be at least ${min}`;
+        } else if (numValue > max) {
+          error = `${currency.toUpperCase()} rate should not exceed ${max}`;
+        }
+      }
+    } else {
+      // This handles the "required" error
+      error = `${currency.toUpperCase()} rate is required`;
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      rates: {
+        ...prev.rates,
+        [level.key]: {
+          ...prev.rates?.[level.key],
+          [currency]: error
+        }
+      }
+    }));
+  };
+
+  // Define levels configuration
+  const levelsConfig = [
+    {
+      key: 'junior',
+      label: 'Junior Level (0-3 years)',
+      showCondition: showJuniorLevel,
+      rangeKey: 'Junior',
+      yearsText: '0-3 years'
+    },
+    {
+      key: 'mid',
+      label: 'Mid-Level (3-6 years)',
+      showCondition: showMidLevel,
+      rangeKey: 'Mid-Level',
+      yearsText: '3-6 years'
+    },
+    {
+      key: 'senior',
+      label: 'Senior Level (6+ years)',
+      showCondition: showSeniorLevel,
+      rangeKey: 'Senior',
+      yearsText: '6+ years'
+    }
+  ];
 
   const handleChangeforExp = (e) => {
     const { name, value } = e.target;
@@ -907,25 +934,25 @@ const EditInterviewDetails = ({
       const shouldShowMid = years >= 3 && years <= 9;
       const shouldShowSenior = years >= 6;
 
-      // Update form data with new technology and reset rates
+      // Update form data with new technology and reset rates to empty
       setFormData((prev) => {
         const newFormData = {
           ...prev,
           Technology: [selectedValue],
           rates: {
             junior: {
-              usd: 0,
-              inr: 0,
+              usd: '',
+              inr: '',
               isVisible: shouldShowJunior,
             },
             mid: {
-              usd: 0,
-              inr: 0,
+              usd: '',
+              inr: '',
               isVisible: shouldShowMid,
             },
             senior: {
-              usd: 0,
-              inr: 0,
+              usd: '',
+              inr: '',
               isVisible: shouldShowSenior,
             },
           },
@@ -948,7 +975,7 @@ const EditInterviewDetails = ({
       // Fetch rate cards for the selected technology
       fetchRateCards(selectedValue)
         .then(() => {
-          console.log("Rate cards fetched for:", selectedValue);
+          // console.log("Rate cards fetched for:", selectedValue);
         })
         .catch((error) => {
           console.error("Error fetching rate cards:", error);
@@ -960,9 +987,9 @@ const EditInterviewDetails = ({
         ...prev,
         Technology: [],
         rates: {
-          junior: { usd: 0, inr: 0, isVisible: false },
-          mid: { usd: 0, inr: 0, isVisible: false },
-          senior: { usd: 0, inr: 0, isVisible: false },
+          junior: { usd: '', inr: '', isVisible: false },
+          mid: { usd: '', inr: '', isVisible: false },
+          senior: { usd: '', inr: '', isVisible: false },
         },
       }));
       setErrors((prev) => ({
@@ -974,7 +1001,7 @@ const EditInterviewDetails = ({
 
 
 
-  // Clamp rates when rateCards change
+  // Clamp rates when rateCards change - only if rates have values
   useEffect(() => {
     if (rateCards.length > 0) {
       const levelMap = {
@@ -989,8 +1016,11 @@ const EditInterviewDetails = ({
           if (newRates[level].isVisible) {
             const ranges = getRateRanges(levelMap[level]);
             if (ranges) {
-              const clamp = (val, min, max) =>
-                Math.max(min, Math.min(max, val || min));
+              const clamp = (val, min, max) => {
+                // Only clamp if value exists and is not empty string
+                if (val === '' || val === null || val === undefined) return val;
+                return Math.max(min, Math.min(max, val));
+              };
               newRates[level].usd = clamp(
                 newRates[level].usd,
                 ranges.usd.min,
@@ -1240,12 +1270,11 @@ const EditInterviewDetails = ({
               )}
 
               {/* Hourly Rates by Experience Level */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Hourly Rates by Experience Level{" "}
                   <span className="text-red-500">*</span>
                 </label>
-                {/* Exchange Rate Info - Simplified */}
                 <div className="text-xs text-gray-600 mb-4">
                   {isRateLoading ? (
                     <span>Loading exchange rate...</span>
@@ -1257,7 +1286,6 @@ const EditInterviewDetails = ({
                   </p>
                 </div>
                 <div className="space-y-4">
-                  {/* Junior Level (0-3 years) - Always visible */}
                   {showJuniorLevel && (
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
@@ -1340,7 +1368,6 @@ const EditInterviewDetails = ({
                     </div>
                   )}
 
-                  {/* Mid Level (4-6 years) - Show if 4+ years */}
                   {showMidLevel && (
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
@@ -1424,7 +1451,6 @@ const EditInterviewDetails = ({
                     </div>
                   )}
 
-                  {/* Senior Level (7+ years) - Show if 7+ years */}
                   {showSeniorLevel && (
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
@@ -1519,8 +1545,101 @@ const EditInterviewDetails = ({
                     </span>
                   )}
                 </p>
-              </div>
+              </div> */}
               {/* </div> */}
+
+              <div>
+                <div className='flex items-center justify-between'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hourly Rates by Experience Level <span className="text-red-500">*</span>
+                  </label>
+                  {/* Exchange Rate Info - Simplified */}
+                  <div className="text-xs text-gray-600 mb-4">
+                    {isRateLoading ? (
+                      <span>Loading exchange rate...</span>
+                    ) : (
+                      <span>Approximately 1 USD = {Number(exchangeRate).toFixed(2)} INR</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {levelsConfig.map((level) => (
+                    level.showCondition && (
+                      <div key={level.key} className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <label htmlFor={`${level.key}_rate`} className="text-sm font-medium text-gray-700">
+                            {level.label}
+                          </label>
+                          <span className="text-xs text-gray-500">
+                            {getRateRanges(level.rangeKey)?.usd && getRateRanges(level.rangeKey)?.inr && (
+                              <span>
+                                Range: ${getRateRanges(level.rangeKey).usd.min}-${getRateRanges(level.rangeKey).usd.max}
+                                {" "}({`₹${getRateRanges(level.rangeKey).inr.min}–${getRateRanges(level.rangeKey).inr.max}`})
+                              </span>
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="flex sm:flex-col w-full">
+                          {/* USD Input */}
+                          <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
+                            <label className="block text-xs font-medium text-gray-500 mb-1">USD</label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                name={`${level.key}_usd`}
+                                id={`${level.key}_usd`}
+                                value={formData.rates?.[level.key]?.usd || ''}
+                                onChange={handleRateChange(level.key, 'usd')}
+                                onBlur={handleRateBlur(level, 'usd')}
+                                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                placeholder="Enter USD rate"
+                              />
+                            </div>
+                            {errors.rates?.[level.key]?.usd && (
+                              <p className="mt-1 text-xs text-red-600">{errors.rates[level.key].usd}</p>
+                            )}
+                          </div>
+
+                          {/* INR Input */}
+                          <div className="w-1/2 sm:w-full pl-2 sm:pl-0">
+                            <label className="block text-xs font-medium text-gray-500 mb-1">INR</label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                name={`${level.key}_inr`}
+                                id={`${level.key}_inr`}
+                                value={formData.rates?.[level.key]?.inr || ''}
+                                onChange={handleRateChange(level.key, 'inr')}
+                                onBlur={handleRateBlur(level, 'inr')}
+                                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                placeholder="Enter INR rate"
+                              />
+                            </div>
+                            {errors.rates?.[level.key]?.inr && (
+                              <p className="mt-1 text-xs text-red-600">{errors.rates[level.key].inr}</p>
+                            )}
+                          </div>
+
+                        </div>
+                      </div>
+                    )
+                  ))}
+                </div>
+
+                <p className="mt-2 text-xs text-gray-500">
+                  {expYears < 3 && (
+                    `You can set rates for junior-level candidates based on your experience.`
+                  )}
+                  {expYears >= 3 && expYears <= 6 && (
+                    'You can set rates for both junior and mid-level candidates based on your experience.'
+                  )}
+                  {expYears >= 7 && (
+                    'You can set rates for junior, mid and senior-level candidates based on your experience.'
+                  )}
+                </p>
+              </div>
 
               {/* Interview Formats You Offer */}
               <div>

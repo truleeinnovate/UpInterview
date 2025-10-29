@@ -489,72 +489,72 @@ const InterviewDetails = ({
         }));
     };
 
-const handleRateChange = (level, currency) => (e) => {
-    const value = e.target.value;
-    
-    setInterviewDetailsData(prev => ({
-        ...prev,
-        rates: {
-            ...prev.rates,
-            [level]: {
-                ...prev.rates?.[level],
-                [currency]: value
-            }
-        }
-    }));
+    const handleRateChange = (level, currency) => (e) => {
+        const value = e.target.value;
 
-    // Clear errors when user starts typing (optional)
-    setErrors(prev => ({
-        ...prev,
-        rates: {
-            ...prev.rates,
-            [level]: {
-                ...prev.rates?.[level],
-                [currency]: ''
+        setInterviewDetailsData(prev => ({
+            ...prev,
+            rates: {
+                ...prev.rates,
+                [level]: {
+                    ...prev.rates?.[level],
+                    [currency]: value
+                }
             }
-        }
-    }));
-};
+        }));
 
-// Add this new function for validation on blur
-const handleRateBlur = (level, currency) => (e) => {
-    const value = e.target.value;
-    const range = getRateRanges(level.rangeKey);
-    let error = '';
-
-    if (value) {
-        const numValue = parseFloat(value);
-        
-        if (isNaN(numValue)) {
-            error = 'Please enter a valid number';
-        } else if (numValue < 0) {
-            error = 'Rate cannot be negative';
-        } else if (range && range[currency]) {
-            const min = range[currency].min;
-            const max = range[currency].max;
-            
-            if (numValue < min) {
-                error = `${currency.toUpperCase()} rate should be at least ${min}`;
-            } else if (numValue > max) {
-                error = `${currency.toUpperCase()} rate should not exceed ${max}`;
+        // Clear errors when user starts typing (optional)
+        setErrors(prev => ({
+            ...prev,
+            rates: {
+                ...prev.rates,
+                [level]: {
+                    ...prev.rates?.[level],
+                    [currency]: ''
+                }
             }
-        }
-    } else {
-        // This handles the "required" error
-        error = `${currency.toUpperCase()} rate is required`;
-    }
+        }));
+    };
 
-    setErrors(prev => ({
-        ...prev,
-        rates: {
-            ...prev.rates,
-            [level.key]: {
-                ...prev.rates?.[level.key],
-                [currency]: error
+    // Add this new function for validation on blur
+    const handleRateBlur = (level, currency) => (e) => {
+        const value = e.target.value;
+        const range = getRateRanges(level.rangeKey);
+        let error = '';
+
+        if (value) {
+            const numValue = parseFloat(value);
+
+            if (isNaN(numValue)) {
+                error = 'Please enter a valid number';
+            } else if (numValue < 0) {
+                error = 'Rate cannot be negative';
+            } else if (range && range[currency]) {
+                const min = range[currency].min;
+                const max = range[currency].max;
+
+                if (numValue < min) {
+                    error = `${currency.toUpperCase()} rate should be at least ${min}`;
+                } else if (numValue > max) {
+                    error = `${currency.toUpperCase()} rate should not exceed ${max}`;
+                }
             }
+        } else {
+            // This handles the "required" error
+            error = `${currency.toUpperCase()} rate is required`;
         }
-    }));
-};
+
+        setErrors(prev => ({
+            ...prev,
+            rates: {
+                ...prev.rates,
+                [level.key]: {
+                    ...prev.rates?.[level.key],
+                    [currency]: error
+                }
+            }
+        }));
+    };
 
     // Define levels configuration
     const levelsConfig = [

@@ -154,6 +154,10 @@ const PhoneField = ({
                                 width: "300px",
                                 minWidth: "280px",
                             }),
+                            menuPortal: (base) => ({
+                                ...base,
+                                zIndex: 9999,
+                            }),
                             control: (base, state) => ({
                                 ...base,
                                 borderColor: state.isFocused ? "#217989" : "#217989",
@@ -185,6 +189,7 @@ const PhoneField = ({
                             }),
                         }}
                         menuPortalTarget={document.body}
+                        menuPosition="fixed"
                     />
                 </div>
                 <div className="flex-1 sm:w-full">
