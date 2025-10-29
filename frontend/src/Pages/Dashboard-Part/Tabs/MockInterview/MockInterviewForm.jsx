@@ -75,7 +75,7 @@ const formatToCustomDateTime = (date) => {
 const MockSchedulelater = () => {
 
     const { singleContact } = useSingleContact();
-    console.log("singleContact===", singleContact);
+    // console.log("singleContact===", singleContact);
 
     const {
         qualifications,
@@ -378,19 +378,19 @@ const MockSchedulelater = () => {
                     skills: skillStrings
                 }));
 
-                console.log("Edit mode skills initialized:", {
-                    skillObjects,
-                    skillStrings
-                });
+                // console.log("Edit mode skills initialized:", {
+                //     skillObjects,
+                //     skillStrings
+                // });
             }
         } else {
             updateTimes(formData.rounds.duration);
         }
     }, [id, mockinterviewData]);
 
-    console.log("formData", formData);
-    console.log("entries", entries);
-    console.log("allSelectedSkills", allSelectedSkills);
+    // console.log("formData", formData);
+    // console.log("entries", entries);
+    // console.log("allSelectedSkills", allSelectedSkills);
 
     // useEffect(() => {
     //     if (id && mockinterviewData.length > 0) {
@@ -593,7 +593,7 @@ const MockSchedulelater = () => {
         scrollToFirstError(newErrors, fieldRefs);
 
         if (!formIsValid) {
-            console.log("Page 1 validation failed:", newErrors);
+            // console.log("Page 1 validation failed:", newErrors);
             return;
         }
 
@@ -623,11 +623,11 @@ const MockSchedulelater = () => {
             // If editing existing mock interview, use that ID
             const mockIdToUse = mockEdit ? id : createdMockInterviewId;
 
-            console.log("Saving Page 1 data:", {
-                formData: page1Data,
-                id: mockIdToUse,
-                isEdit: mockEdit || !!createdMockInterviewId
-            });
+            // console.log("Saving Page 1 data:", {
+            //     formData: page1Data,
+            //     id: mockIdToUse,
+            //     isEdit: mockEdit || !!createdMockInterviewId
+            // });
 
             // Call API to save/update Page 1 data
             const response = await addOrUpdateMockInterview({
@@ -640,7 +640,7 @@ const MockSchedulelater = () => {
                 isResumeRemoved,
             });
 
-            console.log("Page 1 save response:", response);
+            // console.log("Page 1 save response:", response);
 
             // Extract the mock interview ID from response
             const savedMockId = response?.data?.mockInterview?._id || response?._id || response?.data?._id;
@@ -739,15 +739,15 @@ const MockSchedulelater = () => {
             lastModifiedById: userId,
         };
 
-        console.log("Page 2 submission data:", {
-            formData: updatedFormData,
-            id: mockIdToUse,
-            isEdit: mockEdit || !!createdMockInterviewId
-        });
+        // console.log("Page 2 submission data:", {
+        //     formData: updatedFormData,
+        //     id: mockIdToUse,
+        //     isEdit: mockEdit || !!createdMockInterviewId
+        // });
 
         try {
             // 🔹 STEP 1: Save the mock interview with rounds
-            console.log("🔹 STEP 1: Saving mock interview with rounds...");
+            // console.log("🔹 STEP 1: Saving mock interview with rounds...");
             let mockInterviewResponse = await addOrUpdateMockInterview({
                 formData: updatedFormData,
                 id: mockIdToUse,
@@ -771,7 +771,7 @@ const MockSchedulelater = () => {
                 return;
             }
 
-            console.log("✅ STEP 1 COMPLETE: Mock interview saved successfully", mockInterviewResponse);
+            // console.log("✅ STEP 1 COMPLETE: Mock interview saved successfully", mockInterviewResponse);
 
             // 🔹 STEP 2: Get the created mock interview ID and round data
             const mockInterviewId =
@@ -783,7 +783,7 @@ const MockSchedulelater = () => {
             const roundData = mockInterviewResponse?.data?.rounds?.[0] ||
                 mockInterviewResponse?.rounds?.[0];
 
-            console.log("Extracted IDs:", { mockInterviewId, roundData });
+            // console.log("Extracted IDs:", { mockInterviewId, roundData });
 
             if (!mockInterviewId) {
                 notify.error("Failed to get interview details after saving");
@@ -794,7 +794,7 @@ const MockSchedulelater = () => {
             // 🔹 STEP 3: Handle outsource requests if interviewers selected
             if (selectedInterviewers && selectedInterviewers.length > 0 && roundData) {
                 try {
-                    console.log("Creating outsource requests for interviewers:", selectedInterviewers.length);
+                    // console.log("Creating outsource requests for interviewers:", selectedInterviewers.length);
 
                     for (const interviewer of selectedInterviewers) {
                         const outsourceRequestData = {
@@ -812,7 +812,7 @@ const MockSchedulelater = () => {
                             expiryDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
                         };
 
-                        console.log("Sending outsource request:", outsourceRequestData);
+                        // console.log("Sending outsource request:", outsourceRequestData);
 
                         await axios.post(
                             `${config.REACT_APP_API_URL}/interviewrequest`,
@@ -829,7 +829,7 @@ const MockSchedulelater = () => {
                     // Send outsource interview request emails
                     if (selectedInterviewers.length > 0) {
                         try {
-                            console.log("=== Sending outsource interview request emails ===");
+                            // console.log("=== Sending outsource interview request emails ===");
                             const interviewerIds = selectedInterviewers.map(
                                 (interviewer) => interviewer.contact?._id || interviewer._id
                             );
@@ -851,7 +851,7 @@ const MockSchedulelater = () => {
                             );
 
                             if (emailResponse.data.success) {
-                                console.log(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
+                                // console.log(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
                                 if (emailResponse.data.data.failedEmails > 0) {
                                     console.warn(`${emailResponse.data.data.failedEmails} emails failed to send`);
                                 }
@@ -946,7 +946,7 @@ const MockSchedulelater = () => {
 
                     // Update the round with meeting link
                     if (meetingLink) {
-                        console.log("🔹 Updating round with meeting link...");
+                        // console.log("🔹 Updating round with meeting link...");
 
                         const updateRoundData = {
                             _id: roundData._id, // Include round ID for update
@@ -1478,7 +1478,7 @@ const MockSchedulelater = () => {
 
 
     const handleExternalInterviewerSelect = (newInterviewers) => {
-        console.log("newInterviewers", newInterviewers);
+        // console.log("newInterviewers", newInterviewers);
         const formattedInterviewers = newInterviewers.map((interviewer) => ({
             _id: interviewer?.contact?._id,
             name:
@@ -1530,11 +1530,11 @@ const MockSchedulelater = () => {
     };
 
     const addSkill = (skillName) => {
-        console.log("addSkill called with:", skillName);
+        // console.log("addSkill called with:", skillName);
         const trimmedSkill = skillName.trim();
-        console.log("Trimmed skill:", trimmedSkill);
+        // console.log("Trimmed skill:", trimmedSkill);
         if (!trimmedSkill) {
-            console.log("Empty skill name, returning");
+            // console.log("Empty skill name, returning");
             return;
         }
 
@@ -1544,7 +1544,7 @@ const MockSchedulelater = () => {
             return existingSkillName.toLowerCase() === trimmedSkill.toLowerCase();
         });
 
-        console.log("Skill exists check:", skillExists, "Current skills:", allSelectedSkills);
+        // console.log("Skill exists check:", skillExists, "Current skills:", allSelectedSkills);
 
         if (!skillExists) {
             const newSkillObj = {
@@ -1566,9 +1566,9 @@ const MockSchedulelater = () => {
             }));
 
             setErrors((prev) => ({ ...prev, skills: "" }));
-            console.log("Skill added successfully");
-            console.log("Updated allSelectedSkills:", updatedAllSkills);
-            console.log("Updated formData.skills:", updatedFormSkills);
+            // console.log("Skill added successfully");
+            // console.log("Updated allSelectedSkills:", updatedAllSkills);
+            // console.log("Updated formData.skills:", updatedFormSkills);
         } else {
             notify.error("Skill already exists");
         }
@@ -1591,9 +1591,9 @@ const MockSchedulelater = () => {
 
 
     const handleRemoveSkill = (index) => {
-        console.log("Removing skill at index:", index);
-        console.log("Current allSelectedSkills:", allSelectedSkills);
-        console.log("Current formData.skills:", formData.skills);
+        // console.log("Removing skill at index:", index);
+        // console.log("Current allSelectedSkills:", allSelectedSkills);
+        // console.log("Current formData.skills:", formData.skills);
 
         // Create new arrays without mutating the original
         const updatedAllSkills = [...allSelectedSkills];
@@ -1610,8 +1610,8 @@ const MockSchedulelater = () => {
             skills: updatedFormSkills,
         }));
 
-        console.log("After removal - allSelectedSkills:", updatedAllSkills);
-        console.log("After removal - formData.skills:", updatedFormSkills);
+        // console.log("After removal - allSelectedSkills:", updatedAllSkills);
+        // console.log("After removal - formData.skills:", updatedFormSkills);
     };
 
 
@@ -1782,23 +1782,23 @@ const MockSchedulelater = () => {
                                                         }
                                                     }}
                                                     onKeyDown={(e) => {
-                                                        console.log(
-                                                            "Key pressed:",
-                                                            e.key,
-                                                            "Value:",
-                                                            e.target?.value
-                                                        );
+                                                        // console.log(
+                                                        //     "Key pressed:",
+                                                        //     e.key,
+                                                        //     "Value:",
+                                                        //     e.target?.value
+                                                        // );
 
                                                         // Handle the create action from the dropdown
                                                         if (e.key === "Enter" && e.target?.action === "create") {
                                                             const newSkill = e.target.value?.trim();
                                                             if (newSkill) {
-                                                                console.log("Adding new skill:", newSkill);
+                                                                // console.log("Adding new skill:", newSkill);
                                                                 addSkill(newSkill);
 
                                                                 // Clear the input field and close the dropdown
                                                                 setTimeout(() => {
-                                                                    console.log("Attempting to close dropdown");
+                                                                    // console.log("Attempting to close dropdown");
                                                                     // Blur any active element to close dropdowns
                                                                     if (document.activeElement) {
                                                                         document.activeElement.blur();
@@ -1809,7 +1809,7 @@ const MockSchedulelater = () => {
                                                                         // Clear react-select value
                                                                         if (fieldRefs.skills.current.select) {
                                                                             fieldRefs.skills.current.select.clearValue();
-                                                                            console.log("React-select value cleared");
+                                                                            // console.log("React-select value cleared");
                                                                         }
 
                                                                         // Find and clear the input

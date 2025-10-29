@@ -87,7 +87,7 @@ const Price = () => {
                 const contentType = response.headers['content-type'];
 
                 if (contentType && contentType.includes('application/json')) {
-                    console.log('Fetched plans:', response.data);
+                    // console.log('Fetched plans:', response.data);
                     setPlans(response.data);
                 } else {
                     console.error('Expected JSON response but received:', response);

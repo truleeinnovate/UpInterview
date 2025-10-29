@@ -23,7 +23,7 @@ const loadRazorpayScript = () => {
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
         script.async = true;
         script.onload = () => {
-            console.log('Razorpay script loaded successfully');
+            // console.log('Razorpay script loaded successfully');
             resolve(true);
         };
         script.onerror = () => {
@@ -35,7 +35,7 @@ const loadRazorpayScript = () => {
 };
 
 const CardDetails = () => {
-    console.log('card details')
+    // console.log('card details')
 
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
@@ -88,7 +88,7 @@ const CardDetails = () => {
                         email: userProfile.email,
                         phone: userProfile.phone
                     });
-                    console.log('User profile fetched:', userProfile);
+                    // console.log('User profile fetched:', userProfile);
                 }
             } catch (error) {
                 console.error('Error fetching user profile:', error);
@@ -107,7 +107,7 @@ const CardDetails = () => {
             const monthly = parseFloat(monthlyPrice) || 0;
             const annual = parseFloat(annualPrice) || 0;
 
-            console.log('Setting up plan details:', { monthly, annual, planDetails });
+            // console.log('Setting up plan details:', { monthly, annual, planDetails });
 
             // Set monthly and annual prices dynamically
             setPricePerMember({
@@ -130,11 +130,11 @@ const CardDetails = () => {
             // Calculate the initial total - NO discount applied (fixed at 0)
             const price = defaultMembershipType === "annual" ? annual : monthly;
             const initialTotal = Math.max(0, price);
-            console.log('Initial total calculation (no discount):', { 
-                price,
-                discount: 0, // Fixed at 0 for now
-                initialTotal 
-            });
+            // console.log('Initial total calculation (no discount):', { 
+            //     price,
+            //     discount: 0, // Fixed at 0 for now
+            //     initialTotal 
+            // });
 
             setTotalPaid(initialTotal.toFixed(2));
         }
@@ -186,8 +186,8 @@ const CardDetails = () => {
 
             // Ensure totalAmount is a valid number and properly formatted
             const amountToCharge = parseFloat(totalPaid) || 0;
-            console.log('Creating order with amount:', amountToCharge, 'INR');
-            console.log('Discount values - Fixed at 0 for both monthly and annual');
+            // console.log('Creating order with amount:', amountToCharge, 'INR');
+            // console.log('Discount values - Fixed at 0 for both monthly and annual');
 
             // Create order data object
             // console.log('DEBUG - Original planDetails:', planDetails);
@@ -259,7 +259,7 @@ const CardDetails = () => {
 
             // Check if this is a subscription or one-time payment
             if (orderResponse.isSubscription) {
-                console.log('Processing subscription response:', orderResponse);
+                // console.log('Processing subscription response:', orderResponse);
 
                 // Save subscription info for confirmation later
                 localStorage.setItem('pendingSubscription', JSON.stringify({
@@ -315,7 +315,7 @@ const CardDetails = () => {
                             handler: async function (response) {
                                 try {
                                     // Handle successful payment
-                                    console.log("Payment successful:", response);
+                                    // console.log("Payment successful:", response);
                                     setProcessing(true);
 
                                     // Prepare verification data
@@ -333,14 +333,14 @@ const CardDetails = () => {
                                     };
 
                                     // Log to verify invoiceId is included
-                                    console.log('Including invoiceId in verification data:', planDetails.invoiceId);
+                                    // console.log('Including invoiceId in verification data:', planDetails.invoiceId);
 
-                                    console.log('Sending verification data:', verificationData);
+                                    // console.log('Sending verification data:', verificationData);
 
                                     // Verify payment with backend via hook mutation
                                     const verifyResponse = await verifySubscriptionPayment(verificationData);
 
-                                    console.log('Payment verification response:', verifyResponse);
+                                    // console.log('Payment verification response:', verifyResponse);
 
                                     if (verifyResponse.status === 'paid' ||
                                         verifyResponse.status === 'success' ||
@@ -420,14 +420,14 @@ const CardDetails = () => {
                             },
                             modal: {
                                 ondismiss: function () {
-                                    console.log('Payment cancelled by user');
+                                    // console.log('Payment cancelled by user');
                                     toast.info('Payment cancelled');
                                     setProcessing(false);
                                 }
                             }
                         };
 
-                        console.log('Opening Razorpay checkout with options:', options);
+                        // console.log('Opening Razorpay checkout with options:', options);
 
                         // Create and open Razorpay checkout in one step
                         const rzp1 = new window.Razorpay(options);

@@ -97,7 +97,7 @@ const InterviewDetails = ({
             try {
                 setIsRateLoading(true);
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/exchange/rate/current`);
-                console.log('exchange rates:-', response.data)
+                // console.log('exchange rates:-', response.data)
                 if (response.data && response.data.rate) {
                     setExchangeRate(response.data.rate);
                     setLastRateUpdate(new Date().toISOString());
@@ -181,7 +181,7 @@ const InterviewDetails = ({
 
     const fetchRateCardsMemoized = useCallback(async (techName) => {
         if (!techName) return;
-        console.log('1')
+        // console.log('1')
 
         try {
             const token = localStorage.getItem('token');

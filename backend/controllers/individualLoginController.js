@@ -10,7 +10,7 @@ const { validateIndividualSignup } = require('../validations/IndivindualLoginVal
 
 exports.individualLogin = async (req, res) => {
   try {
-    console.log('[individualLogin] Step 1: Started processing individual login request');
+    // console.log('[individualLogin] Step 1: Started processing individual login request');
 
     const {
       userData,
@@ -23,7 +23,7 @@ exports.individualLogin = async (req, res) => {
     } = req.body;
 
     const currentStep = req.body.currentStep || 0;
-    console.log('[individualLogin] Using explicit currentStep:', currentStep);
+    // console.log('[individualLogin] Using explicit currentStep:', currentStep);
 
     // ---------------- STEP VALIDATION ----------------
     const { error } = validateIndividualSignup(currentStep, contactData);
@@ -99,7 +99,7 @@ exports.individualLogin = async (req, res) => {
         currency: 'INR',
       });
       await newInterviewer.save();
-      console.log('[individualLogin] New OutsourceInterviewer created for freelancer on final step');
+      // console.log('[individualLogin] New OutsourceInterviewer created for freelancer on final step');
     }
 
     // ---------------- TOKEN GENERATION ----------------
@@ -143,7 +143,7 @@ exports.individualLogin = async (req, res) => {
         status: 'success',
         responseBody: JSON.parse(JSON.stringify(apiResponse)), // ✅ safe clone
       };
-      console.log(`[individualLogin] ✅ Log created for step ${currentStep}`);
+      // console.log(`[individualLogin] ✅ Log created for step ${currentStep}`);
     }
 
     // ---------------- RESPONSE ----------------

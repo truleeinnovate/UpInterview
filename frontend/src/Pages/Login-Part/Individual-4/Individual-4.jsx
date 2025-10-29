@@ -723,9 +723,9 @@ const MultiStepForm = () => {
                 });
             };
 
-            // Enhanced debug logging
-            console.log('Current Errors:', JSON.stringify(currentErrors, null, 2));
-            console.log('Existing Errors:', JSON.stringify(errors, null, 2));
+            // // Enhanced debug logging
+            // console.log('Current Errors:', JSON.stringify(currentErrors, null, 2));
+            // console.log('Existing Errors:', JSON.stringify(errors, null, 2));
 
             // Check for any errors, including nested ones and existing rate errors
             const hasAnyErrors = (errorObj) => {
@@ -771,23 +771,23 @@ const MultiStepForm = () => {
             const hasExistingRateErrors = hasRateErrors(errors, currentStep);
             const hasErrors = hasCurrentErrors || hasExistingRateErrors || !isValid;
 
-            console.log('Validation state:', {
-                hasCurrentErrors,
-                hasExistingRateErrors,
-                isValid,
-                currentErrors,
-                existingErrors: errors
-            });
+            // console.log('Validation state:', {
+            //     hasCurrentErrors,
+            //     hasExistingRateErrors,
+            //     isValid,
+            //     currentErrors,
+            //     existingErrors: errors
+            // });
 
             if (hasErrors) {
                 // Only show error notification if there are actual error messages
                 const hasActualErrors = hasCurrentErrors || hasExistingRateErrors;
 
                 if (hasActualErrors) {
-                    console.log("Validation failed with errors:", JSON.stringify({
-                        currentErrors,
-                        existingErrors: errors
-                    }, null, 2));
+                    // console.log("Validation failed with errors:", JSON.stringify({
+                    //     currentErrors,
+                    //     existingErrors: errors
+                    // }, null, 2));
                     notify.error("Please fill all required fields.");
                 }
 
@@ -806,7 +806,7 @@ const MultiStepForm = () => {
             }
 
             // If we get here, there are no blocking errors
-            console.log('All validations passed, proceeding to next step');
+            // console.log('All validations passed, proceeding to next step');
             // return true;
 
             // Calculate the updated completion status

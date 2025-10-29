@@ -13,7 +13,7 @@ const WelcomePageUpinterviewIndividual = () => {
 
   const handleLinkedInLogin = () => {
     setIsLoading(true);
-    console.log("1. Starting LinkedIn login flow...");
+    // console.log("1. Starting LinkedIn login flow...");
 
     try {
       // Capture returnUrl from current query if present (set by SessionExpiration)
@@ -33,7 +33,7 @@ const WelcomePageUpinterviewIndividual = () => {
         `&scope=${encodeURIComponent("openid profile email")}` +
         `&state=${encodedState}`;
 
-      console.log("2. Redirecting to LinkedIn auth URL:", authUrl);
+      // console.log("2. Redirecting to LinkedIn auth URL:", authUrl);
       window.location.href = authUrl;
     } catch (error) {
       console.error("Error during LinkedIn authentication:", error);
