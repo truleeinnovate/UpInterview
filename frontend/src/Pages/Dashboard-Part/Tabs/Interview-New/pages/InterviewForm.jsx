@@ -22,6 +22,7 @@ import DropdownWithSearchField from "../../../../../Components/FormFields/Dropdo
 // v1.0.3 <-----------------------------------------------------------
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
 import { notify } from "../../../../../services/toastService.js";
+import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
 // v1.0.3 ----------------------------------------------------------->
 
 // Custom Dropdown Component
@@ -88,6 +89,11 @@ const InterviewForm = () => {
 
   const [rounds, setRounds] = useState([]);
 
+    // Filter positions to show only "opened" status
+  const filteredPositionData = positionData?.filter(position => 
+    position.status === "opened"
+  ) || [];
+
   // Modal handlers for Add New buttons
   const handleAddNewCandidate = () => {
     setShowCandidateModal(true);
@@ -139,86 +145,56 @@ const InterviewForm = () => {
   const interview = isEditing
     ? interviewData.find((interview) => interview._id === id)
     : null;
-  console.log('interview-----',interview);
+ 
 
-  // useEffect(() => {
-  //   if (isEditing && interview) {
-  //     setCandidateId(interview.candidateId._id);
-  //     setPositionId(interview.positionId._id);
-  //     // setTemplateId(interview.templateId?._id);
 
-  //     // Only set templateId when templatesData is available
-  //   if (interview.templateId?._id && templatesData.length > 0) {
-  //     // Verify the template exists in templatesData before setting
-  //     const templateExists = templatesData.some(template => template._id === interview.templateId._id);
-  //     if (templateExists) {
-  //       setTemplateId(interview.templateId._id);
-  //       console.log("Template ID set:", interview.templateId._id);
-  //     } else {
-  //       console.warn("Template not found in templatesData:", interview.templateId._id);
-  //       setTemplateId("");
-  //     }
-  //   } else if (interview.templateId?._id) {
-  //     // If templatesData is not loaded yet, set the ID anyway
-  //     setTemplateId(interview.templateId._id);
-  //   } else {
-  //     setTemplateId("");
-  //   }
 
-  //     if (interview.rounds && interview.rounds.length > 0) {
-  //       setRounds(interview.rounds);
-  //     } else {
-  //       setRounds([]);
-  //     }
-  //   }
-  // }, [isEditing, interview, templatesData]);
+  // v1.0.7  -  Your Name  -  Fixed template dropdown not showing selected value in edit mode
 
-// v1.0.7  -  Your Name  -  Fixed template dropdown not showing selected value in edit mode
+  useEffect(() => {
+    if (isEditing && interview && templatesData.length > 0) {
+      console.log("Interview data:", interview);
 
-useEffect(() => {
-  if (isEditing && interview && templatesData.length > 0) {
-    console.log("Interview data:", interview);
+      setCandidateId(interview.candidateId?._id || "");
+      setPositionId(interview.positionId?._id || "");
 
-    setCandidateId(interview.candidateId?._id || "");
-    setPositionId(interview.positionId?._id || "");
+      // Fix for template - handle the nested object structure
+      if (interview.templateId) {
+        console.log("Template data:", interview.templateId);
 
-    // Fix for template - handle the nested object structure
-    if (interview.templateId) {
-      console.log("Template data:", interview.templateId);
+        let templateIdToSet = null;
 
-      let templateIdToSet = null;
-
-      if (typeof interview.templateId === 'object' && interview.templateId._id) {
-        templateIdToSet = interview.templateId._id;
-      } else if (typeof interview.templateId === 'string') {
-        templateIdToSet = interview.templateId;
-      }
-
-      // Verify template exists in templatesData
-      if (templateIdToSet) {
-        const templateExists = templatesData.some(t => t._id === templateIdToSet);
-        if (templateExists) {
-          // Use setTimeout to ensure state updates after component renders
-          setTimeout(() => {
-            setTemplateId(templateIdToSet);
-            console.log("Template ID set:", templateIdToSet);
-          }, 0);
-        } else {
-          console.warn("Template not found in templatesData:", templateIdToSet);
-          setTemplateId("");
+        if (typeof interview.templateId === 'object' && interview.templateId._id) {
+          templateIdToSet = interview.templateId._id;
+        } else if (typeof interview.templateId === 'string') {
+          templateIdToSet = interview.templateId;
         }
-      }
-    } else {
-      setTemplateId("");
-    }
 
-    if (interview?.rounds && interview?.rounds.length > 0) {
-      setRounds(interview?.rounds);
-    } else {
-      setRounds([]);
+        // Verify template exists in templatesData
+        if (templateIdToSet) {
+          const templateExists = templatesData.some(t => t._id === templateIdToSet);
+          if (templateExists) {
+            // Use setTimeout to ensure state updates after component renders
+            setTimeout(() => {
+              setTemplateId(templateIdToSet);
+              console.log("Template ID set:", templateIdToSet);
+            }, 0);
+          } else {
+            console.warn("Template not found in templatesData:", templateIdToSet);
+            setTemplateId("");
+          }
+        }
+      } else {
+        setTemplateId("");
+      }
+
+      if (interview?.rounds && interview?.rounds.length > 0) {
+        setRounds(interview?.rounds);
+      } else {
+        setRounds([]);
+      }
     }
-  }
-}, [isEditing, interview, templatesData]);
+  }, [isEditing, interview, templatesData]);
 
   console.log("Render state:", {
     templateId,
@@ -378,6 +354,7 @@ useEffect(() => {
   };
   // v1.0.6 <----------------------------------->
 
+  
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -398,6 +375,46 @@ useEffect(() => {
                 : [{ label: "New Interview", path: "" }]),
             ]}
           />
+
+
+          {/* Guidelines Component */}
+          <InfoGuide
+            className="mt-4"
+            title="Interview Creation Guidelines"
+            items={[
+              <>
+                <span className="font-medium">Candidate Selection:</span> Choose from existing candidates or add new candidates using the "Add New" option
+              </>,
+              <>
+                <span className="font-medium">Position Selection:</span> Only positions with "opened" status are available for selection. Use "Add New" to create new positions
+              </>,
+              <>
+                <span className="font-medium">Interview Template:</span> Optional - Select a predefined interview template to automatically set up rounds and evaluation criteria
+              </>,
+              <>
+                <span className="font-medium">Template Override:</span> Changing templates after position selection will override existing rounds with template rounds
+              </>,
+              <>
+                <span className="font-medium">Rounds Pathway:</span> The interview process flow is displayed as a horizontal stepper showing all rounds in sequence
+              </>,
+              <>
+                <span className="font-medium">Status Management:</span> Interviews can have different statuses: draft, opened, closed, hold, or cancelled
+              </>,
+              <>
+                <span className="font-medium">Required Fields:</span> Candidate and Position are mandatory fields for creating an interview
+              </>,
+              <>
+                <span className="font-medium">Template Clearing:</span> Use the × button to clear the selected template and remove associated rounds
+              </>,
+              <>
+                <span className="font-medium">Round Types:</span> Supports various round types including Assessment, Technical, HR, and Final interviews
+              </>,
+              <>
+                <span className="font-medium">Interview Flow:</span> After creation, you'll be directed to set up individual rounds with specific questions and evaluators
+              </>,
+            ]}
+          />
+
 
           <div className="mt-4 bg-white shadow overflow sm:rounded-lg">
             {/* v1.0.4 <----------------------------------- */}
@@ -463,7 +480,7 @@ useEffect(() => {
                       name="positionId"
                       value={positionId || ""}
                       options={[
-                        ...(positionData?.map((position) => ({
+                        ...(filteredPositionData?.map((position) => ({
                           value: position._id,
                           label: position.title,
                         })) || []),
@@ -495,8 +512,8 @@ useEffect(() => {
                   <div className="relative">
 
                     <DropdownWithSearchField
-                   key={`template-${templateId}-${positionId}`}
-                   // key={`template-${templateId}`}
+                      key={`template-${templateId}-${positionId}`}
+                      // key={`template-${templateId}`}
                       label="Interview Template"
                       name="templateId"
                       value={templateId || ""}
@@ -519,7 +536,7 @@ useEffect(() => {
                     />
                     {/* v1.0.1 -------------------> */}
 
-  {/* v1.0.6  -  Ranjith  -  rounds shown as horizontal stepper pathway   // v1.0.6 <-----------------------------------> */}
+                    {/* v1.0.6  -  Ranjith  -  rounds shown as horizontal stepper pathway   // v1.0.6 <-----------------------------------> */}
                     {/* Clear template button */}
                     {templateId && (
                       <button
@@ -567,7 +584,7 @@ useEffect(() => {
                     </div>
                   )}
 
- {/* v1.0.6  -  Ranjith  -  rounds shown as horizontal stepper pathway   // v1.0.6 <-----------------------------------> */}
+                  {/* v1.0.6  -  Ranjith  -  rounds shown as horizontal stepper pathway   // v1.0.6 <-----------------------------------> */}
 
                   <div className="flex justify-end space-x-3">
                     <button
