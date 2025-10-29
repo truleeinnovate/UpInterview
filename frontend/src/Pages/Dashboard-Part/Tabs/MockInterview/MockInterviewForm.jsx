@@ -2768,7 +2768,7 @@ const MockSchedulelater = () => {
                         onClose={() => setShowOutsourcePopup(false)}
                         dateTime={combinedDateTime}
                         onProceed={handleExternalInterviewerSelect}
-                        skills={formData.skills}
+                        skills={formData?.skills}
                         technology={formData.technology}
                         navigatedfrom="mock-interview"
                         candidateExperience={formData?.currentExperience}
