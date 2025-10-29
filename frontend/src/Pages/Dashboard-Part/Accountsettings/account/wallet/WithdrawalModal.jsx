@@ -8,6 +8,7 @@ import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarP
 import { ChevronDown, AlertCircle, Info, CreditCard, Clock, Shield, History } from "lucide-react";
 import LoadingButton from "../../../../../Components/LoadingButton";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
+import { notify } from "../../../../../services/toastService";
 
 export function WithdrawalModal({ onClose, onSuccess }) {
   useScrollLock(true);
@@ -105,7 +106,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
     
     createWithdrawal(withdrawalData, {
       onSuccess: (data) => {
-        toast.success(`Withdrawal request submitted successfully! Your request ID is ${data.withdrawalRequest?.withdrawalCode || ""}. It will be processed by our admin team within 24-48 hours.`);
+        notify.success(`Withdrawal request submitted successfully! Your request ID is ${data.withdrawalRequest?.withdrawalCode || ""}. It will be processed by our admin team within 24-48 hours.`);
         if (onSuccess) {
           onSuccess(data);
         }

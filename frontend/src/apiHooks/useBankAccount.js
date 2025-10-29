@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
+import { notify } from "../services/toastService";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
@@ -50,11 +51,11 @@ export const useAddBankAccount = () => {
     onSuccess: (data) => {
       // Invalidate and refetch bank accounts
       queryClient.invalidateQueries(["bankAccounts"]);
-      toast.success("Bank account added successfully!");
+      notify.success("Bank account added successfully!");
     },
     onError: (error) => {
       const message = error.response?.data?.error || "Failed to add bank account";
-      toast.error(message);
+      notify.error(message);
       console.error("Error adding bank account:", error);
     }
   });
@@ -77,17 +78,17 @@ export const useVerifyBankAccount = () => {
     onSuccess: ({ data, status }) => {
       queryClient.invalidateQueries(["bankAccounts"]);
       if (status === 202 || /initiated/i.test(data?.message || "")) {
-        toast.info(
+        notify.info(
           data?.message ||
             "Verification initiated. It may take a few minutes to complete."
         );
       } else {
-        toast.success(data?.message || "Bank account verified successfully!");
+        notify.success(data?.message || "Bank account verified successfully!");
       }
     },
     onError: (error) => {
       const message = error.response?.data?.error || "Failed to verify bank account";
-      toast.error(message);
+      notify.error(message);
       console.error("Error verifying bank account:", error);
     }
   });
@@ -107,11 +108,11 @@ export const useDeleteBankAccount = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries(["bankAccounts", variables.ownerId]);
-      toast.success("Bank account removed successfully!");
+      notify.success("Bank account removed successfully!");
     },
     onError: (error) => {
       const message = error.response?.data?.error || "Failed to remove bank account";
-      toast.error(message);
+      notify.error(message);
       console.error("Error removing bank account:", error);
     }
   });
@@ -132,11 +133,11 @@ export const useSetDefaultBankAccount = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries(["bankAccounts", variables.ownerId]);
-      toast.success("Default bank account updated!");
+      notify.success("Default bank account updated!");
     },
     onError: (error) => {
       const message = error.response?.data?.error || "Failed to set default bank account";
-      toast.error(message);
+      notify.error(message);
       console.error("Error setting default bank account:", error);
     }
   });

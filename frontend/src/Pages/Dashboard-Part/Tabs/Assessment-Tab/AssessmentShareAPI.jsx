@@ -4,6 +4,7 @@ import Cookies from 'js-cookie';
 import { toast } from 'react-hot-toast';
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from '../../../../config.js';
+import { notify } from '../../../../services/toastService';
 
 export const shareAssessmentAPI = async ({
   assessmentId,
@@ -56,7 +57,7 @@ export const shareAssessmentAPI = async ({
       throw new Error(response.data?.message || 'Failed to share assessment');
     }
 
-    toast.success(response.data?.message || 'Assessment shared successfully');
+    notify.success(response.data?.message || 'Assessment shared successfully');
     // <-------------------------------v1.0.0
     
     // Invalidate related queries to refresh data

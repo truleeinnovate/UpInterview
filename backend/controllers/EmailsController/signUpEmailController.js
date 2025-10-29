@@ -76,7 +76,9 @@ exports.sendSignUpEmail = async (req, res) => {
       updatedBy: ownerId,
     }];
 
-    await notificationMiddleware(req, res, () => { });
+    const notificationResponse = await notificationMiddleware(req, res, () => { });
+
+    console.log('notificationResponse', notificationResponse);
 
     return res.json({ success: true, message: "Signup email sent successfully" });
 

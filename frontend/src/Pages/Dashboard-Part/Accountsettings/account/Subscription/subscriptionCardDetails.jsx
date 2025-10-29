@@ -17,6 +17,7 @@ import { useUserProfile } from "../../../../../apiHooks/useUsers.js";
 // v1.0.0 <---------------------------------------------------------------
 import { createPortal } from "react-dom";
 import Loading from "../../../../../Components/Loading.js";
+import { notify } from "../../../../../services/toastService.js";
 // v1.0.0 --------------------------------------------------------------->
 
 // Loading Skeleton for Subscription Card Details
@@ -482,7 +483,7 @@ const SubscriptionCardDetails = () => {
                       },
                     });
 
-                    toast.success("Payment successfully completed!");
+                    notify.success("Payment successfully completed!");
                     setProcessing(false);
 
                     // axios

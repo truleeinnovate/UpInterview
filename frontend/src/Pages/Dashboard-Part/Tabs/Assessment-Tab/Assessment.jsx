@@ -593,7 +593,7 @@ const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] = useState(null);
         if (assessmentToDelete) {
             try {
                 await deleteAssessment.mutateAsync(assessmentToDelete._id);
-                toast.success('Assessment deleted successfully');
+                notify.success('Assessment deleted successfully');
             } catch (error) {
                 console.error('Error deleting assessment:', error);
             } finally {

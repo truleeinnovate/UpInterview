@@ -6,6 +6,7 @@ import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { config } from '../config';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
+import { notify } from '../services/toastService';
 
 const getAuth = () => {
   const authToken = Cookies.get('authToken');
@@ -46,12 +47,12 @@ export const useSubscriptionPlansAdmin = () => {
       toast.loading('Creating plan...', { id: 'plan-create' });
     },
     onSuccess: () => {
-      toast.success('Plan created', { id: 'plan-create' });
+      notify.success('Plan created', { id: 'plan-create' });
       queryClient.invalidateQueries(['subscriptionPlansAdmin']);
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error?.message || 'Failed to create plan';
-      toast.error(msg, { id: 'plan-create' });
+      notify.error(msg, { id: 'plan-create' });
     },
   });
 
@@ -65,12 +66,12 @@ export const useSubscriptionPlansAdmin = () => {
       toast.loading('Updating plan...', { id: 'plan-update' });
     },
     onSuccess: () => {
-      toast.success('Plan updated', { id: 'plan-update' });
+      notify.success('Plan updated', { id: 'plan-update' });
       queryClient.invalidateQueries(['subscriptionPlansAdmin']);
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error?.message || 'Failed to update plan';
-      toast.error(msg, { id: 'plan-update' });
+      notify.error(msg, { id: 'plan-update' });
     },
   });
 
@@ -82,12 +83,12 @@ export const useSubscriptionPlansAdmin = () => {
       toast.loading('Deleting plan...', { id: 'plan-delete' });
     },
     onSuccess: () => {
-      toast.success('Plan deleted', { id: 'plan-delete' });
+      notify.success('Plan deleted', { id: 'plan-delete' });
       queryClient.invalidateQueries(['subscriptionPlansAdmin']);
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error?.message || 'Failed to delete plan';
-      toast.error(msg, { id: 'plan-delete' });
+      notify.error(msg, { id: 'plan-delete' });
     },
   });
 
