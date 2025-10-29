@@ -1,11 +1,11 @@
+// v1.0.0 - Ashok - fixed style issues
+
 import { useEffect, useState } from "react";
 import { Tab } from "../../Components/SuperAdminComponents/common/Tab";
 import { File, FileText, Banknote } from "lucide-react";
 import PaymentsTable from "../../Components/SuperAdminComponents/Billing/PaymentsTable";
 import ReceiptsTable from "../../Components/SuperAdminComponents/Billing/ReceiptsTable";
 import InvoicesTable from "../../Components/SuperAdminComponents/Billing/InvoicesTable";
-// import axios from "axios";
-// import { config } from "../../config";
 
 function BillingPage({ organizationId, viewMode }) {
   const [activeTab, setActiveTab] = useState("invoices");
@@ -15,14 +15,14 @@ function BillingPage({ organizationId, viewMode }) {
   }, []);
 
   return (
-    <div className="space-y-6 min-h-screen">
+    <div>
       <div
-        className={`absolute py-3 left-0 right-0 bg-background ${
+        className={`absolute left-0 right-0 bg-background ${
           organizationId ? "top-0" : "top-16"
         }`}
       >
-        <div className="flex justify-between items-center px-4 mb-4">
-          <h1 className="text-2xl font-bold text-custom-blue">Billing</h1>
+        <div className="flex justify-between items-center px-4">
+          <h1 className="text-2xl font-semibold text-custom-blue">Billing</h1>
         </div>
 
         <div className="w-full bg-white rounded-lg shadow-sm overflow-hidden overflow-x-auto">
@@ -49,7 +49,7 @@ function BillingPage({ organizationId, viewMode }) {
             </nav>
           </div>
 
-          <div className="relative min-h-screen w-full">
+          <div className="relative w-full">
             {activeTab === "invoices" && (
               <InvoicesTable
                 organizationId={organizationId}
