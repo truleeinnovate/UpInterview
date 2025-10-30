@@ -29,16 +29,25 @@ import { useFeedbacks } from "../../../../apiHooks/useFeedbacks.js"; //<----v1.0
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.2 --------------------------------------------------------------------->
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
+import { useOutsourceStatus } from "../../../../apiHooks/superAdmin/useOutsourceInterviewers.js";
+import OutsourceInterviewerRequestStatus from "./OutsourceInterviewerRequestStatus";
 const Home = () => {
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
+
   const isOrganization = tokenPayload?.organization;
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
+  const {
+    data: outsourceData,
+    isLoading: outsourceLoading,
+  } = useOutsourceStatus(ownerId);
+  const outsourceStatus = outsourceData?.status ?? null;
+  console.log("outsourceData", outsourceData);
   const [selectedFilter, setSelectedFilter] = useState("All");
   const freelancer = tokenPayload?.freelancer;
   const [isInternalInterviews, setInternalInterviews] = useState(false);
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
-  const { effectivePermissions_RoleName} = usePermissions();
+  const { effectivePermissions_RoleName } = usePermissions();
   const isAdmin = effectivePermissions_RoleName === "Admin";
   const isIndividualFreelancer = effectivePermissions_RoleName === "Individual_Freelancer";
   const isIndividual = effectivePermissions_RoleName === "Individual";
@@ -95,19 +104,29 @@ const Home = () => {
           transition={{ duration: 0.5 }}
           // <---------v1.0.0
           className="space-y-6 lg:space-y-8"
-          // v1.0.0 ----------->
+        // v1.0.0 ----------->
         >
           <WelcomeSection
             selectedFilter={selectedFilter}
             setSelectedFilter={setSelectedFilter}
           />
+
         </motion.div>
+
+
+
 
         <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row gap-6 lg:gap-8">
           {/* Main Content Area */}
           {/* <---------v1.0.0 */}
           <div className="flex-1 space-y-6 lg:space-y-8">
+
+            {/* showding outsource request status for user when user is freelancer */}
+            {!outsourceLoading && freelancer && <OutsourceInterviewerRequestStatus status={outsourceStatus} />}
+
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 lg:gap-6">
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -176,7 +195,7 @@ const Home = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             // <---------v1.0.0
             className="lg:w-96 xl:w-[420px] 2xl:w-[450px] flex-shrink-0 space-y-6 lg:space-y-8"
-            // v1.0.0 ----------->
+          // v1.0.0 ----------->
           >
             <TaskList />
             <InterviewerSchedule />

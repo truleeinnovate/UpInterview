@@ -18,4 +18,8 @@ router.get(
 // );
 // -------------------------------------------------------------------------->
 
+//in individual home to show status of outsource request
+
+router.get("/status", outsourceInterviewerController.getOutsourceStatus);
+
 module.exports = router;

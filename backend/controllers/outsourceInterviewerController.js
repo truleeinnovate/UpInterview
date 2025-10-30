@@ -198,3 +198,50 @@ exports.getAllOutsourceInterviewers = async (req, res) => {
 // };
 
 // ----------------------------------------------------------------------->
+
+
+//in individual home to show status of outsource request
+
+exports.getOutsourceStatus = async (req, res) => {
+  try {
+    const { ownerId } = req.query;
+
+    if (!ownerId) {
+      return res.status(400).json({
+        success: false,
+        message: "ownerId is required",
+      });
+    }
+
+    // Find the document by ownerId
+    const interviewer = await OutsourceInterviewer.findOne({ ownerId })
+      .select('status')
+      .lean();
+
+    if (!interviewer) {
+      return res.json({ status: null });
+    }
+
+    const dbStatus = interviewer.status?.toLowerCase();
+
+    // Map DB enum → frontend expected value
+    const statusMap = {
+      new: null,              // No active request
+      underreview: 'underReview',
+      approved: 'approved',
+      rejected: 'rejected',
+      suspended: 'suspended',
+    };
+
+    const normalizedStatus = statusMap[dbStatus] ?? null;
+
+    res.json({ status: normalizedStatus });
+  } catch (error) {
+    console.error("Error in getOutsourceStatus:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
