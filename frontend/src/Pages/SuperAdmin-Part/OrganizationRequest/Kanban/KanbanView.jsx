@@ -68,6 +68,14 @@ const KanbanView = ({ data = [], onViewDetails, selectedOrganizationId }) => {
                                         className={`bg-white rounded-lg shadow-sm border ${isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'} hover:shadow-md transition-all`}
                                     >
                                         <div className="p-4">
+                                            {/* Organization Request Code Badge */}
+                                            {item.organizationRequestCode && (
+                                                <div className="mb-2">
+                                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-50 text-custom-blue border border-blue-200">
+                                                        {item.organizationRequestCode}
+                                                    </span>
+                                                </div>
+                                            )}
                                             <div className="flex justify-between items-start mb-2">
                                                 <div className="text-sm font-medium text-gray-900 line-clamp-1">
                                                     {tenant.company || 'No Company'}

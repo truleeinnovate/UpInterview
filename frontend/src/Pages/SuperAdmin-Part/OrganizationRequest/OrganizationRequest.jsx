@@ -315,10 +315,18 @@ const OrganizationRequest = () => {
 
   const tableColumns = [
     {
-      key: "requestId",
-      header: "Request ID",
+      key: "requestCode",
+      header: "Request Code",
       render: (value, row) =>
-        row?._id ? row._id.substring(0, 8) + "..." : "N/A",
+        row?.organizationRequestCode ? (
+          <span className="font-medium text-custom-blue">
+            {row.organizationRequestCode}
+          </span>
+        ) : (
+          <span className="text-gray-400">
+            {row?._id ? row._id.substring(0, 8) + "..." : "N/A"}
+          </span>
+        ),
       width: 120,
     },
     {

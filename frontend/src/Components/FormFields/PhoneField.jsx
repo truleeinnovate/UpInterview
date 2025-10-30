@@ -76,7 +76,7 @@ const PhoneField = ({
 
         if (!phoneNumber.isValid()) {
             const expectedLength = getExpectedDigitLength;
-            return `Invalid phone number for ${countryCode} (expected ${expectedLength} digits)`;
+            return `Invalid phone number for ${countryCode}`;
         }
 
         return ""; // Valid

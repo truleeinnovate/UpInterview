@@ -529,7 +529,7 @@ const MultiStepForm = () => {
                         // 👈 v1.0.5: Dynamic expected length matching PhoneField
                         const iso2 = getIso2FromCode(basicDetailsData.countryCode);
                         const expectedLength = iso2 ? (getExampleNumber(iso2)?.nationalNumber?.length || 15) : 15;
-                        currentErrors.phone = `Invalid phone number for ${basicDetailsData.countryCode} (expected ${expectedLength} digits)`;
+                        currentErrors.phone = `Invalid phone number for ${basicDetailsData.countryCode}`;
                     }
                 }
                 if (!basicDetailsData.linkedinUrl)

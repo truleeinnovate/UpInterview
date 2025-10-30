@@ -1145,10 +1145,10 @@ const getAllInterviewRounds = async (req, res) => {
         
         if (isMock) {
             // For mock interviews, populate mockInterviewId
-            interviewRounds = await MockInterviewRound.find({ interviewerType: 'External' })
+            interviewRounds = await MockInterviewRound.find({ interviewerType: 'external' })
                 .populate({
                     path: 'mockInterviewId',
-                    select: 'mockInterviewCode candidateName Role technology higherQualification currentExperience tenantId ownerId createdAt'
+                    select: 'mockInterviewCode candidateName Role technology higherQualification skills currentExperience tenantId ownerId createdAt'
                 })
                 .populate('interviewers', 'firstName lastName email _id ownerId tenantId')
                 .lean()
@@ -1162,11 +1162,11 @@ const getAllInterviewRounds = async (req, res) => {
                     populate: [
                         {
                             path: 'candidateId',
-                            select: 'FirstName LastName Email'
+                            select: 'FirstName LastName Email _id'
                         },
                         {
                             path: 'positionId',
-                            select: 'title companyname Location'
+                            select: 'title companyname Location _id'
                         }
                     ]
                 })
@@ -1220,8 +1220,14 @@ const getAllInterviewRounds = async (req, res) => {
             
             const finalInterviewerNames = interviewerNames || 'No interviewers assigned';
             
-            // Fetch wallet transaction data if holdTransactionId exists
+            // Skip fetching wallet transaction data in list view
+            // This data should only be fetched when viewing individual interview details
+            // to avoid N+1 query performance issues
             let holdTransactionData = null;
+            
+            // Comment out wallet queries for performance optimization
+            // Uncomment only if absolutely needed for list view
+            /*
             if (round.holdTransactionId) {
                 try {
                     // Find the wallet that contains this transaction
@@ -1244,6 +1250,7 @@ const getAllInterviewRounds = async (req, res) => {
                     console.error(`Error fetching transaction for round ${round._id}:`, error);
                 }
             }
+            */
 
             // Build the interview code based on type
             let interviewCode = 'N/A';
@@ -1253,23 +1260,22 @@ const getAllInterviewRounds = async (req, res) => {
                 interviewCode = `${mainInterview.interviewCode}-${round.sequence}` || 'N/A';
             }
             
-            // Build candidate info based on type
+            // Build candidate info for mock interviews only
             let candidateInfo = null;
             if (isMock && mainInterview) {
-                // Mock interviews have candidateName as string field
+                // Mock interviews have all candidate details
                 candidateInfo = {
                     name: mainInterview.candidateName || 'Unknown',
-                    email: 'N/A' // Mock interviews don't have email
-                };
-            } else if (!isMock && mainInterview?.candidateId) {
-                // Regular interviews have candidateId as reference
-                candidateInfo = {
-                    name: `${mainInterview.candidateId.FirstName || ''} ${mainInterview.candidateId.LastName || ''}`.trim() || 'Unknown',
-                    email: mainInterview.candidateId.Email || 'N/A'
+                    //email: 'N/A', // Mock interviews don't have email
+                    higherQualification: mainInterview.higherQualification || 'N/A',
+                    currentExperience: mainInterview.currentExperience || 'N/A',
+                    Role: mainInterview.Role || 'N/A',
+                    technology: mainInterview.technology || 'N/A',
+                    skills: mainInterview.skills || []
                 };
             }
             
-            // Build position/role info based on type
+            // Build position/role info for mock interviews only
             let positionInfo = null;
             if (isMock && mainInterview) {
                 // Mock interviews have Role and technology fields
@@ -1277,13 +1283,6 @@ const getAllInterviewRounds = async (req, res) => {
                     title: mainInterview.Role || 'N/A',
                     company: mainInterview.technology || 'N/A',
                     location: 'N/A'
-                };
-            } else if (!isMock && mainInterview?.positionId) {
-                // Regular interviews have positionId reference
-                positionInfo = {
-                    title: mainInterview.positionId.title || 'N/A',
-                    company: mainInterview.positionId.companyname || 'N/A',
-                    location: mainInterview.positionId.Location || 'N/A'
                 };
             }
 
@@ -1345,8 +1344,9 @@ const getAllInterviewRounds = async (req, res) => {
                 updatedAt: round.updatedAt || null,
                 
                 // Related data from populated fields
-                candidate: candidateInfo,
-                position: positionInfo,
+                candidate: !isMock ? mainInterview.candidateId?._id : candidateInfo,
+                position: !isMock ? mainInterview.positionId?._id : positionInfo,
+                
                 interviewStatus: mainInterview?.status || 'N/A',
                 
                 // Type indicator for frontend
@@ -1370,11 +1370,86 @@ const getAllInterviewRounds = async (req, res) => {
     }
 };
 
+// Get wallet transaction data for a specific interview round
+const getInterviewRoundTransaction = async (req, res) => {
+    try {
+        const { roundId } = req.params;
+        
+        if (!roundId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Round ID is required'
+            });
+        }
+        
+        // Determine if this is a mock interview round
+        let round = await InterviewRounds.findById(roundId);
+        let isMock = false;
+        
+        if (!round) {
+            // Try to find as mock interview round
+            round = await MockInterviewRound.findById(roundId);
+            isMock = true;
+        }
+        
+        if (!round) {
+            return res.status(404).json({
+                success: false,
+                message: 'Interview round not found'
+            });
+        }
+        
+        // Fetch wallet transaction data if holdTransactionId exists
+        let holdTransactionData = null;
+        if (round.holdTransactionId) {
+            try {
+                // Find the wallet that contains this transaction
+                const wallet = await Wallet.findOne({
+                    'transactions._id': round.holdTransactionId
+                });
+                
+                if (wallet) {
+                    // Find the specific transaction in the wallet
+                    holdTransactionData = wallet.transactions.find(
+                        t => t._id && t._id.toString() === round.holdTransactionId
+                    );
+                }
+                
+                if (!holdTransactionData) {
+                    console.log(`Transaction ${round.holdTransactionId} not found in any wallet`);
+                }
+            } catch (error) {
+                console.error(`Error fetching transaction for round ${round._id}:`, error);
+            }
+        }
+        
+        res.status(200).json({
+            success: true,
+            data: {
+                roundId: round._id,
+                holdTransactionId: round.holdTransactionId,
+                holdTransactionData: holdTransactionData,
+                settlementStatus: round.settlementStatus || 'pending',
+                settlementDate: round.settlementDate || null,
+                settlementTransactionId: round.settlementTransactionId || null
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching interview round transaction:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch transaction data',
+            error: error.message
+        });
+    }
+};
+
 // Export all controller functions
 module.exports = {
     createInterview,
     getAllInterviews,
     getAllInterviewRounds, // Added new function
+    getInterviewRoundTransaction, // Added transaction fetch function
     updateInterview,
     saveInterviewRound,
     updateInterviewRound,

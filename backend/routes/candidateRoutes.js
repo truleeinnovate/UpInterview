@@ -10,7 +10,7 @@ router.post('/',loggingService.internalLoggingMiddleware,loggingService.FeedsMid
 
 router.patch('/:id',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, updateCandidatePatchCall);
 // router.get('/',getCandidates);
-// router.get('/:id',getCandidateById);
+router.get('/details/:id',getCandidateById);
 router.delete('/delete-candidate/:id', deleteCandidate);
 
 

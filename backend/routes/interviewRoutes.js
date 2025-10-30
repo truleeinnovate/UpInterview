@@ -10,6 +10,7 @@ const {
   getInterviews,
   getAllInterviews,
   getAllInterviewRounds, // Added new function
+  getInterviewRoundTransaction, // Added transaction fetch function
   updateInterview,
   updateInterviewRound,
   updateInterviewStatus,

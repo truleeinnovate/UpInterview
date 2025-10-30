@@ -104,7 +104,7 @@ currentAction: {
   },
   settlementDate: { type: Date },
   settlementTransactionId: { type: String }  // Credit transaction ID in interviewer's wallet
-});
+},{ timestamps: true });
 
 // Check if model is already defined to avoid overwriting
 const MockInterviewRound =

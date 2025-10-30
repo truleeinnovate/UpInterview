@@ -159,7 +159,7 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                     <div className="text-right">
                         <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-white/20 text-white border border-white/30">
                             <Clock className="h-5 w-5 mr-2" />
-                            ID: {organization._id?.slice(-8) || 'N/A'}
+                            {organization.organizationRequestCode || `ID: ${organization._id?.slice(-8) || 'N/A'}`}
                         </div>
                     </div>
                 </div>

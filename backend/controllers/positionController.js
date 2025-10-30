@@ -672,50 +672,52 @@ const deletePosition = async (req, res) => {
 //   }
 // };
 
-// const getPositionById = async (req, res) => {
+const getPositionById = async (req, res) => {
+  const { id } = req.params; // Position ID from URL params
+  const { tenantId } = req.query; // Optional tenant ID from query string
 
-//   const { id } = req.params; // Position ID from URL params
-//   const { tenantId } = req.query; // Tenant ID from query string
+  try {
+    // Build query - if tenantId provided, use it for filtering
+    const query = { _id: id };
+    if (tenantId) {
+      query.tenantId = tenantId;
+    }
 
-//   try {
-//     // Validate tenantId (if required)
-//     if (!tenantId) {
-//       return res.status(400).json({
-//         success: false,
-//         error: "Tenant ID is required"
-//       });
-//     }
+    // Find position by ID (and optionally tenantId)
+    const position = await Position.findOne(query)
+      .populate('rounds') // Populate rounds if needed
+      .populate('skills') // Populate skills if needed
+      .lean(); // Convert to plain JS object for performance
 
-//     // Find position by ID AND tenantId (ensures data isolation)
-//     const position = await Position.findOne({
-//       _id: id,
-//       tenantId: tenantId, // Filter by tenant
-//     }).lean(); // Convert to plain JS object for performance
+    if (!position) {
+      return res.status(404).json({
+        success: false,
+        error: "Position not found",
+        message: "The requested position does not exist or has been deleted"
+      });
+    }
 
-//     if (!position) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Position not found or not accessible for this tenant"
-//       });
-//     }
+    // Success response
+    res.status(200).json(position);
 
-//     // Success response
-//     res.status(200).json(
-//       position
-//     );
-
-//   } catch (error) {
-//     console.error("Error fetching position:", error);
-//     console.error('Error details:', {
-//       error: error.message,
-//       stack: error.stack
-//     });
-//     res.status(500).json({
-//       success: false,
-//       error: "Server Error"
-//     });
-//   }
-// };
+  } catch (error) {
+    console.error("Error fetching position by ID:", error);
+    
+    // Check if it's a CastError (invalid ObjectId format)
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid position ID format"
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch position details",
+      message: error.message
+    });
+  }
+};
 
 // const updateRounds = async (req, res) => {
 //   const { positionId } = req.params;
@@ -1888,5 +1890,6 @@ module.exports = {
   saveInterviewRoundPosition,
   deleteRound,
   updateInterviewRound,
-  deletePosition
+  deletePosition,
+  getPositionById
 };
