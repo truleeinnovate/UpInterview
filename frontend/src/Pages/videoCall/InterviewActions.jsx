@@ -19,6 +19,7 @@ import SupportForm from "../Dashboard-Part/Tabs/SupportDesk/SupportForm";
 import { toast } from "react-toastify";
 import { config } from "../../config";
 import { useInterviews } from "../../apiHooks/useInterviews";
+import { notify } from "../../services/toastService";
 
 const InterviewActions = ({
   interviewData,
@@ -141,11 +142,11 @@ const InterviewActions = ({
 
           // Show success toast based on action type
           if (type === "completion") {
-            toast.success(`Interview marked as ${newStatus}`, {});
+            notify.success(`Interview marked as ${newStatus}`, {});
           } else if (type === "noShow") {
-            toast.success("Candidate marked as no-show", {});
+            notify.success("Candidate marked as no-show", {});
           } else if (type === "cancel") {
-            toast.success("Interview cancelled successfully", {});
+            notify.success("Interview cancelled successfully", {});
           }
 
           // Show success toast based on action type

@@ -12,9 +12,7 @@ import {
   isEmptyObject,
   validateInterviewForm,
 } from "../../../../../../utils/MyProfileValidations";
-
-import { ReactComponent as Technology } from "../../../../../../icons/technology.svg";
-import { ReactComponent as SkillIcon } from "../../../../../../icons/Skills.svg";
+import { ReactComponent as FaPlus } from "../../../../../../icons/FaPlus.svg";
 import { useNavigate, useParams } from "react-router-dom";
 import DropdownSelect from "../../../../../../Components/Dropdowns/DropdownSelect";
 import { useMasterData } from "../../../../../../apiHooks/useMasterData";
@@ -34,6 +32,7 @@ import {
   DescriptionField,
   InputField,
 } from "../../../../../../Components/FormFields";
+import LoadingButton from "../../../../../../Components/LoadingButton";
 // v1.0.2 ----------------------------------------------------------------------------------->
 
 const EditInterviewDetails = ({
@@ -1043,11 +1042,11 @@ const EditInterviewDetails = ({
   return (
     <SidebarPopup title="Edit Interview Details" onClose={handleCloseModal}>
       {/* v1.0.3 <------------------------------------------------------------------------------------------------- */}
-      {loading && (
+      {/* {loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
         </div>
-      )}
+      )} */}
       {/* v1.0.3 -------------------------------------------------------------------------------------------------> */}
 
       <div className="sm:p-0 p-6">
@@ -1320,7 +1319,7 @@ const EditInterviewDetails = ({
                             <IncreaseAndDecreaseField
                               name="junior_usd"
 
-                      disabled = {from !== "outsource-interviewer"}
+                              disabled={from !== "outsource-interviewer"}
                               value={formData.rates?.junior?.usd || ""}
                               onChange={handleRateChange("junior", "usd")}
                               label=""
@@ -1917,24 +1916,9 @@ const EditInterviewDetails = ({
                   // onChange={handleBioChange}
                   onChange={(e) => {
                     handleBioChange(e);
-                    // Clear error when user starts typing
-                    // if (e.target.value.length >= 150) {
-                    //   setErrors(prev => ({ ...prev, bio: '' }));
-                    // }
-                  }}
-                  // onBlur={(e) => {
-                  //   const value = e.target.value.trim();
-                  //   if (!value) {
-                  //     setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
-                  //   } else if (value.length < 150) {
-                  //     setErrors(prev => ({ ...prev, bio: 'Professional bio must be at least 150 characters' }));
-                  //   } else {
-                  //     setErrors(prev => ({ ...prev, bio: '' }));
-                  //   }
-                  // }}
 
-                  // ${errors.bio ? 'border-red-500' : 'border-gray-300'
-                  //   }
+                  }}
+
                   required
                   placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
                   minLength={150}
@@ -1955,13 +1939,17 @@ const EditInterviewDetails = ({
           >
             Cancel
           </button>
-          <button
+
+          <LoadingButton
             type="submit"
             onClick={handleSave}
-            className="px-4 py-2 bg-custom-blue text-white rounded-lg"
+            isLoading={loading}
+            loadingText="updating..."
           >
-            Save Changes
-          </button>
+              Save Changes
+          </LoadingButton>
+
+      
         </div>
       </div>
     </SidebarPopup>

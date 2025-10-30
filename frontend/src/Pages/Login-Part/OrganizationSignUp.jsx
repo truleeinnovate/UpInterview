@@ -39,6 +39,7 @@ import {
 } from "../../utils/workEmailValidation.js";
 
 import { Link } from "react-router-dom";
+import { notify } from "../../services/toastService.js";
 // import Layout from './Layout.jsx';
 
 export const Organization = () => {
@@ -116,7 +117,7 @@ export const Organization = () => {
     const query = new URLSearchParams(location.search);
     const verified = query.get("verified");
     if (verified === "true") {
-      toast.success("Email verified successfully!");
+      notify.success("Email verified successfully!");
       navigate("/organization-login");
       window.location.reload();
     }
@@ -300,10 +301,10 @@ export const Organization = () => {
       await setAuthCookies(token);
       setEmail(selectedEmail);
       setFormSubmitted(true);
-      toast.success("Verification email sent! Please check your inbox.");
+      notify.success("Verification email sent! Please check your inbox.");
       setCountdown(60);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
+      notify.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
@@ -318,15 +319,15 @@ export const Organization = () => {
         { email }
       );
       if (response.data.success) {
-        toast.success("Verification email resent!");
+        notify.success("Verification email resent!");
         setCountdown(60);
       } else {
-        toast.error(
+        notify.error(
           response.data.message || "Failed to resend verification email"
         );
       }
     } catch (error) {
-      toast.error(
+      notify.error(
         error.response?.data?.message || "Failed to resend verification email"
       );
     } finally {

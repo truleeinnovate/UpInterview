@@ -45,206 +45,8 @@ const {
 } = require("./PushNotificationControllers/pushNotificationInterviewController");
 const { MockInterviewRound } = require("../models/MockInterview/mockinterviewRound.js");
 
-// const createInterview = async (req, res) => {
-//   try {
-//     const {
-//       candidateId,
-//       positionId,
-//       templateId,
-//       status,
-//       orgId,
-//       userId,
-//       interviewId,
-//       updatingInterviewStatus,
-//       completionReason,
-//     } = req.body;
-//     let candidate = null;
 
-//     if (!updatingInterviewStatus) {
-//       candidate = await Candidate.findById(candidateId);
-//       if (!candidate) {
-//         return res.status(404).json({ message: "Candidate not found" });
-//       }
-//     }
-
-//     console.log(
-//       "roundsToSave",
-//       candidateId,
-//       positionId,
-//       templateId,
-//       status,
-//       orgId,
-//       userId,
-//       interviewId,
-//       updatingInterviewStatus,
-//       completionReason
-//     );
-
-//     const template = await InterviewTemplate.findById(templateId);
-
-//     let interview;
-//     let isUpdate = Boolean(interviewId);
-//     let interviewData = {
-//       candidateId,
-//       positionId,
-//       templateId: template ? templateId : undefined,
-//       ownerId: userId,
-//       tenantId: orgId || undefined,
-//       completionReason,
-//       status,
-//     };
-
-//     if (isUpdate) {
-//       interviewData.updatedBy = userId;
-//       interview = await Interview.findByIdAndUpdate(
-//         interviewId,
-//         interviewData,
-//         { new: true }
-//       );
-//       if (!interview) {
-//         return res.status(404).json({ message: "Interview not found" });
-//       }
-//     } else {
-//       // Generate interviewCode for new interview
-//       const lastInterview = await Interview.findOne({ tenantId: orgId })
-//         .sort({ _id: -1 })
-//         .select("interviewCode")
-//         .lean();
-
-//       let nextNumber = 1;
-//       if (lastInterview && lastInterview.interviewCode) {
-//         const match = lastInterview.interviewCode.match(/INT-(\d+)/);
-//         if (match) {
-//           nextNumber = parseInt(match[1], 10) + 1;
-//         }
-//       }
-//       interviewData.interviewCode = `INT-${String(nextNumber).padStart(
-//         5,
-//         "0"
-//       )}`;
-//       interviewData.createdBy = userId;
-
-//       interview = new Interview(interviewData);
-//       await interview.save();
-//     }
-
-//     // Handle rounds and questions if not just updating status
-//     if (!updatingInterviewStatus) {
-//       const position = await Position.findById(positionId);
-//       let roundsToSave = [];
-
-//       if (position?.templateId?.toString() === templateId?.toString()) {
-//         roundsToSave = position.rounds || [];
-//       } else if (
-//         position?.templateId &&
-//         position?.templateId.toString() !== templateId?.toString()
-//       ) {
-//         roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
-//       } else if (
-//         !position?.templateId &&
-//         position?.rounds?.length > 0 &&
-//         templateId
-//       ) {
-//         roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
-//       } else if (!position?.templateId && position?.rounds?.length > 0) {
-//         roundsToSave = position.rounds;
-//       } else if (templateId) {
-//         roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
-//       }
-
-//       console.log("roundsToSave", roundsToSave);
-
-//       if (roundsToSave.length > 0) {
-//         if (isUpdate) {
-//           await InterviewRounds.deleteMany({ interviewId: interview._id });
-//           await interviewQuestions.deleteMany({ interviewId: interview._id });
-//         }
-
-//         // Process each round with proper field mapping
-//         for (let index = 0; index < roundsToSave.length; index++) {
-//           const round = roundsToSave[index];
-
-//           // Create round document with proper field mapping
-//           const roundDoc = new InterviewRounds({
-//             interviewId: interview._id,
-//             sequence: index + 1, // Use index-based sequence
-//             roundTitle: round.roundTitle || "",
-//             interviewMode: round.interviewMode || "",
-//             interviewType: round.interviewType || "", // This field was missing in your mapping
-//             interviewerType: round.interviewerType || "",
-//             selectedInterviewersType: round.selectedInterviewersType || "", // This field doesn't exist in schema
-//             duration: round.duration || "", // Map interviewDuration to duration
-//             instructions: round.instructions || "",
-//             dateTime: round.dateTime || "",
-//             interviewers: round.interviewers || [], // This should be ObjectId array
-//             status: "Draft",
-//             // meetLink: round.meetLink || [],
-//             meetingId: round.meetingId || "",
-//             assessmentId: round.assessmentId || null,
-//             // questions: [], // Initialize as empty array
-//             rejectionReason: round.rejectionReason || "",
-//             minimumInterviewers: round.minimumInterviewers || "", // This field doesn't exist in schema
-//             interviewerGroupId: round.interviewerGroupId || null, // This field doesn't exist in schema
-//           });
-
-//           // Save the round document
-//           const savedRound = await roundDoc.save();
-//           console.log("Saved roundDoc:", JSON.stringify(savedRound, null, 2));
-
-//           // Handle questions if they exist and are valid
-//           if (
-//             round.questions &&
-//             Array.isArray(round.questions) &&
-//             round.questions.length > 0
-//           ) {
-//             try {
-//               // Validate questions structure
-//               const validQuestions = round.questions.every(
-//                 (q) =>
-//                   q && (q.questionId || q._id) && (q.snapshot || q.question)
-//               );
-
-//               if (validQuestions) {
-//                 // Transform questions to match expected format
-//                 const transformedQuestions = round.questions.map((q) => ({
-//                   questionId: q.questionId || q._id,
-//                   snapshot: q.snapshot || q,
-//                 }));
-
-//                 await handleInterviewQuestions(
-//                   interview._id,
-//                   savedRound._id,
-//                   transformedQuestions
-//                 );
-//                 console.log(`Questions saved for round ${savedRound._id}`);
-//               } else {
-//                 console.warn(
-//                   `Invalid questions structure for round ${savedRound._id}, skipping questions.`
-//                 );
-//               }
-//             } catch (questionError) {
-//               console.error(
-//                 `Error saving questions for round ${savedRound._id}:`,
-//                 questionError
-//               );
-//             }
-//           }
-//         }
-//       }
-//     }
-
-//     res.status(201).json(interview);
-//   } catch (error) {
-//     console.error("Error creating interview:", error);
-//     res
-//       .status(500)
-//       .json({ message: "Internal server error", error: error.message });
-//   }
-// };
-
-
-// create interview v1.0.4 ------- >
-// create rounds
+//  post call for interview page 
 const createInterview = async (req, res) => {
     try {
         const {
@@ -284,23 +86,9 @@ const createInterview = async (req, res) => {
             }
         }
 
-        // console.log(
-        //   "roundsToSave",
-        //   candidateId,
-        //   positionId,
-        //   templateId,
-        //   status,
-        //   // orgId,
-        //   userId,
-        //   // interviewId,
-        //   updatingInterviewStatus,
-        //   completionReason
-        // );
-
         const template = await InterviewTemplate.findById(templateId);
 
         let interview;
-        // let isUpdate = Boolean(interviewId);
         let interviewData = {
             candidateId,
             positionId,
@@ -311,68 +99,17 @@ const createInterview = async (req, res) => {
             status,
         };
 
-        // if (isUpdate) {
-        //   interviewData.updatedBy = userId;
-        //   interview = await Interview.findByIdAndUpdate(
-        //     interviewId,
-        //     interviewData,
-        //     { new: true }
-        //   );
-        //   if (!interview) {
-        //     return res.status(404).json({ message: "Interview not found" });
-        //   }
-        // } else {
-        // Generate interviewCode for new interview with retry logic for uniqueness
-        let attempts = 0;
-        const maxAttempts = 5;
-        
+        // Generate interviewCode for new interview
+        const lastInterview = await Interview.findOne({ tenantId: orgId })
+            .sort({ _id: -1 })
+            .select("interviewCode")
+            .lean();
 
-        while (attempts < maxAttempts) {
-            const lastInterview = await Interview.findOne({ tenantId: orgId })
-                .sort({ _id: -1 })
-                .select("interviewCode")
-                .lean();
-
-            let nextNumber = 1; // Start from 1
-            if (lastInterview && lastInterview.interviewCode) {
-                const match = lastInterview.interviewCode.match(/INT-(\d+)/);
-                if (match) {
-                    nextNumber = parseInt(match[1], 10) + 1; // INCREMENT the number to get next unique code
-                }
-            }
-            
-            // Add attempt offset to reduce collision probability
-            nextNumber = nextNumber + attempts;
-            
-            interviewData.interviewCode = `INT-${String(nextNumber).padStart(
-                5,
-                "0"
-            )}`;
-            interviewData.createdBy = userId;
-
-            try {
-                interview = new Interview(interviewData);
-                await interview.save();
-                console.log(`[INTERVIEW] Successfully created interview with code: ${interviewData.interviewCode}`);
-                break; // Success, exit the retry loop
-            } catch (error) {
-                attempts++;
-                
-                // Check if it's a duplicate key error
-                if (error.code === 11000 && error.keyPattern?.interviewCode) {
-                    console.log(`[INTERVIEW] Duplicate interview code detected: ${interviewData.interviewCode}, retrying... (attempt ${attempts}/${maxAttempts})`);
-                    
-                    if (attempts >= maxAttempts) {
-                        console.error('[INTERVIEW] Max retry attempts reached for generating unique interview code');
-                        return res.status(500).json({
-                            error: "Unable to generate unique interview code. Please try again."
-                        });
-                    }
-                    continue; // Retry with a new code
-                }
-                
-                // For other errors, throw them
-                throw error;
+        let nextNumber = 1; // Start from 50001
+        if (lastInterview && lastInterview.interviewCode) {
+            const match = lastInterview.interviewCode.match(/INT-(\d+)/);
+            if (match) {
+                nextNumber = parseInt(match[1], 10);
             }
         }
 
@@ -408,14 +145,9 @@ const createInterview = async (req, res) => {
                 roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
             }
 
-            // console.log("roundsToSave", roundsToSave);
 
             if (roundsToSave.length > 0) {
-                // if (isUpdate) {
-                //   await InterviewRounds.deleteMany({ interviewId: interview._id });
-                //   await interviewQuestions.deleteMany({ interviewId: interview._id });
-                // }
-
+            
                 // Process each round with proper field mapping
                 for (let index = 0; index < roundsToSave.length; index++) {
                     const round = roundsToSave[index];
@@ -445,8 +177,7 @@ const createInterview = async (req, res) => {
 
                     // Save the round document
                     const savedRound = await roundDoc.save();
-                    // console.log("Saved roundDoc:", JSON.stringify(savedRound, null, 2));
-
+                    
                     // Create notification if round has scheduled date and interviewer
                     if (savedRound.dateTime || savedRound.interviewers?.length > 0) {
                         try {
@@ -944,12 +675,7 @@ async function processInterviewers(interviewers) {
 const saveInterviewRound = async (req, res) => {
     try {
         const { interviewId, round, roundId, questions } = req.body;
-        // console.log("=== saveInterviewRound START ===");
-        // console.log("Request body:", JSON.stringify(req.body, null, 2));
-        // console.log("interviewId:", interviewId);
-        // console.log("roundId:", roundId);
-        // console.log("round keys:", Object.keys(round || {}));
-        // console.log("meetLink field:", round?.meetLink);
+
 
         //  // Validate the request data
         //  const validationResult = validateInterviewRound(req.body, !!roundId);
@@ -977,47 +703,7 @@ const saveInterviewRound = async (req, res) => {
         }
 
         let savedRound;
-        // v1.0.2 <-----------------------------------------
-        // if (roundId) {
-        //   console.log("Updating existing round with ID:", roundId);
-        //   let existingRound = await InterviewRounds.findById(roundId);
-        //   if (existingRound) {
-        //     console.log("Found existing round:", existingRound._id);
-        //     console.log(
-        //       "Before update - existing round data:",
-        //       JSON.stringify(existingRound.toObject(), null, 2)
-        //     );
-
-        //     // Handle meetLink field separately to prevent conversion issues
-        //     const { meetLink, ...otherRoundData } = round;
-        //     Object.assign(existingRound, otherRoundData);
-
-        //     // Set meetLink directly if it exists
-        //     if (meetLink && Array.isArray(meetLink)) {
-        //       console.log("Setting meetLink directly:", meetLink);
-        //       console.log(
-        //         "meetLink structure:",
-        //         meetLink?.map((item) => ({
-        //           linkType: item.linkType,
-        //           link: item.link,
-        //         }))
-        //       );
-        //       existingRound.meetLink = meetLink;
-        //     }
-
-        //     console.log(
-        //       "After update - round data:",
-        //       JSON.stringify(existingRound.toObject(), null, 2)
-        //     );
-        //     savedRound = await existingRound.save();
-        //     console.log("Round saved successfully:", savedRound._id);
-        //     await reorderInterviewRounds(interviewId);
-        //   } else {
-        //     console.log("Round not found with ID:", roundId);
-        //     return res.status(404).json({ message: "Round not found." });
-        //   }
-        // }
-        // else {
+   
         let totalRounds = await InterviewRounds.countDocuments({ interviewId });
         let newSequence = round.sequence || totalRounds + 1;
 
@@ -1036,14 +722,6 @@ const saveInterviewRound = async (req, res) => {
 
         // Set meetLink directly if it exists
         if (meetLink && Array.isArray(meetLink)) {
-            // console.log("Setting meetLink for new round:", meetLink);
-            // console.log(
-            //   "meetLink structure:",
-            //   meetLink?.map((item) => ({
-            //     linkType: item.linkType,
-            //     link: item.link,
-            //   }))
-            // );
             newInterviewRound.meetLink = meetLink;
             newInterviewRound.meetPlatform = meetPlatform;
         }
@@ -1102,11 +780,7 @@ const saveInterviewRound = async (req, res) => {
             }
         }
     } catch (error) {
-        // console.error("=== saveInterviewRound ERROR ===");
         console.error("Error saving interview round:", error);
-        // console.error("Error message:", error.message);
-        // console.error("Error stack:", error.stack);
-        // console.error("=== saveInterviewRound ERROR END ===");
         return res
             .status(500)
             .json({ message: "Internal server error.", error: error.message });
@@ -1605,19 +1279,6 @@ const getAllInterviews = async (req, res) => {
 
 // -------------------------------------------------------------------------------------->
 
-// module.exports = {
-//     createInterview,
-//     updateInterview,
-//     //  interview round
-//     saveInterviewRound,
-//     updateInterviewRound,
-//     // interview round
-//     getDashboardStats,
-//     deleteRound,
-//     getInterviews,
-//     getAllInterviews,
-//     updateInterviewStatus,
-// };
 
 
 

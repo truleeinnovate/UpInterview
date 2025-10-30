@@ -761,7 +761,7 @@ const extractValidationErrors = (axiosError) => {
       } else {
         onClose();
       }
-      toast.success(
+      notify.success(
         isEdit ? "Question updated successfully" : "Question saved successfully"
       );
     } catch (error) {

@@ -9,8 +9,8 @@ const loggingService = require('../middleware/loggingService.js');
 router.post('/',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, addCandidatePostCall);
 
 router.patch('/:id',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, updateCandidatePatchCall);
-router.get('/',getCandidates);
-router.get('/:id',getCandidateById);
+// router.get('/',getCandidates);
+// router.get('/:id',getCandidateById);
 router.delete('/delete-candidate/:id', deleteCandidate);
 
 
