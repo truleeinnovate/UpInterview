@@ -2,7 +2,10 @@
 const Joi = require("joi");
 
 const candidateValidationSchema = Joi.object({
-  FirstName: Joi.string().allow("", null), // optional
+  FirstName: Joi.string().required().messages({
+    "string.empty": "First Name is required",
+    "any.required": "First Name is required",
+  }), 
   LastName: Joi.string().required().messages({
     "string.empty": "Last Name is required",
     "any.required": "Last Name is required",
