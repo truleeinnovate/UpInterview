@@ -5,10 +5,15 @@ import toast from "react-hot-toast";
 import { usePermissions } from "../../Context/PermissionsContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notify } from "../../services/toastService";
+// import AuthCookieManager from '../../utils/AuthCookieManager/AuthCookieManager';
+
+
+
 
 // Hook to get all outsource interviewers
 export const useOutsourceInterviewers = () => {
   const { superAdminPermissions, isInitialized } = usePermissions();
+  // const ownerId = AuthCookieManager.getCurrentTenantId();
   const hasViewPermission =
     superAdminPermissions?.OutsourceInterviewerRequest?.View;
 
@@ -91,5 +96,21 @@ export const useUpdateOutsourceInterviewer = () => {
       console.error("Error updating interviewer profile:", error);
       notify.error(error.response?.data?.message || "Error updating profile");
     },
+  });
+};
+
+
+export const useOutsourceStatus = (ownerId) => {
+  return useQuery({
+    queryKey: ["outsourceStatus", ownerId],
+    queryFn: async () => {
+      const { data } = await axios.get(
+        `${config.REACT_APP_API_URL}/outsourceInterviewers/status`,
+        { params: { ownerId } }
+      );
+      return data; // { status: "underReview" | "approved" | "rejected" | "suspended" | null }
+    },
+    enabled: !!ownerId,
+    staleTime: 5 * 60 * 1000, // 5 min
   });
 };

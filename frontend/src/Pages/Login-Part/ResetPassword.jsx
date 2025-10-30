@@ -83,8 +83,15 @@ const ResetPassword = () => {
       <div className="w-full max-w-md">
         <div className="bg-white p-8 rounded-lg shadow-md">
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-teal-100">
-              <Lock className="h-6 w-6 text-teal-600" />
+            {/* <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-custom-blue">
+              <Lock className="h-6 w-6 text-white" />
+            </div> */}
+                 <div className="flex justify-center">
+              <img
+                src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp"
+                alt="Logo"
+                className="w-32"
+              />
             </div>
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
               {type === "usercreatepass" ? "Create Your Password" : "Reset Your Password"}
@@ -116,7 +123,7 @@ const ResetPassword = () => {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 pr-10"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-blue focus:border-custom-blue pr-10"
                   placeholder={type === "usercreatepass" ? "Create your password" : "Enter new password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -145,7 +152,7 @@ const ResetPassword = () => {
                   name="confirm-password"
                   type={showConfirmPassword ? "text" : "password"}
                   required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 pr-10"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-blue focus:border-custom-blue pr-10"
                   placeholder="Re-enter password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -171,7 +178,7 @@ const ResetPassword = () => {
                 type="submit"
                 disabled={isSubmitting}
                 className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors ${
-                  isSubmitting ? 'bg-teal-500 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'
+                  isSubmitting ? 'bg-custom-blue cursor-not-allowed' : 'bg-custom-blue hover:bg-custom-blue'
                 }`}
               >
                 {isSubmitting ? (
