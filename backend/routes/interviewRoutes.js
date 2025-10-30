@@ -10,6 +10,7 @@ const {
   getInterviews,
   getAllInterviews,
   getAllInterviewRounds, // Added new function
+  getInterviewRoundTransaction, // Added transaction fetch function
   updateInterview,
   updateInterviewRound,
   updateInterviewStatus,
@@ -37,6 +38,7 @@ router.get("/all-interviews", getInterviews); // SUPER ADMIN Added by Ashok
 // v1.0.0 <-------------------------------------------------------------
 router.get("/interviews", getAllInterviews);
 router.get("/interview-rounds", getAllInterviewRounds); // SUPER ADMIN - All interview rounds with details
+router.get("/interview-rounds/:roundId/transaction", getInterviewRoundTransaction); // Get transaction data for specific round
 // v1.0.0 ------------------------------------------------------------->
 
 
