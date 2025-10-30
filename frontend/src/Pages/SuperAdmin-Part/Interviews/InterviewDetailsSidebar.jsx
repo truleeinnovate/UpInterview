@@ -18,9 +18,56 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
   const [showCandidateSidebar, setShowCandidateSidebar] = useState(false);
   const [showPositionSidebar, setShowPositionSidebar] = useState(false);
   const [candidateData, setCandidateData] = useState(null);
+  //console.log("candidateData----",candidateData);
   const [positionData, setPositionData] = useState(null);
   console.log("positionDat--",positionData);
   const [loading, setLoading] = useState(false);
+  const [transactionData, setTransactionData] = useState(null);
+  const [transactionLoading, setTransactionLoading] = useState(false);
+
+  // Fetch transaction data only when the sidebar is opened and transaction tab is active
+  useEffect(() => {
+    const fetchTransactionData = async () => {
+      if (!isOpen || !interviewData?._id || !interviewData?.holdTransactionId) {
+        return;
+      }
+      
+      // Only fetch if transaction tab is active or will be shown
+      if (activeTab === 'transactions' && !transactionData && !transactionLoading) {
+        setTransactionLoading(true);
+        try {
+          const authToken = Cookies.get('authToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+          const response = await axios.get(
+            `${config.REACT_APP_API_URL}/interview/interview-rounds/${interviewData._id}/transaction`,
+            {
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+              },
+            }
+          );
+          
+          if (response.data.success && response.data.data) {
+            setTransactionData(response.data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching transaction data:', error);
+        } finally {
+          setTransactionLoading(false);
+        }
+      }
+    };
+    
+    fetchTransactionData();
+  }, [isOpen, activeTab, interviewData?._id, interviewData?.holdTransactionId, transactionData, transactionLoading]);
+
+  // Clear transaction data when sidebar closes or interview data changes
+  useEffect(() => {
+    if (!isOpen) {
+      setTransactionData(null);
+      setTransactionLoading(false);
+      setActiveTab('round'); // Reset to default tab
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const fetchInterviewData = async () => {
@@ -36,20 +83,23 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
             setCandidateData({
               FirstName: interviewData.candidate.name?.split(' ')[0] || interviewData.candidate.name || 'Unknown',
               LastName: interviewData.candidate.name?.split(' ').slice(1).join(' ') || '',
-              Email: interviewData.candidate.email || 'N/A',
-              Phone_Number: 'N/A',
-              higherQualification: 'N/A',
-              currentExperience: 'N/A',
+              
+              higherQualification: interviewData.candidate.higherQualification || 'N/A',
+              currentExperience: interviewData.candidate.currentExperience || 'N/A',
+              Role: interviewData.candidate.Role || 'N/A',
+              Technology: interviewData.candidate.technology || 'N/A',
+              skills: interviewData.candidate.skills || [],
               isMock: true
             });
           } else if (typeof interviewData.candidate === 'string') {
             setCandidateData({
               FirstName: interviewData.candidate,
               LastName: '',
-              Email: 'N/A',
-              Phone_Number: 'N/A',
               higherQualification: 'N/A',
               currentExperience: 'N/A',
+              Role: 'N/A',
+              Technology: 'N/A',
+              skills: [],
               isMock: true
             });
           }
@@ -99,7 +149,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
         if (interviewData.candidate) {
           try {
             const candidateResponse = await axios.get(
-              `${config.REACT_APP_API_URL}/candidate/${interviewData.candidate}`,
+              `${config.REACT_APP_API_URL}/candidate/details/${interviewData.candidate}`,
               {
                 headers: {
                   Authorization: `Bearer ${authToken}`,
@@ -575,8 +625,9 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
           {activeTab === 'round' && (
             <>
             {/* Candidate and Position Quick Access */}
+          {interviewData?.dataType !== 'mock' ? (
           <DetailSection title="Quick Access">
-            <div className={`grid ${interviewData?.dataType === 'mock' ? "grid-cols-1" : "grid-cols-2"} gap-3`}>
+            <div className="grid grid-cols-2 gap-3">
               {/* Candidate Button */}
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2 flex-1">
@@ -586,9 +637,9 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-gray-900">Candidate</p>
                     <p className="text-xs text-gray-500 truncate">
-                      {candidateData ? 
-                        (candidateData.isMock ? candidateData.FirstName : `${candidateData.FirstName} ${candidateData.LastName}`.trim()) 
-                        : 'View details'}
+                      
+                        {`${candidateData?.FirstName} ${candidateData?.LastName}`.trim()}
+                        
                     </p>
                   </div>
                 </div>
@@ -602,7 +653,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
               </div>
 
               {/* Position Button */}
-            { interviewData?.dataType !== 'mock' && (
+            
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2 flex-1">
                   <div className="w-8 h-8 bg-custom-blue/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -611,9 +662,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-gray-900">Position</p>
                     <p className="text-xs text-gray-500 truncate">
-                      {positionData ? 
-                        (positionData.isMock ? `${positionData.title} - ${positionData.companyname}` : positionData.title) 
-                        : 'View details'}
+                      {positionData?.title}
                     </p>
                   </div>
                 </div>
@@ -625,9 +674,62 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                   <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
-            )}
+            
             </div>
           </DetailSection>
+           ) : (
+            <DetailSection title="Candidate Details">
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:gap-6">
+              <DetailItem 
+                label="Candidate Name" 
+                value={`${candidateData?.FirstName} ${candidateData?.LastName}`.trim() || 'N/A'}
+                icon={<User className="w-4 h-4" />}
+              />
+              <DetailItem 
+                label="Role" 
+                value={candidateData?.Role || 'N/A'}
+                icon={<Briefcase className="w-4 h-4" />}
+              />
+              <DetailItem 
+                label="Technology" 
+                value={candidateData?.Technology || 'N/A'}
+                icon={<Hash className="w-4 h-4" />}
+              />
+              <DetailItem 
+                label="Higher Qualification" 
+                value={candidateData?.higherQualification || 'N/A'}
+                icon={<GraduationCap className="w-4 h-4" />}
+              />
+              <DetailItem 
+                label="Current Experience" 
+                value={candidateData?.currentExperience ? `${candidateData.currentExperience} Years` : 'N/A'}
+                icon={<Briefcase className="w-4 h-4" />}
+              />
+            </div>
+            
+            {/* Display Skills if available */}
+            {candidateData?.skills && candidateData.skills.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Skills</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {candidateData.skills.map((skill, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <div className="w-2 h-2 bg-custom-blue rounded-full mt-1.5 flex-shrink-0"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{skill.skill || skill}</p>
+                        {skill.experience && skill.expertise && (
+                          <p className="text-xs text-gray-500">
+                            {skill.experience} - {skill.expertise}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </DetailSection>
+           )}
 
 
               {/* Round Information */}
@@ -883,20 +985,30 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
           {/* Transactions Tab */}
           {activeTab === 'transactions' && (
             <>
-              {interviewData.holdTransactionData ? (
+              {transactionLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-custom-blue mx-auto"></div>
+                  <p className="text-sm text-gray-500 mt-2">Loading transaction details...</p>
+                </div>
+              ) : (transactionData?.holdTransactionData || interviewData.holdTransactionData) ? (() => {
+                const txData = transactionData?.holdTransactionData || interviewData.holdTransactionData;
+                const settlementStatus = transactionData?.settlementStatus || interviewData.settlementStatus;
+                const settlementDate = transactionData?.settlementDate || interviewData.settlementDate;
+                
+                return (
                 <DetailSection title="Hold Transaction Details">
                   <div className="space-y-6">
                     {/* Transaction Status Badge */}
                     <div className="flex items-center justify-between pb-4 border-b border-gray-100">
                       <span className="text-sm font-medium text-gray-900">Transaction Status</span>
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        interviewData.holdTransactionData.status === 'completed' 
+                        txData?.status === 'completed' 
                           ? 'bg-green-100 text-green-800' 
-                          : interviewData.holdTransactionData.status === 'pending'
+                          : txData?.status === 'pending'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {interviewData.holdTransactionData.status?.toUpperCase() || 'N/A'}
+                        {txData?.status?.toUpperCase() || 'N/A'}
                       </span>
                     </div>
 
@@ -904,29 +1016,29 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                     <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
                       <DetailItem 
                         label="Transaction Type" 
-                        value={interviewData.holdTransactionData.type?.toUpperCase() || 'N/A'}
+                        value={txData?.type?.toUpperCase() || 'N/A'}
                         icon={<CreditCard className="w-4 h-4" />}
                       />
                       <DetailItem 
                         label="Amount" 
-                        value={`₹${interviewData.holdTransactionData.amount || 0}`}
+                        value={`₹${txData?.amount || 0}`}
                         icon={<DollarSign className="w-4 h-4" />}
                       />
                       <DetailItem 
                         label="Description" 
-                        value={interviewData.holdTransactionData.description || 'N/A'}
+                        value={txData?.description || 'N/A'}
                         icon={<FileText className="w-4 h-4" />}
                       />
                       <DetailItem 
                         label="Invoice ID" 
-                        value={interviewData.holdTransactionData.relatedInvoiceId || 'N/A'}
+                        value={txData?.relatedInvoiceId || 'N/A'}
                         icon={<Hash className="w-4 h-4" />}
                       />
                       <DetailItem 
                         label="Transaction Date" 
                         value={
-                          interviewData.holdTransactionData.createdAt 
-                            ? new Date(interviewData.holdTransactionData.createdAt).toLocaleString('en-US', {
+                          txData?.createdAt 
+                            ? new Date(txData.createdAt).toLocaleString('en-US', {
                                 dateStyle: 'medium',
                                 timeStyle: 'short'
                               })
@@ -937,7 +1049,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                     </div>
 
                     {/* Metadata Section */}
-                    {interviewData.holdTransactionData.metadata && (
+                    {txData?.metadata && (
                       <div className="pt-4 border-t border-gray-100">
                         <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">
                           Transaction Metadata
@@ -945,22 +1057,22 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                         <div className="grid grid-cols-2 gap-4">
                           <DetailItem 
                             label="Hourly Rate" 
-                            value={`₹${interviewData.holdTransactionData.metadata.rate || interviewData.holdTransactionData.metadata.hourlyRate || 0}`}
+                            value={`₹${txData?.metadata?.rate || txData?.metadata?.hourlyRate || 0}`}
                             icon={<DollarSign className="w-4 h-4" />}
                           />
                           <DetailItem 
                             label="Duration" 
-                            value={`${interviewData.holdTransactionData.metadata.durationInMinutes || 0} minutes`}
+                            value={`${txData?.metadata?.durationInMinutes || 0} minutes`}
                             icon={<Clock className="w-4 h-4" />}
                           />
                           <DetailItem 
                             label="Previous Balance" 
-                            value={`₹${interviewData.holdTransactionData.metadata.prevBalance || 0}`}
+                            value={`₹${txData?.metadata?.prevBalance || 0}`}
                             icon={<CreditCard className="w-4 h-4" />}
                           />
                           <DetailItem 
                             label="New Balance" 
-                            value={`₹${interviewData.holdTransactionData.metadata.newBalance || 0}`}
+                            value={`₹${txData?.metadata?.newBalance || 0}`}
                             icon={<CreditCard className="w-4 h-4" />}
                           />
                         </div>
@@ -968,7 +1080,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                     )}
 
                     {/* Settlement Info */}
-                    {interviewData.settlementStatus === 'completed' ? (
+                    {settlementStatus === 'completed' ? (
                       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                         <div className="flex items-start">
                           <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" />
@@ -976,9 +1088,9 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                             <h4 className="text-sm font-medium text-green-900 mb-1">Payment Settled</h4>
                             <p className="text-sm text-green-700">
                               This payment has been successfully settled to the interviewer's wallet.
-                              {interviewData.settlementDate && (
+                              {settlementDate && (
                                 <span className="block mt-1">
-                                  Settled on: {new Date(interviewData.settlementDate).toLocaleString()}
+                                  Settled on: {new Date(settlementDate).toLocaleString()}
                                 </span>
                               )}
                             </p>
@@ -1001,7 +1113,8 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                     )}
                   </div>
                 </DetailSection>
-              ) : (
+                );
+              })() : (
                 <DetailSection title="No Transaction Data">
                   <div className="text-center py-8">
                     <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-3" />
