@@ -14,7 +14,7 @@ const {
 // Create and get all templates
 router.route('/')
     .post(createInterviewTemplate)
-// .get(getAllTemplates);
+
 
 // Get, update and delete template by ID
 router.route('/:id')

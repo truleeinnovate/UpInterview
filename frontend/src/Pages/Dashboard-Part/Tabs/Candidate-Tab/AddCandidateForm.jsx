@@ -893,6 +893,7 @@ const AddCandidateForm = ({
                     label="First Name"
                     name="FirstName"
                     required={false}
+                    error={errors.FirstName}
                   />
                   <InputField
                     value={formData.LastName}

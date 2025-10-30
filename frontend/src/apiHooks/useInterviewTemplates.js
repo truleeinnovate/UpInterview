@@ -10,55 +10,6 @@ import { notify } from '../services/toastService';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
-// export const useInterviewTemplates = () => {
-//     const authToken = Cookies.get('authToken');
-//     const tokenPayload = decodeJwt(authToken);
-//     const userId = tokenPayload?.userId;
-//     const tenantId = tokenPayload?.tenantId;
-//     const organization = tokenPayload?.organization;
-//     const queryClient = useQueryClient();
-//     const initialLoad = useRef(true);
-
-//     // Memoize query parameters to prevent unnecessary re-renders
-//     const queryParams = useMemo(() => ({
-//         tenantId,
-//         userId,
-//         organization,
-//         authToken
-//     }), [tenantId, userId, organization, authToken]);
-
-//     // Interview templates query
-//     const {
-//         data: templatesData = [],
-//         isLoading: isQueryLoading,
-//         isError,
-//         error,
-//     } = useQuery({
-//         queryKey: ['interviewTemplates', queryParams],
-//         queryFn: async () => {
-//             try {
-//                 let queryString = '';
-//                 if (queryParams.organization) {
-//                     queryString = `tenantId=${queryParams.tenantId}&organization=true`;
-//                 } else {
-//                     queryString = `ownerId=${queryParams.userId}&organization=false`;
-//                 }
-
-//                 const apiUrl = `${config.REACT_APP_API_URL}/interviewTemplates?${queryString}`;
-//                 const headers = { Authorization: `Bearer ${queryParams.authToken}` };
-
-//                 const response = await axios.get(apiUrl, { headers });
-//                 return response.data.data.reverse();
-//             } catch (err) {
-//                 console.error('Error fetching templates:', err);
-//                 throw err;
-//             }
-//         },
-//         enabled: !!queryParams.authToken &&  (!!queryParams.tenantId  || !!queryParams.userId),
-//         retry: 1,
-//         staleTime: 1000 * 60 * 5, // 5 minutes cache
-//         refetchOnWindowFocus: false,
-//     });
 
 export const useInterviewTemplates = () => {
     const queryClient = useQueryClient();
@@ -153,69 +104,7 @@ export const useInterviewTemplates = () => {
         },
     });
 
-    // Add/edit round mutation
-    // v1.0.0 <-------------------------------------------------------------------------
-    // const addOrUpdateRound = useMutation({
-    //     mutationFn: async ({ id, roundData, roundId, template }) => {
-    //         const headers = { Authorization: `Bearer ${queryParams.authToken}` };
-    //         const currentRounds = template?.rounds || [];
-    //         const updatedRounds = roundId
-    //             ? currentRounds.map((round) =>
-    //                 round._id === roundId ? { ...round, ...roundData } : round
-    //             )
-    //             : [...currentRounds, roundData];
-
-    //         const response = await axios.patch(
-    //             `${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
-    //             {
-    //                 tenantId: queryParams.tenantId,
-    //                 rounds: updatedRounds,
-    //             },
-    //             { headers }
-    //         );
-    //         return response.data;
-    //     },
-    //     onSuccess: () => {
-    //         queryClient.invalidateQueries(['interviewTemplates']);
-    //     },
-    //     onError: (error) => {
-    //         console.error('Error adding/updating round:', error);
-    //     },
-    // });
-
-    // const addOrUpdateRound = useMutation({
-    //     mutationFn: async ({ id, roundData, roundId, template }) => {
-    //         const headers = { Authorization: `Bearer ${queryParams.authToken}` };
-    //         const currentRounds = template?.rounds || [];
-
-    //         // Remove existing round if editing
-    //         const filteredRounds = roundId
-    //         ? currentRounds.filter((round) => round._id !== roundId)
-    //         : [...currentRounds];
-
-    //         // Push the new or updated round
-    //         const updatedRounds = [...filteredRounds, roundData];
-
-    //         // Let backend sort and normalize by sequence
-    //         const response = await axios.patch(
-    //         `${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
-    //         {
-    //             tenantId: queryParams.tenantId,
-    //             rounds: updatedRounds,
-    //         },
-    //         { headers }
-    //         );
-
-    //         return response.data;
-    //     },
-    //     onSuccess: () => {
-    //         queryClient.invalidateQueries(['interviewTemplates']);
-    //     },
-    //     onError: (error) => {
-    //         console.error('Error adding/updating round:', error);
-    //     },
-    // });
-
+   
     const addOrUpdateRound = useMutation({
         mutationFn: async ({ id, roundData, roundId, template }) => {
             const headers = { Authorization: `Bearer ${queryParams.authToken}` };

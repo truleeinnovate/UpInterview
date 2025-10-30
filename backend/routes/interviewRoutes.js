@@ -18,36 +18,37 @@ const {
   deleteInterview,
 } = require("../controllers/interviewController");
 
- //  post call for interview page
+// post call interview create routes
 router.post("/", createInterview);
 
-//  Ranjith added patch call for interview update
+// patch call for interview update routes
 router.patch("/:id", updateInterview);
-
-// router.patch('/:id', updateInterview);
-router.post("/save-round", saveInterviewRound);
-
-//  interview round update
-router.patch("/update-round/:roundId", updateInterviewRound);
-
-// Route to fetch dashboard statistics
-router.get("/dashboard-stats", getDashboardStats);
-
-router.delete("/delete-round/:id", deleteRound);
-router.get("/all-interviews", getInterviews); // SUPER ADMIN Added by Ashok
-// v1.0.0 <-------------------------------------------------------------
-router.get("/interviews", getAllInterviews);
-router.get("/interview-rounds", getAllInterviewRounds); // SUPER ADMIN - All interview rounds with details
-router.get("/interview-rounds/:roundId/transaction", getInterviewRoundTransaction); // Get transaction data for specific round
-// v1.0.0 ------------------------------------------------------------->
-
 
 // Interview Status Update
 router.patch('/status/:interviewId/:status', updateInterviewStatus);
 
+//  interview delete routes
+router.delete('/delete-interview/:id', deleteInterview);
+
+//  interview Rounds post APi's routes
+router.post("/save-round", saveInterviewRound);
+
+//  interview round update routes
+router.patch("/update-round/:roundId", updateInterviewRound);
+
+//  interview round delete routes
+router.delete("/delete-round/:id", deleteRound);
+
+// Route to fetch dashboard statistics routes
+router.get("/dashboard-stats", getDashboardStats);
+
 // Check internal interview usage
 router.get('/check-usage', checkInternalInterviewUsage);
 
-router.delete('/delete-interview/:id', deleteInterview);
+//  interview get all routes SUPER ADMIN pages added by ASHOK
+router.get("/all-interviews", getInterviews); // SUPER ADMIN Added by Ashok
+router.get("/interviews", getAllInterviews);
+router.get("/interview-rounds", getAllInterviewRounds); // SUPER ADMIN - All interview rounds with details
+
 
 module.exports = router;
