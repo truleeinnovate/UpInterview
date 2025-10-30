@@ -114,6 +114,7 @@ exports.getOrganizationRequests = async (req, res) => {
 
             return {
                 ...req,
+                //organizationRequestCode: req.organizationRequestCode || null, // Explicitly include the code
                 status: formattedStatus,
                 contact: contactMap.get(ownerIdStr) || {
                     firstName: "",

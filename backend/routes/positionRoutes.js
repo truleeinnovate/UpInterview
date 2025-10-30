@@ -5,8 +5,8 @@ const {
   saveInterviewRoundPosition,
   deleteRound,
   updateInterviewRound,
-  deletePosition
-  // getPositionById,
+  deletePosition,
+  getPositionById
   // updateRounds
 } = require('../controllers/positionController.js');
 const loggingService = require('../middleware/loggingService.js');
@@ -30,6 +30,6 @@ router.delete('/delete-position/:id', deletePosition);
 
 // router.get("/:id", updateRounds);
 
-// router.get("/details/:id", getPositionById);
+router.get("/details/:id", getPositionById);
 
 module.exports = router;
