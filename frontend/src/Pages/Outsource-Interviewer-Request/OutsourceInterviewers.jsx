@@ -218,7 +218,7 @@ const OutsourceInterviewers = () => {
   // Table Columns
   const tableColumns = [
     {
-      key: "interviewerNo",
+      key: "outsourceRequestCode",
       header: "Interviewer ID",
       render: (vale, row) => (
         <span
@@ -240,7 +240,7 @@ const OutsourceInterviewers = () => {
             // v1.0.0 --------------------------------------------------------->
           }}
         >
-          {row?.interviewerNo || `TEMP-${row?._id?.slice(-6) || "NA"}`}
+          {row?.outsourceRequestCode || "N/A"}
         </span>
       ),
     },
