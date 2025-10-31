@@ -294,10 +294,10 @@ function PaymentsTable({ organizationId, viewMode }) {
       ),
     },
     {
-      key: "method",
+      key: "paymentMethod",
       header: "Payment Method",
       render: (value, row) => (
-        <div className="capitalize">{row?.method?.replace("-", " ")}</div>
+        <div className="capitalize">{row?.paymentMethod?.replace("-", " ")}</div>
       ),
     },
     {

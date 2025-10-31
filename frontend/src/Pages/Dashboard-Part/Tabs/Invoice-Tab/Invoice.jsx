@@ -142,7 +142,7 @@ const InvoiceTab = () => {
       const formattedData = invoiceData.map((invoice) => {
         const paymentId =
           invoice.paymentId ||
-          `PAY-${invoice._id.toString().substring(18, 24)}-${Date.now()
+          `PMT-${invoice._id.toString().substring(18, 24)}-${Date.now()
             .toString()
             .substring(8)}`;
         return {
