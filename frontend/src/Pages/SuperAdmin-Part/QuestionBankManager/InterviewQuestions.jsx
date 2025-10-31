@@ -1,17 +1,18 @@
 // v1.0.0 - Ashok - Fixed issues
+// v1.0.1 - Ashok - Added Edit functionality
 
 import React from "react";
-import { Eye } from "lucide-react";
+import { Eye, Pencil } from "lucide-react";
 
 // v1.0.0 <-------------------------------------------------------------------------
 const InterviewQuestions = ({
   questions = [],
   onView,
+  onEdit,
   showCheckboxes,
   selectedQuestions = [],
   onToggleSelection,
 }) => {
-
   if (!Array.isArray(questions) || questions.length === 0) {
     return (
       <div className="text-center py-10 text-gray-500 font-medium">
@@ -64,14 +65,24 @@ const InterviewQuestions = ({
             key={q?._id}
             className=" w-full bg-white rounded-2xl shadow-md p-5 border border-gray-200 group"
           >
-            {/* Eye icon - hidden by default, shows on hover */}
-            <button
-              onClick={() => onView?.(q)}
-              type="button"
-              className="absolute top-3 right-6 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Eye className="w-6 h-6 text-custom-blue" />
-            </button>
+            {/* Eye and Pencil icons - hidden by default, shows on hover */}
+            <div className="flex items-center gap-2 absolute top-3 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={() => onEdit(q)}
+                className="p-2 text-green-600 hover:bg-green-50 rounded-lg"
+                title="Edit Question"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onView?.(q)}
+                type="button"
+                className="p-2 text-green-600 hover:bg-green-50 rounded-lg"
+                title="View Question"
+              >
+                <Eye className="w-5 h-5 text-custom-blue" />
+              </button>
+            </div>
 
             {/* Question */}
             <h3 className="text-lg font-semibold text-gray-800 mb-2">

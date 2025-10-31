@@ -5,6 +5,7 @@
 // v1.0.4 - Ashok - Improved responsiveness
 // v1.0.5 - Ashok - Fixed issues in responsiveness for activity
 // v1.0.6 - Ashok - change placement of edit position button
+// v1.0.7 - Ashok - changed Salary Range to Salary Range (Annual)
 
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
@@ -255,7 +256,7 @@ const PositionSlideDetails = () => {
             <div className="space-y-6 mt-4">
               {/* v1.0.6 <--------------------------------------------- */}
               <div className="sm:text-start text-center mb-4">
-              {/* v1.0.6 ---------------------------------------------> */}
+                {/* v1.0.6 ---------------------------------------------> */}
                 <h3 className="sm:text-xl text-2xl font-bold text-gray-900 truncate">
                   {position?.companyname || ""}
                 </h3>
@@ -311,7 +312,7 @@ const PositionSlideDetails = () => {
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
                       <span className="text-md text-custom-blue">₹</span>
-                      <span className="text-sm">Salary Range</span>
+                      <span className="text-sm">Salary Range (Annual)</span>
                     </div>
                     <p className="text-sm font-medium text-gray-800">
                       {position?.minSalary && position?.maxSalary

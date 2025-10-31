@@ -2,6 +2,7 @@
 // v1.0.1 - Ashok - changed some code in createQuestions Controller
 // v1.0.2 - Ashok - added backend pagination for improve loading speed by getting chunk of data
 // v1.0.3 - Ashok - Tried to fix issue for getting data in online
+// v1.0.4 - Ashok - added updateQuestionById controller and route for updating question by ID added updatedBy and createdBy fields
 
 const fs = require("fs"); // for reading uploaded files
 const Papa = require("papaparse"); // for parsing CSV
@@ -11,6 +12,7 @@ const {
 const {
   AssessmentQuestion,
 } = require("../../models/QuestionBank/assessmentQuestions");
+const { Users } = require("../../models/Users");
 
 // helper to pick correct model
 const getModel = (type) => {
@@ -210,9 +212,8 @@ const safeParseJSON = (str) => {
 const createQuestions = async (req, res) => {
   try {
     const { type } = req.params;
-    console.log("Request type:", type);
-
     const Model = getModel(type);
+    const createdBy = req.body.createdBy || req.query.createdBy;
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
@@ -271,10 +272,17 @@ const createQuestions = async (req, res) => {
           row.isActive !== undefined
             ? String(row.isActive).toLowerCase() === "true"
             : undefined,
-        createdBy: cleanString(row.createdBy),
-        modifiedDate: row.modifiedDate ? new Date(row.modifiedDate) : undefined,
-        modifiedBy: cleanString(row.modifiedBy),
+        createdBy: createdBy,
       };
+
+      // Convert createdBy to ObjectId
+      if (createdBy) {
+        try {
+          baseDoc.createdBy = new mongoose.Types.ObjectId(createdBy);
+        } catch (err) {
+          console.warn(`Invalid ObjectId for createdBy: ${createdBy}`);
+        }
+      }
 
       // interview only
       const interviewExtras = {};
@@ -339,6 +347,56 @@ const createQuestions = async (req, res) => {
 
 // v1.0.2 <--------------------------------------------------------------------------------
 
+// const getQuestions = async (req, res) => {
+//   try {
+//     const { type } = req.params;
+//     const {
+//       page = 1,
+//       perPage = 10,
+//       searchTerm = "",
+//       sortOrder = "asc",
+//     } = req.query;
+//     const Model = getModel(type);
+
+//     const query = {};
+
+//     // Optional search across fields
+//     if (searchTerm) {
+//       const regex = new RegExp(searchTerm, "i"); // case-insensitive
+//       query.$or = [
+//         { topic: regex },
+//         { questionOrderId: regex },
+//         { questionText: regex },
+//       ];
+//     }
+
+//     const total = await Model.countDocuments(query);
+
+//     // 👇 choose sort direction dynamically
+//     const sortDirection = sortOrder === "asc" ? 1 : -1;
+
+//     const questions = await Model.find(query)
+//       .skip((page - 1) * perPage)
+//       .limit(parseInt(perPage))
+//       // v1.0.3 <---------------------------------------------
+//       .sort({ _id: sortDirection });
+//     // v1.0.3 --------------------------------------------->
+//     // you can also change this to "createdAt" or "_id" depending on requirement
+
+//     res.status(200).json({
+//       success: true,
+//       total,
+//       page: parseInt(page),
+//       perPage: parseInt(perPage),
+//       sortOrder,
+//       questions,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// };
+
 const getQuestions = async (req, res) => {
   try {
     const { type } = req.params;
@@ -347,14 +405,29 @@ const getQuestions = async (req, res) => {
       perPage = 10,
       searchTerm = "",
       sortOrder = "asc",
+      topic,
+      difficulty,
+      questionType,
+      category,
+      subTopic,
+      area,
+      technology,
+      tags,
+      minexperience,
+      maxexperience,
+      isActive,
+      reviewStatus,
+      fromDate,
+      toDate,
+      // add more fields as needed
     } = req.query;
     const Model = getModel(type);
 
     const query = {};
 
-    // Optional search across fields
+    // --- Search (across fields)
     if (searchTerm) {
-      const regex = new RegExp(searchTerm, "i"); // case-insensitive
+      const regex = new RegExp(searchTerm, "i");
       query.$or = [
         { topic: regex },
         { questionOrderId: regex },
@@ -362,18 +435,39 @@ const getQuestions = async (req, res) => {
       ];
     }
 
-    const total = await Model.countDocuments(query);
+    // --- Filters by direct fields
+    if (topic) query.topic = new RegExp(topic, "i");
+    if (difficulty) query.difficultyLevel = difficulty;
+    if (questionType) query.questionType = questionType;
+    if (category) query.category = category;
+    if (subTopic) query.subTopic = subTopic;
+    if (area) query.area = area;
+    if (technology) query.technology = technology; // value: string OR [string]
+    if (tags) query.tags = tags; // value: string OR [string]
+    if (reviewStatus) query.reviewStatus = reviewStatus;
+    if (isActive !== undefined) query.isActive = isActive === "true";
 
-    // 👇 choose sort direction dynamically
+    // --- Filters by experience
+    if (minexperience) query.minexperience = { $gte: Number(minexperience) };
+    if (maxexperience) query.maxexperience = { $lte: Number(maxexperience) };
+
+    // --- Filters by created date range
+    if (fromDate || toDate) {
+      query.createdAt = {};
+      if (fromDate) query.createdAt.$gte = new Date(fromDate);
+      if (toDate) query.createdAt.$lte = new Date(toDate);
+    }
+
+    // --- Pagination and sorting
+    const total = await Model.countDocuments(query);
     const sortDirection = sortOrder === "asc" ? 1 : -1;
 
     const questions = await Model.find(query)
       .skip((page - 1) * perPage)
       .limit(parseInt(perPage))
-      // v1.0.3 <---------------------------------------------
-      .sort({ _id: sortDirection });
-      // v1.0.3 --------------------------------------------->
-    // you can also change this to "createdAt" or "_id" depending on requirement
+      .sort({ _id: sortDirection })
+      .populate("createdBy", "firstName lastName -password")
+      .populate("updatedBy", "firstName lastName -password");
 
     res.status(200).json({
       success: true,
@@ -473,9 +567,44 @@ const getQuestionDeleteById = async (req, res) => {
   }
 };
 
+// Update by ID
+const updateQuestionById = async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const updateData = req.body;
+
+    const Model = getModel(type);
+    const updatedBy = updateData.updatedBy;
+
+    // If tenant found, replace updatedBy with readable name
+    if (updatedBy) {
+      updateData.updatedBy = updatedBy;
+    }
+
+    const updatedQuestion = await Model.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    if (!updatedQuestion) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    res.json({
+      message: "Question updated successfully",
+      data: updatedQuestion,
+    });
+  } catch (error) {
+    console.error("Error updating question:", error);
+    res
+      .status(500)
+      .json({ message: "Error updating question", error: error.message });
+  }
+};
+
 module.exports = {
   createQuestions,
   getQuestions,
   getQuestionById,
   getQuestionDeleteById,
+  updateQuestionById,
 };

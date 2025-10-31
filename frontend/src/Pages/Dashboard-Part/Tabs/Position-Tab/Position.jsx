@@ -8,6 +8,7 @@
 // v1.0.7  -  Ashok   - fixed style issue
 // v1.0.8  -  Ashok   - added common code for kanban
 // v1.0.9  -  Ashok   - added clickable title to navigate to details page at kanban
+// v2.0.0  -  Ashok   - added max salary annually for filters
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -184,6 +185,7 @@ const PositionTab = () => {
   const [selectedCompany, setSelectedCompany] = useState([]);
   const [experience, setExperience] = useState({ min: "", max: "" });
   const [salaryMin, setSalaryMin] = useState("");
+  const [salaryMax, setSalaryMax] = useState("");
   const [createdDatePreset, setCreatedDatePreset] = useState("");
   //-----v1.03----->
   const filterIconRef = useRef(null);
@@ -278,11 +280,23 @@ const PositionTab = () => {
         (selectedFilters.company?.length || 0) === 0 ||
         selectedFilters.company.includes(position.companyname);
 
-      const threshold = Number(selectedFilters.salaryMin) || 0;
+      // const threshold = Number(selectedFilters.salaryMin) || 0;
+      // const minSal = parseFloat(position.minSalary) || 0;
+      // const maxSal = parseFloat(position.maxSalary) || 0;
+      // const matchesSalary =
+      //   threshold === 0 || maxSal >= threshold || minSal >= threshold;
+      const minThreshold = Number(selectedFilters.salaryMin) || 0;
+      const maxThreshold =
+        selectedFilters.salaryMax !== "" &&
+        selectedFilters.salaryMax !== undefined
+          ? Number(selectedFilters.salaryMax)
+          : Infinity;
+
       const minSal = parseFloat(position.minSalary) || 0;
       const maxSal = parseFloat(position.maxSalary) || 0;
-      const matchesSalary =
-        threshold === 0 || maxSal >= threshold || minSal >= threshold;
+
+      // Must be >= minThreshold and <= maxThreshold
+      const matchesSalary = minSal >= minThreshold && maxSal <= maxThreshold;
 
       // Created date preset filter
       let matchesCreatedDate = true;
@@ -417,6 +431,7 @@ const PositionTab = () => {
     setSelectedCompany([]);
     setExperience({ min: "", max: "" });
     setSalaryMin("");
+    setSalaryMax("");
     setCreatedDatePreset("");
     //-----v1.03----->
     setSelectedFilters(clearedFilters);
@@ -436,6 +451,7 @@ const PositionTab = () => {
       //<-----v1.03-----
       company: selectedCompany,
       salaryMin: Number(salaryMin) || 0,
+      salaryMax: Number(salaryMax) || 0,
       createdDate: createdDatePreset,
       //-----v1.03----->
     };
@@ -449,6 +465,7 @@ const PositionTab = () => {
         filters.experience.max ||
         filters.company.length > 0 ||
         (filters.salaryMin && filters.salaryMin > 0) ||
+        (filters.salaryMax && filters.salaryMax > 0) ||
         !!filters.createdDate
       //-----v1.03----->
     );
@@ -1065,7 +1082,7 @@ const PositionTab = () => {
                       onClick={() => setIsSalaryOpen(!isSalaryOpen)}
                     >
                       <span className="font-medium text-gray-700">
-                        Salary (Min LPA)
+                        Min Salary (Annual)
                       </span>
                       {isSalaryOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
@@ -1078,18 +1095,33 @@ const PositionTab = () => {
                         <div className="flex items-center space-x-3">
                           <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-700">
-                              Minimum Salary (LPA)
+                              Minimum Salary (Annual)
                             </label>
                             <input
                               type="number"
                               min="0"
                               step="0.1"
-                              placeholder="e.g., 10"
+                              placeholder="Min Salary (Annual)"
                               value={salaryMin}
                               onChange={(e) => setSalaryMin(e.target.value)}
                               className="mt-1 px-2 block w-full rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
                             />
                           </div>
+                        </div>
+                        {/* Maximum Salary */}
+                        <div className="flex-1">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Max Salary (Annual)
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            placeholder="Max Salary (Annual)"
+                            value={salaryMax}
+                            onChange={(e) => setSalaryMax(e.target.value)}
+                            className="mt-1 px-2 block w-full rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                          />
                         </div>
                       </div>
                     )}
