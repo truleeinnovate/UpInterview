@@ -95,15 +95,15 @@ const createInterview = async (req, res) => {
             .select("interviewCode")
             .lean();
 
-        let nextNumber = 1; // Start from 50001
+        let nextNumber = 1; // Start from 00001
         if (lastInterview && lastInterview.interviewCode) {
             const match = lastInterview.interviewCode.match(/INT-(\d+)/);
             if (match) {
-                nextNumber = parseInt(match[1], 10);
+                nextNumber = parseInt(match[1], 10) + 1;
             }
         }
 
-         const interviewCode = `INT-${nextNumber}`;
+         const interviewCode = `INT-${String(nextNumber).padStart(5, "0")}`;
         // Create interview
          interview = await Interview.create({
             ...interviewData,
@@ -111,7 +111,7 @@ const createInterview = async (req, res) => {
         });
 
 
-        console.log("nextNumber interview", interview);
+        //console.log("nextNumber interview", interview);
 
         // Create push notification for interview creation
         try {

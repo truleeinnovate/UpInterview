@@ -1355,12 +1355,29 @@ const registerOrganization = async (req, res) => {
       throw new Error(emailResult.message);
     }
 
+    // Generate custom porganizationRequestCode like ORG-00001
+        const lastOrganizationRequestCode = await OrganizationRequest.findOne({})
+          .sort({ _id: -1 })
+          .select("organizationRequestCode")
+          .lean();
+    
+        let nextNumber = 1;
+        if (lastOrganizationRequestCode?.organizationRequestCode) {
+          const match = lastOrganizationRequestCode.organizationRequestCode.match(/ORG-(\d+)/);
+          if (match) {
+            nextNumber = parseInt(match[1], 10) + 1;
+          }
+        }
+    
+        const organizationRequestCode = `ORG-${String(nextNumber).padStart(5, "0")}`;
+
     // Create OrganizationRequest with contact ID (profileId)
     try {
       await OrganizationRequest.findOneAndUpdate(
         { tenantId: savedTenant._id, ownerId: savedUser._id },
         {
           $setOnInsert: {
+            organizationRequestCode:organizationRequestCode,
             tenantId: savedTenant._id,
             ownerId: savedUser._id,
             status: 'pending_review'
