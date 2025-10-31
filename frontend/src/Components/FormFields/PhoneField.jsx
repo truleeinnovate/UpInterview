@@ -160,7 +160,7 @@ const PhoneField = ({
                             }),
                             control: (base, state) => ({
                                 ...base,
-                                borderColor: state.isFocused ? "#217989" : "#217989",
+                                borderColor: state.isFocused ? "#217989" : "#d1d5db",
                                 boxShadow: state.isFocused ? "0 0 0 1px #217989" : "none",
                                 "&:hover": {
                                     borderColor: "#217989",
