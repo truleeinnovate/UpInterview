@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Created updateQuestionById route handler
+
 const express = require("express");
 const router = express.Router();
 const multer = require("multer"); // import multer
@@ -7,6 +9,7 @@ const {
   getQuestionById,
   getQuestions,
   getQuestionDeleteById,
+  updateQuestionById,
 } = require("../../controllers/QuestionBankManagerControllers/QuestionBankManagerController");
 
 // Configure multer for temporary file storage
@@ -20,6 +23,9 @@ router.get("/:type", getQuestions);
 
 // Get by id
 router.get("/:type/:id", getQuestionById);
+
+// Update by ID
+router.put("/:type/:id", updateQuestionById);
 
 router.delete("/:type", getQuestionDeleteById);
 

@@ -1,17 +1,22 @@
+// v1.0.0 - Ashok - Added createdBy and updatedBy
+
 //<-------------------------------------NEW SCHEMA------------------------------------------
 
 const mongoose = require("mongoose");
 
-  // Sub-schema for solutions (from JSON)
-  const solutionSchema = new mongoose.Schema({
+// Sub-schema for solutions (from JSON)
+const solutionSchema = new mongoose.Schema(
+  {
     language: { type: String, required: true }, // NEW FIELD from JSON
     code: { type: String, required: true }, // NEW FIELD from JSON
-    approach: { type: String } // NEW FIELD from JSON
-  }, { _id: false });
-  
-  
-  // Main schema
-  const suggestedQuestionSchema = new mongoose.Schema({
+    approach: { type: String }, // NEW FIELD from JSON
+  },
+  { _id: false }
+);
+
+// Main schema
+const suggestedQuestionSchema = new mongoose.Schema(
+  {
     // questionNo: { type: String }, // From existing schema
     questionOrderId: { type: String }, // INTQ-00000, INTQ-00001, INTQ-00002
     questionText: { type: String, required: true },
@@ -32,7 +37,7 @@ const mongoose = require("mongoose");
     maxexperience: { type: Number },
     charLimits: {
       min: { type: Number },
-      max: { type: Number }
+      max: { type: Number },
     },
     solutions: [solutionSchema], // NEW FIELD from JSON
     relatedQuestions: [{ type: String }], // NEW FIELD from JSON
@@ -41,15 +46,19 @@ const mongoose = require("mongoose");
     version: { type: Number, default: 1 }, // NEW FIELD from JSON
     isActive: { type: Boolean, default: true },
     //isInterviewQuestionOnly: { type: Boolean, default: true },// NEW FIELD
-    createdBy: { type: String },
-    modifiedDate: { type: Date },
-    modifiedBy: { type: String }
-  }, { timestamps: true });
-  
-  const InterviewQuestion = mongoose.model("InterviewQuestions", suggestedQuestionSchema);
-  
-  module.exports = {
-    InterviewQuestion,
-  };
-  
-  // --------------------------------------NEW SCHEMA------------------------------------------> 
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+  },
+  { timestamps: true }
+);
+
+const InterviewQuestion = mongoose.model(
+  "InterviewQuestions",
+  suggestedQuestionSchema
+);
+
+module.exports = {
+  InterviewQuestion,
+};
+
+// --------------------------------------NEW SCHEMA------------------------------------------>
