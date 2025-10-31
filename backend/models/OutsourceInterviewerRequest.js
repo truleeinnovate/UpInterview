@@ -76,10 +76,10 @@ OutsourceInterviewerSchema.pre('save', async function (next) {
                     .select('outsourceRequestCode')
                     .lean();
 
-                let nextNumber = 50001; // Starting from 50001
+                let nextNumber = 1; // Starting from 1
 
                 if (lastRequest && lastRequest.outsourceRequestCode) {
-                    // Extract the number from the last code (OINT-50001 -> 50001)
+                    // Extract the number from the last code (OINT-00001 -> 1)
                     const match = lastRequest.outsourceRequestCode.match(/OINT-(\d+)/);
                     if (match) {
                         nextNumber = parseInt(match[1], 10) + 1;
