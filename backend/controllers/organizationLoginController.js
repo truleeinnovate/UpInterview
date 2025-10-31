@@ -286,23 +286,22 @@ const loginOrganization = async (req, res) => {
     };
     const authToken = generateToken(payload, { expiresIn: "7h" });
 
-
-    // Create or update OrganizationRequest with contact ID (profileId)
-    await OrganizationRequest.findOneAndUpdate(
-      { tenantId: user.tenantId, ownerId: user._id },
-      {
-        $setOnInsert: {
-          tenantId: user.tenantId,
-          ownerId: user._id,
-          status: 'pending_review'
-        },
-      },
-      {
-        upsert: true,
-        new: true,
-        setDefaultsOnInsert: true
-      }
-    );
+    // // Create or update OrganizationRequest with contact ID (profileId)
+    // await OrganizationRequest.findOneAndUpdate(
+    //   { tenantId: user.tenantId, ownerId: user._id },
+    //   {
+    //     $setOnInsert: {
+    //       tenantId: user.tenantId,
+    //       ownerId: user._id,
+    //       status: 'pending_review'
+    //     },
+    //   },
+    //   {
+    //     upsert: true,
+    //     new: true,
+    //     setDefaultsOnInsert: true
+    //   }
+    // );
 
     const responseData = {
       success: true,
@@ -1354,6 +1353,28 @@ const registerOrganization = async (req, res) => {
     });
     if (!emailResult.success) {
       throw new Error(emailResult.message);
+    }
+
+    // Create OrganizationRequest with contact ID (profileId)
+    try {
+      await OrganizationRequest.findOneAndUpdate(
+        { tenantId: savedTenant._id, ownerId: savedUser._id },
+        {
+          $setOnInsert: {
+            tenantId: savedTenant._id,
+            ownerId: savedUser._id,
+            status: 'pending_review'
+          },
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true
+        }
+      );
+      console.log("OrganizationRequest created/updated successfully");
+    } catch (error) {
+      console.error("Error creating/updating OrganizationRequest:", error);
     }
 
     // Generate JWT
