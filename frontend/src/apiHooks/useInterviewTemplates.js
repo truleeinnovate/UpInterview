@@ -87,22 +87,22 @@ export const useInterviewTemplates = () => {
     });
 
     // get templates by tenantId
-    const getTemplatesByTenantId = useMutation({
-        mutationFn: async (tenantId) => {
-            const headers = { Authorization: `Bearer ${queryParams.authToken}` };
-            const response = await axios.get(
-                `${config.REACT_APP_API_URL}/interviewTemplates/tenant/${tenantId}`,
-                { headers }
-            );
-            return response.data.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(['interviewTemplates']);
-        },
-        onError: (error) => {
-            console.error('Template save error:', error.message);
-        },
-    });
+    // const getTemplatesByTenantId = useMutation({
+    //     mutationFn: async (tenantId) => {
+    //         const headers = { Authorization: `Bearer ${queryParams.authToken}` };
+    //         const response = await axios.get(
+    //             `${config.REACT_APP_API_URL}/interviewTemplates/tenant/${tenantId}`,
+    //             { headers }
+    //         );
+    //         return response.data.data;
+    //     },
+    //     onSuccess: () => {
+    //         queryClient.invalidateQueries(['interviewTemplates']);
+    //     },
+    //     onError: (error) => {
+    //         console.error('Template save error:', error.message);
+    //     },
+    // });
 
    
     const addOrUpdateRound = useMutation({
@@ -253,7 +253,7 @@ export const useInterviewTemplates = () => {
         deleteRound: deleteRoundMutation.mutateAsync,
         deleteInterviewTemplate: deleteInterviewTemplate.mutateAsync,
         isDeleting: deleteInterviewTemplate.isPending,
-        getTemplatesByTenantId: getTemplatesByTenantId.mutateAsync,
-        isGetTemplatesLoading: getTemplatesByTenantId.isPending,
+        // getTemplatesByTenantId: getTemplatesByTenantId.mutateAsync,
+        // isGetTemplatesLoading: getTemplatesByTenantId.isPending,
     };
 };

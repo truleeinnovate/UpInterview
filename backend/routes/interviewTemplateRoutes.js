@@ -25,6 +25,6 @@ router.route('/:id')
 router.delete('/delete-round/:roundId', deleteRound)
 
 // want to get the data of interview templates by matching tenantId
-router.route('/tenant/:tenantId').get(getTemplatesByTenantId)
+// router.route('/tenant/:tenantId').get(getTemplatesByTenantId)
 
 module.exports = router;

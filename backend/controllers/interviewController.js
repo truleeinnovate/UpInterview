@@ -19,9 +19,9 @@ const { Position } = require("../models/Position/position.js");
 const Wallet = require("../models/WalletTopup");
 
 // Import usage service for internal interview tracking
-const { 
-    checkInternalInterviewUsageLimit, 
-    getInternalInterviewUsageStats 
+const {
+    checkInternalInterviewUsageLimit,
+    getInternalInterviewUsageStats
 } = require('../services/interviewUsageService');
 
 
@@ -51,6 +51,8 @@ const createInterview = async (req, res) => {
         let candidate = null;
 
         // Skip candidate/position check if just updating status
+
+        console.log("req.body interview", req.body);
 
         if (!candidateId) {
             return res.status(400).json({
@@ -101,6 +103,16 @@ const createInterview = async (req, res) => {
             }
         }
 
+         const interviewCode = `INT-${nextNumber}`;
+        // Create interview
+         interview = await Interview.create({
+            ...interviewData,
+            interviewCode,
+        });
+
+
+        console.log("nextNumber interview", interview);
+
         // Create push notification for interview creation
         try {
             await createInterviewCreatedNotification(interview);
@@ -135,7 +147,7 @@ const createInterview = async (req, res) => {
 
 
             if (roundsToSave.length > 0) {
-            
+
                 // Process each round with proper field mapping
                 for (let index = 0; index < roundsToSave.length; index++) {
                     const round = roundsToSave[index];
@@ -165,7 +177,7 @@ const createInterview = async (req, res) => {
 
                     // Save the round document
                     const savedRound = await roundDoc.save();
-                    
+
                     // Create notification if round has scheduled date and interviewer
                     if (savedRound.dateTime || savedRound.interviewers?.length > 0) {
                         try {
@@ -201,7 +213,7 @@ const createInterview = async (req, res) => {
                                     savedRound._id,
                                     transformedQuestions
                                 );
-                              
+
                             } else {
                                 console.warn(
                                     `Invalid questions structure for round ${savedRound._id}, skipping questions.`
@@ -511,7 +523,7 @@ const saveInterviewRound = async (req, res) => {
         }
 
         let savedRound;
-   
+
         let totalRounds = await InterviewRounds.countDocuments({ interviewId });
         let newSequence = round.sequence || totalRounds + 1;
 
@@ -521,7 +533,7 @@ const saveInterviewRound = async (req, res) => {
         );
 
         // Handle meetLink field separately for new rounds too
-        const {meetPlatform, meetLink, ...otherRoundData } = round;
+        const { meetPlatform, meetLink, ...otherRoundData } = round;
         const newInterviewRound = new InterviewRounds({
             interviewId,
             ...otherRoundData,
@@ -608,7 +620,7 @@ const updateInterviewRound = async (req, res) => {
 
         const roundId = new mongoose.Types.ObjectId(roundIdParam);
 
-    
+
 
         if (!interviewId || !roundId || !round) {
             return res.status(400).json({
@@ -622,23 +634,23 @@ const updateInterviewRound = async (req, res) => {
 
         let existingRound = await InterviewRounds.findById(roundId);
         if (!existingRound) {
-           
+
             return res.status(404).json({ message: "Round not found." });
         }
 
         // Check usage limit if changing status to Scheduled for internal interview
-        if (round.status === 'Scheduled' && 
-            existingRound.status !== 'Scheduled' && 
+        if (round.status === 'Scheduled' &&
+            existingRound.status !== 'Scheduled' &&
             existingRound.interviewerType === 'internal') {
-            
+
             // Get interview details for tenantId
             const interview = await Interview.findById(interviewId);
             if (interview) {
                 const usageCheck = await checkInternalInterviewUsageLimit(
-                    interview.tenantId, 
+                    interview.tenantId,
                     interview.ownerId
                 );
-                
+
                 if (!usageCheck.canSchedule) {
                     return res.status(400).json({
                         message: usageCheck.message,
@@ -656,21 +668,21 @@ const updateInterviewRound = async (req, res) => {
         existingRound._original_status = existingRound.status;
 
         // Handle meetLink field separately to prevent conversion issues
-        const {meetPlatform, meetLink, ...otherRoundData } = round;
+        const { meetPlatform, meetLink, ...otherRoundData } = round;
         Object.assign(existingRound, otherRoundData);
 
         if (meetPlatform) existingRound.meetPlatform = meetPlatform;
         // && Array.isArray(meetLink)
 
-        if (meetLink ) {
+        if (meetLink) {
             existingRound.meetLink = meetLink;
-           
+
         }
 
         // Save updated round
         const savedRound = await existingRound.save();
 
-      
+
         // Reorder rounds just in case sequence was changed
         await reorderInterviewRounds(interviewId);
 
@@ -880,63 +892,63 @@ const getDashboardStats = async (req, res) => {
 const deleteInterview = async (req, res) => {
     res.locals.loggedByController = true;
     res.locals.processName = "Delete Interview";
-  
+
     const { id } = req.params;
-  
+
     try {
-      // ✅ Validate ID
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-          status: "error",
-          message: "Invalid interview ID format",
+        // ✅ Validate ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid interview ID format",
+            });
+        }
+
+        // ✅ Check if interview exists
+        const interview = await Interview.findById(id);
+        if (!interview) {
+            return res.status(404).json({
+                status: "error",
+                message: "Interview not found",
+            });
+        }
+
+        // ✅ Check if status is "Draft"
+        if (interview.status !== "Draft") {
+            return res.status(400).json({
+                status: "error",
+                message: `Interview cannot be deleted because its current status is "${interview.status}".`,
+            });
+        }
+
+        // ✅ Delete related interview rounds first
+        const deletedRounds = await InterviewRounds.deleteMany({ interviewId: id });
+
+        // ✅ Delete the interview itself
+        const deletedInterview = await Interview.findByIdAndDelete(id);
+
+        if (!deletedInterview) {
+            return res.status(404).json({
+                status: "error",
+                message: "Interview not found or already deleted",
+            });
+        }
+
+        // ✅ Success response
+        res.status(200).json({
+            status: "success",
+            message: "Interview and its related rounds deleted successfully.",
         });
-      }
-  
-      // ✅ Check if interview exists
-      const interview = await Interview.findById(id);
-      if (!interview) {
-        return res.status(404).json({
-          status: "error",
-          message: "Interview not found",
-        });
-      }
-  
-      // ✅ Check if status is "Draft"
-      if (interview.status !== "Draft") {
-        return res.status(400).json({
-          status: "error",
-          message: `Interview cannot be deleted because its current status is "${interview.status}".`,
-        });
-      }
-  
-      // ✅ Delete related interview rounds first
-      const deletedRounds = await InterviewRounds.deleteMany({ interviewId: id });
-  
-      // ✅ Delete the interview itself
-      const deletedInterview = await Interview.findByIdAndDelete(id);
-  
-      if (!deletedInterview) {
-        return res.status(404).json({
-          status: "error",
-          message: "Interview not found or already deleted",
-        });
-      }
-  
-      // ✅ Success response
-      res.status(200).json({
-        status: "success",
-        message: "Interview and its related rounds deleted successfully.",
-      });
-  
+
     } catch (error) {
-      console.error("Error deleting interview:", error);
-      res.status(500).json({
-        status: "error",
-        message: "Internal server error while deleting interview",
-        error: process.env.NODE_ENV === "development" ? error.message : undefined,
-      });
+        console.error("Error deleting interview:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Internal server error while deleting interview",
+            error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        });
     }
-  };
+};
 
 //  Delete interview Round 
 const deleteRound = async (req, res) => {
@@ -1054,14 +1066,14 @@ const getAllInterviews = async (req, res) => {
 const checkInternalInterviewUsage = async (req, res) => {
     try {
         const { tenantId, ownerId } = req.query;
-        
+
         if (!tenantId) {
             return res.status(400).json({ message: 'TenantId is required' });
         }
-        
+
         const usageCheck = await checkInternalInterviewUsageLimit(tenantId, ownerId);
         const usageStats = await getInternalInterviewUsageStats(tenantId, ownerId);
-        
+
         return res.status(200).json({
             canSchedule: usageCheck.canSchedule,
             message: usageCheck.message,
@@ -1074,9 +1086,9 @@ const checkInternalInterviewUsage = async (req, res) => {
         });
     } catch (error) {
         console.error('Error checking internal interview usage:', error);
-        return res.status(500).json({ 
-            message: 'Error checking usage limits', 
-            error: error.message 
+        return res.status(500).json({
+            message: 'Error checking usage limits',
+            error: error.message
         });
     }
 };
@@ -1100,7 +1112,7 @@ const updateInterviewStatusController = async (req, res) => {
 
         // Find and update the interview
         const interview = await Interview.findById(interviewId);
-        
+
         if (!interview) {
             return res.status(404).json({
                 success: false,
@@ -1110,7 +1122,7 @@ const updateInterviewStatusController = async (req, res) => {
 
         // Update the status
         interview.status = status;
-        
+
         // If there's a reason, update it
         if (reason) {
             interview.completionReason = reason;
@@ -1139,10 +1151,10 @@ const getAllInterviewRounds = async (req, res) => {
     try {
         const { type } = req.query || {};
         const isMock = type === 'mock';
-        
+
         // Build the query based on interview type
         let interviewRounds;
-        
+
         if (isMock) {
             // For mock interviews, populate mockInterviewId
             interviewRounds = await MockInterviewRound.find({ interviewerType: 'external' })
@@ -1174,16 +1186,16 @@ const getAllInterviewRounds = async (req, res) => {
                 .lean()
                 .sort({ _id: -1 });
         }
-        
+
         // Format the data for frontend
         const formattedRounds = await Promise.all(interviewRounds.map(async (round) => {
             // Get the main interview/mock interview reference
             const mainInterview = isMock ? round.mockInterviewId : round.interviewId;
-            
+
             // Get organization/tenant info
             let organizationType = 'individual'; // Default to individual
             let organizationName = 'Individual';
-            
+
             const tenantId = mainInterview?.tenantId;
             if (tenantId) {
                 try {
@@ -1217,14 +1229,14 @@ const getAllInterviewRounds = async (req, res) => {
                     .filter(name => name !== null)
                     .join(', ')
                 : '';
-            
+
             const finalInterviewerNames = interviewerNames || 'No interviewers assigned';
-            
+
             // Skip fetching wallet transaction data in list view
             // This data should only be fetched when viewing individual interview details
             // to avoid N+1 query performance issues
             let holdTransactionData = null;
-            
+
             // Comment out wallet queries for performance optimization
             // Uncomment only if absolutely needed for list view
             /*
@@ -1259,7 +1271,7 @@ const getAllInterviewRounds = async (req, res) => {
             } else if (!isMock && mainInterview) {
                 interviewCode = `${mainInterview.interviewCode}-${round.sequence}` || 'N/A';
             }
-            
+
             // Build candidate info for mock interviews only
             let candidateInfo = null;
             if (isMock && mainInterview) {
@@ -1274,7 +1286,7 @@ const getAllInterviewRounds = async (req, res) => {
                     skills: mainInterview.skills || []
                 };
             }
-            
+
             // Build position/role info for mock interviews only
             let positionInfo = null;
             if (isMock && mainInterview) {
@@ -1292,7 +1304,7 @@ const getAllInterviewRounds = async (req, res) => {
                 interviewCode: interviewCode,
                 interviewId: mainInterview?._id || null,
                 sequence: round.sequence || 1,
-                
+
                 // Round details
                 roundTitle: round.roundTitle || 'N/A',
                 interviewMode: round.interviewMode || 'N/A',
@@ -1301,32 +1313,32 @@ const getAllInterviewRounds = async (req, res) => {
                 duration: round.duration || 'N/A',
                 instructions: round.instructions || '',
                 dateTime: round.dateTime || 'Not scheduled',
-                
+
                 // Interviewer details
                 interviewerViewType: round.interviewerViewType || '',
                 interviewerGroupId: round.interviewerGroupId || '',
                 interviewers: round.interviewers || [],
                 interviewerNames: finalInterviewerNames,
-                
+
                 // Status and actions
                 status: round.status || 'Draft',
                 currentAction: round.currentAction || null,
                 previousAction: round.previousAction || null,
                 currentActionReason: round.currentActionReason || '',
                 previousActionReason: round.previousActionReason || '',
-                
+
                 // Support and history
                 supportTickets: round.supportTickets || [],
                 history: round.history || [],
-                
+
                 // Meeting details
                 meetingId: round.meetingId || '',
                 meetPlatform: round.meetPlatform || '',
-                
+
                 // Assessment references
                 assessmentId: round.assessmentId || null,
                 scheduleAssessmentId: round.scheduleAssessmentId || null,
-                
+
                 // Additional info
                 rejectionReason: round.rejectionReason || '',
                 holdTransactionId: round.holdTransactionId || null,
@@ -1334,26 +1346,26 @@ const getAllInterviewRounds = async (req, res) => {
                 settlementStatus: round.settlementStatus || 'pending',
                 settlementDate: round.settlementDate || null,
                 settlementTransactionId: round.settlementTransactionId || null,
-                
+
                 // Organization info
                 organizationType: organizationType,
                 organization: organizationName,
-                
+
                 // Timestamps
                 createdOn: round.createdAt || new Date(),
                 updatedAt: round.updatedAt || null,
-                
+
                 // Related data from populated fields
                 candidate: !isMock ? mainInterview.candidateId?._id : candidateInfo,
                 position: !isMock ? mainInterview.positionId?._id : positionInfo,
-                
+
                 interviewStatus: mainInterview?.status || 'N/A',
-                
+
                 // Type indicator for frontend
                 dataType: isMock ? 'mock' : 'interview'
             };
         }));
-       
+
         res.status(200).json({
             success: true,
             data: formattedRounds,
@@ -1374,31 +1386,31 @@ const getAllInterviewRounds = async (req, res) => {
 const getInterviewRoundTransaction = async (req, res) => {
     try {
         const { id: roundId } = req.params;
-        
+
         if (!roundId) {
             return res.status(400).json({
                 success: false,
                 message: 'Round ID is required'
             });
         }
-        
+
         // Determine if this is a mock interview round
         let round = await InterviewRounds.findById(roundId);
         let isMock = false;
-        
+
         if (!round) {
             // Try to find as mock interview round
             round = await MockInterviewRound.findById(roundId);
             isMock = true;
         }
-        
+
         if (!round) {
             return res.status(404).json({
                 success: false,
                 message: 'Interview round not found'
             });
         }
-        
+
         // Fetch wallet transaction data if holdTransactionId exists
         let holdTransactionData = null;
         if (round.holdTransactionId) {
@@ -1407,14 +1419,14 @@ const getInterviewRoundTransaction = async (req, res) => {
                 const wallet = await Wallet.findOne({
                     'transactions._id': round.holdTransactionId
                 });
-                
+
                 if (wallet) {
                     // Find the specific transaction in the wallet
                     holdTransactionData = wallet.transactions.find(
                         t => t._id && t._id.toString() === round.holdTransactionId
                     );
                 }
-                
+
                 if (!holdTransactionData) {
                     console.log(`Transaction ${round.holdTransactionId} not found in any wallet`);
                 }
@@ -1422,7 +1434,7 @@ const getInterviewRoundTransaction = async (req, res) => {
                 console.error(`Error fetching transaction for round ${round._id}:`, error);
             }
         }
-        
+
         res.status(200).json({
             success: true,
             data: {
