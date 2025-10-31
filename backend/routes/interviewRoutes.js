@@ -49,6 +49,7 @@ router.get('/check-usage', checkInternalInterviewUsage);
 router.get("/all-interviews", getInterviews); // SUPER ADMIN Added by Ashok
 router.get("/interviews", getAllInterviews);
 router.get("/interview-rounds", getAllInterviewRounds); // SUPER ADMIN - All interview rounds with details
+router.get("/interview-rounds/:id/transaction", getInterviewRoundTransaction);
 
 
 module.exports = router;

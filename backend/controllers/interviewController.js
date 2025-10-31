@@ -1373,7 +1373,7 @@ const getAllInterviewRounds = async (req, res) => {
 // Get wallet transaction data for a specific interview round
 const getInterviewRoundTransaction = async (req, res) => {
     try {
-        const { roundId } = req.params;
+        const { id: roundId } = req.params;
         
         if (!roundId) {
             return res.status(400).json({
