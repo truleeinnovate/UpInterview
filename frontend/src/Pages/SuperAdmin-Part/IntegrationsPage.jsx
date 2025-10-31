@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - added console statement and made some changes. Integrations not getting on online
+// v1.0.1 - Ashok - fixed style issue
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -741,6 +742,7 @@ function IntegrationsPage() {
                       loading={isLoading}
                       actions={tableActions}
                       emptyState="No logs found."
+                      customHeight="h-[calc(100vh-16.5rem)]"
                     />
                   </div>
                 ) : (

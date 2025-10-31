@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashok   -  added loading view for the table itself
 // v1.0.2  -  Ashok   -  added functionality for auto close menu when clicking outside
 // v1.0.3  -  Ashok   -  added custom height prop for table container
+// v1.0.4  -  Ashok   -  increased number of loading rows from 5 to 10
 
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -155,7 +156,7 @@ const TableView = ({
             <tbody className="divide-y divide-gray-200">
               {delayedLoading ? (
                 // Skeleton rows only
-                [...Array(5)].map((_, row) => (
+                [...Array(10)].map((_, row) => (
                   <tr key={`skeleton-${row}`}>
                     {columns.map((_, cell) => (
                       <td key={`row-${row}-cell-${cell}`} className="px-3 py-2">
