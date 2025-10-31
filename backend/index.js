@@ -1756,6 +1756,10 @@ app.post('/api/create-meeting', async (req, res) => {
 const upinterviewContactUsPageRoutes = require("./routes/upinterviewContactUsPageRoutes");
 app.use("/upinterviewcontactuspage", upinterviewContactUsPageRoutes);
 
+// upinterview enterprise contact routes
+const upinterviewEnterpriseContactRoutes = require("./routes/upinterviewEnterpriseContactRoutes");
+app.use("/upinterviewEnterpriseContact", upinterviewEnterpriseContactRoutes);
+
 
 
 
