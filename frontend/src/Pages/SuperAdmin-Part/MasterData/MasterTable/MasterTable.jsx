@@ -2,6 +2,7 @@
 // v1.0.1 - Ashok - Fixed issues
 // v1.0.2 - Ashok - Change placement of category field
 // v1.0.3 - Ashok - Added Name field at the table for technology
+// v1.0.4 - Ashok - Fixed alignment issues
 
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useParams, useNavigate } from "react-router-dom";
@@ -546,7 +547,7 @@ const MasterTable = () => {
           filterIconRef={filterIconRef}
         />
       </div>
-      <motion.div className="bg-white">
+      <motion.div className="fixed top-56 left-0 right-0 bg-background">
         {view === "table" ? (
           <TableView
             data={currentFilteredRows}
@@ -554,39 +555,42 @@ const MasterTable = () => {
             actions={tableActions}
             loading={isLoading}
             emptyState="No Master data found."
+            customHeight="h-[calc(100vh-14rem)]"
           />
         ) : (
-          <MasterKanban
-            data={currentFilteredRows.map((row) => ({
-              ...row,
-              id: row._id,
-              title:
-                row.IndustryName ||
-                row.TechnologyMasterName ||
-                row.SkillName ||
-                "N/A",
-              // subtitle: row.status || "Unknown",
-            }))}
-            masterData={masterData}
-            columns={kanbanColumns}
-            renderActions={(item) =>
-              tableActions.map((action) => (
-                <button
-                  key={action.key}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    action.onClick(item);
-                  }}
-                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"
-                  title={action.label}
-                >
-                  {action.icon}
-                </button>
-              ))
-            }
-            loading={isLoading}
-            emptyState="No master data found."
-          />
+          <div className="">
+            <MasterKanban
+              data={currentFilteredRows.map((row) => ({
+                ...row,
+                id: row._id,
+                title:
+                  row.IndustryName ||
+                  row.TechnologyMasterName ||
+                  row.SkillName ||
+                  "N/A",
+                // subtitle: row.status || "Unknown",
+              }))}
+              masterData={masterData}
+              columns={kanbanColumns}
+              renderActions={(item) =>
+                tableActions.map((action) => (
+                  <button
+                    key={action.key}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      action.onClick(item);
+                    }}
+                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"
+                    title={action.label}
+                  >
+                    {action.icon}
+                  </button>
+                ))
+              }
+              loading={isLoading}
+              emptyState="No master data found."
+            />
+          </div>
         )}
 
         {/* Filter Popup */}

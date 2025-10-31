@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Fixed alignment issues
+
 import { motion } from "framer-motion";
 
 const capitalizeFirstLetter = (str) =>
@@ -16,10 +18,10 @@ const KanbanView = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full bg-gray-50 rounded-xl px-6 pt-6 pb-6"
+      className="w-full bg-gray-50 rounded-xl pt-3 pb-6"
     >
       <div className="min-h-[400px]">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-3 px-6">
           <h3 className="text-xl font-semibold text-gray-800">
             All master data
           </h3>
@@ -33,15 +35,15 @@ const KanbanView = ({
         ) : masterData?.length === 0 ? (
           <div className="text-center py-10 text-gray-500">{emptyState}</div>
         ) : (
-          <div className="overflow-y-auto max-h-[calc(100vh-260px)] pb-8 pr-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+          <div className="overflow-y-auto max-h-[calc(100vh-17.6rem)] pb-16 px-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
               {data.map((item, index) => (
                 <motion.div
                   key={item.id || item._id || index}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
-                  className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full"
+                  className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col"
                 >
                   {/* Card content */}
                   <div className="flex justify-between items-start mb-4 gap-2">
