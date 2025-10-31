@@ -286,6 +286,7 @@ const loginOrganization = async (req, res) => {
     };
     const authToken = generateToken(payload, { expiresIn: "7h" });
 
+
     // Create or update OrganizationRequest with contact ID (profileId)
     await OrganizationRequest.findOneAndUpdate(
       { tenantId: user.tenantId, ownerId: user._id },
