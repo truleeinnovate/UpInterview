@@ -30,6 +30,8 @@ const mongoose = require("mongoose");
 const {
   sendVerificationEmail,
 } = require("../controllers/EmailsController/signUpEmailController.js");
+const InterviewAvailability = require("../models/InterviewAvailability.js");
+
 
 const organizationUserCreation = async (req, res) => {
   try {
@@ -977,7 +979,16 @@ const deleteTenantAndAssociatedData = async (req, res) => {
     // Delete associated Users
     const usersResult = await Users.deleteMany({ tenantId });
 
-    // Delete associated Contacts
+    // Find all contacts belonging to the tenant
+    const contacts = await Contacts.find({ tenantId });
+    const contactIds = contacts.map(contact => contact._id);
+
+    // Delete all interview availabilities linked to these contacts
+    const availabilityResult = await InterviewAvailability.deleteMany({
+      contact: { $in: contactIds },
+    });
+
+    // Delete the contacts themselves
     const contactsResult = await Contacts.deleteMany({ tenantId });
 
     res.status(200).json({
@@ -985,12 +996,14 @@ const deleteTenantAndAssociatedData = async (req, res) => {
       deletedTenant: tenant,
       deletedUsersCount: usersResult.deletedCount,
       deletedContactsCount: contactsResult.deletedCount,
+      deletedAvailabilityCount: availabilityResult.deletedCount,
     });
   } catch (error) {
     console.error('Error deleting tenant and associated data:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 // const getOrganizationById = async (req, res) => {
