@@ -508,6 +508,22 @@ const walletVerifyPayment = async (req, res) => {
           },
         });
 
+        // Generate Recepit code
+        const lastRecepit = await Receipt.findOne({})
+                .sort({ _id: -1 })
+                .select('receiptCode')
+                .lean();
+        let nextRCPNumber = 50001; // Start from 50001
+        if (lastRecepit && lastRecepit.receiptCode) {
+            const match = lastRecepit.receiptCode.match(/RCP-(\d+)/);
+            if (match) {
+                const lastRCPNumber = parseInt(match[1], 10);
+                nextRCPNumber = lastRCPNumber >= 50001 ? lastRCPNumber + 1 : 50001;
+              }
+        }
+
+        const receiptCode = `RCP-${String(nextRCPNumber).padStart(5, '0')}`;
+
         // 2. Receipt – reference the created invoice
         receipt = await Receipt.create({
           invoiceId: invoice._id,
@@ -516,18 +532,34 @@ const walletVerifyPayment = async (req, res) => {
           amount: parsedAmount,
           paymentMethod: "razorpay",
           transactionId: razorpay_payment_id,
-          receiptCode: `RCPT-${Date.now()}`,
+          receiptCode: receiptCode,
           status: "success",
         });
 
+        // Generate payment code
+        const lastPayment = await Payment.findOne({})
+            .sort({ _id: -1 })
+            .select('paymentCode')
+            .lean();
+        let nextNumber = 50001; // Start from 50001
+        if (lastPayment && lastPayment.paymentCode) {
+              const match = lastPayment.paymentCode.match(/PMT-(\d+)/);
+              if (match) {
+                  const lastNumber = parseInt(match[1], 10);
+                  nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
+              }
+        }
+
+        const paymentCode = `PMT-${String(nextNumber).padStart(5, '0')}`;
         // 3. Payment – reference both invoice & receipt
         payment = await Payment.create({
-          paymentCode: `PAY-${Date.now()}`,
+          paymentCode: paymentCode ,
           tenantId: tenantId || "",
           ownerId,
           amount: parsedAmount,
           currency: currency || "INR",
           status: "captured",
+          paidAt: new Date(),
           paymentMethod: "wallet",
           paymentGateway: "razorpay",
           razorpayPaymentId: razorpay_payment_id,

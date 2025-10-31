@@ -63,6 +63,7 @@ function InvoicesTable({ organizationId, viewMode }) {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
   // const [invoices, setInvoices] = useState([]);
   const { invoices, isLoading } = useInvoices(organizationId); // from apiHooks
+  console.log("invoices++++",invoices);
   const { invoice: selectedInvoice } = useInvoiceById(selectedInvoiceId); // from apiHooks
 
   // Kanban view setter

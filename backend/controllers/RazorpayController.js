@@ -443,6 +443,7 @@ const verifyPayment = async (req, res) => {
 
             // Look for existing subscription by ownerId
             const customerSubscription = await CustomerSubscription.findOne({ ownerId: ownerId });
+            const payment = await Payment.findOne({ razorpayPaymentId: razorpay_payment_id });
 
             if (!customerSubscription) {
                 console.warn(`No existing subscription found for owner: ${ownerId}`);
@@ -498,6 +499,7 @@ const verifyPayment = async (req, res) => {
                     invoice.lastPaymentId = razorpay_payment_id;
                     invoice.startDate = startDate;
                     invoice.endDate = endDate;
+                    invoice.paymentId= payment.paymentCode;
 
                     await invoice.save();
                     // console.log('Invoice updated to paid status:', invoice._id);
