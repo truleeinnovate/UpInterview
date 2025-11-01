@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 // SUPER ADMIN added by Ashok
 const getPaymentsSummary = async (req, res) => {
   try {
-    const payments = await Payments.find();
+    const payments = await Payments.find().sort({ _id: -1}).lean();
 
     const totalPayments = payments.length;
 

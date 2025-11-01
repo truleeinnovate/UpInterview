@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 const OutsourceInterviewerSchema = new mongoose.Schema({
     outsourceRequestCode: {
@@ -63,46 +64,14 @@ OutsourceInterviewerSchema.pre('save', async function (next) {
             return next();
         }
 
-        const maxAttempts = 5;
-        let attempts = 0;
-        let codeGenerated = false;
-
-        while (attempts < maxAttempts && !codeGenerated) {
+        if (!this.outsourceRequestCode) {
             try {
-                // Find the last outsource request code
-                const lastRequest = await mongoose.model('OutsourceInterviewerRequest')
-                    .findOne({ outsourceRequestCode: { $exists: true, $ne: null } })
-                    .sort({ outsourceRequestCode: -1 })
-                    .select('outsourceRequestCode')
-                    .lean();
-
-                let nextNumber = 1; // Starting from 1
-
-                if (lastRequest && lastRequest.outsourceRequestCode) {
-                    // Extract the number from the last code (OINT-00001 -> 1)
-                    const match = lastRequest.outsourceRequestCode.match(/OINT-(\d+)/);
-                    if (match) {
-                        nextNumber = parseInt(match[1], 10) + 1;
-                    }
-                }
-
-                // Add attempt offset to reduce collision probability
-                nextNumber += attempts;
-
-                // Generate the new code with 5-digit padding
-                this.outsourceRequestCode = `OINT-${String(nextNumber).padStart(5, '0')}`;
-                
-                codeGenerated = true;
+                // Generate outsource request code using centralized service
+                this.outsourceRequestCode = await generateUniqueId('OINT', mongoose.model('OutsourceInterviewerRequest'), 'outsourceRequestCode');
                 console.log(`Generated outsource request code: ${this.outsourceRequestCode}`);
             } catch (error) {
-                attempts++;
-                if (attempts >= maxAttempts) {
-                    console.error('Failed to generate unique outsource request code after max attempts');
-                    // Exit the loop and throw error
-                    throw new Error('Failed to generate unique outsource request code. Please try again.');
-                }
-                // Add small delay before retry
-                await new Promise(resolve => setTimeout(resolve, 50));
+                console.error('Failed to generate unique outsource request code:', error);
+                throw new Error('Failed to generate unique outsource request code. Please try again.');
             }
         }
         

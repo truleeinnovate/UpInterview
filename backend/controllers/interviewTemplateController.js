@@ -3,29 +3,14 @@ const { default: mongoose } = require("mongoose");
 const { Interview } = require("../models/Interview/Interview");
 const InterviewTemplate = require("../models/InterviewTemplate");
 const { Position } = require("../models/Position/position");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 // Create a new interview template
 exports.createInterviewTemplate = async (req, res) => {
     try {
         const { tenantId } = req.body;
-        // Generate custom code like ASMT-TPL-00001
-        const lastTemplate = await InterviewTemplate.findOne({ tenantId })
-            .sort({ _id: -1 })
-            .select("interviewTemplateCode")
-            .lean();
-
-        let nextNumber = 1;
-        if (lastTemplate?.interviewTemplateCode) {
-            const match = lastTemplate.interviewTemplateCode.match(/INT-TPL-(\d+)/);
-            if (match) {
-                nextNumber = parseInt(match[1], 10) + 1;
-            }
-        }
-
-        const interviewTemplateCode = `INT-TPL-${String(nextNumber).padStart(
-            5,
-            "0"
-        )}`;
+        // Generate interview template code using centralized service with tenant ID
+        const interviewTemplateCode = await generateUniqueId('INT-TPL', InterviewTemplate, 'interviewTemplateCode', tenantId);
 
         const template = new InterviewTemplate({
             ...req.body,

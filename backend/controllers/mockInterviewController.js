@@ -4,6 +4,7 @@
 // controllers/mockInterviewController.js
 const { MockInterview } = require("../models/Mockinterview/mockinterview");
 const { MockInterviewRound } = require("../models/Mockinterview/mockinterviewRound");
+const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
 const { validateMockInterview, validateMockInterviewUpdate } = require("../validations/mockInterviewValidation");
 
 exports.createMockInterview = async (req, res) => {
@@ -35,22 +36,8 @@ exports.createMockInterview = async (req, res) => {
       lastModifiedById,
     } = req.body;
 
-    // Generate mockInterviewCode
-    const lastMockInterview = await MockInterview.findOne({})
-      .sort({ _id: -1 })
-      .select("mockInterviewCode")
-      .lean();
-
-    let nextNumber = 50001; // Start from 50001
-    if (lastMockInterview?.mockInterviewCode) {
-      const match = lastMockInterview.mockInterviewCode.match(/MINT-(\d+)/);
-      if (match) {
-        const lastNumber = parseInt(match[1], 10);
-        nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
-      }
-    }
-
-    const mockInterviewCode = `MINT-${String(nextNumber).padStart(5, "0")}`;
+    // Generate mockInterviewCode using centralized service
+    const mockInterviewCode = await generateUniqueId('MINT', MockInterview, 'mockInterviewCode');
 
     // Create mock interview
     const mockInterview = new MockInterview({

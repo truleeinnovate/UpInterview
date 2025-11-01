@@ -7,7 +7,7 @@ const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js');
 const PaymentCard = require('../models/Carddetails.js');
 const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const Invoicemodels = require("../models/Invoicemodels");
-const { generateUniqueInvoiceCode } = require("../utils/invoiceCodeGenerator");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 const Receipt = require('../models/Receiptmodels.js');
 const Tenant = require('../models/Tenant');
 
@@ -218,20 +218,8 @@ const verifyPayment = async (req, res) => {
         } else {
             //console.log('Creating new payment record for verified payment');
             // Create new payment record
-            // Generate payment code
-            const lastPayment = await Payment.findOne({})
-                .sort({ _id: -1 })
-                .select('paymentCode')
-                .lean();
-            let nextNumber = 50001; // Start from 50001
-            if (lastPayment && lastPayment.paymentCode) {
-                const match = lastPayment.paymentCode.match(/PMT-(\d+)/);
-                if (match) {
-                    const lastNumber = parseInt(match[1], 10);
-                    nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
-                }
-            }
-            const paymentCode = `PMT-${String(nextNumber).padStart(5, '0')}`;
+            // Generate payment code using centralized service
+            const paymentCode = await generateUniqueId('PMT', Payment, 'paymentCode');
             const newPayment = new Payment({
                 paymentCode: paymentCode,
                 tenantId: tenantId,
@@ -510,19 +498,7 @@ const verifyPayment = async (req, res) => {
                 // Only create receipt if payment was successful
                 if (payment.status === 'captured' || payment.status === 'authorized') {
                     // Generate Recepit code
-                    const lastRecepit = await Receipt.findOne({})
-                        .sort({ _id: -1 })
-                        .select('receiptCode')
-                        .lean();
-                    let nextNumber = 50001; // Start from 50001
-                    if (lastRecepit && lastRecepit.receiptCode) {
-                        const match = lastRecepit.receiptCode.match(/RCP-(\d+)/);
-                        if (match) {
-                            const lastNumber = parseInt(match[1], 10);
-                            nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
-                        }
-                    }
-                    const receiptCode = `RCP-${String(nextNumber).padStart(5, '0')}`;
+                    const receiptCode = await generateUniqueId('RCP', Receipt, 'receiptCode');
                     //console.log('Creating receipt for successful payment');
                      receipt = new Receipt({
                         receiptCode: receiptCode,
@@ -1506,20 +1482,8 @@ const handlePaymentFailed = async (payment,res) => {
         }
 
         // Create a payment record for the failed payment
-        // Generate payment code
-        const lastPayment = await Payment.findOne({})
-            .sort({ _id: -1 })
-            .select('paymentCode')
-            .lean();
-        let nextNumber = 50001; // Start from 50001
-        if (lastPayment && lastPayment.paymentCode) {
-            const match = lastPayment.paymentCode.match(/PMT-(\d+)/);
-            if (match) {
-                const lastNumber = parseInt(match[1], 10);
-                nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
-            }
-        }
-        const paymentCode = `PMT-${String(nextNumber).padStart(5, '0')}`;
+        // Generate payment code using centralized service
+        const paymentCode = await generateUniqueId('PMT', Payment, 'paymentCode');
         const failedPayment = new Payment({
             paymentCode: paymentCode,
             ownerId: customerSubscription.ownerId,
@@ -2269,7 +2233,7 @@ const handleSubscriptionCharged = async (subscription,res) => {
             console.log('No existing invoice found, creating new one');
 
             // Generate unique invoice code using centralized utility
-            const invoiceCode = await generateUniqueInvoiceCode();
+            const invoiceCode = await generateUniqueId('INV', Invoicemodels, 'invoiceCode');
 
             // Create a simple invoice directly without complex calculations
             invoice = new Invoicemodels({
@@ -2403,19 +2367,7 @@ const handleSubscriptionCharged = async (subscription,res) => {
         }
 
         // Create a receipt for this payment - with positional parameters matching function definition
-        const lastRecepit = await Receipt.findOne({})
-            .sort({ _id: -1 })
-            .select('receiptCode')
-            .lean();
-        let nextNumber = 50001; // Start from 50001
-        if (lastRecepit && lastRecepit.receiptCode) {
-            const match = lastRecepit.receiptCode.match(/RCP-(\d+)/);
-            if (match) {
-                const lastNumber = parseInt(match[1], 10);
-                nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
-            }
-        }
-        const receiptCode = `RCP-${String(nextNumber).padStart(5, '0')}`;
+        const receiptCode = await generateUniqueId('RCP', Receipt, 'receiptCode');
         const receipt = new Receipt({
             receiptCode: receiptCode,
             tenantId: customerSubscription.tenantId,

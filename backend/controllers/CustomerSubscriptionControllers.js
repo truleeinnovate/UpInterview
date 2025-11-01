@@ -3,6 +3,7 @@ const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js');
 const Invoicemodels = require('../models/Invoicemodels.js');
 const Wallet = require('../models/WalletTopup.js');
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');;
 const { createInvoice, createSubscriptionRecord, createReceipt, calculateEndDate } = require('./CustomerSubscriptionInvoiceContollers.js');
 const { Users } = require('../models/Users.js');
 const Tenant = require('../models/Tenant.js');
@@ -360,61 +361,25 @@ const createSubscriptionControllers = async (req, res) => {
  
     if (!wallet) {
         // ✅ Create a new Wallet only if it doesn't exist
-        // Generate unique walletCode
-        let walletCode;
-        let attempts = 0;
-        const maxAttempts = 5;
-       
-        while (attempts < maxAttempts) {
-            try {
-                // Generate walletCode
-                const lastWallet = await Wallet.findOne({})
-                    .sort({ _id: -1 })
-                    .select("walletCode")
-                    .lean();
-               
-                let nextWalletNumber = 50001; // Start from 50001
-                if (lastWallet?.walletCode) {
-                    const match = lastWallet.walletCode.match(/WLT-(\d+)/);
-                    if (match) {
-                        const lastNumber = parseInt(match[1], 10);
-                        nextWalletNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
-                    }
-                }
-               
-                // Add attempts offset to reduce collision probability
-                walletCode = `WLT-${String(nextWalletNumber + attempts).padStart(5, "0")}`;
-               
-                // Create wallet with the generated code
-                wallet = new Wallet({
-                    tenantId: userDetails?.tenantId,
-                    ownerId: userDetails?.ownerId,
-                    walletCode: walletCode,  // ✅ Set the walletCode here
-                    balance: 0, // Initial balance
-                    transactions: [] // Empty transactions
-                });
-               
-                await wallet.save(); // Save the new wallet to the database
-                console.log("New wallet created with code:", walletCode);
-                break; // Success, exit loop
-               
-            } catch (error) {
-                attempts++;
-               
-                // Check if it's a duplicate key error for walletCode
-                if (error.code === 11000 && error.keyPattern?.walletCode) {
-                    console.log(`[Wallet] Duplicate walletCode detected, attempt ${attempts}/${maxAttempts}`);
-                   
-                    if (attempts >= maxAttempts) {
-                        console.error("Failed to generate unique wallet code after", maxAttempts, "attempts");
-                        throw new Error("Unable to create wallet. Please try again.");
-                    }
-                    continue; // Try again with new code
-                }
-               
-                // Other errors
-                throw error;
-            }
+        try {
+            // Generate unique walletCode using centralized service (handles retries internally)
+            const walletCode = await generateUniqueId('WLT', Wallet, 'walletCode');
+           
+            // Create wallet with the generated code
+            wallet = new Wallet({
+                tenantId: userDetails?.tenantId,
+                ownerId: userDetails?.ownerId,
+                walletCode: walletCode,  // ✅ Set the walletCode here
+                balance: 0, // Initial balance
+                transactions: [] // Empty transactions
+            });
+           
+            await wallet.save(); // Save the new wallet to the database
+            console.log("New wallet created with code:", walletCode);
+           
+        } catch (error) {
+            console.error("Failed to create wallet:", error);
+            throw new Error("Unable to create wallet. Please try again.");
         }
     } else {
         console.log("Wallet already exists:", wallet);
