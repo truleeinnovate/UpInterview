@@ -7,6 +7,7 @@ const Assessment = require("../models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.1 >
 const { isValidObjectId } = require("mongoose");
 const { CandidateAssessment } = require("../models/Assessment/candidateAssessment.js");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 const mongoose = require("mongoose");
 const ScheduleAssessment = require("../models/Assessment/assessmentsSchema.js");
@@ -267,45 +268,8 @@ exports.newAssessment = async (req, res) => {
             newAssessmentData.CandidateDetails = CandidateDetails;
         }
 
-        // Generate custom AssessmentCode like "ASMT-00001"
-        const lastAssessment = await Assessment.findOne({ tenantId })
-            .select("AssessmentCode")
-            // <-------------------------------v1.0.2
-            .sort({ _id: -1 }) // Use _id for sorting instead of AssessmentCode
-            // ------------------------------v1.0.2 >
-            .lean();
-
-        let nextNumber = 1;
-        if (lastAssessment?.AssessmentCode) {
-            const match = lastAssessment.AssessmentCode.match(/ASMT-TPL-(\d+)/);
-            if (match) {
-                nextNumber = parseInt(match[1], 10) + 1;
-            }
-        }
-
-        // Alternative approach: Find the highest number by querying all AssessmentCodes
-        // This is more reliable but less efficient - use only if the above approach fails
-        // if (nextNumber === 1) {
-        //   const allAssessmentCodes = await Assessment.find({
-        //     tenantId,
-        //     AssessmentCode: { $regex: /^ASMT-TPL-\d+$/ }
-        //   })
-        //     .select("AssessmentCode")
-        //     .lean();
-
-        //   const numbers = allAssessmentCodes
-        //     .map(assessment => {
-        //       const match = assessment.AssessmentCode.match(/ASMT-TPL-(\d+)/);
-        //       return match ? parseInt(match[1], 10) : 0;
-        //     })
-        //     .filter(num => num > 0);
-
-        //   if (numbers.length > 0) {
-        //     nextNumber = Math.max(...numbers) + 1;
-        //   }
-        // }
-
-        const assessmentCode = `ASMT-TPL-${String(nextNumber).padStart(5, "0")}`;
+        // Generate assessment code using centralized service with tenant ID
+        const assessmentCode = await generateUniqueId('ASMT-TPL', Assessment, 'AssessmentCode', tenantId);
         newAssessmentData.AssessmentCode = assessmentCode;
 
         const assessment = new Assessment(newAssessmentData);

@@ -9,8 +9,8 @@ const SubscriptionPlan = require('../models/Subscriptionmodels');
 const Usage = require('../models/Usage');
 const Invoicemodels = require('../models/Invoicemodels');
 const { calculateEndDate } = require('./CustomerSubscriptionInvoiceContollers');
-const { generateUniqueInvoiceCode } = require("../utils/invoiceCodeGenerator");
 const { updateTenantLimits } = require('./SubscriptionRenewalController');
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 let isJobRunning = false;
 
@@ -59,7 +59,8 @@ const processFreePlanRenewal = async (subscription) => {
 
         // Create new invoice for the renewal period
         try {
-            const invoiceCode = await generateUniqueInvoiceCode();
+            // Generate unique invoice code using centralized utility
+              const invoiceCode = await generateUniqueId('INVC', Invoicemodels, 'invoiceCode');
 
             const newInvoice = await Invoicemodels.create([{
                 tenantId: subscription.tenantId,

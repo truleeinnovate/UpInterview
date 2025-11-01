@@ -17,6 +17,7 @@ const { Candidate } = require("../models/candidate.js");
 const interviewQuestions = require("../models/Interview/selectedInterviewQuestion.js");
 const { Position } = require("../models/Position/position.js");
 const Wallet = require("../models/WalletTopup");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 // Import usage service for internal interview tracking
 const {
@@ -89,21 +90,9 @@ const createInterview = async (req, res) => {
             status,
         };
 
-        // Generate interviewCode for new interview
-        const lastInterview = await Interview.findOne({ tenantId: orgId })
-            .sort({ _id: -1 })
-            .select("interviewCode")
-            .lean();
-
-        let nextNumber = 1; // Start from 00001
-        if (lastInterview && lastInterview.interviewCode) {
-            const match = lastInterview.interviewCode.match(/INT-(\d+)/);
-            if (match) {
-                nextNumber = parseInt(match[1], 10) + 1;
-            }
-        }
-
-         const interviewCode = `INT-${String(nextNumber).padStart(5, "0")}`;
+        // Generate interviewCode for new interview with tenant ID
+        const interviewCode = await generateUniqueId('INT', Interview, 'interviewCode', orgId);
+        
         // Create interview
          interview = await Interview.create({
             ...interviewData,

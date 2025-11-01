@@ -5,6 +5,7 @@ const { Position } = require("../models/Position/position.js");
 const { validatePosition, validateRoundData, validateRoundPatchData, positionValidationSchema, positionPatchValidationSchema, validateRoundDataStandard } = require("../validations/positionValidation.js");
 const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Interview } = require("../models/Interview/Interview.js");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 
 //  post call for position
@@ -13,6 +14,7 @@ const createPosition = async (req, res) => {
   res.locals.processName = "Create Position";
 
 
+  const { tenantId } = req.body;
   const isStandardType =
     req.body.type === "standard" ||
     req.body?.template?.type === "standard";
@@ -63,21 +65,8 @@ const createPosition = async (req, res) => {
 
   try {
 
-    // Generate custom positionCode like POS-00001
-    const lastPosition = await Position.findOne({ tenantId: req.body.tenantId })
-      .sort({ _id: -1 })
-      .select("positionCode")
-      .lean();
-
-    let nextNumber = 1;
-    if (lastPosition?.positionCode) {
-      const match = lastPosition.positionCode.match(/POS-(\d+)/);
-      if (match) {
-        nextNumber = parseInt(match[1], 10) + 1;
-      }
-    }
-
-    const positionCode = `POS-${String(nextNumber).padStart(5, "0")}`;
+    // Generate position code using centralized service with tenant ID
+    const positionCode = await generateUniqueId('POS', Position, 'positionCode', tenantId);
 
     // Map request body to schema fields
     const positionData = {

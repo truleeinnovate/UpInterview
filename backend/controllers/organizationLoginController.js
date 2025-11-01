@@ -8,6 +8,7 @@ const { Users } = require("../models/Users");
 const { Contacts } = require("../models/Contacts");
 const CustomerSubscription = require("../models/CustomerSubscriptionmodels.js");
 const OrganizationRequest = require("../models/OrganizationRequest");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 const {
   getAuthCookieOptions,
   clearAuthCookies,
@@ -1355,21 +1356,8 @@ const registerOrganization = async (req, res) => {
       throw new Error(emailResult.message);
     }
 
-    // Generate custom porganizationRequestCode like ORG-00001
-        const lastOrganizationRequestCode = await OrganizationRequest.findOne({})
-          .sort({ _id: -1 })
-          .select("organizationRequestCode")
-          .lean();
-    
-        let nextNumber = 1;
-        if (lastOrganizationRequestCode?.organizationRequestCode) {
-          const match = lastOrganizationRequestCode.organizationRequestCode.match(/ORG-(\d+)/);
-          if (match) {
-            nextNumber = parseInt(match[1], 10) + 1;
-          }
-        }
-    
-        const organizationRequestCode = `ORG-${String(nextNumber).padStart(5, "0")}`;
+    // Generate organization request code using centralized service
+    const organizationRequestCode = await generateUniqueId('ORG', OrganizationRequest, 'organizationRequestCode');
 
     // Create OrganizationRequest with contact ID (profileId)
     try {
