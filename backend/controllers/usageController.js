@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Usage = require('../models/Usage');
 const Tenant = require('../models/Tenant');
 const { Users } = require('../models/Users');
+const { recalculateAssessmentUsage } = require('../services/assessmentUsageService');
 
 // GET /usage
 // Returns usage for current period (or latest) for the tenant.
@@ -33,6 +34,25 @@ const getUsageByTenant = async (req, res) => {
 
     if (!usage) {
       return res.status(404).json({ message: 'No active usage period' });
+    }
+
+    // Recalculate assessment usage based on actual CandidateAssessment counts
+    // This ensures accuracy by counting all completed/pass assessments
+    try {
+      await recalculateAssessmentUsage(tenantId);
+      // Reload usage after recalculation
+      usage = await Usage.findOne({
+        ...filter,
+        fromDate: { $lte: now },
+        toDate: { $gte: now }
+      }).lean();
+      
+      if (!usage) {
+        usage = await Usage.findOne(filter).sort({ _id: -1 }).lean();
+      }
+    } catch (recalcError) {
+      console.error('[USAGE] Error recalculating assessment usage:', recalcError);
+      // Continue with existing usage data if recalculation fails
     }
 
     // Fetch tenant plan limits and current user count for this tenant

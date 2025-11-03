@@ -3,7 +3,7 @@ const Receipt = require('../models/Receiptmodels.js');
 const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js'); 
 const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const Tenant = require('../models/Tenant');
-const { generateUniqueInvoiceCode } = require("../utils/invoiceCodeGenerator");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService.js');
 
 const createSubscriptionRecord = async (userDetails, planDetails, pricing, discount, totalAmount,invoiceId,status,receiptId) => {
   console.log("userDetails ----", userDetails.ownerId);
@@ -97,7 +97,7 @@ const  createInvoice = async (
     : null;
 
   // Generate unique invoice code using centralized utility
-  const invoiceCode = await generateUniqueInvoiceCode();
+  const invoiceCode = await generateUniqueId('INVC', Invoicemodels, 'invoiceCode');
 
   // // Generate custom Code like INVC-00001
   //     const lastInvoice = await Invoicemodels.findOne({ tenantId: tenantId })
@@ -145,7 +145,10 @@ const  createInvoice = async (
   
   const createReceipt = async (tenantId,ownerId, invoiceId, totalPaid, transactionId, cardDetails) => {
    
+    const receiptCode = await generateUniqueId('RCP', Receipt, 'receiptCode');
+
     return await Receipt.create({
+      receiptCode: receiptCode,
       tenantId: tenantId,
       ownerId: ownerId,
       invoiceId: invoiceId,

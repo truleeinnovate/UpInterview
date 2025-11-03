@@ -209,6 +209,7 @@ const OutsourceInterviewers = () => {
     return status
       .toString()
       .trim()
+      .replace(/([a-z])([A-Z])/g, "$1 $2") // Add space before capital letters (camelCase to words)
       .replace(/[_\s-]+/g, " ") // replace underscores, hyphens, or multiple spaces with single space
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))

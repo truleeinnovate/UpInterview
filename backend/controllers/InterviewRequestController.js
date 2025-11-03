@@ -12,6 +12,7 @@ const Wallet = require("../models/WalletTopup");
 const { Candidate } = require("../models/Candidate");
 const { MockInterviewRound } = require('../models/Mockinterview/mockinterviewRound');
 const { MockInterview } = require('../models/Mockinterview/mockinterview');
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 
 //old mansoor code i have changed this code because each interviwer send one request
@@ -56,11 +57,6 @@ const { MockInterview } = require('../models/Mockinterview/mockinterview');
 
 // each interviwer send one request
 
-function generateCustomRequestId(latestNumber) {
-  const nextNumber = latestNumber + 1;
-  return `INT-RQST-${String(nextNumber).padStart(5, "0")}`;
-}
-
 exports.createRequest = async (req, res) => {
   try {
     const {
@@ -82,22 +78,8 @@ exports.createRequest = async (req, res) => {
     } = req.body;
     const isInternal = interviewerType === "internal";
 
-    // Step 1: Get the last created request to determine the last number used
-    // v1.0.0 <------------------------------------------------------------------------
-    const lastRequest = await InterviewRequest.findOne({})
-      .sort({ _id: -1 }) // ensure you have timestamps enabled
-      .select("customRequestId");
-    // v1.0.0 ------------------------------------------------------------------------>
-
-    let latestNumber = 0;
-    if (lastRequest && lastRequest.customRequestId) {
-      const match = lastRequest.customRequestId.match(/INT-RQST-(\d+)/);
-      if (match) {
-        latestNumber = parseInt(match[1], 10);
-      }
-    }
-
-    const customRequestId = generateCustomRequestId(latestNumber);
+    // Generate custom request ID using centralized service with tenant ID
+    const customRequestId = await generateUniqueId('INT-RQST', InterviewRequest, 'customRequestId', tenantId);
 
     const newRequest = new InterviewRequest({
       interviewRequestCode: customRequestId,

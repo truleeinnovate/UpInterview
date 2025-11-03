@@ -92,10 +92,10 @@ const getReceiptsByTenantId = async (req, res) => {
 
 const getReceiptsSummary = async (req, res) => {
   try {
-    const receipts = await Receipts.find().populate({
+    const receipts = await Receipts.find().sort({ _id: -1}).populate({
       path: "invoiceId",
       select: "invoiceCode", // Only fetch invoiceCode to keep it lean
-    });
+    }).lean();
 
     const totalReceipts = receipts.length;
     const totalAmount = receipts.reduce((sum, r) => sum + (r.amount || 0), 0);

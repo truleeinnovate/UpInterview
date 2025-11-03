@@ -353,6 +353,8 @@ exports.resendAssessmentLink = async (req, res) => {
 };
 // ------------------------------v1.0.3 >
 
+const { checkAssessmentUsageLimit } = require('../../services/assessmentUsageService');
+
 exports.shareAssessment = async (req, res) => {
   try {
     const {
@@ -378,6 +380,40 @@ exports.shareAssessment = async (req, res) => {
     if (!assessment) {
       return res.status(404).json({ success: false, message: 'Assessment not found' });
     }
+
+    // Enforce assessment usage limits before creating schedules (per-tenant limit)
+    // Determine tenant and remaining capacity
+    const tenantId = assessment.tenantId;
+    const candidatesToShare = Array.isArray(selectedCandidates) ? selectedCandidates.length : 0;
+
+    const limit = await checkAssessmentUsageLimit(tenantId);
+    const entitled = limit.entitled;
+    const utilized = limit.utilized;
+    const remaining = limit.remaining === Infinity ? Infinity : Math.max((limit.remaining || 0), 0);
+
+    if (entitled !== 0) {
+      if (!limit.canShare || (remaining !== Infinity && candidatesToShare > remaining)) {
+        const ms = new Date(limit.toDate) - new Date(limit.fromDate);
+        const days = Math.round(ms / (1000 * 60 * 60 * 24));
+        const period = days > 330 ? 'annual' : 'monthly';
+
+        return res.status(400).json({
+          success: false,
+          code: 'ASSESSMENT_LIMIT_EXCEEDED',
+          message: `Your ${period} assessment limit is used. Remaining: ${remaining}. You selected ${candidatesToShare}. Wait for next ${period} cycle or upgrade your plan.`,
+          details: {
+            entitled,
+            utilized,
+            remaining,
+            period,
+            periodFrom: limit.fromDate,
+            periodTo: limit.toDate
+          }
+        });
+      }
+    }
+
+    // After successful validations and before returning, trigger a usage recalc at the end
 
     // Handle link expiry days - ensure it's a valid number
     let linkExpiryDays = parseInt(assessment.linkExpiryDays, 10);
@@ -647,6 +683,13 @@ exports.shareAssessment = async (req, res) => {
     //     { $set: { status: 'Success' } }
     //   );
     // }
+
+    // Trigger usage recalculation for accurate utilized count after sharing
+    try {
+      await require('../../services/assessmentUsageService').recalculateAssessmentUsage(tenantId);
+    } catch (e) {
+      console.error('[ASSESSMENT_USAGE] Recalc after share failed:', e.message);
+    }
 
     return res.status(200).json({
       success: true,

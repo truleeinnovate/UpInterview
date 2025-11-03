@@ -8,9 +8,8 @@
 const Assessment = require("../models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.1 >
 const { isValidObjectId } = require("mongoose");
-const {
-  CandidateAssessment,
-} = require("../models/Assessment/candidateAssessment.js");
+const { CandidateAssessment } = require("../models/Assessment/candidateAssessment.js");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 const mongoose = require("mongoose");
 const ScheduleAssessment = require("../models/Assessment/assessmentsSchema.js");
@@ -210,147 +209,102 @@ exports.validateAssessmentStep = async (req, res) => {
 //newassessment is using
 
 exports.newAssessment = async (req, res) => {
-  try {
-    // Validate the assessment data using Joi
-    const { errors, isValid } = validateCreateAssessment(req.body);
-    if (!isValid) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors,
-      });
-    }
-
-    const {
-      AssessmentTitle,
-      // AssessmentType,
-      NumberOfQuestions,
-      Position,
-      DifficultyLevel,
-      Duration,
-      ExpiryDate,
-      linkExpiryDays,
-      CandidateDetails,
-      Instructions,
-      AdditionalNotes,
-      CreatedBy,
-      ownerId,
-      tenantId,
-      totalScore,
-      passScore,
-      passScoreType,
-      passScoreBy,
-      categoryOrTechnology,
-    } = req.body;
-    console.log("CATEGORY OR TECHNOLOGY =============================> ", categoryOrTechnology);
-
-    // Clean up empty strings for enum fields
-    const cleanedPassScoreType =
-      passScoreType && passScoreType.trim() !== "" ? passScoreType : undefined;
-    const cleanedPassScoreBy =
-      passScoreBy && passScoreBy.trim() !== "" ? passScoreBy : undefined;
-
-    const newAssessmentData = {
-      AssessmentTitle,
-      // AssessmentType,
-      Position,
-      Duration,
-      DifficultyLevel,
-      NumberOfQuestions,
-      ExpiryDate,
-      linkExpiryDays,
-      Instructions,
-      AdditionalNotes,
-      CreatedBy,
-      ownerId,
-      tenantId,
-      totalScore,
-      passScore,
-      assessmentTemplateList: categoryOrTechnology,
-    };
-
-    // Only add these fields if they have valid values
-    if (cleanedPassScoreType) {
-      newAssessmentData.passScoreType = cleanedPassScoreType;
-    }
-    if (cleanedPassScoreBy) {
-      newAssessmentData.passScoreBy = cleanedPassScoreBy;
-    }
-
-    if (
-      CandidateDetails &&
-      (CandidateDetails.includePosition ||
-        CandidateDetails.includePhone ||
-        CandidateDetails.includeSkills)
-    ) {
-      newAssessmentData.CandidateDetails = CandidateDetails;
-    }
-
-    // Generate custom AssessmentCode like "ASMT-00001"
-    const lastAssessment = await Assessment.findOne({ tenantId })
-      .select("AssessmentCode")
-      // <-------------------------------v1.0.2
-      .sort({ _id: -1 }) // Use _id for sorting instead of AssessmentCode
-      // ------------------------------v1.0.2 >
-      .lean();
-
-    let nextNumber = 1;
-    if (lastAssessment?.AssessmentCode) {
-      const match = lastAssessment.AssessmentCode.match(/ASMT-TPL-(\d+)/);
-      if (match) {
-        nextNumber = parseInt(match[1], 10) + 1;
-      }
-    }
-
-    // Alternative approach: Find the highest number by querying all AssessmentCodes
-    // This is more reliable but less efficient - use only if the above approach fails
-    // if (nextNumber === 1) {
-    //   const allAssessmentCodes = await Assessment.find({
-    //     tenantId,
-    //     AssessmentCode: { $regex: /^ASMT-TPL-\d+$/ }
-    //   })
-    //     .select("AssessmentCode")
-    //     .lean();
-
-    //   const numbers = allAssessmentCodes
-    //     .map(assessment => {
-    //       const match = assessment.AssessmentCode.match(/ASMT-TPL-(\d+)/);
-    //       return match ? parseInt(match[1], 10) : 0;
-    //     })
-    //     .filter(num => num > 0);
-
-    //   if (numbers.length > 0) {
-    //     nextNumber = Math.max(...numbers) + 1;
-    //   }
-    // }
-
-    const assessmentCode = `ASMT-TPL-${String(nextNumber).padStart(5, "0")}`;
-    newAssessmentData.AssessmentCode = assessmentCode;
-
-    const assessment = new Assessment(newAssessmentData);
-    await assessment.save();
-
-    // Create push notification for assessment creation
     try {
-      // Pass ownerId as the createdBy parameter
-      await createAssessmentCreatedNotification(assessment, assessment.ownerId);
-    } catch (notificationError) {
-      console.error(
-        "[ASSESSMENT] Error creating notification:",
-        notificationError
-      );
-      // Continue execution even if notification fails
-    }
+        // Validate the assessment data using Joi
+        const { errors, isValid } = validateCreateAssessment(req.body);
+        if (!isValid) {
+            return res.status(400).json({
+                success: false,
+                message: "Validation failed",
+                errors
+            });
+        }
 
-    res.status(201).json({ success: true, data: assessment });
-  } catch (error) {
-    console.error("[ASSESSMENT] Error creating assessment:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to create assessment",
-      error: error.message,
-    });
-  }
+        const {
+            AssessmentTitle,
+            // AssessmentType,
+            NumberOfQuestions,
+            Position,
+            DifficultyLevel,
+            Duration,
+            ExpiryDate,
+            linkExpiryDays,
+            CandidateDetails,
+            Instructions,
+            AdditionalNotes,
+            CreatedBy,
+            ownerId,
+            tenantId,
+            totalScore,
+            passScore,
+            passScoreType,
+            passScoreBy,
+        } = req.body;
+
+        // Clean up empty strings for enum fields
+        const cleanedPassScoreType = passScoreType && passScoreType.trim() !== '' ? passScoreType : undefined;
+        const cleanedPassScoreBy = passScoreBy && passScoreBy.trim() !== '' ? passScoreBy : undefined;
+
+        const newAssessmentData = {
+            AssessmentTitle,
+            // AssessmentType,
+            Position,
+            Duration,
+            DifficultyLevel,
+            NumberOfQuestions,
+            ExpiryDate,
+            linkExpiryDays,
+            Instructions,
+            AdditionalNotes,
+            CreatedBy,
+            ownerId,
+            tenantId,
+            totalScore,
+            passScore,
+        };
+
+        // Only add these fields if they have valid values
+        if (cleanedPassScoreType) {
+            newAssessmentData.passScoreType = cleanedPassScoreType;
+        }
+        if (cleanedPassScoreBy) {
+            newAssessmentData.passScoreBy = cleanedPassScoreBy;
+        }
+
+        if (
+            CandidateDetails &&
+            (CandidateDetails.includePosition ||
+                CandidateDetails.includePhone ||
+                CandidateDetails.includeSkills)
+        ) {
+            newAssessmentData.CandidateDetails = CandidateDetails;
+        }
+
+        // Generate assessment code using centralized service with tenant ID
+        const assessmentCode = await generateUniqueId('ASMT-TPL', Assessment, 'AssessmentCode', tenantId);
+        newAssessmentData.AssessmentCode = assessmentCode;
+
+        const assessment = new Assessment(newAssessmentData);
+        await assessment.save();
+
+        // Create push notification for assessment creation
+        try {
+            // Pass ownerId as the createdBy parameter
+            await createAssessmentCreatedNotification(assessment, assessment.ownerId);
+        } catch (notificationError) {
+            console.error('[ASSESSMENT] Error creating notification:', notificationError);
+            // Continue execution even if notification fails
+        }
+
+        res.status(201).json({ success: true, data: assessment });
+    } catch (error) {
+        console.error('[ASSESSMENT] Error creating assessment:', error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to create assessment",
+            error: error.message
+        });
+    }
 };
 //update is using
 

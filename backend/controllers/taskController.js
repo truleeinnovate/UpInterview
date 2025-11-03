@@ -4,6 +4,7 @@
 const Task = require('../models/task');
 const { validateCreateTask, validateUpdateTask } = require('../validations/taskvalidation');//<------v1.0.0---
 const { hasPermission } = require('../middleware/permissionMiddleware');
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 
 // Get all tasks
@@ -48,20 +49,10 @@ const createTask = async (req, res) => {
     return res.status(400).json({ message: 'Validation failed', errors });
   }
   //------v1.0.0--->
-  const lastTask = await Task.findOne({})
-    .sort({ _id: -1 })
-    .select('taskCode')
-    .lean();
-  let nextNumber = 1; // Start from 50001
-  if (lastTask && lastTask.taskCode) {
-    const match = lastTask.taskCode.match(/TSK-(\d+)/);
-    if (match) {
-      nextNumber = parseInt(match[1], 10) + 1;
-     
-    }
-  }
-  const taskCode = `TSK-${String(nextNumber).padStart(5, '0')}`;
+  
+  // Generate taskCode with tenant ID
   const { title, assignedTo, assignedToId, priority, status, relatedTo, dueDate, comments, ownerId, tenantId } = req.body;
+  const taskCode = await generateUniqueId('TSK', Task, 'taskCode', tenantId);
   const task = new Task({
     title,
     assignedTo,
