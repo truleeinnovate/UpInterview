@@ -379,23 +379,57 @@ export const useAssessments = (filters = {}) => {
     },
   });
 
-  const assessmentLists = async (tenantId, ownerId) => {
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/assessments/lists`,
-        {
-          params: { tenantId, ownerId },
-        }
-      );
-      return response.data.data;
-    } catch (error) {
-      console.error("Error fetching assessment list:", error);
-      return {
-        data: null,
-        error: error.response?.data?.message || error.message,
-      };
-    }
+
+  const useAssessmentList = (filters = {}, hasViewPermission) => {
+    const {
+      data: assessmentListData = [],
+      isLoading,
+      isError,
+      error,
+      refetch,
+    } = useQuery({
+      queryKey: ['AssessmentList', filters],
+      queryFn: async () => {
+        const data = await fetchFilterData('assessmentlist'); // API endpoint
+        console.log("useAssessmentList:", data);
+
+        return data
+          .map((assessment) => ({
+            ...assessment,
+            // Optional: add any transformations here
+          }))
+          .reverse(); // latest first
+      },
+      enabled: !!hasViewPermission,
+      retry: 1,
+      staleTime: 1000 * 60 * 10, // 10 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+    });
+
+    return { assessmentListData, isLoading, isError, error, refetch };
   };
+
+
+  // const assessmentLists = async (tenantId, ownerId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/assessments/lists`,
+  //       {
+  //         params: { tenantId, ownerId },
+  //       }
+  //     );
+  //     return response.data.data;
+  //   } catch (error) {
+  //     console.error("Error fetching assessment list:", error);
+  //     return {
+  //       data: null,
+  //       error: error.response?.data?.message || error.message,
+  //     };
+  //   }
+  // };
 
   return {
     assessmentData,
@@ -424,6 +458,7 @@ export const useAssessments = (filters = {}) => {
     // ------------------------------ v1.0.5 >
     deleteAssessment,
     createAssessmentTemplateList,
-    assessmentLists,
+    // assessmentLists,
+    useAssessmentList,
   };
 };

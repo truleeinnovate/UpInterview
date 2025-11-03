@@ -166,6 +166,7 @@ const NewAssessment = () => {
       setFormData({
         AssessmentTitle: assessment.AssessmentTitle || "",
         Position: assessment.Position || "",
+        categoryOrTechnology:assessment.categoryOrTechnology || "",
         DifficultyLevel: assessment.DifficultyLevel || "",
         Duration: assessment.Duration || "60 Minutes",
         NumberOfQuestions: assessment.NumberOfQuestions || "",
