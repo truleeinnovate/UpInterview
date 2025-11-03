@@ -6,25 +6,23 @@ import axios from 'axios';
 import { config } from '../config';
 
 // Custom hook helper to create a disabled query (on-demand fetching)
-const useOnDemandQuery = (key, path, staleTime, retry,enabled = true) =>
+const ONE_DAY = 1000 * 60 * 60 * 24; // 24 hours
+
+const useOnDemandQuery = (key, path, staleTime = ONE_DAY, retry = 1) =>
   useQuery({
     queryKey: ['masterData', key],
     queryFn: async () => {
       const res = await axios.get(`${config.REACT_APP_API_URL}/${path}`);
       return res.data;
     },
-    // enabled, // false do NOT fetch on mount; fetch only when refetch() is called
-    staleTime,
+    staleTime,                // <--- auto-refresh once per day
+    cacheTime: ONE_DAY * 2,   // optional: keep cached for 2 days
     retry,
- // CHANGE 2: Added cacheTime for longer in-memory caching
- cacheTime: 1000 * 60 * 60 * 2, // 2 hours cache time
- // CHANGE 3: Added refetchOnMount and refetchOnWindowFocus settings
- refetchOnMount: false, // Don't refetch on component mount if data exists
- refetchOnWindowFocus: false, // Don't refetch when window gains focus
- // CHANGE 4: Added networkMode for better offline handling
- networkMode: 'online',
-
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    networkMode: 'online',
   });
+
 
 export const useMasterData = () => {
   const staleTime = 1000 * 60 * 60; // 1 hour cache
@@ -97,8 +95,8 @@ export const useMasterData = () => {
     ]);
   };
 
-   // CHANGE 9: Added new function for selective lazy loading (backward compatibility)
-   const ensureDataLoaded = async (dataType) => {
+  // CHANGE 9: Added new function for selective lazy loading (backward compatibility)
+  const ensureDataLoaded = async (dataType) => {
     const queryMap = {
       locations: locationsQ,
       industries: industriesQ,
@@ -147,7 +145,7 @@ export const useMasterData = () => {
     // loadCompanies: companiesQ.refetch,
     // loadCategory: categoryQ.refetch,
 
-     // CHANGE 10: Updated loader functions - now they just ensure data is available
+    // CHANGE 10: Updated loader functions - now they just ensure data is available
     // These will return immediately if data is already cached
     loadLocations: () => ensureDataLoaded('locations'),
     loadIndustries: () => ensureDataLoaded('industries'),
@@ -171,12 +169,12 @@ export const useMasterData = () => {
     isCategoryFetching: categoryQ.isFetching,
 
 
-     // CHANGE 11: Added new utility functions
-     isDataReady: !isMasterDataLoading && !isMasterDataError,
-     hasData: (dataType) => {
-       const data = masterData[dataType];
-       return Array.isArray(data) && data.length > 0;
-     },
+    // CHANGE 11: Added new utility functions
+    isDataReady: !isMasterDataLoading && !isMasterDataError,
+    hasData: (dataType) => {
+      const data = masterData[dataType];
+      return Array.isArray(data) && data.length > 0;
+    },
 
   };
 };

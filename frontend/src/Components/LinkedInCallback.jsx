@@ -9,12 +9,16 @@ import {
 } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
 import Loading from '../Components/Loading.js';
 import { useIndividualLogin } from '../apiHooks/useIndividualLogin';
+import { usePermissions } from "../Context/PermissionsContext";
+
 
 const LinkedInCallback = () => {
     const navigate = useNavigate();
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [filteredContact, setFilteredContact] = useState(null);
+    const { refreshPermissions } = usePermissions();
+
 
     const fetchAndFilterContacts = async (linkedInEmail) => {
         try {
@@ -147,7 +151,7 @@ const LinkedInCallback = () => {
                     replace: true,
                 });
             }
-
+            await refreshPermissions();
             // For any status, default to home
             return navigate('/home', {
                 replace: true,
