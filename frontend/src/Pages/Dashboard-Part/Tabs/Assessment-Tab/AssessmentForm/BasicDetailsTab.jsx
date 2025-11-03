@@ -11,6 +11,12 @@ import PositionForm from "../../Position-Tab/Position-Form";
 // Common Form Field Components
 import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
 import InputField from "../../../../../Components/FormFields/InputField.jsx";
+import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import { X } from "lucide-react";
+import { notify } from "../../../../../services/toastService.js";
 
 const BasicDetailsTab = ({
   isEditing,
@@ -63,14 +69,43 @@ const BasicDetailsTab = ({
   fieldRefs,
   // v1.0.1 <----------------------------------------
 }) => {
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
+  const tenantId = tokenPayload?.tenantId;
+  const ownerId = tokenPayload?.userId;
+
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
   const assessmentTypeRef = useRef(null);
   const positionRef = useRef(null);
   const difficultyRef = useRef(null);
   const durationRef = useRef(null);
+  const categoryOrTechnologyRef = useRef(null);
 
   const [isPositionModalOpen, setIsPositionModalOpen] = useState(false);
+  const { assessmentLists, createAssessmentTemplateList } = useAssessments();
+
+  // ------------------------------ Category / Technology ---------------------------------------
+  const [error, setError] = useState("");
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [categories, setCategories] = useState([]); // fetched or newly created
+  const [selectedCategory, setSelectedCategory] = useState("");
+  useScrollLock(isCategoryModalOpen);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await assessmentLists(tenantId, ownerId);
+        setCategories(response || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // ------------------------------ Category / Technology ---------------------------------------
 
   // Close all dropdowns except the one specified
   const closeAllDropdowns = (except = null) => {
@@ -124,9 +159,113 @@ const BasicDetailsTab = ({
     setIsPositionModalOpen(false);
   };
 
+  // const handleCreate = () => {
+  //   if (!formData.newCategoryName?.trim() || !formData.newCategoryKey?.trim()) {
+  //     setError("Please fill in all required fields.");
+  //     return;
+  //   }
+
+  //   const newCategory = {
+  //     _id: Date.now().toString(),
+  //     // include both shapes to match existing data from backend
+  //     name: formData.newCategoryName.trim(),
+  //     key: formData.newCategoryKey.trim(),
+  //     categoryOrTechnology: formData.newCategoryName.trim(), // ensure UI mapping works
+  //   };
+
+  //   setCategories((prev) => [...prev, newCategory]);
+  //   setSelectedCategory(newCategory._id);
+
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     categoryOrTechnology: newCategory._id,
+  //     newCategoryName: "",
+  //     newCategoryKey: "",
+  //   }));
+
+  //   setError("");
+  //   setIsCategoryModalOpen(false);
+  // };
+
+  const handleCreate = async () => {
+    const { newCategoryName, newCategoryKey } = formData;
+
+    if (!newCategoryName?.trim() || !newCategoryKey?.trim()) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
+    // Check duplicates
+    const isDuplicateLabel = categories.some(
+      (cat) =>
+        cat?.name.toLowerCase() === newCategoryName?.trim()?.toLowerCase()
+    );
+    if (isDuplicateLabel) {
+      setError("A category with this name already exists.");
+      return;
+    }
+
+    const isDuplicateKey = categories.some(
+      (cat) => cat?.key?.toLowerCase() === newCategoryKey?.trim()?.toLowerCase()
+    );
+    if (isDuplicateKey) {
+      setError("A category with this key already exists.");
+      return;
+    }
+
+    // Validate key format
+    const nameRegex = /^[A-Za-z0-9_]+$/;
+    if (!nameRegex.test(newCategoryKey.trim())) {
+      setError("Key can only contain letters, numbers, and underscores (_).");
+      return;
+    }
+
+    try {
+      // API call to backend
+      const result = await createAssessmentTemplateList.mutateAsync({
+        categoryOrTechnology: newCategoryName.trim(),
+        name: newCategoryKey.trim(),
+        tenantId,
+        ownerId,
+      });
+
+      if (!result.success) {
+        setError(result.message || "Failed to create category.");
+        return;
+      }
+
+      // Fetch updated category list from backend
+      const updatedCategories = await assessmentLists(tenantId, ownerId);
+      if (updatedCategories && Array.isArray(updatedCategories)) {
+        setCategories(updatedCategories);
+        const newCat = updatedCategories.find(
+          (cat) => cat.name === newCategoryName.trim()
+        );
+        setSelectedCategory(newCat?._id || "");
+      }
+
+      setTimeout(() => {
+        notify.success("Category created successfully!");
+      }, 100);
+
+      // Reset form
+      setFormData((prev) => ({
+        ...prev,
+        categoryOrTechnology: "",
+        newCategoryName: "",
+        newCategoryKey: "",
+      }));
+      setError("");
+      setIsCategoryModalOpen(false);
+    } catch (error) {
+      console.error("Create Category Error:", error);
+      setError("Server error, please try again.");
+    }
+  };
+
   return (
     // v1.0.2 <------------------------------------------------------------------------------
-    <div>
+    <div className="pb-16">
       <form>
         {/* // <---------------------- v1.0.0 */}
 
@@ -403,29 +542,74 @@ const BasicDetailsTab = ({
           {/* Link Expiry Days */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
             <div>
-              <DropdownWithSearchField
-                containerRef={linkExpiryRef}
-                label="Link Expiry (Days)"
-                required
-                name="linkExpiry"
-                value={linkExpiryDays || 3} 
-                options={Array.from({ length: 10 }, (_, index) => ({
-                  value: index + 1,
-                  label: `${index + 1}`,
-                }))}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  setLinkExpiryDays(value);
-                  setFormData((prev) => ({
-                    ...prev,
-                    linkExpiryDays: value,
-                  }));
-                }}
-                error={errors.LinkExpiryDays}
-                placeholder="Select days"
-              />
+              <div>
+                <DropdownWithSearchField
+                  containerRef={linkExpiryRef}
+                  label="Link Expiry (Days)"
+                  required
+                  name="linkExpiry"
+                  value={linkExpiryDays || 3}
+                  options={Array.from({ length: 10 }, (_, index) => ({
+                    value: index + 1,
+                    label: `${index + 1}`,
+                  }))}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setLinkExpiryDays(value);
+                    setFormData((prev) => ({
+                      ...prev,
+                      linkExpiryDays: value,
+                    }));
+                  }}
+                  error={errors.LinkExpiryDays}
+                  placeholder="Select days"
+                />
+              </div>
+              <div></div> {/* Empty div to maintain grid structure */}
             </div>
-            <div></div> {/* Empty div to maintain grid structure */}
+            {/* Assessment List */}
+            <div>
+              <div>
+                <DropdownWithSearchField
+                  containerRef={categoryOrTechnologyRef}
+                  label="Category/Technology"
+                  required
+                  name="categoryOrTechnology"
+                  value={selectedCategory || ""}
+                  options={[
+                    ...(categories?.map((category) => ({
+                      value: category._id,
+                      label:
+                        category.categoryOrTechnology ||
+                        category.name ||
+                        category.key ||
+                        "Unnamed",
+                    })) || []),
+                    {
+                      value: "create_new",
+                      label: "+ Create List",
+                      isSticky: true,
+                      className: "text-blue-600 font-medium hover:bg-blue-50",
+                    },
+                  ]}
+                  onChange={(e) => {
+                    const value = e?.target?.value || e?.value;
+                    if (value === "create_new") {
+                      setIsCategoryModalOpen(true);
+                    } else {
+                      setSelectedCategory(value);
+                      setFormData((prev) => ({
+                        ...prev,
+                        categoryOrTechnology: value,
+                      }));
+                    }
+                  }}
+                  error={error || errors.categoryOrTechnology}
+                  placeholder="Select List"
+                />
+              </div>
+              <div></div> {/* Empty div to maintain grid structure */}
+            </div>
           </div>
         </div>
       </form>
@@ -463,6 +647,118 @@ const BasicDetailsTab = ({
             onClose={handlePositionCreated}
             isModal={true}
           />
+        </div>
+      )}
+
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-[1000]">
+          <div className="relative bg-white rounded-lg shadow-lg w-[350px] p-6">
+            <h2 className="text-lg text-custom-blue font-semibold mb-4">
+              New List
+            </h2>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setIsCategoryModalOpen(false)}
+              className="absolute top-4 right-4"
+            >
+              <X className="h-5 w-5 text-red-500" />
+            </button>
+
+            {/* Category/Technology */}
+            <div className="mb-3">
+              <div className="flex items-start gap-1">
+                <label className="text-sm text-gray-800">
+                  Category/Technology
+                </label>
+                <label className="text-red-500">*</label>
+              </div>
+              <input
+                type="text"
+                placeholder="Category or technology"
+                className="w-full border rounded-md px-3 py-2 mt-1 text-sm focus:ring-2 focus:ring-custom-blue outline-none"
+                value={formData.newCategoryName || ""}
+                maxLength={30}
+                onChange={(e) => {
+                  const cleanValue = e.target.value.replace(
+                    /[^a-zA-Z0-9_ ]/g,
+                    ""
+                  );
+                  setFormData((prev) => ({
+                    ...prev,
+                    newCategoryName: cleanValue,
+                    // auto-generate the key if typing
+                    newCategoryKey: cleanValue
+                      .toLowerCase()
+                      .replace(/\s+/g, "_")
+                      .replace(/[^a-z0-9_]/g, ""),
+                  }));
+                  setError("");
+                }}
+              />
+              <div className="flex justify-between mt-1">
+                {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+                <p className="text-xs text-gray-400 ml-auto">
+                  {formData.newCategoryName?.length || 0}/30
+                </p>
+              </div>
+            </div>
+
+            {/* Name / Key */}
+            <div className="mb-4">
+              <div className="flex items-start gap-1">
+                <label className="text-sm text-gray-800">Name</label>
+                <label className="text-red-500">*</label>
+              </div>
+              <input
+                type="text"
+                disabled
+                value={formData.newCategoryKey || ""}
+                onChange={(e) => {
+                  const cleanValue = e.target.value
+                    .toLowerCase()
+                    .replace(/\s+/g, "_")
+                    .replace(/[^a-z0-9_]/g, "");
+                  setFormData((prev) => ({
+                    ...prev,
+                    newCategoryKey: cleanValue,
+                  }));
+                  setError("");
+                }}
+                className="w-full border rounded-md px-3 py-2 mt-1 text-sm focus:ring-2 focus:ring-custom-blue outline-none"
+              />
+              {error && !formData.newCategoryKey?.trim() && (
+                <p className="text-xs text-red-500 mt-1">
+                  This field is required.
+                </p>
+              )}
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="px-3 py-2 text-sm text-gray-600 border rounded-md hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreate}
+                disabled={
+                  !formData.newCategoryName?.trim() ||
+                  !formData.newCategoryKey?.trim()
+                }
+                className={`px-3 py-2 text-sm rounded-md text-white ${
+                  !formData.newCategoryName?.trim() ||
+                  !formData.newCategoryKey?.trim()
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-custom-blue hover:bg-custom-blue/90"
+                }`}
+              >
+                Create
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

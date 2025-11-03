@@ -146,6 +146,7 @@ const Assessment = () => {
     useState(null);
 
   const [activeTab, setActiveTab] = useState("standard");
+  const [selectedOption, setSelectedOption] = useState(null);
 
   // console.log('assessmentToDelete', assessmentToDelete);
   // <---------------------- v1.0.0
@@ -326,10 +327,15 @@ const Assessment = () => {
     return assessmentData.filter((assessment) => {
       // Filter by active tab (standard/custom)
       const matchesType =
-        assessment.type &&
-        assessment.type.toLowerCase() === activeTab.toLowerCase();
+        assessment?.type &&
+        assessment?.type.toLowerCase() === activeTab.toLowerCase();
 
       if (!matchesType) return false;
+
+      // 🧩 NEW FILTER: Match selectedOption._id with assessmentTemplateList
+      const matchesTemplate =
+        !selectedOption ||
+        assessment.assessmentTemplateList === selectedOption._id;
 
       // Enhanced search across multiple fields
       const normalizedQuery = normalizeSpaces(searchQuery);
@@ -406,6 +412,7 @@ const Assessment = () => {
       };
 
       return (
+        matchesTemplate &&
         matchesSearchQuery &&
         matchesDifficultyLevel &&
         matchesDuration &&
@@ -707,6 +714,8 @@ const Assessment = () => {
     );
   };
 
+  console.log("SELECTED OPTION ==========================> :", selectedOption);
+
   return (
     <div className="bg-background min-h-screen">
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
@@ -737,6 +746,7 @@ const Assessment = () => {
               filterIconRef={filterIconRef}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
+              setSelectedOption={setSelectedOption}
             />
           </div>
         </main>

@@ -10,6 +10,8 @@ const {
   resendAssessmentLink,
   getAllAssessments,
   deleteAssessment,
+  createList,
+  getLists,
 } = require("../controllers/assessmentController");
 
 const router = express.Router();
@@ -28,6 +30,9 @@ router.get("/:assessmentId/results", getAssessmentResults);
 // SUPER ADMIN added by Ashok ----------------------------------------->
 router.get("/all-assessments", getAllAssessments);
 // -------------------------------------------------------------------->
+
+router.post("/create-list", createList);
+router.get("/lists", getLists);
 
 // Delete assessment
 router.delete("/:id", deleteAssessment);
