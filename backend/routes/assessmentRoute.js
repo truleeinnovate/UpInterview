@@ -11,7 +11,7 @@ const {
   getAllAssessments,
   deleteAssessment,
   createList,
-  getLists,
+  // getLists,
 } = require("../controllers/assessmentController");
 
 const router = express.Router();
@@ -32,7 +32,7 @@ router.get("/all-assessments", getAllAssessments);
 // -------------------------------------------------------------------->
 
 router.post("/create-list", createList);
-router.get("/lists", getLists);
+// router.get("/lists", getLists);
 
 // Delete assessment
 router.delete("/:id", deleteAssessment);

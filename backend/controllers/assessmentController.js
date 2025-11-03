@@ -647,20 +647,20 @@ exports.createList = async (req, res) => {
 };
 
 // Get all lists
-exports.getLists = async (req, res) => {
-  try {
-    const { tenantId, ownerId } = req.query;
+// exports.getLists = async (req, res) => {
+//   try {
+//     const { tenantId, ownerId } = req.query;
 
-    // Build query dynamically
-    const filter = {};
-    if (tenantId) filter.tenantId = tenantId;
-    if (ownerId) filter.ownerId = ownerId;
+//     // Build query dynamically
+//     const filter = {};
+//     if (tenantId) filter.tenantId = tenantId;
+//     if (ownerId) filter.ownerId = ownerId;
 
-    const lists = await AssessmentList.find(filter).sort({ _id: -1 });
+//     const lists = await AssessmentList.find(filter).sort({ _id: -1 });
 
-    return res.status(200).json({ success: true, data: lists });
-  } catch (error) {
-    console.error("Error fetching lists:", error);
-    return res.status(500).json({ success: false, message: error.message });
-  }
-};
+//     return res.status(200).json({ success: true, data: lists });
+//   } catch (error) {
+//     console.error("Error fetching lists:", error);
+//     return res.status(500).json({ success: false, message: error.message });
+//   }
+// };
