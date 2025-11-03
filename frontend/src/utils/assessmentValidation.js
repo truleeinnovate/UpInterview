@@ -7,6 +7,7 @@ export const validateAssessmentData = (assessmentData, tab) => {
             AssessmentTitle: "Assessment Title is required",
             DifficultyLevel: "Difficulty Level is required",
             NumberOfQuestions: "Number of Questions is required",
+            categoryOrTechnology: "Category or technology is required",
         };
 
         Object.entries(requiredFields).forEach(([field, message]) => {

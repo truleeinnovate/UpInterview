@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - fixed an  unique "key" prop at recent activity
 // v1.0.1 - Ashok - Added some more fields and displayed based on type of tenant and color circle for features
+// v1.0.2 - Ashok - commented ownerId because owner and tenant is same
 
 import { formatDate } from "../../../utils/dateUtils";
 import {
@@ -162,11 +163,11 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
             )}
 
             {/* Owner ID */}
-            {tenant?.ownerId && (
+            {/* {tenant?.ownerId && (
               <InfoField icon={Hash} label="Owner ID">
                 {tenant.ownerId?.$oid || tenant.ownerId}
               </InfoField>
-            )}
+            )} */}
 
             {/* Users Bandwidth */}
             {tenant?.usersBandWidth && (

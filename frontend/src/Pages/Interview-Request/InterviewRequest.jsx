@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - changed some fields at table and added cards at top section
 // v1.0.1 - Ashok - commented top two sections and adjusted table height
+// v1.0.2 - Ashok - corrected name from Interview Requests to Interviewer Requests
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
@@ -790,7 +791,7 @@ const InternalRequest = () => {
           {/* v1.0.0 --------------------------------------------------------------------------------> */}
           <div className="mt-3">
             <span className="text-2xl font-semibold text-custom-blue">
-              Interview Requests
+              Interviewer Requests
             </span>
           </div>
         </div>

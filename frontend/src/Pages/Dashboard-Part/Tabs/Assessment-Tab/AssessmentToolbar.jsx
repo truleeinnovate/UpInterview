@@ -12,12 +12,18 @@ import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FaList } from "../../../../icons/FaList.svg";
 import { useMediaQuery } from "react-responsive";
 import { useAssessments } from "../../../../apiHooks/useAssessments.js";
+import { X } from "lucide-react";
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { notify } from "../../../../services/toastService.js";
 
 const ToolbarDropdown = ({
   options,
   selected,
   onSelect,
   placeholder = "Select",
+  setSelectedOption,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({
@@ -25,30 +31,85 @@ const ToolbarDropdown = ({
     left: 0,
     width: 0,
   });
-  const dropdownRef = useRef();
+  const [searchTerm, setSearchTerm] = useState("");
+  const dropdownRef = useRef(null); // wrapper/button ref
+  const inputRef = useRef(null); // search input ref
+  const menuRef = useRef(null); // menu ref for measurement
+  const rafRef = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setIsOpen(false);
+        setSearchTerm("");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Calculate fixed menu position
-  useEffect(() => {
-    if (isOpen && dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-      });
+  // Compute menu position relative to viewport and optionally flip above if needed
+  const updatePosition = () => {
+    if (!dropdownRef.current || !menuRef.current) return;
+
+    const rect = dropdownRef.current.getBoundingClientRect();
+    const menuEl = menuRef.current;
+
+    // measure menu height (or fallback)
+    const menuHeight = menuEl.offsetHeight || 200;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // default place below
+    let top = rect.bottom + 4; // small gap
+    // if not enough space below, place above
+    if (spaceBelow < menuHeight && spaceAbove >= menuHeight) {
+      top = rect.top - menuHeight - 4;
+    } else {
+      // if not enough space either side, clamp so it stays inside viewport
+      if (top + menuHeight > window.innerHeight) {
+        top = Math.max(8, window.innerHeight - menuHeight - 8);
+      }
     }
+
+    setMenuPosition({
+      top: Math.round(top),
+      left: Math.round(rect.left),
+      width: Math.round(rect.width),
+    });
+  };
+
+  // Attach scroll/resize listeners (capture true to catch ancestor scrolls)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // immediate update
+    updatePosition();
+    // focus input after menu renders
+    setTimeout(() => inputRef.current?.focus(), 0);
+
+    const onScrollOrResize = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        updatePosition();
+      });
+    };
+
+    window.addEventListener("scroll", onScrollOrResize, true); // capture to catch container scrolls
+    window.addEventListener("resize", onScrollOrResize);
+
+    return () => {
+      window.removeEventListener("scroll", onScrollOrResize, true);
+      window.removeEventListener("resize", onScrollOrResize);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [isOpen]);
+
+  // Filtered options based on search term
+  const filteredOptions = options.filter((opt) =>
+    opt.categoryOrTechnology.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div ref={dropdownRef} className="relative w-48 text-sm">
@@ -61,19 +122,29 @@ const ToolbarDropdown = ({
           hover:border-[#9ca3af] focus:ring-2 focus:ring-[#21798933] focus:border-[#217989]
           outline-none transition-all duration-150`}
       >
-        <span
-          className={`truncate ${
-            selected ? "text-black font-medium" : "text-gray-400"
-          }`}
-        >
-          {selected ? selected.label : placeholder}
-        </span>
+        {/* When open → show input instead of text */}
+        {isOpen ? (
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder={placeholder}
+            className="w-full outline-none text-sm text-gray-800 placeholder-gray-400"
+            onClick={(e) => e.stopPropagation()} // prevent closing
+          />
+        ) : (
+          <span
+            className={`truncate ${
+              selected ? "text-black font-medium" : "text-gray-400"
+            }`}
+          >
+            {selected ? selected.categoryOrTechnology : placeholder}
+          </span>
+        )}
 
         <div className="flex items-center">
-          {/* Separator line near arrow (right side) */}
           <span className="w-px h-5 bg-gray-300 mr-2"></span>
-
-          {/* Arrow icon */}
           <svg
             className={`w-4 h-4 flex-shrink-0 transform transition-transform duration-200 ${
               isOpen ? "rotate-180" : ""
@@ -92,42 +163,54 @@ const ToolbarDropdown = ({
         </div>
       </button>
 
-      {/* Dropdown menu rendered in portal */}
+      {/* Dropdown menu rendered in portal (positioned fixed using viewport coords) */}
       {createPortal(
         <AnimatePresence>
           {isOpen && (
             <motion.ul
-              initial={{ opacity: 0, y: -10 }}
+              ref={menuRef}
+              key="toolbar-dropdown-menu"
+              initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18 }}
               style={{
                 position: "fixed",
                 top: menuPosition.top,
                 left: menuPosition.left,
                 width: menuPosition.width,
                 zIndex: 99999,
+                maxHeight: "55vh",
+                overflow: "auto",
+                marginTop: 0,
               }}
-              className="bg-white border border-gray-200 rounded-md shadow-lg
-              overflow-hidden max-h-56 overflow-y-auto"
+              className="bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden"
             >
-              {options.map((opt) => (
-                <li
-                  key={opt.value}
-                  onClick={() => {
-                    onSelect(opt);
-                    setIsOpen(false);
-                  }}
-                  className={`px-4 py-2 cursor-pointer text-sm transition-colors duration-150 
+              {filteredOptions.length === 0 ? (
+                <li className="px-4 py-2 text-gray-400 text-sm text-center select-none">
+                  No options
+                </li>
+              ) : (
+                filteredOptions.map((opt) => (
+                  <li
+                    key={opt.value}
+                    onClick={() => {
+                      onSelect(opt);
+                      setSelectedOption(opt);
+                      setIsOpen(false);
+                      setSearchTerm("");
+                    }}
+                    className={`px-4 py-2 cursor-pointer text-sm transition-colors duration-150 
                     ${
                       selected?.value === opt.value
                         ? "bg-[#217989] text-white"
                         : "hover:bg-[#2179891A] hover:text-[#217989] text-gray-800"
                     }`}
-                >
-                  {opt.label}
-                </li>
-              ))}
+                  >
+                    {opt.categoryOrTechnology}
+                  </li>
+                ))
+              )}
             </motion.ul>
           )}
         </AnimatePresence>,
@@ -188,18 +271,24 @@ const AssessmentToolbar = ({
   onPrevPage,
   onNextPage,
   onFilterClick,
-  isFilterActive,
   isFilterPopupOpen,
   dataLength = 0,
   showViewToggles = true,
   searchPlaceholder = "Search...",
   filterIconRef,
-  // templatesData,
   activeTab,
   setActiveTab,
+  setSelectedOption,
 }) => {
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
+  const tenantId = tokenPayload?.tenantId;
+  const ownerId = tokenPayload?.userId;
+
   const isTablet = useMediaQuery({ maxWidth: 320 });
-  const { assessmentData } = useAssessments();
+  const { assessmentData, assessmentLists, createAssessmentTemplateList } =
+    useAssessments();
 
   const standardCount =
     assessmentData?.filter((t) => t?.type === "standard")?.length || 0;
@@ -208,10 +297,142 @@ const AssessmentToolbar = ({
   const totalCount = assessmentData?.length || 0;
   const [selected, setSelected] = useState(null);
 
-  const options = [
-    { value: "technology", label: "Technology" },
-    { value: "category", label: "Category" },
-  ];
+  const [showPopup, setShowPopup] = useState(false);
+  const [newList, setNewList] = useState({
+    categoryOrTechnology: "",
+    name: "",
+  });
+  const [error, setError] = useState("");
+  const [options, setOptions] = useState([]);
+
+  useScrollLock(showPopup);
+
+  // ⬇Add this block
+  useEffect(() => {
+    const fetchLists = async () => {
+      try {
+        const response = await assessmentLists(tenantId, ownerId);
+
+        if (response && Array.isArray(response)) {
+          const formatted = response.map((item) => ({
+            categoryOrTechnology: item?.categoryOrTechnology,
+            value: item?.name,
+            _id: item?._id,
+          }));
+
+          setOptions(formatted);
+        }
+      } catch (error) {
+        console.error("Error fetching lists:", error);
+      }
+    };
+
+    fetchLists();
+  }, []);
+
+  // Auto-generate and sanitize 'name' field from label
+  useEffect(() => {
+    if (newList.categoryOrTechnology) {
+      const generatedName = newList.categoryOrTechnology
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "_") // convert spaces to underscores
+        .replace(/[^a-z0-9_]/g, ""); // remove invalid chars
+
+      // Check if same name already exists (case-insensitive)
+      const isDuplicate = options.some(
+        (opt) => opt.value.toLowerCase() === generatedName.toLowerCase()
+      );
+
+      // Always set generated name (for visibility)
+      setNewList((prev) => ({ ...prev, name: generatedName }));
+
+      // Show or clear error
+      if (isDuplicate) {
+        setError("A list with this name already exists.");
+      } else {
+        setError("");
+      }
+    } else {
+      setNewList((prev) => ({ ...prev, name: "" }));
+      setError("");
+    }
+  }, [newList.categoryOrTechnology, options]);
+
+  const handleCreateList = async () => {
+    const { categoryOrTechnology, name } = newList;
+
+    if (!categoryOrTechnology.trim() || !name.trim()) {
+      setError("Both fields are required.");
+      return;
+    }
+
+    // Check duplicate label
+    const isDuplicateLabel = options.some(
+      (opt) =>
+        opt.categoryOrTechnology.toLowerCase() ===
+        categoryOrTechnology.trim().toLowerCase()
+    );
+    if (isDuplicateLabel) {
+      setError("A list with this label already exists.");
+      return;
+    }
+
+    // Check duplicate name
+    const isDuplicateName = options.some(
+      (opt) => opt.value.toLowerCase() === name.trim().toLowerCase()
+    );
+    if (isDuplicateName) {
+      setError("A list with this name already exists.");
+      return;
+    }
+
+    // Validate format
+    const nameRegex = /^[A-Za-z0-9_]+$/;
+    if (!nameRegex.test(name)) {
+      setError("Name can only contain letters, numbers, and underscores (_).");
+      return;
+    }
+
+    try {
+      // Call API
+
+      const result = await createAssessmentTemplateList.mutateAsync({
+        categoryOrTechnology,
+        name,
+        tenantId,
+        ownerId,
+      });
+
+      if (!result.success) {
+        setError(result.message || "Failed to create list");
+        notify.error(result.message || "Failed to create list");
+        return;
+      }
+
+      // Refetch from backend after creation
+      const updatedLists = await assessmentLists(tenantId, ownerId);
+      if (updatedLists && Array.isArray(updatedLists)) {
+        const formatted = updatedLists.map((item) => ({
+          categoryOrTechnology: item?.categoryOrTechnology,
+          value: item?.name,
+        }));
+        setOptions(formatted);
+        setSelected({ categoryOrTechnology, value: name.toLowerCase() });
+      }
+
+      setTimeout(() => {
+        notify.success("List created successfully!");
+      }, 100);
+
+      setNewList({ categoryOrTechnology: "", name: "" });
+      setError("");
+      setShowPopup(false);
+    } catch (error) {
+      setError("Server error, please try again.");
+      console.error("Create List Error:", error);
+    }
+  };
 
   return (
     <motion.div
@@ -261,9 +482,17 @@ const AssessmentToolbar = ({
               options={options}
               selected={selected}
               onSelect={setSelected}
-              placeholder="Choose an option"
+              placeholder="Select List"
+              setSelectedOption={setSelectedOption}
             />
           </div>
+          <span className="w-px h-5 bg-gray-500"></span>
+          <button
+            onClick={() => setShowPopup(true)}
+            className="text-custom-blue font-semibold"
+          >
+            Create List
+          </button>
         </div>
       )}
 
@@ -352,6 +581,90 @@ const AssessmentToolbar = ({
           </Tooltip>
         </div>
       </div>
+      {showPopup &&
+        createPortal(
+          <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-[1000]">
+            <div className="relative bg-white rounded-lg shadow-lg w-[350px] p-6">
+              <h2 className="text-lg text-custom-blue font-semibold mb-4">
+                New List
+              </h2>
+
+              <button
+                onClick={() => setShowPopup(false)}
+                className="absolute top-4 right-4"
+              >
+                <X className="h-5 w-5 text-red-500" />
+              </button>
+
+              {/* Label */}
+              <div className="mb-2">
+                <div className="flex items-start gap-1">
+                  <label className="text-sm text-gray-800">
+                    Category/Technology
+                  </label>
+                  <label className="text-red-500">*</label>
+                </div>
+                <input
+                  type="text"
+                  value={newList.categoryOrTechnology}
+                  maxLength={30} // Limit to 30 characters
+                  onChange={(e) => {
+                    const cleanValue = e.target.value.replace(
+                      /[^a-zA-Z0-9_ ]/g,
+                      ""
+                    );
+                    setNewList((prev) => ({
+                      ...prev,
+                      categoryOrTechnology: cleanValue,
+                    }));
+                    setError(""); // Clear error on typing
+                  }}
+                  className="w-full border rounded-md px-3 py-2 mt-1 text-sm focus:ring-2 focus:ring-custom-blue outline-none"
+                  placeholder="Category or technology"
+                />
+                <div className="flex justify-between items-center mt-1">
+                  {error === "A list with this label already exists." && (
+                    <p className="text-xs text-red-500">{error}</p>
+                  )}
+                  <p className="text-xs text-gray-400 ml-auto">
+                    {newList.categoryOrTechnology.length}/30
+                  </p>
+                </div>
+              </div>
+
+              {/* Name */}
+              <div className="mb-4">
+                <div className="flex items-start gap-1">
+                  <label className="text-sm text-gray-800">Name</label>
+                  <label className="text-red-500">*</label>
+                </div>
+                <input
+                  type="text"
+                  value={newList.name}
+                  onChange={(e) => {
+                    const cleanValue = e.target.value
+                      .toLowerCase()
+                      .replace(/\s+/g, "_") // replace spaces
+                      .replace(/[^a-z0-9_]/g, ""); // remove invalid chars
+                    setNewList((prev) => ({ ...prev, name: cleanValue }));
+                  }}
+                  className="w-full border rounded-md px-3 py-2 mt-1 text-sm focus:ring-2 focus:ring-custom-blue outline-none"
+                  disabled
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={handleCreateList}
+                  className="px-3 py-2 text-sm bg-custom-blue text-white rounded-md hover:bg-custom-blue/90"
+                >
+                  Create
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </motion.div>
   );
 };

@@ -5,7 +5,13 @@
 // v1.0.4  -  Ashok   - Improved responsiveness
 // v1.0.5  -  Ashok   - Fixed responsive issues
 
-import React, { useState, useEffect, useRef, useCallback, forwardRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  forwardRef,
+} from "react";
 import {
   getAssessmentQuestions,
   upsertAssessmentQuestions,
@@ -61,15 +67,14 @@ const NewAssessment = () => {
     ? assessmentData.find((assessment) => assessment._id === id)
     : null;
 
-
   const [activeTab, setActiveTab] = useState("Basicdetails");
   // const [startDate, setStartDate] = useState(new Date());
   // Replace the current startDate initialization with:
-const [startDate, setStartDate] = useState(() => {
-  const sixMonthsFromNow = new Date();
-  sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
-  return sixMonthsFromNow;
-});
+  const [startDate, setStartDate] = useState(() => {
+    const sixMonthsFromNow = new Date();
+    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+    return sixMonthsFromNow;
+  });
   const [showMessage, setShowMessage] = useState(false);
   const [errors, setErrors] = useState("");
   const [showDropdownAssessment, setShowDropdownAssessment] = useState(false);
@@ -127,7 +132,9 @@ const [startDate, setStartDate] = useState(() => {
     passScoreBy: "",
     passScore: "",
     linkExpiryDays: "",
+    categoryOrTechnology: "",
   });
+  console.log("FORM DATA =======================================>  ", formData)
 
   // v1.0.3 <---------------------------------------------------------
   const fieldRefs = {
@@ -152,7 +159,6 @@ const [startDate, setStartDate] = useState(() => {
   // Load basic assessment data
   useEffect(() => {
     if (isEditing && assessment) {
-
       const matchedPosition = positionData.find(
         (pos) => pos._id === assessment?.Position
       );
@@ -413,7 +419,9 @@ const [startDate, setStartDate] = useState(() => {
         return { errors: error.response.data.errors };
       }
       // Fallback to frontend validation errors
-      console.warn("Backend validation unavailable, using frontend validation only");
+      console.warn(
+        "Backend validation unavailable, using frontend validation only"
+      );
     }
 
     return { assessmentData };
@@ -715,12 +723,14 @@ const [startDate, setStartDate] = useState(() => {
         }),
         ...{ status: formData.status },
         // Only include passScoreType and passScoreBy if they have values
-        ...(formData.passScoreType && formData.passScoreType.trim() !== '' && {
-          passScoreType: formData.passScoreType,
-        }),
-        ...(formData.passScoreBy && formData.passScoreBy.trim() !== '' && {
-          passScoreBy: formData.passScoreBy,
-        }),
+        ...(formData.passScoreType &&
+          formData.passScoreType.trim() !== "" && {
+            passScoreType: formData.passScoreType,
+          }),
+        ...(formData.passScoreBy &&
+          formData.passScoreBy.trim() !== "" && {
+            passScoreBy: formData.passScoreBy,
+          }),
         ...(formData.passScoreBy === "Overall" && { totalScore: totalScore }),
         ...(formData.passScoreBy === "Overall" &&
           formData.passScore && { passScore: formData.passScore }),
@@ -1261,101 +1271,99 @@ const [startDate, setStartDate] = useState(() => {
   // changes made by shashank on [08/01/2025] addedSections onSectionAdded
   const [sectionName, setSectionName] = useState("");
 
+  //   const handleAddSection = (closeAddSectionPopup) => {
+  //     // const validateErrors = {};
+  //     // if (!sectionName.trim()) {
+  //     //   validateErrors.sectionName = "";
+  //     //   setIsAlreadyExistingSection("section name is required*");
+  //     //   return;
+  //     // }
+  //     if (addedSections.map((each) => each.SectionName).includes(sectionName)) {
+  //       setIsAlreadyExistingSection(`section ${sectionName} already exists`);
+  //       return;
+  //     }
 
-//   const handleAddSection = (closeAddSectionPopup) => {
-//     // const validateErrors = {};
-//     // if (!sectionName.trim()) {
-//     //   validateErrors.sectionName = "";
-//     //   setIsAlreadyExistingSection("section name is required*");
-//     //   return;
-//     // }
-//     if (addedSections.map((each) => each.SectionName).includes(sectionName)) {
-//       setIsAlreadyExistingSection(`section ${sectionName} already exists`);
-//       return;
-//     }
+  //     // Generate section name (Section1, Section2, etc.)
+  //   const sectionNumber = addedSections.length + 1;
+  //   const newSectionName = `Section ${sectionNumber}`;
 
-//     // Generate section name (Section1, Section2, etc.)
-//   const sectionNumber = addedSections.length + 1;
-//   const newSectionName = `Section ${sectionNumber}`;
+  //   // Check if section name already exists (in case of deletions)
+  //   let finalSectionName = newSectionName;
+  //   let counter = 1;
 
-//   // Check if section name already exists (in case of deletions)
-//   let finalSectionName = newSectionName;
-//   let counter = 1;
-
-//   while (addedSections.map(each => each.SectionName).includes(finalSectionName)) {
-//     finalSectionName = `Section${sectionNumber + counter}`;
-//     counter++;
-//   }
-// console.log(finalSectionName);
-//     handleSectionAdded({
-//       SectionName: finalSectionName,
-//       Questions: [],
-//     });
-//     setSectionName("");
-//     // closeAddSectionPopup();
-//      // Close the popup if it exists
-//   if (closeAddSectionPopup) {
-//     closeAddSectionPopup();
-//   }
-//   };
-
+  //   while (addedSections.map(each => each.SectionName).includes(finalSectionName)) {
+  //     finalSectionName = `Section${sectionNumber + counter}`;
+  //     counter++;
+  //   }
+  // console.log(finalSectionName);
+  //     handleSectionAdded({
+  //       SectionName: finalSectionName,
+  //       Questions: [],
+  //     });
+  //     setSectionName("");
+  //     // closeAddSectionPopup();
+  //      // Close the popup if it exists
+  //   if (closeAddSectionPopup) {
+  //     closeAddSectionPopup();
+  //   }
+  //   };
 
   // Add this useEffect to automatically create default section when not in editing mode
 
-
   useEffect(() => {
-  if (!isEditing && addedSections.length === 0) {
-    // Auto-create default section when not in editing mode and no sections exist
-    handleAddSection(null, true); // Pass true to indicate it's auto-creation
-  }
-}, [isEditing, addedSections.length]);
+    if (!isEditing && addedSections.length === 0) {
+      // Auto-create default section when not in editing mode and no sections exist
+      handleAddSection(null, true); // Pass true to indicate it's auto-creation
+    }
+  }, [isEditing, addedSections.length]);
 
-const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
-  // If it's auto-creation in non-edit mode, use default naming
-  if (isAutoCreate) {
-    const defaultSectionName = "Section 1";
+  const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
+    // If it's auto-creation in non-edit mode, use default naming
+    if (isAutoCreate) {
+      const defaultSectionName = "Section 1";
+
+      handleSectionAdded({
+        SectionName: defaultSectionName,
+        Questions: [],
+      });
+      setSectionName("");
+      return;
+    }
+
+    // Existing logic for manual section creation
+    if (addedSections.map((each) => each.SectionName).includes(sectionName)) {
+      setIsAlreadyExistingSection(`section ${sectionName} already exists`);
+      return;
+    }
+
+    // Generate section name (Section1, Section2, etc.) - ONLY for manual creation
+    const sectionNumber = addedSections.length + 1;
+    const newSectionName = `Section ${sectionNumber}`;
+
+    // Check if section name already exists (in case of deletions)
+    let finalSectionName = newSectionName;
+    let counter = 1;
+
+    while (
+      addedSections.map((each) => each.SectionName).includes(finalSectionName)
+    ) {
+      finalSectionName = `Section ${sectionNumber + counter}`;
+      counter++;
+    }
+
+    console.log(finalSectionName);
 
     handleSectionAdded({
-      SectionName: defaultSectionName,
+      SectionName: finalSectionName,
       Questions: [],
     });
     setSectionName("");
-    return;
-  }
 
-  // Existing logic for manual section creation
-  if (addedSections.map((each) => each.SectionName).includes(sectionName)) {
-    setIsAlreadyExistingSection(`section ${sectionName} already exists`);
-    return;
-  }
-
-  // Generate section name (Section1, Section2, etc.) - ONLY for manual creation
-  const sectionNumber = addedSections.length + 1;
-  const newSectionName = `Section ${sectionNumber}`;
-
-  // Check if section name already exists (in case of deletions)
-  let finalSectionName = newSectionName;
-  let counter = 1;
-
-  while (addedSections.map(each => each.SectionName).includes(finalSectionName)) {
-    finalSectionName = `Section ${sectionNumber + counter}`;
-    counter++;
-  }
-
-  console.log(finalSectionName);
-
-  handleSectionAdded({
-    SectionName: finalSectionName,
-    Questions: [],
-  });
-  setSectionName("");
-
-  // Close the popup if it exists
-  if (closeAddSectionPopup) {
-    closeAddSectionPopup();
-  }
-};
-
+    // Close the popup if it exists
+    if (closeAddSectionPopup) {
+      closeAddSectionPopup();
+    }
+  };
 
   // const updateQuestionsInAddedSectionFromQuestionBank = (
   //   sectionName,
@@ -1383,8 +1391,8 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
   ) => {
     console.log("🔄 updateQuestionsInAddedSectionFromQuestionBank called:", {
       sectionName,
-      question: question ? 'has question' : 'no question',
-      questionIdToRemove
+      question: question ? "has question" : "no question",
+      questionIdToRemove,
     });
 
     setAddedSections((prevSections) => {
@@ -1395,25 +1403,26 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
           if (questionIdToRemove) {
             // Remove the question
             const initialLength = updatedQuestions.length;
-            updatedQuestions = updatedQuestions.filter(q => {
+            updatedQuestions = updatedQuestions.filter((q) => {
               if (!q) return false;
 
               // Try multiple ID properties
               const id = q.questionId || q._id || q.id;
               if (!id) {
-                console.warn('Question without ID found:', q);
+                console.warn("Question without ID found:", q);
                 return false;
               }
 
               return id !== questionIdToRemove;
             });
 
-            console.log(`🗑️ Removed question ${questionIdToRemove}. ${initialLength} → ${updatedQuestions.length} questions`);
-          }
-          else if (question) {
+            console.log(
+              `🗑️ Removed question ${questionIdToRemove}. ${initialLength} → ${updatedQuestions.length} questions`
+            );
+          } else if (question) {
             // Add the question (with duplicate check)
             const existingQuestionId = question.questionId || question._id;
-            const isDuplicate = updatedQuestions.some(q => {
+            const isDuplicate = updatedQuestions.some((q) => {
               if (!q) return false;
               const qId = q.questionId || q._id;
               return qId === existingQuestionId;
@@ -1423,7 +1432,9 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
               updatedQuestions.push(question);
               console.log(`✅ Added question ${existingQuestionId}`);
             } else {
-              console.warn(`⚠️ Duplicate question ${existingQuestionId} not added`);
+              console.warn(
+                `⚠️ Duplicate question ${existingQuestionId} not added`
+              );
             }
           }
 
@@ -1439,7 +1450,6 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
       return updatedSections;
     });
   };
-
 
   const navigate = useNavigate();
 
@@ -1467,7 +1477,7 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
       // v1.0.4 <----------------------------------------------------------------------------
       // v1.0.5 <---------------------------------------------------------------------------
       <div className="flex justify-end sm:px-0 px-6 pt-6">
-      {/* v1.0.5 --------------------------------------------------------------------------> */}
+        {/* v1.0.5 --------------------------------------------------------------------------> */}
         {currentTab !== "Basicdetails" && (
           <button
             onClick={handleBack}
@@ -1594,9 +1604,9 @@ const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
     <div ref={formRef}>
       <div className="bg-gray-50">
         {/* v1.0.4 <------------------------------------------------------------------ */}
-        <main className="mx-auto py-4 sm:px-3 lg:px-8 md:px-8 xl:px-8 2xl:px-8 mr-14 ml-14">
+        <main className="mx-auto py-4 sm:px-3 lg:px-8 md:px-8 xl:px-8 2xl:px-8 mr-14 ml-14 pb-20">
           <div className="sm:px-0">
-            <div className="mt-4 bg-white shadow overflow-hidden rounded-lg">
+            <div className="mt-4 bg-white shadow overflow-hidden rounded-lg pb-16">
               <div className="flex justify-between px-12 py-6 sm:px-4">
                 <div>
                   <h3 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl leading-6 font-medium text-gray-900">

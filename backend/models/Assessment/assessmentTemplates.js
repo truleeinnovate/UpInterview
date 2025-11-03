@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  fixed assessment code unique issue
 // v1.0.1  -  Ashraf  -  added index to calculate the total number of assessments
 // v1.0.2  -  Ashok   -  added type field
+// v1.0.3  -  Ashok   -  added templateListId field
 
 const mongoose = require("mongoose");
 
@@ -47,6 +48,10 @@ const assessmentSchema = new mongoose.Schema(
       type: String,
       enum: ["custom", "standard"],
       default: "custom",
+    },
+    assessmentTemplateList: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AssessmentList",
     },
     ownerId: String,
     tenantId: String,
