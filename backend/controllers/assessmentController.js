@@ -8,8 +8,10 @@
 const Assessment = require("../models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.1 >
 const { isValidObjectId } = require("mongoose");
-const { CandidateAssessment } = require("../models/Assessment/candidateAssessment.js");
-const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
+const {
+  CandidateAssessment,
+} = require("../models/Assessment/candidateAssessment.js");
+const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
 
 const mongoose = require("mongoose");
 const ScheduleAssessment = require("../models/Assessment/assessmentsSchema.js");
@@ -209,102 +211,114 @@ exports.validateAssessmentStep = async (req, res) => {
 //newassessment is using
 
 exports.newAssessment = async (req, res) => {
-    try {
-        // Validate the assessment data using Joi
-        const { errors, isValid } = validateCreateAssessment(req.body);
-        if (!isValid) {
-            return res.status(400).json({
-                success: false,
-                message: "Validation failed",
-                errors
-            });
-        }
-
-        const {
-            AssessmentTitle,
-            // AssessmentType,
-            NumberOfQuestions,
-            Position,
-            DifficultyLevel,
-            Duration,
-            ExpiryDate,
-            linkExpiryDays,
-            CandidateDetails,
-            Instructions,
-            AdditionalNotes,
-            CreatedBy,
-            ownerId,
-            tenantId,
-            totalScore,
-            passScore,
-            passScoreType,
-            passScoreBy,
-        } = req.body;
-
-        // Clean up empty strings for enum fields
-        const cleanedPassScoreType = passScoreType && passScoreType.trim() !== '' ? passScoreType : undefined;
-        const cleanedPassScoreBy = passScoreBy && passScoreBy.trim() !== '' ? passScoreBy : undefined;
-
-        const newAssessmentData = {
-            AssessmentTitle,
-            // AssessmentType,
-            Position,
-            Duration,
-            DifficultyLevel,
-            NumberOfQuestions,
-            ExpiryDate,
-            linkExpiryDays,
-            Instructions,
-            AdditionalNotes,
-            CreatedBy,
-            ownerId,
-            tenantId,
-            totalScore,
-            passScore,
-        };
-
-        // Only add these fields if they have valid values
-        if (cleanedPassScoreType) {
-            newAssessmentData.passScoreType = cleanedPassScoreType;
-        }
-        if (cleanedPassScoreBy) {
-            newAssessmentData.passScoreBy = cleanedPassScoreBy;
-        }
-
-        if (
-            CandidateDetails &&
-            (CandidateDetails.includePosition ||
-                CandidateDetails.includePhone ||
-                CandidateDetails.includeSkills)
-        ) {
-            newAssessmentData.CandidateDetails = CandidateDetails;
-        }
-
-        // Generate assessment code using centralized service with tenant ID
-        const assessmentCode = await generateUniqueId('ASMT-TPL', Assessment, 'AssessmentCode', tenantId);
-        newAssessmentData.AssessmentCode = assessmentCode;
-
-        const assessment = new Assessment(newAssessmentData);
-        await assessment.save();
-
-        // Create push notification for assessment creation
-        try {
-            // Pass ownerId as the createdBy parameter
-            await createAssessmentCreatedNotification(assessment, assessment.ownerId);
-        } catch (notificationError) {
-            console.error('[ASSESSMENT] Error creating notification:', notificationError);
-            // Continue execution even if notification fails
-        }
-
-        res.status(201).json({ success: true, data: assessment });
-    } catch (error) {
-        console.error('[ASSESSMENT] Error creating assessment:', error);
-        res.status(500).json({
-            success: false,
-            message: "Failed to create assessment",
-            error: error.message
-        });
+  try {
+    // Validate the assessment data using Joi
+    const { errors, isValid } = validateCreateAssessment(req.body);
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors,
+      });
     }
+
+    const {
+      AssessmentTitle,
+      // AssessmentType,
+      NumberOfQuestions,
+      Position,
+      DifficultyLevel,
+      Duration,
+      ExpiryDate,
+      linkExpiryDays,
+      CandidateDetails,
+      Instructions,
+      AdditionalNotes,
+      CreatedBy,
+      ownerId,
+      tenantId,
+      totalScore,
+      passScore,
+      passScoreType,
+      passScoreBy,
+      categoryOrTechnology,
+    } = req.body;
+
+    // Clean up empty strings for enum fields
+    const cleanedPassScoreType =
+      passScoreType && passScoreType.trim() !== "" ? passScoreType : undefined;
+    const cleanedPassScoreBy =
+      passScoreBy && passScoreBy.trim() !== "" ? passScoreBy : undefined;
+
+    const newAssessmentData = {
+      AssessmentTitle,
+      // AssessmentType,
+      Position,
+      Duration,
+      DifficultyLevel,
+      NumberOfQuestions,
+      ExpiryDate,
+      linkExpiryDays,
+      Instructions,
+      AdditionalNotes,
+      CreatedBy,
+      ownerId,
+      tenantId,
+      totalScore,
+      passScore,
+      assessmentTemplateList: categoryOrTechnology,
+    };
+
+    // Only add these fields if they have valid values
+    if (cleanedPassScoreType) {
+      newAssessmentData.passScoreType = cleanedPassScoreType;
+    }
+    if (cleanedPassScoreBy) {
+      newAssessmentData.passScoreBy = cleanedPassScoreBy;
+    }
+
+    if (
+      CandidateDetails &&
+      (CandidateDetails.includePosition ||
+        CandidateDetails.includePhone ||
+        CandidateDetails.includeSkills)
+    ) {
+      newAssessmentData.CandidateDetails = CandidateDetails;
+    }
+
+    // Generate assessment code using centralized service with tenant ID
+    const assessmentCode = await generateUniqueId(
+      "ASMT-TPL",
+      Assessment,
+      "AssessmentCode",
+      tenantId
+    );
+    newAssessmentData.AssessmentCode = assessmentCode;
+
+    const assessment = new Assessment(newAssessmentData);
+    await assessment.save();
+
+    // Create push notification for assessment creation
+    try {
+      // Pass ownerId as the createdBy parameter
+      await createAssessmentCreatedNotification(assessment, assessment.ownerId);
+    } catch (notificationError) {
+      console.error(
+        "[ASSESSMENT] Error creating notification:",
+        notificationError
+      );
+      // Continue execution even if notification fails
+    }
+
+    res.status(201).json({ success: true, data: assessment });
+  } catch (error) {
+    console.error("[ASSESSMENT] Error creating assessment:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create assessment",
+      error: error.message,
+    });
+  }
 };
 //update is using
 

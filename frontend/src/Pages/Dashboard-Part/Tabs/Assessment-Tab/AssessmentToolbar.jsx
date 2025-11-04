@@ -12,11 +12,11 @@ import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FaList } from "../../../../icons/FaList.svg";
 import { useMediaQuery } from "react-responsive";
 import { useAssessments } from "../../../../apiHooks/useAssessments.js";
-import { X } from "lucide-react";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { notify } from "../../../../services/toastService.js";
+import AssessmentListModal from "./AssessmentListModal/AssessmentListModal.jsx";
 
 const ToolbarDropdown = ({
   options,
@@ -287,8 +287,12 @@ const AssessmentToolbar = ({
   const ownerId = tokenPayload?.userId;
 
   const isTablet = useMediaQuery({ maxWidth: 320 });
-  const { assessmentData, assessmentLists, createAssessmentTemplateList } =
+  const { assessmentData, useAssessmentList, createAssessmentTemplateList } =
     useAssessments();
+  const hasViewPermission = true; // replace with your actual permission logic
+  const filters = { tenantId, ownerId };
+
+  const { assessmentListData } = useAssessmentList(filters, hasViewPermission);
 
   const standardCount =
     assessmentData?.filter((t) => t?.type === "standard")?.length || 0;
@@ -311,7 +315,7 @@ const AssessmentToolbar = ({
   useEffect(() => {
     const fetchLists = async () => {
       try {
-        const response = await assessmentLists(tenantId, ownerId);
+        const response = assessmentListData;
 
         if (response && Array.isArray(response)) {
           const formatted = response.map((item) => ({
@@ -328,7 +332,7 @@ const AssessmentToolbar = ({
     };
 
     fetchLists();
-  }, []);
+  }, [assessmentListData]);
 
   // Auto-generate and sanitize 'name' field from label
   useEffect(() => {
@@ -358,81 +362,6 @@ const AssessmentToolbar = ({
       setError("");
     }
   }, [newList.categoryOrTechnology, options]);
-
-  const handleCreateList = async () => {
-    const { categoryOrTechnology, name } = newList;
-
-    if (!categoryOrTechnology.trim() || !name.trim()) {
-      setError("Both fields are required.");
-      return;
-    }
-
-    // Check duplicate label
-    const isDuplicateLabel = options.some(
-      (opt) =>
-        opt.categoryOrTechnology.toLowerCase() ===
-        categoryOrTechnology.trim().toLowerCase()
-    );
-    if (isDuplicateLabel) {
-      setError("A list with this label already exists.");
-      return;
-    }
-
-    // Check duplicate name
-    const isDuplicateName = options.some(
-      (opt) => opt.value.toLowerCase() === name.trim().toLowerCase()
-    );
-    if (isDuplicateName) {
-      setError("A list with this name already exists.");
-      return;
-    }
-
-    // Validate format
-    const nameRegex = /^[A-Za-z0-9_]+$/;
-    if (!nameRegex.test(name)) {
-      setError("Name can only contain letters, numbers, and underscores (_).");
-      return;
-    }
-
-    try {
-      // Call API
-
-      const result = await createAssessmentTemplateList.mutateAsync({
-        categoryOrTechnology,
-        name,
-        tenantId,
-        ownerId,
-      });
-
-      if (!result.success) {
-        setError(result.message || "Failed to create list");
-        notify.error(result.message || "Failed to create list");
-        return;
-      }
-
-      // Refetch from backend after creation
-      const updatedLists = await assessmentLists(tenantId, ownerId);
-      if (updatedLists && Array.isArray(updatedLists)) {
-        const formatted = updatedLists.map((item) => ({
-          categoryOrTechnology: item?.categoryOrTechnology,
-          value: item?.name,
-        }));
-        setOptions(formatted);
-        setSelected({ categoryOrTechnology, value: name.toLowerCase() });
-      }
-
-      setTimeout(() => {
-        notify.success("List created successfully!");
-      }, 100);
-
-      setNewList({ categoryOrTechnology: "", name: "" });
-      setError("");
-      setShowPopup(false);
-    } catch (error) {
-      setError("Server error, please try again.");
-      console.error("Create List Error:", error);
-    }
-  };
 
   return (
     <motion.div
@@ -581,90 +510,16 @@ const AssessmentToolbar = ({
           </Tooltip>
         </div>
       </div>
-      {showPopup &&
-        createPortal(
-          <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-[1000]">
-            <div className="relative bg-white rounded-lg shadow-lg w-[350px] p-6">
-              <h2 className="text-lg text-custom-blue font-semibold mb-4">
-                New List
-              </h2>
-
-              <button
-                onClick={() => setShowPopup(false)}
-                className="absolute top-4 right-4"
-              >
-                <X className="h-5 w-5 text-red-500" />
-              </button>
-
-              {/* Label */}
-              <div className="mb-2">
-                <div className="flex items-start gap-1">
-                  <label className="text-sm text-gray-800">
-                    Category/Technology
-                  </label>
-                  <label className="text-red-500">*</label>
-                </div>
-                <input
-                  type="text"
-                  value={newList.categoryOrTechnology}
-                  maxLength={30} // Limit to 30 characters
-                  onChange={(e) => {
-                    const cleanValue = e.target.value.replace(
-                      /[^a-zA-Z0-9_ ]/g,
-                      ""
-                    );
-                    setNewList((prev) => ({
-                      ...prev,
-                      categoryOrTechnology: cleanValue,
-                    }));
-                    setError(""); // Clear error on typing
-                  }}
-                  className="w-full border rounded-md px-3 py-2 mt-1 text-sm focus:ring-2 focus:ring-custom-blue outline-none"
-                  placeholder="Category or technology"
-                />
-                <div className="flex justify-between items-center mt-1">
-                  {error === "A list with this label already exists." && (
-                    <p className="text-xs text-red-500">{error}</p>
-                  )}
-                  <p className="text-xs text-gray-400 ml-auto">
-                    {newList.categoryOrTechnology.length}/30
-                  </p>
-                </div>
-              </div>
-
-              {/* Name */}
-              <div className="mb-4">
-                <div className="flex items-start gap-1">
-                  <label className="text-sm text-gray-800">Name</label>
-                  <label className="text-red-500">*</label>
-                </div>
-                <input
-                  type="text"
-                  value={newList.name}
-                  onChange={(e) => {
-                    const cleanValue = e.target.value
-                      .toLowerCase()
-                      .replace(/\s+/g, "_") // replace spaces
-                      .replace(/[^a-z0-9_]/g, ""); // remove invalid chars
-                    setNewList((prev) => ({ ...prev, name: cleanValue }));
-                  }}
-                  className="w-full border rounded-md px-3 py-2 mt-1 text-sm focus:ring-2 focus:ring-custom-blue outline-none"
-                  disabled
-                />
-              </div>
-
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={handleCreateList}
-                  className="px-3 py-2 text-sm bg-custom-blue text-white rounded-md hover:bg-custom-blue/90"
-                >
-                  Create
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
+      <AssessmentListModal
+        show={showPopup}
+        onClose={() => setShowPopup(false)}
+        createAssessmentTemplateList={createAssessmentTemplateList}
+        useAssessmentList={useAssessmentList}
+        tenantId={tenantId}
+        ownerId={ownerId}
+        setOptions={setOptions}
+        setSelected={setSelected}
+      />
     </motion.div>
   );
 };
