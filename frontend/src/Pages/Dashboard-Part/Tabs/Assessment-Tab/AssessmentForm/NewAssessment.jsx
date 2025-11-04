@@ -41,6 +41,7 @@ import LoadingButton from "../../../../../Components/LoadingButton";
 import { Button } from "@mui/material";
 import { Trash2, X } from "lucide-react";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+import AssessmentListModal from "../AssessmentListModal/AssessmentListModal.jsx";
 
 const NewAssessment = () => {
   const formRef = useRef(null);
@@ -50,6 +51,8 @@ const NewAssessment = () => {
     upsertAssessmentQuestions,
     isMutationLoading,
     fetchAssessmentQuestions,
+    useAssessmentList,
+    createAssessmentTemplateList,
   } = useAssessments();
   const { positionData } = usePositions();
 
@@ -134,7 +137,49 @@ const NewAssessment = () => {
     linkExpiryDays: "",
     categoryOrTechnology: "",
   });
-  console.log("FORM DATA =======================================>  ", formData)
+
+  const tenantId = tokenPayload?.tenantId;
+  const ownerId = tokenPayload?.userId;
+
+  const filters = { tenantId, ownerId };
+
+  const hasViewPermission = true; // replace with your actual permission logic
+  const { assessmentListData } = useAssessmentList(filters, hasViewPermission);
+
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(""); // stores category._id or ""
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+
+  // 1) fetch categories on mount (and after create)
+  const fetchCategories = async () => {
+    try {
+      const response = assessmentListData;
+      setCategories(response || []);
+    } catch (err) {
+      console.error("fetchCategories error", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assessmentListData]);
+
+  // 2) when editing, ensure selectedCategory reflects formData value
+  useEffect(() => {
+    if (formData?.categoryOrTechnology) {
+      setSelectedCategory(formData.categoryOrTechnology);
+    }
+  }, [formData?.categoryOrTechnology]);
+
+  // 3) handler for user selecting category from dropdown
+  const handleCategorySelect = (categoryId) => {
+    setSelectedCategory(categoryId || "");
+    setFormData((prev) => ({
+      ...prev,
+      categoryOrTechnology: categoryId || "",
+    }));
+  };
 
   // v1.0.3 <---------------------------------------------------------
   const fieldRefs = {
@@ -163,10 +208,15 @@ const NewAssessment = () => {
         (pos) => pos._id === assessment?.Position
       );
 
+      // Find category object using assessmentTemplateList ID
+      const matchedCategory = assessmentListData.find(
+        (item) => item._id === assessment?.assessmentTemplateList
+      );
+
       setFormData({
         AssessmentTitle: assessment.AssessmentTitle || "",
         Position: assessment.Position || "",
-        categoryOrTechnology:assessment.categoryOrTechnology || "",
+        categoryOrTechnology: matchedCategory?.categoryOrTechnology || "",
         DifficultyLevel: assessment.DifficultyLevel || "",
         Duration: assessment.Duration || "60 Minutes",
         NumberOfQuestions: assessment.NumberOfQuestions || "",
@@ -185,6 +235,14 @@ const NewAssessment = () => {
       setAdditionalNotes(assessment.AdditionalNotes || "");
       setSelectedPosition(matchedPosition || null);
       setLinkExpiryDays(assessment.linkExpiryDays);
+      // Preselect categoryOrTechnology
+      if (matchedCategory) {
+        setSelectedCategory(matchedCategory._id); // store id instead of name
+        setFormData((prev) => ({
+          ...prev,
+          categoryOrTechnology: matchedCategory._id, // also store id
+        }));
+      }
 
       // Set CandidateDetails fields if they exist
       if (assessment.CandidateDetails) {
@@ -721,6 +779,9 @@ const NewAssessment = () => {
         ...(formData.ExpiryDate && { ExpiryDate: formData.ExpiryDate }),
         ...(formData.linkExpiryDays && {
           linkExpiryDays: formData.linkExpiryDays,
+        }),
+        ...(formData.categoryOrTechnology && {
+          categoryOrTechnology: formData.categoryOrTechnology,
         }),
         ...{ status: formData.status },
         // Only include passScoreType and passScoreBy if they have values
@@ -1683,6 +1744,22 @@ const NewAssessment = () => {
                           isEditing={isEditing}
                           setActiveTab={setActiveTab}
                           fieldRefs={fieldRefs}
+                          isCategoryModalOpen={isCategoryModalOpen}
+                          openCategoryModal={() => setIsCategoryModalOpen(true)}
+                          closeCategoryModal={() =>
+                            setIsCategoryModalOpen(false)
+                          }
+                          categories={categories}
+                          setCategories={setCategories}
+                          selectedCategory={selectedCategory}
+                          setSelectedCategory={setSelectedCategory}
+                          onCategorySelect={handleCategorySelect}
+                          useAssessmentList={useAssessmentList}
+                          createAssessmentTemplateList={
+                            createAssessmentTemplateList
+                          }
+                          tenantId={tenantId}
+                          ownerId={ownerId}
                         />
                         <p className="flex justify-end">
                           <TabFooter currentTab="Basicdetails" />
@@ -1895,6 +1972,21 @@ const NewAssessment = () => {
                       setIsSelectCandidatePopupOpen(false)
                     }
                     singleButtonText="OK"
+                  />
+                )}
+                {/* Render modal at parent level */}
+                {isCategoryModalOpen && (
+                  <AssessmentListModal
+                    show={isCategoryModalOpen}
+                    onClose={() => setIsCategoryModalOpen(false)}
+                    createAssessmentTemplateList={createAssessmentTemplateList}
+                    useAssessmentList={useAssessmentList}
+                    tenantId={tenantId}
+                    ownerId={ownerId}
+                    setOptions={setCategories}
+                    setSelected={(selected) => {
+                      setSelectedCategory(selected?.value || "");
+                    }}
                   />
                 )}
               </div>

@@ -379,7 +379,6 @@ export const useAssessments = (filters = {}) => {
     },
   });
 
-
   const useAssessmentList = (filters = {}, hasViewPermission) => {
     const {
       data: assessmentListData = [],
@@ -388,9 +387,9 @@ export const useAssessments = (filters = {}) => {
       error,
       refetch,
     } = useQuery({
-      queryKey: ['AssessmentList', filters],
+      queryKey: ["AssessmentList", filters],
       queryFn: async () => {
-        const data = await fetchFilterData('assessmentlist'); // API endpoint
+        const data = await fetchFilterData("assessmentlist"); // API endpoint
         console.log("useAssessmentList:", data);
 
         return data
@@ -411,7 +410,6 @@ export const useAssessments = (filters = {}) => {
 
     return { assessmentListData, isLoading, isError, error, refetch };
   };
-
 
   // const assessmentLists = async (tenantId, ownerId) => {
   //   try {
