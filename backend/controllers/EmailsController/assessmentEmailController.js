@@ -353,7 +353,7 @@ exports.resendAssessmentLink = async (req, res) => {
 };
 // ------------------------------v1.0.3 >
 
-const { checkAssessmentUsageLimit } = require('../../services/assessmentUsageService');
+const { checkAssessmentUsageLimit, handleAssessmentStatusChange } = require('../../services/assessmentUsageService');
 
 exports.shareAssessment = async (req, res) => {
   try {
@@ -386,7 +386,8 @@ exports.shareAssessment = async (req, res) => {
     const tenantId = assessment.tenantId;
     const candidatesToShare = Array.isArray(selectedCandidates) ? selectedCandidates.length : 0;
 
-    const limit = await checkAssessmentUsageLimit(tenantId);
+    // Use organizationId for usage limit check since ScheduleAssessment uses organizationId
+    const limit = await checkAssessmentUsageLimit(organizationId || tenantId);
     const entitled = limit.entitled;
     const utilized = limit.utilized;
     const remaining = limit.remaining === Infinity ? Infinity : Math.max((limit.remaining || 0), 0);
@@ -550,6 +551,27 @@ exports.shareAssessment = async (req, res) => {
 
     const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments);
 
+    // Track usage for each newly created candidate assessment
+    for (const insertedAssessment of insertedAssessments) {
+      try {
+        await handleAssessmentStatusChange(
+          insertedAssessment._id,
+          null,  // Old status (no previous status for new assessments)
+          'pending',  // New status
+          {
+            // Use organizationId as tenantId since ScheduleAssessment uses organizationId
+            // This ensures usage tracking aligns with how we find assessments
+            tenantId: organizationId || assessment.tenantId,
+            ownerId: assessment.ownerId || userId
+          }
+        );
+        console.log(`[ASSESSMENT_SHARE] Usage tracked for candidate assessment: ${insertedAssessment._id}`);
+      } catch (usageError) {
+        console.error('[ASSESSMENT_SHARE] Error updating usage for new assessment:', usageError);
+        // Continue even if usage tracking fails - don't block the sharing process
+      }
+    }
+
     const tenant = await Tenant.findById(organizationId);
     const orgCompanyName = tenant.company;
 
@@ -686,7 +708,9 @@ exports.shareAssessment = async (req, res) => {
 
     // Trigger usage recalculation for accurate utilized count after sharing
     try {
-      await require('../../services/assessmentUsageService').recalculateAssessmentUsage(tenantId);
+      // Use organizationId for recalculation as ScheduleAssessment uses organizationId
+      // In many cases organizationId and tenantId are the same
+      await require('../../services/assessmentUsageService').recalculateAssessmentUsage(organizationId || tenantId);
     } catch (e) {
       console.error('[ASSESSMENT_USAGE] Recalc after share failed:', e.message);
     }
