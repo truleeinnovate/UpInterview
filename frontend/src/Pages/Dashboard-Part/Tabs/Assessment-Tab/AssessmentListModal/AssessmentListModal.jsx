@@ -149,7 +149,7 @@ const AssessmentListModal = ({
               setError("");
             }}
             className="w-full border rounded-md px-3 py-2 mt-1 text-sm focus:ring-2 focus:ring-custom-blue outline-none"
-            placeholder="Category or technology"
+            placeholder="Category or Technology"
           />
           <div className="flex justify-between items-center mt-1">
             {error && (
