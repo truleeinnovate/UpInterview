@@ -79,9 +79,6 @@ const BasicDetailsTab = ({
   useAssessmentList,
   createAssessmentTemplateList,
 }) => {
-
-
-
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
   const assessmentTypeRef = useRef(null);
@@ -478,11 +475,25 @@ const BasicDetailsTab = ({
                 required
                 name="categoryOrTechnology"
                 value={selectedCategory || ""}
+                // options={[
+                //   ...(categories?.map((category) => ({
+                //     value: category._id,
+                //     label: category.categoryOrTechnology,
+                //   })) || []),
+                //   {
+                //     value: "create_new",
+                //     label: "+ Create List",
+                //     isSticky: true,
+                //     className: "text-blue-600 font-medium hover:bg-blue-50",
+                //   },
+                // ]}
                 options={[
-                  ...(categories?.map((category) => ({
-                    value: category._id,
-                    label: category.categoryOrTechnology,
-                  })) || []),
+                  ...(categories
+                    ?.filter((category) => category?.type === "custom")
+                    ?.map((category) => ({
+                      value: category._id,
+                      label: category.categoryOrTechnology,
+                    })) || []),
                   {
                     value: "create_new",
                     label: "+ Create List",

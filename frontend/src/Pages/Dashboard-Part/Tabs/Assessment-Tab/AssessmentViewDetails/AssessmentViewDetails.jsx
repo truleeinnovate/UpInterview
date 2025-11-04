@@ -4,6 +4,7 @@
 // v1.0.3  -  Ashok  - Implemented scroll lock hook for conditionally disable outer scrollbar
 // v1.0.4  -  Ashraf  -  assessment view default expand true
 // v1.0.5  -  Ashok   -  Improved responsiveness
+// v1.0.6  -  Ashok   -  When active tab or type equal to standard edit button should hidden
 
 import { useState, useEffect } from "react";
 import { Tab } from "@headlessui/react";
@@ -173,14 +174,26 @@ function AssessmentView() {
                     Assessment Template Details
                   </h3>
                   <div className="flex items-center space-x-2">
-                    <button
+                    {/* <button
                       onClick={() =>
                         navigate(`/assessment-templates/edit/${assessment._id}`)
                       }
                       className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
                     >
                       <Pencil className="w-4 h-4" />
-                    </button>
+                    </button> */}
+                    {assessment?.type !== "standard" && (
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/assessment-templates/edit/${assessment._id}`
+                          )
+                        }
+                        className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    )}
 
                     <button
                       onClick={toggleFullscreen}

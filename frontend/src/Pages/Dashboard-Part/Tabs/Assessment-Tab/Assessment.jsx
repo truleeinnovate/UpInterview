@@ -8,6 +8,7 @@
 */
 // v1.0.6  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.7  -  Ashok   -  improved responsiveness
+// v1.0.8  -  Ashok   -  disabled column and actions for standard type templates
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -596,18 +597,22 @@ const Assessment = () => {
   };
 
   const tableColumns = [
-    {
-      key: "AssessmentCode",
-      header: "Template ID",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => handleView(row)}
-        >
-          {value || "Not Provided"}
-        </div>
-      ),
-    },
+    ...(activeTab === "custom"
+      ? [
+          {
+            key: "AssessmentCode",
+            header: "Template ID",
+            render: (value, row) => (
+              <div
+                className="text-sm font-medium text-custom-blue cursor-pointer"
+                onClick={() => handleView(row)}
+              >
+                {value || "Not Provided"}
+              </div>
+            ),
+          },
+        ]
+      : []),
     {
       key: "AssessmentTitle",
       header: "Template Name",
@@ -647,7 +652,7 @@ const Assessment = () => {
         row.passScore
           ? row.passScoreType === "Percentage"
             ? `${row.passScore}%`
-            : `${row.passScore} marks` // or "pts"
+            : `${row.passScore} Marks` // or "pts"
           : "Not Provided",
     },
     {
@@ -682,6 +687,7 @@ const Assessment = () => {
             label: "Edit",
             icon: <Pencil className="w-4 h-4 text-custom-blue" />,
             onClick: handleEdit,
+            show: (row) => row.type !== "standard",
           },
         ]
       : []),
@@ -692,6 +698,7 @@ const Assessment = () => {
             label: "Delete",
             icon: <Trash className="w-4 h-4 text-red-600" />,
             onClick: handleDelete,
+            show: (row) => row.type !== "standard",
           },
         ]
       : []),
@@ -713,8 +720,6 @@ const Assessment = () => {
         : [...prev, option]
     );
   };
-
-  console.log("SELECTED OPTION ==========================> :", selectedOption);
 
   return (
     <div className="bg-background min-h-screen">

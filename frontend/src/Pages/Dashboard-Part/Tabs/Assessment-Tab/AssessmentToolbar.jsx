@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - type based options
+
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Tooltip from "@mui/material/Tooltip";
@@ -309,6 +311,11 @@ const AssessmentToolbar = ({
   const [error, setError] = useState("");
   const [options, setOptions] = useState([]);
 
+  useEffect(() => {
+    setSelected(null);
+    setSelectedOption(null);
+  }, [activeTab]);
+
   useScrollLock(showPopup);
 
   // ⬇Add this block
@@ -322,6 +329,7 @@ const AssessmentToolbar = ({
             categoryOrTechnology: item?.categoryOrTechnology,
             value: item?.name,
             _id: item?._id,
+            type: item?.type,
           }));
 
           setOptions(formatted);
@@ -362,6 +370,10 @@ const AssessmentToolbar = ({
       setError("");
     }
   }, [newList.categoryOrTechnology, options]);
+
+  const filteredOptionsByType = options.filter(
+    (opt) => opt?.type === activeTab
+  );
 
   return (
     <motion.div
@@ -408,10 +420,10 @@ const AssessmentToolbar = ({
           {/* New Custom Dropdown */}
           <div className="w-48">
             <ToolbarDropdown
-              options={options}
+              options={filteredOptionsByType}
               selected={selected}
               onSelect={setSelected}
-              placeholder="Select List"
+              placeholder="Category or Technology"
               setSelectedOption={setSelectedOption}
             />
           </div>
