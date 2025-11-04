@@ -4,6 +4,7 @@ const Usage = require('../models/Usage');
 const Tenant = require('../models/Tenant');
 const { Users } = require('../models/Users');
 const { recalculateAssessmentUsage } = require('../services/assessmentUsageService');
+const { recalculateInterviewUsage } = require('../services/interviewUsageService');
 
 // GET /usage
 // Returns usage for current period (or latest) for the tenant.
@@ -52,6 +53,25 @@ const getUsageByTenant = async (req, res) => {
       }
     } catch (recalcError) {
       console.error('[USAGE] Error recalculating assessment usage:', recalcError);
+      // Continue with existing usage data if recalculation fails
+    }
+
+    // Recalculate interview usage based on actual scheduled External interviews
+    // This ensures accuracy by counting all scheduled External interviews
+    try {
+      await recalculateInterviewUsage(tenantId);
+      // Reload usage after recalculation
+      usage = await Usage.findOne({
+        ...filter,
+        fromDate: { $lte: now },
+        toDate: { $gte: now }
+      }).lean();
+      
+      if (!usage) {
+        usage = await Usage.findOne(filter).sort({ _id: -1 }).lean();
+      }
+    } catch (recalcError) {
+      console.error('[USAGE] Error recalculating interview usage:', recalcError);
       // Continue with existing usage data if recalculation fails
     }
 
@@ -177,5 +197,88 @@ const getUsageHistory = async (req, res) => {
   }
 };
 
-module.exports = { getUsageByTenant, getUsageHistory };
+// POST /usage/initialize/:tenantId
+// Initialize Usage document for testing (temporary endpoint)
+// const initializeUsage = async (req, res) => {
+//   try {
+//     const { tenantId } = req.params;
+//     const { entitled = 50 } = req.body || {};
+
+//     if (!tenantId) {
+//       return res.status(400).json({ error: 'tenantId is required' });
+//     }
+
+//     // Check if Usage document already exists
+//     const existingUsage = await Usage.findOne({ tenantId });
+//     if (existingUsage) {
+//       // If exists, just recalculate
+//       await recalculateInterviewUsage(tenantId);
+//       return res.json({
+//         success: true,
+//         message: 'Usage document already exists, recalculated interview usage'
+//       });
+//     }
+
+//     // Create new Usage document
+//     const now = new Date();
+//     const fromDate = new Date(now);
+//     fromDate.setDate(1); // Start from beginning of current month
+//     const toDate = new Date(now);
+//     toDate.setMonth(toDate.getMonth() + 1); // End next month
+
+//     const newUsage = new Usage({
+//       tenantId,
+//       usageAttributes: [
+//         {
+//           type: 'Internal Interviews',
+//           entitled: entitled,
+//           utilized: 0,
+//           remaining: entitled
+//         },
+//         {
+//           type: 'Assessments',
+//           entitled: 100,
+//           utilized: 0,
+//           remaining: 100
+//         },
+//         {
+//           type: 'Question Bank Access',
+//           entitled: 1000,
+//           utilized: 0,
+//           remaining: 1000
+//         },
+//         {
+//           type: 'User Bandwidth',
+//           entitled: 10,
+//           utilized: 0,
+//           remaining: 10
+//         }
+//       ],
+//       fromDate,
+//       toDate
+//     });
+
+//     await newUsage.save();
+    
+//     // Now recalculate to count existing scheduled interviews
+//     await recalculateInterviewUsage(tenantId);
+
+//     return res.json({
+//       success: true,
+//       message: 'Usage document created and interview usage calculated'
+//     });
+//   } catch (error) {
+//     console.error('[API] Error initializing usage:', error);
+//     return res.status(500).json({ 
+//       error: 'Internal server error',
+//       message: error.message 
+//     });
+//   }
+// };
+
+module.exports = { 
+  getUsageByTenant,
+  getUsageHistory 
+  //initializeUsage 
+};
 //-------v1.1.0------->
