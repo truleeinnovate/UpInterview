@@ -177,11 +177,17 @@ async function recalculateAssessmentUsage(tenantId) {
     const assessmentIds = assessments.map(a => a._id);
 
     // Find all scheduled assessments for these assessment IDs
+    // Also filter by organizationId (which should match tenantId) to ensure we only count this tenant's assessments
     const scheduledAssessments = await ScheduleAssessment.find({
-      assessmentId: { $in: assessmentIds }
+      $or: [
+        { assessmentId: { $in: assessmentIds } },
+        { organizationId: tenantId }  // Also check by organizationId in case it matches tenantId
+      ]
     }).select('_id');
 
     const scheduledAssessmentIds = scheduledAssessments.map(sa => sa._id);
+    
+    console.log(`[ASSESSMENT_USAGE] Found ${assessments.length} assessments, ${scheduledAssessments.length} scheduled assessments`);
 
     // Count active candidate assessments (scheduled/shared) for usage
     // Count statuses that consume capacity: pending, in_progress, completed, pass, extended
@@ -189,6 +195,14 @@ async function recalculateAssessmentUsage(tenantId) {
       scheduledAssessmentId: { $in: scheduledAssessmentIds },
       status: { $in: ['pending', 'in_progress', 'completed', 'pass', 'extended'] }
     });
+
+    console.log(`[ASSESSMENT_USAGE] Counted ${utilizedCount} candidate assessments with status in [pending, in_progress, completed, pass, extended]`);
+    
+    // Debug: Check total candidate assessments for these scheduled assessments
+    const totalCandidateAssessments = await CandidateAssessment.countDocuments({
+      scheduledAssessmentId: { $in: scheduledAssessmentIds }
+    });
+    console.log(`[ASSESSMENT_USAGE] Total candidate assessments for these scheduled assessments: ${totalCandidateAssessments}`);
 
     // Get current date for finding active usage period
     const now = new Date();
