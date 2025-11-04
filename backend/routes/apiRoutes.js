@@ -439,6 +439,17 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         break;
       // ------------------------------ v1.0.4 >
       case 'assessmentlist':
+         query = {
+          $or: [
+            { type: 'standard' }, // Standard templates are accessible to all
+            {
+              $and: [
+                { type: 'custom' },
+                query, // Reuse the base query with tenantId and ownerId filters
+              ],
+            },
+          ],
+        };
         data = await DataModel.find(query);
         break;
 
