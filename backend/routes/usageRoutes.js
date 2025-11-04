@@ -1,7 +1,13 @@
 //<-----v1.0.0-----Venkatesh---added getUsageByTenant route
 const express = require('express');
 const router = express.Router();
-const { getUsageByTenant, getUsageHistory } = require('../controllers/usageController');
+const { getUsageByTenant,
+        getUsageHistory,
+        //initializeUsage
+       } = require('../controllers/usageController');
+
+// POST /usage/initialize/:tenantId - Initialize usage for testing
+//router.post('/initialize/:tenantId', initializeUsage);
 
 // GET /api/usage
 router.get('/:tenantId', getUsageByTenant);
