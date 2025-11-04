@@ -54,12 +54,29 @@ const candidateSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ Indexes to speed up filtering
-candidateSchema.index({ tenantId: 1 });
-candidateSchema.index({ ownerId: 1 });
 
-// If you often search by both
-candidateSchema.index({ tenantId: 1, ownerId: 1 });
+// Add indexes to candidate schema
+candidateSchema.index({ tenantId: 1, createdAt: -1 });
+candidateSchema.index({ tenantId: 1, Email: 1 });
+candidateSchema.index({ tenantId: 1, 'skills.skill': 1 });
+candidateSchema.index({ tenantId: 1, CurrentExperience: 1 });
+candidateSchema.index({ tenantId: 1, HigherQualification: 1 });
+
+// For text search
+candidateSchema.index({
+  FirstName: 'text',
+  LastName: 'text', 
+  Email: 'text',
+  Phone: 'text'
+});
+
+
+// // ✅ Indexes to speed up filtering
+// candidateSchema.index({ tenantId: 1 });
+// candidateSchema.index({ ownerId: 1 });
+
+// // If you often search by both
+// candidateSchema.index({ tenantId: 1, ownerId: 1 });
 
 const Candidate = mongoose.models.Candidate || mongoose.model("Candidate", candidateSchema);
 
