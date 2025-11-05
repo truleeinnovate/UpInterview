@@ -38,10 +38,7 @@ import { useMediaQuery } from "react-responsive";
 // v1.0.2 ------------------------------------------------------>
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 import { notify } from "../../../../services/toastService"; //<----v1.02-----
-import { Button } from "../CommonCode-AllTabs/ui/button";
-import { createPortal } from "react-dom";
 import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal";
-import { format } from "date-fns";
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
 import { formatDateTime } from "../../../../utils/dateFormatter";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
@@ -144,14 +141,8 @@ const PositionTab = () => {
   // All hooks at the top
   const { effectivePermissions, isInitialized } = usePermissions();
   const { locations, skills, companies } = useMasterData(); //<-----v1.03-----
-  const {
-    positionData,
-    isLoading,
-    addOrUpdatePosition,
-    deletePositionMutation,
-    isMutationLoading,
-  } = usePositions(); //<----v1.02-----
-  //console.log("pos",positionData);
+
+
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("table");
@@ -205,6 +196,29 @@ const PositionTab = () => {
   //  Ranjith added delete Candidate functionality
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deletePosition, setDeletePosition] = useState(null);
+  const rowsPerPage = 10;
+  // Replace the current usePositions call with one that includes filters
+  const apiFilters = useMemo(() => ({
+    searchQuery,
+    location: selectedFilters.location,
+    tech: selectedFilters.tech,
+    company: selectedFilters.company,
+    experience: selectedFilters.experience,
+    salaryMin: selectedFilters.salaryMin,
+    salaryMax: selectedFilters.salaryMax,
+    createdDate: selectedFilters.createdDate,
+    page: currentPage + 1, // API usually uses 1-based indexing
+    limit: rowsPerPage
+  }), [searchQuery, selectedFilters, currentPage, rowsPerPage]);
+
+  const {
+    positionData,
+    total,
+    isLoading,
+    addOrUpdatePosition,
+    deletePositionMutation,
+    isMutationLoading,
+  } = usePositions(apiFilters);
 
   // v1.0.8 <------------------------------------------
   useScrollLock(view === "kanban");
@@ -288,7 +302,7 @@ const PositionTab = () => {
       const minThreshold = Number(selectedFilters.salaryMin) || 0;
       const maxThreshold =
         selectedFilters.salaryMax !== "" &&
-        selectedFilters.salaryMax !== undefined
+          selectedFilters.salaryMax !== undefined
           ? Number(selectedFilters.salaryMax)
           : Infinity;
 
@@ -459,14 +473,14 @@ const PositionTab = () => {
     setCurrentPage(0);
     setIsFilterActive(
       filters.location.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        //<-----v1.03-----
-        filters.experience.max ||
-        filters.company.length > 0 ||
-        (filters.salaryMin && filters.salaryMin > 0) ||
-        (filters.salaryMax && filters.salaryMax > 0) ||
-        !!filters.createdDate
+      filters.tech.length > 0 ||
+      filters.experience.min ||
+      //<-----v1.03-----
+      filters.experience.max ||
+      filters.company.length > 0 ||
+      (filters.salaryMin && filters.salaryMin > 0) ||
+      (filters.salaryMax && filters.salaryMax > 0) ||
+      !!filters.createdDate
       //-----v1.03----->
     );
     setFilterPopupOpen(false);
@@ -483,10 +497,10 @@ const PositionTab = () => {
     setCurrentPage(0);
   };
 
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData.length / rowsPerPage);
+
+  const totalPages = Math.ceil(positionData.length / rowsPerPage);
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData.length) {
+    if ((currentPage + 1) * rowsPerPage < positionData.length) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
@@ -496,9 +510,13 @@ const PositionTab = () => {
     }
   };
 
+  // const startIndex = currentPage * rowsPerPage;
+  // const endIndex = Math.min(startIndex + rowsPerPage, FilteredData.length);
+  // const currentFilteredRows = FilteredData.slice(startIndex, endIndex);
+
   const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData.length);
-  const currentFilteredRows = FilteredData.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + rowsPerPage, positionData.length);
+  const currentFilteredRows = positionData.slice(startIndex, endIndex);
 
   const statusOptions = STATUS_OPTIONS.map((s) => ({
     value: s,
@@ -660,44 +678,44 @@ const PositionTab = () => {
   const tableActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => handleView(row),
-          },
-        ]
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (row) => handleView(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-          //<----v1.02-----
-          {
-            key: "change_status",
-            label: "Change Status",
-            icon: <Repeat className="w-4 h-4 text-green-600" />,
-            onClick: (row) => openStatusModal(row),
-          },
-          //----v1.02----->
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => handleEdit(row),
-          },
-        ]
+        //<----v1.02-----
+        {
+          key: "change_status",
+          label: "Change Status",
+          icon: <Repeat className="w-4 h-4 text-green-600" />,
+          onClick: (row) => openStatusModal(row),
+        },
+        //----v1.02----->
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (row) => handleEdit(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (row) => {
-              setShowDeleteConfirmModal(true);
-              setDeletePosition(row);
-            },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: (row) => {
+            setShowDeleteConfirmModal(true);
+            setDeletePosition(row);
           },
-        ]
+        },
+      ]
       : []),
   ];
   // v1.0.5 <----------------------------------------------------------------------------------
@@ -761,47 +779,47 @@ const PositionTab = () => {
   const kanbanActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
-            onClick: (row) => handleView(row),
-          },
-        ]
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-blue-600" />,
+          onClick: (row) => handleView(row),
+        },
+      ]
       : []),
 
     ...(effectivePermissions.Positions?.Edit
       ? [
-          {
-            key: "change_status",
-            label: "Change Status",
-            icon: <Repeat className="w-4 h-4 text-green-600" />,
-            onClick: (row) => openStatusModal(row),
-          },
-        ]
+        {
+          key: "change_status",
+          label: "Change Status",
+          icon: <Repeat className="w-4 h-4 text-green-600" />,
+          onClick: (row) => openStatusModal(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => handleEdit(row),
-          },
-        ]
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (row) => handleEdit(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (row) => {
-              setShowDeleteConfirmModal(true);
-              setDeletePosition(row);
-            },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: (row) => {
+            setShowDeleteConfirmModal(true);
+            setDeletePosition(row);
           },
-        ]
+        },
+      ]
       : []),
   ];
   // v1.0.8 ---------------------------------------------------------------------------------->
@@ -972,7 +990,7 @@ const PositionTab = () => {
                                 onChange={() => handleLocationToggle(location)}
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                // v1.0.1 --------------------------------------------------------------->
+                              // v1.0.1 --------------------------------------------------------------->
                               />
                               <span className="text-sm">{location}</span>
                             </label>
@@ -1013,7 +1031,7 @@ const PositionTab = () => {
                                 }
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                // v1.0.1 <---------------------------------------------------------------
+                              // v1.0.1 <---------------------------------------------------------------
                               />
                               <span className="text-sm">{skill.SkillName}</span>
                             </label>

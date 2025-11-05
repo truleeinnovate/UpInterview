@@ -26,7 +26,7 @@ export const useCandidates = (filters = {}) => {
     queryFn: async () => {
       const data = await fetchFilterData("candidate", effectivePermissions,filters);
 
-      console.log("data data", data);
+      // console.log("data data", data);
       return data;
      
         
@@ -116,50 +116,50 @@ const totalCandidatess = responseData?.data?.total || 0;
       }
 
       // FIXED: Optimistically update the cache - handle your specific backend structure
-      queryClient.setQueryData(["candidates", filters], (oldData) => {
-        if (!oldData) return oldData;
+      // queryClient.setQueryData(["candidates", filters], (oldData) => {
+      //   if (!oldData) return oldData;
 
-        // Your backend returns { data: { candidate: [...], total: X } }
-        if (oldData.data && oldData.data.candidate) {
-          // New structure: { data: { candidate: [...], total: X } }
-          if (variables.id) {
-            // Update existing candidate
-            const updatedCandidates = oldData.data.candidate.map((c) =>
-              c._id === variables.id ? { ...c, ...data.data } : c
-            );
-            return {
-              ...oldData,
-              data: {
-                ...oldData.data,
-                candidate: updatedCandidates,
-                total: oldData.data.total // total remains same for update
-              }
-            };
-          } else {
-            // Add new candidate
-            return {
-              ...oldData,
-              data: {
-                ...oldData.data,
-                candidate: [data.data, ...oldData.data.candidate],
-                total: oldData.data.total + 1
-              }
-            };
-          }
-        } else if (Array.isArray(oldData)) {
-          // Old structure: array of candidates (fallback)
-          if (variables.id) {
-            return oldData.map((c) =>
-              c._id === variables.id ? { ...c, ...data.data } : c
-            );
-          } else {
-            return [data.data, ...oldData];
-          }
-        } else {
-          // Unknown structure, return as is
-          return oldData;
-        }
-      });
+      //   // Your backend returns { data: { candidate: [...], total: X } }
+      //   if (oldData.data && oldData.data.candidate) {
+      //     // New structure: { data: { candidate: [...], total: X } }
+      //     if (variables.id) {
+      //       // Update existing candidate
+      //       const updatedCandidates = oldData.data.candidate.map((c) =>
+      //         c._id === variables.id ? { ...c, ...data.data } : c
+      //       );
+      //       return {
+      //         ...oldData,
+      //         data: {
+      //           ...oldData.data,
+      //           candidate: updatedCandidates,
+      //           total: oldData.data.total // total remains same for update
+      //         }
+      //       };
+      //     } else {
+      //       // Add new candidate
+      //       return {
+      //         ...oldData,
+      //         data: {
+      //           ...oldData.data,
+      //           candidate: [data.data, ...oldData.data.candidate],
+      //           total: oldData.data.total + 1
+      //         }
+      //       };
+      //     }
+      //   } else if (Array.isArray(oldData)) {
+      //     // Old structure: array of candidates (fallback)
+      //     if (variables.id) {
+      //       return oldData.map((c) =>
+      //         c._id === variables.id ? { ...c, ...data.data } : c
+      //       );
+      //     } else {
+      //       return [data.data, ...oldData];
+      //     }
+      //   } else {
+      //     // Unknown structure, return as is
+      //     return oldData;
+      //   }
+      // });
 
       // Invalidate to ensure consistency
       queryClient.invalidateQueries(["candidates"]);

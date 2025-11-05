@@ -70,11 +70,11 @@ const modelRequirements = {
     permissionName: 'AssessmentTemplates',
     requiredPermission: 'View'
   },
-  scheduleassessment: {
-    model: ScheduledAssessmentSchema,
-    permissionName: 'Assessments',
-    requiredPermission: 'View'
-  },
+  // scheduleassessment: {
+  //   model: ScheduledAssessmentSchema,
+  //   permissionName: 'Assessments',
+  //   requiredPermission: 'View'
+  // },
   tenantquestions: {
     model: TenantQuestions,
     permissionName: 'QuestionBank',
@@ -179,17 +179,16 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     }
     // ------------------------------v1.0.7 >
     // Base query - always enforce tenant boundary
-    let query = model.toLowerCase() === 'scheduleassessment' ? { organizationId: tenantId } : { tenantId };
+    // let query = model.toLowerCase() === 'scheduleassessment' ? { organizationId: tenantId } : { tenantId };
     // console.log('[11] Initial query with tenantId:', query);
-
+    
+    
+    let query= {}
     const roleType = effectivePermissions_RoleType;
     const roleName = effectivePermissions_RoleName;
 
-
-
-    if (roleType === 'individual' && model.toLowerCase() !== 'scheduleassessment') {
+    if (roleType === 'individual') {
       query.ownerId = userId;
-      // console.log('[13] Individual user - adding ownerId filter:', query);
     } else if (roleType === 'organization' && roleName !== 'Admin') {
 
 
@@ -211,12 +210,9 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       }
 
 
-    } else {
-
-      // Ensure scheduled assessments are not restricted by ownerId
-      if (model.toLowerCase() === 'scheduleassessment') {
-        delete query.ownerId;
-      }
+    } else if (roleType === 'organization' && roleName === 'Admin') {
+        query.tenantId = tenantId;
+ 
     }
 
     let data;
@@ -361,7 +357,6 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           ],
         };
 
-        // console.log('[34.1] InterviewTemplate query:', JSON.stringify(query, null, 2));
         data = await DataModel.find(query)
           .populate({
             path: 'rounds.interviewers',
@@ -369,7 +364,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
             select: 'firstName lastName email',
           })
           .lean();
-        // console.log('[35] Found', data.length, 'InterviewTemplate records');
+       
         break;
       // ------------------------------ v1.0.4 >
 
@@ -409,16 +404,130 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
 
       case 'position':
-        // console.log('[32] Processing Position model');
-        data = await DataModel.find(query)
+
+        // query search params based on that will get the data
+        // query search params based on that will get the data
+        const {
+          page: positionPage = 1,
+          limit: positionLimit = 10,
+          search: positionSearch,
+          location: positionLocation,
+          tech: positionTech,
+          company: positionCompany,
+          experienceMin: positionExperienceMin,
+          experienceMax: positionExperienceMax,
+          salaryMin: positionSalaryMin,
+          salaryMax: positionSalaryMax,
+          createdDate: positionCreatedDate
+        } = req.query;
+
+        const parsedPositionPage = parseInt(positionPage) || 1;
+        const parsedPositionLimit = parseInt(positionLimit) || 10;
+        const positionSkip = (parsedPositionPage - 1) * parsedPositionLimit;
+
+        // Apply search
+        if (positionSearch) {
+          const searchRegex = new RegExp(positionSearch, 'i');
+          query.$or = [
+            { title: searchRegex },
+            { companyname: searchRegex },
+            { Location: searchRegex },
+            { positionCode: searchRegex }
+          ];
+        }
+
+        // Apply location filter
+        if (positionLocation) {
+          const locations = Array.isArray(positionLocation) ? positionLocation : [positionLocation];
+          query.Location = { $in: locations };
+        }
+
+        // Apply tech/skills filter
+        if (positionTech) {
+          const techs = Array.isArray(positionTech) ? positionTech : [positionTech];
+          query['skills.skill'] = { $in: techs };
+        }
+
+        // Apply company filter
+        if (positionCompany) {
+          const companies = Array.isArray(positionCompany) ? positionCompany : [positionCompany];
+          query.companyname = { $in: companies };
+        }
+
+        // Apply experience filter
+        const positionExpMin = parseInt(positionExperienceMin) || 0;
+        const positionExpMax = parseInt(positionExperienceMax) || Infinity;
+        if (positionExpMin > 0 || positionExpMax < Infinity) {
+          query.$and = query.$and || [];
+          if (positionExpMin > 0) query.$and.push({ minexperience: { $gte: positionExpMin } });
+          if (positionExpMax < Infinity) query.$and.push({ maxexperience: { $lte: positionExpMax } });
+        }
+
+        // Apply salary filter
+        const positionSalMin = parseInt(positionSalaryMin) || 0;
+        const positionSalMax = parseInt(positionSalaryMax) || Infinity;
+        if (positionSalMin > 0 || positionSalMax < Infinity) {
+          query.$and = query.$and || [];
+          if (positionSalMin > 0) query.$and.push({ 
+            $or: [
+              { minSalary: { $gte: positionSalMin } },
+              { maxSalary: { $gte: positionSalMin } }
+            ]
+          });
+          if (positionSalMax < Infinity) query.$and.push({
+            $or: [
+              { minSalary: { $lte: positionSalMax } },
+              { maxSalary: { $lte: positionSalMax } }
+            ]
+          });
+        }
+
+        // Apply created date filter
+        if (positionCreatedDate === 'last7') {
+          const date = new Date();
+          date.setDate(date.getDate() - 7);
+          query.createdAt = { $gte: date };
+        } else if (positionCreatedDate === 'last30') {
+          const date = new Date();
+          date.setDate(date.getDate() - 30);
+          query.createdAt = { $gte: date };
+        }
+
+        // Fetch paginated data with sort
+        const positionData = await DataModel.find(query)
           .populate({
             path: 'rounds.interviewers',
             model: 'Contacts',
             select: 'firstName lastName email',
           })
+          .sort({ createdAt: -1 })
+          .skip(positionSkip)
+          .limit(parsedPositionLimit)
           .lean();
-        // console.log('[33] Found', data.length, 'Position records');
+
+        // Get total count
+        total = await DataModel.countDocuments(query);
+
+        dataObj = {
+          positions: positionData,
+          total,
+          page: parsedPositionPage,
+          totalPages: Math.ceil(total / parsedPositionLimit)
+        };
+
+        data = dataObj;
+        // console.log('[33] Found', data.positions.length, 'Position records out of', total);
         break;
+
+        // data = await DataModel.find(query)
+        //   .populate({
+        //     path: 'rounds.interviewers',
+        //     model: 'Contacts',
+        //     select: 'firstName lastName email',
+        //   })
+        //   .lean();
+        // console.log('[33] Found', data.length, 'Position records');
+        // break;
 
       case 'feedback':
         // console.log('[34] Processing Feedback model with complex logic');
@@ -486,30 +595,123 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         break;
 
       case "candidate":
-        // NEW: Parse query params for filters, search, pagination
-        const {
-          page = 1,
-          limit = 10,
-          search,
-          status,
-          tech,
-          experienceMin,
-          experienceMax,
-          relevantExperienceMin,
-          relevantExperienceMax,
-          roles,
-          universities,
-          createdDate
-        } = req.query;
-        // console.log("[40] Query params:", req.query);
+        //   candidate query base on query will get the data from db 
+        // const {
+        //   page = 1,
+        //   limit = 10,
+        //   search,
+        //   status,
+        //   tech,
+        //   experienceMin,
+        //   experienceMax,
+        //   relevantExperienceMin,
+        //   relevantExperienceMax,
+        //   roles,
+        //   universities,
+        //   createdDate
+        // } = req.query;
 
-        const parsedPage = parseInt(page) || 1;
-        const parsedLimit = parseInt(limit) || 10;
-        const skip = (parsedPage - 1) * parsedLimit;
+        // const parsedPage = parseInt(page) || 1;
+        // const parsedLimit = parseInt(limit) || 10;
+        // const skip = (parsedPage - 1) * parsedLimit;
+
+        // // Apply search
+        // if (search) {
+        //   const searchRegex = new RegExp(search, 'i');
+        //   query.$or = [
+        //     { FirstName: searchRegex },
+        //     { LastName: searchRegex },
+        //     { Email: searchRegex },
+        //     { Phone: searchRegex }
+        //   ];
+        // }
+
+        // // Apply filters
+        // if (status) {
+        //   const statuses = Array.isArray(status) ? status : [status];
+        //   query.HigherQualification = { $in: statuses };
+        // }
+
+        // if (tech) {
+        //   const techs = Array.isArray(tech) ? tech : [tech];
+        //   query['skills.skill'] = { $in: techs };
+        // }
+
+        // const expMin = parseInt(experienceMin) || 0;
+        // const expMax = parseInt(experienceMax) || Infinity;
+        // if (expMin > 0 || expMax < Infinity) {
+        //   query.CurrentExperience = {};
+        //   if (expMin > 0) query.CurrentExperience.$gte = expMin;
+        //   if (expMax < Infinity) query.CurrentExperience.$lte = expMax;
+        // }
+
+        // const relExpMin = parseInt(relevantExperienceMin) || 0;
+        // const relExpMax = parseInt(relevantExperienceMax) || Infinity;
+        // if (relExpMin > 0 || relExpMax < Infinity) {
+        //   query.RelevantExperience = {};
+        //   if (relExpMin > 0) query.RelevantExperience.$gte = relExpMin;
+        //   if (relExpMax < Infinity) query.RelevantExperience.$lte = relExpMax;
+        // }
+
+        // if (roles) {
+        //   const roleList = Array.isArray(roles) ? roles : [roles];
+        //   query.CurrentRole = { $in: roleList };
+        // }
+
+        // if (universities) {
+        //   const uniList = Array.isArray(universities) ? universities : [universities];
+        //   query.UniversityCollege = { $in: uniList };
+        // }
+
+        // if (createdDate === 'last7') {
+        //   const date = new Date();
+        //   date.setDate(date.getDate() - 7);
+        //   query.createdAt = { $gte: date };
+        // } else if (createdDate === 'last30') {
+        //   const date = new Date();
+        //   date.setDate(date.getDate() - 30);
+        //   query.createdAt = { $gte: date };
+        // }
+
+        // // Fetch paginated data with sort
+        // data = await Candidate.find(query)
+        //   .sort({ createdAt: -1 })
+        //   .skip(skip)
+        //   .limit(parsedLimit)
+        //   .lean();
+
+        // // Get total count
+        // total = await Candidate.countDocuments(query);
+
+        // dataObj = {
+        //   candidate: data, total
+        // }
+
+        // data = dataObj
+        // break;
+         // candidate query base on query will get the data from db 
+        const {
+          page: candidatePage = 1,
+          limit: candidateLimit = 10,
+          search: candidateSearch,
+          status: candidateStatus,
+          tech: candidateTech,
+          experienceMin: candidateExperienceMin,
+          experienceMax: candidateExperienceMax,
+          relevantExperienceMin: candidateRelevantExperienceMin,
+          relevantExperienceMax: candidateRelevantExperienceMax,
+          roles: candidateRoles,
+          universities: candidateUniversities,
+          createdDate: candidateCreatedDate
+        } = req.query;
+
+        const parsedCandidatePage = parseInt(candidatePage) || 1;
+        const parsedCandidateLimit = parseInt(candidateLimit) || 10;
+        const candidateSkip = (parsedCandidatePage - 1) * parsedCandidateLimit;
 
         // Apply search
-        if (search) {
-          const searchRegex = new RegExp(search, 'i');
+        if (candidateSearch) {
+          const searchRegex = new RegExp(candidateSearch, 'i');
           query.$or = [
             { FirstName: searchRegex },
             { LastName: searchRegex },
@@ -519,75 +721,69 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         }
 
         // Apply filters
-        if (status) {
-          const statuses = Array.isArray(status) ? status : [status];
+        if (candidateStatus) {
+          const statuses = Array.isArray(candidateStatus) ? candidateStatus : [candidateStatus];
           query.HigherQualification = { $in: statuses };
         }
 
-        if (tech) {
-          const techs = Array.isArray(tech) ? tech : [tech];
+        if (candidateTech) {
+          const techs = Array.isArray(candidateTech) ? candidateTech : [candidateTech];
           query['skills.skill'] = { $in: techs };
         }
 
-        const expMin = parseInt(experienceMin) || 0;
-        const expMax = parseInt(experienceMax) || Infinity;
-        if (expMin > 0 || expMax < Infinity) {
+        const candidateExpMin = parseInt(candidateExperienceMin) || 0;
+        const candidateExpMax = parseInt(candidateExperienceMax) || Infinity;
+        if (candidateExpMin > 0 || candidateExpMax < Infinity) {
           query.CurrentExperience = {};
-          if (expMin > 0) query.CurrentExperience.$gte = expMin;
-          if (expMax < Infinity) query.CurrentExperience.$lte = expMax;
+          if (candidateExpMin > 0) query.CurrentExperience.$gte = candidateExpMin;
+          if (candidateExpMax < Infinity) query.CurrentExperience.$lte = candidateExpMax;
         }
 
-        const relExpMin = parseInt(relevantExperienceMin) || 0;
-        const relExpMax = parseInt(relevantExperienceMax) || Infinity;
-        if (relExpMin > 0 || relExpMax < Infinity) {
+        const candidateRelExpMin = parseInt(candidateRelevantExperienceMin) || 0;
+        const candidateRelExpMax = parseInt(candidateRelevantExperienceMax) || Infinity;
+        if (candidateRelExpMin > 0 || candidateRelExpMax < Infinity) {
           query.RelevantExperience = {};
-          if (relExpMin > 0) query.RelevantExperience.$gte = relExpMin;
-          if (relExpMax < Infinity) query.RelevantExperience.$lte = relExpMax;
+          if (candidateRelExpMin > 0) query.RelevantExperience.$gte = candidateRelExpMin;
+          if (candidateRelExpMax < Infinity) query.RelevantExperience.$lte = candidateRelExpMax;
         }
 
-        if (roles) {
-          const roleList = Array.isArray(roles) ? roles : [roles];
+        if (candidateRoles) {
+          const roleList = Array.isArray(candidateRoles) ? candidateRoles : [candidateRoles];
           query.CurrentRole = { $in: roleList };
         }
 
-        if (universities) {
-          const uniList = Array.isArray(universities) ? universities : [universities];
+        if (candidateUniversities) {
+          const uniList = Array.isArray(candidateUniversities) ? candidateUniversities : [candidateUniversities];
           query.UniversityCollege = { $in: uniList };
         }
 
-        if (createdDate === 'last7') {
+        if (candidateCreatedDate === 'last7') {
           const date = new Date();
           date.setDate(date.getDate() - 7);
           query.createdAt = { $gte: date };
-        } else if (createdDate === 'last30') {
+        } else if (candidateCreatedDate === 'last30') {
           const date = new Date();
           date.setDate(date.getDate() - 30);
           query.createdAt = { $gte: date };
         }
 
         // Fetch paginated data with sort
-        data = await Candidate.find(query)
+        const candidateData = await Candidate.find(query)
           .sort({ createdAt: -1 })
-          .skip(skip)
-          .limit(parsedLimit)
+          .skip(candidateSkip)
+          .limit(parsedCandidateLimit)
           .lean();
-
-
-
-
 
         // Get total count
         total = await Candidate.countDocuments(query);
 
         dataObj = {
-          candidate: data, total
-        }
+          candidate: candidateData,
+          total
+        };
 
-        data = dataObj
-
-
+        data = dataObj;
         break;
-
 
       // data = await DataModel.find(query).lean();
       // break;  
