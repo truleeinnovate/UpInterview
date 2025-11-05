@@ -1,17 +1,18 @@
 // v1.0.0 - Venkatesh - Added subscription status check to prevent already-subscribed users from accessing subscription plans page
 // v1.0.1 - Ashok - Fixed cards background color and grid layout for md screens
+// v1.0.2 - Ashok - fixed contact sales popup open and close
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-import { config } from '../../../config.js';
+import { config } from "../../../config.js";
 import toast from "react-hot-toast";
-import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js';
+import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode.js";
 import Cookies from "js-cookie";
-import { useSubscription } from '../../../apiHooks/useSubscription.js';
+import { useSubscription } from "../../../apiHooks/useSubscription.js";
 import { notify } from "../../../services/toastService.js";
 import SidebarPopup from "../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
-import ContactSalesForm from "../../../components/common/EnterpriseContactSalesForm.jsx";
+import ContactSalesForm from "../../../Components/common/EnterpriseContactSalesForm.jsx";
 import { validateWorkEmail } from "../../../utils/workEmailValidation.js";
 
 // Loading Skeleton for Subscription Plans
@@ -67,7 +68,13 @@ const SubscriptionPlan = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
-  const { plans, subscriptionData, createCustomerSubscription, isSubscriptionLoading, isPlansLoading } = useSubscription();
+  const {
+    plans,
+    subscriptionData,
+    createCustomerSubscription,
+    isSubscriptionLoading,
+    isPlansLoading,
+  } = useSubscription();
   const loading = isSubscriptionLoading || isPlansLoading;
   //console.log("plans ----", plans);
   //console.log("subscriptionData ----", subscriptionData);
@@ -118,23 +125,28 @@ const SubscriptionPlan = () => {
     }
 
     // Check if subscription data is loaded and user has an active subscription
-    if (!isSubscriptionLoading && subscriptionData && subscriptionData.status === 'active') {
+    if (
+      !isSubscriptionLoading &&
+      subscriptionData &&
+      subscriptionData.status === "active"
+    ) {
       // User already has an active subscription, redirect to home
       // console.log('User already has active subscription, redirecting to home...');
-      navigate('/home', { replace: true });
+      navigate("/home", { replace: true });
     }
   }, [subscriptionData, isSubscriptionLoading, isUpgrading, navigate]);
 
   const toggleBilling = () => setIsAnnual(!isAnnual);
 
   const submitPlans = async (plan) => {
-
     if (!plan) {
       notify.success("No plan is selected");
       return;
     }
     const totalAmount = isAnnual ? plan.annualPrice : plan.monthlyPrice;
-    const isFreePlan = (/free/i.test(String(plan?.name)) || ((plan?.monthlyPrice || 0) === 0 && (plan?.annualPrice || 0) === 0));
+    const isFreePlan =
+      /free/i.test(String(plan?.name)) ||
+      ((plan?.monthlyPrice || 0) === 0 && (plan?.annualPrice || 0) === 0);
 
     const payload = {
       planDetails: {
@@ -151,7 +163,10 @@ const SubscriptionPlan = () => {
         membershipType: isAnnual ? "annual" : "monthly",
       },
       totalAmount,
-      status: user.userType === "individual" && plan.name === "Free" ? "active" : "pending",
+      status:
+        user.userType === "individual" && plan.name === "Free"
+          ? "active"
+          : "pending",
     };
     // console.log("payload ----", payload);
     try {
@@ -170,10 +185,12 @@ const SubscriptionPlan = () => {
         //   ownerId: ownerId,
         // }).catch((err) => console.error('Email error (free):', err));
 
-        axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
-          tenantId: tenantId,
-          ownerId: ownerId,
-        }).catch((err) => console.error('Email error (signup):', err));
+        axios
+          .post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
+            tenantId: tenantId,
+            ownerId: ownerId,
+          })
+          .catch((err) => console.error("Email error (signup):", err));
 
         // Navigate immediately to home for Free plan
         // console.log("Navigating to /home after Free plan activation");
@@ -192,59 +209,56 @@ const SubscriptionPlan = () => {
           },
         });
       }
-
     } catch (error) {
       console.error("Error submitting subscription:", error);
     } finally {
       setIsSubmitting(false);
     }
-
   };
 
   const isHighlighted = (plan) =>
     hoveredPlan ? hoveredPlan === plan.name : plan.isDefault;
 
-
   // <---- contact sales popup code start
   const [isContactSalesOpen, setIsContactSalesOpen] = useState(false);
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    jobTitle: '',
-    companyName: '',
-    companySize: '',
-    additionalDetails: ''
+    firstName: "",
+    lastName: "",
+    email: "",
+    jobTitle: "",
+    companyName: "",
+    companySize: "",
+    additionalDetails: "",
   });
 
   const companySizeOptions = [
-    { value: '1-10', label: '1-10' },
-    { value: '11-50', label: '11-50' },
-    { value: '51-200', label: '51-200' },
-    { value: '201-500', label: '201-500' },
-    { value: '501-1000', label: '501-1000' },
-    { value: '1000+', label: '1000+' }
+    { value: "1-10", label: "1-10" },
+    { value: "11-50", label: "11-50" },
+    { value: "51-200", label: "51-200" },
+    { value: "201-500", label: "201-500" },
+    { value: "501-1000", label: "501-1000" },
+    { value: "1000+", label: "1000+" },
   ];
 
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target || e;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error when user types
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
 
     // Email validation using validateWorkEmail
     const emailError = validateWorkEmail(formData.email);
@@ -252,9 +266,11 @@ const SubscriptionPlan = () => {
       newErrors.email = emailError;
     }
 
-    if (!formData.jobTitle.trim()) newErrors.jobTitle = 'Job title is required';
-    if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required';
-    if (!formData.companySize) newErrors.companySize = 'Please select company size';
+    if (!formData.jobTitle.trim()) newErrors.jobTitle = "Job title is required";
+    if (!formData.companyName.trim())
+      newErrors.companyName = "Company name is required";
+    if (!formData.companySize)
+      newErrors.companySize = "Please select company size";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -264,46 +280,52 @@ const SubscriptionPlan = () => {
     e.preventDefault();
     if (validateForm()) {
       try {
-        const response = await fetch(`${config.REACT_APP_API_URL}/upinterviewEnterpriseContact`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            workEmail: formData.email,
-            jobTitle: formData.jobTitle,
-            companyName: formData.companyName,
-            companySize: formData.companySize,
-            additionalDetails: formData.additionalDetails || ""
-          }),
-        });
+        const response = await fetch(
+          `${config.REACT_APP_API_URL}/upinterviewEnterpriseContact`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              workEmail: formData.email,
+              jobTitle: formData.jobTitle,
+              companyName: formData.companyName,
+              companySize: formData.companySize,
+              additionalDetails: formData.additionalDetails || "",
+            }),
+          }
+        );
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to submit form');
+          throw new Error(data.error || "Failed to submit form");
         }
 
         // Show success message
-        notify.success('Thank you for contacting us! We will get back to you soon.');
+        notify.success(
+          "Thank you for contacting us! We will get back to you soon."
+        );
 
         // Close the popup and reset form
         setIsContactSalesOpen(false);
         setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          jobTitle: '',
-          companyName: '',
-          companySize: '',
-          additionalDetails: ''
+          firstName: "",
+          lastName: "",
+          email: "",
+          jobTitle: "",
+          companyName: "",
+          companySize: "",
+          additionalDetails: "",
         });
-
       } catch (error) {
-        console.error('Error submitting form:', error);
-        notify.error(error.message || 'Failed to submit form. Please try again.');
+        console.error("Error submitting form:", error);
+        notify.error(
+          error.message || "Failed to submit form. Please try again."
+        );
       }
     }
   };
@@ -321,7 +343,8 @@ const SubscriptionPlan = () => {
         {/* Header Section */}
         <div className="text-center mb-8">
           <h4 className="text-2xl sm:text-sm font-bold text-custom-blue">
-            The Right Plan for {user.userType === "organization" ? "Your Organization" : "You"}
+            The Right Plan for{" "}
+            {user.userType === "organization" ? "Your Organization" : "You"}
           </h4>
           <p className="text-custom-blue mt-2 sm:text-xs">
             We have several powerful plans to showcase your business and get
@@ -332,24 +355,34 @@ const SubscriptionPlan = () => {
         {/* Toggle Section */}
         <div className="flex justify-center items-center space-x-2 mb-16">
           <p
-            className={`text-custom-blue ${!isAnnual ? "font-semibold text-lg sm:text-sm" : "font-medium sm:text-xs"
-              }`}
+            className={`text-custom-blue ${
+              !isAnnual
+                ? "font-semibold text-lg sm:text-sm"
+                : "font-medium sm:text-xs"
+            }`}
           >
             Bill Monthly
           </p>
           <div
             onClick={toggleBilling}
-            className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${isAnnual ? "bg-[#217989]" : "bg-[#217989]"
-              }`}
+            className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
+              isAnnual ? "bg-[#217989]" : "bg-[#217989]"
+            }`}
           >
             <div
-              className={`w-4 h-4 rounded-full shadow-md transform transition-all ${isAnnual ? "translate-x-6 bg-yellow-500" : "translate-x-0 bg-yellow-500"
-                }`}
+              className={`w-4 h-4 rounded-full shadow-md transform transition-all ${
+                isAnnual
+                  ? "translate-x-6 bg-yellow-500"
+                  : "translate-x-0 bg-yellow-500"
+              }`}
             ></div>
           </div>
           <p
-            className={`text-[#217989] ${isAnnual ? "font-semibold text-lg sm:text-sm" : "font-medium sm:text-xs"
-              }`}
+            className={`text-[#217989] ${
+              isAnnual
+                ? "font-semibold text-lg sm:text-sm"
+                : "font-medium sm:text-xs"
+            }`}
           >
             Bill Annually
           </p>
@@ -362,80 +395,116 @@ const SubscriptionPlan = () => {
           <div className="grid sm:grid-cols-1 md:grid-cols-2 grid-cols-3 gap-6 items-stretch mb-5 ">
             {plans.map((plan) => {
               // Get actual price
-              const actualPrice = isAnnual ? plan.annualPrice : plan.monthlyPrice;
+              const actualPrice = isAnnual
+                ? plan.annualPrice
+                : plan.monthlyPrice;
               const monthlyPrice = plan.monthlyPrice;
 
               // Define static higher prices for organizations to show as strikethrough
               const getStaticHigherPrice = (planName, isAnnual) => {
-                if (planName === 'Starter') {
+                if (planName === "Starter") {
                   return isAnnual ? 19999 : 1999; // Monthly: 1999, Annual: 19999
-                } else if (planName === 'Professional' || planName === 'Pro') {
+                } else if (planName === "Professional" || planName === "Pro") {
                   return isAnnual ? 42999 : 4299; // Monthly: 4299, Annual: 42999
                 }
                 return actualPrice; // For other plans, use actual price
               };
 
-              const staticHigherPrice = getStaticHigherPrice(plan.name, isAnnual);
-              const shouldShowLimitedOffer = organization && !isAnnual &&
-                (plan.name === 'Starter' || plan.name === 'Professional' || plan.name === 'Pro');
-              const shouldShowSavings = organization && isAnnual &&
-                (plan.name === 'Starter' || plan.name === 'Professional' || plan.name === 'Pro');
+              const staticHigherPrice = getStaticHigherPrice(
+                plan.name,
+                isAnnual
+              );
+              const shouldShowLimitedOffer =
+                organization &&
+                !isAnnual &&
+                (plan.name === "Starter" ||
+                  plan.name === "Professional" ||
+                  plan.name === "Pro");
+              const shouldShowSavings =
+                organization &&
+                isAnnual &&
+                (plan.name === "Starter" ||
+                  plan.name === "Professional" ||
+                  plan.name === "Pro");
 
               // Calculate savings for individuals on annual plans
-              const individualAnnualSavings = !organization && isAnnual && monthlyPrice > 0 ?
-                (monthlyPrice * 12 - actualPrice) : 0;
-              const shouldShowIndividualSavings = !organization && isAnnual && individualAnnualSavings > 0;
+              const individualAnnualSavings =
+                !organization && isAnnual && monthlyPrice > 0
+                  ? monthlyPrice * 12 - actualPrice
+                  : 0;
+              const shouldShowIndividualSavings =
+                !organization && isAnnual && individualAnnualSavings > 0;
 
-              const savingsAmount = organization ? (staticHigherPrice - actualPrice) : individualAnnualSavings;
-              const isEnterprise = plan.name === 'Enterprise';
-              const isFree = plan.name === 'Free' || actualPrice === 0;
+              const savingsAmount = organization
+                ? staticHigherPrice - actualPrice
+                : individualAnnualSavings;
+              const isEnterprise = plan.name === "Enterprise";
+              const isFree = plan.name === "Free" || actualPrice === 0;
 
               return (
                 <div
                   key={plan.name}
-                  className={`shadow-xl rounded-2xl relative transition-all duration-300 flex flex-col h-full ${isHighlighted(plan)
-                    ? "-translate-y-2 md:-translate-y-3 z-10 bg-[#217989] text-white transform scale-[1.02]"
-                    : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
-                    }`}
+                  className={`shadow-xl rounded-2xl relative transition-all duration-300 flex flex-col h-full ${
+                    isHighlighted(plan)
+                      ? "-translate-y-2 md:-translate-y-3 z-10 bg-[#217989] text-white transform scale-[1.02]"
+                      : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
+                  }`}
                   onMouseEnter={() => setHoveredPlan(plan.name)}
                   onMouseLeave={() => setHoveredPlan(null)}
                   style={{ minHeight: "500px" }}
                 >
                   <div className="p-5 flex flex-col h-full">
                     {/* Most Popular Badge - Professional for orgs, Premium for individuals */}
-                    {((organization && (plan.name === 'Professional' || plan.name === 'Pro')) ||
-                      (!organization && plan.name === 'Premium')) && (
-                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                          <span className="bg-[#217989] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
-                            Most Popular
-                          </span>
-                        </div>
-                      )}
+                    {((organization &&
+                      (plan.name === "Professional" || plan.name === "Pro")) ||
+                      (!organization && plan.name === "Premium")) && (
+                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <span className="bg-[#217989] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
+                          Most Popular
+                        </span>
+                      </div>
+                    )}
                     {/* Plan Name - Left aligned */}
                     <div className="text-start mb-4">
                       <h5
-                        className={`text-xl md:text-2xl font-bold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
-                          }`}
+                        className={`text-xl md:text-2xl font-bold ${
+                          isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                        }`}
                       >
                         {plan?.name ? plan?.name : "Plan Name Not Available"}
                       </h5>
                     </div>
                     {/* Features List */}
-                    <div className="flex-grow" style={{ minHeight: "200px", marginBottom: "16px" }}>
+                    <div
+                      className="flex-grow"
+                      style={{ minHeight: "200px", marginBottom: "16px" }}
+                    >
                       <ul className="space-y-2.5 text-sm">
-                        {plan.features && plan.features.map((feature, idx) => (
-                          <li key={idx} className="flex items-center">
-                            <span className={`mr-2 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${isHighlighted(plan)
-                              ? "bg-white/20 text-white"
-                              : "bg-green-100 text-green-600"
-                              }`}>
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </span>
-                            <span className="leading-snug">{feature}</span>
-                          </li>
-                        ))}
+                        {plan.features &&
+                          plan.features.map((feature, idx) => (
+                            <li key={idx} className="flex items-center">
+                              <span
+                                className={`mr-2 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
+                                  isHighlighted(plan)
+                                    ? "bg-white/20 text-white"
+                                    : "bg-green-100 text-green-600"
+                                }`}
+                              >
+                                <svg
+                                  className="w-3 h-3"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </span>
+                              <span className="leading-snug">{feature}</span>
+                            </li>
+                          ))}
                       </ul>
                     </div>
 
@@ -444,100 +513,174 @@ const SubscriptionPlan = () => {
                       {shouldShowLimitedOffer ? (
                         // Monthly plans for organizations - Show strikethrough and Limited-Time Offer
                         <div>
-                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold line-through ${isHighlighted(plan)
-                            ? "text-white/70" : "text-gray-400"
-                            }`}>
-                            <span className="text-base sm:text-lg md:text-xl">₹</span>
-                            {staticHigherPrice.toLocaleString('en-IN')}
+                          <p
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold line-through ${
+                              isHighlighted(plan)
+                                ? "text-white/70"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            <span className="text-base sm:text-lg md:text-xl">
+                              ₹
+                            </span>
+                            {staticHigherPrice.toLocaleString("en-IN")}
                           </p>
-                          <p className={`text-xs font-medium mt-1 ${isHighlighted(plan) ? "text-white/80" : "text-gray-500"
-                            }`}>
+                          <p
+                            className={`text-xs font-medium mt-1 ${
+                              isHighlighted(plan)
+                                ? "text-white/80"
+                                : "text-gray-500"
+                            }`}
+                          >
                             per month
                           </p>
                           <div className="mt-1">
-                            <span className={`inline-block px-3 py-1.5 rounded-md text-xs font-semibold ${isHighlighted(plan)
-                              ? "bg-white/20 text-white"
-                              : "bg-yellow-100 text-yellow-800"
-                              }`}>
-                              Limited-Time Offer: ₹{actualPrice.toLocaleString('en-IN')} / month
+                            <span
+                              className={`inline-block px-3 py-1.5 rounded-md text-xs font-semibold ${
+                                isHighlighted(plan)
+                                  ? "bg-white/20 text-white"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              Limited-Time Offer: ₹
+                              {actualPrice.toLocaleString("en-IN")} / month
                             </span>
                           </div>
                         </div>
                       ) : shouldShowSavings ? (
                         // Annual plans for organizations - Show actual price and savings
                         <div>
-                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
-                            }`}>
-                            <span className="text-base sm:text-lg md:text-xl">₹</span>
-                            {actualPrice.toLocaleString('en-IN')}
+                          <p
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${
+                              isHighlighted(plan)
+                                ? "text-white"
+                                : "text-[#217989]"
+                            }`}
+                          >
+                            <span className="text-base sm:text-lg md:text-xl">
+                              ₹
+                            </span>
+                            {actualPrice.toLocaleString("en-IN")}
                           </p>
-                          <p className={`text-xs font-medium mt-1 ${isHighlighted(plan) ? "text-white/80" : "text-gray-600"
-                            }`}>
+                          <p
+                            className={`text-xs font-medium mt-1 ${
+                              isHighlighted(plan)
+                                ? "text-white/80"
+                                : "text-gray-600"
+                            }`}
+                          >
                             per year
                           </p>
                           <div className="mt-1">
-                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${isHighlighted(plan)
-                              ? "bg-green-100/20 text-white border border-white/30"
-                              : "bg-green-50 text-green-700 border border-green-200"
-                              }`}>
+                            <span
+                              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                                isHighlighted(plan)
+                                  ? "bg-green-100/20 text-white border border-white/30"
+                                  : "bg-green-50 text-green-700 border border-green-200"
+                              }`}
+                            >
                               <span className="text-sm">🔥</span>
-                              Save ₹{savingsAmount.toLocaleString('en-IN')}/year
+                              Save ₹{savingsAmount.toLocaleString("en-IN")}/year
                             </span>
                           </div>
                         </div>
                       ) : isEnterprise ? (
                         // Enterprise plan - Show custom pricing
                         <div>
-                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
-                            }`}>
+                          <p
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${
+                              isHighlighted(plan)
+                                ? "text-white"
+                                : "text-[#217989]"
+                            }`}
+                          >
                             Custom
                           </p>
-                          <p className={`text-xs font-medium mt-1 ${isHighlighted(plan) ? "text-white/80" : "text-gray-600"
-                            }`}>
+                          <p
+                            className={`text-xs font-medium mt-1 ${
+                              isHighlighted(plan)
+                                ? "text-white/80"
+                                : "text-gray-600"
+                            }`}
+                          >
                             pricing
                           </p>
                         </div>
                       ) : isFree ? (
                         // Free plan - Show ₹0 forever
                         <div>
-                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
-                            }`}>
-                            <span className="text-base sm:text-lg md:text-xl">₹</span>
+                          <p
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${
+                              isHighlighted(plan)
+                                ? "text-white"
+                                : "text-[#217989]"
+                            }`}
+                          >
+                            <span className="text-base sm:text-lg md:text-xl">
+                              ₹
+                            </span>
                             0
                           </p>
-                          <p className={`text-xs font-medium mt-1 ${isHighlighted(plan) ? "text-white/80" : "text-gray-600"
-                            }`}>
+                          <p
+                            className={`text-xs font-medium mt-1 ${
+                              isHighlighted(plan)
+                                ? "text-white/80"
+                                : "text-gray-600"
+                            }`}
+                          >
                             forever
                           </p>
                         </div>
                       ) : shouldShowIndividualSavings ? (
                         // Individual annual plans - Show price with savings
                         <div>
-                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
-                            }`}>
-                            <span className="text-base sm:text-lg md:text-xl">₹</span>
-                            {actualPrice.toLocaleString('en-IN')}
+                          <p
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${
+                              isHighlighted(plan)
+                                ? "text-white"
+                                : "text-[#217989]"
+                            }`}
+                          >
+                            <span className="text-base sm:text-lg md:text-xl">
+                              ₹
+                            </span>
+                            {actualPrice.toLocaleString("en-IN")}
                           </p>
-                          <p className={`text-xs font-medium mt-1 ${isHighlighted(plan) ? "text-white/80" : "text-gray-600"
-                            }`}>
+                          <p
+                            className={`text-xs font-medium mt-1 ${
+                              isHighlighted(plan)
+                                ? "text-white/80"
+                                : "text-gray-600"
+                            }`}
+                          >
                             per year
                           </p>
                           <div className="mt-1">
-                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${isHighlighted(plan)
-                              ? "bg-green-100/20 text-white border border-white/30"
-                              : "bg-green-50 text-green-700 border border-green-200"
-                              }`}>
-                              Save ₹{savingsAmount.toLocaleString('en-IN')}/year
+                            <span
+                              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                                isHighlighted(plan)
+                                  ? "bg-green-100/20 text-white border border-white/30"
+                                  : "bg-green-50 text-green-700 border border-green-200"
+                              }`}
+                            >
+                              Save ₹{savingsAmount.toLocaleString("en-IN")}/year
                             </span>
                           </div>
                         </div>
                       ) : (
                         // Regular pricing for individuals or other cases
                         <div>
-                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
-                            }`}>
-                            <span className="text-base sm:text-lg md:text-xl">₹</span>
-                            {actualPrice.toLocaleString('en-IN')}
+                          <p
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${
+                              isHighlighted(plan)
+                                ? "text-white"
+                                : "text-[#217989]"
+                            }`}
+                          >
+                            <span className="text-base sm:text-lg md:text-xl">
+                              ₹
+                            </span>
+                            {actualPrice.toLocaleString("en-IN")}
                             <span className="text-xs font-medium">
                               {" "}
                               / {isAnnual ? "year" : "month"}
@@ -547,21 +690,40 @@ const SubscriptionPlan = () => {
                       )}
                     </div>
 
-
                     <button
                       key={plan._id}
-                      onClick={isEnterprise ? handleContactSales : () => !isEnterprise && submitPlans(plan)}
-                      isLoading={subscriptionData.subscriptionPlanId === plan.planId && isSubmitting}
-                      loadingText={subscriptionData.subscriptionPlanId === plan.planId &&
-                        "Processing..."}
+                      onClick={
+                        isEnterprise
+                          ? handleContactSales
+                          : () => !isEnterprise && submitPlans(plan)
+                      }
+                      isLoading={
+                        subscriptionData.subscriptionPlanId === plan.planId &&
+                        isSubmitting
+                      }
+                      loadingText={
+                        subscriptionData.subscriptionPlanId === plan.planId &&
+                        "Processing..."
+                      }
                       className={`w-full font-semibold py-2.5 mt-auto rounded-lg text-sm
-                ${isHighlighted(plan) ? "bg-white text-custom-blue hover:text-custom-blue " : "text-white bg-custom-blue"}
-                ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""}`}
-                      disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"}
+                ${
+                  isHighlighted(plan)
+                    ? "bg-white text-custom-blue hover:text-custom-blue "
+                    : "text-white bg-custom-blue"
+                }
+                ${
+                  subscriptionData.subscriptionPlanId === plan.planId &&
+                  subscriptionData.status === "active"
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+                      disabled={
+                        subscriptionData.subscriptionPlanId === plan.planId &&
+                        subscriptionData.status === "active"
+                      }
                     >
-                      {subscriptionData.subscriptionPlanId === plan.planId && isSubmitting ? (
+                      {subscriptionData.subscriptionPlanId === plan.planId &&
+                      isSubmitting ? (
                         <span className="flex items-center justify-center">
                           <svg
                             className="animate-spin h-5 w-5 mr-2"
@@ -586,11 +748,15 @@ const SubscriptionPlan = () => {
                         </span>
                       ) : isEnterprise ? (
                         "Contact Sales"
-                      ) : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
-                        ? "Subscribed"
-                        : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
-                          ? "Continue to Payment"
-                          : "Choose"}
+                      ) : subscriptionData.subscriptionPlanId === plan.planId &&
+                        subscriptionData.status === "active" ? (
+                        "Subscribed"
+                      ) : subscriptionData.subscriptionPlanId === plan.planId &&
+                        subscriptionData.status === "created" ? (
+                        "Continue to Payment"
+                      ) : (
+                        "Choose"
+                      )}
                     </button>
                   </div>
                 </div>
@@ -601,21 +767,22 @@ const SubscriptionPlan = () => {
       </div>
 
       {/* contact sale popup */}
-      <SidebarPopup
-        title="Contact Sales"
-        isOpen={isContactSalesOpen}
-        onClose={() => setIsContactSalesOpen(false)}
-      >
-        <div className="p-4">
-          <ContactSalesForm
-            formData={formData}
-            errors={errors}
-            handleChange={handleChange}
-            handleSubmit={handleSubmit}
-            isLoading={false}
-          />
-        </div>
-      </SidebarPopup>
+      {isContactSalesOpen && (
+        <SidebarPopup
+          title="Contact Sales"
+          onClose={() => setIsContactSalesOpen(false)}
+        >
+          <div className="p-4">
+            <ContactSalesForm
+              formData={formData}
+              errors={errors}
+              handleChange={handleChange}
+              handleSubmit={handleSubmit}
+              isLoading={false}
+            />
+          </div>
+        </SidebarPopup>
+      )}
     </div>
   );
 };
