@@ -630,7 +630,7 @@ const updateInterviewRound = async (req, res) => {
         // Check usage limit if changing status to Scheduled for internal interview
         if (round.status === 'Scheduled' &&
             existingRound.status !== 'Scheduled' &&
-            existingRound.interviewerType === 'internal') {
+            existingRound.interviewerType === 'Internal') {
 
             // Get interview details for tenantId
             const interview = await Interview.findById(interviewId);
