@@ -11,10 +11,7 @@ import Cookies from "js-cookie";
 import { useSubscription } from '../../../apiHooks/useSubscription.js';
 import { notify } from "../../../services/toastService.js";
 import SidebarPopup from "../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
-import InputField from "../../../Components/FormFields/InputField";
-import EmailField from "../../../Components/FormFields/EmailField";
-import DescriptionField from "../../../Components/FormFields/DescriptionField";
-import DropdownWithSearchField from "../../../Components/FormFields/DropdownWithSearchField";
+import ContactSalesForm from "../../../components/common/EnterpriseContactSalesForm.jsx";
 import { validateWorkEmail } from "../../../utils/workEmailValidation.js";
 
 // Loading Skeleton for Subscription Plans
@@ -244,24 +241,24 @@ const SubscriptionPlan = () => {
     }
   };
 
-const validateForm = () => {
-  const newErrors = {};
+  const validateForm = () => {
+    const newErrors = {};
 
-  if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
 
-  // Email validation using validateWorkEmail
-  const emailError = validateWorkEmail(formData.email);
-  if (emailError) {
-    newErrors.email = emailError;
-  }
+    // Email validation using validateWorkEmail
+    const emailError = validateWorkEmail(formData.email);
+    if (emailError) {
+      newErrors.email = emailError;
+    }
 
-  if (!formData.jobTitle.trim()) newErrors.jobTitle = 'Job title is required';
-  if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required';
-  if (!formData.companySize) newErrors.companySize = 'Please select company size';
+    if (!formData.jobTitle.trim()) newErrors.jobTitle = 'Job title is required';
+    if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required';
+    if (!formData.companySize) newErrors.companySize = 'Please select company size';
 
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -447,7 +444,8 @@ const validateForm = () => {
                       {shouldShowLimitedOffer ? (
                         // Monthly plans for organizations - Show strikethrough and Limited-Time Offer
                         <div>
-                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold line-through ${isHighlighted(plan) ? "text-white/70" : "text-gray-400"
+                          <p className={`text-xl sm:text-2xl md:text-3xl font-bold line-through ${isHighlighted(plan)
+                            ? "text-white/70" : "text-gray-400"
                             }`}>
                             <span className="text-base sm:text-lg md:text-xl">₹</span>
                             {staticHigherPrice.toLocaleString('en-IN')}
@@ -609,87 +607,13 @@ const validateForm = () => {
         onClose={() => setIsContactSalesOpen(false)}
       >
         <div className="p-4">
-          <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                label="First Name"
-              />
-              <InputField
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                label="Last Name"
-                required
-                error={errors.lastName}
-              />
-            </div>
-
-            <EmailField
-              name="email"
-              value={formData.email}
-              onChange={(e) => handleChange({ target: { name: 'email', value: e.target.value } })}
-              label="Work Email"
-              required
-              error={errors.email}
-              placeholder="your.email@company.com"
-              onInvalid={(e) => {
-                e.preventDefault(); // Prevent default HTML5 validation
-              }}
-            />
-
-            <InputField
-              name="jobTitle"
-              value={formData.jobTitle}
-              onChange={handleChange}
-              label="Job Title"
-              required
-              error={errors.jobTitle}
-            />
-
-            <InputField
-              name="companyName"
-              value={formData.companyName}
-              onChange={handleChange}
-              label="Company Name"
-              required
-              error={errors.companyName}
-            />
-
-            <div>
-              <DropdownWithSearchField
-                name="companySize"
-                value={formData.companySize}
-                onChange={handleChange}
-                options={companySizeOptions}
-                label="Company Size"
-                required
-                error={errors.companySize}
-                placeholder="Select company size"
-                isSearchable={false}
-              />
-            </div>
-
-            <DescriptionField
-              name="additionalDetails"
-              value={formData.additionalDetails}
-              onChange={handleChange}
-              label="Additional Details"
-              placeholder="Tell us about your requirements"
-              rows={3}
-            />
-
-            <div className="pt-2">
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-custom-blue hover:bg-custom-blue/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
-              >
-                Contact Sales
-              </button>
-            </div>
-          </form>
+          <ContactSalesForm
+            formData={formData}
+            errors={errors}
+            handleChange={handleChange}
+            handleSubmit={handleSubmit}
+            isLoading={false}
+          />
         </div>
       </SidebarPopup>
     </div>
