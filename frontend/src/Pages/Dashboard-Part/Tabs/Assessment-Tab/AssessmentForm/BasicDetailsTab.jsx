@@ -84,28 +84,8 @@ const BasicDetailsTab = ({
   const categoryOrTechnologyRef = useRef(null);
 
   const [isPositionModalOpen, setIsPositionModalOpen] = useState(false);
-  // const { assessmentLists, createAssessmentTemplateList } = useAssessments();
 
-  // ------------------------------ Category / Technology ---------------------------------------
-  const [error, setError] = useState("");
-  // const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  // const [categories, setCategories] = useState([]); // fetched or newly created
-  // const [selectedCategory, setSelectedCategory] = useState("");
   useScrollLock(isCategoryModalOpen);
-
-  // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     try {
-  //       const response = await assessmentLists(tenantId, ownerId);
-  //       setCategories(response || []);
-  //     } catch (error) {
-  //       console.error("Error fetching categories:", error);
-  //     }
-  //   };
-  //   fetchCategories();
-  // }, []);
-
-  // ------------------------------ Category / Technology ---------------------------------------
 
   // Close all dropdowns except the one specified
   const closeAllDropdowns = (except = null) => {
@@ -497,7 +477,7 @@ const BasicDetailsTab = ({
                     }));
                   }
                 }}
-                error={error || errors.categoryOrTechnology}
+                error={errors.categoryOrTechnology}
                 placeholder="Select List"
               />
               <div></div> {/* Empty div to maintain grid structure */}
