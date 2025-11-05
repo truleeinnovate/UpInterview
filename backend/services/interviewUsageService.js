@@ -160,10 +160,10 @@ async function handleInterviewStatusChange(roundId, oldStatus, newStatus, interv
       return { success: false, message: 'Round not found' };
     }
 
-    // Only track internal interviews
-    if (round.interviewerType !== 'Internal') {
-      console.log('[USAGE] Not an internal interview, skipping usage tracking');
-      return { success: true, message: 'Not an internal interview' };
+    // Only track external interviews
+    if (round.interviewerType !== 'External') {
+      console.log('[USAGE] Not an external interview, skipping usage tracking');
+      return { success: true, message: 'Not an external interview' };
     }
 
     // Get tenantId and ownerId from interview or provided data
@@ -285,20 +285,20 @@ async function recalculateInterviewUsage(tenantId) {
     let scheduledCount = 0;
     
     if (interviewIds.length > 0) {
-      // Count all scheduled External interviews for this tenant's interviews
+      // Count all scheduled Internal interviews for this tenant's interviews
       scheduledCount = await InterviewRounds.countDocuments({
         interviewId: { $in: interviewIds },
         status: 'Scheduled',
-        interviewerType: 'External'
+        interviewerType: 'Internal'
       });
-      console.log(`[USAGE] Found ${scheduledCount} scheduled External interviews for tenant's interviews`);
+      console.log(`[USAGE] Found ${scheduledCount} scheduled Internal interviews for tenant's interviews`);
     } else {
       // Alternative approach: Find rounds with External type and populate interview to check tenantId
       console.log('[USAGE] No interviews found via Interview model, using alternative approach');
       
       const rounds = await InterviewRounds.find({
         status: 'Scheduled',
-        interviewerType: 'External'
+        interviewerType: 'Internal'
       }).populate('interviewId');
       
       // Filter rounds that belong to this tenant
@@ -308,7 +308,7 @@ async function recalculateInterviewUsage(tenantId) {
       });
       
       scheduledCount = tenantRounds.length;
-      console.log(`[USAGE] Found ${scheduledCount} scheduled External interviews via alternative approach`);
+      console.log(`[USAGE] Found ${scheduledCount} scheduled Internal interviews via alternative approach`);
     }
 
     // Get current date for finding active usage period

@@ -127,7 +127,7 @@ const interviewRoundSchema = new mongoose.Schema({
     roundTitle: String,
     interviewMode: String,
     interviewType: String, // instant or schedule later
-    interviewerType: String, // internal or external
+    interviewerType: String, // Internal or External
     duration: String,
     instructions: String,
 
@@ -225,8 +225,8 @@ interviewRoundSchema.pre('save', async function (next) {
             const oldStatus = this._original_status || 'Draft';
             const newStatus = this.status;
 
-            // Only track for External interviews
-            if (this.interviewerType === 'External') {
+            // Only track for Internal interviews
+            if (this.interviewerType === 'Internal') {
                 // Get the interview details for tenantId and ownerId
                 const Interview = require('../Interview/Interview').Interview;
                 const interview = await Interview.findById(this.interviewId);
@@ -273,8 +273,8 @@ interviewRoundSchema.post('findOneAndUpdate', async function (doc) {
         const oldStatus = this._originalDoc.status;
         const newStatus = doc.status;
 
-        // Check if status changed and it's an External interview
-        if (oldStatus !== newStatus && doc.interviewerType === 'External') {
+        // Check if status changed and it's an Internal interview
+        if (oldStatus !== newStatus && doc.interviewerType === 'Internal') {
             const Interview = require('../Interview/Interview').Interview;
             const interview = await Interview.findById(doc.interviewId);
 

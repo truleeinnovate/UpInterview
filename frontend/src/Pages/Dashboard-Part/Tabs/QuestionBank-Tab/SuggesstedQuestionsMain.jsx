@@ -195,6 +195,7 @@ const SuggestedQuestionsComponent = ({
     accessibleQuestions,
     lockedQuestions: lockedQuestionsCount,
     questionTypeFilter,
+    typeBreakdown,
     isLoading,
   } = useQuestions({
     questionType: selectedQuestionType,
@@ -535,11 +536,10 @@ const SuggestedQuestionsComponent = ({
 
   const onClickAddButton = async (item) => {
     // Check if question is locked
-    // COMMENTED OUT FOR NOW - Show all questions without limits
-    // if (item.isLocked) {
-    //   navigate('/account-settings/subscription');
-    //   return;
-    // }
+    if (item.isLocked) {
+      navigate('/account-settings/subscription');
+      return;
+    }
 
     if (type === "assessment") {
       const isDuplicate = addedSections.some((section) =>
@@ -1113,6 +1113,7 @@ const SuggestedQuestionsComponent = ({
         type={type}
       />
 
+
       {/* v1.0.5 -----------------------------------------------------------------> */}
       {isLoading ? (
         <SkeletonLoader />
@@ -1185,51 +1186,64 @@ const SuggestedQuestionsComponent = ({
             <ul className="flex flex-col gap-4 pr-2 h-[calc(100vh-210px)] overflow-y-auto">
               {/* v1.0.7 <----------------------------------------------------------------------- */}
               {paginatedData.length > 0 ? (
-                paginatedData.map((item, index) => (
-                  <div
-                    key={index}
-                    className={`border rounded-lg h-full shadow-sm transition-shadow text-sm ${
-                      // COMMENTED OUT FOR NOW - Show all questions without locked styling
-                      // item.isLocked
-                      //   ? 'border-gray-300 bg-gray-50 opacity-75'
-                      //   : 'border-gray-200 hover:shadow-md'
-                      "border-gray-200 hover:shadow-md"
-                    }`}
-                  >
-                    <div className="flex justify-between items-center border-b border-gray-200 px-4">
-                      {/* v1.0.6 <---------------------------------------------------------------------------- */}
-                      <div className="flex items-start justify-start sm:w-[50%] md:w-[58%] w-[80%]">
-                        <div
-                          className={`flex items-center gap-2 justify-center rounded-md px-3 py-1 text-white text-sm transition-colors ${
-                            // COMMENTED OUT FOR NOW - Show all questions without locked styling
-                            // item.isLocked ? 'bg-gray-400' : 'bg-custom-blue/80'
-                            "bg-custom-blue/80"
-                          }`}
-                        >
-                          {/* COMMENTED OUT FOR NOW - Don't show lock icon */}
-                          {/* {item.isLocked && <Lock className="w-4 h-4" />} */}
-                          <p className="font-medium">{item.technology[0]}</p>
+                paginatedData.map((item, index) => {
+                  // For locked cards, show simplified centered content
+                  if (item.isLocked) {
+                    return (
+                      <div
+                        key={index}
+                        className="border rounded-lg shadow-sm transition-shadow text-sm border-gray-300 bg-gray-50"
+                      >
+                        <div className="relative min-h-[200px] flex items-center justify-center p-8">
+                          <div className="flex flex-col items-center justify-center">
+                            <Lock className="w-12 h-12 text-gray-400 mb-3" />
+                            <p className="text-gray-700 font-medium text-lg mb-4">This question is locked</p>
+                            <button
+                              onClick={() => navigate('/account-settings/subscription')}
+                              className="px-6 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
+                            >
+                              Upgrade to unlock
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      {/* v1.0.6 ----------------------------------------------------------------------------> */}
-                      <div
-                        className={`flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${
-                          type === "interviewerSection" ||
-                          type === "feedback" ||
-                          type === "assessment"
-                            ? "w-[15%]"
-                            : "sm:w-[28%] md:w-[20%] w-[10%]"
-                        }`}
-                      >
-                        <p
-                          className={`w-16 text-center ${getDifficultyStyles(
-                            item.difficultyLevel
-                          )} rounded-full py-1`}
-                          title="Difficulty Level"
+                    );
+                  }
+                  
+                  // Regular unlocked card
+                  return (
+                    <div
+                      key={index}
+                      className="border rounded-lg h-full shadow-sm transition-shadow text-sm border-gray-200 hover:shadow-md"
+                    >
+                      <div className="flex justify-between items-center border-b border-gray-200 px-4">
+                        {/* v1.0.6 <---------------------------------------------------------------------------- */}
+                        <div className="flex items-start justify-start sm:w-[50%] md:w-[58%] w-[80%]">
+                          <div
+                            className="flex items-center gap-2 justify-center rounded-md px-3 py-1 text-white text-sm transition-colors bg-custom-blue/80"
+                          >
+                            <p className="font-medium">{item.technology[0]}</p>
+                          </div>
+                        </div>
+                        {/* v1.0.6 ----------------------------------------------------------------------------> */}
+                        <div
+                          className={`flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${
+                            type === "interviewerSection" ||
+                            type === "feedback" ||
+                            type === "assessment"
+                              ? "w-[15%]"
+                              : "sm:w-[28%] md:w-[20%] w-[10%]"
+                          }`}
                         >
-                          {item.difficultyLevel}
-                        </p>
-                      </div>
+                          <p
+                            className={`w-16 text-center ${getDifficultyStyles(
+                              item.difficultyLevel
+                            )} rounded-full py-1`}
+                            title="Difficulty Level"
+                          >
+                            {item.difficultyLevel}
+                          </p>
+                        </div>
                       {fromScheduleLater && (
                         <div className="flex justify-center text-center h-12 sm:border-0 border-r border-gray-200">
                           <div className="flex items-center w-14 justify-center">
@@ -1264,8 +1278,7 @@ const SuggestedQuestionsComponent = ({
                       {(type === "interviewerSection" ||
                         type === "feedback") && (
                         <div className="p-1 flex justify-center w-[8%]">
-                          {/* COMMENTED OUT FOR NOW - No lock check for buttons */}
-                          {/* item.isLocked ? (
+                          {item.isLocked ? (
                             <button
                               type="button"
                               onClick={() => navigate('/account-settings/subscription')}
@@ -1274,8 +1287,7 @@ const SuggestedQuestionsComponent = ({
                               <Lock className="h-4 w-4 mr-1" />
                               <span className="sm:hidden inline">Upgrade</span>
                             </button>
-                          ) : */}
-                          {interviewQuestionsLists?.some(
+                          ) : interviewQuestionsLists?.some(
                             (q) => q.questionId === item._id
                           ) ? (
                             <button
@@ -1344,79 +1356,38 @@ const SuggestedQuestionsComponent = ({
 
                       {!type && !fromScheduleLater && (
                         <div className="flex justify-center relative">
-                          {/* COMMENTED OUT FOR NOW - No lock check for buttons */}
-                          {/* item.isLocked ? (
-                            <button
-                              type="button"
-                              className="flex items-center gap-1 px-3 py-1 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition-colors text-sm"
-                              onClick={() => navigate('/account-settings/subscription')}
-                            >
-                              <Lock className="w-4 h-4" />
-                              <span>Unlock</span>
-                            </button>
-                          ) : ( */}
-                          <>
-                            <button
-                              type="button"
-                              className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
-                              onClick={() => toggleDropdown(item._id)}
-                            >
-                              Add{" "}
-                              <span className="sm:hidden md:hidden inline">
-                                to list
-                              </span>
-                            </button>
-                            {dropdownOpen === item._id && (
-                              <MyQuestionList
-                                question={item}
-                                closeDropdown={closeDropdown}
-                                isInterviewType={
-                                  dropdownValue === "Interview Questions"
-                                }
-                              />
-                            )}
-                          </>
-                          {/* ) */}
+                          <button
+                            type="button"
+                            className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
+                            onClick={() => toggleDropdown(item._id)}
+                          >
+                            Add{" "}
+                            <span className="sm:hidden md:hidden inline">
+                              to list
+                            </span>
+                          </button>
+                          {dropdownOpen === item._id && (
+                            <MyQuestionList
+                              question={item}
+                              closeDropdown={closeDropdown}
+                              isInterviewType={
+                                dropdownValue === "Interview Questions"
+                              }
+                            />
+                          )}
                         </div>
                       )}
                     </div>
-                    <div className="p-4 border-b relative">
-                      {/* COMMENTED OUT FOR NOW - Show all question content without locking */}
-                      {/* item.isLocked ? (
-                        <div className="relative">
-                          <div className="flex items-start w-full pt-2 gap-2 blur-sm select-none">
-                            <span className="sm:text-sm font-semibold">
-                              {(currentPage - 1) * itemsPerPage + index + 1}.
-                            </span>
-                            <p className="sm:text-sm text-gray-700 break-words w-full">
-                              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...
-                            </p>
-                          </div>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm rounded">
-                            <Lock className="w-8 h-8 text-gray-400 mb-2" />
-                            <p className="text-gray-700 font-medium mb-3">This question is locked</p>
-                            <button
-                              onClick={() => navigate('/account-settings/subscription')}
-                              className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
-                            >
-                              Upgrade to unlock
-                            </button>
-                          </div>
+                      <div className="p-4 border-b relative">
+                        <div className="flex items-start w-full pt-2 gap-2">
+                          <span className="sm:text-sm font-semibold">
+                            {(currentPage - 1) * itemsPerPage + index + 1}.
+                          </span>
+                          <p className="sm:text-sm text-gray-700 break-words w-full">
+                            {item.questionText}
+                          </p>
                         </div>
-                      ) : ( */}
-                      <div className="flex items-start w-full pt-2 gap-2">
-                        <span className="sm:text-sm font-semibold">
-                          {(currentPage - 1) * itemsPerPage + index + 1}.
-                        </span>
-                        <p className="sm:text-sm text-gray-700 break-words w-full">
-                          {item.questionText}
-                        </p>
-                      </div>
-                      {/* ) */}
-                      {/* COMMENTED OUT FOR NOW - Show MCQ options for all questions */}
-                      {
-                        /* !item.isLocked && */ item.questionType === "MCQ" &&
-                          item.options && (
+                        {item.questionType === "MCQ" && item.options && (
                             <div className="mb-2 ml-12 mt-2">
                               <ul className="list-none">
                                 {(() => {
@@ -1440,34 +1411,31 @@ const SuggestedQuestionsComponent = ({
                                 })()}
                               </ul>
                             </div>
-                          )
-                      }
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <p className="text-sm break-words whitespace-pre-wrap">
+                          <span className="sm:text-sm font-medium text-gray-700">
+                            Answer:{" "}
+                          </span>
+                          <span className="sm:text-sm text-gray-600">
+                            {item.questionType === "Programming"
+                              ? renderSolutions(item.solutions)
+                              : item.correctAnswer}
+                          </span>
+                        </p>
+                        <p className="sm:text-sm font-medium pt-2">
+                          Tags:{" "}
+                          <span className="text-sm text-gray-600">
+                            {Array.isArray(item.tags)
+                              ? item.tags.join(", ")
+                              : String(item.tags || "")}
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                    {/* COMMENTED OUT FOR NOW - Show answer for all questions */}
-                    {/* !item.isLocked && ( */}
-                    <div className="p-4">
-                      <p className="text-sm break-words whitespace-pre-wrap">
-                        <span className="sm:text-sm font-medium text-gray-700">
-                          Answer:{" "}
-                        </span>
-                        <span className="sm:text-sm text-gray-600">
-                          {item.questionType === "Programming"
-                            ? renderSolutions(item.solutions)
-                            : item.correctAnswer}
-                        </span>
-                      </p>
-                      <p className="sm:text-sm font-medium pt-2">
-                        Tags:{" "}
-                        <span className="text-sm text-gray-600">
-                          {Array.isArray(item.tags)
-                            ? item.tags.join(", ")
-                            : String(item.tags || "")}
-                        </span>
-                      </p>
-                    </div>
-                    {/* ) */}
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="h-full flex flex-col gap-4 justify-center items-center text-center mt-24">
                   <div className="text-gray-400">
@@ -1761,58 +1729,6 @@ const SuggestedQuestionsComponent = ({
           {/*------v1.0.4-------->*/}
         </div>
       </FilterPopup>
-
-      {/* COMMENTED OUT FOR NOW - No usage limit banners */}
-      {/* Usage Limit Banner */}
-      {/* questionBankUsageLimit && questionBankUsageLimit.remaining <= 10 && questionBankUsageLimit.remaining > 0 && (
-        <div className="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 mb-4 mx-5">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <p className="font-semibold">
-                You have {questionBankUsageLimit.remaining} questions remaining in your plan
-              </p>
-              <p className="text-sm mt-1">
-                This limit is shared across both Interview and Assessment questions.
-                Consider upgrading for unlimited access.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/account-settings/subscription')}
-              className="ml-4 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors text-sm"
-            >
-              Upgrade
-            </button>
-          </div>
-        </div>
-      ) */}
-
-      {/* Usage Info Banner - Always show when there's a limit */}
-      {/* questionBankUsageLimit && questionBankUsageLimit.entitled !== Infinity && (
-        <div className="bg-blue-50 border-l-4 border-custom-blue text-gray-700 p-3 mb-4 mx-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm">
-                <span className="font-medium">Question Bank Access:</span> {questionBankUsageLimit.utilized || 0} of {questionBankUsageLimit.entitled} questions used
-                <span className="text-gray-500 ml-2">(Combined limit for Interview & Assessment)</span>
-              </p>
-              {questionTypeFilter && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Currently viewing: {questionTypeFilter === 'Interview' ? 'Interview Questions' : questionTypeFilter === 'Assignment' ? 'Assessment Questions' : 'All Questions'}
-                  • Total available: {totalQuestionsFromAPI} questions • Accessible: {accessibleQuestions || 0} questions
-                </p>
-              )}
-            </div>
-            {questionBankUsageLimit.remaining <= 0 && (
-              <button
-                onClick={() => navigate('/account-settings/subscription')}
-                className="px-3 py-1 bg-custom-blue text-white rounded text-sm hover:bg-custom-blue/90"
-              >
-                Upgrade for More
-              </button>
-            )}
-          </div>
-        </div>
-      ) */}
     </div>
   );
 };

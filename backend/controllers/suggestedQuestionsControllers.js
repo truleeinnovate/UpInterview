@@ -138,62 +138,124 @@ const getQuestions = async (req, res) => {
       lockReason: isLocked ? 'Upgrade your plan to access more questions' : null
     });
 
-    // Fetch both collections to get total count for combined limit
+    // Fetch both collections to get total count
     const [assessments, interviews] = await Promise.all([
       AssessmentQuestion.find().lean(),
       InterviewQuestion.find().lean(),
     ]);
 
-    // Combine and sort all questions for consistent ordering
-    const allDocs = [...interviews, ...assessments].sort((a, b) => {
-      // Sort by creation date or ID for consistent ordering
+    // Sort each type by creation date (newest first)
+    interviews.sort((a, b) => {
       const dateA = new Date(a.createdAt || 0);
       const dateB = new Date(b.createdAt || 0);
-      return dateB - dateA; // Newest first
+      return dateB - dateA;
     });
 
-    // Calculate total questions and apply global limit
-    const totalQuestionsCount = allDocs.length;
+    assessments.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0);
+      const dateB = new Date(b.createdAt || 0);
+      return dateB - dateA;
+    });
+
+    const totalInterviewCount = interviews.length;
+    const totalAssessmentCount = assessments.length;
+    const totalQuestionsCount = totalInterviewCount + totalAssessmentCount;
+
+    // Calculate accessible counts for each type with fair sharing
+    let accessibleInterviewCount = Infinity;
+    let accessibleAssessmentCount = Infinity;
     
-    // When filtering by type, filter from the combined list but maintain global index for locking
+    if (accessibleCount !== Infinity) {
+      // Split the limit equally between Interview and Assessment
+      const halfLimit = Math.floor(accessibleCount / 2);
+      
+      // Calculate base allocation for each type
+      accessibleInterviewCount = Math.min(halfLimit, totalInterviewCount);
+      accessibleAssessmentCount = Math.min(halfLimit, totalAssessmentCount);
+      
+      // If one type has fewer questions than its half, give the unused quota to the other
+      const unusedInterviewQuota = halfLimit - accessibleInterviewCount;
+      const unusedAssessmentQuota = halfLimit - accessibleAssessmentCount;
+      
+      // Add unused quota from Interview to Assessment
+      if (unusedInterviewQuota > 0) {
+        accessibleAssessmentCount = Math.min(
+          accessibleAssessmentCount + unusedInterviewQuota,
+          totalAssessmentCount
+        );
+      }
+      
+      // Add unused quota from Assessment to Interview
+      if (unusedAssessmentQuota > 0) {
+        accessibleInterviewCount = Math.min(
+          accessibleInterviewCount + unusedAssessmentQuota,
+          totalInterviewCount
+        );
+      }
+    }
+    
+    // Process questions based on type filter
     let questionsToReturn = [];
-    let filteredQuestions = [];
+    let actualAccessibleCount = 0;
+    let actualLockedCount = 0;
 
     if (questionType === 'Interview') {
-      // Filter only interview questions but keep track of their position in combined list
-      allDocs.forEach((doc, globalIndex) => {
-        // Check if this is an interview question (you may need to adjust this check)
-        const isInterview = interviews.some(i => i._id.toString() === doc._id.toString());
-        if (isInterview) {
-          const isLocked = accessibleCount !== Infinity && globalIndex >= accessibleCount;
-          filteredQuestions.push({ doc, globalIndex, isLocked });
+      // Return only interview questions with their specific limit
+      interviews.forEach((doc, index) => {
+        const isLocked = accessibleInterviewCount !== Infinity && index >= accessibleInterviewCount;
+        questionsToReturn.push(toUnified(doc, index, isLocked));
+        if (isLocked) {
+          actualLockedCount++;
+        } else {
+          actualAccessibleCount++;
         }
       });
     } else if (questionType === 'Assessment' || questionType === 'Assignment') {
-      // Filter only assessment questions but keep track of their position in combined list
-      allDocs.forEach((doc, globalIndex) => {
-        const isAssessment = assessments.some(a => a._id.toString() === doc._id.toString());
-        if (isAssessment) {
-          const isLocked = accessibleCount !== Infinity && globalIndex >= accessibleCount;
-          filteredQuestions.push({ doc, globalIndex, isLocked });
+      // Return only assessment questions with their specific limit
+      assessments.forEach((doc, index) => {
+        const isLocked = accessibleAssessmentCount !== Infinity && index >= accessibleAssessmentCount;
+        questionsToReturn.push(toUnified(doc, index, isLocked));
+        if (isLocked) {
+          actualLockedCount++;
+        } else {
+          actualAccessibleCount++;
         }
       });
     } else {
-      // Return all questions with combined limit
-      allDocs.forEach((doc, globalIndex) => {
-        const isLocked = accessibleCount !== Infinity && globalIndex >= accessibleCount;
-        filteredQuestions.push({ doc, globalIndex, isLocked });
+      // Return all questions - combine with proper locking
+      // First add accessible interviews
+      interviews.forEach((doc, index) => {
+        const isLocked = accessibleInterviewCount !== Infinity && index >= accessibleInterviewCount;
+        questionsToReturn.push(toUnified(doc, index, isLocked));
+        if (isLocked) {
+          actualLockedCount++;
+        } else {
+          actualAccessibleCount++;
+        }
+      });
+      
+      // Then add accessible assessments
+      assessments.forEach((doc, index) => {
+        const isLocked = accessibleAssessmentCount !== Infinity && index >= accessibleAssessmentCount;
+        questionsToReturn.push(toUnified(doc, interviews.length + index, isLocked));
+        if (isLocked) {
+          actualLockedCount++;
+        } else {
+          actualAccessibleCount++;
+        }
+      });
+      
+      // Sort combined list by date
+      questionsToReturn.sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0);
+        const dateB = new Date(b.createdAt || 0);
+        return dateB - dateA;
       });
     }
 
-    // Map to unified format
-    questionsToReturn = filteredQuestions.map(({ doc, globalIndex, isLocked }) => 
-      toUnified(doc, globalIndex, isLocked)
-    );
-
-    // Calculate locked questions based on total, not filtered
+    // Calculate total locked questions
     const totalLockedQuestions = accessibleCount !== Infinity 
-      ? Math.max(0, totalQuestionsCount - accessibleCount) 
+      ? Math.max(0, totalQuestionsCount - Math.min(accessibleCount, totalQuestionsCount))
       : 0;
 
     return res.status(200).send({
@@ -202,9 +264,22 @@ const getQuestions = async (req, res) => {
       questions: questionsToReturn,
       usageLimit,
       totalQuestions: totalQuestionsCount, // Total across both types
-      accessibleQuestions: accessibleCount !== Infinity ? accessibleCount : totalQuestionsCount,
-      lockedQuestions: totalLockedQuestions,
-      questionTypeFilter: questionType || 'all'
+      accessibleQuestions: actualAccessibleCount || (accessibleCount !== Infinity ? accessibleCount : totalQuestionsCount),
+      lockedQuestions: actualLockedCount || totalLockedQuestions,
+      questionTypeFilter: questionType || 'all',
+      // Additional info for better UI display
+      typeBreakdown: {
+        interview: {
+          total: totalInterviewCount,
+          accessible: accessibleInterviewCount !== Infinity ? accessibleInterviewCount : totalInterviewCount,
+          locked: totalInterviewCount - (accessibleInterviewCount !== Infinity ? accessibleInterviewCount : totalInterviewCount)
+        },
+        assessment: {
+          total: totalAssessmentCount,
+          accessible: accessibleAssessmentCount !== Infinity ? accessibleAssessmentCount : totalAssessmentCount,
+          locked: totalAssessmentCount - (accessibleAssessmentCount !== Infinity ? accessibleAssessmentCount : totalAssessmentCount)
+        }
+      }
     });
   } catch (error) {
     console.log('error in getting questions', error);

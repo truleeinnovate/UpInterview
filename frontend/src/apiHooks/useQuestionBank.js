@@ -151,10 +151,11 @@ export const useQuestions = (filters = {}) => {
           totalQuestions: response.data.totalQuestions,
           accessibleQuestions: response.data.accessibleQuestions,
           lockedQuestions: response.data.lockedQuestions,
-          questionTypeFilter: response.data.questionTypeFilter
+          questionTypeFilter: response.data.questionTypeFilter,
+          typeBreakdown: response.data.typeBreakdown
         };
       }
-      return { questions: [], usageLimit: null, totalQuestions: null, accessibleQuestions: null, lockedQuestions: null, questionTypeFilter: null };
+      return { questions: [], usageLimit: null, totalQuestions: null, accessibleQuestions: null, lockedQuestions: null, questionTypeFilter: null, typeBreakdown: null };
     },
     retry: 1,
     staleTime: 1000 * 60 * 10, // 10 minutes
@@ -170,6 +171,7 @@ export const useQuestions = (filters = {}) => {
   const accessibleQuestions = suggestedQuestionsData.accessibleQuestions;
   const lockedQuestions = suggestedQuestionsData.lockedQuestions;
   const questionTypeFilter = suggestedQuestionsData.questionTypeFilter;
+  const typeBreakdown = suggestedQuestionsData.typeBreakdown;
 
   // 4️⃣ Custom Hook: Fetch Question by Suggested ID
   const useQuestionBySuggestedId = (suggestedQuestionId) =>
@@ -457,6 +459,7 @@ export const useQuestions = (filters = {}) => {
     accessibleQuestions,
     lockedQuestions,
     questionTypeFilter,
+    typeBreakdown,
     isLoading,
     isMyQuestionsLoading,
     isListsLoading,
