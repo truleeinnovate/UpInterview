@@ -14,11 +14,11 @@ const ScheduledAssessmentSchema = new mongoose.Schema(
       ref: "assessment",
       required: true,
     },
-    organizationId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Organization",
-      required: true,
-    },
+    // organizationId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Organization",
+    //   required: true,
+    // },
     expiryAt: { type: Date },
     status: {
       type: String,
@@ -30,19 +30,19 @@ const ScheduledAssessmentSchema = new mongoose.Schema(
       ref: "ScheduledAssessment",
     },
     proctoringEnabled: { type: Boolean, default: false },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Users",
-      required: true,
-    },
-    
+
     // <-------------------------------v1.0.1
     // createdAt: { type: Date, default: Date.now },
     // updatedAt: { type: Date, default: Date.now },
- // ------------------------------v1.0.1 > 
-    
+    // ------------------------------v1.0.1 > 
+
     isActive: { type: Boolean, default: true },
     order: { type: String, default: "Assessment 1" }, // New field for display name
+
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
   },
   { timestamps: true }
 );

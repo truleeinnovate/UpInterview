@@ -7,7 +7,7 @@ const scheduledAssessmentsSchema = require("../models/Assessment/assessmentsSche
 const mongoose = require("mongoose");
 
 // Import push notification functions
-const {createAssessmentScheduledNotification} = require("./PushNotificationControllers/pushNotificationAssessmentController");
+const { createAssessmentScheduledNotification } = require("./PushNotificationControllers/pushNotificationAssessmentController");
 
 exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
   try {
@@ -39,6 +39,7 @@ exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
 exports.getScheduledAssessmentsWithCandidates = async (req, res) => {
   try {
     const { assessmentId } = req.params;
+    const { ownerId, tenantId } = req.query; // 👈 Added
 
     if (!mongoose.isValidObjectId(assessmentId)) {
       return res
@@ -46,28 +47,33 @@ exports.getScheduledAssessmentsWithCandidates = async (req, res) => {
         .json({ success: false, message: "Invalid assessment ID" });
     }
 
-    // Find all active scheduled assessments for the given assessmentId
+    if (!ownerId || !tenantId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing ownerId or tenantId" });
+    }
+
+    // Find all active scheduled assessments for the given assessmentId, ownerId, and tenantId
     const scheduledAssessments = await scheduledAssessmentsSchema
       .find({
         assessmentId,
+        tenantId,
+        ownerId,
         isActive: true,
       })
       .select("_id order expiryAt status createdAt");
 
     if (!scheduledAssessments.length) {
-      return res.status(200).json([]);
+      return res.status(200).json({ success: true, data: [] });
     }
 
     // Fetch candidate assessments for all scheduled assessments
-     // <-------------------------------v1.0.0
-    // Remove isActive filter to show cancelled candidates as well
     const scheduledIds = scheduledAssessments.map((sa) => sa._id);
     const candidateAssessments = await CandidateAssessment.find({
       scheduledAssessmentId: { $in: scheduledIds },
-      // Removed isActive: true filter to show cancelled candidates
-    })
-     // <-------------------------------v1.0.0
-      .populate("candidateId");
+      tenantId,
+      ownerId,
+    }).populate("candidateId");
 
     // Group candidate assessments by scheduledAssessmentId
     const schedulesWithCandidates = scheduledAssessments.map((schedule) => {
@@ -86,19 +92,18 @@ exports.getScheduledAssessmentsWithCandidates = async (req, res) => {
 
     res.status(200).json({ success: true, data: schedulesWithCandidates });
   } catch (error) {
-    console.error(
-      "Error fetching scheduled assessments with candidates:",
-      error
-    );
+    console.error("Error fetching scheduled assessments with candidates:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 exports.createScheduledAssessment = async (req, res) => {
   try {
     const {
       assessmentId,
-      organizationId,
+      tenantId,
+      ownerId,
       expiryAt,
       status,
       rescheduledFrom,
@@ -108,7 +113,7 @@ exports.createScheduledAssessment = async (req, res) => {
     } = req.body;
 
     // Generate custom code like ASMT-TPL-00001
-    const lastScheduled = await scheduledAssessmentsSchema.findOne({ })
+    const lastScheduled = await scheduledAssessmentsSchema.findOne({})
       .select("scheduledAssessmentCode")
       .lean();
 
@@ -131,7 +136,8 @@ exports.createScheduledAssessment = async (req, res) => {
     const scheduledAssessment = new scheduledAssessmentsSchema({
       scheduledAssessmentCode,
       assessmentId,
-      organizationId,
+      tenantId,
+      ownerId,
       expiryAt,
       status,
       rescheduledFrom,
@@ -142,7 +148,7 @@ exports.createScheduledAssessment = async (req, res) => {
 
     // Save to DB
     const savedAssessment = await scheduledAssessment.save();
-    
+
     // Create push notification for scheduled assessment
     try {
       await createAssessmentScheduledNotification(savedAssessment);

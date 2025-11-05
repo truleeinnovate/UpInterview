@@ -19,6 +19,8 @@ import { usePermissions } from "../Context/PermissionsContext";
 import toast from "react-hot-toast";
 import { notify } from "../services/toastService";
 // ------------------------------ v1.0.5 >
+import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
+import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
 
 export const useAssessments = (filters = {}) => {
   const queryClient = useQueryClient();
@@ -27,6 +29,11 @@ export const useAssessments = (filters = {}) => {
   const hasViewPermission = effectivePermissions?.AssessmentTemplates?.View;
   // ---------------------- v1.0.1 >
   const initialLoad = useRef(true);
+  const authToken = AuthCookieManager.getAuthToken();
+  const tokenPayload = decodeJwt(authToken);
+  const tenantId = tokenPayload.tenantId;
+  const ownerId = tokenPayload.userId;
+
 
   const {
     data: assessmentData = [],
@@ -279,22 +286,32 @@ export const useAssessments = (filters = {}) => {
   // ------------------------------ v1.0.5 >
   // <---------------------- v1.0.5
   // Convert fetchScheduledAssessments to use React Query for proper caching
-  const fetchScheduledAssessments = useCallback(async (assessmentId) => {
-    // ------------------------------ v1.0.5 >
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
-      );
-      if (response.data.success) {
-        return { data: response.data.data, error: null };
-      } else {
-        return { data: null, error: response.data.message };
+  const fetchScheduledAssessments = useCallback(
+    async (assessmentId) => {
+      try {
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`,
+          {
+            params: {
+              ownerId,
+              tenantId,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          return { data: response.data.data, error: null };
+        } else {
+          return { data: null, error: response.data.message };
+        }
+      } catch (error) {
+        console.error("Error fetching scheduled assessments:", error);
+        return { data: null, error: error.message };
       }
-    } catch (error) {
-      console.error("Error fetching scheduled assessments:", error);
-      return { data: null, error: error.message };
-    }
-  }, []);
+    },
+    [ownerId, tenantId]
+  );
+
   // ------------------------------ v1.0.5 >
   // React Query hook for scheduled assessments
   const useScheduledAssessments = (assessmentId) => {
