@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - fixed unique check with name field
+
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
@@ -10,8 +12,8 @@ const AssessmentListModal = ({
   useAssessmentList,
   tenantId,
   ownerId,
-  setOptions,
   setSelected,
+  selectionType,
 }) => {
   const [newList, setNewList] = useState({
     categoryOrTechnology: "",
@@ -75,12 +77,11 @@ const AssessmentListModal = ({
       return;
     }
 
-    const isDuplicateLabel = options.some(
-      (opt) =>
-        opt.categoryOrTechnology.toLowerCase() ===
-        categoryOrTechnology.trim().toLowerCase()
+    // Duplicate check using `name` field instead of categoryOrTechnology
+    const isDuplicateName = options.some(
+      (opt) => opt.value.toLowerCase() === name.trim().toLowerCase()
     );
-    if (isDuplicateLabel) {
+    if (isDuplicateName) {
       setError("A list with this label already exists.");
       return;
     }
@@ -105,7 +106,11 @@ const AssessmentListModal = ({
       }
 
       // Refetch lists after creation
-      setSelected({ categoryOrTechnology, value: name.toLowerCase() });
+      if (selectionType === "object") {
+        setSelected({ categoryOrTechnology, value: name.toLowerCase() });
+      } else if (selectionType === "id") {
+        setSelected(result.data._id);
+      }
 
       notify.success("List created successfully!");
       onClose();

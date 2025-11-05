@@ -147,7 +147,7 @@ const NewAssessment = () => {
   const { assessmentListData } = useAssessmentList(filters, hasViewPermission);
 
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(""); // stores category._id or ""
+  const [selected, setSelected] = useState(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   // 1) fetch categories on mount (and after create)
@@ -168,13 +168,13 @@ const NewAssessment = () => {
   // 2) when editing, ensure selectedCategory reflects formData value
   useEffect(() => {
     if (formData?.categoryOrTechnology) {
-      setSelectedCategory(formData.categoryOrTechnology);
+      setSelected(formData.categoryOrTechnology);
     }
   }, [formData?.categoryOrTechnology]);
 
   // 3) handler for user selecting category from dropdown
   const handleCategorySelect = (categoryId) => {
-    setSelectedCategory(categoryId || "");
+    setSelected(categoryId || "");
     setFormData((prev) => ({
       ...prev,
       categoryOrTechnology: categoryId || "",
@@ -237,7 +237,7 @@ const NewAssessment = () => {
       setLinkExpiryDays(assessment.linkExpiryDays);
       // Preselect categoryOrTechnology
       if (matchedCategory) {
-        setSelectedCategory(matchedCategory._id); // store id instead of name
+        setSelected(matchedCategory._id); // store id instead of name
         setFormData((prev) => ({
           ...prev,
           categoryOrTechnology: matchedCategory._id, // also store id
@@ -1751,8 +1751,8 @@ const NewAssessment = () => {
                           }
                           categories={categories}
                           setCategories={setCategories}
-                          selectedCategory={selectedCategory}
-                          setSelectedCategory={setSelectedCategory}
+                          selected={selected}
+                          setSelected={setSelected}
                           onCategorySelect={handleCategorySelect}
                           useAssessmentList={useAssessmentList}
                           createAssessmentTemplateList={
@@ -1984,9 +1984,8 @@ const NewAssessment = () => {
                     tenantId={tenantId}
                     ownerId={ownerId}
                     setOptions={setCategories}
-                    setSelected={(selected) => {
-                      setSelectedCategory(selected?.value || "");
-                    }}
+                    setSelected={setSelected}
+                    selectionType="id"
                   />
                 )}
               </div>

@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - type based options
+// v1.0.1 - Ashok - hidden create list button when type is standard
 
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -427,13 +428,24 @@ const AssessmentToolbar = ({
               setSelectedOption={setSelectedOption}
             />
           </div>
-          <span className="w-px h-5 bg-gray-500"></span>
-          <button
+
+          {activeTab === "custom" && (
+            <span className="w-px h-5 bg-gray-500"></span>
+          )}
+          {/* <button
             onClick={() => setShowPopup(true)}
             className="text-custom-blue font-semibold"
           >
             Create List
-          </button>
+          </button> */}
+          {activeTab === "custom" && (
+            <button
+              onClick={() => setShowPopup(true)}
+              className="text-custom-blue font-semibold"
+            >
+              Create List
+            </button>
+          )}
         </div>
       )}
 
@@ -531,6 +543,7 @@ const AssessmentToolbar = ({
         ownerId={ownerId}
         setOptions={setOptions}
         setSelected={setSelected}
+        selectionType="object"
       />
     </motion.div>
   );
