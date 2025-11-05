@@ -71,13 +71,9 @@ const BasicDetailsTab = ({
   // v1.0.1 <----------------------------------------
   isCategoryModalOpen,
   openCategoryModal,
-  // closeCategoryModal,
   categories,
-  setSelectedCategory,
-  selectedCategory,
-  // createCategory,
-  useAssessmentList,
-  createAssessmentTemplateList,
+  selected,
+  setSelected,
 }) => {
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
@@ -474,19 +470,7 @@ const BasicDetailsTab = ({
                 label="Category/Technology"
                 required
                 name="categoryOrTechnology"
-                value={selectedCategory || ""}
-                // options={[
-                //   ...(categories?.map((category) => ({
-                //     value: category._id,
-                //     label: category.categoryOrTechnology,
-                //   })) || []),
-                //   {
-                //     value: "create_new",
-                //     label: "+ Create List",
-                //     isSticky: true,
-                //     className: "text-blue-600 font-medium hover:bg-blue-50",
-                //   },
-                // ]}
+                value={selected || ""}
                 options={[
                   ...(categories
                     ?.filter((category) => category?.type === "custom")
@@ -506,7 +490,7 @@ const BasicDetailsTab = ({
                   if (value === "create_new") {
                     openCategoryModal();
                   } else {
-                    setSelectedCategory(value);
+                    setSelected(value);
                     setFormData((prev) => ({
                       ...prev,
                       categoryOrTechnology: value,
