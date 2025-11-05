@@ -28,7 +28,6 @@ function SidebarPopup({
   onEdit, // optional callback for edit
   editPath, // optional route prefix for edit
   headerAction, // custom header action buttons
-  isOpen
 }) {
   
   const [isExpanded, setIsExpanded] = useState(false);
@@ -54,8 +53,6 @@ function SidebarPopup({
       );
     }
   };
-
-  if (!isOpen) return null;
 
   const popupContent = (
     <div className="fixed inset-0 z-50 flex justify-end">
