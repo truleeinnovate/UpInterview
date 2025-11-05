@@ -377,9 +377,9 @@ const AddTenantForm = lazy(() =>
 const TenantDetailsPage = lazy(() =>
     import("./Pages/SuperAdmin-Part/TenantDetailsPage.jsx")
 );
-const OutsourceRequestsPage = lazy(() =>
-    import("./Pages/SuperAdmin-Part/OutsourceRequestsPage.jsx")
-);
+// const OutsourceRequestsPage = lazy(() =>
+//     import("./Pages/SuperAdmin-Part/OutsourceRequestsPage.jsx")
+// );
 // const CandidatesPage = lazy(() =>
 //     import("./Pages/SuperAdmin-Part/CandidatesPage.jsx")
 // );
