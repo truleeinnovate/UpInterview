@@ -456,6 +456,7 @@ const MainAppRoutes = ({
         effectivePermissions,
         superAdminPermissions,
     } = usePermissions();
+    const userType = AuthCookieManager.getUserType();
 
     const combinedPermissions = useMemo(() => {
         const combined = { ...effectivePermissions, ...superAdminPermissions };
