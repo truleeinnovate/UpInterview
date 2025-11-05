@@ -10,14 +10,13 @@ const createEnterpriseContact = async (req, res) => {
     console.log("🧾 upinterviewEnterpriseContact Request Body:", req.body);
 
     // Step 2: Validate required fields
-    if (!firstName || !lastName || !workEmail || !jobTitle || !companyName || !companySize) {
+    if (!lastName || !workEmail || !jobTitle || !companyName || !companySize) {
       console.warn("⚠️ upinterviewEnterpriseContact Missing required fields:", { 
         firstName, lastName, workEmail, jobTitle, companyName, companySize 
       });
       return res.status(400).json({ 
         error: "All required fields must be filled",
         missingFields: {
-          firstName: !firstName,
           lastName: !lastName,
           workEmail: !workEmail,
           jobTitle: !jobTitle,

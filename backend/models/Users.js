@@ -39,5 +39,10 @@ const UsersSchema = new mongoose.Schema({
     isProfileCompleted: { type: Boolean },
 }, { timestamps: true });
 
+// added by mansoor for indexes to fetch the data fast
+UsersSchema.index({ tenantId: 1 });
+UsersSchema.index({ email: 1 });
+UsersSchema.index({ roleId: 1 });
+
 const Users = mongoose.model('Users', UsersSchema);
 module.exports = { Users };

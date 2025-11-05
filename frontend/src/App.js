@@ -15,6 +15,7 @@
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Logo from "./Pages/Login-Part/Logo";
+import { Toaster } from "react-hot-toast";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
 import AuthCookieManager, { getAuthToken } from "./utils/AuthCookieManager/AuthCookieManager";
@@ -69,8 +70,6 @@ const VideoCallJoinRoom = lazy(() =>
     import("./Pages/CustomVideoCall/JoinRoom.jsx")
 );
 const VideoCallRoom = lazy(() => import("./Pages/CustomVideoCall/Room.jsx"));
-// v1.0.5 ------------------------------>
-
 const Home = lazy(() =>
     import("./Pages/Dashboard-Part/Dashboard/Home/Home.jsx")
 );
@@ -314,13 +313,11 @@ const Webhooks = lazy(() =>
 const HrmsAtsApi = lazy(() =>
     import("./Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi")
 );
-// v1.0.6 <-----------------------------------------------------------------------------
 const SettingsIntegrations = lazy(() =>
     import(
         "./Pages/Dashboard-Part/Accountsettings/account/WebHooks/MainContent.jsx"
     )
 );
-// v1.0.6 ----------------------------------------------------------------------------->
 const InterviewTemplates = lazy(() =>
     import("../src/Pages/InteviewTemplates/InterviewTemplates")
 );
@@ -355,8 +352,6 @@ const Task = lazy(() =>
     import("./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx")
 );
 const VerifyEmail = lazy(() => import("./VerifyWorkEmail.jsx"));
-
-// v1.0.5 <--------------------------------------------------------------------------------
 const AnalyticsLayout = lazy(() => import("./Components/Analytics/Layout.jsx"));
 const AnalyticsDashboard = lazy(() =>
     import("./Pages/Dashboard-Part/Tabs/Analytics/Dashboard.jsx")
@@ -370,9 +365,6 @@ const AnalyticsReportDetail = lazy(() =>
 const AnalyticsTrends = lazy(() =>
     import("./Pages/Dashboard-Part/Tabs/Analytics/Trends.jsx")
 );
-// v1.0.5 -------------------------------------------------------------------------------->
-
-// Super Admin Lazy-loaded components
 const SuperAdminDashboard = lazy(() =>
     import("./Pages/SuperAdmin-Part/Dashboard.jsx")
 );
@@ -384,6 +376,9 @@ const AddTenantForm = lazy(() =>
 );
 const TenantDetailsPage = lazy(() =>
     import("./Pages/SuperAdmin-Part/TenantDetailsPage.jsx")
+);
+const OutsourceRequestsPage = lazy(() =>
+    import("./Pages/SuperAdmin-Part/OutsourceRequestsPage.jsx")
 );
 // const CandidatesPage = lazy(() =>
 //     import("./Pages/SuperAdmin-Part/CandidatesPage.jsx")
@@ -410,12 +405,6 @@ const BillingPage = lazy(() =>
 const AddInvoiceForm = lazy(() =>
     import("./Components/SuperAdminComponents/Billing/Invoice/AddInvoiceForm.jsx")
 );
-// const SupportTicketsPage = lazy(() =>
-//     import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk")
-// );
-// const AddSupportForm = lazy(() =>
-//     import("./Pages/SuperAdmin-Part/Support/AddSupportForm.jsx")
-// );
 const SettingsPage = lazy(() =>
     import("./Pages/SuperAdmin-Part/SettingsPage.jsx")
 );
@@ -431,9 +420,6 @@ const ContactProfileDetails = lazy(() =>
     )
 );
 
-// v1.0.9 <-------------------------------------------------------------------------------
-// v1.0.8 <-------------------------------------------------------------------------------
-// v1.0.7 <-------------------------------------------------------------------------------
 const InterviewerRatesPage = lazy(() =>
     import("./Pages/SuperAdmin-Part/InterviewerRates/InterviewerRatesPage.jsx")
 );
@@ -453,17 +439,11 @@ const QuestionBankManager = lazy(() =>
 const ContactUsPage = lazy(() =>
     import("./Pages/SuperAdmin-Part/ContactUs/ContactUsPage.jsx")
 );
-// v2.0.0 <------------------------------------------------------------------
-// v1.0.7 ------------------------------------------------------------------------------->
-// v1.0.8 ------------------------------------------------------------------------------->
-// v1.0.9 ------------------------------------------------------------------------------->
 
-// Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
     <Suspense fallback={<Loading />}>{children}</Suspense>
 );
 
-// Move all logic that uses usePermissions into this component
 const MainAppRoutes = ({
     location,
     organization,
@@ -475,12 +455,8 @@ const MainAppRoutes = ({
     const {
         effectivePermissions,
         superAdminPermissions,
-        loading,
-        isInitialized,
     } = usePermissions();
-    const userType = AuthCookieManager.getUserType();
 
-    // Combine permissions into a single object
     const combinedPermissions = useMemo(() => {
         const combined = { ...effectivePermissions, ...superAdminPermissions };
         return combined;
@@ -488,17 +464,6 @@ const MainAppRoutes = ({
 
     const showLogo = showLogoPaths.includes(location.pathname);
     const shouldRenderNavbar = !noNavbarPaths.includes(location.pathname);
-
-    // Show loading when permissions are being loaded and not initialized
-    // if (loading || !isInitialized) {
-    //   return (
-    //     <Loading
-    //       message="Loading permissions..."
-    //       size="large"
-    //       className="fixed inset-0 z-50 bg-white"
-    //     />
-    //   );
-    // }
 
     // Permission check function
     const hasPermission = (objectName, permissionType = "ViewTab") => {
@@ -1546,6 +1511,8 @@ const App = () => {
     }, []);
 
     return (
+        <>
+        <Toaster />
         <ErrorBoundary>
             <SuspenseWithLoading>
                 <CustomProvider>
@@ -1565,6 +1532,7 @@ const App = () => {
                 </CustomProvider>
             </SuspenseWithLoading>
         </ErrorBoundary>
+        </>
     );
 };
 

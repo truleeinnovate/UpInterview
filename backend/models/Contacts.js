@@ -128,6 +128,11 @@ const ContactsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// added by mansoor for indexes to fetch the data fast
+ContactsSchema.index({ tenantId: 1, ownerId: 1 });
+ContactsSchema.index({ email: 1 });
+ContactsSchema.index({ status: 1 });
+
 const Contacts = mongoose.model("Contacts", ContactsSchema);
 
 module.exports = {

@@ -15,6 +15,13 @@ import { useSubscription } from "../../../../../apiHooks/useSubscription";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 import { notify } from "../../../../../services/toastService";
+import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import InputField from "../../../../../Components/FormFields/InputField";
+import EmailField from "../../../../../Components/FormFields/EmailField";
+import DescriptionField from "../../../../../Components/FormFields/DescriptionField";
+import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField";
+import { validateWorkEmail } from "../../../../../utils/workEmailValidation";
+import { config } from "../../../../../config";
 
 // Helper function to format date as dd-mm-yy
 const formatDate = (dateStr) => {
@@ -390,6 +397,119 @@ const Subscription = () => {
     setShowRenewalModal(true);
   };
 
+
+    // <---- contact sales popup code start
+    const [isContactSalesOpen, setIsContactSalesOpen] = useState(false);
+  
+    const [formData, setFormData] = useState({
+      firstName: '',
+      lastName: '',
+      email: '',
+      jobTitle: '',
+      companyName: '',
+      companySize: '',
+      additionalDetails: ''
+    });
+  
+    const companySizeOptions = [
+      { value: '1-10', label: '1-10' },
+      { value: '11-50', label: '11-50' },
+      { value: '51-200', label: '51-200' },
+      { value: '201-500', label: '201-500' },
+      { value: '501-1000', label: '501-1000' },
+      { value: '1000+', label: '1000+' }
+    ];
+  
+    const [errors, setErrors] = useState({});
+  
+    const handleChange = (e) => {
+      const { name, value } = e.target || e;
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+      // Clear error when user types
+      if (errors[name]) {
+        setErrors(prev => ({ ...prev, [name]: '' }));
+      }
+    };
+  
+  const validateForm = () => {
+    const newErrors = {};
+  
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+  
+    // Email validation using validateWorkEmail
+    const emailError = validateWorkEmail(formData.email);
+    if (emailError) {
+      newErrors.email = emailError;
+    }
+  
+    if (!formData.jobTitle.trim()) newErrors.jobTitle = 'Job title is required';
+    if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required';
+    if (!formData.companySize) newErrors.companySize = 'Please select company size';
+  
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      if (validateForm()) {
+        try {
+          const response = await fetch(`${config.REACT_APP_API_URL}/upinterviewEnterpriseContact`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              workEmail: formData.email,
+              jobTitle: formData.jobTitle,
+              companyName: formData.companyName,
+              companySize: formData.companySize,
+              additionalDetails: formData.additionalDetails || ""
+            }),
+          });
+  
+          const data = await response.json();
+  
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to submit form');
+          }
+  
+          // Show success message
+          notify.success('Thank you for contacting us! We will get back to you soon.');
+  
+          // Close the popup and reset form
+          setIsContactSalesOpen(false);
+          setFormData({
+            firstName: '',
+            lastName: '',
+            email: '',
+            jobTitle: '',
+            companyName: '',
+            companySize: '',
+            additionalDetails: ''
+          });
+  
+        } catch (error) {
+          console.error('Error submitting form:', error);
+          notify.error(error.message || 'Failed to submit form. Please try again.');
+        }
+      }
+    };
+  
+    const handleContactSales = (e) => {
+      e.preventDefault();
+      console.log('[Subscription] Opening Contact Sales sidebar', { isContactSalesOpenBefore: isContactSalesOpen });
+      setIsContactSalesOpen(true);
+    };
+  
+    // contact sales popup code end ---->
+
+
   return (
     <>
       {/* v1.0.2 <--------------------------------------------------- */}
@@ -724,7 +844,11 @@ const Subscription = () => {
 
                     {/* Button Section */}
                     <button
-                      onClick={() => !isEnterprise && (isSubscriptionExpired ? handleRenewalPlanSelection(plan) : submitPlans(plan))}
+                      onClick={
+                        isEnterprise
+                          ? handleContactSales
+                          : () => (isSubscriptionExpired ? handleRenewalPlanSelection(plan) : submitPlans(plan))
+                      }
                       className={`w-full font-semibold py-2.5 mt-auto rounded-lg text-sm
                 ${
                   isHighlighted(plan)
@@ -733,10 +857,7 @@ const Subscription = () => {
                       ? "text-white bg-green-600 hover:bg-green-700 animate-pulse"
                       : "text-white bg-custom-blue"
                 }
-                ${
-                  isEnterprise
-                    ? "opacity-50 cursor-not-allowed"
-                    : subscriptionData.subscriptionPlanId === plan.planId &&
+                ${subscriptionData.subscriptionPlanId === plan.planId &&
                       subscriptionData.selectedBillingCycle ===
                         (isAnnual ? "annual" : "monthly") &&
                       subscriptionData.status === "active"
@@ -788,7 +909,6 @@ const Subscription = () => {
                   return "";
                 })()}`}
                     disabled={
-                      isEnterprise ||
                       (subscriptionData.subscriptionPlanId === plan.planId &&
                       subscriptionData.selectedBillingCycle ===
                         (isAnnual ? "annual" : "monthly") &&
@@ -1119,6 +1239,97 @@ const Subscription = () => {
           document.body
         )}
       {/* v1.0.2 ----------------------------------------------------------------------> */}
+
+      {/* contact sale popup */}
+            <SidebarPopup
+              title="Contact Sales"
+              isOpen={isContactSalesOpen}
+              onClose={() => setIsContactSalesOpen(false)}
+            >
+              <div className="p-4">
+                <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <InputField
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      label="First Name"
+                    />
+                    <InputField
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      label="Last Name"
+                      required
+                      error={errors.lastName}
+                    />
+                  </div>
+      
+                  <EmailField
+                    name="email"
+                    value={formData.email}
+                    onChange={(e) => handleChange({ target: { name: 'email', value: e.target.value } })}
+                    label="Work Email"
+                    required
+                    error={errors.email}
+                    placeholder="your.email@company.com"
+                    onInvalid={(e) => {
+                      e.preventDefault(); // Prevent default HTML5 validation
+                    }}
+                  />
+      
+                  <InputField
+                    name="jobTitle"
+                    value={formData.jobTitle}
+                    onChange={handleChange}
+                    label="Job Title"
+                    required
+                    error={errors.jobTitle}
+                  />
+      
+                  <InputField
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    label="Company Name"
+                    required
+                    error={errors.companyName}
+                  />
+      
+                  <div>
+                    <DropdownWithSearchField
+                      name="companySize"
+                      value={formData.companySize}
+                      onChange={handleChange}
+                      options={companySizeOptions}
+                      label="Company Size"
+                      required
+                      error={errors.companySize}
+                      placeholder="Select company size"
+                      isSearchable={false}
+                    />
+                  </div>
+      
+                  <DescriptionField
+                    name="additionalDetails"
+                    value={formData.additionalDetails}
+                    onChange={handleChange}
+                    label="Additional Details"
+                    placeholder="Tell us about your requirements"
+                    rows={3}
+                  />
+      
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-custom-blue hover:bg-custom-blue/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
+                    >
+                      Contact Sales
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </SidebarPopup>
     </>
   );
 };

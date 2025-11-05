@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const upinterviewEnterpriseContactSchema = new mongoose.Schema({
-  firstName: { type: String, required: true },
+  firstName: { type: String },
   lastName: { type: String, required: true },
   workEmail: { type: String, required: true },
   jobTitle: { type: String, required: true },

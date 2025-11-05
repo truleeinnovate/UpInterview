@@ -1,6 +1,6 @@
 // Login.jsx
-// v1.0.0 - [Your Name] - Initial modern UI implementation
-// v1.0.1 - [Your Name] - Added responsive styles for sm, md, lg, xl, 2xl breakpoints
+// v1.0.0 - Mansoor - Initial modern UI implementation
+// v1.0.1 - Mansoor - Added responsive styles for sm, md, lg, xl, 2xl breakpoints
 // v1.0.2 - Ashok - added padding to the cards container for mobile
 
 import React from "react";
@@ -235,116 +235,6 @@ const Login = () => {
             </div>
           </div>
 
-          {/* How It Works Section */}
-          {/* <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 lg:p-12 xl:p-12 2xl:p-12 mb-12 sm:mb-16 md:mb-20 lg:mb-20 xl:mb-20 2xl:mb-20 shadow-lg border border-gray-100">
-                        <div className="text-center mb-12 sm:mb-14 md:mb-16 lg:mb-16 xl:mb-16 2xl:mb-16">
-                            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 md:mb-6 lg:mb-6 xl:mb-6 2xl:mb-6">
-                                How It Works
-                            </h2>
-                            <p className="text-sm sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg text-gray-600 max-w-2xl sm:max-w-3xl md:max-w-3xl lg:max-w-3xl xl:max-w-3xl 2xl:max-w-3xl mx-auto">
-                                Streamline your interview process in three simple steps
-                            </p>
-                        </div>
-                        <div className="grid sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-8 sm:gap-10 md:gap-12 lg:gap-12 xl:gap-12 2xl:gap-12 max-w-5xl mx-auto">
-                            <div className="text-center">
-                                <div className="w-12 sm:w-16 md:w-16 lg:w-16 xl:w-16 2xl:w-16 h-12 sm:h-16 md:h-16 lg:h-16 xl:h-16 2xl:h-16 bg-custom-blue text-white rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-6 lg:mb-6 xl:mb-6 2xl:mb-6 text-xl sm:text-2xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-bold">
-                                    1
-                                </div>
-                                <h4 className="text-md sm:text-lg md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 md:mb-4 lg:mb-4 xl:mb-4 2xl:mb-4">
-                                    Schedule Interview
-                                </h4>
-                                <p className="text-sm text-gray-600 leading-relaxed">
-                                    Choose from available freelance interviewers or schedule with your
-                                    internal team based on availability.
-                                </p>
-                            </div>
-                            <div className="text-center">
-                                <div className="w-12 sm:w-16 md:w-16 lg:w-16 xl:w-16 2xl:w-16 h-12 sm:h-16 md:h-16 lg:h-16 xl:h-16 2xl:h-16 bg-custom-blue text-white rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-6 lg:mb-6 xl:mb-6 2xl:mb-6 text-xl sm:text-2xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-bold">
-                                    2
-                                </div>
-                                <h4 className="text-md sm:text-lg md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 md:mb-4 lg:mb-4 xl:mb-4 2xl:mb-4">
-                                    Conduct Interview
-                                </h4>
-                                <p className="text-sm text-gray-600 leading-relaxed">
-                                    Expert interviewers conduct thorough technical assessments using
-                                    industry-standard practices and tools.
-                                </p>
-                            </div>
-                            <div className="text-center">
-                                <div className="w-12 sm:w-16 md:w-16 lg:w-16 xl:w-16 2xl:w-16 h-12 sm:h-16 md:h-16 lg:h-16 xl:h-16 2xl:h-16 bg-custom-blue text-white rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-6 lg:mb-6 xl:mb-6 2xl:mb-6 text-xl sm:text-2xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-bold">
-                                    3
-                                </div>
-                                <h4 className="text-md sm:text-lg md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 md:mb-4 lg:mb-4 xl:mb-4 2xl:mb-4">
-                                    Get Results
-                                </h4>
-                                <p className="text-sm text-gray-600 leading-relaxed">
-                                    Receive detailed feedback and recommendations to make informed
-                                    hiring decisions quickly.
-                                </p>
-                            </div>
-                        </div>
-                    </div> */}
-
-          {/* Stats Section */}
-          {/* <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-6 sm:gap-8 md:gap-8 lg:gap-8 xl:gap-8 2xl:gap-8 text-center mb-12 sm:mb-16 md:mb-20 lg:mb-20 xl:mb-20 2xl:mb-20">
-                        <div className="bg-white rounded-2xl p-6 sm:p-8 md:p-8 lg:p-8 xl:p-8 2xl:p-8 shadow-lg border border-gray-100">
-                            <div className="text-2xl sm:text-3xl md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-3xl font-bold text-custom-blue mb-2">
-                                500+
-                            </div>
-                            <div className="text-sm sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base text-gray-600 font-medium">
-                                Expert Interviewers
-                            </div>
-                        </div>
-                        <div className="bg-white rounded-2xl p-6 sm:p-8 md:p-8 lg:p-8 xl:p-8 2xl:p-8 shadow-lg border border-gray-100">
-                            <div className="text-2xl sm:text-3xl md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-3xl font-bold text-custom-blue mb-2">
-                                10k+
-                            </div>
-                            <div className="text-sm sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base text-gray-600 font-medium">
-                                Interviews Conducted
-                            </div>
-                        </div>
-                        <div className="bg-white rounded-2xl p-6 sm:p-8 md:p-8 lg:p-8 xl:p-8 2xl:p-8 shadow-lg border border-gray-100">
-                            <div className="text-2xl sm:text-3xl md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-3xl font-bold text-custom-blue mb-2">
-                                60%
-                            </div>
-                            <div className="text-sm sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base text-gray-600 font-medium">
-                                Faster Hiring
-                            </div>
-                        </div>
-                        <div className="bg-white rounded-2xl p-6 sm:p-8 md:p-8 lg:p-8 xl:p-8 2xl:p-8 shadow-lg border border-gray-100">
-                            <div className="text-2xl sm:text-3xl md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-3xl font-bold text-custom-blue mb-2">
-                                200+
-                            </div>
-                            <div className="text-sm sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base text-gray-600 font-medium">
-                                Companies Trust Us
-                            </div>
-                        </div>
-                    </div> */}
-
-          {/* CTA Section */}
-          {/* <div className="bg-custom-blue rounded-3xl p-8 sm:p-10 md:p-12 lg:p-12 xl:p-12 2xl:p-12 text-center text-white">
-                        <h2 className="text-2xl sm:text-3xl md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-3xl font-bold mb-4 sm:mb-6 md:mb-6 lg:mb-6 xl:mb-6 2xl:mb-6">
-                            Ready to Accelerate Your Hiring?
-                        </h2>
-                        <p className="text-base sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg mb-6 sm:mb-8 md:mb-8 lg:mb-8 xl:mb-8 2xl:mb-8 opacity-90 max-w-xl sm:max-w-2xl md:max-w-2xl lg:max-w-2xl xl:max-w-2xl 2xl:max-w-2xl mx-auto">
-                            Join thousands of companies and interviewers who trust our platform to
-                            streamline their interview process.
-                        </p>
-                        <div className="flex flex-row sm:flex-col gap-3 sm:gap-4 md:gap-4 lg:gap-4 xl:gap-4 2xl:gap-4 justify-center">
-                            <button
-                                onClick={handleOrganizationLogin}
-                                className="bg-white text-custom-blue font-medium py-3 sm:py-4 md:py-4 lg:py-4 xl:py-4 2xl:py-4 px-6 sm:px-8 md:px-8 lg:px-8 xl:px-8 2xl:px-8 rounded-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 text-base sm:text-lg md:text-lg lg:text-lg xl:text-lg 2xl:text-lg"
-                            >
-                                Start Hiring Faster
-                            </button>
-                            <button
-                                onClick={handleIndividualLogin}
-                                className="border-2 border-white text-white hover:bg-white hover:text-custom-blue font-medium py-3 sm:py-4 md:py-4 lg:py-4 xl:py-4 2xl:py-4 px-6 sm:px-8 md:px-8 lg:px-8 xl:px-8 2xl:px-8 rounded-lg transition-all duration-300 transform hover:scale-105 text-base sm:text-lg md:text-lg lg:text-lg xl:text-lg 2xl:text-lg"
-                            >
-                                Become an Interviewer
-                            </button>
-                        </div>
-                    </div> */}
         </div>
       </div>
     </Layout>
