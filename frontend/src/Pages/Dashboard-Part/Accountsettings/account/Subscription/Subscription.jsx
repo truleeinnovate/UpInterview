@@ -6,9 +6,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-// v1.0.1 <---------------------------------------------
 import { createPortal } from "react-dom";
-// v1.0.1 --------------------------------------------->
 import toast from "react-hot-toast";
 import "./subscription-animations.css";
 import { useSubscription } from "../../../../../apiHooks/useSubscription";
@@ -16,10 +14,9 @@ import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 import { notify } from "../../../../../services/toastService";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
-import InputField from "../../../../../Components/FormFields/InputField";
-import EmailField from "../../../../../Components/FormFields/EmailField";
-import DescriptionField from "../../../../../Components/FormFields/DescriptionField";
-import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField";
+import ContactSalesForm from "../../../components/common/EnterpriseContactSalesForm.jsx";
+// import DescriptionField from "../../../../../Components/FormFields/DescriptionField";
+// import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField";
 import { validateWorkEmail } from "../../../../../utils/workEmailValidation";
 import { config } from "../../../../../config";
 
@@ -1247,87 +1244,13 @@ const Subscription = () => {
               onClose={() => setIsContactSalesOpen(false)}
             >
               <div className="p-4">
-                <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <InputField
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      label="First Name"
-                    />
-                    <InputField
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      label="Last Name"
-                      required
-                      error={errors.lastName}
-                    />
-                  </div>
-      
-                  <EmailField
-                    name="email"
-                    value={formData.email}
-                    onChange={(e) => handleChange({ target: { name: 'email', value: e.target.value } })}
-                    label="Work Email"
-                    required
-                    error={errors.email}
-                    placeholder="your.email@company.com"
-                    onInvalid={(e) => {
-                      e.preventDefault(); // Prevent default HTML5 validation
-                    }}
-                  />
-      
-                  <InputField
-                    name="jobTitle"
-                    value={formData.jobTitle}
-                    onChange={handleChange}
-                    label="Job Title"
-                    required
-                    error={errors.jobTitle}
-                  />
-      
-                  <InputField
-                    name="companyName"
-                    value={formData.companyName}
-                    onChange={handleChange}
-                    label="Company Name"
-                    required
-                    error={errors.companyName}
-                  />
-      
-                  <div>
-                    <DropdownWithSearchField
-                      name="companySize"
-                      value={formData.companySize}
-                      onChange={handleChange}
-                      options={companySizeOptions}
-                      label="Company Size"
-                      required
-                      error={errors.companySize}
-                      placeholder="Select company size"
-                      isSearchable={false}
-                    />
-                  </div>
-      
-                  <DescriptionField
-                    name="additionalDetails"
-                    value={formData.additionalDetails}
-                    onChange={handleChange}
-                    label="Additional Details"
-                    placeholder="Tell us about your requirements"
-                    rows={3}
-                  />
-      
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-custom-blue hover:bg-custom-blue/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
-                    >
-                      Contact Sales
-                    </button>
-                  </div>
-                </form>
+                <ContactSalesForm
+                  formData={formData}
+                  errors={errors}
+                  handleChange={handleChange}
+                  handleSubmit={handleSubmit}
+                  isLoading={false}
+                />
               </div>
             </SidebarPopup>
     </>
