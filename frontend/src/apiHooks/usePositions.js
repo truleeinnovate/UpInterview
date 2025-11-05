@@ -13,7 +13,8 @@ export const usePositions = (filters = {}) => {
   const hasDeletePermission = effectivePermissions?.Positions?.Delete;
 
   const {
-    data: positionData = [],
+    data: responseData = {},
+
     isLoading: isQueryLoading,
     isError,
     error,
@@ -21,8 +22,9 @@ export const usePositions = (filters = {}) => {
   } = useQuery({
     queryKey: ['positions', filters],
     queryFn: async () => {
-      const data = await fetchFilterData('position');
-      return data.reverse();
+      const data = await fetchFilterData('position',filters);
+      console.log("positionData",data);
+      return data;
     },
     enabled: !!hasViewPermission,
     retry: 1,
@@ -32,6 +34,11 @@ export const usePositions = (filters = {}) => {
     refetchOnMount: false, // Don't refetch when component mounts if data exists
     refetchOnReconnect: false, // Don't refetch on network reconnect
   });
+
+  // Then in your component
+const positionData = responseData.positions || responseData.data || [];
+const totalCount = responseData.total || positionData.length;
+// const totalPages = responseData.totalPages || Math.ceil(totalCount / rowsPerPage); 
 
   const positionMutation = useMutation({
     mutationFn: async ({ id, data }) => {
@@ -46,19 +53,19 @@ export const usePositions = (filters = {}) => {
     onSuccess: (data, variables) => {
       // Optimistically update the cache
       queryClient.setQueryData(['positions', filters], (oldData) => {
-        if (!oldData) return oldData;
+        // if (!oldData) return oldData;
         
-        if (variables.id) {
-          // Update existing position
-          return oldData.map(position => 
-            position._id === variables.id 
-              ? { ...position, ...data.data }
-              : position
-          );
-        } else {
-          // Add new position
-          return [data.data, ...oldData];
-        }
+        // if (variables.id) {
+        //   // Update existing position
+        //   return oldData.map(position => 
+        //     position._id === variables.id 
+        //       ? { ...position, ...data.data }
+        //       : position
+        //   );
+        // } else {
+        //   // Add new position
+        //   return [data.data, ...oldData];
+        // }
       });
       
       // Invalidate to ensure consistency
@@ -108,20 +115,20 @@ export const usePositions = (filters = {}) => {
     //   queryClient.invalidateQueries(['positions']);
     // },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData(['positions', filters], (oldData) => {
-        if (!oldData) return oldData;
-        return oldData.map(position => 
-          position._id === variables.positionId 
-            ? {
-                ...position,
-                rounds: mergeUniqueRounds(
-                  position.rounds || [],
-                  Array.isArray(data.data) ? data.data : [data.data]
-                )
-              }
-            : position
-        );
-      });
+      // queryClient.setQueryData(['positions', filters], (oldData) => {
+      //   if (!oldData) return oldData;
+      //   return oldData.map(position => 
+      //     position._id === variables.positionId 
+      //       ? {
+      //           ...position,
+      //           rounds: mergeUniqueRounds(
+      //             position.rounds || [],
+      //             Array.isArray(data.data) ? data.data : [data.data]
+      //           )
+      //         }
+      //       : position
+      //   );
+      // });
       queryClient.invalidateQueries(['positions']);
     },
 
@@ -178,10 +185,10 @@ export const usePositions = (filters = {}) => {
     },
     onSuccess: (data, positionId) => {
       // Optimistically remove from cache
-      queryClient.setQueryData(["positions", filters], (oldData) => {
-        if (!oldData) return oldData;
-        return oldData.filter(position => position._id !== positionId);
-      });
+      // queryClient.setQueryData(["positions", filters], (oldData) => {
+      //   if (!oldData) return oldData;
+      //   return oldData.filter(position => position._id !== positionId);
+      // });
       
       // Invalidate queries to ensure consistency
       queryClient.invalidateQueries(["positions"]);

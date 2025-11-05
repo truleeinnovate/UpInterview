@@ -191,12 +191,32 @@ function Candidate({
     min: "",
     max: "",
   });
+  const rowsPerPage = 10;
+
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [selectedUniversities, setSelectedUniversities] = useState([]);
   const [createdDatePreset, setCreatedDatePreset] = useState("");
   const { skills, qualifications, currentRoles, colleges } = useMasterData();
-  //-----v1.0.4-------->
-  const { candidateData, deleteCandidateData, isLoading } = useCandidates();
+ 
+  
+  
+    // NEW: Compute queryFilters for server-side
+  const queryFilters = {
+    page: currentPage + 1,
+    limit: rowsPerPage,
+    search: searchQuery,
+    status: selectedFilters.status,
+    tech: selectedFilters.tech,
+    experienceMin: selectedFilters.experience.min,
+    experienceMax: selectedFilters.experience.max,
+    relevantExperienceMin: selectedFilters.relevantExperience.min,
+    relevantExperienceMax: selectedFilters.relevantExperience.max,
+    roles: selectedFilters.roles,
+    universities: selectedFilters.universities,
+    createdDate: selectedFilters.createdDate,
+  };
+  
+  const { candidateData,totalCandidates, deleteCandidateData, isLoading } = useCandidates(queryFilters);
   const navigate = useNavigate();
   // v1.0.7 <----------------------------------------------------------------------
   // const isTablet = useMediaQuery({ maxWidth: 1024 });
@@ -205,6 +225,8 @@ function Candidate({
   const filterIconRef = useRef(null);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deleteCandidate, setDeleteCandidate] = useState(null);
+
+
 
   // <---------------------- v1.0.2
   // Helper function to check if a candidate is cancelled (handles all case variations)
@@ -452,9 +474,6 @@ function Candidate({
 
   const dataToUse = isAssessmentView ? candidates : candidateData;
 
-  console.log("dataToUse", dataToUse);
-
-  logger.log("dataToUse", dataToUse);
 
   const handleApplyFilters = () => {
     const filters = {
@@ -595,23 +614,39 @@ function Candidate({
     });
   };
 
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
-  const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
 
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prevPage) => prevPage - 1);
-    }
-  };
+  // const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
+  const total = isAssessmentView ? (candidates?.length || 0) : totalCandidates;
+  const totalPages = Math.ceil(total / rowsPerPage);
+
+  // const nextPage = () => {
+  //   if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
+  //     setCurrentPage((prevPage) => prevPage + 1);
+  //   }
+  // };
+
+  // const prevPage = () => {
+  //   if (currentPage > 0) {
+  //     setCurrentPage((prevPage) => prevPage - 1);
+  //   }
+  // };
+
+  const nextPage = () => {
+  if (currentPage + 1 < totalPages) {
+    setCurrentPage((prevPage) => prevPage + 1);
+  }
+};
+
+const prevPage = () => {
+  if (currentPage > 0) {
+    setCurrentPage((prevPage) => prevPage - 1);
+  }
+};
 
   const startIndex = currentPage * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  // const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  const currentFilteredRows = isAssessmentView ? FilteredData().slice(startIndex, endIndex) : FilteredData();
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
