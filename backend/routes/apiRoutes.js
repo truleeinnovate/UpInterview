@@ -117,13 +117,8 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
   try {
     const { model } = req.params;
 
-    // console.log('[1] Request received for model:', model);
-    // console.log('[1.1] Cookies received:', req.cookies);
-    // console.log('[1.2] Authorization header:', req.headers.authorization ? 'Present' : 'Missing');
-
     // Get user information from res.locals (set by permissionMiddleware)
     let { userId, tenantId } = res.locals;
-    // console.log('[2] User info from res.locals:', { userId, tenantId });
 
     // If res.locals doesn't have user info, try to extract from token directly
     if (!userId || !tenantId) {
@@ -153,7 +148,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     }
 
     if (!userId || !tenantId) {
-      // console.log('[3] Missing userId or tenantId - returning 401');
+
       return res.status(401).json({ error: 'Unauthorized: Missing userId or tenantId' });
     }
 
@@ -163,23 +158,8 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       effectivePermissions_RoleType,
       effectivePermissions_RoleName,
     } = res.locals;
-    console.log("inheritedRoleIds", inheritedRoleIds);
-
-
-    // console.log('[4] Permission data from res.locals:', {
-    //   roleType: effectivePermissions_RoleType,
-    //   roleName: effectivePermissions_RoleName,
-    //   inheritedRoleIds: inheritedRoleIds?.length || 0,
-    //   hasEffectivePermissions: !!effectivePermissions
-    // });
-
-    // if (!effectivePermissions) {
-    //   // console.log('[5] No effective permissions found - returning 403');
-    //   return res.status(403).json({ error: 'Forbidden: No permissions available' });
-    // }
 
     const modelMapping = getModelMapping(effectivePermissions);
-    // console.log('[6] Model mapping for request:', Object.keys(modelMapping));
 
     const modelConfig = modelMapping[model.toLowerCase()];
 
@@ -189,11 +169,6 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
     const { model: DataModel, hasViewPermission } = modelConfig;
 
-    // if (!hasViewPermission) {
-    //   console.log('[9] User lacks view permission for model - returning 403');
-    //   return res.status(403).json({ error: 'Forbidden: No view permission for this resource' });
-    // }
-    // <------------------------v1.0.7
 
     // Special handling for feedback model which has custom logic
     if (model.toLowerCase() === 'feedback') {
@@ -210,34 +185,13 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     const roleType = effectivePermissions_RoleType;
     const roleName = effectivePermissions_RoleName;
 
-    // console.log('[12] User role details:', {
-    //   roleType,
-    //   roleName,
-    //   isOrganizationAdmin: roleType === 'organization' && roleName === 'Admin'
-    // });
+
 
     if (roleType === 'individual' && model.toLowerCase() !== 'scheduleassessment') {
       query.ownerId = userId;
       // console.log('[13] Individual user - adding ownerId filter:', query);
     } else if (roleType === 'organization' && roleName !== 'Admin') {
-      // if (model.toLowerCase() === 'scheduleassessment') {
-      //   // For scheduled assessments, organization non-admin can see all under same organization
-      // }
-      // if (inheritedRoleIds?.length > 0) {
-      //   // console.log('[14] Non-admin org user with inherited roles:', inheritedRoleIds);
-      //   const accessibleUsers = await Users.find({
-      //     tenantId,
-      //     roleId: { $in: inheritedRoleIds },
-      //   }).select('_id');
 
-      //   const userIds = accessibleUsers.map(user => user._id);
-      //   // console.log('[15] Accessible user IDs from inherited roles:', userIds);
-
-      //   query.ownerId = { $in: userIds };
-      // } else {
-      //   // console.log('[16] Non-admin org user with no inherited roles - using own userId');
-      //   query.ownerId = userId;
-      // }
 
       if (inheritedRoleIds?.length > 0) {
         const accessibleUsers = await Users.find({
@@ -256,9 +210,9 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         query.ownerId = userId;
       }
 
-      // console.log('[17] Final query after org user processing:', query);
+
     } else {
-      // console.log('[18] Organization Admin - only tenantId filter applied');
+
       // Ensure scheduled assessments are not restricted by ownerId
       if (model.toLowerCase() === 'scheduleassessment') {
         delete query.ownerId;
@@ -439,7 +393,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         break;
       // ------------------------------ v1.0.4 >
       case 'assessmentlist':
-         query = {
+        query = {
           $or: [
             { type: 'standard' }, // Standard templates are accessible to all
             {
@@ -465,8 +419,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           .lean();
         // console.log('[33] Found', data.length, 'Position records');
         break;
-      // ------------------------------ v1.0.1 >
-      // <------------------------v1.0.7
+
       case 'feedback':
         // console.log('[34] Processing Feedback model with complex logic');
 
@@ -531,11 +484,118 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         data = feedbackWithQuestions;
         // console.log('[39] Final feedback data prepared with', data.length, 'records');
         break;
-      // ------------------------------v1.0.7 >
+
+      case "candidate":
+        // NEW: Parse query params for filters, search, pagination
+        const {
+          page = 1,
+          limit = 10,
+          search,
+          status,
+          tech,
+          experienceMin,
+          experienceMax,
+          relevantExperienceMin,
+          relevantExperienceMax,
+          roles,
+          universities,
+          createdDate
+        } = req.query;
+        // console.log("[40] Query params:", req.query);
+
+        const parsedPage = parseInt(page) || 1;
+        const parsedLimit = parseInt(limit) || 10;
+        const skip = (parsedPage - 1) * parsedLimit;
+
+        // Apply search
+        if (search) {
+          const searchRegex = new RegExp(search, 'i');
+          query.$or = [
+            { FirstName: searchRegex },
+            { LastName: searchRegex },
+            { Email: searchRegex },
+            { Phone: searchRegex }
+          ];
+        }
+
+        // Apply filters
+        if (status) {
+          const statuses = Array.isArray(status) ? status : [status];
+          query.HigherQualification = { $in: statuses };
+        }
+
+        if (tech) {
+          const techs = Array.isArray(tech) ? tech : [tech];
+          query['skills.skill'] = { $in: techs };
+        }
+
+        const expMin = parseInt(experienceMin) || 0;
+        const expMax = parseInt(experienceMax) || Infinity;
+        if (expMin > 0 || expMax < Infinity) {
+          query.CurrentExperience = {};
+          if (expMin > 0) query.CurrentExperience.$gte = expMin;
+          if (expMax < Infinity) query.CurrentExperience.$lte = expMax;
+        }
+
+        const relExpMin = parseInt(relevantExperienceMin) || 0;
+        const relExpMax = parseInt(relevantExperienceMax) || Infinity;
+        if (relExpMin > 0 || relExpMax < Infinity) {
+          query.RelevantExperience = {};
+          if (relExpMin > 0) query.RelevantExperience.$gte = relExpMin;
+          if (relExpMax < Infinity) query.RelevantExperience.$lte = relExpMax;
+        }
+
+        if (roles) {
+          const roleList = Array.isArray(roles) ? roles : [roles];
+          query.CurrentRole = { $in: roleList };
+        }
+
+        if (universities) {
+          const uniList = Array.isArray(universities) ? universities : [universities];
+          query.UniversityCollege = { $in: uniList };
+        }
+
+        if (createdDate === 'last7') {
+          const date = new Date();
+          date.setDate(date.getDate() - 7);
+          query.createdAt = { $gte: date };
+        } else if (createdDate === 'last30') {
+          const date = new Date();
+          date.setDate(date.getDate() - 30);
+          query.createdAt = { $gte: date };
+        }
+
+        // Fetch paginated data with sort
+        data = await Candidate.find(query)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(parsedLimit)
+          .lean();
+
+
+
+
+
+        // Get total count
+        total = await Candidate.countDocuments(query);
+
+        dataObj = {
+          candidate: data, total
+        }
+
+        data = dataObj
+
+
+        break;
+
+
+      // data = await DataModel.find(query).lean();
+      // break;  
+
       default:
         // console.log('[40] Processing generic model:', model);
         data = await DataModel.find(query).lean();
-      // console.log('[41] Found', data.length, 'records for model', model);
+
     }
 
     // console.log('[36] Sending response with data');

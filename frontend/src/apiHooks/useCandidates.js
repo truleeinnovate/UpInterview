@@ -16,7 +16,7 @@ export const useCandidates = (filters = {}) => {
   const hasDeletePermission = effectivePermissions?.Candidates?.Delete;
 
   const {
-    data: candidateData = [],
+   data: responseData,
     isLoading: isQueryLoading,
     isError,
     error,
@@ -24,20 +24,12 @@ export const useCandidates = (filters = {}) => {
   } = useQuery({
     queryKey: ["candidates", filters],
     queryFn: async () => {
-      const data = await fetchFilterData("candidate", effectivePermissions);
-      return data
-        .map((candidate) => {
-          if (candidate.ImageData?.filename) {
-            return {
-              ...candidate,
-              imageUrl: `${
-                config.REACT_APP_API_URL
-              }/${candidate.ImageData.path.replace(/\\/g, "/")}`,
-            };
-          }
-          return candidate;
-        })
-        .reverse();
+      const data = await fetchFilterData("candidate", effectivePermissions,filters);
+
+      console.log("data data", data);
+      return data;
+     
+        
     },
     enabled: !!hasViewPermission, // Only fetch if user has permission
     retry: 1,
@@ -47,6 +39,22 @@ export const useCandidates = (filters = {}) => {
     refetchOnMount: false, // Don't refetch when component mounts if data exists
     refetchOnReconnect: false, // Don't refetch on network reconnect
   });
+
+
+// Extract data and total from response
+  const candidateData = responseData?.candidate || [];
+  const totalCandidates = responseData?.total || 0;
+
+  // In useCandidates hook, change data extraction to:
+const candidateDatas = responseData?.data?.candidate || [];
+const totalCandidatess = responseData?.data?.total || 0;
+
+// console.log("candidateDatas", candidateDatas);
+// console.log("totalCandidatess", totalCandidatess);
+
+
+//   console.log("candidateData", candidateData);
+//   console.log("totalCandidates", totalCandidates);
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -101,28 +109,55 @@ export const useCandidates = (filters = {}) => {
       const candidate = data?.data;
 
       if (!candidate) {
-        // no changes — close the form safely
-        // console.log("No changes detected, closing form.");
         if (variables.isModal && variables.onClose) {
-          variables.onClose({}); // pass empty object
+          variables.onClose({});
         }
         return;
       }
 
-      // Optimistically update the cache
+      // FIXED: Optimistically update the cache - handle your specific backend structure
       queryClient.setQueryData(["candidates", filters], (oldData) => {
         if (!oldData) return oldData;
 
-        if (variables.id) {
-          // Update existing candidate
-          return oldData.map((candidate) =>
-            candidate._id === variables.id
-              ? { ...candidate, ...data.data }
-              : candidate
-          );
+        // Your backend returns { data: { candidate: [...], total: X } }
+        if (oldData.data && oldData.data.candidate) {
+          // New structure: { data: { candidate: [...], total: X } }
+          if (variables.id) {
+            // Update existing candidate
+            const updatedCandidates = oldData.data.candidate.map((c) =>
+              c._id === variables.id ? { ...c, ...data.data } : c
+            );
+            return {
+              ...oldData,
+              data: {
+                ...oldData.data,
+                candidate: updatedCandidates,
+                total: oldData.data.total // total remains same for update
+              }
+            };
+          } else {
+            // Add new candidate
+            return {
+              ...oldData,
+              data: {
+                ...oldData.data,
+                candidate: [data.data, ...oldData.data.candidate],
+                total: oldData.data.total + 1
+              }
+            };
+          }
+        } else if (Array.isArray(oldData)) {
+          // Old structure: array of candidates (fallback)
+          if (variables.id) {
+            return oldData.map((c) =>
+              c._id === variables.id ? { ...c, ...data.data } : c
+            );
+          } else {
+            return [data.data, ...oldData];
+          }
         } else {
-          // Add new candidate
-          return [data.data, ...oldData];
+          // Unknown structure, return as is
+          return oldData;
         }
       });
 
@@ -132,6 +167,42 @@ export const useCandidates = (filters = {}) => {
     onError: (error) => {
       console.error("Error adding/updating candidate:", error);
     },
+
+    // onSuccess: (data, variables) => {
+    //   const candidate = data?.data;
+
+    //   if (!candidate) {
+    //     // no changes — close the form safely
+    //     // console.log("No changes detected, closing form.");
+    //     if (variables.isModal && variables.onClose) {
+    //       variables.onClose({}); // pass empty object
+    //     }
+    //     return;
+    //   }
+
+    //   // Optimistically update the cache
+    //   queryClient.setQueryData(["candidates", filters], (oldData) => {
+    //     if (!oldData) return oldData;
+
+    //     if (variables.id) {
+    //       // Update existing candidate
+    //       return oldData.map((candidate) =>
+    //         candidate._id === variables.id
+    //           ? { ...candidate, ...data.data }
+    //           : candidate
+    //       );
+    //     } else {
+    //       // Add new candidate
+    //       return [data.data, ...oldData];
+    //     }
+    //   });
+
+    //   // Invalidate to ensure consistency
+    //   queryClient.invalidateQueries(["candidates"]);
+    // },
+    // onError: (error) => {
+    //   console.error("Error adding/updating candidate:", error);
+    // },
   });
 
   // Delete candidate mutation
@@ -152,24 +223,62 @@ export const useCandidates = (filters = {}) => {
       );
       return response.data;
     },
+
     onSuccess: (data, candidateId) => {
-      // Optimistically remove from cache
+      // FIXED: Optimistically remove from cache - handle your specific backend structure
       queryClient.setQueryData(["candidates", filters], (oldData) => {
         if (!oldData) return oldData;
-        return oldData.filter((candidate) => candidate._id !== candidateId);
+
+        // Your backend returns { data: { candidate: [...], total: X } }
+        if (oldData.data && oldData.data.candidate) {
+          // New structure: { data: { candidate: [...], total: X } }
+          const filteredCandidates = oldData.data.candidate.filter(
+            (candidate) => candidate._id !== candidateId
+          );
+          return {
+            ...oldData,
+            data: {
+              ...oldData.data,
+              candidate: filteredCandidates,
+              total: oldData.data.total - 1
+            }
+          };
+        } else if (Array.isArray(oldData)) {
+          // Old structure: array of candidates (fallback)
+          return oldData.filter((candidate) => candidate._id !== candidateId);
+        } else {
+          // Unknown structure, return as is
+          return oldData;
+        }
       });
 
       // Invalidate queries to ensure consistency
       queryClient.invalidateQueries(["candidates"]);
-
-      // console.log("Candidate deleted successfully:", data);
     },
     onError: (error, candidateId) => {
       console.error("Error deleting candidate:", error);
-
-      // Revert optimistic update on error
       queryClient.invalidateQueries(["candidates"]);
     },
+
+
+    // onSuccess: (data, candidateId) => {
+    //   // Optimistically remove from cache
+    //   queryClient.setQueryData(["candidates", filters], (oldData) => {
+    //     if (!oldData) return oldData;
+    //     return oldData.filter((candidate) => candidate._id !== candidateId);
+    //   });
+
+    //   // Invalidate queries to ensure consistency
+    //   queryClient.invalidateQueries(["candidates"]);
+
+    //   // console.log("Candidate deleted successfully:", data);
+    // },
+    // onError: (error, candidateId) => {
+    //   console.error("Error deleting candidate:", error);
+
+    //   // Revert optimistic update on error
+    //   queryClient.invalidateQueries(["candidates"]);
+    // },
   });
 
   // Use mutation.isPending instead of checking status (for v5+)
@@ -180,6 +289,7 @@ export const useCandidates = (filters = {}) => {
 
   return {
     candidateData,
+    totalCandidates,
     isLoading,
     isQueryLoading,
     isMutationLoading,

@@ -4,7 +4,7 @@ import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 import { config } from './config';
 
 
-export const fetchFilterData = async (endpoint, effectivePermissions = {}) => {
+export const fetchFilterData = async (endpoint, effectivePermissions = {},params = {}) => {
   // console.log("Sending X-Permissions header:", JSON.stringify(effectivePermissions));
 
   try {
@@ -23,6 +23,7 @@ export const fetchFilterData = async (endpoint, effectivePermissions = {}) => {
     }
 
     const response = await axios.get(`${config.REACT_APP_API_URL}/api/${endpoint}`, {
+      params,
       headers: {
         Authorization: `Bearer ${authToken}`,
         'x-permissions': JSON.stringify(effectivePermissions) // Send permissions in headers
