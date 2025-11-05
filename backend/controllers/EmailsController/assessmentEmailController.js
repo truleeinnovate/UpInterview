@@ -446,7 +446,8 @@ exports.shareAssessment = async (req, res) => {
     // Use a simpler approach that doesn't require sorting by scheduledAssessmentCode
     // <---------------------- v1.0.1
     const scheduleCount = await ScheduleAssessment.countDocuments({
-      organizationId,
+      tenantId: organizationId,
+      ownerId: userId,
       scheduledAssessmentCode: { $exists: true, $ne: null }
     });
 
@@ -456,7 +457,8 @@ exports.shareAssessment = async (req, res) => {
 
     // Check if this code already exists (in case of concurrent requests)
     const existingCode = await ScheduleAssessment.findOne({
-      organizationId,
+      tenantId: organizationId,
+      ownerId: userId,
       scheduledAssessmentCode
     });
 
@@ -472,7 +474,8 @@ exports.shareAssessment = async (req, res) => {
     // Validate the scheduled assessment data
     const { errors, isValid } = validateScheduledAssessment({
       assessmentId,
-      organizationId,
+      tenantId: organizationId,
+      ownerId: userId,
       expiryAt,
       createdBy: userId
     });
@@ -489,7 +492,8 @@ exports.shareAssessment = async (req, res) => {
       const scheduleAssessment = new ScheduleAssessment({
         scheduledAssessmentCode,
         assessmentId,
-        organizationId,
+        tenantId: organizationId,
+        ownerId: userId,
         status: 'scheduled',
         proctoringEnabled: true,
         createdBy: userId,
