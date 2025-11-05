@@ -310,10 +310,10 @@ function validateScheduledAssessment(payload = {}) {
       "string.pattern.base": "Invalid Assessment ID format",
     }),
 
-    organizationId: objectId.required().messages({
-      "any.required": "Organization ID is required",
-      "string.pattern.base": "Invalid Organization ID format",
-    }),
+    // organizationId: objectId.required().messages({
+    //   "any.required": "Organization ID is required",
+    //   "string.pattern.base": "Invalid Organization ID format",
+    // }),
 
     expiryAt: Joi.date().iso().min("now").allow(null).optional().messages({
       "date.min": "Expiry date must be in the future",

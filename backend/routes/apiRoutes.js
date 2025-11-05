@@ -33,12 +33,14 @@ const { Users } = require('../models/Users');
 const { permissionMiddleware } = require('../middleware/permissionMiddleware');
 // <-------------------------------v1.0.6
 const ScheduledAssessmentSchema = require('../models/Assessment/assessmentsSchema.js');
+
 // ------------------------------v1.0.6 >
 // <-------------------------------v1.0.7
 
 const FeedbackModel = require('../models/feedback.js');
 const { Contacts } = require('../models/Contacts.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
+const { CandidateAssessment } = require('../models/Assessment/candidateAssessment.js');
 // ------------------------------v1.0.7 >
 
 const modelRequirements = {
@@ -70,11 +72,11 @@ const modelRequirements = {
     permissionName: 'AssessmentTemplates',
     requiredPermission: 'View'
   },
-  // scheduleassessment: {
-  //   model: ScheduledAssessmentSchema,
-  //   permissionName: 'Assessments',
-  //   requiredPermission: 'View'
-  // },
+  scheduleassessment: {
+    model: ScheduledAssessmentSchema,
+    permissionName: 'Assessments',
+    requiredPermission: 'View'
+  },
   tenantquestions: {
     model: TenantQuestions,
     permissionName: 'QuestionBank',
@@ -181,9 +183,9 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     // Base query - always enforce tenant boundary
     // let query = model.toLowerCase() === 'scheduleassessment' ? { organizationId: tenantId } : { tenantId };
     // console.log('[11] Initial query with tenantId:', query);
-    
-    
-    let query= {}
+
+
+    let query = {}
     const roleType = effectivePermissions_RoleType;
     const roleName = effectivePermissions_RoleName;
 
@@ -211,8 +213,8 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
 
     } else if (roleType === 'organization' && roleName === 'Admin') {
-        query.tenantId = tenantId;
- 
+      query.tenantId = tenantId;
+
     }
 
     let data;
@@ -364,7 +366,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
             select: 'firstName lastName email',
           })
           .lean();
-       
+
         break;
       // ------------------------------ v1.0.4 >
 
@@ -386,6 +388,69 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           .lean();
         // console.log('[37] Found', data.length, 'Assessment records');
         break;
+
+      case 'scheduleassessment': {
+        const { assessmentId } = req.query;
+
+        // Base filter: tenant + ownership (already built in `query`)
+        const scheduledFilter = {
+          ...query,           // includes tenantId, ownerId (or $in for inherited roles)
+          isActive: true,
+        };
+
+        // Only add assessmentId filter if it's provided AND valid
+        if (assessmentId) {
+          if (!mongoose.isValidObjectId(assessmentId)) {
+            return res.status(400).json({
+              success: false,
+              message: 'Invalid assessmentId format'
+            });
+          }
+          scheduledFilter.assessmentId = assessmentId;
+        }
+
+        // 1. Fetch active scheduled assessments (filtered by assessmentId if provided)
+        const scheduledAssessments = await ScheduledAssessmentSchema
+          .find(scheduledFilter)
+          .select('_id order expiryAt status createdAt assessmentId')
+          .lean();
+
+        // If no assessments found, return empty array
+        if (!scheduledAssessments.length) {
+          data = [];
+          break;
+        }
+
+        // 2. Get all candidate assessments for these scheduled IDs
+        const scheduledIds = scheduledAssessments.map(sa => sa._id);
+
+        const candidateAssessments = await CandidateAssessment.find({
+          scheduledAssessmentId: { $in: scheduledIds }
+        })
+          .populate('candidateId')
+          .lean();
+
+
+        // 3. Group candidates under each scheduled assessment
+        const schedulesWithCandidates = scheduledAssessments.map(schedule => {
+          const candidates = candidateAssessments.filter(
+            ca => ca.scheduledAssessmentId.toString() === schedule._id.toString()
+          );
+          return {
+            _id: schedule._id,
+            assessmentId: schedule.assessmentId,
+            order: schedule.order,
+            expiryAt: schedule.expiryAt,
+            status: schedule.status,
+            createdAt: schedule.createdAt,
+            candidates,
+          };
+        });
+
+        data = schedulesWithCandidates;
+        console.log("scheduleassessment", data);
+        break;
+      }
       // ------------------------------ v1.0.4 >
       case 'assessmentlist':
         query = {
@@ -468,7 +533,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         const positionSalMax = parseInt(positionSalaryMax) || Infinity;
         if (positionSalMin > 0 || positionSalMax < Infinity) {
           query.$and = query.$and || [];
-          if (positionSalMin > 0) query.$and.push({ 
+          if (positionSalMin > 0) query.$and.push({
             $or: [
               { minSalary: { $gte: positionSalMin } },
               { maxSalary: { $gte: positionSalMin } }
@@ -519,15 +584,15 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         // console.log('[33] Found', data.positions.length, 'Position records out of', total);
         break;
 
-        // data = await DataModel.find(query)
-        //   .populate({
-        //     path: 'rounds.interviewers',
-        //     model: 'Contacts',
-        //     select: 'firstName lastName email',
-        //   })
-        //   .lean();
-        // console.log('[33] Found', data.length, 'Position records');
-        // break;
+      // data = await DataModel.find(query)
+      //   .populate({
+      //     path: 'rounds.interviewers',
+      //     model: 'Contacts',
+      //     select: 'firstName lastName email',
+      //   })
+      //   .lean();
+      // console.log('[33] Found', data.length, 'Position records');
+      // break;
 
       case 'feedback':
         // console.log('[34] Processing Feedback model with complex logic');
@@ -689,7 +754,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
         // data = dataObj
         // break;
-         // candidate query base on query will get the data from db 
+        // candidate query base on query will get the data from db 
         const {
           page: candidatePage = 1,
           limit: candidateLimit = 10,

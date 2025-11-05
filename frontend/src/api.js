@@ -4,7 +4,7 @@ import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 import { config } from './config';
 
 
-export const fetchFilterData = async (endpoint, effectivePermissions = {},params = {}) => {
+export const fetchFilterData = async (endpoint, effectivePermissions = {}, params = {}) => {
   // console.log("Sending X-Permissions header:", JSON.stringify(effectivePermissions));
 
   try {
