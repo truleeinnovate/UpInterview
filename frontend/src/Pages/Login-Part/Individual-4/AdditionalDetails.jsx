@@ -416,7 +416,7 @@ const AdditionalDetails = ({
 
             {/* Cover Letter Section */}
             <div className="sm:col-span-2 col-span-2">
-              <div>
+              <div className='mb-3'>
                 <label
                   htmlFor="coverLetter"
                   className="text-sm font-medium text-gray-700 mb-1"
@@ -435,7 +435,7 @@ const AdditionalDetails = ({
                   />
                   <div
                     // <-------------------------v1.0.0
-                    className="bg-custom-blue text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
+                    className="bg-custom-blue text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
                     // v1.0.0-------------------------->
                     onClick={() => coverLetterInputRef.current.click()} // Trigger file input click
                   >
@@ -449,7 +449,7 @@ const AdditionalDetails = ({
               </div>
               {coverLetterName && (
                 // v1.0.1 <------------------------------------------------------------------
-                <div className="border mt-2 flex items-center justify-between gap-2 px-2 rounded-md xl:max-w-md 2xl:max-w-md">
+                <div className="border flex items-center justify-between px-4 py-2 rounded-md xl:max-w-md 2xl:max-w-md">
                   <div className="min-w-0">
                     <span className="text-sm block truncate text-gray-600">
                       {coverLetterName}
@@ -457,10 +457,10 @@ const AdditionalDetails = ({
                   </div>
                   <button
                     type="button"
-                    className="text-red-500 flex-shrink-0"
+                    className="text-red-500 flex-shrink-0 -mt-1"
                     onClick={handleRemoveCoverLetter}
                   >
-                    <span className="text-xl">×</span>
+                    <span className="text-2xl">×</span>
                   </button>
                 </div>
                 // v1.0.1 ----------------------------------------------------------------->

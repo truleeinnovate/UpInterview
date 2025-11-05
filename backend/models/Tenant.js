@@ -85,6 +85,12 @@ const TenantSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// added by mansoor for indexes to fetch the data fast
+TenantSchema.index({ subdomain: 1 });
+TenantSchema.index({ fullDomain: 1 });
+TenantSchema.index({ email: 1 });
+TenantSchema.index({ ownerId: 1 });
+
 module.exports = mongoose.model("Tenant", TenantSchema);
 
 // const mongoose = require('mongoose');

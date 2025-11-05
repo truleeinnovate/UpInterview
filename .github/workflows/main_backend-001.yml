@@ -66,6 +66,78 @@
 #           clean: true
 
 
+# name: Build and deploy Node.js app to Azure Web App - dev-backend-upinterview
+
+# on:
+#   push:
+#     branches:
+#       - main
+#   workflow_dispatch:
+
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Set up Node.js version
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: '20.x'
+#           cache: 'npm'
+#           cache-dependency-path: './backend/package-lock.json'
+
+#       - name: Install dependencies
+#         working-directory: ./backend
+#         env:
+#           # LinkedIn OAuth configuration
+#           REACT_APP_CLIENT_ID: ${{ secrets.REACT_APP_CLIENT_ID }}
+#           REACT_APP_CLIENT_SECRET: ${{ secrets.REACT_APP_CLIENT_SECRET }}
+#           REACT_APP_REDIRECT_URI: ${{ secrets.REACT_APP_REDIRECT_URI }}
+
+#           # API URLs
+#           REACT_APP_API_URL_FRONTEND: ${{ secrets.REACT_APP_API_URL_FRONTEND }}
+#         run: npm ci --only=production
+
+#       - name: Create optimized deployment package
+#         run: |
+#           # Create deployment directory
+#           mkdir -p deploy/backend
+
+#           # Copy only essential files (much faster than rsync)
+#           cp -r backend/package*.json deploy/backend/
+#           cp -r backend/index.js deploy/backend/
+#           cp -r backend/config.js deploy/backend/
+#           cp -r backend/web.config deploy/backend/
+#           cp -r backend/routes deploy/backend/
+#           cp -r backend/controllers deploy/backend/
+#           cp -r backend/models deploy/backend/
+#           cp -r backend/middleware deploy/backend/
+#           cp -r backend/utils deploy/backend/
+#           cp -r backend/constants deploy/backend/
+#           cp -r backend/data deploy/backend/
+#           cp -r backend/validations deploy/backend/
+#           cp -r backend/services deploy/backend/
+
+#           # Copy node_modules (already installed with production deps)
+#           cp -r backend/node_modules deploy/backend/
+
+#           # Create zip file
+#           cd deploy
+#           zip -r ../release.zip . -x "*.git*" "*.DS_Store*" "*.log*"
+
+#       - name: Deploy to Azure Web App
+#         uses: azure/webapps-deploy@v3
+#         with:
+#           app-name: 'dev-backend-upinterview'
+#           slot-name: 'Production'
+#           package: release.zip
+#           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DEV_BACKEND }}
+#           clean: true
+
+
+
 name: Build and deploy Node.js app to Azure Web App - dev-backend-upinterview
 
 on:
@@ -99,6 +171,10 @@ jobs:
           # API URLs
           REACT_APP_API_URL_FRONTEND: ${{ secrets.REACT_APP_API_URL_FRONTEND }}
         run: npm ci --only=production
+
+      # 👇 NEW STEP — Install PM2 globally
+      - name: Install PM2
+        run: npm install -g pm2
 
       - name: Create optimized deployment package
         run: |
