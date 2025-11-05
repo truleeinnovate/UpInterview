@@ -25,11 +25,20 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from "../../../../../config.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import { notify } from "../../../../../services/toastService.js";
-
+import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
 function AssessmentsTab({ assessment }) {
   // <-------------------------------v1.0.3
-  const { useScheduledAssessments, fetchAssessmentQuestions } =
+  const { fetchAssessmentQuestions } =
     useAssessments();
+  const {
+    scheduleData,
+    isLoading,
+    isError,
+    error,
+  } = useScheduleAssessments(assessment._id);
+
+  console.log("scheduleData", scheduleData);
+
   // ------------------------------v1.0.3 >
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   // Remove console.log to prevent loops
@@ -55,11 +64,11 @@ function AssessmentsTab({ assessment }) {
   const [resendLoading, setResendLoading] = useState({}); // Track loading state for each resend button
 
   // Use React Query for scheduled assessments
-  const { data: scheduledAssessments = [], isLoading: loading } =
-    useScheduledAssessments(assessment?._id);
+  // const { data: scheduledAssessments = [], isLoading: loading } =
+  //   useScheduledAssessments(assessment?._id);
   // ------------------------------v1.0.3 >
 
-  console.log("scheduledAssessments", scheduledAssessments);
+  // console.log("scheduledAssessments", scheduledAssessments);
   // Check if assessment has sections
   useEffect(() => {
     const checkAssessmentSections = async () => {
@@ -90,18 +99,18 @@ function AssessmentsTab({ assessment }) {
   // Initialize openSchedules when scheduledAssessments data changes
   useEffect(() => {
     // <-------------------------------v1.0.3
-    if (scheduledAssessments && scheduledAssessments.length > 0) {
-      const initialOpenState = scheduledAssessments.reduce((acc, schedule) => {
+    if (scheduleData && scheduleData.length > 0) {
+      const initialOpenState = scheduleData.reduce((acc, schedule) => {
         acc[schedule._id] = false;
         return acc;
       }, {});
       setOpenSchedules(initialOpenState);
       setOpenSchedules((prev) => ({
         ...prev,
-        [scheduledAssessments[0]._id]: true,
+        [scheduleData[0]._id]: true,
       }));
     }
-  }, [scheduledAssessments]);
+  }, [scheduleData]);
   // ------------------------------v1.0.3 >
 
   const handleResendLink = async (candidateAssessmentId) => {
@@ -178,7 +187,7 @@ function AssessmentsTab({ assessment }) {
 
   // <-------------------------------v1.0.3
 
-  if (loading)
+  if (isLoading)
     return <div className="p-4 text-gray-600">Loading Assessments...</div>;
 
   const formattedCandidates = (candidates) =>
@@ -199,8 +208,8 @@ function AssessmentsTab({ assessment }) {
           ? assessment.passScoreBy === "Each Section"
             ? "N/A"
             : candidate.totalScore >= (assessment?.passScore || 0)
-            ? "pass"
-            : "fail"
+              ? "pass"
+              : "fail"
           : null,
       Phone: candidate.candidateId?.Phone || "N/A",
       HigherQualification: candidate.candidateId?.HigherQualification || "N/A",
@@ -229,9 +238,9 @@ function AssessmentsTab({ assessment }) {
         </div>
         {/* <---------------------- v1.0.1 > */}
         <div className="space-y-4">
-          {Array.isArray(scheduledAssessments) &&
-          scheduledAssessments.length > 0 ? (
-            scheduledAssessments.map((schedule) => (
+          {Array.isArray(scheduleData) &&
+            scheduleData.length > 0 ? (
+            scheduleData.map((schedule) => (
               // v1.0.5 <-----------------------------------------------------------------
               <div
                 key={schedule._id}
@@ -255,11 +264,10 @@ function AssessmentsTab({ assessment }) {
                     </span> */}
                       {/* //<---------------------- v1.0.0 */}
                       <span
-                        className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                          schedule.status === "scheduled"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-full ${schedule.status === "scheduled"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                          }`}
                       >
                         {schedule.status.charAt(0).toUpperCase() +
                           schedule.status.slice(1)}
@@ -276,11 +284,10 @@ function AssessmentsTab({ assessment }) {
                         }
                       }}
                       disabled={shouldDisableActionButtons(schedule)}
-                      className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                        shouldDisableActionButtons(schedule)
-                          ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                          : "text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500"
-                      }`}
+                      className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${shouldDisableActionButtons(schedule)
+                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                        : "text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500"
+                        }`}
                       title={
                         shouldDisableActionButtons(schedule)
                           ? "Action not available for this status"
@@ -298,11 +305,10 @@ function AssessmentsTab({ assessment }) {
                         }
                       }}
                       disabled={shouldDisableActionButtons(schedule)}
-                      className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                        shouldDisableActionButtons(schedule)
-                          ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                          : "text-red-700 bg-red-100 hover:bg-red-200 focus:ring-red-500"
-                      }`}
+                      className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${shouldDisableActionButtons(schedule)
+                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                        : "text-red-700 bg-red-100 hover:bg-red-200 focus:ring-red-500"
+                        }`}
                       title={
                         shouldDisableActionButtons(schedule)
                           ? "Action not available for this status"
@@ -363,8 +369,8 @@ function AssessmentsTab({ assessment }) {
           isOpen={isShareOpen}
           onCloseshare={() => setIsShareOpen(false)}
           assessment={assessment}
-          // AssessmentTitle={assessment?.AssessmentTitle}
-          // assessmentId={assessment._id}
+        // AssessmentTitle={assessment?.AssessmentTitle}
+        // assessmentId={assessment._id}
         />
       )}
       {/* <---------------------- v1.0.3 */}

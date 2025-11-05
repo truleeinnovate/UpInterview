@@ -32,28 +32,28 @@ function ScheduleAssDetails() {
   }, [schedule, navigate]);
 
   // Fetch candidates if not present in navigation state
-  useEffect(() => {
-    const load = async () => {
-      try {
-        if (!schedule.assessmentId) return;
-        setLoading(true);
-        const assessmentIdString = schedule.assessmentId;
-        const { data, error } = await fetchScheduledAssessments(
-          assessmentIdString
-        );
-        setLoading(false);
-        if (!error && Array.isArray(data)) {
-          const matched = data.find((s) => s._id === schedule._id);
-          if (matched) setCandidates(matched.candidates || []);
-        }
-      } catch (err) {
-        console.error("Failed to fetch schedule candidates", err);
-        setLoading(false);
-      }
-    };
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // useEffect(() => {
+  //   const load = async () => {
+  //     try {
+  //       if (!schedule.assessmentId) return;
+  //       setLoading(true);
+  //       const assessmentIdString = schedule.assessmentId;
+  //       const { data, error } = await fetchScheduledAssessments(
+  //         assessmentIdString
+  //       );
+  //       setLoading(false);
+  //       if (!error && Array.isArray(data)) {
+  //         const matched = data.find((s) => s._id === schedule._id);
+  //         if (matched) setCandidates(matched.candidates || []);
+  //       }
+  //     } catch (err) {
+  //       console.error("Failed to fetch schedule candidates", err);
+  //       setLoading(false);
+  //     }
+  //   };
+  //   load();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
 
   if (!schedule) {
     return null;

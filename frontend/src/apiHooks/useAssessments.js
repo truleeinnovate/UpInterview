@@ -286,53 +286,53 @@ export const useAssessments = (filters = {}) => {
   // ------------------------------ v1.0.5 >
   // <---------------------- v1.0.5
   // Convert fetchScheduledAssessments to use React Query for proper caching
-  const fetchScheduledAssessments = useCallback(
-    async (assessmentId) => {
-      try {
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`,
-          {
-            params: {
-              ownerId,
-              tenantId,
-            },
-          }
-        );
+  // const fetchScheduledAssessments = useCallback(
+  //   async (assessmentId) => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`,
+  //         {
+  //           params: {
+  //             ownerId,
+  //             tenantId,
+  //           },
+  //         }
+  //       );
 
-        if (response.data.success) {
-          return { data: response.data.data, error: null };
-        } else {
-          return { data: null, error: response.data.message };
-        }
-      } catch (error) {
-        console.error("Error fetching scheduled assessments:", error);
-        return { data: null, error: error.message };
-      }
-    },
-    [ownerId, tenantId]
-  );
+  //       if (response.data.success) {
+  //         return { data: response.data.data, error: null };
+  //       } else {
+  //         return { data: null, error: response.data.message };
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching scheduled assessments:", error);
+  //       return { data: null, error: error.message };
+  //     }
+  //   },
+  //   [ownerId, tenantId]
+  // );
 
   // ------------------------------ v1.0.5 >
   // React Query hook for scheduled assessments
-  const useScheduledAssessments = (assessmentId) => {
-    return useQuery({
-      queryKey: ["scheduledAssessments", assessmentId],
-      queryFn: async () => {
-        const { data, error } = await fetchScheduledAssessments(assessmentId);
-        if (error) {
-          throw new Error(error);
-        }
-        return data || [];
-      },
-      enabled: !!assessmentId && !!hasViewPermission,
-      retry: 1,
-      staleTime: 0, // Always consider data stale for immediate updates
-      cacheTime: 1000 * 60 * 5, // 5 minutes cache
-      refetchOnWindowFocus: false,
-      refetchOnMount: true, // Refetch when component mounts
-      refetchOnReconnect: false,
-    });
-  };
+  // const useScheduledAssessments = (assessmentId) => {
+  //   return useQuery({
+  //     queryKey: ["scheduledAssessments", assessmentId],
+  //     queryFn: async () => {
+  //       const { data, error } = await fetchScheduledAssessments(assessmentId);
+  //       if (error) {
+  //         throw new Error(error);
+  //       }
+  //       return data || [];
+  //     },
+  //     enabled: !!assessmentId && !!hasViewPermission,
+  //     retry: 1,
+  //     staleTime: 0, // Always consider data stale for immediate updates
+  //     cacheTime: 1000 * 60 * 5, // 5 minutes cache
+  //     refetchOnWindowFocus: false,
+  //     refetchOnMount: true, // Refetch when component mounts
+  //     refetchOnReconnect: false,
+  //   });
+  // };
 
   const isMutationLoading =
     addOrUpdateAssessment.isPending ||
@@ -462,8 +462,8 @@ export const useAssessments = (filters = {}) => {
     fetchAssessmentQuestions, // assessment questions getting
     fetchAssessmentResults,
     // ------------------------------ v1.0.5 >
-    fetchScheduledAssessments, // Keep for backward compatibility
-    useScheduledAssessments, // New React Query hook
+    // fetchScheduledAssessments, // Keep for backward compatibility
+    // useScheduledAssessments, // New React Query hook
     refetch,
     // Assessment Actions
     extendAssessment,

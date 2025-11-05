@@ -144,6 +144,7 @@ const ScheduleAssessment = () => {
   const { assessmentData, checkExpiredAssessments, updateAllScheduleStatuses } =
     useAssessments();
   const { scheduleData, isLoading } = useScheduleAssessments();
+  console.log(scheduleData);
   const navigate = useNavigate();
   // <---------------------- v1.0.1
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -570,7 +571,7 @@ const ScheduleAssessment = () => {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => handleView(row)}
         >
-          {value || "Not Provided"}
+          {row.order || "Not Provided"}
         </div>
       ),
     },
