@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  assessments to assessment templates
 // v1.0.1  -  Ashok   -  updated loading view
 // v1.0.2  -  Ashok   -  fixed zoom in effect
+// v1.0.3  -  Ashok   -  hidden acton buttons when type "standard"
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -228,7 +229,7 @@ const AssessmentKanban = ({
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.3 }}
                           >
-                            <motion.div
+                            {/* <motion.div
                               className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity"
                               whileHover={{ scale: 1.05 }}
                             >
@@ -279,6 +280,68 @@ const AssessmentKanban = ({
                                   </button>
                                 </motion.span>
                               </Tooltip>
+                            </motion.div> */}
+
+                            <motion.div
+                              className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              whileHover={{ scale: 1.05 }}
+                            >
+                              {/* 👁 View button (always visible) */}
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => onView(assessment)}
+                                className="p-1 text-gray-500 hover:text-custom-blue hover:bg-blue-50 rounded"
+                                title="View"
+                              >
+                                <EyeIcon className="w-5 h-5" />
+                              </motion.button>
+
+                              {/* ✏️ Edit button (only for custom type) */}
+                              {assessment.type !== "standard" && (
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => onEdit(assessment)}
+                                  className="p-1 text-gray-500 hover:text-custom-blue hover:bg-indigo-50 rounded"
+                                  title="Edit"
+                                >
+                                  <PencilSquareIcon className="w-5 h-5" />
+                                </motion.button>
+                              )}
+
+                              {/* 🔗 Share button (only for custom type) */}
+                              {assessment.type !== "standard" && (
+                                <Tooltip
+                                  title={
+                                    (assessmentSections[assessment._id] ??
+                                      0) === 0
+                                      ? "No questions added"
+                                      : "Share"
+                                  }
+                                  enterDelay={300}
+                                  leaveDelay={100}
+                                  arrow
+                                >
+                                  <motion.span whileHover={{ scale: 1.05 }}>
+                                    <button
+                                      onClick={() => onShare(assessment)}
+                                      className={`p-1 text-gray-500 rounded ${
+                                        (assessmentSections[assessment._id] ??
+                                          0) === 0
+                                          ? "cursor-not-allowed opacity-50"
+                                          : "hover:text-green-600 hover:bg-green-50"
+                                      }`}
+                                      disabled={
+                                        (assessmentSections[assessment._id] ??
+                                          0) === 0
+                                      }
+                                    >
+                                      <ShareIcon className="w-5 h-5" />
+                                    </button>
+                                  </motion.span>
+                                </Tooltip>
+                              )}
                             </motion.div>
 
                             <motion.div

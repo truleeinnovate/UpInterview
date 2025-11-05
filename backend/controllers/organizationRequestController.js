@@ -148,8 +148,47 @@ exports.createOrganizationRequest = async (req, res) => {
                 message: 'tenantId and ownerId are required'
             });
         }
-
+        
+        // const MAX_RETRIES = 10; // Prevent infinite loops
+        // let attempts = 0;
+        // let organizationRequestCode
+          
+        //   while (attempts < MAX_RETRIES) {
+        //     attempts++;
+            
+        //     // Find the last organization request by ID to get the highest organization request code number
+        //     const lastOrganizationRequestCode = await OrganizationRequest.findOne({})
+        //       .sort({ _id: -1 })
+        //       .select("organizationRequestCode")
+            
+        //     let nextNumber = 1; // Start from 00001
+        //     if (lastOrganizationRequestCode?.organizationRequestCode) {
+        //       // Extract number from ORG-00001 format
+        //       const match = lastOrganizationRequestCode.organizationRequestCode.match(/ORG-(\d+)/);
+        //       if (match) {
+        //         nextNumber = parseInt(match[1], 10) + 1;
+        //       }
+        //     }
+            
+        //     organizationRequestCode = `ORG-${String(nextNumber).padStart(5, '0')}`;
+            
+        //     // Double-check that this organization request code doesn't already exist
+        //     // This handles race conditions where multiple requests generate codes simultaneously
+        //     const existingOrganizationRequestCode = await OrganizationRequest.findOne({ organizationRequestCode }).lean();
+            
+        //     if (!existingOrganizationRequestCode) {
+        //       // Code is unique, return it
+        //       console.log(`Generated unique organization request code: ${organizationRequestCode} (attempt ${attempts})`);
+        //       return organizationRequestCode;
+        //     }
+            
+        //     // If code exists, log warning and try again
+        //      console.warn(`Organization request code ${organizationRequestCode} already exists, generating new one...`);
+        //   }
+        
+        // console.log("organizationRequestCode--",organizationRequestCode);
         const newRequest = new OrganizationRequest({
+            //organizationRequestCode,
             tenantId,
             ownerId,
             status
@@ -305,3 +344,4 @@ exports.getAllReqForPaymentPendingPage = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
+

@@ -11,6 +11,7 @@
 // v1.0.8 - Ashok - Changed file name Interviewers to Interviews in super Admin
 // v1.0.9 - Ashok - Added Master Data page at super admin
 // v2.0.0 - Ashok - Added Question Bank Manager page in super admin
+// v2.0.1 - Ashraf - removed unwanted outsource request path,added condition like super admin pages only open if super admin
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Logo from "./Pages/Login-Part/Logo";
@@ -50,6 +51,15 @@ const CardDetails = lazy(() => import("./Pages/Login-Part/SubscriptionPlans/Card
 const SubscriptionCardDetails = lazy(() => import("./Pages/Dashboard-Part/Accountsettings/account/Subscription/subscriptionCardDetails.jsx"));
 const ForgetPassword = lazy(() => import("./Pages/Login-Part/ForgetPassword"));
 const ResetPassword = lazy(() => import("./Pages/Login-Part/ResetPassword"));
+
+// const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
+// import {
+//   preloadPermissions,
+//   hasValidCachedPermissions,
+// } from "./utils/permissionPreloader";
+// import InvoiceTab from "./Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx";
+// import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
+// import { config } from "./config.js";
 
 
 //  Video Call Application Components
@@ -370,6 +380,19 @@ const TenantDetailsPage = lazy(() =>
 const OutsourceRequestsPage = lazy(() =>
     import("./Pages/SuperAdmin-Part/OutsourceRequestsPage.jsx")
 );
+// const CandidatesPage = lazy(() =>
+//     import("./Pages/SuperAdmin-Part/CandidatesPage.jsx")
+// );
+// const PositionsPage = lazy(() =>
+//     import("./Pages/SuperAdmin-Part/PositionsPage.jsx")
+// );
+// const InterviewsPage = lazy(() =>
+//     import("./Pages/SuperAdmin-Part/InterviewsPage.jsx")
+// );
+// const AssessmentsPage = lazy(() =>
+//     import("./Pages/SuperAdmin-Part/AssessmentsPage.jsx")
+// );
+
 const OutsourceInterviewersPage = lazy(() =>
     import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
 );
@@ -1140,136 +1163,136 @@ const MainAppRoutes = ({
                         )}
 
                         {/* Outsource Interviewer Request */}
-                        {hasPermission("OutsourceInterviewerRequest") && (
+                        {/* {hasPermission("OutsourceInterviewerRequest") && (
                             <Route
                                 path="/outsource-interviewers-request"
                                 element={<OutsourceInterviewerRequest />}
                             />
-                        )}
+                        )} */}
 
                         {/* Interview Request */}
-                        {hasPermission("InterviewRequest") && (
+                        {/* {hasPermission("InterviewRequest") && (
                             <Route
                                 path="/outsource-interview-request"
                                 element={<InterviewRequest />}
                             />
-                        )}
+                        )} */}
 
-                        {/* Organization Request */}
-                        {hasPermission("OrganizationRequest") && (
-                            <Route
-                                path="/organization-request"
-                                element={<OrganizationRequest />}
-                            />
-                        )}
 
-                        {/* -----------------------------------Super Admin Routes------------------------- */}
-                        {hasPermission("Tenants") && (
-                            <Route path="/tenants" element={<TenantsPage />}>
-                                <Route index element={null} />
-                                {hasPermission("Tenants", "Create") && (
+
+                        {/* only show below tabs when super admin logged in */}
+                        {userType === "superAdmin" && (
+                            <>
+
+                                {/* -----------------------------------Super Admin Routes------------------------- */}
+
+                                {/* Organization Request */}
+                                {hasPermission("OrganizationRequest") && (
                                     <Route
-                                        path="new"
-                                        element={<AddTenantForm mode="Create" />}
+                                        path="/organization-request"
+                                        element={<OrganizationRequest />}
                                     />
                                 )}
-                                {hasPermission("Tenants", "Edit") && (
+                                {hasPermission("Tenants") && (
+                                    <Route path="/tenants" element={<TenantsPage />}>
+                                        <Route index element={null} />
+                                        {hasPermission("Tenants", "Create") && (
+                                            <Route
+                                                path="new"
+                                                element={<AddTenantForm mode="Create" />}
+                                            />
+                                        )}
+                                        {hasPermission("Tenants", "Edit") && (
+                                            <Route
+                                                path="edit/:id"
+                                                element={<AddTenantForm mode="Edit" />}
+                                            />
+                                        )}
+                                    </Route>
+                                )}
+                                {/* Withdrawal Requests */}
+                                {hasPermission("WithdrawalRequest") && (
                                     <Route
-                                        path="edit/:id"
-                                        element={<AddTenantForm mode="Edit" />}
+                                        path="/withdrawal-request"
+                                        element={<WithdrawalRequests />}
                                     />
                                 )}
-                            </Route>
-                        )}
-                        {/* Withdrawal Requests */}
-                        {hasPermission("WithdrawalRequest") && (
-                            <Route
-                                path="/withdrawal-request"
-                                element={<WithdrawalRequests />}
-                            />
-                        )}
-                        {hasPermission("Tenants") && (
-                            <Route
-                                path="/tenants/:id"
-                                element={
+                                {hasPermission("Tenants") && (
+                                    <Route
+                                        path="/tenants/:id"
+                                        element={
+                                            <>
+                                                <TenantsPage />
+                                                <TenantDetailsPage />
+                                            </>
+                                        }
+                                    />
+                                )}
+                                {hasPermission("OutsourceInterviewerRequest") && (
                                     <>
-                                        <TenantsPage />
-                                        <TenantDetailsPage />
+                                        <Route
+                                            path="/outsource-interviewers"
+                                            element={<OutsourceInterviewersPage />}
+                                        />
+                                        {/* Edit routes for outsource interviewers */}
+                                        <Route
+                                            path="/outsource-interviewers/edit/basic/:id"
+                                            element={<><OutsourceInterviewersPage /> <BasicDetailsEditPage from="outsource-interviewer" /></>}
+                                        />
+                                        <Route
+                                            path="/outsource-interviewers/edit/advanced/:id"
+                                            element={<><OutsourceInterviewersPage /> <EditAdvacedDetails from="outsource-interviewer" /></>}
+                                        />
+                                        <Route
+                                            path="/outsource-interviewers/edit/interview/:id"
+                                            element={<><OutsourceInterviewersPage /> <EditInterviewDetails from="outsource-interviewer" /></>}
+                                        />
+                                        <Route
+                                            path="/outsource-interviewers/edit/availability/:id"
+                                            element={<><OutsourceInterviewersPage /> <EditAvailabilityDetails from="outsource-interviewer" /></>}
+                                        />
                                     </>
-                                }
-                            />
-                        )}
-                        {hasPermission("OutsourceInterviewerRequest") && (
-                            <Route
-                                path="/outsource-requests"
-                                element={<OutsourceRequestsPage />}
-                            />
-                        )}
-                        {hasPermission("OutsourceInterviewerRequest") && (
-                            <>
-                                <Route
-                                    path="/outsource-interviewers"
-                                    element={<OutsourceInterviewersPage />}
-                                />
-                                {/* Edit routes for outsource interviewers */}
-                                <Route
-                                    path="/outsource-interviewers/edit/basic/:id"
-                                    element={<><OutsourceInterviewersPage /> <BasicDetailsEditPage from="outsource-interviewer" /></>}
-                                />
-                                <Route
-                                    path="/outsource-interviewers/edit/advanced/:id"
-                                    element={<><OutsourceInterviewersPage /> <EditAdvacedDetails from="outsource-interviewer" /></>}
-                                />
-                                <Route
-                                    path="/outsource-interviewers/edit/interview/:id"
-                                    element={<><OutsourceInterviewersPage /> <EditInterviewDetails from="outsource-interviewer" /></>}
-                                />
-                                <Route
-                                    path="/outsource-interviewers/edit/availability/:id"
-                                    element={<><OutsourceInterviewersPage /> <EditAvailabilityDetails from="outsource-interviewer" /></>}
-                                />
-                            </>
-                        )}
-                        {hasPermission("InterviewRequest") && (
-                            <Route
-                                path="/interviewer-requests"
-                                element={<InterviewerRequestsPage />}
-                            />
-                        )}
-                        {hasPermission("SubscriptionPlans") && (
-                            <>
-                                <Route path="/sub-plans" element={<SubscriptionPlansPage />} />
-                                {hasPermission("SubscriptionPlans", "Create") && (
-                                    <Route path="/sub-plans/new" element={<> <SubscriptionPlansPage /></>} />
                                 )}
-                                {hasPermission("SubscriptionPlans", "View") && (
-                                    <Route path="/sub-plans/:id" element={<><SubscriptionPlansPage /></>} />
-                                )}
-                                {hasPermission("SubscriptionPlans", "Edit") && (
-                                    <Route path="/sub-plans/:id/edit" element={<><SubscriptionPlansPage /></>} />
-                                )}
-                            </>
-                        )}
-                        {hasPermission("Billing") && (
-                            <Route path="/admin-billing" element={<BillingPage />}>
-                                <Route index element={null} />
-                                {hasPermission("Billing", "Manage") && (
+                                {hasPermission("InterviewRequest") && (
                                     <Route
-                                        path="new"
-                                        element={<AddInvoiceForm mode="Create" />}
+                                        path="/interviewer-requests"
+                                        element={<InterviewerRequestsPage />}
                                     />
                                 )}
-                                {hasPermission("Billing", "Manage") && (
-                                    <Route
-                                        path="edit/:id"
-                                        element={<AddInvoiceForm mode="Edit" />}
-                                    />
+                                {hasPermission("SubscriptionPlans") && (
+                                    <>
+                                        <Route path="/sub-plans" element={<SubscriptionPlansPage />} />
+                                        {hasPermission("SubscriptionPlans", "Create") && (
+                                            <Route path="/sub-plans/new" element={<> <SubscriptionPlansPage /></>} />
+                                        )}
+                                        {hasPermission("SubscriptionPlans", "View") && (
+                                            <Route path="/sub-plans/:id" element={<><SubscriptionPlansPage /></>} />
+                                        )}
+                                        {hasPermission("SubscriptionPlans", "Edit") && (
+                                            <Route path="/sub-plans/:id/edit" element={<><SubscriptionPlansPage /></>} />
+                                        )}
+                                    </>
                                 )}
-                            </Route>
-                        )}
+                                {hasPermission("Billing") && (
+                                    <Route path="/admin-billing" element={<BillingPage />}>
+                                        <Route index element={null} />
+                                        {hasPermission("Billing", "Manage") && (
+                                            <Route
+                                                path="new"
+                                                element={<AddInvoiceForm mode="Create" />}
+                                            />
+                                        )}
+                                        {hasPermission("Billing", "Manage") && (
+                                            <Route
+                                                path="edit/:id"
+                                                element={<AddInvoiceForm mode="Edit" />}
+                                            />
+                                        )}
+                                    </Route>
+                                )}
 
-                        {/* SuperAdmin Support Desk */}
-                        {/* {hasPermission("SupportDesk") && (
+                                {/* SuperAdmin Support Desk */}
+                                {/* {hasPermission("SupportDesk") && (
                 <>
                   <Route
                     exact
@@ -1301,46 +1324,49 @@ const MainAppRoutes = ({
                 </>
               )} */}
 
-                        {hasPermission("Settings") && (
-                            <Route path="/settings" element={<SettingsPage />} />
-                        )}
-                        {hasPermission("InternalLogs") && (
-                            <Route path="/internal-logs" element={<InternalLogsPage />} />
-                        )}
-                        {hasPermission("IntegrationLogs") && (
-                            <Route path="/integrations" element={<IntegrationsPage />} />
+                                {hasPermission("Settings") && (
+                                    <Route path="/settings" element={<SettingsPage />} />
+                                )}
+                                {hasPermission("InternalLogs") && (
+                                    <Route path="/internal-logs" element={<InternalLogsPage />} />
+                                )}
+                                {hasPermission("IntegrationLogs") && (
+                                    <Route path="/integrations" element={<IntegrationsPage />} />
+                                )}
+
+                                <Route
+                                    path="/contact-profile-details"
+                                    element={
+                                        <>
+                                            <TenantsPage />
+                                            <ContactProfileDetails />
+                                        </>
+                                    }
+                                />
+                                <Route
+                                    path="/admin-dashboard"
+                                    element={<SuperAdminDashboard />}
+                                />
+                                {/* v1.0.9 <--------------------------------------------------------------------- */}
+                                {/* v1.0.8 <--------------------------------------------------------------------- */}
+                                {/* v1.0.7 <--------------------------------------------------------------- */}
+                                <Route
+                                    path="/interviewer-rates"
+                                    element={<InterviewerRatesPage />}
+                                />
+                                <Route path="/interviews" element={<Interviewers />} />
+                                <Route path="/master-data" element={<MasterData />} />
+                                <Route path="/master-data/:type" element={<MasterTable />} />
+                                {/* v2.0.0 <------------------------------------------------- */}
+                                <Route path="/question-bank-manager" element={<QuestionBankManager />} />
+                                <Route path="/contact-us" element={<ContactUsPage />} />
+                                {/* v2.0.0 -------------------------------------------------> */}
+                                {/* v1.0.7 ---------------------------------------------------------------> */}
+                                {/* v1.0.8 ---------------------------------------------------------------------> */}
+                                {/* v1.0.9 ---------------------------------------------------------------------> */}
+                            </>
                         )}
 
-                        <Route
-                            path="/contact-profile-details"
-                            element={
-                                <>
-                                    <TenantsPage />
-                                    <ContactProfileDetails />
-                                </>
-                            }
-                        />
-                        <Route
-                            path="/admin-dashboard"
-                            element={<SuperAdminDashboard />}
-                        />
-                        {/* v1.0.9 <--------------------------------------------------------------------- */}
-                        {/* v1.0.8 <--------------------------------------------------------------------- */}
-                        {/* v1.0.7 <--------------------------------------------------------------- */}
-                        <Route
-                            path="/interviewer-rates"
-                            element={<InterviewerRatesPage />}
-                        />
-                        <Route path="/interviews" element={<Interviewers />} />
-                        <Route path="/master-data" element={<MasterData />} />
-                        <Route path="/master-data/:type" element={<MasterTable />} />
-                        {/* v2.0.0 <------------------------------------------------- */}
-                        <Route path="/question-bank-manager" element={<QuestionBankManager />} />
-                        <Route path="/contact-us" element={<ContactUsPage />} />
-                        {/* v2.0.0 -------------------------------------------------> */}
-                        {/* v1.0.7 ---------------------------------------------------------------> */}
-                        {/* v1.0.8 ---------------------------------------------------------------------> */}
-                        {/* v1.0.9 ---------------------------------------------------------------------> */}
                     </Route>
                 </Routes>
             </div>

@@ -14,7 +14,6 @@ import InterviewDetailsSidebar from "./InterviewDetailsSidebar.jsx";
 // v1.0.0 <------------------------------------------------------------
 import { config } from "../../../config.js";
 import axios from "axios";
-import { Tooltip } from "@mantine/core";
 import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect.jsx";
 // v1.0.0 ------------------------------------------------------------>
 
@@ -254,13 +253,11 @@ const Interviewers = () => {
       key: "interviewerNames",
       header: "Interviewer",
       render: (value, row) => (
-        <Tooltip label={row.interviewerNames || "No interviewers assigned"}>
           <div className="truncate max-w-[200px]">
             <div className="text-sm text-gray-700">
               {row.interviewerNames || "No interviewers assigned"}
             </div>
           </div>
-        </Tooltip>
       ),
     },
     {

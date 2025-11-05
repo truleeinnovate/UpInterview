@@ -1,6 +1,5 @@
 const Invoice = require("../models/Invoicemodels.js");
 const mongoose = require("mongoose");
-const { generateUniqueInvoiceCode } = require("../utils/invoiceCodeGenerator");
 
 // GET: Fetch invoices by ownerId or tenantId based on isOrganization query param
 const getInvoice = async (req, res) => {
@@ -71,8 +70,9 @@ const createInvoice = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+
     // Generate unique invoice code using centralized utility
-    const invoiceCode = await generateUniqueInvoiceCode();
+      const invoiceCode = await generateUniqueId('INVC', Invoice, 'invoiceCode');
 
     // Calculate outstandingAmount if not given
     const calculatedOutstanding = totalAmount - amountPaid;
@@ -120,7 +120,7 @@ const createInvoice = async (req, res) => {
 // SUPER ADMIN added by Ashok ----------------------------------->
 const getInvoices = async (req, res) => {
   try {
-    const invoices = await Invoice.find();
+    const invoices = await Invoice.find().sort({ _id: -1}).lean();
 
     // Calculate aggregates
     const totalInvoices = invoices.length;

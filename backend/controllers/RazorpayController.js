@@ -7,7 +7,7 @@ const CustomerSubscription = require('../models/CustomerSubscriptionmodels.js');
 const PaymentCard = require('../models/Carddetails.js');
 const SubscriptionPlan = require('../models/Subscriptionmodels.js');
 const Invoicemodels = require("../models/Invoicemodels");
-const { generateUniqueInvoiceCode } = require("../utils/invoiceCodeGenerator");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 const Receipt = require('../models/Receiptmodels.js');
 const Tenant = require('../models/Tenant');
 
@@ -218,20 +218,8 @@ const verifyPayment = async (req, res) => {
         } else {
             //console.log('Creating new payment record for verified payment');
             // Create new payment record
-            // Generate payment code
-            const lastPayment = await Payment.findOne({})
-                .sort({ _id: -1 })
-                .select('paymentCode')
-                .lean();
-            let nextNumber = 50001; // Start from 50001
-            if (lastPayment && lastPayment.paymentCode) {
-                const match = lastPayment.paymentCode.match(/PMT-(\d+)/);
-                if (match) {
-                    const lastNumber = parseInt(match[1], 10);
-                    nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
-                }
-            }
-            const paymentCode = `PMT-${String(nextNumber).padStart(5, '0')}`;
+            // Generate payment code using centralized service
+            const paymentCode = await generateUniqueId('PMT', Payment, 'paymentCode');
             const newPayment = new Payment({
                 paymentCode: paymentCode,
                 tenantId: tenantId,
@@ -443,6 +431,7 @@ const verifyPayment = async (req, res) => {
 
             // Look for existing subscription by ownerId
             const customerSubscription = await CustomerSubscription.findOne({ ownerId: ownerId });
+            const payment = await Payment.findOne({ razorpayPaymentId: razorpay_payment_id });
 
             if (!customerSubscription) {
                 console.warn(`No existing subscription found for owner: ${ownerId}`);
@@ -498,6 +487,7 @@ const verifyPayment = async (req, res) => {
                     invoice.lastPaymentId = razorpay_payment_id;
                     invoice.startDate = startDate;
                     invoice.endDate = endDate;
+                    invoice.paymentId= payment.paymentCode;
 
                     await invoice.save();
                     // console.log('Invoice updated to paid status:', invoice._id);
@@ -508,19 +498,7 @@ const verifyPayment = async (req, res) => {
                 // Only create receipt if payment was successful
                 if (payment.status === 'captured' || payment.status === 'authorized') {
                     // Generate Recepit code
-                    const lastRecepit = await Receipt.findOne({})
-                        .sort({ _id: -1 })
-                        .select('receiptCode')
-                        .lean();
-                    let nextNumber = 50001; // Start from 50001
-                    if (lastRecepit && lastRecepit.receiptCode) {
-                        const match = lastRecepit.receiptCode.match(/RCP-(\d+)/);
-                        if (match) {
-                            const lastNumber = parseInt(match[1], 10);
-                            nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
-                        }
-                    }
-                    const receiptCode = `RCP-${String(nextNumber).padStart(5, '0')}`;
+                    const receiptCode = await generateUniqueId('RCP', Receipt, 'receiptCode');
                     //console.log('Creating receipt for successful payment');
                      receipt = new Receipt({
                         receiptCode: receiptCode,
@@ -994,7 +972,7 @@ const handleWebhook = async (req, res) => {
         // Extract payment entity - handle different event types
         let payload;
 
-        if (event === 'payment.captured' || event === 'payment.authorized') {
+        if (event === 'payment.captured' || event === 'payment.authorized' || event === 'payment.failed') {
             payload = req.body.payload.payment.entity;
         } else if (event && event.startsWith('subscription.')) {
             payload = req.body.payload.subscription?.entity || req.body.payload.subscription;
@@ -1471,21 +1449,92 @@ const handlePaymentFailed = async (payment,res) => {
     try {
         //console.log('Processing payment failed event for:', payment.id);
 
+        // Check if this is a wallet top-up payment
+        if (payment.notes?.type === 'wallet_topup') {
+            console.log('Processing failed wallet top-up payment:', payment.id);
+            
+            const ownerId = payment.notes?.ownerId;
+            const tenantId = payment.notes?.tenantId;
+            const walletCode = payment.notes?.walletCode;
+
+            if (!ownerId) {
+                console.error('OwnerId not found in payment notes for wallet top-up');
+                return;
+            }
+
+            // Find the wallet
+            const wallet = await WalletTopup.findOne({ ownerId });
+
+            if (!wallet) {
+                console.error('Wallet not found for ownerId:', ownerId);
+                return;
+            }
+
+            // Calculate amount in rupees (payment.amount is in paise)
+            const amount = payment.amount / 100;
+
+            // Push failed transaction history
+            const failedTransaction = {
+                type: 'credit',
+                amount: amount,
+                description: `Wallet Top-up failed - ${payment.error_description || payment.error_code || 'Payment failed'}`,
+                status: 'failed',
+                metadata: {
+                    paymentId: payment.id,
+                    orderId: payment.order_id,
+                    errorCode: payment.error_code,
+                    errorDescription: payment.error_description,
+                    errorSource: payment.error_source,
+                    errorStep: payment.error_step,
+                    errorReason: payment.error_reason,
+                    walletCode: walletCode || wallet.walletCode,
+                    razorpayPaymentId: payment.id
+                },
+                createdDate: new Date()
+            };
+
+            wallet.transactions.push(failedTransaction);
+            await wallet.save();
+            
+            console.log('Failed wallet top-up transaction history added:', failedTransaction);
+
+            // Update logging context for wallet top-up
+            res.locals.logData = {
+                tenantId: tenantId || wallet.tenantId || "",
+                ownerId: ownerId || "",
+                processName: 'Wallet Top-up Payment Failed',
+                status: 'success',
+                message: `Wallet top-up payment failed event processed successfully`,
+                requestBody: {
+                    payment
+                },
+                responseBody: {
+                    wallet: wallet._id,
+                    failedTransaction
+                }
+            };
+
+            return;
+        }
+
         // Check if this is a subscription payment
-        if (!payment.subscription_id) {
+        // Razorpay sends subscription_id in notes.subscriptionId for failed payments
+        const subscriptionId = payment.subscription_id || payment.notes?.subscriptionId;
+        
+        if (!subscriptionId) {
             console.log('Not a subscription payment, skipping subscription update');
             return;
         }
 
-        
+        console.log('Processing failed payment for subscription:', subscriptionId);
 
         // Find the subscription in our database
         const customerSubscription = await CustomerSubscription.findOne({
-            razorpaySubscriptionId: payment.subscription_id
+            razorpaySubscriptionId: subscriptionId
         });
 
         if (!customerSubscription) {
-            console.error('Subscription not found in our records:', payment.subscription_id);
+            console.error('Subscription not found in our records:', subscriptionId);
             return;
         }
 
@@ -1504,20 +1553,8 @@ const handlePaymentFailed = async (payment,res) => {
         }
 
         // Create a payment record for the failed payment
-        // Generate payment code
-        const lastPayment = await Payment.findOne({})
-            .sort({ _id: -1 })
-            .select('paymentCode')
-            .lean();
-        let nextNumber = 50001; // Start from 50001
-        if (lastPayment && lastPayment.paymentCode) {
-            const match = lastPayment.paymentCode.match(/PMT-(\d+)/);
-            if (match) {
-                const lastNumber = parseInt(match[1], 10);
-                nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
-            }
-        }
-        const paymentCode = `PMT-${String(nextNumber).padStart(5, '0')}`;
+        // Generate payment code using centralized service
+        const paymentCode = await generateUniqueId('PMT', Payment, 'paymentCode');
         const failedPayment = new Payment({
             paymentCode: paymentCode,
             ownerId: customerSubscription.ownerId,
@@ -1528,8 +1565,9 @@ const handlePaymentFailed = async (payment,res) => {
             status: 'failed',
             paymentMethod: payment.method || 'card',
             razorpayPaymentId: payment.id,
-            razorpaySubscriptionId: payment.subscription_id,
-            invoiceId: invoice._id,
+            razorpaySubscriptionId: subscriptionId,
+            transactionId: payment.id, // Use payment ID as transactionId to ensure uniqueness
+            invoiceId: invoice ? invoice._id : null,
             failureReason: payment.error_description || payment.error_code || 'Payment failed',
             membershipType: customerSubscription.selectedBillingCycle,
             metadata: {
@@ -1555,16 +1593,18 @@ const handlePaymentFailed = async (payment,res) => {
         customerSubscription.lastFailedPaymentDate = new Date();
         customerSubscription.lastFailedPaymentId = payment.id;
         customerSubscription.status = SUBSCRIPTION_STATUSES.FAILED;
-        customerSubscription.invoiceId = invoice._id;
+        if (invoice) {
+            customerSubscription.invoiceId = invoice._id;
+        }
         await customerSubscription.save();
 
-           // Success logging for each event type
+           // Success logging for payment failed event
             res.locals.logData = {
                 tenantId:customerSubscription?.tenantId || "",
                 ownerId: customerSubscription?.ownerId || "",
-                processName: 'Subscription Authenticated', // Always include processName
+                processName: 'Subscription Payment Failed', // Always include processName
                 status: 'success',
-                message: `Subscription Authenticated processed successfully`,
+                message: `Payment failed event processed successfully`,
                 // event: req.body.event,
                 // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
                 requestBody: {
@@ -1595,20 +1635,24 @@ const handlePaymentFailed = async (payment,res) => {
 
     } catch (error) {
         console.error('Error handling payment failed event:', error);
-         // Success logging for each event type
+         // Error logging - determine process name based on payment type
+            const processName = payment.notes?.type === 'wallet_topup' 
+                ? 'Wallet Top-up Payment Failed' 
+                : 'Subscription Payment Failed';
+            
             res.locals.logData = {
-                tenantId: req?.body?.payload?.subscription?.entity?.notes?.tenantId || "",
-                ownerId: req?.body?.payload?.subscription?.entity?.notes?.ownerId || "",
-                processName: 'Subscription Failed', // Always include processName
+                tenantId: payment?.notes?.tenantId || "",
+                ownerId: payment?.notes?.ownerId || "",
+                processName: processName, // Always include processName
                 status: 'error',
-                message: `Subscription Failed processed Failed`,
-                event: req.body.event,
-                entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
+                message: `Payment failed event processing error: ${error.message}`,
+                event: 'payment.failed',
+                entityId: payment?.id || "",
                 requestBody: {
                     payment
                 },
                 responseBody: {
-                    error
+                    error: error.message
                 }
             };
     }
@@ -2267,7 +2311,7 @@ const handleSubscriptionCharged = async (subscription,res) => {
             console.log('No existing invoice found, creating new one');
 
             // Generate unique invoice code using centralized utility
-            const invoiceCode = await generateUniqueInvoiceCode();
+            const invoiceCode = await generateUniqueId('INV', Invoicemodels, 'invoiceCode');
 
             // Create a simple invoice directly without complex calculations
             invoice = new Invoicemodels({
@@ -2401,19 +2445,7 @@ const handleSubscriptionCharged = async (subscription,res) => {
         }
 
         // Create a receipt for this payment - with positional parameters matching function definition
-        const lastRecepit = await Receipt.findOne({})
-            .sort({ _id: -1 })
-            .select('receiptCode')
-            .lean();
-        let nextNumber = 50001; // Start from 50001
-        if (lastRecepit && lastRecepit.receiptCode) {
-            const match = lastRecepit.receiptCode.match(/RCP-(\d+)/);
-            if (match) {
-                const lastNumber = parseInt(match[1], 10);
-                nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
-            }
-        }
-        const receiptCode = `RCP-${String(nextNumber).padStart(5, '0')}`;
+        const receiptCode = await generateUniqueId('RCP', Receipt, 'receiptCode');
         const receipt = new Receipt({
             receiptCode: receiptCode,
             tenantId: customerSubscription.tenantId,

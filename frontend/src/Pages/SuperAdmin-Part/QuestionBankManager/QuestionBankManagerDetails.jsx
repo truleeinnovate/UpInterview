@@ -1,6 +1,8 @@
 // v1.0.0 - Ashok - Improved issues
 
 import React from "react";
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+
 const QuestionBankManagerDetails = ({ content, type }) => {
   if (!content) return <div>No data available</div>;
 
@@ -290,6 +292,27 @@ const QuestionBankManagerDetails = ({ content, type }) => {
         <p className="text-gray-700">
           {content.attachments?.length > 0
             ? content.attachments.join(", ")
+            : "N/A"}
+        </p>
+      </div>
+      <div>
+        <h3 className="font-semibold text-gray-800 mb-1">Created By</h3>
+        <p className="text-gray-700">
+          {content?.createdBy
+            ? `${capitalizeFirstLetter(content?.createdBy?.firstName) || ""} ${
+                capitalizeFirstLetter(content?.createdBy?.lastName) || ""
+              }`.trim() || "N/A"
+            : "N/A"}
+        </p>
+      </div>
+
+      <div>
+        <h3 className="font-semibold text-gray-800 mb-1">Updated By</h3>
+        <p className="text-gray-700">
+          {content?.updatedBy
+            ? `${capitalizeFirstLetter(content?.updatedBy?.firstName) || ""} ${
+                capitalizeFirstLetter(content?.updatedBy?.lastName) || ""
+              }`.trim() || "N/A"
             : "N/A"}
         </p>
       </div>

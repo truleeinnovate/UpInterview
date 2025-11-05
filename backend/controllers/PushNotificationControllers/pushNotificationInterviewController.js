@@ -59,8 +59,8 @@ async function createInterviewCreatedNotification(interview) {
     //   tenantId: interview.tenantId
     // });
 
-    const candidate = await getCandidateDetails(interview.candidateId);
-    const position = await getPositionDetails(interview.positionId);
+    const candidate = await getCandidateDetails(interview?.candidateId);
+    const position = await getPositionDetails(interview?.positionId);
 
     // console.log('[INTERVIEW NOTIFICATIONS] Fetched candidate:', candidate ? `${candidate.FirstName} ${candidate.LastName}` : 'NULL');
     // console.log('[INTERVIEW NOTIFICATIONS] Fetched position:', position ? position.title : 'NULL');

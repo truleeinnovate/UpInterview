@@ -209,6 +209,7 @@ const OutsourceInterviewers = () => {
     return status
       .toString()
       .trim()
+      .replace(/([a-z])([A-Z])/g, "$1 $2") // Add space before capital letters (camelCase to words)
       .replace(/[_\s-]+/g, " ") // replace underscores, hyphens, or multiple spaces with single space
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -218,7 +219,7 @@ const OutsourceInterviewers = () => {
   // Table Columns
   const tableColumns = [
     {
-      key: "interviewerNo",
+      key: "outsourceRequestCode",
       header: "Interviewer ID",
       render: (vale, row) => (
         <span
@@ -240,7 +241,7 @@ const OutsourceInterviewers = () => {
             // v1.0.0 --------------------------------------------------------->
           }}
         >
-          {row?.interviewerNo || `TEMP-${row?._id?.slice(-6) || "NA"}`}
+          {row?.outsourceRequestCode || "N/A"}
         </span>
       ),
     },

@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Fixed style issue
+
 import { motion } from "framer-motion";
 
 const capitalizeFirstLetter = (str) =>
@@ -16,10 +18,10 @@ const KanbanView = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full bg-gray-50 rounded-xl px-6 pt-6 pb-6"
+      className="w-full bg-gray-50 rounded-xl pt-3 pb-6"
     >
       <div className="min-h-[400px]">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-3 px-6">
           <h3 className="text-xl font-semibold text-gray-800">Internal Logs</h3>
           <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
             {logs?.length || 0} Internal Logs
@@ -31,7 +33,7 @@ const KanbanView = ({
         ) : logs?.length === 0 ? (
           <div className="text-center py-10 text-gray-500">{emptyState}</div>
         ) : (
-          <div className="overflow-y-auto max-h-[calc(100vh-340px)] pb-8 pr-1">
+          <div className="overflow-y-auto max-h-[calc(100vh-20.5rem)] pb-16 px-6 ">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
               {data.map((item, index) => (
                 <motion.div

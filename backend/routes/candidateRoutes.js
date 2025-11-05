@@ -1,5 +1,5 @@
 const express = require('express');
-const { getCandidates,addCandidatePostCall,updateCandidatePatchCall,getCandidateById, deleteCandidate } = require('../controllers/candidateController.js');
+const { getCandidates,addCandidatePostCall,updateCandidatePatchCall,getCandidateById, deleteCandidate, searchCandidates, getCandidatesData } = require('../controllers/candidateController.js');
 const router = express.Router();
 
 // const candidateController = require('../controllers/candidateController');
@@ -10,8 +10,12 @@ router.post('/',loggingService.internalLoggingMiddleware,loggingService.FeedsMid
 
 router.patch('/:id',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, updateCandidatePatchCall);
 // router.get('/',getCandidates);
-// router.get('/:id',getCandidateById);
+router.get('/details/:id',getCandidateById);
 router.delete('/delete-candidate/:id', deleteCandidate);
+
+
+router.get('/', getCandidatesData);
+router.post('/search',searchCandidates);
 
 
 module.exports = router;

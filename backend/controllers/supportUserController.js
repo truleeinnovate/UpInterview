@@ -2,6 +2,7 @@
 //<----v1.0.1----Venkatesh----add validation
 const supportNotif = require('./PushNotificationControllers/pushNotificationSupportUserController');
 const SupportUser = require("../models/SupportUser");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 //<----v1.0.1----
 const mongoose = require("mongoose");
 const {
@@ -56,19 +57,8 @@ exports.createTicket = async (req, res) => {
     //-----v1.0.1--->
 
 
-    const lastTicket = await SupportUser.findOne({})
-      .sort({ _id: -1 })
-      .select("ticketCode")
-      .lean();
-    let nextNumber = 50001; // Start from 50001
-    if (lastTicket && lastTicket.ticketCode) {
-      const match = lastTicket.ticketCode.match(/SPT-(\d+)/);
-      if (match) {
-        const lastNumber = parseInt(match[1], 10);
-        nextNumber = lastNumber >= 50001 ? lastNumber + 1 : 50001;
-      }
-    }
-    const ticketCode = `SPT-${String(nextNumber).padStart(5, "0")}`;
+    // Generate ticket code using centralized service
+    const ticketCode = await generateUniqueId('SPT', SupportUser, 'ticketCode');
     const ticket = await SupportUser.create({
       issueType,
       description,

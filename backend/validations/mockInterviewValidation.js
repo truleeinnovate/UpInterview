@@ -45,22 +45,7 @@ const createRoundSchema = baseRoundSchema.keys({
 
 // ✅ PAGE 1 VALIDATION - For initial POST without rounds
 const mockInterviewPage1Schema = Joi.object({
-  // skills: Joi.array().items(
-  //   Joi.object({
-  //     skill: Joi.string().required().messages({
-  //       'string.empty': 'Skill name is required'
-  //     }),
-  //     experience: Joi.string().required().messages({
-  //       'string.empty': 'Experience is required'
-  //     }),
-  //     expertise: Joi.string().required().messages({
-  //       'string.empty': 'Expertise is required'
-  //     })
-  //   })
-  // ).min(1).required().messages({
-  //   'array.min': 'At least one skill is required',
-  //   'array.base': 'Skills must be an array'
-  // }),
+  
    skills: Joi.array().items(
     Joi.string().required().messages({
       'string.empty': 'Skill name cannot be empty'

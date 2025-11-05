@@ -14,6 +14,9 @@ const {
   createAssessmentStatusUpdateNotification,
 } = require("./PushNotificationControllers/pushNotificationAssessmentController");
 
+// Import assessment usage service
+const { handleAssessmentStatusChange } = require("../services/assessmentUsageService");
+
 // exports.updateCandidateAssessment = async (req, res) => {
 //   try {
 //     const { id } = req.params;
@@ -321,6 +324,18 @@ exports.submitCandidateAssessment = async (req, res) => {
         console.error('[ASSESSMENT] Error creating status update notification:', notificationError);
         // Continue execution even if notification fails
       }
+
+      // Update assessment usage when status changes
+      try {
+        await handleAssessmentStatusChange(
+          candidateAssessmentId,
+          oldStatus,
+          candidateAssessment.status
+        );
+      } catch (usageError) {
+        console.error('[ASSESSMENT] Error updating assessment usage:', usageError);
+        // Continue execution even if usage update fails
+      }
     }
     
     // Create push notification for assessment submission
@@ -492,6 +507,18 @@ exports.cancelCandidateAssessments = async (req, res) => {
             await createAssessmentStatusUpdateNotification(candidateAssessment, oldStatus, 'cancelled');
           } catch (notificationError) {
             console.error('[ASSESSMENT] Error creating cancellation notification:', notificationError);
+          }
+
+          // Update assessment usage when status changes to cancelled
+          try {
+            await handleAssessmentStatusChange(
+              candidateAssessmentId,
+              oldStatus,
+              'cancelled'
+            );
+          } catch (usageError) {
+            console.error('[ASSESSMENT] Error updating assessment usage:', usageError);
+            // Continue execution even if usage update fails
           }
         }
 
@@ -666,6 +693,18 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
             await createAssessmentStatusUpdateNotification(assessment, oldStatus, 'expired');
           } catch (notificationError) {
             console.error('[ASSESSMENT] Error creating expiry notification:', notificationError);
+          }
+
+          // Update assessment usage when status changes to expired
+          try {
+            await handleAssessmentStatusChange(
+              assessment._id,
+              oldStatus,
+              'expired'
+            );
+          } catch (usageError) {
+            console.error('[ASSESSMENT] Error updating assessment usage:', usageError);
+            // Continue execution even if usage update fails
           }
         }
         

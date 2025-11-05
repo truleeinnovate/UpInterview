@@ -72,6 +72,7 @@ const InvoiceSchema = new mongoose.Schema(
       },
     ],
     invoiceCode: { type: String, unique: true },
+    paymentId : { type: String },
     failureReason: { type: String },
     comments: { type: String, default: "" },
   },

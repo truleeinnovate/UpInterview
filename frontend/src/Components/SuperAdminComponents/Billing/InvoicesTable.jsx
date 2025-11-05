@@ -63,6 +63,7 @@ function InvoicesTable({ organizationId, viewMode }) {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
   // const [invoices, setInvoices] = useState([]);
   const { invoices, isLoading } = useInvoices(organizationId); // from apiHooks
+  console.log("invoices++++",invoices);
   const { invoice: selectedInvoice } = useInvoiceById(selectedInvoiceId); // from apiHooks
 
   // Kanban view setter
@@ -236,13 +237,14 @@ function InvoicesTable({ organizationId, viewMode }) {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
     }).format(amount);
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString();
   };
 
@@ -337,9 +339,9 @@ function InvoicesTable({ organizationId, viewMode }) {
       ),
     },
     {
-      key: "dueDate",
+      key: "endDate",
       header: "Due Date",
-      render: (value, row) => formatDate(row.dueDate) || "N/A",
+      render: (value, row) => formatDate(row?.endDate) || "N/A",
     },
   ];
 

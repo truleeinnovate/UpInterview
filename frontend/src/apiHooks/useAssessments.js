@@ -4,18 +4,20 @@
 //v1.0.3  -  Ashraf  -  assessment data getting loop so added usecallback
 //v1.0.4  -  Ashraf  -  assessment data added reverse to get updated data first
 //v1.0.5  -  Ashraf  -  converted fetchScheduledAssessments to use React Query for proper caching,added cancel,extend,check expired,update all schedule statuses api code
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-  // <---------------------- v1.0.3
+//v1.0.6  -  Ashok   -  added creating and fetching lists apis
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+// <---------------------- v1.0.3
+
+import { useEffect, useRef, useCallback } from "react";
 // ------------------------------ v1.0.3 >
 import { fetchFilterData } from "../api";
-import { config } from '../config';
-import { usePermissions } from '../Context/PermissionsContext';
+import { config } from "../config";
+import { usePermissions } from "../Context/PermissionsContext";
 // <---------------------- v1.0.5
-import toast from 'react-hot-toast';
-import { notify } from '../services/toastService';
+import toast from "react-hot-toast";
+import { notify } from "../services/toastService";
 // ------------------------------ v1.0.5 >
 
 export const useAssessments = (filters = {}) => {
@@ -34,18 +36,19 @@ export const useAssessments = (filters = {}) => {
     refetch,
   } = useQuery({
     // <---------------------- v1.0.1
-    queryKey: ['AssessmentTemplates', filters],
+    queryKey: ["AssessmentTemplates", filters],
     // ---------------------- v1.0.1 >
     queryFn: async () => {
-      const data = await fetchFilterData('assessment');
+      const data = await fetchFilterData("assessment");
 
-      return data.map(assessment => ({
-        ...assessment,
-        // <---------------------- v1.0.4
-        // Add any assessment-specific transformations here
-      })).reverse();
-        // ---------------------- v1.0.4 >
-
+      return data
+        .map((assessment) => ({
+          ...assessment,
+          // <---------------------- v1.0.4
+          // Add any assessment-specific transformations here
+        }))
+        .reverse();
+      // ---------------------- v1.0.4 >
     },
     enabled: !!hasViewPermission,
     retry: 1,
@@ -62,34 +65,37 @@ export const useAssessments = (filters = {}) => {
 
   const addOrUpdateAssessment = useMutation({
     mutationFn: async ({ isEditing, id, assessmentData, tabsSubmitStatus }) => {
-
-      if (isEditing && id && id !== '' && id !== null && id !== undefined) {
-
+      if (isEditing && id && id !== "" && id !== null && id !== undefined) {
         const { data } = await axios.patch(
           `${config.REACT_APP_API_URL}/assessments/update/${id}`,
-          assessmentData,
+          assessmentData
         );
         return data;
       }
 
-
       const { data } = await axios.post(
         `${config.REACT_APP_API_URL}/assessments/new-assessment`,
-        assessmentData,
+        assessmentData
       );
       return data;
     },
     onSuccess: (data, variables) => {
       // Optimistically update the cache
       // <---------------------- v1.0.1
-      queryClient.setQueryData(['AssessmentTemplates', filters], (oldData) => {
-      // ---------------------- v1.0.1 >
+      queryClient.setQueryData(["AssessmentTemplates", filters], (oldData) => {
+        // ---------------------- v1.0.1 >
         if (!oldData) return oldData;
 
-        if (variables.isEditing && variables.id && variables.id !== '' && variables.id !== null && variables.id !== undefined) {
+        if (
+          variables.isEditing &&
+          variables.id &&
+          variables.id !== "" &&
+          variables.id !== null &&
+          variables.id !== undefined
+        ) {
           // <---------------------- v1.0.0
           // Update existing assessment
-          return oldData.map(assessment =>
+          return oldData.map((assessment) =>
             assessment._id === variables.id
               ? { ...assessment, ...data.data }
               : assessment
@@ -102,11 +108,11 @@ export const useAssessments = (filters = {}) => {
 
       // Invalidate to ensure consistency
       // <---------------------- v1.0.1
-      queryClient.invalidateQueries(['AssessmentTemplates']);
+      queryClient.invalidateQueries(["AssessmentTemplates"]);
       // ---------------------- v1.0.1 >
     },
     onError: (err) => {
-      console.error('Assessment save error:', err.message);
+      console.error("Assessment save error:", err.message);
     },
   });
 
@@ -114,17 +120,17 @@ export const useAssessments = (filters = {}) => {
     mutationFn: async (assessmentQuestionsData) => {
       const { data } = await axios.post(
         `${config.REACT_APP_API_URL}/assessment-questions/upsert`,
-        assessmentQuestionsData,
+        assessmentQuestionsData
       );
       return data;
     },
     onSuccess: () => {
       // <---------------------- v1.0.1
-      queryClient.invalidateQueries(['AssessmentTemplates']);
+      queryClient.invalidateQueries(["AssessmentTemplates"]);
       // ---------------------- v1.0.1 >
     },
     onError: (err) => {
-      console.error('Assessment questions save error:', err.message);
+      console.error("Assessment questions save error:", err.message);
     },
   });
   // ------------------------------ v1.0.5 >
@@ -139,17 +145,19 @@ export const useAssessments = (filters = {}) => {
       return response.data;
     },
     onSuccess: (data) => {
-      notify.success(data.message || 'Assessment extended successfully');
+      notify.success(data.message || "Assessment extended successfully");
       // Invalidate all related queries to ensure data refresh
-      queryClient.invalidateQueries({ queryKey: ['Assessments'] });
-      queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });
-      queryClient.invalidateQueries({ queryKey: ['scheduleassessment'] });
-      queryClient.invalidateQueries({ queryKey: ['AssessmentTemplates'] });
-      queryClient.invalidateQueries({ queryKey: ['candidates'] });
-      queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
+      queryClient.invalidateQueries({ queryKey: ["Assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["assessmentResults"] });
+      queryClient.invalidateQueries({ queryKey: ["scheduleassessment"] });
+      queryClient.invalidateQueries({ queryKey: ["AssessmentTemplates"] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["scheduledAssessments"] });
     },
     onError: (error) => {
-      notify.error(error.response?.data?.message || 'Failed to extend assessment');
+      notify.error(
+        error.response?.data?.message || "Failed to extend assessment"
+      );
     },
   });
 
@@ -162,17 +170,19 @@ export const useAssessments = (filters = {}) => {
       return response.data;
     },
     onSuccess: (data) => {
-      notify.success(data.message || 'Assessment cancelled successfully');
+      notify.success(data.message || "Assessment cancelled successfully");
       // Invalidate all related queries to ensure data refresh
-      queryClient.invalidateQueries({ queryKey: ['Assessments'] });
-      queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });
-      queryClient.invalidateQueries({ queryKey: ['scheduleassessment'] });
-      queryClient.invalidateQueries({ queryKey: ['AssessmentTemplates'] });
-      queryClient.invalidateQueries({ queryKey: ['candidates'] });
-      queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
+      queryClient.invalidateQueries({ queryKey: ["Assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["assessmentResults"] });
+      queryClient.invalidateQueries({ queryKey: ["scheduleassessment"] });
+      queryClient.invalidateQueries({ queryKey: ["AssessmentTemplates"] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["scheduledAssessments"] });
     },
     onError: (error) => {
-      notify.error(error.response?.data?.message || 'Failed to cancel assessment');
+      notify.error(
+        error.response?.data?.message || "Failed to cancel assessment"
+      );
     },
   });
 
@@ -184,17 +194,19 @@ export const useAssessments = (filters = {}) => {
       return response.data;
     },
     onSuccess: (data) => {
-      notify.success(data.message || 'Expiry check completed successfully');
+      notify.success(data.message || "Expiry check completed successfully");
       // Invalidate all related queries to ensure data refresh
-      queryClient.invalidateQueries({ queryKey: ['Assessments'] });
-      queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });
-      queryClient.invalidateQueries({ queryKey: ['scheduleassessment'] });
-      queryClient.invalidateQueries({ queryKey: ['AssessmentTemplates'] });
-      queryClient.invalidateQueries({ queryKey: ['candidates'] });
-      queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
+      queryClient.invalidateQueries({ queryKey: ["Assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["assessmentResults"] });
+      queryClient.invalidateQueries({ queryKey: ["scheduleassessment"] });
+      queryClient.invalidateQueries({ queryKey: ["AssessmentTemplates"] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["scheduledAssessments"] });
     },
     onError: (error) => {
-      notify.error(error.response?.data?.message || 'Failed to check expired assessments');
+      notify.error(
+        error.response?.data?.message || "Failed to check expired assessments"
+      );
     },
   });
 
@@ -206,24 +218,28 @@ export const useAssessments = (filters = {}) => {
       return response.data;
     },
     onSuccess: (data) => {
-      notify.success(data.message || 'All schedule statuses updated successfully');
+      notify.success(
+        data.message || "All schedule statuses updated successfully"
+      );
       // Invalidate all related queries to ensure data refresh
-      queryClient.invalidateQueries({ queryKey: ['Assessments'] });
-      queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });
-      queryClient.invalidateQueries({ queryKey: ['scheduleassessment'] });
-      queryClient.invalidateQueries({ queryKey: ['AssessmentTemplates'] });
-      queryClient.invalidateQueries({ queryKey: ['candidates'] });
-      queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
+      queryClient.invalidateQueries({ queryKey: ["Assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["assessmentResults"] });
+      queryClient.invalidateQueries({ queryKey: ["scheduleassessment"] });
+      queryClient.invalidateQueries({ queryKey: ["AssessmentTemplates"] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["scheduledAssessments"] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to update schedule statuses');
+      toast.error(
+        error.response?.data?.message || "Failed to update schedule statuses"
+      );
     },
   });
   // ------------------------------ v1.0.5 >
 
   // <---------------------- v1.0.3
   const fetchAssessmentQuestions = useCallback(async (assessmentId) => {
-  // ------------------------------ v1.0.3 >
+    // ------------------------------ v1.0.3 >
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/assessment-questions/list/${assessmentId}`
@@ -240,7 +256,7 @@ export const useAssessments = (filters = {}) => {
         return { data: null, error: response.data.message };
       }
     } catch (error) {
-      console.error('Error fetching assessment questions:', error);
+      console.error("Error fetching assessment questions:", error);
       return { data: null, error: error.message };
     }
   }, []);
@@ -256,7 +272,7 @@ export const useAssessments = (filters = {}) => {
         return { data: null, error: response.data.message };
       }
     } catch (error) {
-      console.error('Error fetching assessment results:', error);
+      console.error("Error fetching assessment results:", error);
       return { data: null, error: error.message };
     }
   };
@@ -264,7 +280,7 @@ export const useAssessments = (filters = {}) => {
   // <---------------------- v1.0.5
   // Convert fetchScheduledAssessments to use React Query for proper caching
   const fetchScheduledAssessments = useCallback(async (assessmentId) => {
-  // ------------------------------ v1.0.5 >
+    // ------------------------------ v1.0.5 >
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
@@ -275,7 +291,7 @@ export const useAssessments = (filters = {}) => {
         return { data: null, error: response.data.message };
       }
     } catch (error) {
-      console.error('Error fetching scheduled assessments:', error);
+      console.error("Error fetching scheduled assessments:", error);
       return { data: null, error: error.message };
     }
   }, []);
@@ -283,7 +299,7 @@ export const useAssessments = (filters = {}) => {
   // React Query hook for scheduled assessments
   const useScheduledAssessments = (assessmentId) => {
     return useQuery({
-      queryKey: ['scheduledAssessments', assessmentId],
+      queryKey: ["scheduledAssessments", assessmentId],
       queryFn: async () => {
         const { data, error } = await fetchScheduledAssessments(assessmentId);
         if (error) {
@@ -301,8 +317,13 @@ export const useAssessments = (filters = {}) => {
     });
   };
 
-
-  const isMutationLoading = addOrUpdateAssessment.isPending || upsertAssessmentQuestions.isPending || extendAssessment.isPending || cancelAssessment.isPending || checkExpiredAssessments.isPending || updateAllScheduleStatuses.isPending;
+  const isMutationLoading =
+    addOrUpdateAssessment.isPending ||
+    upsertAssessmentQuestions.isPending ||
+    extendAssessment.isPending ||
+    cancelAssessment.isPending ||
+    checkExpiredAssessments.isPending ||
+    updateAllScheduleStatuses.isPending;
   // ------------------------------ v1.0.5 >
   // Controlled logging
   useEffect(() => {
@@ -310,11 +331,11 @@ export const useAssessments = (filters = {}) => {
       initialLoad.current = false;
       return;
     }
-    console.log('useAssessments state update:', {
+    console.log("useAssessments state update:", {
       assessmentDataCount: assessmentData.length,
       isLoading,
       isQueryLoading,
-      isMutationLoading
+      isMutationLoading,
     });
   }, [assessmentData.length, isLoading, isQueryLoading, isMutationLoading]);
 
@@ -325,7 +346,7 @@ export const useAssessments = (filters = {}) => {
         `${config.REACT_APP_API_URL}/assessments/${assessmentId}`,
         {
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -333,13 +354,80 @@ export const useAssessments = (filters = {}) => {
     },
     onSuccess: () => {
       // Invalidate and refetch the assessments query to update the UI
-      queryClient.invalidateQueries(['AssessmentTemplates']);
+      queryClient.invalidateQueries(["AssessmentTemplates"]);
     },
     onError: (error) => {
-      console.error('Error deleting assessment:', error);
+      console.error("Error deleting assessment:", error);
       throw error;
     },
   });
+
+  const createAssessmentTemplateList = useMutation({
+    mutationFn: async ({ categoryOrTechnology, name, tenantId, ownerId }) => {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/assessments/create-list`,
+        { categoryOrTechnology, name, tenantId, ownerId }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["AssessmentTemplates"]);
+      queryClient.invalidateQueries(["AssessmentList"]);
+    },
+    onError: (error) => {
+      notify.error(error.response?.data?.message || "Failed to create list");
+    },
+  });
+
+  const useAssessmentList = (filters = {}, hasViewPermission) => {
+    const {
+      data: assessmentListData = [],
+      isLoading,
+      isError,
+      error,
+      refetch,
+    } = useQuery({
+      queryKey: ["AssessmentList", filters],
+      queryFn: async () => {
+        const data = await fetchFilterData("assessmentlist"); // API endpoint
+        console.log("useAssessmentList:", data);
+
+        return data
+          .map((assessment) => ({
+            ...assessment,
+            // Optional: add any transformations here
+          }))
+          .reverse(); // latest first
+      },
+      enabled: !!hasViewPermission,
+      retry: 1,
+      staleTime: 1000 * 60 * 10, // 10 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+    });
+
+    return { assessmentListData, isLoading, isError, error, refetch };
+  };
+
+  // const assessmentLists = async (tenantId, ownerId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/assessments/lists`,
+  //       {
+  //         params: { tenantId, ownerId },
+  //       }
+  //     );
+  //     return response.data.data;
+  //   } catch (error) {
+  //     console.error("Error fetching assessment list:", error);
+  //     return {
+  //       data: null,
+  //       error: error.response?.data?.message || error.message,
+  //     };
+  //   }
+  // };
 
   return {
     assessmentData,
@@ -366,6 +454,9 @@ export const useAssessments = (filters = {}) => {
     checkExpiredAssessments,
     updateAllScheduleStatuses,
     // ------------------------------ v1.0.5 >
-    deleteAssessment
+    deleteAssessment,
+    createAssessmentTemplateList,
+    // assessmentLists,
+    useAssessmentList,
   };
 };

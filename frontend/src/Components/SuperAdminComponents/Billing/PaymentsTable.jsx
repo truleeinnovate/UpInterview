@@ -234,8 +234,8 @@ function PaymentsTable({ organizationId, viewMode }) {
     setCurrentPage(0); // Reset to first page on search
   };
 
-  const formatCurrency = (amount, currency = "USD") => {
-    return new Intl.NumberFormat("en-US", {
+  const formatCurrency = (amount, currency = "INR") => {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency,
     }).format(amount);
@@ -294,10 +294,10 @@ function PaymentsTable({ organizationId, viewMode }) {
       ),
     },
     {
-      key: "method",
+      key: "paymentMethod",
       header: "Payment Method",
       render: (value, row) => (
-        <div className="capitalize">{row?.method?.replace("-", " ")}</div>
+        <div className="capitalize">{row?.paymentMethod?.replace("-", " ")}</div>
       ),
     },
     {

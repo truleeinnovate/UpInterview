@@ -168,10 +168,10 @@ const SubscriptionPlan = () => {
       // console.log(organization, plan.name, "organization");
       if (user.userType === "individual" && isFreePlan) {
         // Fire-and-forget emails; do not block navigation
-        axios.post(`${config.REACT_APP_API_URL}/emails/subscription/free`, {
-          tenantId: tenantId,
-          ownerId: ownerId,
-        }).catch((err) => console.error('Email error (free):', err));
+        // axios.post(`${config.REACT_APP_API_URL}/emails/subscription/free`, {
+        //   tenantId: tenantId,
+        //   ownerId: ownerId,
+        // }).catch((err) => console.error('Email error (free):', err));
 
         axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
           tenantId: tenantId,

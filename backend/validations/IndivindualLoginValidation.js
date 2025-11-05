@@ -53,13 +53,25 @@ const interviewDetailsSchema = Joi.object({
   technologies: Joi.array().items(Joi.string()).min(1).required().messages({
     "array.min": "Technologies are required",
   }),
-  previousInterviewExperience: Joi.alternatives()
+  PreviousExperienceConductingInterviews: Joi.alternatives()
     .try(Joi.boolean(), Joi.string().valid("yes", "no"))
     .required()
     .messages({
       "any.required": "Previous interview experience is required",
     }),
-  previousInterviewExperienceYears: Joi.number().optional(),
+      PreviousExperienceConductingInterviewsYears: Joi.alternatives().conditional(
+        "PreviousExperienceConductingInterviews",
+        {
+          is: "yes",
+          then: Joi.string()
+            .pattern(/^\d+$/)
+            .messages({    
+              "string.empty": "Years of Experience is required",
+              "string.pattern.base": "Enter a Number between 1 and 15",
+            }),
+          otherwise: Joi.optional(),
+        }
+      ),
   interviewFormatWeOffer: Joi.array().items(Joi.string()).min(1).required().messages({
     "array.min": "At least one interview format is required",
   }),
@@ -118,8 +130,8 @@ function validateIndividualSignup(step, data) {
     stepData = {
       skills: data.skills,
       technologies: data.technologies,
-      previousInterviewExperience: data.PreviousExperienceConductingInterviews || data.previousInterviewExperience,
-      previousInterviewExperienceYears: data.PreviousExperienceConductingInterviewsYears || data.previousInterviewExperienceYears,
+      PreviousExperienceConductingInterviews: data.PreviousExperienceConductingInterviews || data.previousInterviewExperience,
+      PreviousExperienceConductingInterviewsYears: data.PreviousExperienceConductingInterviewsYears || data.previousInterviewExperienceYears,
       interviewFormatWeOffer: data.InterviewFormatWeOffer || data.interviewFormatWeOffer,
       professionalTitle: data.professionalTitle,
       bio: data.bio,

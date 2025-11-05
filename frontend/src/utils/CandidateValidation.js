@@ -13,6 +13,7 @@ const validatePhoneNumber = (phone) => {
 
 const getErrorMessage = (field, value, formData) => {
     const messages = {
+        FirstName: "First Name is required",
         LastName: "Last Name is required",
         Email: "Email is required",
         Phone: "Phone Number is required",

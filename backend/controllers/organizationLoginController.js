@@ -8,6 +8,7 @@ const { Users } = require("../models/Users");
 const { Contacts } = require("../models/Contacts");
 const CustomerSubscription = require("../models/CustomerSubscriptionmodels.js");
 const OrganizationRequest = require("../models/OrganizationRequest");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 const {
   getAuthCookieOptions,
   clearAuthCookies,
@@ -30,6 +31,8 @@ const mongoose = require("mongoose");
 const {
   sendVerificationEmail,
 } = require("../controllers/EmailsController/signUpEmailController.js");
+const InterviewAvailability = require("../models/InterviewAvailability.js");
+
 
 const organizationUserCreation = async (req, res) => {
   try {
@@ -977,7 +980,16 @@ const deleteTenantAndAssociatedData = async (req, res) => {
     // Delete associated Users
     const usersResult = await Users.deleteMany({ tenantId });
 
-    // Delete associated Contacts
+    // Find all contacts belonging to the tenant
+    const contacts = await Contacts.find({ tenantId });
+    const contactIds = contacts.map(contact => contact._id);
+
+    // Delete all interview availabilities linked to these contacts
+    const availabilityResult = await InterviewAvailability.deleteMany({
+      contact: { $in: contactIds },
+    });
+
+    // Delete the contacts themselves
     const contactsResult = await Contacts.deleteMany({ tenantId });
 
     res.status(200).json({
@@ -985,12 +997,14 @@ const deleteTenantAndAssociatedData = async (req, res) => {
       deletedTenant: tenant,
       deletedUsersCount: usersResult.deletedCount,
       deletedContactsCount: contactsResult.deletedCount,
+      deletedAvailabilityCount: availabilityResult.deletedCount,
     });
   } catch (error) {
     console.error('Error deleting tenant and associated data:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 // const getOrganizationById = async (req, res) => {
@@ -1355,12 +1369,16 @@ const registerOrganization = async (req, res) => {
       throw new Error(emailResult.message);
     }
 
+    // Generate organization request code using centralized service
+    const organizationRequestCode = await generateUniqueId('ORG', OrganizationRequest, 'organizationRequestCode');
+
     // Create OrganizationRequest with contact ID (profileId)
     try {
       await OrganizationRequest.findOneAndUpdate(
         { tenantId: savedTenant._id, ownerId: savedUser._id },
         {
           $setOnInsert: {
+            organizationRequestCode:organizationRequestCode,
             tenantId: savedTenant._id,
             ownerId: savedUser._id,
             status: 'pending_review'

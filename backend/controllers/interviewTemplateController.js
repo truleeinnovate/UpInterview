@@ -3,29 +3,14 @@ const { default: mongoose } = require("mongoose");
 const { Interview } = require("../models/Interview/Interview");
 const InterviewTemplate = require("../models/InterviewTemplate");
 const { Position } = require("../models/Position/position");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 // Create a new interview template
 exports.createInterviewTemplate = async (req, res) => {
     try {
         const { tenantId } = req.body;
-        // Generate custom code like ASMT-TPL-00001
-        const lastTemplate = await InterviewTemplate.findOne({ tenantId })
-            .sort({ _id: -1 })
-            .select("interviewTemplateCode")
-            .lean();
-
-        let nextNumber = 1;
-        if (lastTemplate?.interviewTemplateCode) {
-            const match = lastTemplate.interviewTemplateCode.match(/INT-TPL-(\d+)/);
-            if (match) {
-                nextNumber = parseInt(match[1], 10) + 1;
-            }
-        }
-
-        const interviewTemplateCode = `INT-TPL-${String(nextNumber).padStart(
-            5,
-            "0"
-        )}`;
+        // Generate interview template code using centralized service with tenant ID
+        const interviewTemplateCode = await generateUniqueId('INT-TPL', InterviewTemplate, 'interviewTemplateCode', tenantId);
 
         const template = new InterviewTemplate({
             ...req.body,
@@ -48,110 +33,7 @@ exports.createInterviewTemplate = async (req, res) => {
     }
 };
 
-// Get all interview templates for a tenant
-// Get all interview templates based on organization or owner
-// exports.getAllTemplates = async (req, res) => {
-//   try {
-//     const { tenantId, ownerId, organization } = req.query;
 
-//     let filter = {};
-
-//     if (organization === "true") {
-//       if (!tenantId) {
-//         console.error("Missing tenantId for organization");
-//         return res.status(400).json({
-//           success: false,
-//           message: "tenantId is required for organization",
-//         });
-//       }
-//       filter.tenantId = tenantId;
-//     } else {
-//       if (!ownerId) {
-//         console.error("Missing ownerId for individual user");
-//         return res.status(400).json({
-//           success: false,
-//           message: "ownerId is required for individual user",
-//         });
-//       }
-//       filter.ownerId = ownerId;
-//       console.log("Filtering by ownerId:", ownerId);
-//     }
-
-//     // const templates = await InterviewTemplate.find(filter).populate('rounds.interviewers');
-
-//     // Only populate firstName and lastName of interviewers
-//     // Populate only firstName and lastName for interviewers
-//     const templates = await InterviewTemplate.find(filter).populate({
-//       path: "rounds.interviewers",
-//       model: "Contacts",
-//       select: "firstName lastName email",
-//       // select: "firstName lastName _id", // limit fields
-//     // v1.0.0 <-------------------------------------------------------------------------
-//     }).sort({ _id: -1 }); // _id in MongoDB roughly reflects creation order
-//     // v1.0.0 ------------------------------------------------------------------------->
-
-
-//     // Transform output: map interviewers to a single "name" field
-//     const transformedTemplates = templates.map((template) => {
-//       const templateObj = template.toObject();
-//       // templateObj.rounds = templateObj.rounds.map((round) => {
-//       //   if (Array.isArray(round.interviewers)) {
-//       //     round.interviewers = round.interviewers.map((interviewer) => ({
-//       //       _id: interviewer._id,
-//       //       name: `${interviewer.firstName} ${interviewer.lastName}`.trim(),
-//       //     }));
-//       //   }
-//       //   return round;
-//       // });
-
-//       return templateObj;
-//     });
-
-//     return res.status(200).json({
-//       success: true,
-//       data: transformedTemplates,
-//     });
-//   } catch (error) {
-//     console.error(
-//       "Error fetching interview templates:",
-//       error.message,
-//       error.stack
-//     );
-//     return res.status(500).json({
-//       success: false,
-//       message: "Server error. Please try again later.",
-//       error: error.message,
-//     });
-//   }
-// };
-
-// Get template by ID
-// exports.getTemplateById = async (req, res) => {
-//     try {
-//         const tenantId = req.query.tenantId;
-//         const template = await InterviewTemplate.findOne({
-//             _id: req.params.id,
-//             tenantId
-//         });
-
-//         if (!template) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'Template not found'
-//             });
-//         }
-
-//         res.status(200).json({
-//             success: true,
-//             data: template
-//         });
-//     } catch (error) {
-//         res.status(400).json({
-//             success: false,
-//             message: error.message
-//         });
-//     }
-// };
 
 exports.updateTemplate = async (req, res) => {
     try {
@@ -182,49 +64,6 @@ exports.updateTemplate = async (req, res) => {
             Object.assign(updateData, req.body.templateData);
         }
 
-        // Validate and process rounds if present
-        // v1.0.0 <-------------------------------------------------------------------------------
-        // if (req.body.rounds) {
-        //   // Validate rounds is an array
-        //   if (!Array.isArray(req.body.rounds)) {
-        //     return res.status(400).json({
-        //       status: false,
-        //       message: "Rounds must be an array",
-        //     });
-        //   }
-
-        //   // Process each round
-        //   const processedRounds = req.body.rounds.map((round, index) => {
-        //     // Ensure sequence is set - use provided or default to position
-        //     const sequence =
-        //       typeof round.sequence === "number" ? round.sequence : index + 1;
-
-        //     console.log("req.body.rounds", req.body.rounds);
-
-        //     // Return the processed round with required fields
-        //     return {
-        //       roundTitle: round.roundTitle || `Round ${index + 1}`,
-        //       sequence,
-        //       duration: round.duration || 60,
-        //       instructions: round.instructions || "",
-        //       interviewMode: round.interviewMode || "virtual",
-        //       interviewerType: round.interviewerType || "",
-        //       selectedInterviewersType: round.selectedInterviewersType || "",
-        //       // selectedInterviewerIds: round.selectedInterviewerIds || [],
-        //       interviewQuestionsList: round.interviewQuestionsList || [],
-        //       interviewers: round.interviewers || [],
-        //       assessmentId: round.assessmentId || null,
-        //       // interviewerGroupId: round.interviewerGroupId || null,
-        //       interviewers: round.interviewers || [],
-        //       // minimumInterviewers: round.minimumInterviewers || '1',
-        //       // Include any other fields from the original round
-        //       ...round,
-        //     };
-        //   });
-
-        //   // Replace the rounds in the request body with processed rounds
-        //   updateData.rounds = processedRounds;
-        // }
 
         if (req.body.rounds) {
             if (!Array.isArray(req.body.rounds)) {

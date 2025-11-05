@@ -17,4 +17,7 @@ router.put('/:id/status', organizationRequestController.updateStatus);
 // Get organization request by ID (keep this last as it's a catch-all for GET /:id)
 router.get('/:id', organizationRequestController.getOrganizationRequestById);
 
+
+
+
 module.exports = router;

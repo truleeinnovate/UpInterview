@@ -225,8 +225,8 @@ interviewRoundSchema.pre('save', async function (next) {
             const oldStatus = this._original_status || 'Draft';
             const newStatus = this.status;
 
-            // Only track for internal interviews
-            if (this.interviewerType === 'internal') {
+            // Only track for External interviews
+            if (this.interviewerType === 'External') {
                 // Get the interview details for tenantId and ownerId
                 const Interview = require('../Interview/Interview').Interview;
                 const interview = await Interview.findById(this.interviewId);
@@ -273,8 +273,8 @@ interviewRoundSchema.post('findOneAndUpdate', async function (doc) {
         const oldStatus = this._originalDoc.status;
         const newStatus = doc.status;
 
-        // Check if status changed and it's an internal interview
-        if (oldStatus !== newStatus && doc.interviewerType === 'internal') {
+        // Check if status changed and it's an External interview
+        if (oldStatus !== newStatus && doc.interviewerType === 'External') {
             const Interview = require('../Interview/Interview').Interview;
             const interview = await Interview.findById(doc.interviewId);
 

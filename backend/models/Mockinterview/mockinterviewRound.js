@@ -38,11 +38,6 @@ const MockInterviewRoundSchema = new mongoose.Schema({
   instructions: String,
 
   // Current scheduled date/time
-  // dateTime: { type: Date },
-
-  
-  // Current scheduled date/time
-
   dateTime: String,
 
   interviewerViewType: String,

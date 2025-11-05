@@ -5,7 +5,7 @@
 // v1.0.3  -  Ashok   -  Removed border left and set outline as none
 // v1.0.4  -  Ashok   -  Improved responsiveness and added common code to popup
 // v1.0.5  -  Ashok   -  changed name labels Clone to Copy of and Clone_ to Copy_of_
-
+// v1.0.6  -  Ashok   -  changed placeholder texts
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -452,7 +452,7 @@ const InterviewSlideover = ({ mode }) => {
                                 type="text"
                                 id="title"
                                 name="title"
-                                placeholder="e.g., Senior_Frontend_Developer"
+                                placeholder="Senior Frontend Developer"
                                 value={newTemplate.title}
                                 onChange={handleTitleChange}
                                 onBlur={() => {
@@ -486,7 +486,7 @@ const InterviewSlideover = ({ mode }) => {
                                 type="text"
                                 id="bestFor"
                                 name="bestFor"
-                                placeholder="e.g., Senior developers with 5+ years experience"
+                                placeholder="Senior developers with 5+ years experience"
                                 value={newTemplate.bestFor}
                                 onChange={(e) => {
                                     const value = e.target.value.slice(0, 50);

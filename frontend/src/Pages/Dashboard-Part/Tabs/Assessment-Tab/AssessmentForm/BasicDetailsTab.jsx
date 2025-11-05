@@ -11,6 +11,13 @@ import PositionForm from "../../Position-Tab/Position-Form";
 // Common Form Field Components
 import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
 import InputField from "../../../../../Components/FormFields/InputField.jsx";
+import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import { X } from "lucide-react";
+import { notify } from "../../../../../services/toastService.js";
+import AssessmentListModal from "../AssessmentListModal/AssessmentListModal.jsx";
 
 const BasicDetailsTab = ({
   isEditing,
@@ -62,6 +69,11 @@ const BasicDetailsTab = ({
   // v1.0.1 <----------------------------------------
   fieldRefs,
   // v1.0.1 <----------------------------------------
+  isCategoryModalOpen,
+  openCategoryModal,
+  categories,
+  selected,
+  setSelected,
 }) => {
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
@@ -69,8 +81,31 @@ const BasicDetailsTab = ({
   const positionRef = useRef(null);
   const difficultyRef = useRef(null);
   const durationRef = useRef(null);
+  const categoryOrTechnologyRef = useRef(null);
 
   const [isPositionModalOpen, setIsPositionModalOpen] = useState(false);
+  // const { assessmentLists, createAssessmentTemplateList } = useAssessments();
+
+  // ------------------------------ Category / Technology ---------------------------------------
+  const [error, setError] = useState("");
+  // const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  // const [categories, setCategories] = useState([]); // fetched or newly created
+  // const [selectedCategory, setSelectedCategory] = useState("");
+  useScrollLock(isCategoryModalOpen);
+
+  // useEffect(() => {
+  //   const fetchCategories = async () => {
+  //     try {
+  //       const response = await assessmentLists(tenantId, ownerId);
+  //       setCategories(response || []);
+  //     } catch (error) {
+  //       console.error("Error fetching categories:", error);
+  //     }
+  //   };
+  //   fetchCategories();
+  // }, []);
+
+  // ------------------------------ Category / Technology ---------------------------------------
 
   // Close all dropdowns except the one specified
   const closeAllDropdowns = (except = null) => {
@@ -126,7 +161,7 @@ const BasicDetailsTab = ({
 
   return (
     // v1.0.2 <------------------------------------------------------------------------------
-    <div>
+    <div className="pb-16">
       <form>
         {/* // <---------------------- v1.0.0 */}
 
@@ -403,29 +438,70 @@ const BasicDetailsTab = ({
           {/* Link Expiry Days */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
             <div>
-              <DropdownWithSearchField
-                containerRef={linkExpiryRef}
-                label="Link Expiry (Days)"
-                required
-                name="linkExpiry"
-                value={linkExpiryDays || 3} 
-                options={Array.from({ length: 10 }, (_, index) => ({
-                  value: index + 1,
-                  label: `${index + 1}`,
-                }))}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  setLinkExpiryDays(value);
-                  setFormData((prev) => ({
-                    ...prev,
-                    linkExpiryDays: value,
-                  }));
-                }}
-                error={errors.LinkExpiryDays}
-                placeholder="Select days"
-              />
+              <div>
+                <DropdownWithSearchField
+                  containerRef={linkExpiryRef}
+                  label="Link Expiry (Days)"
+                  required
+                  name="linkExpiry"
+                  value={linkExpiryDays || 3}
+                  options={Array.from({ length: 10 }, (_, index) => ({
+                    value: index + 1,
+                    label: `${index + 1}`,
+                  }))}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setLinkExpiryDays(value);
+                    setFormData((prev) => ({
+                      ...prev,
+                      linkExpiryDays: value,
+                    }));
+                  }}
+                  error={errors.LinkExpiryDays}
+                  placeholder="Select days"
+                />
+              </div>
+              <div></div> {/* Empty div to maintain grid structure */}
             </div>
-            <div></div> {/* Empty div to maintain grid structure */}
+            {/* Assessment List */}
+            <div>
+              <DropdownWithSearchField
+                containerRef={categoryOrTechnologyRef}
+                label="Category/Technology"
+                required
+                name="categoryOrTechnology"
+                value={selected || ""}
+                options={[
+                  ...(categories
+                    ?.filter((category) => category?.type === "custom")
+                    ?.map((category) => ({
+                      value: category._id,
+                      label: category.categoryOrTechnology,
+                    })) || []),
+                  {
+                    value: "create_new",
+                    label: "+ Create List",
+                    isSticky: true,
+                    className: "text-blue-600 font-medium hover:bg-blue-50",
+                  },
+                ]}
+                onChange={(e) => {
+                  const value = e?.target?.value || e?.value;
+                  if (value === "create_new") {
+                    openCategoryModal();
+                  } else {
+                    setSelected(value);
+                    setFormData((prev) => ({
+                      ...prev,
+                      categoryOrTechnology: value,
+                    }));
+                  }
+                }}
+                error={error || errors.categoryOrTechnology}
+                placeholder="Select List"
+              />
+              <div></div> {/* Empty div to maintain grid structure */}
+            </div>
           </div>
         </div>
       </form>

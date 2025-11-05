@@ -1,4 +1,6 @@
 // v1.0.0 - Ashok - added console statement and made some changes. Integrations not getting on online
+// v1.0.1 - Ashok - fixed style issue
+// v1.0.2 - Ashok - changed name from Integrations to Integration Logs
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -672,7 +674,9 @@ function IntegrationsPage() {
     <div className="space-y-6">
       <div className="fixed md:mt-3 sm:mt-5 top-16 left-0 right-0 bg-background">
         <div className="flex justify-between items-center px-4 mb-4 mt-4">
-          <h1 className="text-2xl font-bold text-custom-blue">Integrations</h1>
+          <h1 className="text-2xl font-bold text-custom-blue">
+            Integration Logs
+          </h1>
           {/* <div className="flex space-x-2">
             <button className="flex items-center btn-secondary border border-gray-200 rounded-md py-1 px-2">
               <AiOutlineDownload className="mr-2" />
@@ -741,6 +745,7 @@ function IntegrationsPage() {
                       loading={isLoading}
                       actions={tableActions}
                       emptyState="No logs found."
+                      customHeight="h-[calc(100vh-16.5rem)]"
                     />
                   </div>
                 ) : (

@@ -342,6 +342,116 @@ const updateCandidatePatchCall = async (req, res) => {
 };
 
 
+// serach and pagincation functionality  
+
+// Optimized candidate query with pagination
+const getCandidatesData = async (req, res) => {
+  try {
+    const {
+      page = 0,
+      limit = 10,
+      search = '',
+      status,
+      tech,
+      minExperience,
+      maxExperience,
+      minRelevantExperience,
+      maxRelevantExperience,
+      roles,
+      universities,
+      createdDate
+    } = req.query;
+
+    const skip = parseInt(page) * parseInt(limit);
+    const limitNum = parseInt(limit);
+
+    // Build query efficiently
+    let query = { tenantId: req.tenantId };
+
+    // Search optimization - use text index
+    if (search) {
+      query.$text = { $search: search };
+    }
+
+    // Filter optimizations
+    if (status) {
+      query.HigherQualification = { $in: status.split(',') };
+    }
+
+    if (tech) {
+      query['skills.skill'] = { $in: tech.split(',') };
+    }
+
+    if (minExperience || maxExperience) {
+      query.CurrentExperience = {};
+      if (minExperience) query.CurrentExperience.$gte = parseInt(minExperience);
+      if (maxExperience) query.CurrentExperience.$lte = parseInt(maxExperience);
+    }
+
+    // Add other filters similarly...
+
+    // Get total count (can be optimized with estimatedDocumentsCount for large datasets)
+    const total = await Candidate.countDocuments(query);
+
+    // Fetch paginated data with only needed fields
+    const candidates = await Candidate.find(query)
+      .select('FirstName LastName Email Phone CurrentExperience skills HigherQualification ImageData createdAt CurrentRole')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean(); // Use lean for better performance
+
+    res.json({
+      data: candidates,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limitNum),
+        totalItems: total,
+        hasNext: skip + limitNum < total,
+        hasPrev: parseInt(page) > 0
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Dedicated search endpoint for better performance
+const searchCandidates =    async (req, res) => {
+  try {
+    const { search, filters = {}, limit = 50 } = req.body;
+
+    let query = { tenantId: req.tenantId };
+
+    if (search) {
+      // Use regex for partial matching - consider text index for better performance
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { FirstName: searchRegex },
+        { LastName: searchRegex },
+        { Email: searchRegex },
+        { Phone: searchRegex }
+      ];
+    }
+
+    // Apply filters
+    Object.keys(filters).forEach(key => {
+      if (filters[key]) {
+        query[key] = filters[key];
+      }
+    });
+
+    const results = await Candidate.find(query)
+      .select('FirstName LastName Email Phone CurrentExperience')
+      .limit(parseInt(limit))
+      .lean();
+
+    res.json({ data: results });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 
 const getCandidates = async (req, res) => {
@@ -531,7 +641,7 @@ const deleteCandidate = async (req, res) => {
 };
 
 
-module.exports = { getCandidates, addCandidatePostCall, updateCandidatePatchCall, getCandidateById,deleteCandidate }
+module.exports = { getCandidates, addCandidatePostCall, updateCandidatePatchCall,searchCandidates,getCandidatesData, getCandidateById,deleteCandidate }
 
 
 

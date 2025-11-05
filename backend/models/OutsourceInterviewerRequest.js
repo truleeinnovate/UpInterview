@@ -1,7 +1,13 @@
 const mongoose = require('mongoose');
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 const OutsourceInterviewerSchema = new mongoose.Schema({
-    interviewerNo: { type: String, unique: true }, // Auto-generated unique number
+    outsourceRequestCode: {
+        type: String,
+        unique: true,
+        sparse: true,
+        index: true
+    },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', },
     contactId: { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts', required: true },
 
@@ -50,32 +56,45 @@ const OutsourceInterviewerSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-// Auto-generate a unique interviewer number before saving
+// Pre-save hook to generate unique outsource request code
 OutsourceInterviewerSchema.pre('save', async function (next) {
-    if (this.isNew && !this.interviewerNo) {
-        try {
-            // Use a separate counter collection to avoid sorting
-            const Counter = mongoose.model('Counter');
-            const counter = await Counter.findOneAndUpdate(
-                { name: 'outsourceInterviewer' },
-                { $inc: { seq: 1 } },
-                { upsert: true, new: true, setDefaultsOnInsert: true }
-            );
-            this.interviewerNo = `OINT-${counter.seq}`;
-        } catch (error) {
-            console.error('Error generating interviewer number:', error);
-            // Fallback to timestamp if counter fails
-            this.interviewerNo = `OINT-${Date.now()}`;
+    try {
+        // Only generate code for new documents
+        if (!this.isNew || this.outsourceRequestCode) {
+            return next();
         }
+
+        if (!this.outsourceRequestCode) {
+            try {
+                // Generate outsource request code using centralized service
+                this.outsourceRequestCode = await generateUniqueId('OINT', mongoose.model('OutsourceInterviewerRequest'), 'outsourceRequestCode');
+                console.log(`Generated outsource request code: ${this.outsourceRequestCode}`);
+            } catch (error) {
+                console.error('Failed to generate unique outsource request code:', error);
+                throw new Error('Failed to generate unique outsource request code. Please try again.');
+            }
+        }
+        
+        next();
+    } catch (error) {
+        console.error('Error in OutsourceInterviewerSchema pre-save hook:', error);
+        next(error); // Pass error to prevent save
     }
-    next();
 });
 
-// Define a Counter schema (create this if it doesn't exist)
-const CounterSchema = new mongoose.Schema({
-    name: String,
-    seq: { type: Number, default: 1000 }
+// Post-save hook to handle duplicate key errors
+OutsourceInterviewerSchema.post('save', function(error, doc, next) {
+    if (error.name === 'MongoServerError' && error.code === 11000) {
+        if (error.keyPattern && error.keyPattern.outsourceRequestCode) {
+            // Duplicate outsource request code error
+            console.error('Duplicate outsource request code detected:', error.keyValue?.outsourceRequestCode);
+            next(new Error('Failed to generate unique outsource request code. Please try again.'));
+        } else {
+            next(error);
+        }
+    } else {
+        next(error);
+    }
 });
-mongoose.model('Counter', CounterSchema);
 
 module.exports = mongoose.model('OutsourceInterviewerRequest', OutsourceInterviewerSchema);

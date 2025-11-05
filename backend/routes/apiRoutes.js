@@ -14,6 +14,7 @@ const jwt = require('jsonwebtoken');
 const { Candidate } = require('../models/candidate.js');
 // <-------------------------------v1.0.6
 const Assessment = require("../models/Assessment/assessmentTemplates.js");
+const AssessmentList = require("../models/Assessment/AssessmentList.js");
 // ------------------------------v1.0.6 >
 const { Position } = require('../models/Position/position.js');
 const InterviewTemplate = require("../models/InterviewTemplate");
@@ -61,6 +62,12 @@ const modelRequirements = {
     // <---------------------- v1.0.0
     permissionName: 'AssessmentTemplates',
     // ---------------------- v1.0.0 >
+    requiredPermission: 'View'
+  },
+
+  assessmentlist: {
+    model: AssessmentList,
+    permissionName: 'AssessmentTemplates',
     requiredPermission: 'View'
   },
   scheduleassessment: {
@@ -412,13 +419,40 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         break;
       // ------------------------------ v1.0.4 >
 
-      case 'assessment':
+      case 'assessment'://assessment templates
+
+        query = {
+          $or: [
+            { type: 'standard' }, // Standard templates are accessible to all
+            {
+              $and: [
+                { type: 'custom' },
+                query, // Reuse the base query with tenantId and ownerId filters
+              ],
+            },
+          ],
+        };
         // console.log('[36] Processing Assessment model');
         data = await DataModel.find(query)
           .lean();
         // console.log('[37] Found', data.length, 'Assessment records');
         break;
       // ------------------------------ v1.0.4 >
+      case 'assessmentlist':
+         query = {
+          $or: [
+            { type: 'standard' }, // Standard templates are accessible to all
+            {
+              $and: [
+                { type: 'custom' },
+                query, // Reuse the base query with tenantId and ownerId filters
+              ],
+            },
+          ],
+        };
+        data = await DataModel.find(query);
+        break;
+
 
       case 'position':
         // console.log('[32] Processing Position model');
