@@ -19,7 +19,6 @@ import ProtectedRoute from "./Components/ProtectedRoute";
 import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
 import AuthCookieManager, { getAuthToken } from "./utils/AuthCookieManager/AuthCookieManager";
 import { usePermissions, PermissionsProvider } from "./Context/PermissionsContext";
-import ErrorBoundary from "./Components/ErrorBoundary/ErrorBoundary";
 import { CustomProvider } from "./Context/Contextfetch";
 import PageSetter from "./Components/PageSetter";
 import BillingSubtabs from "./Pages/Dashboard-Part/Accountsettings/account/billing/BillingSubtabs.jsx";
@@ -1558,25 +1557,23 @@ const App = () => {
     }, []);
 
     return (
-        <ErrorBoundary>
-            <SuspenseWithLoading>
-                <CustomProvider>
-                    <PermissionsProvider>
-                        <UserDataLoader>
-                            <ToastProvider />
-                            <MainAppRoutes
-                                location={location}
-                                organization={organization}
-                                sessionExpired={sessionExpired}
-                                setSessionExpired={setSessionExpired}
-                                showLogoPaths={showLogoPaths}
-                                noNavbarPaths={noNavbarPaths}
-                            />
-                        </UserDataLoader>
-                    </PermissionsProvider>
-                </CustomProvider>
-            </SuspenseWithLoading>
-        </ErrorBoundary>
+        <SuspenseWithLoading>
+            <CustomProvider>
+                <PermissionsProvider>
+                    <UserDataLoader>
+                        <ToastProvider />
+                        <MainAppRoutes
+                            location={location}
+                            organization={organization}
+                            sessionExpired={sessionExpired}
+                            setSessionExpired={setSessionExpired}
+                            showLogoPaths={showLogoPaths}
+                            noNavbarPaths={noNavbarPaths}
+                        />
+                    </UserDataLoader>
+                </PermissionsProvider>
+            </CustomProvider>
+        </SuspenseWithLoading>
     );
 };
 

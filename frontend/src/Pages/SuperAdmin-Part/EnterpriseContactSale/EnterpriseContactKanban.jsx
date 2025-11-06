@@ -121,12 +121,6 @@ const EnterpriseContactKanban = ({
                                                 <Mail className="h-4 w-4 text-gray-400" />
                                                 <span className="truncate">{contact.email || 'N/A'}</span>
                                             </div>
-                                            {contact.phone && (
-                                                <div className="flex items-center gap-2 text-sm">
-                                                    <Phone className="h-4 w-4 text-gray-400" />
-                                                    <span>{contact.phone}</span>
-                                                </div>
-                                            )}
                                         </div>
 
                                         {/* Card footer */}
