@@ -44,20 +44,37 @@ const cachePermissions = (permissions) => {
   }
 };
 
+// Debug function to log permission checks
+const logPermissionCheck = (permissions, objectName, permissionType) => {
+  console.log('Permission check:', { objectName, permissionType });
+  console.log('Effective permissions:', permissions.effectivePermissions);
+  console.log('SuperAdmin permissions:', permissions.superAdminPermissions);
+};
+
+const checkPermission = (permissions, objectName, permissionType) => {
+  if (!permissions[objectName]) return false;
+  if (typeof permissions[objectName] === 'boolean') return permissions[objectName];
+  return permissions[objectName][permissionType] ?? false;
+};
+
 export const PermissionsProvider = ({ children }) => {
-  const [permissionState, setPermissionState] = useState({
-    effectivePermissions: {},
-    superAdminPermissions: null,
-    effectivePermissions_RoleType: null,
-    effectivePermissions_RoleLevel: null,
-    effectivePermissions_RoleName: null,
-    impersonatedUser_roleType: null,
-    impersonatedUser_roleName: null,
-    inheritedRoleIds: [],
-    isImpersonating: false,
-    loading: false,
-    authError: null,
-    isInitialized: false,
+  const [permissionState, setPermissionState] = useState(() => {
+    const cached = getCachedPermissions();
+    console.log('Initial permissions state:', { cached });
+    return {
+      effectivePermissions: cached?.effectivePermissions || {},
+      superAdminPermissions: cached?.superAdminPermissions || null,
+      effectivePermissions_RoleType: null,
+      effectivePermissions_RoleLevel: null,
+      effectivePermissions_RoleName: null,
+      impersonatedUser_roleType: null,
+      impersonatedUser_roleName: null,
+      inheritedRoleIds: [],
+      isImpersonating: false,
+      loading: false,
+      authError: null,
+      isInitialized: false,
+    };
   });
 
   const refreshPermissions = useCallback(async (forceRefresh = false) => {
@@ -198,29 +215,26 @@ export const PermissionsProvider = ({ children }) => {
   }, [refreshPermissions]);
 
   // Optimized permission checking function
-  const hasPermission = useCallback(
-    (objectName, permissionType = 'ViewTab') => {
-      const { effectivePermissions, superAdminPermissions, isInitialized } = permissionState;
-
-      if (!isInitialized) {
-        // Fallback to cached permissions during initialization
-        const cached = getCachedPermissions();
-        if (cached) {
-          const combined = { ...cached.effectivePermissions, ...cached.superAdminPermissions };
-          if (!combined[objectName]) return false;
-          if (typeof combined[objectName] === 'boolean') return combined[objectName];
-          return combined[objectName][permissionType] ?? false;
-        }
-        return false;
-      }
-
-      const combined = { ...effectivePermissions, ...superAdminPermissions };
-      if (!combined[objectName]) return false;
-      if (typeof combined[objectName] === 'boolean') return combined[objectName];
-      return combined[objectName][permissionType] ?? false;
-    },
-    [permissionState]
-  );
+  const hasPermission = useCallback((objectName, permissionType = "ViewTab") => {
+    if (!objectName) {
+      console.log('hasPermission called with no objectName');
+      return false;
+    }
+    
+    logPermissionCheck(permissionState, objectName, permissionType);
+    
+    // Check super admin permissions first
+    if (permissionState.superAdminPermissions) {
+      const superAdminHasPermission = checkPermission(permissionState.superAdminPermissions, objectName, permissionType);
+      console.log(`SuperAdmin has ${objectName}.${permissionType}:`, superAdminHasPermission);
+      if (superAdminHasPermission) return true;
+    }
+    
+    // Check effective permissions
+    const effectiveHasPermission = checkPermission(permissionState.effectivePermissions, objectName, permissionType);
+    console.log(`Effective has ${objectName}.${permissionType}:`, effectiveHasPermission);
+    return effectiveHasPermission;
+  }, [permissionState]);
 
   // Memoized context value
   const contextValue = useMemo(

@@ -368,6 +368,11 @@ const CombinedNavbar = React.memo(() => {
     if (userType === "superAdmin") {
       return [
         {
+          path: "/enterprise-contact-sale",
+          label: "Enterprise Contact Sale",
+          permissionKey: "EnterpriseContactSale.ViewTab",
+        },
+        {
           path: "/contact-us",
           label: "Contact Us",
           permissionKey: "ContactUs.ViewTab",
