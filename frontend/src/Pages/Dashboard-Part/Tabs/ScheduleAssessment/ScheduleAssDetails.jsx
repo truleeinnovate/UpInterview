@@ -13,7 +13,6 @@ import {
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
 } from "@heroicons/react/24/outline";
-import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 
 function ScheduleAssDetails() {
   const navigate = useNavigate();
@@ -21,7 +20,6 @@ function ScheduleAssDetails() {
   const schedule = state?.schedule;
   //console.log('schedule--', schedule);
 
-  const { fetchScheduledAssessments } = useAssessments();
   const [candidates, setCandidates] = useState(schedule?.candidates || []);
   const [loading, setLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(true);

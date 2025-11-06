@@ -59,7 +59,7 @@ const ShareAssessment = ({
   const [linkExpiryDays, setLinkExpiryDays] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [assignedCandidates, setAssignedCandidates] = useState([]);
+  // const [assignedCandidates, setAssignedCandidates] = useState([]);
   const [showMainContent, setShowMainContent] = useState(true);
   const [filteredCandidates, setFilteredCandidates] = useState([]);
   const [selectedCandidates, setSelectedCandidates] = useState([]);
@@ -86,35 +86,35 @@ const ShareAssessment = ({
   const [sectionsCache, setSectionsCache] = useState({});
 
   // Fetch assigned candidates
-  const fetchAssignedCandidates = async (assessmentId) => {
-    // <---------------------- v1.0.1
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
-      );
+  // const fetchAssignedCandidates = async (assessmentId) => {
+  //   // <---------------------- v1.0.1
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
+  //     );
 
-      // Check if response has the expected structure
-      if (
-        response.data &&
-        response.data.success &&
-        Array.isArray(response.data.data)
-      ) {
-        const assigned = response.data.data.flatMap((schedule) =>
-          schedule.candidates.map((candidate) => ({
-            candidateId: candidate.candidateId._id.toString(),
-            scheduleOrder: schedule.order,
-          }))
-        );
-        setAssignedCandidates(assigned);
-      } else {
-        // Handle case where no schedules exist or different response structure
-        setAssignedCandidates([]);
-      }
-    } catch (error) {
-      console.error("Error fetching assigned candidates:", error);
-      setAssignedCandidates([]);
-    }
-  };
+  //     // Check if response has the expected structure
+  //     if (
+  //       response.data &&
+  //       response.data.success &&
+  //       Array.isArray(response.data.data)
+  //     ) {
+  //       const assigned = response.data.data.flatMap((schedule) =>
+  //         schedule.candidates.map((candidate) => ({
+  //           candidateId: candidate.candidateId._id.toString(),
+  //           scheduleOrder: schedule.order,
+  //         }))
+  //       );
+  //       setAssignedCandidates(assigned);
+  //     } else {
+  //       // Handle case where no schedules exist or different response structure
+  //       setAssignedCandidates([]);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching assigned candidates:", error);
+  //     setAssignedCandidates([]);
+  //   }
+  // };
 
   // <---------------------- v1.0.1 >
 
@@ -167,11 +167,11 @@ const ShareAssessment = ({
     if (fromscheduleAssessment) {
       // When fromscheduleAssessment is true, we don't have an assessment initially
       setSelectedAssessment(null);
-      setAssignedCandidates([]);
+      // setAssignedCandidates([]);
     } else if (assessment._id) {
       // When fromscheduleAssessment is false, we have an assessment
       setSelectedAssessment(assessment);
-      fetchAssignedCandidates(assessment._id);
+      // fetchAssignedCandidates(assessment._id);
       // Pre-fetch sections for the current assessment
       fetchAssessmentSections(assessment._id);
     }
@@ -291,7 +291,7 @@ const ShareAssessment = ({
       setAssessmentInput(assessment.AssessmentTitle);
       setErrors({ ...errors, Assessment: "" });
       // Fetch assigned candidates for the selected assessment
-      fetchAssignedCandidates(assessment._id);
+      // fetchAssignedCandidates(assessment._id);
       // Pre-fetch sections for the selected assessment
       fetchAssessmentSections(assessment._id);
     }

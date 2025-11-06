@@ -33,7 +33,6 @@ import {
   MoreVertical,
 } from "lucide-react";
 // ------------------------------v1.0.3 >
-import ScheduleAssessmentKanban from "./ScheduleAssessmentKanban.jsx";
 // <-------------------------------v1.0.3 >
 import AssessmentActionPopup from "../Assessment-Tab/AssessmentViewDetails/AssessmentActionPopup.jsx";
 import { format } from "date-fns";
@@ -144,7 +143,7 @@ const ScheduleAssessment = () => {
   const { assessmentData, checkExpiredAssessments, updateAllScheduleStatuses } =
     useAssessments();
   const { scheduleData, isLoading } = useScheduleAssessments();
-  console.log(scheduleData);
+  console.log("Schedule Data:", scheduleData);
   const navigate = useNavigate();
   // <---------------------- v1.0.1
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -153,8 +152,8 @@ const ScheduleAssessment = () => {
   const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [selectedAction, setSelectedAction] = useState(""); // 'extend', 'cancel', or 'resend'
-  const [selectedAssessmentTemplateId, setSelectedAssessmentTemplateId] =
-    useState(null);
+  // const [selectedAssessmentTemplateId, setSelectedAssessmentTemplateId] =
+  //   useState(null);
   // Function to check if action buttons should be shown based on schedule status
   const shouldShowActionButtons = (schedule) => {
     const status = schedule.status?.toLowerCase();
@@ -417,11 +416,11 @@ const ScheduleAssessment = () => {
     setSelectedCreatedDate(tempCreatedDatePreset);
     setIsFilterActive(
       tempSelectedStatus.length > 0 ||
-        tempSelectedTemplates.length > 0 ||
-        tempOrderRange.min !== "" ||
-        tempOrderRange.max !== "" ||
-        tempExpiryDatePreset !== "" ||
-        tempCreatedDatePreset !== ""
+      tempSelectedTemplates.length > 0 ||
+      tempOrderRange.min !== "" ||
+      tempOrderRange.max !== "" ||
+      tempExpiryDatePreset !== "" ||
+      tempCreatedDatePreset !== ""
     );
     setFilterPopupOpen(false);
   };
@@ -486,49 +485,59 @@ const ScheduleAssessment = () => {
   };
 
   // <---------------------- v1.0.3
-  const handleActionClick = async (schedule, action) => {
-    try {
-      // Get and store the assessment template ID from the original row data
-      const assessmentTemplateId = getAssessmentTemplateId(schedule);
-      setSelectedAssessmentTemplateId(assessmentTemplateId);
-      console.log(
-        "Debug - Stored Assessment Template ID:",
-        assessmentTemplateId
-      );
+  // const handleActionClick = async (schedule, action) => {
+  //   try {
+  //     // Get and store the assessment template ID from the original row data
+  //     const assessmentTemplateId = getAssessmentTemplateId(schedule);
+  //     setSelectedAssessmentTemplateId(assessmentTemplateId);
+  //     console.log(
+  //       "Debug - Stored Assessment Template ID:",
+  //       assessmentTemplateId
+  //     );
 
-      // Fetch candidate data for this schedule if not already available
-      if (!schedule.candidates || schedule.candidates.length === 0) {
-        if (assessmentTemplateId) {
-          const response = await axios.get(
-            `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentTemplateId}/schedules`
-          );
-          if (response.data.success && response.data.data) {
-            const scheduleWithCandidates = response.data.data.find(
-              (s) => s._id === schedule._id
-            );
-            if (scheduleWithCandidates) {
-              setSelectedSchedule(scheduleWithCandidates);
-            } else {
-              setSelectedSchedule(schedule);
-            }
-          } else {
-            setSelectedSchedule(schedule);
-          }
-        } else {
-          setSelectedSchedule(schedule);
-        }
-      } else {
-        setSelectedSchedule(schedule);
-      }
-      setSelectedAction(action);
-      setIsActionPopupOpen(true);
-    } catch (error) {
-      console.error("Error fetching candidate data:", error);
-      setSelectedSchedule(schedule);
-      setSelectedAction(action);
-      setIsActionPopupOpen(true);
-    }
-  };
+  //     // Fetch candidate data for this schedule if not already available
+  //     if (!schedule.candidates || schedule.candidates.length === 0) {
+  //       if (assessmentTemplateId) {
+  //         // const response = await axios.get(
+  //         //   `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentTemplateId}/schedules`
+  //         // );
+  //           const { scheduleData, isLoading } = useScheduleAssessments(assessmentTemplateId);
+  //         if (response.data.success && response.data.data) {
+  //           const scheduleWithCandidates = response.data.data.find(
+  //             (s) => s._id === schedule._id
+  //           );
+  //           if (scheduleWithCandidates) {
+  //             setSelectedSchedule(scheduleWithCandidates);
+  //           } else {
+  //             setSelectedSchedule(schedule);
+  //           }
+  //         } else {
+  //           setSelectedSchedule(schedule);
+  //         }
+  //       } else {
+  //         setSelectedSchedule(schedule);
+  //       }
+  //     } else {
+  //       setSelectedSchedule(schedule);
+  //     }
+  //     setSelectedAction(action);
+  //     setIsActionPopupOpen(true);
+  //   } catch (error) {
+  //     console.error("Error fetching candidate data:", error);
+  //     setSelectedSchedule(schedule);
+  //     setSelectedAction(action);
+  //     setIsActionPopupOpen(true);
+  //   }
+  // };
+
+const handleActionClick = (schedule, action) => {
+  const assessmentTemplateId = getAssessmentTemplateId(schedule);
+
+  // setSelectedAssessmentTemplateId(assessmentTemplateId);
+  setSelectedSchedule(schedule); // ← Critical!
+  setSelectedAction(action);
+  setIsActionPopupOpen(true);
+};
 
   const handleActionSuccess = () => {
     // The useAssessments mutations will automatically invalidate and refresh the data
@@ -647,13 +656,13 @@ const ScheduleAssessment = () => {
   const tableActions = [
     ...(effectivePermissions.Assessments?.View
       ? [
-          {
-            key: "view",
-            label: "View",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: handleView,
-          },
-        ]
+        {
+          key: "view",
+          label: "View",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: handleView,
+        },
+      ]
       : []),
     // <-------------------------------v1.0.3
     {
@@ -1028,13 +1037,9 @@ const ScheduleAssessment = () => {
             setIsActionPopupOpen(false);
             setSelectedSchedule(null);
             setSelectedAction("");
-            setSelectedAssessmentTemplateId(null);
+            // setSelectedAssessmentTemplateId(null);
           }}
-          schedule={{
-            ...selectedSchedule,
-            assessmentId: selectedAssessmentTemplateId,
-          }}
-          candidates={selectedSchedule.candidates || []}
+          schedule={selectedSchedule}           // ← Pass full schedule
           onSuccess={handleActionSuccess}
           defaultAction={selectedAction}
         />

@@ -33,8 +33,6 @@ function AssessmentsTab({ assessment }) {
   const {
     scheduleData,
     isLoading,
-    isError,
-    error,
   } = useScheduleAssessments(assessment._id);
 
   console.log("scheduleData", scheduleData);
