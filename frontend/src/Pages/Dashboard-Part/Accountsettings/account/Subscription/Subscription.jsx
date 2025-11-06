@@ -14,7 +14,7 @@ import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 import { notify } from "../../../../../services/toastService";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
-import ContactSalesForm from "../../../components/common/EnterpriseContactSalesForm.jsx";
+import ContactSalesForm from "../../../../../Components/common/EnterpriseContactSalesForm.jsx";
 // import DescriptionField from "../../../../../Components/FormFields/DescriptionField";
 // import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField";
 import { validateWorkEmail } from "../../../../../utils/workEmailValidation";

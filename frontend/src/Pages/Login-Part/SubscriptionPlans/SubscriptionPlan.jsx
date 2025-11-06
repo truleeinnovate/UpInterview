@@ -11,7 +11,7 @@ import Cookies from "js-cookie";
 import { useSubscription } from '../../../apiHooks/useSubscription.js';
 import { notify } from "../../../services/toastService.js";
 import SidebarPopup from "../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
-import ContactSalesForm from "../../../components/common/EnterpriseContactSalesForm.jsx";
+import ContactSalesForm from "../../../Components/common/EnterpriseContactSalesForm.jsx";
 import { validateWorkEmail } from "../../../utils/workEmailValidation.js";
 
 // Loading Skeleton for Subscription Plans
