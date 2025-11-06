@@ -19,13 +19,13 @@ import ProtectedRoute from "./Components/ProtectedRoute";
 import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
 import AuthCookieManager, { getAuthToken } from "./utils/AuthCookieManager/AuthCookieManager";
 import { usePermissions, PermissionsProvider } from "./Context/PermissionsContext";
+import ErrorBoundary from "./Components/ErrorBoundary/ErrorBoundary";
 import { CustomProvider } from "./Context/Contextfetch";
 import PageSetter from "./Components/PageSetter";
 import BillingSubtabs from "./Pages/Dashboard-Part/Accountsettings/account/billing/BillingSubtabs.jsx";
 import UserInvoiceDetails from "./Pages/Dashboard-Part/Tabs/Invoice-Tab/InvoiceDetails.jsx";
 import SubscriptionSuccess from "./Pages/Login-Part/SubscriptionPlans/SubscriptionSuccess.jsx";
 import AccountSettingsSidebar from "./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx";
-import ErrorBoundary from "./Components/ErrorBoundary";
 import { getActivityEmitter } from "./utils/activityTracker";
 import CombinedNavbar from "./Components/Navbar/CombinedNavbar";
 import VerifyUserEmail from "./VerifyUserEmail.jsx";
@@ -80,6 +80,11 @@ const OutsourceInterviewerRequest = lazy(() =>
 const OrganizationRequest = lazy(() =>
     import("./Pages/SuperAdmin-Part/OrganizationRequest/OrganizationRequest.jsx")
 );
+
+const EnterpriseContactSale = lazy(() =>
+    import("./Pages/SuperAdmin-Part/EnterpriseContactSale/EnterpriseContactSale.jsx")
+);
+
 const CandidateTab = lazy(() =>
     import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate")
 );
@@ -1220,6 +1225,13 @@ const MainAppRoutes = ({
                             <>
 
                                 {/* -----------------------------------Super Admin Routes------------------------- */}
+                                {/* Enterprise Contact Sale */}
+                                {hasPermission("EnterpriseContactSales") && (
+                                    <Route
+                                        path="/enterprise-contact-sale"
+                                        element={<EnterpriseContactSale />}
+                                    />
+                                )}
 
                                 {/* Organization Request */}
                                 {hasPermission("OrganizationRequest") && (
