@@ -17,18 +17,20 @@ import { useScrollLock } from '../../../../../apiHooks/scrollHook/useScrollLock.
 import { notify } from '../../../../../services/toastService.js';
 // v1.0.2 ------------------------------------------------------------------------------->
 
-const AssessmentActionPopup = ({ 
-  isOpen, 
-  onClose, 
-  schedule, 
-  candidates, 
+const AssessmentActionPopup = ({
+  isOpen,
+  onClose,
+  schedule,           // ← Use this
   onSuccess,
-  defaultAction = '' // 'extend', 'cancel', or 'resend'
+  defaultAction = ''
 }) => {
-  console.log('AssessmentActionPopup', candidates);
+  // const candidates = schedule?.candidates || [];
   const [action, setAction] = useState(defaultAction); // 'extend' or 'cancel'
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [extensionDays, setExtensionDays] = useState(1);
+  const candidates = useMemo(() => {
+    return schedule?.candidates || [];
+  }, [schedule?.candidates]);
 
   // Get the assessment template's linkExpiryDays for consistent extensions
   const getTemplateExtensionDays = useMemo(() => {
@@ -242,9 +244,9 @@ const AssessmentActionPopup = ({
         await cancelAssessment.mutateAsync({
           candidateAssessmentIds: selectedCandidates
         });
-            } else if (action === 'resend') {
+      } else if (action === 'resend') {
         setIsResendLoading(true);
-        
+
         // Get the assessmentId from the schedule object
         let assessmentId;
         if (schedule?.assessmentId) {
@@ -254,15 +256,15 @@ const AssessmentActionPopup = ({
             assessmentId = schedule.assessmentId;
           }
         }
-        
+
         console.log('Debug - Schedule object:', schedule);
         console.log('Debug - AssessmentId being sent:', assessmentId);
         console.log('Debug - Selected candidates:', selectedCandidates);
-        
+
         if (!assessmentId) {
           throw new Error('Unable to determine assessment ID for resend operation');
         }
-        
+
         // Use the same API endpoint for both single and multiple candidates
         const response = await axios.post(
           `${config.REACT_APP_API_URL}/emails/resend-link`,
@@ -508,8 +510,8 @@ const AssessmentActionPopup = ({
                       <label
                         key={candidateId || `${candidateData.Email}-${index}`}
                         className={`flex items-center p-3 border border-gray-200 rounded-lg transition-colors ${candidate.canAct
-                            ? 'hover:bg-gray-50 cursor-pointer'
-                            : 'bg-gray-50 cursor-not-allowed opacity-60'
+                          ? 'hover:bg-gray-50 cursor-pointer'
+                          : 'bg-gray-50 cursor-not-allowed opacity-60'
                           }`}
                       >
                         <input
@@ -570,10 +572,10 @@ const AssessmentActionPopup = ({
               onClick={handleSubmit}
               disabled={isLoading || selectedCandidates.length === 0}
               className={`px-4 py-2 text-white rounded-md transition-colors ${action === 'extend'
-                  ? 'bg-custom-blue hover:bg-custom-blue/80 disabled:bg-custom-blue/50'
-                  : action === 'cancel'
-                    ? 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
-                    : 'bg-green-600 hover:bg-green-700 disabled:bg-green-300'
+                ? 'bg-custom-blue hover:bg-custom-blue/80 disabled:bg-custom-blue/50'
+                : action === 'cancel'
+                  ? 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
+                  : 'bg-green-600 hover:bg-green-700 disabled:bg-green-300'
                 }`}
             >
               {isLoading ? (
