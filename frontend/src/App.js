@@ -37,11 +37,11 @@ import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
 import { VideoCallingSettings } from "./Pages/Dashboard-Part/Accountsettings/VideoCallingSetting/VideoCallingSettings.jsx";
 import ToastProvider from "./Components/ToastProvider";
 import PendingApproval from "./Pages/Login-Part/PendingApproval/PendingApproval.jsx";
-// React Query Persistence imports
-import { useQueryClient } from '@tanstack/react-query';
+// React Query imports
+import { QueryClientProvider } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import localforage from 'localforage';
+import { queryClient } from './utils/queryClient'; // Import shared query client
+import { usePersistenceConfig } from './utils/persistenceConfig'; // Import persistence config
 
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
 const SelectProfession = lazy(() => import("./Pages/Login-Part/Individual-3"));
@@ -1562,87 +1562,34 @@ const App = () => {
         };
     }, []);
 
-    // React Query persistence setup
-    const queryClient = useQueryClient();
-    
-    // Configure localforage for better storage
-    React.useEffect(() => {
-        localforage.config({
-            name: 'UpInterview',
-            storeName: 'masterData',
-        });
-    }, []);
-    
-    // Create async storage adapter for localforage
-    const storage = useMemo(() => ({
-        getItem: async (key) => {
-            try {
-                const value = await localforage.getItem(key);
-                return value;
-            } catch (error) {
-                console.error('Error reading from localforage:', error);
-                return null;
-            }
-        },
-        setItem: async (key, value) => {
-            try {
-                await localforage.setItem(key, value);
-            } catch (error) {
-                console.error('Error writing to localforage:', error);
-            }
-        },
-        removeItem: async (key) => {
-            try {
-                await localforage.removeItem(key);
-            } catch (error) {
-                console.error('Error removing from localforage:', error);
-            }
-        },
-    }), []);
-    
-    const persister = useMemo(() => createAsyncStoragePersister({
-        storage,
-        serialize: JSON.stringify,
-        deserialize: JSON.parse,
-    }), [storage]);
+    // Use clean persistence configuration from utility
+    const { persistOptions, onSuccess } = usePersistenceConfig();
 
     return (
         <SuspenseWithLoading>
-            <CustomProvider>
+            <QueryClientProvider client={queryClient}>
                 <PersistQueryClientProvider
                     client={queryClient}
-                    persistOptions={{
-                        persister,
-                        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-                        buster: 'v1', // Cache buster for versioning
-                        dehydrateOptions: {
-                            // Only persist successful master data queries
-                            shouldDehydrateQuery: (query) => {
-                                return query.state.status === 'success' && 
-                                       query.queryKey[0] === 'masterData';
-                            },
-                            shouldDehydrateMutation: () => false, // Don't persist mutations
-                        },
-                    }}
-                    onSuccess={() => {
-                        console.log('Master data cache restored successfully');
-                    }}
+                    persistOptions={persistOptions}
+                    onSuccess={onSuccess}
                 >
-                    <PermissionsProvider>
-                        <UserDataLoader>
-                            <ToastProvider />
-                            <MainAppRoutes
-                                location={location}
-                                organization={organization}
-                                sessionExpired={sessionExpired}
-                                setSessionExpired={setSessionExpired}
-                                showLogoPaths={showLogoPaths}
-                                noNavbarPaths={noNavbarPaths}
-                            />
-                        </UserDataLoader>
-                    </PermissionsProvider>
+                    <CustomProvider>
+                        <PermissionsProvider>
+                            <UserDataLoader>
+                                <ToastProvider />
+                                <MainAppRoutes
+                                    location={location}
+                                    organization={organization}
+                                    sessionExpired={sessionExpired}
+                                    setSessionExpired={setSessionExpired}
+                                    showLogoPaths={showLogoPaths}
+                                    noNavbarPaths={noNavbarPaths}
+                                />
+                            </UserDataLoader>
+                        </PermissionsProvider>
+                    </CustomProvider>
                 </PersistQueryClientProvider>
-            </CustomProvider>
+            </QueryClientProvider>
         </SuspenseWithLoading>
     );
 };

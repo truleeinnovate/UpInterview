@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 const OutsourceInterviewerSchema = new mongoose.Schema({
     outsourceRequestCode: {
@@ -54,47 +53,8 @@ const OutsourceInterviewerSchema = new mongoose.Schema({
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' }, // Who added the interviewer
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 
-// Pre-save hook to generate unique outsource request code
-OutsourceInterviewerSchema.pre('save', async function (next) {
-    try {
-        // Only generate code for new documents
-        if (!this.isNew || this.outsourceRequestCode) {
-            return next();
-        }
 
-        if (!this.outsourceRequestCode) {
-            try {
-                // Generate outsource request code using centralized service
-                this.outsourceRequestCode = await generateUniqueId('OINT', mongoose.model('OutsourceInterviewerRequest'), 'outsourceRequestCode');
-                console.log(`Generated outsource request code: ${this.outsourceRequestCode}`);
-            } catch (error) {
-                console.error('Failed to generate unique outsource request code:', error);
-                throw new Error('Failed to generate unique outsource request code. Please try again.');
-            }
-        }
-        
-        next();
-    } catch (error) {
-        console.error('Error in OutsourceInterviewerSchema pre-save hook:', error);
-        next(error); // Pass error to prevent save
-    }
-});
-
-// Post-save hook to handle duplicate key errors
-OutsourceInterviewerSchema.post('save', function(error, doc, next) {
-    if (error.name === 'MongoServerError' && error.code === 11000) {
-        if (error.keyPattern && error.keyPattern.outsourceRequestCode) {
-            // Duplicate outsource request code error
-            console.error('Duplicate outsource request code detected:', error.keyValue?.outsourceRequestCode);
-            next(new Error('Failed to generate unique outsource request code. Please try again.'));
-        } else {
-            next(error);
-        }
-    } else {
-        next(error);
-    }
-});
 
 module.exports = mongoose.model('OutsourceInterviewerRequest', OutsourceInterviewerSchema);

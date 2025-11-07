@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 
 // Import push notification functions
 const { createAssessmentScheduledNotification } = require("./PushNotificationControllers/pushNotificationAssessmentController");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
   try {
@@ -113,23 +114,7 @@ exports.createScheduledAssessment = async (req, res) => {
     } = req.body;
 
     // Generate custom code like ASMT-TPL-00001
-    const lastScheduled = await scheduledAssessmentsSchema.findOne({})
-      .select("scheduledAssessmentCode")
-      .lean();
-
-    let nextNumber = 1;
-    if (lastScheduled?.scheduledAssessmentCode) {
-      const match =
-        lastScheduled.scheduledAssessmentCode.match(/ASMT-(\d+)/);
-      if (match) {
-        nextNumber = parseInt(match[1], 10) + 1;
-      }
-    }
-
-    const scheduledAssessmentCode = `ASMT-${String(nextNumber).padStart(
-      5,
-      "0"
-    )}`;
+    const scheduledAssessmentCode = await generateUniqueId('ASMT', scheduledAssessmentsSchema, 'scheduledAssessmentCode', tenantId);
 
     console.log("expiryAt---", expiryAt);
     // Build new object

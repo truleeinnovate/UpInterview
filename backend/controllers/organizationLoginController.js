@@ -849,8 +849,69 @@ const verifyEmailChange = async (req, res) => {
 
 const getAllOrganizations = async (req, res) => {
   try {
-    // Total user count per tenant
+    const {
+      page = 0,
+      limit = 10,
+      search = '',
+      status,
+      subscriptionStatus,
+      plan,
+      createdDate,
+      minUsers,
+      maxUsers,
+      type
+    } = req.query;
+
+    const skip = parseInt(page) * parseInt(limit);
+    const limitNum = parseInt(limit);
+
+    // Build query efficiently
+    let query = {};
+
+    // Search optimization - use regex for text search
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { firstName: searchRegex },
+        { lastName: searchRegex },
+        { Email: searchRegex },
+        { Phone: searchRegex },
+        { company: searchRegex }
+      ];
+    }
+
+    // Filter optimizations
+    if (status) {
+      query.status = { $in: status.split(',') };
+    }
+
+    if (type) {
+      query.type = type;
+    }
+
+    if (createdDate) {
+      const date = new Date(createdDate);
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      query.createdAt = { $gte: date, $lt: nextDay };
+    }
+
+    // Get total count for pagination
+    const total = await Tenant.countDocuments(query);
+
+    // Fetch paginated tenants
+    const organizations = await Tenant.find(query)
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean();
+
+    // Get tenant IDs for aggregation
+    const tenantIds = organizations.map(org => org._id);
+
+    // Total user count per tenant (only for paginated results)
     const userCounts = await Users.aggregate([
+      { $match: { tenantId: { $in: tenantIds } } },
       {
         $group: {
           _id: "$tenantId",
@@ -866,9 +927,9 @@ const getAllOrganizations = async (req, res) => {
       }
     });
 
-    // Active user count per tenant
+    // Active user count per tenant (only for paginated results)
     const activeUserCounts = await Users.aggregate([
-      { $match: { status: "active" } },
+      { $match: { status: "active", tenantId: { $in: tenantIds } } },
       {
         $group: {
           _id: "$tenantId",
@@ -884,11 +945,10 @@ const getAllOrganizations = async (req, res) => {
       }
     });
 
-    // Fetch all tenants
-    const organizations = await Tenant.find().lean();
-
-    // Fetch all subscriptions and get latest per tenant (sorted by createdAt descending)
-    const allSubscriptions = await CustomerSubscription.find()
+    // Fetch subscriptions only for paginated tenants
+    const allSubscriptions = await CustomerSubscription.find({
+      tenantId: { $in: tenantIds }
+    })
       .sort({ _id: -1 })
       .lean();
 
@@ -901,8 +961,10 @@ const getAllOrganizations = async (req, res) => {
       }
     });
 
-    // Fetch all contacts
-    const contacts = await Contacts.find().lean();
+    // Fetch contacts only for paginated tenants
+    const contacts = await Contacts.find({
+      tenantId: { $in: tenantIds }
+    }).lean();
     const contactsMap = {};
     contacts.forEach((contact) => {
       if (contact.tenantId) {
@@ -949,9 +1011,45 @@ const getAllOrganizations = async (req, res) => {
       };
     });
 
+    // Apply additional filters on enriched data if needed
+    let filteredOrganizations = enrichedOrganizations;
+
+    // Filter by subscription status if provided
+    if (subscriptionStatus) {
+      const statusList = subscriptionStatus.split(',');
+      filteredOrganizations = filteredOrganizations.filter(org => 
+        org.subscription && statusList.includes(org.subscription.status)
+      );
+    }
+
+    // Filter by plan if provided
+    if (plan) {
+      const planList = plan.split(',');
+      filteredOrganizations = filteredOrganizations.filter(org => 
+        org.subscriptionPlan && planList.includes(org.subscriptionPlan.planName)
+      );
+    }
+
+    // Filter by user count if provided
+    if (minUsers || maxUsers) {
+      filteredOrganizations = filteredOrganizations.filter(org => {
+        const userCount = org.usersCount || 0;
+        if (minUsers && userCount < parseInt(minUsers)) return false;
+        if (maxUsers && userCount > parseInt(maxUsers)) return false;
+        return true;
+      });
+    }
+
     return res.status(200).json({
-      organizations: enrichedOrganizations,
-      totalOrganizations: organizations.length,
+      data: filteredOrganizations,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limitNum),
+        totalItems: total,
+        hasNext: skip + limitNum < total,
+        hasPrev: parseInt(page) > 0,
+        itemsPerPage: limitNum
+      },
       status: true,
     });
   } catch (error) {
