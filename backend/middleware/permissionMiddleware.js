@@ -6,49 +6,73 @@ const RoleOverrides = require('../models/roleOverrides');
 
 const permissionMiddleware = async (req, res, next) => {
   try {
-    // Get tokens from cookies (they might be undefined)
-    let authToken = req.cookies.authToken;
-    let impersonationToken = req.cookies.impersonationToken;
 
-    // If not in cookies, check Authorization header
-    if (!authToken && !impersonationToken) {
-      const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.substring(7);
-        // Try to determine which type of token this is by decoding it
-        try {
-          const decoded = jwt.decode(token);
-          if (decoded) {
-            if (decoded.impersonatedUserId) {
-              // This is an impersonation token
-              impersonationToken = token;
-            } else if (decoded.userId && decoded.tenantId) {
-              // This is an auth token
-              authToken = token;
-            }
-          }
-        } catch (err) {
-          console.warn('[permissionMiddleware] Failed to decode token from Authorization header:', err.message);
-        }
-      }
-    }
+    const {
+      actingAsUserId,
+      actingAsTenantId,
+      onBehalfOfUserId,
+      // isImpersonating,
+      isSuperAdminOnly,
+      isEffectiveOnly,
+    } = res.locals.auth;
 
-    // Initialize payload variables
-    let authPayload = null;
-    let impersonationPayload = null;
 
-    // Safely decode tokens if they exist
-    try {
-      authPayload = authToken ? jwt.decode(authToken) : null;
-      impersonationPayload = impersonationToken ? jwt.decode(impersonationToken) : null;
-    } catch (err) {
-      // Continue with null payloads
-    }
+
+    // console.log('[permissionMiddleware] Processing permissions:', {
+    //   actingAsUserId,
+    //   actingAsTenantId,
+    //   onBehalfOfUserId,
+    //   isSuperAdminOnly,
+    //   isEffectiveOnly,
+    // });
+
+    // // Get tokens from cookies (they might be undefined)
+    // let authToken = req.cookies.authToken;
+    // let impersonationToken = req.cookies.impersonationToken;
+
+    // // If not in cookies, check Authorization header
+    // if (!authToken && !impersonationToken) {
+    //   const authHeader = req.headers.authorization;
+    //   if (authHeader && authHeader.startsWith('Bearer ')) {
+    //     const token = authHeader.substring(7);
+    //     // Try to determine which type of token this is by decoding it
+    //     try {
+    //       const decoded = jwt.decode(token);
+    //       if (decoded) {
+    //         if (decoded.impersonatedUserId) {
+    //           // This is an impersonation token
+    //           impersonationToken = token;
+    //         } else if (decoded.userId && decoded.tenantId) {
+    //           // This is an auth token
+    //           authToken = token;
+    //         }
+    //       }
+    //     } catch (err) {
+    //       console.warn('[permissionMiddleware] Failed to decode token from Authorization header:', err.message);
+    //     }
+    //   }
+    // }
+
+    // // Initialize payload variables
+    // let authPayload = null;
+    // let impersonationPayload = null;
+
+    // // Safely decode tokens if they exist
+    // try {
+    //   authPayload = authToken ? jwt.decode(authToken) : null;
+    //   impersonationPayload = impersonationToken ? jwt.decode(impersonationToken) : null;
+    // } catch (err) {
+    //   // Continue with null payloads
+    // }
 
     // Initialize user variables with defaults
-    let userId = authPayload?.userId || null;
-    let tenantId = authPayload?.tenantId || null;
-    const impersonatedUserId = impersonationPayload?.impersonatedUserId || null;
+    // let userId = authPayload?.userId || null;
+    // let tenantId = authPayload?.tenantId || null;
+    // const impersonatedUserId = impersonationPayload?.impersonatedUserId || null;
+
+    let userId = actingAsUserId;
+    let tenantId = actingAsTenantId;
+    let impersonatedUserId = actingAsUserId;
 
     let currentUser = null;
     let isImpersonating = false;

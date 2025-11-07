@@ -42,7 +42,6 @@ const Home = () => {
     isLoading: outsourceLoading,
   } = useOutsourceStatus(ownerId);
   const outsourceStatus = outsourceData?.status ?? null;
-  console.log("outsourceData", outsourceData);
   const [selectedFilter, setSelectedFilter] = useState("All");
   const freelancer = tokenPayload?.freelancer;
   const [isInternalInterviews, setInternalInterviews] = useState(false);

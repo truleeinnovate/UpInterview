@@ -2,9 +2,16 @@ import Cookies from 'js-cookie';
 import axios from 'axios';
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 import { config } from './config';
+import { getAuthIds } from './utils/authHelpers';
 
 
 export const fetchFilterData = async (endpoint, effectivePermissions = {}, params = {}) => {
+
+  // const { actingAsUserId, actingAsTenantId, onBehalfOfUserId, isImpersonating } = getAuthIds();
+  // console.log("actingAsUserId", actingAsUserId);
+  // console.log("actingAsTenantId", actingAsTenantId);
+  // console.log("onBehalfOfUserId", onBehalfOfUserId);
+  // console.log("isImpersonating", isImpersonating);
   // console.log("Sending X-Permissions header:", JSON.stringify(effectivePermissions));
 
   try {
@@ -26,7 +33,7 @@ export const fetchFilterData = async (endpoint, effectivePermissions = {}, param
       params,
       headers: {
         Authorization: `Bearer ${authToken}`,
-        'x-permissions': JSON.stringify(effectivePermissions) // Send permissions in headers
+        // 'x-permissions': JSON.stringify(effectivePermissions) // Send permissions in headers
       },
       withCredentials: true,
     });
