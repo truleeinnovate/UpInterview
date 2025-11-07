@@ -10,6 +10,7 @@
 // V1.0.8  -  Ashok   -  Changed Logo from local to cloud url and added new tab name Master Data
 // v1.0.9  -  Ashok   -  Added Master Data tab in more
 // v2.0.0  -  Ashok   -  fixed icons vertically expanding issue
+// v2.0.1  -  Ashok   -  kept Interviews, QuestionBank, Internal Logs out side
 
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -377,11 +378,11 @@ const CombinedNavbar = React.memo(() => {
           label: "Contact Us",
           permissionKey: "ContactUs.ViewTab",
         },
-        {
-          path: "/internal-logs",
-          label: "Internal Logs",
-          permissionKey: "InternalLogs.ViewTab",
-        },
+        // {
+        //   path: "/internal-logs",
+        //   label: "Internal Logs",
+        //   permissionKey: "InternalLogs.ViewTab",
+        // },
         {
           path: "/integrations",
           label: "Integration Logs",
@@ -392,21 +393,21 @@ const CombinedNavbar = React.memo(() => {
           label: "Interviewer Rates",
           permissionKey: "InterviewerRates.ViewTab",
         },
-        {
-          path: "/interviews",
-          label: "Interviews",
-          permissionKey: "Interviews.ViewTab",
-        },
+        // {
+        //   path: "/interviews",
+        //   label: "Interviews",
+        //   permissionKey: "Interviews.ViewTab",
+        // },
         {
           path: "/master-data",
           label: "Master Data",
           permissionKey: "MasterData.ViewTab",
         },
-        {
-          path: "/question-bank-manager",
-          label: "Question Bank",
-          permissionKey: "QuestionBank.ViewTab",
-        },
+        // {
+        //   path: "/question-bank-manager",
+        //   label: "Question Bank",
+        //   permissionKey: "QuestionBank.ViewTab",
+        // },
         {
           path: "/sub-plans",
           label: "Subscription Plans",
@@ -991,6 +992,96 @@ const CombinedNavbar = React.memo(() => {
                         )}
                       </NavLink>
                     )}
+                    {enhancedCheckPermission("InternalLogs") && (
+                      <NavLink
+                        to="/internal-logs"
+                        className={`${
+                          userType === "superAdmin"
+                            ? "h-[52px] flex items-center relative"
+                            : "h-full flex items-center relative px-1"
+                        } ${
+                          isActive("/internal-logs")
+                            ? "text-custom-blue font-bold"
+                            : "text-gray-600 hover:text-custom-blue"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          closeAllDropdowns();
+                          navigate("/internal-logs");
+                        }}
+                      >
+                        Internal Logs
+                        {isActive("/internal-logs") && (
+                          <div
+                            className={`absolute ${
+                              userType === "superAdmin"
+                                ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
+                                : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
+                            }`}
+                          ></div>
+                        )}
+                      </NavLink>
+                    )}
+                    {enhancedCheckPermission("Interviews") && (
+                      <NavLink
+                        to="/interviews"
+                        className={`${
+                          userType === "superAdmin"
+                            ? "h-[52px] flex items-center relative"
+                            : "h-full flex items-center relative px-1"
+                        } ${
+                          isActive("/interviews")
+                            ? "text-custom-blue font-bold"
+                            : "text-gray-600 hover:text-custom-blue"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          closeAllDropdowns();
+                          navigate("/interviews");
+                        }}
+                      >
+                        Interviews
+                        {isActive("/interviews") && (
+                          <div
+                            className={`absolute ${
+                              userType === "superAdmin"
+                                ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
+                                : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
+                            }`}
+                          ></div>
+                        )}
+                      </NavLink>
+                    )}
+                    {enhancedCheckPermission("QuestionBankManager") && (
+                      <NavLink
+                        to="/question-bank-manager"
+                        className={`${
+                          userType === "superAdmin"
+                            ? "h-[52px] flex items-center relative"
+                            : "h-full flex items-center relative px-1"
+                        } ${
+                          isActive("/question-bank-manager")
+                            ? "text-custom-blue font-bold"
+                            : "text-gray-600 hover:text-custom-blue"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          closeAllDropdowns();
+                          navigate("/question-bank-manager");
+                        }}
+                      >
+                        Question Bank
+                        {isActive("/question-bank-manager") && (
+                          <div
+                            className={`absolute ${
+                              userType === "superAdmin"
+                                ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
+                                : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
+                            }`}
+                          ></div>
+                        )}
+                      </NavLink>
+                    )}
 
                     {/* Super Admin More Dropdown */}
                     <div
@@ -1039,7 +1130,7 @@ const CombinedNavbar = React.memo(() => {
                         <div
                           className={`absolute ${
                             userType === "superAdmin"
-                              ? "left-0 top-10 z-50 w-52 bg-white rounded-md shadow-lg border ring-black transform transition-all duration-300 ease-in-out origin-top p-2 pr-6"
+                              ? "left-0 top-10 z-50 w-60 bg-white rounded-md shadow-lg border ring-black transform transition-all duration-300 ease-in-out origin-top p-2 pr-6"
                               : "top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border"
                           }`}
                         >

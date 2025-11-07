@@ -2,13 +2,15 @@
 // v1.0.1  -  Ashraf  -  removed recent activity code
 // v1.0.2  -  Ashraf  -  getting error in azure for organization get based on id
 // v1.0.3  -  Ashraf  -  fixed suepr admin creation issue
+// v1.0.4  -  Ashok   -  small change in get tenant by Id controller
+
 const bcrypt = require("bcrypt");
 const Tenant = require("../models/Tenant");
 const { Users } = require("../models/Users");
 const { Contacts } = require("../models/Contacts");
 const CustomerSubscription = require("../models/CustomerSubscriptionmodels.js");
 const OrganizationRequest = require("../models/OrganizationRequest");
-const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
+const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
 const {
   getAuthCookieOptions,
   clearAuthCookies,
@@ -32,7 +34,6 @@ const {
   sendVerificationEmail,
 } = require("../controllers/EmailsController/signUpEmailController.js");
 const InterviewAvailability = require("../models/InterviewAvailability.js");
-
 
 const organizationUserCreation = async (req, res) => {
   try {
@@ -66,7 +67,7 @@ const organizationUserCreation = async (req, res) => {
 
     // Remove isProfileCompleted for super admins if present
     const isSuperAdmin = userType === "superAdmin";
-    if (isSuperAdmin && 'isProfileCompleted' in UserData) {
+    if (isSuperAdmin && "isProfileCompleted" in UserData) {
       delete UserData.isProfileCompleted;
     }
     // ------------------------------v1.0.3 >
@@ -160,7 +161,9 @@ const organizationUserCreation = async (req, res) => {
         status: status,
         isEmailVerified: isEmailVerified || false,
         // <-------------------------------v1.0.3
-        ...(isSuperAdmin ? {} : { isProfileCompleted: isProfileCompleted || false }),
+        ...(isSuperAdmin
+          ? {}
+          : { isProfileCompleted: isProfileCompleted || false }),
         // ------------------------------v1.0.3 >
       });
 
@@ -208,7 +211,6 @@ const organizationUserCreation = async (req, res) => {
   }
 };
 
-
 const loginOrganization = async (req, res) => {
   try {
     // logger.log("[loginOrganization] Login request received");
@@ -218,13 +220,17 @@ const loginOrganization = async (req, res) => {
     password = password?.trim();
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Email and password are required" });
     }
 
     // ✅ Use lean() for performance (plain JS object, faster than Mongoose doc)
     const user = await Users.findOne({ email }).select("+password").lean();
     if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid email or password" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email or password" });
     }
 
     if (!user.isEmailVerified) {
@@ -239,7 +245,7 @@ const loginOrganization = async (req, res) => {
     const [role, organization, contact] = await Promise.all([
       user.roleId ? RolesPermissionObject.findById(user.roleId).lean() : null,
       user.tenantId ? Tenant.findById(user.tenantId).lean() : null,
-      Contacts.findOne({ ownerId: user._id }).lean()
+      Contacts.findOne({ ownerId: user._id }).lean(),
     ]);
 
     // Role details
@@ -249,7 +255,9 @@ const loginOrganization = async (req, res) => {
     // Verify password (bcrypt cost factor tuned)
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(400).json({ success: false, message: "Invalid email or password" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email or password" });
     }
 
     // Internal (super admin) login
@@ -328,7 +336,6 @@ const loginOrganization = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-
 
 const getRolesByTenant = async (req, res) => {
   try {
@@ -928,7 +935,7 @@ const getAllOrganizations = async (req, res) => {
       const subscription = subscriptionMap[orgId] || null;
       const plan =
         subscription?.subscriptionPlanId &&
-          subscriptionPlanMap[subscription.subscriptionPlanId.toString()]
+        subscriptionPlanMap[subscription.subscriptionPlanId.toString()]
           ? subscriptionPlanMap[subscription.subscriptionPlanId.toString()]
           : null;
 
@@ -967,14 +974,14 @@ const deleteTenantAndAssociatedData = async (req, res) => {
 
   // Validate tenantId
   if (!mongoose.Types.ObjectId.isValid(tenantId)) {
-    return res.status(400).json({ error: 'Invalid tenantId' });
+    return res.status(400).json({ error: "Invalid tenantId" });
   }
 
   try {
     // Delete Tenant
     const tenant = await Tenant.findByIdAndDelete(tenantId);
     if (!tenant) {
-      return res.status(404).json({ error: 'Tenant not found' });
+      return res.status(404).json({ error: "Tenant not found" });
     }
 
     // Delete associated Users
@@ -982,7 +989,7 @@ const deleteTenantAndAssociatedData = async (req, res) => {
 
     // Find all contacts belonging to the tenant
     const contacts = await Contacts.find({ tenantId });
-    const contactIds = contacts.map(contact => contact._id);
+    const contactIds = contacts.map((contact) => contact._id);
 
     // Delete all interview availabilities linked to these contacts
     const availabilityResult = await InterviewAvailability.deleteMany({
@@ -993,19 +1000,17 @@ const deleteTenantAndAssociatedData = async (req, res) => {
     const contactsResult = await Contacts.deleteMany({ tenantId });
 
     res.status(200).json({
-      message: 'Tenant and associated data deleted successfully',
+      message: "Tenant and associated data deleted successfully",
       deletedTenant: tenant,
       deletedUsersCount: usersResult.deletedCount,
       deletedContactsCount: contactsResult.deletedCount,
       deletedAvailabilityCount: availabilityResult.deletedCount,
     });
   } catch (error) {
-    console.error('Error deleting tenant and associated data:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error deleting tenant and associated data:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
-
-
 
 // const getOrganizationById = async (req, res) => {
 //   try {
@@ -1098,8 +1103,6 @@ const deleteTenantAndAssociatedData = async (req, res) => {
 
 //ashraf
 
-
-
 // v1.0.0 <--------------------------------------------------------------------------
 const getOrganizationById = async (req, res) => {
   try {
@@ -1110,7 +1113,11 @@ const getOrganizationById = async (req, res) => {
     // }
 
     const users = await Users.find({ tenantId: id }).select("-password").lean();
+    const user = await Users.findOne({ tenantId: id })
+      .select("-password")
+      .lean();
     const organization = await Tenant.findOne({ _id: id }).lean();
+    const contact = await Contacts.findOne({ tenantId: id }).lean();
     const subscription = await CustomerSubscription.findOne({
       tenantId: id,
     }).lean();
@@ -1156,6 +1163,8 @@ const getOrganizationById = async (req, res) => {
 
         ...subscription,
         subscriptionPlan,
+        contact,
+        user,
       },
       users: usersWithRoleAndContact,
     };
@@ -1220,9 +1229,8 @@ const superAdminLoginAsUser = async (req, res) => {
 // ------------------------------------------------------------------------------->
 
 const registerOrganization = async (req, res) => {
-
   res.locals.loggedByController = true;
-  res.locals.processName = 'Create Organization';
+  res.locals.processName = "Create Organization";
   let savedTenant = null;
   try {
     console.log("Starting organization registration process...");
@@ -1356,21 +1364,25 @@ const registerOrganization = async (req, res) => {
     console.log("Contact saved successfully with ID:", savedContact._id);
 
     const emailResult = await sendVerificationEmail({
-      type: 'initial_email_verification',
+      type: "initial_email_verification",
       to: email,
       data: {
         email,
         userId: savedUser._id,
-        firstName: firstName || '',
-        lastName: lastName || '',
-      }
+        firstName: firstName || "",
+        lastName: lastName || "",
+      },
     });
     if (!emailResult.success) {
       throw new Error(emailResult.message);
     }
 
     // Generate organization request code using centralized service
-    const organizationRequestCode = await generateUniqueId('ORG', OrganizationRequest, 'organizationRequestCode');
+    const organizationRequestCode = await generateUniqueId(
+      "ORG",
+      OrganizationRequest,
+      "organizationRequestCode"
+    );
 
     // Create OrganizationRequest with contact ID (profileId)
     try {
@@ -1378,16 +1390,16 @@ const registerOrganization = async (req, res) => {
         { tenantId: savedTenant._id, ownerId: savedUser._id },
         {
           $setOnInsert: {
-            organizationRequestCode:organizationRequestCode,
+            organizationRequestCode: organizationRequestCode,
             tenantId: savedTenant._id,
             ownerId: savedUser._id,
-            status: 'pending_review'
+            status: "pending_review",
           },
         },
         {
           upsert: true,
           new: true,
-          setDefaultsOnInsert: true
+          setDefaultsOnInsert: true,
         }
       );
       console.log("OrganizationRequest created/updated successfully");
@@ -1410,9 +1422,9 @@ const registerOrganization = async (req, res) => {
       message: "Organization created successfully",
       tenantId: savedTenant._id,
       ownerId: savedUser._id,
-      organization: savedTenant,       // full tenant object
-      user: savedUser,                 // full user object
-      contact: savedContact,           // full contact object
+      organization: savedTenant, // full tenant object
+      user: savedUser, // full user object
+      contact: savedContact, // full contact object
       // emailResult,                     // include email send result
       timestamp: new Date().toISOString(),
     };
@@ -1420,10 +1432,10 @@ const registerOrganization = async (req, res) => {
     res.locals.logData = {
       tenantId: savedTenant._id,
       ownerId: savedUser._id,
-      processName: 'Create Organization',
+      processName: "Create Organization",
       requestBody: req.body,
-      message: 'Organization created successfully',
-      status: 'success',
+      message: "Organization created successfully",
+      status: "success",
       responseBody: JSON.parse(JSON.stringify(apiResponse)),
     };
 
@@ -1442,10 +1454,10 @@ const registerOrganization = async (req, res) => {
     res.locals.logData = {
       tenantId: req.body.tenantId,
       ownerId: req.body.ownerId,
-      processName: 'Create Organization',
+      processName: "Create Organization",
       requestBody: req.body,
       message: error.message,
-      status: 'error',
+      status: "error",
     };
     if (error.code === 11000) {
       console.log("Duplicate key error detected:", error.message);
@@ -1470,8 +1482,13 @@ const getOrganizationRequestStatus = async (req, res) => {
   try {
     const { tenantId, ownerId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(tenantId) || !mongoose.Types.ObjectId.isValid(ownerId)) {
-      return res.status(400).json({ success: false, message: 'Invalid tenant or owner ID' });
+    if (
+      !mongoose.Types.ObjectId.isValid(tenantId) ||
+      !mongoose.Types.ObjectId.isValid(ownerId)
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid tenant or owner ID" });
     }
 
     const request = await OrganizationRequest.findOne({ tenantId, ownerId });
@@ -1479,7 +1496,7 @@ const getOrganizationRequestStatus = async (req, res) => {
     if (!request) {
       return res.status(200).json({
         success: true,
-        data: { status: 'NotRequested' }
+        data: { status: "NotRequested" },
       });
     }
 
@@ -1487,12 +1504,12 @@ const getOrganizationRequestStatus = async (req, res) => {
       success: true,
       data: {
         status: request.status,
-        updatedAt: request.updatedAt
-      }
+        updatedAt: request.updatedAt,
+      },
     });
   } catch (error) {
-    console.error('Error getting organization request status:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("Error getting organization request status:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 

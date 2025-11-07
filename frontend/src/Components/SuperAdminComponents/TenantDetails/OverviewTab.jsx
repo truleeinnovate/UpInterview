@@ -17,6 +17,7 @@ import {
   Factory,
   Globe2,
   Hash,
+  Laptop,
   Mail,
   MapPin,
   Percent,
@@ -27,6 +28,7 @@ import {
   Users,
 } from "lucide-react";
 import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import CompletionTracker from "../../../Pages/SuperAdmin-Part/Tenant/ComletionTracker";
 
 function OverviewTab({ tenant, viewMode = "expanded" }) {
   const cardBase = "card border border-gray-200 p-4 bg-white rounded-lg";
@@ -50,6 +52,14 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
 
   return (
     <div className={`space-y-6 ${textSize} pb-6`}>
+      <div>
+        {tenant?.type === "individual" && (
+          <CompletionTracker
+            completionStatus={tenant?.contact?.completionStatus}
+            stepsToShow={tenant?.user?.isFreelancer ? 4 : 2}
+          />
+        )}
+      </div>
       <div className={`grid ${gridCols} gap-6 px-4 mt-4`}>
         {/* Tenant Info */}
         <div className={cardBase}>
@@ -92,6 +102,13 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
             {tenant?.type === "organization" && tenant?.jobTitle && (
               <InfoField icon={Briefcase} label="Job Title">
                 {capitalizeFirstLetter(tenant.jobTitle)}
+              </InfoField>
+            )}
+
+            {/* Freelancer (Individual only) */}
+            {tenant?.type === "individual" && tenant?.user && (
+              <InfoField icon={Laptop} label="Freelancer">
+                {tenant?.user?.isFreelancer ? "Yes" : "No"}
               </InfoField>
             )}
 
@@ -154,20 +171,6 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
             <InfoField icon={Building2} label="Type">
               {capitalizeFirstLetter(tenant?.type)}
             </InfoField>
-
-            {/* Status */}
-            {tenant?.status && (
-              <InfoField icon={CheckCircle} label="Status">
-                {capitalizeFirstLetter(tenant.status)}
-              </InfoField>
-            )}
-
-            {/* Owner ID */}
-            {/* {tenant?.ownerId && (
-              <InfoField icon={Hash} label="Owner ID">
-                {tenant.ownerId?.$oid || tenant.ownerId}
-              </InfoField>
-            )} */}
 
             {/* Users Bandwidth */}
             {tenant?.usersBandWidth && (
