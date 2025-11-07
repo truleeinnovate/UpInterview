@@ -408,6 +408,30 @@ const NewAssessment = () => {
     }
   };
 
+  const handleAssessmentListChange = (e) => {
+  const value = e?.target?.value || e?.value;
+
+  if (value === "create_new") {
+    // open modal when user selects + Create List
+    setIsCategoryModalOpen(true);
+    return;
+  }
+
+  // Update selected and form data normally
+  setSelected(value);
+  setFormData((prevData) => ({
+    ...prevData,
+    categoryOrTechnology: value,
+  }));
+
+  // Clear related error
+  setErrors((prevErrors) => ({
+    ...prevErrors,
+    categoryOrTechnology: "",
+  }));
+};
+
+
   const [isQuestionLimitErrorPopupOpen, setIsQuestionLimitErrorPopupOpen] =
     useState(false);
 
@@ -1751,6 +1775,7 @@ const NewAssessment = () => {
                           }
                           categories={categories}
                           setCategories={setCategories}
+                          handleAssessmentListChange={handleAssessmentListChange}
                           selected={selected}
                           setSelected={setSelected}
                           onCategorySelect={handleCategorySelect}

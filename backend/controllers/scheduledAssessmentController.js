@@ -36,66 +36,66 @@ exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
     });
   }
 };
-exports.getScheduledAssessmentsWithCandidates = async (req, res) => {
-  try {
-    const { assessmentId } = req.params;
-    const { ownerId, tenantId } = req.query; // 👈 Added
+// exports.getScheduledAssessmentsWithCandidates = async (req, res) => {
+//   try {
+//     const { assessmentId } = req.params;
+//     const { ownerId, tenantId } = req.query; // 👈 Added
 
-    if (!mongoose.isValidObjectId(assessmentId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid assessment ID" });
-    }
+//     if (!mongoose.isValidObjectId(assessmentId)) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Invalid assessment ID" });
+//     }
 
-    if (!ownerId || !tenantId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing ownerId or tenantId" });
-    }
+//     if (!ownerId || !tenantId) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Missing ownerId or tenantId" });
+//     }
 
-    // Find all active scheduled assessments for the given assessmentId, ownerId, and tenantId
-    const scheduledAssessments = await scheduledAssessmentsSchema
-      .find({
-        assessmentId,
-        tenantId,
-        ownerId,
-        isActive: true,
-      })
-      .select("_id order expiryAt status createdAt");
+//     // Find all active scheduled assessments for the given assessmentId, ownerId, and tenantId
+//     const scheduledAssessments = await scheduledAssessmentsSchema
+//       .find({
+//         assessmentId,
+//         tenantId,
+//         ownerId,
+//         isActive: true,
+//       })
+//       .select("_id order expiryAt status createdAt");
 
-    if (!scheduledAssessments.length) {
-      return res.status(200).json({ success: true, data: [] });
-    }
+//     if (!scheduledAssessments.length) {
+//       return res.status(200).json({ success: true, data: [] });
+//     }
 
-    // Fetch candidate assessments for all scheduled assessments
-    const scheduledIds = scheduledAssessments.map((sa) => sa._id);
-    const candidateAssessments = await CandidateAssessment.find({
-      scheduledAssessmentId: { $in: scheduledIds },
-      tenantId,
-      ownerId,
-    }).populate("candidateId");
+//     // Fetch candidate assessments for all scheduled assessments
+//     const scheduledIds = scheduledAssessments.map((sa) => sa._id);
+//     const candidateAssessments = await CandidateAssessment.find({
+//       scheduledAssessmentId: { $in: scheduledIds },
+//       tenantId,
+//       ownerId,
+//     }).populate("candidateId");
 
-    // Group candidate assessments by scheduledAssessmentId
-    const schedulesWithCandidates = scheduledAssessments.map((schedule) => {
-      const candidates = candidateAssessments.filter(
-        (ca) => ca.scheduledAssessmentId.toString() === schedule._id.toString()
-      );
-      return {
-        _id: schedule._id,
-        order: schedule.order,
-        expiryAt: schedule.expiryAt,
-        status: schedule.status,
-        createdAt: schedule.createdAt,
-        candidates,
-      };
-    });
+//     // Group candidate assessments by scheduledAssessmentId
+//     const schedulesWithCandidates = scheduledAssessments.map((schedule) => {
+//       const candidates = candidateAssessments.filter(
+//         (ca) => ca.scheduledAssessmentId.toString() === schedule._id.toString()
+//       );
+//       return {
+//         _id: schedule._id,
+//         order: schedule.order,
+//         expiryAt: schedule.expiryAt,
+//         status: schedule.status,
+//         createdAt: schedule.createdAt,
+//         candidates,
+//       };
+//     });
 
-    res.status(200).json({ success: true, data: schedulesWithCandidates });
-  } catch (error) {
-    console.error("Error fetching scheduled assessments with candidates:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+//     res.status(200).json({ success: true, data: schedulesWithCandidates });
+//   } catch (error) {
+//     console.error("Error fetching scheduled assessments with candidates:", error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 
 
 exports.createScheduledAssessment = async (req, res) => {

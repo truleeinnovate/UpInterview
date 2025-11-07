@@ -1,6 +1,8 @@
 
 const express = require('express')
-const { getScheduledAssessmentsWithCandidates, getScheduledAssessmentsListBasedOnId } = require('../controllers/scheduledAssessmentController')
+const { 
+    // getScheduledAssessmentsWithCandidates,
+     getScheduledAssessmentsListBasedOnId } = require('../controllers/scheduledAssessmentController')
 const router = express.Router()
 
 //createScheduledAssessment using this
@@ -14,5 +16,5 @@ router.get('/list/:id',getScheduledAssessmentsListBasedOnId)
 // router.post('/resend-link-otp/:id',shareScheduledAssessment)
 
 // Get all scheduled assessments with their candidates for an assessment
-router.get('/:assessmentId/schedules', getScheduledAssessmentsWithCandidates);
+// router.get('/:assessmentId/schedules', getScheduledAssessmentsWithCandidates);
 module.exports = router

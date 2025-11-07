@@ -70,10 +70,11 @@ const BasicDetailsTab = ({
   fieldRefs,
   // v1.0.1 <----------------------------------------
   isCategoryModalOpen,
-  openCategoryModal,
+  // openCategoryModal,
   categories,
   selected,
   setSelected,
+  handleAssessmentListChange
 }) => {
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
@@ -465,18 +466,19 @@ const BasicDetailsTab = ({
                     className: "text-blue-600 font-medium hover:bg-blue-50",
                   },
                 ]}
-                onChange={(e) => {
-                  const value = e?.target?.value || e?.value;
-                  if (value === "create_new") {
-                    openCategoryModal();
-                  } else {
-                    setSelected(value);
-                    setFormData((prev) => ({
-                      ...prev,
-                      categoryOrTechnology: value,
-                    }));
-                  }
-                }}
+                // onChange={(e) => {
+                //   const value = e?.target?.value || e?.value;
+                //   if (value === "create_new") {
+                //     openCategoryModal();
+                //   } else {
+                //     setSelected(value);
+                //     setFormData((prev) => ({
+                //       ...prev,
+                //       categoryOrTechnology: value,
+                //     }));
+                //   }
+                // }}
+                onChange={handleAssessmentListChange}
                 error={errors.categoryOrTechnology}
                 placeholder="Select List"
               />
