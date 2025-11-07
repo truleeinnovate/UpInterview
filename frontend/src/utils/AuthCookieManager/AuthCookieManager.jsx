@@ -51,108 +51,6 @@ class AuthCookieManager {
     }
   }
   // ---------------------- v1.0.2 >
-
-  // Clear expired token and trigger smart logout
-  // 
-//   static clearExpiredToken(tokenKey) {
-//     try {
-//       const currentDomain = window.location.hostname;
-//       const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
-
-//       // Clear with proper options
-//       const clearOptions = {
-//         expires: new Date(0),
-//         path: '/',
-//         secure: !isLocalhost,
-//         sameSite: isLocalhost ? 'Lax' : 'None'
-//       };
-
-//       if (!isLocalhost && currentDomain.includes('upinterview.io')) {
-//         clearOptions.domain = '.upinterview.io';
-//       }
-// // <---------------------- v1.0.3
-
-//       Cookies.remove(tokenKey, clearOptions);
-
-//       // Only trigger logout if BOTH tokens are gone
-//       const remainingAuthToken = this.getAuthToken();
-//       const remainingImpersonationToken = this.getImpersonationToken();
-
-//       if (!remainingAuthToken && !remainingImpersonationToken) {
-//         window.dispatchEvent(new CustomEvent('tokenExpired', {
-//           detail: { tokenKey }
-//         }));
-//       }
-//   // ---------------------- v1.0.3 >
-
-//     } catch (error) {
-//       console.error(`Error clearing expired token ${tokenKey}:`, error);
-//     }
-//   }
-
-  // Sync authentication state across tabs
-  // static syncAuthAcrossTabs() {
-  //   try {
-  //     const authToken = this.getAuthToken();
-  //     const impersonationToken = this.getImpersonationToken();
-
-  //     // Broadcast auth state to other tabs
-  //     if (typeof window !== 'undefined' && window.localStorage) {
-  //       const authState = {
-  //         authToken,
-  //         impersonationToken,
-  //         timestamp: Date.now()
-  //       };
-
-  //       localStorage.setItem('auth_sync_state', JSON.stringify(authState));
-
-  //       // Trigger storage event for other tabs
-  //       window.dispatchEvent(new StorageEvent('storage', {
-  //         key: 'auth_sync_state',
-  //         newValue: JSON.stringify(authState)
-  //       }));
-  //     }
-  //   } catch (error) {
-  //     console.warn('Error syncing auth across tabs:', error);
-  //   }
-  // }
-
-  // Listen for auth changes from other tabs
-  // static setupCrossTabAuthListener() {
-  //   if (typeof window === 'undefined') return;
-
-  //   const handleStorageChange = (event) => {
-  //     if (event.key === 'auth_sync_state') {
-  //       try {
-  //         const authState = JSON.parse(event.newValue);
-  //         if (authState && authState.timestamp) {
-  //           // Update local state if the remote state is newer
-  //           const localTimestamp = localStorage.getItem('auth_sync_timestamp') || '0';
-  //           if (authState.timestamp > parseInt(localTimestamp)) {
-  //             // Sync the tokens
-  //             if (authState.authToken) {
-  //               this.setAuthToken(authState.authToken);
-  //             }
-  //             if (authState.impersonationToken) {
-  //               this.setImpersonationToken(authState.impersonationToken);
-  //             }
-  //             localStorage.setItem('auth_sync_timestamp', authState.timestamp.toString());
-  //           }
-  //         }
-  //       } catch (error) {
-  //         console.warn('Error processing auth sync event:', error);
-  //       }
-  //     }
-  //   };
-
-  //   window.addEventListener('storage', handleStorageChange);
-
-  //   // Return cleanup function
-  //   return () => {
-  //     window.removeEventListener('storage', handleStorageChange);
-  //   };
-  // }
-
   // Set auth token
   static setAuthToken(token) {
     try {
@@ -267,19 +165,6 @@ class AuthCookieManager {
       console.error('Error setting user type:', error);
     }
   }
-
-  // Get impersonated user data
-  // static getImpersonatedUser() {
-  //   try {
-  //     const userData = localStorage.getItem(IMPERSONATED_USER_KEY);
-  //     return userData ? JSON.parse(userData) : null;
-  //   } catch (error) {
-  //     console.warn('Error getting impersonated user:', error);
-  //     return null;
-  //   }
-  // }
-
-
 
   // Check if user is super admin only
   static isSuperAdminOnly() {
@@ -435,112 +320,8 @@ class AuthCookieManager {
     return null;
   }
 
-  // /**
-  //  * Get current permissions based on user type
-  //  * 
-  //  * @returns {Object|null} Current permissions for the active user type
-  //  */
-  // static getCurrentPermissions() {
-  //   const userType = this.getUserType();
-
-  //   if (userType === 'effective') {
-  //     return this.getEffectivePermissions();
-  //   } else if (userType === 'superAdmin') {
-  //     return this.getSuperAdminPermissions();
-  //   }
-
-  //   return null;
-  // }
-
-  // /**
-  //  * Get effective user permissions from localStorage
-  //  * 
-  //  * @returns {Object|null} Effective user permissions
-  //  */
-  // static getEffectivePermissions() {
-  //   try {
-  //     const permissions = localStorage.getItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
-  //     return permissions ? JSON.parse(permissions) : null;
-  //   } catch (error) {
-  //     console.warn('Error getting effective permissions:', error);
-  //     return null;
-  //   }
-  // }
-
-  // /**
-  //  * Set effective user permissions in localStorage
-  //  * 
-  //  * @param {Object} permissions - Effective user permissions
-  //  */
-  // static setEffectivePermissions(permissions) {
-  //   try {
-  //     localStorage.setItem(EFFECTIVE_PERMISSIONS_CACHE_KEY, JSON.stringify(permissions));
-  //     localStorage.setItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP, Date.now().toString());
-  //   } catch (error) {
-  //     console.error('Error setting effective permissions:', error);
-  //   }
-  // }
-
-  // /**
-  //  * Get super admin permissions from localStorage
-  //  * 
-  //  * @returns {Object|null} Super admin permissions
-  //  */
-  // static getSuperAdminPermissions() {
-  //   try {
-  //     const permissions = localStorage.getItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
-  //     return permissions ? JSON.parse(permissions) : null;
-  //   } catch (error) {
-  //     console.warn('Error getting super admin permissions:', error);
-  //     return null;
-  //   }
-  // }
-
-  // /**
-  //  * Set super admin permissions in localStorage
-  //  * 
-  //  * @param {Object} permissions - Super admin permissions
-  //  */
-  // static setSuperAdminPermissions(permissions) {
-  //   try {
-  //     localStorage.setItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY, JSON.stringify(permissions));
-  //     localStorage.setItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP, Date.now().toString());
-  //   } catch (error) {
-  //     console.error('Error setting super admin permissions:', error);
-  //   }
-  // }
-
-  // /**
-  //  * Set permissions based on current user type
-  //  * 
-  //  * @param {Object} permissions - Permissions to set
-  //  */
-  // static setCurrentPermissions(permissions) {
-  //   const userType = this.getUserType();
-
-  //   if (userType === 'effective') {
-  //     this.setEffectivePermissions(permissions);
-  //   } else if (userType === 'superAdmin') {
-  //     this.setSuperAdminPermissions(permissions);
-  //   } else {
-  //     console.warn('⚠️ Cannot set permissions - no valid user type');
-  //   }
-  // }
-
-  /**
-   * Clear all permission caches from localStorage
-   * This includes both old and new cache keys
-   */
   static clearAllPermissionCaches() {
     try {
-      // Clear old permission cache keys
-      // localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
-      // localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
-      // localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
-      // localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
-      // localStorage.removeItem('app_permissions_cache');
-      // localStorage.removeItem('app_permissions_timestamp');
-
       // Clear new permission cache keys
       localStorage.removeItem('permissions_effective');
       localStorage.removeItem('permissions_superAdmin');
@@ -583,76 +364,7 @@ class AuthCookieManager {
    * 
    * @param {string} userType - The user type to clear permissions for ('effective' or 'superAdmin')
    */
-  // static clearPermissions(userType) {
-  //   try {
-  //     if (userType === 'effective') {
-  //       localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
-  //       localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
-  //     } else if (userType === 'superAdmin') {
-  //       localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
-  //       localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error clearing permissions:', error);
-  //   }
-  // }
-
-  // Clear only effective user data (return to super admin)
-  // static clearEffectiveUser() {
-  //   try {
-  //     // Clear impersonation token and related data
-  //     Cookies.remove(IMPERSONATION_TOKEN_KEY);
-  //     localStorage.removeItem(IMPERSONATED_USER_KEY);
-
-  //     // Clear effective user permissions
-  //     this.clearPermissions('effective');
-
-  //     // Also clear the old legacy cache keys for backward compatibility
-  //     localStorage.removeItem('app_permissions_cache');
-  //     localStorage.removeItem('app_permissions_timestamp');
-
-  //     // Update user type based on current state
-  //     AuthCookieManager.updateUserType();
-
-  //     console.log('✅ Effective user data cleared, returning to super admin');
-  //   } catch (error) {
-  //     console.error('Error clearing effective user data:', error);
-  //   }
-  // }
-
-  // // Login as super admin
-  // static loginAsSuperAdmin(token) {
-  //   try {
-  //     this.clearAllAuth(); // Clear any existing data
-  //     this.setAuthToken(token);
-  //     console.log('✅ Logged in as super admin');
-  //   } catch (error) {
-  //     console.error('Error logging in as super admin:', error);
-  //   }
-  // }
-
-  // // Login as effective user (direct login)
-  // static loginAsEffectiveUser(token) {
-  //   try {
-  //     this.clearAllAuth(); // Clear any existing data
-  //     this.setImpersonationToken(token);
-  //     console.log('✅ Logged in as effective user');
-  //   } catch (error) {
-  //     console.error('Error logging in as effective user:', error);
-  //   }
-  // }
-
-  // Impersonate user (super admin impersonating effective user)
-  // static impersonateUser(token, userData) {
-  //   try {
-  //     // Keep super admin token, add impersonation token
-  //     this.setImpersonationToken(token, userData);
-  //     console.log('✅ Impersonating user:', userData);
-  //   } catch (error) {
-  //     console.error('Error impersonating user:', error);
-  //   }
-  // }
-
+ 
   // Login as user (super admin switching to user account)
   // Login as user (clear all cookies and set new user session)
   static async loginAsUser(authToken, userData) {
@@ -691,11 +403,6 @@ class AuthCookieManager {
         throw new Error('Failed to verify cookie state after retries');
       }
 
-      // Step 5: Store user data if provided
-      // if (userData) {
-      //   localStorage.setItem(IMPERSONATED_USER_KEY, JSON.stringify(userData));
-      // }
-
       // Step 6: Update user type
       AuthCookieManager.updateUserType();
 
@@ -704,36 +411,11 @@ class AuthCookieManager {
 
       // Step 8: Log final state
       const finalAuthToken = AuthCookieManager.getAuthToken();
-      // console.log('✅ Login as user completed:', {
-      //   authToken: !!finalAuthToken,
-      //   impersonationToken: !!AuthCookieManager.getImpersonationToken(),
-      //   userType: AuthCookieManager.getUserType(),
-      // });
     } catch (error) {
       console.error('❌ Error during login as user:', error);
       throw error;
     }
   }
-  
-  // static loginAsUser(authToken, userData) {
-  //   try {
-
-  //     // Store the current super admin impersonation token
-  //     const currentImpersonationToken = AuthCookieManager.getImpersonationToken();
-
-  //     // Set the user's auth token as the auth token (effective user session)
-  //     AuthCookieManager.setAuthToken(authToken);
-
-  //     // Restore the super admin's impersonation token
-  //     if (currentImpersonationToken) {
-  //       AuthCookieManager.setImpersonationToken(currentImpersonationToken);
-  //     }
-
-  //   } catch (error) {
-  //     console.error('❌ Error during login as user:', error);
-  //   }
-  // }
-
 
   // Smart logout based on current authentication state
   //<---------------------- v1.0.0
@@ -830,68 +512,6 @@ class AuthCookieManager {
   }
   // ---------------------- v1.0.2 >
 
-  // Simplified logout for token expiration (no navigation required)
-  // static async handleTokenExpiration() {
-  //   try {
-  //     // console.log('🔄 Handling token expiration...');
-
-  //     // const { resetPermissionPreload } = await import("../permissionPreloader");
-  //     // resetPermissionPreload();
-
-  //     const authToken = AuthCookieManager.getAuthToken();
-  //     const impersonationToken = AuthCookieManager.getImpersonationToken();
-
-  //     if (impersonationToken && !authToken) {
-  //       AuthCookieManager.clearCookie(IMPERSONATION_TOKEN_KEY);
-  //       localStorage.removeItem(IMPERSONATED_USER_KEY);
-  //       localStorage.removeItem(USER_TYPE_KEY);
-  //       // AuthCookieManager.clearPermissions('superAdmin');
-  //       localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
-  //       localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
-  //     } else if (authToken && !impersonationToken) {
-  //       AuthCookieManager.clearCookie(AUTH_TOKEN_KEY);
-  //       localStorage.removeItem(USER_TYPE_KEY);
-  //       // AuthCookieManager.clearPermissions('effective');
-  //       localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
-  //       localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
-  //       localStorage.removeItem('app_permissions_cache');
-  //       localStorage.removeItem('permissions_effective');
-  //       localStorage.removeItem('app_permissions_timestamp');
-  //     } else if (authToken && impersonationToken) {
-  //       AuthCookieManager.clearCookie(AUTH_TOKEN_KEY);
-  //       // AuthCookieManager.clearPermissions('effective');
-  //       AuthCookieManager.clearAllPermissionCaches();
-  //       localStorage.removeItem(USER_TYPE_KEY);
-  //     }
-
-  //     const loginUrl = `${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
-  //     window.location.href = loginUrl;
-  //   } catch (error) {
-  //     console.error('❌ Error handling token expiration:', error);
-  //     window.location.href = `${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
-  //   }
-  // }
-
-  // Get authentication status summary
-  // static getAuthStatus() {
-  //   const authToken = this.getAuthToken();
-  //   const impersonationToken = this.getImpersonationToken();
-  //   const userType = this.getUserType();
-  //   const impersonatedUser = this.getImpersonatedUser();
-
-  //   return {
-  //     hasAuthToken: !!authToken,
-  //     hasImpersonationToken: !!impersonationToken,
-  //     isImpersonating: !!impersonationToken,
-  //     isSuperAdminOnly: this.isSuperAdminOnly(),
-  //     isEffectiveUserOnly: this.isEffectiveUserOnly(),
-  //     isAuthenticated: this.isAuthenticated(),
-  //     userType,
-  //     impersonatedUser,
-  //     activeToken: this.getActiveToken() ? 'present' : 'none'
-  //   };
-  // }
-
   // Clear all authentication data
   static async clearAllAuth() {
     try {
@@ -954,136 +574,6 @@ class AuthCookieManager {
       throw error; // Re-throw to allow calling code to handle
     }
   }
-
-  // // Test cookie functionality (legacy function)
-  // static testCookieFunctionality() {
-  //   try {
-  //     const authToken = AuthCookieManager.getAuthToken();
-  //     const impersonationToken = AuthCookieManager.getImpersonationToken();
-  //     return {
-  //       authToken: !!authToken,
-  //       impersonationToken: !!impersonationToken,
-  //       success: true
-  //     };
-  //   } catch (error) {
-  //     console.error('Error testing cookie functionality:', error);
-  //     return { success: false, error: error.message };
-  //   }
-  // }
-
-  // Debug token sources (legacy function)
-  // static debugTokenSources() {
-  //   try {
-  //     const authToken = AuthCookieManager.getAuthToken();
-  //     const impersonationToken = AuthCookieManager.getImpersonationToken();
-  //     const authTokenFromDocument = document.cookie.split(';').find(cookie => cookie.trim().startsWith('authToken='));
-  //     const impersonationTokenFromDocument = document.cookie.split(';').find(cookie => cookie.trim().startsWith('impersonationToken='));
-
-  //     return {
-  //       authToken: !!authToken,
-  //       impersonationToken: !!impersonationToken,
-  //       authTokenFromDocument: !!authTokenFromDocument,
-  //       impersonationTokenFromDocument: !!impersonationTokenFromDocument,
-  //       success: true
-  //     };
-  //   } catch (error) {
-  //     console.error('Error debugging token sources:', error);
-  //     return { success: false, error: error.message };
-  //   }
-  // }
-
-  /**
-   * Verify cookie state and log detailed information for debugging
-   * This helps identify if cookies are being set multiple times
-   */
-  // static verifyCookieState() {
-  //   try {
-  //     const authToken = AuthCookieManager.getAuthToken();
-  //     const impersonationToken = AuthCookieManager.getImpersonationToken();
-  //     const userType = AuthCookieManager.getUserType();
-
-  //     // Count cookies in document.cookie
-  //     const allCookies = document.cookie.split(';').map(c => c.trim());
-  //     const authTokenCount = allCookies.filter(c => c.startsWith('authToken=')).length;
-  //     const impersonationTokenCount = allCookies.filter(c => c.startsWith('impersonationToken=')).length;
-
-  //     // Check for duplicate cookies
-  //     if (authTokenCount > 1) {
-  //       console.warn('⚠️ Multiple authToken cookies detected:', authTokenCount);
-  //     }
-  //     if (impersonationTokenCount > 1) {
-  //       console.warn('⚠️ Multiple impersonationToken cookies detected:', impersonationTokenCount);
-  //     }
-
-  //     return {
-  //       authToken: !!authToken,
-  //       impersonationToken: !!impersonationToken,
-  //       userType,
-  //       authTokenCount,
-  //       impersonationTokenCount,
-  //       hasDuplicates: authTokenCount > 1 || impersonationTokenCount > 1
-  //     };
-  //   } catch (error) {
-  //     console.error('Error verifying cookie state:', error);
-  //     return { error: error.message };
-  //   }
-  // }
-
-  /**
-   * Debug function to check cookie state and help identify issues
-   */
-  // static debugCookieState() {
-  //   try {
-  //     const currentDomain = window.location.hostname;
-  //     const authToken = AuthCookieManager.getAuthToken();
-  //     const impersonationToken = AuthCookieManager.getImpersonationToken();
-
-  //     // Count cookies in document.cookie
-  //     const allCookies = document.cookie.split(';').map(c => c.trim());
-  //     const authTokenCount = allCookies.filter(c => c.startsWith('authToken=')).length;
-  //     const impersonationTokenCount = allCookies.filter(c => c.startsWith('impersonationToken=')).length;
-
-  //     // console.log('🔍 Cookie State Debug:', {
-  //     //   currentDomain,
-  //     //   authToken: {
-  //     //     exists: !!authToken,
-  //     //     length: authToken ? authToken.length : 0,
-  //     //     count: authTokenCount,
-  //     //     preview: authToken ? `${authToken.substring(0, 20)}...` : 'null'
-  //     //   },
-  //     //   impersonationToken: {
-  //     //     exists: !!impersonationToken,
-  //     //     length: impersonationToken ? impersonationToken.length : 0,
-  //     //     count: impersonationTokenCount,
-  //     //     preview: impersonationToken ? `${impersonationToken.substring(0, 20)}...` : 'null'
-  //     //   },
-  //     //   totalCookies: allCookies.length,
-  //     //   allCookieNames: allCookies.map(c => c.split('=')[0]),
-  //     //   documentCookie: document.cookie
-  //     // });
-
-  //     // Check for duplicate cookies
-  //     if (authTokenCount > 1) {
-  //       console.warn('⚠️ Multiple authToken cookies detected:', authTokenCount);
-  //     }
-  //     if (impersonationTokenCount > 1) {
-  //       console.warn('⚠️ Multiple impersonationToken cookies detected:', impersonationTokenCount);
-  //     }
-
-  //     return {
-  //       currentDomain,
-  //       authToken: !!authToken,
-  //       impersonationToken: !!impersonationToken,
-  //       authTokenCount,
-  //       impersonationTokenCount,
-  //       hasDuplicates: authTokenCount > 1 || impersonationTokenCount > 1,
-  //       totalCookies: allCookies.length
-  //     };
-  //   } catch (error) {
-  //     console.error('Error debugging cookie state:', error);
-  //     return { error: error.message };
-  //   }
-  // }
   // ---------------------- v1.0.2 >
   // Check browser permissions and capabilities
   static checkBrowserPermissions() {
@@ -1145,145 +635,7 @@ class AuthCookieManager {
     }
   }
 
-  // Detect if we're in a new browser context
-  // static isNewBrowserContext() {
-  //   try {
-  //     const contextId = sessionStorage.getItem('browser_context_id');
-  //     if (!contextId) {
-  //       // Generate new context ID
-  //       const newContextId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-  //       sessionStorage.setItem('browser_context_id', newContextId);
-  //       return true;
-  //     }
-  //     return false;
-  //   } catch (e) {
-  //     console.warn('Could not check browser context:', e);
-  //     return true; // Assume new context if we can't check
-  //   }
-  // }
-
-  // Validate token expiration periodically
-  // static startTokenValidation() {
-  //   // Check tokens every 5 minutes
-  //   const validationInterval = setInterval(() => {
-  //     try {
-  //       const authToken = this.getAuthToken();
-  //       const impersonationToken = this.getImpersonationToken();
-
-  //       // If no tokens exist, clear the interval
-  //       if (!authToken && !impersonationToken) {
-  //         clearInterval(validationInterval);
-  //         return;
-  //       }
-
-  //       // Validation is already done in getAuthToken() and getImpersonationToken()
-  //       // This just ensures we check periodically
-  //       // console.log('Token validation check completed');
-
-  //     } catch (error) {
-  //       console.error('Error during token validation:', error);
-  //     }
-  //   }, 5 * 60 * 1000); // 5 minutes
-
-  //   // Return cleanup function
-  //   return () => clearInterval(validationInterval);
-  // }
-
-  // Check if token will expire soon (within 1 hour)
-  // static isTokenExpiringSoon(token) {
-  //   try {
-  //     if (!token) return false;
-
-  //     const decoded = jwtDecode(token);
-  //     if (decoded && decoded.exp) {
-  //       const currentTime = Math.floor(Date.now() / 1000);
-  //       const oneHour = 60 * 60; // 1 hour in seconds
-  //       return (decoded.exp - currentTime) <= oneHour;
-  //     }
-  //     return false;
-  //   } catch (error) {
-  //     console.warn('Error checking token expiration:', error);
-  //     return false;
-  //   }
-  // }
-  // ---------------------- v1.0.2 >
-
-
-  // Add these validation methods (but don't call them in getters)
-  // static validateTokenExpiration(token) {
-  //   if (!token) return { isValid: false, reason: 'No token' };
-
-  //   try {
-  //     const decoded = jwtDecode(token);
-  //     if (decoded && decoded.exp) {
-  //       const currentTime = Math.floor(Date.now() / 1000);
-  //       if (currentTime >= decoded.exp) {
-  //         return { isValid: false, reason: 'Token expired' };
-  //       }
-  //       return { isValid: true, expiresIn: decoded.exp - currentTime };
-  //     }
-  //     return { isValid: false, reason: 'Invalid token format' };
-  //   } catch (error) {
-  //     return { isValid: false, reason: 'Token decode error' };
-  //   }
-  // }
-
-  // Use this for checking if tokens need to be cleared
-  // static checkAndHandleExpiredTokens() {
-  //   const authToken = this.getAuthToken();
-  //   const impersonationToken = this.getImpersonationToken();
-
-  //   if (authToken) {
-  //     const validation = this.validateTokenExpiration(authToken);
-  //     if (!validation.isValid) {
-  //       console.log('Auth token invalid:', validation.reason);
-  //       this.clearExpiredToken(AUTH_TOKEN_KEY);
-  //     }
-  //   }
-
-  //   if (impersonationToken) {
-  //     const validation = this.validateTokenExpiration(impersonationToken);
-  //     if (!validation.isValid) {
-  //       console.log('Impersonation token invalid:', validation.reason);
-  //       this.clearExpiredToken(IMPERSONATION_TOKEN_KEY);
-  //     }
-  //   }
-  // }
-
-  // static debugCookieStateDetailed() {
-  //   try {
-  //     console.log('=== COOKIE DEBUG ===');
-  //     console.log('Current domain:', window.location.hostname);
-  //     console.log('All cookies:', document.cookie);
-
-  //     // Check specific cookies
-  //     const authToken = Cookies.get(AUTH_TOKEN_KEY);
-  //     const impersonationToken = Cookies.get(IMPERSONATION_TOKEN_KEY);
-
-  //     console.log('Auth token exists:', !!authToken);
-  //     console.log('Impersonation token exists:', !!impersonationToken);
-
-  //     if (authToken) {
-  //       try {
-  //         const decoded = jwtDecode(authToken);
-  //         const currentTime = Math.floor(Date.now() / 1000);
-  //         console.log('Auth token expires in:', decoded.exp - currentTime, 'seconds');
-  //       } catch (e) {
-  //         console.log('Auth token decode error:', e.message);
-  //       }
-  //     }
-
-  //     return {
-  //       authToken: !!authToken,
-  //       impersonationToken: !!impersonationToken,
-  //       documentCookie: document.cookie
-  //     };
-  //   } catch (error) {
-  //     console.error('Debug error:', error);
-  //     return { error: error.message };
-  //   }
-  // }
-}
+ }
 
 
 
@@ -1291,11 +643,7 @@ class AuthCookieManager {
 export const setAuthCookies = AuthCookieManager.setAuthCookies;
 export const clearAllAuth = AuthCookieManager.clearAllAuth.bind(AuthCookieManager);
 export const clearCookie = AuthCookieManager.clearCookie.bind(AuthCookieManager);
-// export const debugTokenSources = AuthCookieManager.debugTokenSources;
-// export const testCookieFunctionality = AuthCookieManager.testCookieFunctionality;
 export const verifyCookieState = AuthCookieManager.verifyCookieState;
-// export const debugCookieState = AuthCookieManager.debugCookieState;
-// export const debugCookieStateDetailed = AuthCookieManager.debugCookieStateDetailed;
 
 // Token getters
 export const getAuthToken = AuthCookieManager.getAuthToken;
@@ -1315,7 +663,6 @@ export const syncUserType = AuthCookieManager.syncUserType;
 export const isAuthenticated = AuthCookieManager.isAuthenticated;
 export const isSuperAdminOnly = AuthCookieManager.isSuperAdminOnly;
 export const isEffectiveUserOnly = AuthCookieManager.isEffectiveUserOnly;
-// export const getAuthStatus = AuthCookieManager.getAuthStatus;
 
 // Impersonation
 // export const getImpersonatedUser = AuthCookieManager.getImpersonatedUser;

@@ -116,7 +116,6 @@ app.options("/interviewRounds", handleOptions);
 app.options("/get-tickets", handleOptions);
 
 // API Routes
-const apiRoutes = require("./routes/apiRoutes");
 const linkedinAuthRoutes = require("./routes/linkedinAuthRoute.js");
 const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
 const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
@@ -439,42 +438,45 @@ const dbConnectionMiddleware = (req, res, next) => {
 };
 // ------------------------------v1.0.3 >
 // Apply permission middleware to all routes except authentication routes
-const { permissionMiddleware } = require("./middleware/permissionMiddleware");
+const { authContextMiddleware } = require("./middleware/authContext.js");
+// const { permissionMiddleware } = require("./middleware/permissionMiddleware");
 
-// Create a middleware that skips permission check for auth routes
-const conditionalPermissionMiddleware = (req, res, next) => {
-    // Skip permission middleware for authentication routes
-    const authRoutes = [
-        "/Organization/Login",
-        "/Organization/Signup",
-        "/Organization/reset-password",
-        "/Organization/verify-email",
-        "/Organization/verify-user-email",
-        "/Individual/Login",
-        "/Individual/Signup",
-        "/linkedin/auth",
-        "/linkedin/callback",
-        // Remove /users/permissions from excluded routes - it needs permission middleware
-    ];
+// // Create a middleware that skips permission check for auth routes
+// const conditionalPermissionMiddleware = (req, res, next) => {
+//     // Skip permission middleware for authentication routes
+//     const authRoutes = [
+//         "/Organization/Login",
+//         "/Organization/Signup",
+//         "/Organization/reset-password",
+//         "/Organization/verify-email",
+//         "/Organization/verify-user-email",
+//         "/Individual/Login",
+//         "/Individual/Signup",
+//         "/linkedin/auth",
+//         "/linkedin/callback",
+//         // Remove /users/permissions from excluded routes - it needs permission middleware
+//     ];
 
-    const isAuthRoute = authRoutes.some((route) => req.path.includes(route));
+//     const isAuthRoute = authRoutes.some((route) => req.path.includes(route));
 
-    if (isAuthRoute) {
-        return next();
-    }
+//     if (isAuthRoute) {
+//         return next();
+//     }
 
-    // Apply permission middleware for non-auth routes
-    return permissionMiddleware(req, res, next);
-};
+//     // Apply permission middleware for non-auth routes
+//     return permissionMiddleware(req, res, next);
+// };
 
-app.use(conditionalPermissionMiddleware);
+app.use(authContextMiddleware);
+// app.use(conditionalPermissionMiddleware);
 
 app.use("/api/agora", agoraRoomRoute);
 // ------------------------------v1.0.3 >
 // Apply database connection middleware to all API routes except health check
-app.use("/api", dbConnectionMiddleware, apiRoutes);
-app.use("/linkedin", dbConnectionMiddleware, linkedinAuthRoutes);
-app.use("/Individual", dbConnectionMiddleware, individualLoginRoutes);
+const apiRoutes = require("./routes/apiRoutes");
+app.use("/api", apiRoutes);
+app.use("/linkedin", linkedinAuthRoutes);
+app.use("/Individual", individualLoginRoutes);
 // ------------------------------v1.0.3 >
 app.use("/", SubscriptionRouter);
 app.use("/", CustomerSubscriptionRouter);
@@ -1078,8 +1080,8 @@ const interviewTemplateRoutes = require("./routes/interviewTemplateRoutes");
 app.use("/interviewTemplates", interviewTemplateRoutes);
 
 // Import and use auth routes
-const authRoutes = require("./routes/authRoutes");
-app.use("/api/auth", authRoutes);
+// const authRoutes = require("./routes/authRoutes");
+// app.use("/api/auth", authRoutes);
 
 // Start background cron jobs (Task due reminders)
 // Ensures pushNotificationTaskController registers its cron schedule on server start
