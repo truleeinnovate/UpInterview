@@ -28,12 +28,8 @@ import {
   ChevronLeft,
   ChevronRight,
   TrashIcon,
-  CheckSquare,
-  Square,
   X,
 } from "lucide-react";
-import { ReactComponent as IoIosArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
-import { ReactComponent as IoIosArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdMoreVert } from "../../../../icons/MdMoreVert.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
@@ -372,7 +368,7 @@ const MyQuestionsList = ({
 }) => {
   const { myQuestionsList, createdLists, isLoading } = useQuestions(); //<----v1.0.4---
   const { mutateAsync: deleteQuestions } = useQuestionDeletion();
-  console.log("myQuestionsList:", myQuestionsList);
+
 
   const myQuestionsListRef = useRef(null);
   const sidebarRef = useRef(null);
@@ -493,13 +489,13 @@ const MyQuestionsList = ({
   };
 
   const handleDeleteQuestions = async (deleteLabel = false) => {
-    // console.log("selectedLabel", selectedLabel);
+ 
     const allQuestions = Object.values(myQuestionsList || {}).flat();
     const matchingQuestion = allQuestions.find(
       (q) => q.label === selectedLabel
     );
     const labelId = matchingQuestion.listId;
-    // console.log(" matchingQuestion.listId", labelId);
+  
 
     try {
       let payload;
@@ -531,15 +527,13 @@ const MyQuestionsList = ({
           label: labelId,
         };
       }
-      console.log("payload selected", payload);
-
+     
       payload.ownerId = ownerId;
       payload.tenantId = tenantId;
 
       // Call the delete API
       const response = await deleteQuestions(payload);
-      console.log("response", response);
-
+     
       if (response.success) {
         // Show success message
         notify.success(
@@ -1124,8 +1118,7 @@ const MyQuestionsList = ({
   // };
 
   const onClickAddButton = async (question, listName, indx) => {
-    console.log("question", question);
-    console.log("type", type);
+
     if (type === "assessment") {
       const isDuplicate = addedSections.some((section) =>
         section.Questions.some((q) => q.questionId === question._id)
@@ -1187,8 +1180,7 @@ const MyQuestionsList = ({
       }
     } else {
       try {
-        console.log("question", question);
-
+       
         const questionToAdd = {
           questionId: question._id,
           source: "system",
@@ -1198,7 +1190,7 @@ const MyQuestionsList = ({
           // mandatory: mandatoryStatus[item._id] ? "true" : "false",
         };
 
-        console.log("questionToAdd", questionToAdd);
+       
 
         if (onAddQuestion) {
           onAddQuestion(questionToAdd); // Pass the question and index to the parent
@@ -1463,7 +1455,7 @@ const MyQuestionsList = ({
     });
     return result;
   }, [filteredMyQuestionsList, createdLists, dropdownValue]);
-  console.log("groupedQuestions", groupedQuestions);
+
 
   // Ensure selectedLabel is valid for the currently filtered lists
   useEffect(() => {

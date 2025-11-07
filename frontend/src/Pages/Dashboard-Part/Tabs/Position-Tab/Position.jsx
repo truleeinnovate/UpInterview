@@ -157,12 +157,11 @@ const PositionTab = () => {
   const [selectedFilters, setSelectedFilters] = useState({
     location: [],
     tech: [],
-    //<-----v1.03-----
     company: [],
     experience: { min: "", max: "" },
     salaryMin: "",
+    salaryMax: "", // Add this line
     createdDate: "",
-    //-----v1.03----->
   });
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
@@ -198,18 +197,19 @@ const PositionTab = () => {
   const [deletePosition, setDeletePosition] = useState(null);
   const rowsPerPage = 10;
   // Replace the current usePositions call with one that includes filters
-  const apiFilters = useMemo(() => ({
+  const queryFilters = {
     searchQuery,
     location: selectedFilters.location,
     tech: selectedFilters.tech,
     company: selectedFilters.company,
-    experience: selectedFilters.experience,
+    experienceMin: selectedFilters.experience.min,
+    experienceMax: selectedFilters.experience.max,
     salaryMin: selectedFilters.salaryMin,
-    salaryMax: selectedFilters.salaryMax,
+    salaryMax: selectedFilters.salaryMax, // Add this line
     createdDate: selectedFilters.createdDate,
-    page: currentPage + 1, // API usually uses 1-based indexing
+    page: currentPage + 1,
     limit: rowsPerPage
-  }), [searchQuery, selectedFilters, currentPage, rowsPerPage]);
+  };
 
   const {
     positionData,
@@ -218,7 +218,7 @@ const PositionTab = () => {
     addOrUpdatePosition,
     deletePositionMutation,
     isMutationLoading,
-  } = usePositions(apiFilters);
+  } = usePositions(queryFilters);
 
   // v1.0.8 <------------------------------------------
   useScrollLock(view === "kanban");
@@ -264,86 +264,7 @@ const PositionTab = () => {
   }, [companies]);
   //-----v1.03----->
 
-  // Memoize filtered data to prevent recalculation on every render
-  const FilteredData = useMemo(() => {
-    if (!Array.isArray(positionData)) return [];
-    return positionData.filter((position) => {
-      const fieldsToSearch = [
-        position.title,
-        position.companyname,
-        position.Location,
-        position.positionCode,
-      ].filter((field) => field !== null && field !== undefined);
 
-      const matchesLocation =
-        selectedFilters.location.length === 0 ||
-        selectedFilters.location.includes(position.Location);
-      const matchesTech =
-        selectedFilters.tech.length === 0 ||
-        position.skills?.some((skill) =>
-          selectedFilters.tech.includes(skill.skill)
-        );
-      const matchesExperience =
-        (!selectedFilters.experience.min ||
-          position.minexperience >= selectedFilters.experience.min) &&
-        (!selectedFilters.experience.max ||
-          position.maxexperience <= selectedFilters.experience.max);
-
-      //<-----v1.03-----
-      const matchesCompany =
-        (selectedFilters.company?.length || 0) === 0 ||
-        selectedFilters.company.includes(position.companyname);
-
-      // const threshold = Number(selectedFilters.salaryMin) || 0;
-      // const minSal = parseFloat(position.minSalary) || 0;
-      // const maxSal = parseFloat(position.maxSalary) || 0;
-      // const matchesSalary =
-      //   threshold === 0 || maxSal >= threshold || minSal >= threshold;
-      const minThreshold = Number(selectedFilters.salaryMin) || 0;
-      const maxThreshold =
-        selectedFilters.salaryMax !== "" &&
-          selectedFilters.salaryMax !== undefined
-          ? Number(selectedFilters.salaryMax)
-          : Infinity;
-
-      const minSal = parseFloat(position.minSalary) || 0;
-      const maxSal = parseFloat(position.maxSalary) || 0;
-
-      // Must be >= minThreshold and <= maxThreshold
-      const matchesSalary = minSal >= minThreshold && maxSal <= maxThreshold;
-
-      // Created date preset filter
-      let matchesCreatedDate = true;
-      if (selectedFilters.createdDate === "last7") {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        matchesCreatedDate = position.createdAt
-          ? new Date(position.createdAt) >= sevenDaysAgo
-          : true;
-      } else if (selectedFilters.createdDate === "last30") {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        matchesCreatedDate = position.createdAt
-          ? new Date(position.createdAt) >= thirtyDaysAgo
-          : true;
-      }
-
-      //-----v1.03----->
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      return (
-        matchesSearchQuery &&
-        matchesLocation &&
-        matchesTech &&
-        matchesExperience &&
-        matchesCompany &&
-        matchesSalary &&
-        matchesCreatedDate
-      );
-    });
-  }, [positionData, selectedFilters, searchQuery]);
 
   // v1.0.2 <------------------------------------------------------
   // useEffect(() => {
@@ -373,13 +294,18 @@ const PositionTab = () => {
     if (isFilterPopupOpen) {
       setSelectedLocation(selectedFilters.location);
       setSelectedTech(selectedFilters.tech);
-      setExperience(selectedFilters.experience);
-      //<-----v1.03-----
       setSelectedCompany(selectedFilters.company || []);
+      setExperience(selectedFilters.experience);
       setSalaryMin(
         selectedFilters.salaryMin !== undefined &&
           selectedFilters.salaryMin !== null
           ? String(selectedFilters.salaryMin)
+          : ""
+      );
+      setSalaryMax( // Add this block
+        selectedFilters.salaryMax !== undefined &&
+          selectedFilters.salaryMax !== null
+          ? String(selectedFilters.salaryMax)
           : ""
       );
       setCreatedDatePreset(selectedFilters.createdDate || "");
@@ -389,9 +315,8 @@ const PositionTab = () => {
       setIsCompanyOpen(false);
       setIsSalaryOpen(false);
       setIsDatesOpen(false);
-      //-----v1.03----->
     }
-  }, [isFilterPopupOpen, selectedFilters]);
+  }, [isFilterPopupOpen, selectedFilters, positionData]);
 
   // Only after all hooks
   if (!isInitialized) {
@@ -434,10 +359,10 @@ const PositionTab = () => {
     const clearedFilters = {
       location: [],
       tech: [],
-      //<-----v1.03-----
       company: [],
       experience: { min: "", max: "" },
       salaryMin: "",
+      salaryMax: "", // Add this line
       createdDate: "",
     };
     setSelectedLocation([]);
@@ -445,9 +370,8 @@ const PositionTab = () => {
     setSelectedCompany([]);
     setExperience({ min: "", max: "" });
     setSalaryMin("");
-    setSalaryMax("");
+    setSalaryMax(""); // Add this line
     setCreatedDatePreset("");
-    //-----v1.03----->
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
     setIsFilterActive(false);
@@ -458,30 +382,27 @@ const PositionTab = () => {
     const filters = {
       location: selectedLocation,
       tech: selectedTech,
+      company: selectedCompany,
       experience: {
         min: Number(experience.min) || 0,
         max: Number(experience.max) || 15,
       },
-      //<-----v1.03-----
-      company: selectedCompany,
       salaryMin: Number(salaryMin) || 0,
-      salaryMax: Number(salaryMax) || 0,
-      createdDate: createdDatePreset,
-      //-----v1.03----->
+      salaryMax: Number(salaryMax) || 0, // Add this line
+      createdDate: createdDatePreset || "",
     };
+
     setSelectedFilters(filters);
     setCurrentPage(0);
     setIsFilterActive(
       filters.location.length > 0 ||
       filters.tech.length > 0 ||
-      filters.experience.min ||
-      //<-----v1.03-----
-      filters.experience.max ||
       filters.company.length > 0 ||
-      (filters.salaryMin && filters.salaryMin > 0) ||
-      (filters.salaryMax && filters.salaryMax > 0) ||
+      filters.experience.min > 0 ||
+      filters.experience.max < 15 ||
+      filters.salaryMin > 0 ||
+      filters.salaryMax > 0 ||
       !!filters.createdDate
-      //-----v1.03----->
     );
     setFilterPopupOpen(false);
   };
@@ -498,12 +419,26 @@ const PositionTab = () => {
   };
 
 
-  const totalPages = Math.ceil(positionData.length / rowsPerPage);
+  // const totalPages = Math.ceil(positionData.length / rowsPerPage);
+  // const nextPage = () => {
+  //   if ((currentPage + 1) * rowsPerPage < positionData.length) {
+  //     setCurrentPage((prevPage) => prevPage + 1);
+  //   }
+  // };
+  // const prevPage = () => {
+  //   if (currentPage > 0) {
+  //     setCurrentPage((prevPage) => prevPage - 1);
+  //   }
+  // };
+
+  const totalPages = Math.ceil(total / rowsPerPage);
+
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < positionData.length) {
+    if (currentPage < totalPages - 1) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
+
   const prevPage = () => {
     if (currentPage > 0) {
       setCurrentPage((prevPage) => prevPage - 1);
@@ -516,7 +451,10 @@ const PositionTab = () => {
 
   const startIndex = currentPage * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, positionData.length);
-  const currentFilteredRows = positionData.slice(startIndex, endIndex);
+  // const currentFilteredRows = positionData.slice(startIndex, endIndex);
+
+  const currentFilteredRows = positionData || [];
+
 
   const statusOptions = STATUS_OPTIONS.map((s) => ({
     value: s,

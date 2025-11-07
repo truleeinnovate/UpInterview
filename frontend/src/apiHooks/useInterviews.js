@@ -1,55 +1,66 @@
 // v1.0.0 - Ashraf - added sending interview email link update in rounds api
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { config } from '../config';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
-import toast from 'react-hot-toast';
 
-export const useInterviews = (filters = {}) => {
+
+export const useInterviews = (filters = {}, page = 1, limit = 10) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Interviews?.View;
   const navigate = useNavigate();
   const initialLoad = useRef(true);
+  // const params = filters
+
+  // // const total = 0;
+  const params = useMemo(() => ({
+    ...filters,
+    page: page,
+    limit: limit,
+  }), [filters, page, limit]);
+ 
+
+  console.log("params",params);
+  
+
+  // FIX: Use state to hold total
+  // const [total, setTotal] = useState(0);
+  // const [totalPages, setTotalPages] = useState(1);
+
 
   const {
-    data: interviewData = [],
+    // data: interviewData = [],
+     data: responseData = {},
     isLoading: isQueryLoading,
     isError,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['interviews', filters],
+    queryKey: ['interviews', params],
     queryFn: async () => {
-      const interviews = await fetchFilterData('interview');
-
+      const response = await fetchFilterData('interview', params);
+      console.log("interviews response", response);
       // Enhanced with candidate data
-      const interviewsWithCandidates = await Promise.all(
-        interviews.map(async (interview) => {
-          if (!interview.CandidateId) {
-            return { ...interview, candidate: null };
-          }
 
-          try {
-            const candidate = await fetchFilterData(`candidate/${interview.CandidateId}`);
-            return {
-              ...interview,
-              candidate: candidate.ImageData?.filename ? {
-                ...candidate,
-                imageUrl: `${config.REACT_APP_API_URL}/${candidate.ImageData.path.replace(/\\/g, '/')}`
-              } : candidate
-            };
-          } catch {
-            return { ...interview, candidate: null };
-          }
-        })
-      );
+      // FIX: Extract pagination info
+      // const { data: interviews = [], total = 0, totalPages = 1 } = response;
 
-      return interviewsWithCandidates.reverse();
+      // Update total state
+      // setTotal(total);
+      // setTotalPages(totalPages);
+
+       // Return both data and total
+      return {
+        data: response
+      };
+
+      // return response?.data
+      // return interviewsWithCandidates;
     },
     enabled: !!hasViewPermission,
     retry: 1,
@@ -59,6 +70,18 @@ export const useInterviews = (filters = {}) => {
     refetchOnMount: false, // Don't refetch when component mounts if data exists
     refetchOnReconnect: false, // Don't refetch on network reconnect
   });
+
+  
+  // Extract data and total from response
+  const interviewData = responseData?.data?.data || [];
+  const total = responseData.total || 0;
+  const currentPage = responseData.page || 1;
+  const totalPages = responseData.totalPages || 1;
+
+  console.log("interviewData", interviewData);
+  console.log("total", total);
+
+
 
   // Create new interview mutation
   const createInterview = useMutation({
@@ -104,11 +127,11 @@ export const useInterviews = (filters = {}) => {
     },
     onSuccess: (data) => {
       // Optimistically update the cache
-      queryClient.setQueryData(['interviews', filters], (oldData) => {
+      queryClient.setQueryData(['interviews', params], (oldData) => {
         if (!oldData) return oldData;
         return [data, ...oldData];
       });
-      
+
       queryClient.invalidateQueries(['interviews']);
       navigate(`/interviews/${data._id}`);
     },
@@ -145,27 +168,27 @@ export const useInterviews = (filters = {}) => {
 
 
   // 🔹 New mutation: Update interview round (PATCH for edit)
-const updateInterviewRound = useMutation({
-  mutationFn: async (payload) => {
-    const response = await axios.patch(
-      `${config.REACT_APP_API_URL}/interview/update-round/${payload.roundId}`,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Cookies.get("authToken")}`,
-        },
-      }
-    );
-    return response.data;
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries(["interviews"]);
-  },
-  onError: (error) => {
-    console.error("Round update error:", error);
-  },
-});
+  const updateInterviewRound = useMutation({
+    mutationFn: async (payload) => {
+      const response = await axios.patch(
+        `${config.REACT_APP_API_URL}/interview/update-round/${payload.roundId}`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Cookies.get("authToken")}`,
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["interviews"]);
+    },
+    onError: (error) => {
+      console.error("Round update error:", error);
+    },
+  });
 
   // Update round with meeting links mutation
   // const updateRoundWithMeetingLinks = useMutation({
@@ -177,7 +200,7 @@ const updateInterviewRound = useMutation({
   //     console.log('Input meetingUrls:', meetingUrls);
   //     console.log('meetLink field:', meetingUrls.meetLink);
   //     console.log('meetLink structure:', meetingUrls.meetLink?.map(item => ({ linkType: item.linkType, link: item.link })));
-      
+
   //     // Clean up roundData by removing undefined values and fields that might cause issues
   //     const cleanedRoundData = Object.fromEntries(
   //       Object.entries(roundData).filter(([key, value]) => {
@@ -227,7 +250,7 @@ const updateInterviewRound = useMutation({
   //         },
   //       }
   //     );
-      
+
   //     console.log('API response:', response.data);
   //     console.log('=== updateRoundWithMeetingLinks mutation END ===');
   //     return response.data;
@@ -251,9 +274,9 @@ const updateInterviewRound = useMutation({
   // v1.0.2 <-----------------------------------------
 
   // Update interview status mutation
-  
-  
-  
+
+
+
   const updateInterviewStatus = useMutation({
     mutationFn: async ({ interviewId, status, reason }) => {
       const interviewData = {
@@ -277,15 +300,15 @@ const updateInterviewRound = useMutation({
     },
     onSuccess: (data, variables) => {
       // Optimistically update the cache
-      queryClient.setQueryData(['interviews', filters], (oldData) => {
+      queryClient.setQueryData(['interviews', params], (oldData) => {
         if (!oldData) return oldData;
-        return oldData.map(interview => 
-          interview._id === variables.interviewId 
+        return oldData.map(interview =>
+          interview._id === variables.interviewId
             ? { ...interview, status: variables.status }
             : interview
         );
       });
-      
+
       queryClient.invalidateQueries(['interviews']);
     },
     onError: (error) => {
@@ -312,43 +335,43 @@ const updateInterviewRound = useMutation({
   });
 
   //  interview and round deletion
-// Interview deletion mutation
-const deleteInterviewMutation = useMutation({
-  mutationFn: async (interviewId) => {
-    const response = await axios.delete(
-      `${config.REACT_APP_API_URL}/interview/delete-interview/${interviewId}`,
-      // {
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${Cookies.get("authToken")}`,
-      //   },
-      // }
-    );
-    return response.data;
-  },
-  onSuccess: (data, deletedInterviewId) => {
-    // Optimistically remove from cache
-    queryClient.setQueryData(['interviews', filters], (oldData) => {
-      if (!oldData) return oldData;
-      return oldData.filter(interview => interview._id !== deletedInterviewId);
-    });
-    
-    // Invalidate and refetch
-    queryClient.invalidateQueries(['interviews']);
-    
-  },
-  onError: (error) => {
-    console.error('Interview deletion error:', error);
-    const errorMessage = error.response?.data?.message || 'Failed to delete interview';
-    // toast.error(errorMessage);
-  }
-});
-  
+  // Interview deletion mutation
+  const deleteInterviewMutation = useMutation({
+    mutationFn: async (interviewId) => {
+      const response = await axios.delete(
+        `${config.REACT_APP_API_URL}/interview/delete-interview/${interviewId}`,
+        // {
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //     Authorization: `Bearer ${Cookies.get("authToken")}`,
+        //   },
+        // }
+      );
+      return response.data;
+    },
+    onSuccess: (data, deletedInterviewId) => {
+      // Optimistically remove from cache
+      queryClient.setQueryData(['interviews', params], (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.filter(interview => interview._id !== deletedInterviewId);
+      });
+
+      // Invalidate and refetch
+      queryClient.invalidateQueries(['interviews']);
+
+    },
+    onError: (error) => {
+      console.error('Interview deletion error:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to delete interview';
+      // toast.error(errorMessage);
+    }
+  });
+
 
   // Calculate loading states
-  const isMutationLoading = createInterview.isPending || saveInterviewRound.isPending ||  updateInterviewStatus.isPending || deleteRoundMutation.isPending;
+  const isMutationLoading = createInterview.isPending || saveInterviewRound.isPending || updateInterviewStatus.isPending || deleteRoundMutation.isPending;
   const isLoading = isQueryLoading || isMutationLoading ||
-  deleteInterviewMutation.isPending; 
+    deleteInterviewMutation.isPending;
 
   // Controlled logging
   useEffect(() => {
@@ -360,6 +383,9 @@ const deleteInterviewMutation = useMutation({
 
   return {
     interviewData,
+        total,
+    currentPage,
+    totalPages,
     isLoading,
     isQueryLoading,
     isMutationLoading,
