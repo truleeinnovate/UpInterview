@@ -135,8 +135,9 @@ const bandwidthRoutes = require("./routes/bandwidthRoutes.js");
 // CORS is now handled by our custom middleware above
 // <---------------------- v1.0.3
 
-// Standard middleware
-app.use(bodyParser.json());
+// Standard middleware with increased payload limit for bulk operations
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Enhanced MongoDB connection with Azure-specific configurations
 const mongooseOptions = {

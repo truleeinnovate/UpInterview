@@ -20,7 +20,19 @@ const theme = createTheme({
   },
 });
 
-const queryClient = new QueryClient();
+// Create QueryClient with default options
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Default options for all queries
+      staleTime: 5 * 60 * 1000, // 5 minutes for regular queries
+      cacheTime: 10 * 60 * 1000, // 10 minutes for regular queries
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: 1,
+    },
+  },
+});
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

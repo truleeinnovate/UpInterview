@@ -12,7 +12,6 @@ import {
   Trash2,
   ArrowLeft,
   AlertTriangle,
-  Edit2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "../../../../Components/Shared/Header/Header";
@@ -28,11 +27,29 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.0 <------------------------------------------------------------------------
 import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { useQueryClient } from '@tanstack/react-query';
 import Cookies from "js-cookie";
 import { notify } from "../../../../services/toastService";
 // v1.0.0 ------------------------------------------------------------------------>
 
-const MasterTable = () => {
+// Helper function to map master data types to query keys
+const getMasterDataKey = (type) => {
+  const typeMap = {
+    'industries': 'industries',
+    'technologies': 'technology',
+    'skills': 'skills',
+    'locations': 'locations',
+    'roles': 'roles',
+    'qualifications': 'qualification',
+    'colleges': 'universitycollege',
+    'companies': 'company',
+    'category': 'category'
+  };
+  return typeMap[type] || type;
+};
+
+const MasterTable = ({ permissions = {} }) => {
+  const queryClient = useQueryClient();
   const { type } = useParams();
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,7 +69,7 @@ const MasterTable = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
 
-  const authToken = Cookies.get("authToken");
+  // const authToken = Cookies.get("authToken"); // Kept for future authentication needs
   const impersonationToken = Cookies.get("impersonationToken");
 
   const impersonatedTokenPayload = decodeJwt(impersonationToken);
@@ -150,6 +167,18 @@ const MasterTable = () => {
         notify.success(`Master created successfully!`);
       }
 
+      // Invalidate the specific master data cache
+      // This will force refetch for all users
+      await queryClient.invalidateQueries({ 
+        queryKey: ['masterData', getMasterDataKey(type)] 
+      });
+      
+      // Also refetch the local data
+      const fetchRes = await axios.get(
+        `${config.REACT_APP_API_URL}/master-data/${type}`
+      );
+      setMasterData(fetchRes.data);
+
       // Reset selected master
       setSelectedMaster(null);
     } catch (err) {
@@ -177,6 +206,11 @@ const MasterTable = () => {
         setIsDeletePopupOpen(false);
         setDeleteTarget(null);
         notify.success(`Master deleted successfully!`);
+        
+        // Invalidate the specific master data cache
+        await queryClient.invalidateQueries({ 
+          queryKey: ['masterData', getMasterDataKey(type)] 
+        });
       }
     } catch (err) {
       console.error("Error deleting master:", err);

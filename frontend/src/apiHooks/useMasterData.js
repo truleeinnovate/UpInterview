@@ -1,31 +1,34 @@
 // v1.0.0 - Ashok - modified piece of code
 // v2.0.0 - Lazy-load master data per dropdown (fetch on open only)
+// v3.0.0 - Optimized for production with 7-day cache and persistence
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { config } from '../config';
 
-// Custom hook helper to create a disabled query (on-demand fetching)
+// Master data cache times - since master data rarely changes
 const ONE_DAY = 1000 * 60 * 60 * 24; // 24 hours
+const ONE_WEEK = ONE_DAY * 7; // 7 days
+const TWO_WEEKS = ONE_DAY * 14; // 14 days
 
-const useOnDemandQuery = (key, path, staleTime = ONE_DAY, retry = 1) =>
+const useOnDemandQuery = (key, path, staleTime = ONE_WEEK, retry = 1) =>
   useQuery({
     queryKey: ['masterData', key],
     queryFn: async () => {
       const res = await axios.get(`${config.REACT_APP_API_URL}/${path}`);
       return res.data;
     },
-    staleTime,                // <--- auto-refresh once per day
-    cacheTime: ONE_DAY * 2,   // optional: keep cached for 2 days
+    staleTime,                // Data considered fresh for 7 days by default
+    cacheTime: TWO_WEEKS,     // Keep in memory/storage for 14 days
     retry,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     networkMode: 'online',
   });
 
-
 export const useMasterData = () => {
-  const staleTime = 1000 * 60 * 60; // 1 hour cache
+  const queryClient = useQueryClient();
+  const staleTime = ONE_WEEK; // 7 days - master data rarely changes
   const retry = 1;
 
   // Individual queries for each master list (all disabled by default)
@@ -95,6 +98,19 @@ export const useMasterData = () => {
     ]);
   };
 
+  // Force refresh all master data (admin use or manual refresh)
+  const forceRefreshMasterData = async () => {
+    // Invalidate all master data queries
+    await queryClient.invalidateQueries({ queryKey: ['masterData'] });
+    // Then refetch
+    return refetchMasterData();
+  };
+
+  // Clear all cached master data
+  const clearMasterDataCache = () => {
+    queryClient.removeQueries({ queryKey: ['masterData'] });
+  };
+
   // CHANGE 9: Added new function for selective lazy loading (backward compatibility)
   const ensureDataLoaded = async (dataType) => {
     const queryMap = {
@@ -134,17 +150,6 @@ export const useMasterData = () => {
     companies: masterData.companies,
     category: masterData.category,
 
-    // // On-demand loaders to be called on dropdown open
-    // loadLocations: locationsQ.refetch,
-    // loadIndustries: industriesQ.refetch,
-    // loadCurrentRoles: rolesQ.refetch,
-    // loadSkills: skillsQ.refetch,
-    // loadTechnologies: technologiesQ.refetch,
-    // loadQualifications: qualificationsQ.refetch,
-    // loadColleges: collegesQ.refetch,
-    // loadCompanies: companiesQ.refetch,
-    // loadCategory: categoryQ.refetch,
-
     // CHANGE 10: Updated loader functions - now they just ensure data is available
     // These will return immediately if data is already cached
     loadLocations: () => ensureDataLoaded('locations'),
@@ -168,7 +173,6 @@ export const useMasterData = () => {
     isCompaniesFetching: companiesQ.isFetching,
     isCategoryFetching: categoryQ.isFetching,
 
-
     // CHANGE 11: Added new utility functions
     isDataReady: !isMasterDataLoading && !isMasterDataError,
     hasData: (dataType) => {
@@ -176,5 +180,13 @@ export const useMasterData = () => {
       return Array.isArray(data) && data.length > 0;
     },
 
+    // v3.0.0 - Additional utility functions for cache management
+    forceRefreshMasterData, // Force refresh all master data (bypasses cache)
+    clearMasterDataCache,   // Clear all cached master data
+    cacheInfo: {
+      staleTime: staleTime / ONE_DAY, // in days
+      cacheTime: TWO_WEEKS / ONE_DAY,  // in days
+      persistence: true,
+    },
   };
 };
