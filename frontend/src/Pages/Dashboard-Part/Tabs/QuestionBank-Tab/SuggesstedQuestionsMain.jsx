@@ -113,11 +113,10 @@ function HeaderBar({
             <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
               <span
                 onClick={onClickLeftPaginationIcon}
-                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${
-                  currentPage === 1
+                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 1
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <IoIosArrowBack />
               </span>
@@ -125,11 +124,10 @@ function HeaderBar({
             <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
               <span
                 onClick={onClickRightPagination}
-                className={`border p-2 text-xl rounded-md cursor-pointer ${
-                  currentPage === totalPages || totalPages === 0
+                className={`border p-2 text-xl rounded-md cursor-pointer ${currentPage === totalPages || totalPages === 0
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <IoIosArrowForward />
               </span>
@@ -186,20 +184,91 @@ const SuggestedQuestionsComponent = ({
   const selectedQuestionType = useMemo(
     () =>
       dropdownValue === "Interview Questions" ? "Interview" : "Assignment",
+
     [dropdownValue]
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [dropdownValue]);
+
+
+  const [questionTypeFilterItems, setQuestionTypeFilterItems] = useState([]);
+  const [difficultyLevelFilterItems, setDifficultyLevelFilterItems] = useState(
+    []
+  );
+  const [categoryFilterItems, setCategoryFilterItems] = useState([]);
+  const [technologyFilterItems, setTechnologyFilterItems] = useState([]);
+  const [mandatoryStatus, setMandatoryStatus] = useState({});
+
+  // Temporary states for filter popup
+  const [tempQuestionTypeFilterItems, setTempQuestionTypeFilterItems] =
+    useState([]);
+  const [tempDifficultyLevelFilterItems, setTempDifficultyLevelFilterItems] =
+    useState([]);
+  const [tempCategoryFilterItems, setTempCategoryFilterItems] = useState([]);
+  const [tempTechnologyFilterItems, setTempTechnologyFilterItems] = useState(
+    []
+  );
+  const [tempSelectedSkills, setTempSelectedSkills] = useState([]);
+  const [tempSkillInput, setTempSkillInput] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearchInput, setDebouncedSearchInput] = useState("");
+
+
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchInput(searchInput);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchInput]);
+
+
+  // Combine all filters for API call
+  const apiFilters = useMemo(() => ({
+    questionType: selectedQuestionType,
+    page: currentPage,
+    limit: itemsPerPage,
+    search: debouncedSearchInput,
+    difficultyLevel: difficultyLevelFilterItems,
+    category: categoryFilterItems,
+    technology: technologyFilterItems,
+    questionTypes: questionTypeFilterItems,
+  }), [
+    selectedQuestionType,
+    currentPage,
+    itemsPerPage,
+    debouncedSearchInput,
+    difficultyLevelFilterItems,
+    categoryFilterItems,
+    technologyFilterItems,
+    questionTypeFilterItems,
+  ]);
+
+
   const {
     suggestedQuestions,
     questionBankUsageLimit,
+
     totalQuestions: totalQuestionsFromAPI,
     accessibleQuestions,
     lockedQuestions: lockedQuestionsCount,
     questionTypeFilter,
     typeBreakdown,
     isLoading,
-  } = useQuestions({
-    questionType: selectedQuestionType,
-  });
+    pagination
+  } = useQuestions(
+    apiFilters
+    //   {
+    //   questionType: selectedQuestionType,
+
+    // }
+  );
+
 
   useScrollLock(true);
   //<------v1.0.4--------
@@ -311,6 +380,10 @@ const SuggestedQuestionsComponent = ({
     },
   ]);
 
+  const [tempFiltrationData, setTempFiltrationData] = useState(
+    JSON.parse(JSON.stringify(filtrationData))
+  );
+
   //<------v1.0.4--------
   // Keep filtration sections in sync with dropdown selection and available data
   useEffect(() => {
@@ -328,29 +401,9 @@ const SuggestedQuestionsComponent = ({
     uniqueTechnologies.length,
   ]);
 
-  const [questionTypeFilterItems, setQuestionTypeFilterItems] = useState([]);
-  const [difficultyLevelFilterItems, setDifficultyLevelFilterItems] = useState(
-    []
-  );
-  const [categoryFilterItems, setCategoryFilterItems] = useState([]);
-  const [technologyFilterItems, setTechnologyFilterItems] = useState([]);
-  const [mandatoryStatus, setMandatoryStatus] = useState({});
 
-  // Temporary states for filter popup
-  const [tempQuestionTypeFilterItems, setTempQuestionTypeFilterItems] =
-    useState([]);
-  const [tempDifficultyLevelFilterItems, setTempDifficultyLevelFilterItems] =
-    useState([]);
-  const [tempCategoryFilterItems, setTempCategoryFilterItems] = useState([]);
-  const [tempTechnologyFilterItems, setTempTechnologyFilterItems] = useState(
-    []
-  );
-  const [tempSelectedSkills, setTempSelectedSkills] = useState([]);
-  const [tempSkillInput, setTempSkillInput] = useState("");
-  const [searchInput, setSearchInput] = useState("");
-  const [tempFiltrationData, setTempFiltrationData] = useState(
-    JSON.parse(JSON.stringify(filtrationData))
-  );
+
+
 
   // Keep popup temp state in sync when opening the popup or when base sections update
   useEffect(() => {
@@ -373,118 +426,27 @@ const SuggestedQuestionsComponent = ({
     selectedSkills,
     skillInput,
   ]);
-  //------v1.0.4-------->
 
-  // Filter questions
-  const suggestedQuestionsFilteredData = useMemo(() => {
-    if (!suggestedQuestions || suggestedQuestions.length === 0) return [];
-    return suggestedQuestions.filter((question) => {
-      // Unified search: check both question text and tags
-      const matchesSearch =
-        !searchInput ||
-        question.questionText
-          .toLowerCase()
-          .includes(searchInput.toLowerCase()) ||
-        question.tags.some((tag) =>
-          tag.toLowerCase().includes(searchInput.toLowerCase())
-        );
+  const totalItems = suggestedQuestions.length;
+  const totalPages = pagination?.totalPages || 1;
 
-      const matchesType =
-        //<------v1.0.4--------
-        !showQuestionTypeFilter ||
-        questionTypeFilterItems.length === 0 ||
-        questionTypeFilterItems.includes(
-          (question.questionType || "").toLowerCase()
-        );
 
-      const matchesDifficultyLevel =
-        difficultyLevelFilterItems.length === 0 ||
-        difficultyLevelFilterItems.includes(
-          question.difficultyLevel.toLowerCase()
-        );
 
-      const matchesCategory =
-        categoryFilterItems.length === 0 ||
-        (question.category &&
-          categoryFilterItems.includes(
-            String(question.category).toLowerCase()
-          ));
+  const paginatedData = suggestedQuestions || [];
 
-      const matchesTechnology =
-        technologyFilterItems.length === 0 ||
-        (Array.isArray(question.technology) &&
-          question.technology.some((t) =>
-            technologyFilterItems.includes(String(t).toLowerCase())
-          ));
 
-      return (
-        matchesSearch &&
-        matchesType &&
-        matchesDifficultyLevel &&
-        matchesCategory &&
-        matchesTechnology
-      );
-    });
-  }, [
-    suggestedQuestions,
-    searchInput,
-    questionTypeFilterItems,
-    difficultyLevelFilterItems,
-    categoryFilterItems,
-    technologyFilterItems,
-    showQuestionTypeFilter,
-    //------v1.0.4------>
-  ]);
-
-  // Pagination
-  //<-----v1.0.3-----
-  const totalItems = suggestedQuestionsFilteredData.length;
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(totalItems / itemsPerPage)),
-    [totalItems, itemsPerPage]
-    //-----v1.0.3----->
-  );
-  const paginatedData = useMemo(
-    () =>
-      suggestedQuestionsFilteredData.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-      ),
-    [suggestedQuestionsFilteredData, currentPage, itemsPerPage]
-  );
-  //console.log("pagedata",paginatedData);
-
-  //<-----v1.0.3-----
-  const startIndex =
-    totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  // Range label using backend data
+  const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
   const rangeLabel =
     totalItems === 0
       ? "0/0"
       : startIndex === endIndex
-      ? `${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`
-      : `${startIndex}-${endIndex}/${totalItems} ${
-          totalItems > 1 ? "Questions" : "Question"
+        ? `${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`
+        : `${startIndex}-${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"
         }`;
 
-  // Reset page when filters/search change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    searchInput,
-    questionTypeFilterItems,
-    difficultyLevelFilterItems,
-    categoryFilterItems,
-    technologyFilterItems,
-    dropdownValue,
-  ]);
 
-  // Clamp page if out of range
-  useEffect(() => {
-    const tp = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-    if (currentPage > tp) setCurrentPage(tp);
-  }, [totalItems, itemsPerPage, currentPage]);
-  //-----v1.0.3----->
 
   // Update mandatory status
   useEffect(() => {
@@ -500,15 +462,6 @@ const SuggestedQuestionsComponent = ({
     });
   }, [interviewQuestionsList, interviewQuestionsLists]);
 
-  // // Filter tags for skill dropdown
-  // const filteredTags = useMemo(() => {
-  //     if (!skillInput || !suggestedQuestions) return [];
-  //     const allTags = new Set();
-  //     suggestedQuestions.forEach((question) => {
-  //         question.tags.forEach((tag) => allTags.add(tag.toLowerCase()));
-  //     });
-  //     return [...allTags].filter((tag) => tag.includes(skillInput.toLowerCase()));
-  // }, [skillInput, suggestedQuestions]);
 
   // Handlers
   const handleToggle = (questionId, item) => {
@@ -602,14 +555,7 @@ const SuggestedQuestionsComponent = ({
     }
   };
 
-  // const onClickDropdownSkill = (tag) => {
-  //     if (!selectedSkills.includes(tag)) {
-  //         setSelectedSkills((prev) => [...prev, tag]);
-  //         setSkillInput("");
-  //     } else {
-  //         toast.error(`${tag} already selected`);
-  //     }
-  // };
+
 
   const onClickCrossIcon = (skill) => {
     setSelectedSkills((prev) => prev.filter((s) => s !== skill));
@@ -668,13 +614,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 1
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  opt.type.toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                opt.type.toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt
+              ),
+            }
             : category
         )
       );
@@ -684,13 +630,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 2
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  opt.level.toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                opt.level.toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt
+              ),
+            }
             : category
         )
       );
@@ -701,13 +647,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 3
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  String(opt.value).toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                String(opt.value).toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt
+              ),
+            }
             : category
         )
       );
@@ -717,13 +663,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 4
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  String(opt.value).toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                String(opt.value).toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt
+              ),
+            }
             : category
         )
       );
@@ -917,26 +863,7 @@ const SuggestedQuestionsComponent = ({
   const SkeletonLoader = () => {
     return (
       <div>
-        <div className="flex items-end justify-end gap-x-3 w-full px-5 py-4">
-          {/* Search box skeleton */}
-          {/* v1.0.5 <------------------------------------------------------------------- */}
-          <div className="flex items-center gap-3">
-            <div className="h-10 bg-gray-200 rounded-md w-28 shimmer"></div>
-            <div className="h-10 bg-gray-200 rounded-md w-52 shimmer"></div>
-            <div className="h-10 bg-gray-200 rounded-md w-40 shimmer"></div>
-          </div>
-          {/* v1.0.5 -------------------------------------------------------------------> */}
-
-          {/* Pagination skeleton */}
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-gray-200 rounded shimmer"></div>
-            <div className="h-10 w-10 bg-gray-200 rounded shimmer"></div>
-            <div className="h-10 w-10 bg-gray-200 rounded shimmer"></div>
-          </div>
-
-          {/* Filter button skeleton */}
-          <div className="h-10 w-10 bg-gray-200 rounded-md shimmer"></div>
-        </div>
+       
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <ul className="flex flex-col gap-4 pr-2">
@@ -972,37 +899,37 @@ const SuggestedQuestionsComponent = ({
   //   v1.0.1 -------------------------------------------------------->
 
   // <-------v1.0.0 -----
-  if (isLoading) return <SkeletonLoader />;
+  // if (isLoading) return <SkeletonLoader />;
   // ------v1.0.0 ----->
 
-  if (!suggestedQuestions || suggestedQuestions.length === 0) {
-    return (
-      <div className="h-full flex flex-col gap-4 justify-center items-center text-center p-8 mt-24">
-        <div className="text-gray-400">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-12 w-12"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </div>
-        <h2 className="text-gray-700 font-semibold text-lg">
-          No Questions Available
-        </h2>
-        <p className="text-gray-500">
-          Please try again later or check your data source.
-        </p>
-      </div>
-    );
-  }
+  // if (!suggestedQuestions || suggestedQuestions.length === 0) {
+  //   return (
+  //     <div className="h-full flex flex-col gap-4 justify-center items-center text-center p-8 mt-24">
+  //       <div className="text-gray-400">
+  //         <svg
+  //           xmlns="http://www.w3.org/2000/svg"
+  //           className="h-12 w-12"
+  //           fill="none"
+  //           viewBox="0 0 24 24"
+  //           stroke="currentColor"
+  //         >
+  //           <path
+  //             strokeLinecap="round"
+  //             strokeLinejoin="round"
+  //             strokeWidth={1.5}
+  //             d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+  //           />
+  //         </svg>
+  //       </div>
+  //       <h2 className="text-gray-700 font-semibold text-lg">
+  //         No Questions Available
+  //       </h2>
+  //       <p className="text-gray-500">
+  //         Please try again later or check your data source.
+  //       </p>
+  //     </div>
+  //   );
+  // }
 
   // v1.0.8 <---------------------------------------------
   const capitalizeFirstLetter = (str) =>
@@ -1112,6 +1039,34 @@ const SuggestedQuestionsComponent = ({
         onClickRightPagination={onClickRightPagination}
         type={type}
       />
+      { 
+        !suggestedQuestions || suggestedQuestions.length === 0 && !isLoading && (
+        <div className="h-full flex flex-col gap-4 justify-center items-center text-center p-8 mt-24">
+        <div className="text-gray-400">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-12 w-12"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <h2 className="text-gray-700 font-semibold text-lg">
+          No Questions Available
+        </h2>
+        <p className="text-gray-500">
+          Please try again later or check your data source.
+        </p>
+      </div>
+        )
+      }
 
 
       {/* v1.0.5 -----------------------------------------------------------------> */}
@@ -1148,40 +1103,40 @@ const SuggestedQuestionsComponent = ({
               ...categoryFilterItems,
               ...technologyFilterItems,
             ].length > 0 && (
-              /* v1.0.6 <---------------------------------------------------------------------- */
-              /* v1.0.8 <---------------------------------------------------------------------- */
-              <div className="flex items-center flex-wrap px-4 pt-2 mb-3 gap-3">
-                <h3 className="font-medium text-gray-700 text-sm">
-                  Filters applied:
-                </h3>
-                <ul className="flex gap-2 flex-wrap">
-                  {[
-                    ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
-                    ...difficultyLevelFilterItems,
-                    ...categoryFilterItems,
-                    ...technologyFilterItems,
-                  ].map((filterItem, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center gap-1 rounded-full border border-custom-blue px-3 py-1 text-custom-blue font-medium bg-blue-50 text-sm"
-                    >
-                      <span>{capitalizeFirstLetter(filterItem)}</span>
-                      <button
-                        className="hover:text-red-500 transition-colors"
-                        onClick={() =>
-                          onClickRemoveSelectedFilterItem(filterItem)
-                        }
-                        type="button"
+                /* v1.0.6 <---------------------------------------------------------------------- */
+                /* v1.0.8 <---------------------------------------------------------------------- */
+                <div className="flex items-center flex-wrap px-4 pt-2 mb-3 gap-3">
+                  <h3 className="font-medium text-gray-700 text-sm">
+                    Filters applied:
+                  </h3>
+                  <ul className="flex gap-2 flex-wrap">
+                    {[
+                      ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
+                      ...difficultyLevelFilterItems,
+                      ...categoryFilterItems,
+                      ...technologyFilterItems,
+                    ].map((filterItem, index) => (
+                      <li
+                        key={index}
+                        className="flex items-center gap-1 rounded-full border border-custom-blue px-3 py-1 text-custom-blue font-medium bg-blue-50 text-sm"
                       >
-                        <X size={14} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              // v1.0.8 ---------------------------------------------------------------------->
-              // v1.0.6 ---------------------------------------------------------------------->
-            )}
+                        <span>{capitalizeFirstLetter(filterItem)}</span>
+                        <button
+                          className="hover:text-red-500 transition-colors"
+                          onClick={() =>
+                            onClickRemoveSelectedFilterItem(filterItem)
+                          }
+                          type="button"
+                        >
+                          <X size={14} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                // v1.0.8 ---------------------------------------------------------------------->
+                // v1.0.6 ---------------------------------------------------------------------->
+              )}
             {/* v1.0.7 <----------------------------------------------------------------------- */}
             <ul className="flex flex-col gap-4 pr-2 h-[calc(100vh-210px)] overflow-y-auto">
               {/* v1.0.7 <----------------------------------------------------------------------- */}
@@ -1209,7 +1164,7 @@ const SuggestedQuestionsComponent = ({
                       </div>
                     );
                   }
-                  
+
                   // Regular unlocked card
                   return (
                     <div
@@ -1227,13 +1182,12 @@ const SuggestedQuestionsComponent = ({
                         </div>
                         {/* v1.0.6 ----------------------------------------------------------------------------> */}
                         <div
-                          className={`flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${
-                            type === "interviewerSection" ||
-                            type === "feedback" ||
-                            type === "assessment"
+                          className={`flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${type === "interviewerSection" ||
+                              type === "feedback" ||
+                              type === "assessment"
                               ? "w-[15%]"
                               : "sm:w-[28%] md:w-[20%] w-[10%]"
-                          }`}
+                            }`}
                         >
                           <p
                             className={`w-16 text-center ${getDifficultyStyles(
@@ -1244,140 +1198,137 @@ const SuggestedQuestionsComponent = ({
                             {item.difficultyLevel}
                           </p>
                         </div>
-                      {fromScheduleLater && (
-                        <div className="flex justify-center text-center h-12 sm:border-0 border-r border-gray-200">
-                          <div className="flex items-center w-14 justify-center">
-                            <button
-                              onClick={() => {
-                                if (
-                                  interviewQuestionsLists?.some(
-                                    (q) => q.questionId === item._id
-                                  )
-                                ) {
-                                  handleToggle(item._id, item);
-                                }
-                              }}
-                              className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${
-                                mandatoryStatus[item._id]
-                                  ? "bg-blue-100 border-custom-blue justify-end"
-                                  : "bg-gray-200 border-gray-300 justify-start"
-                              }`}
-                              type="button"
-                            >
-                              <span
-                                className={`w-3 h-3 rounded-full transition-colors ${
-                                  mandatoryStatus[item._id]
-                                    ? "bg-custom-blue"
-                                    : "bg-gray-400"
-                                }`}
-                              />
-                            </button>
+                        {fromScheduleLater && (
+                          <div className="flex justify-center text-center h-12 sm:border-0 border-r border-gray-200">
+                            <div className="flex items-center w-14 justify-center">
+                              <button
+                                onClick={() => {
+                                  if (
+                                    interviewQuestionsLists?.some(
+                                      (q) => q.questionId === item._id
+                                    )
+                                  ) {
+                                    handleToggle(item._id, item);
+                                  }
+                                }}
+                                className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
+                                    ? "bg-blue-100 border-custom-blue justify-end"
+                                    : "bg-gray-200 border-gray-300 justify-start"
+                                  }`}
+                                type="button"
+                              >
+                                <span
+                                  className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
+                                      ? "bg-custom-blue"
+                                      : "bg-gray-400"
+                                    }`}
+                                />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      {(type === "interviewerSection" ||
-                        type === "feedback") && (
-                        <div className="p-1 flex justify-center w-[8%]">
-                          {item.isLocked ? (
-                            <button
-                              type="button"
-                              onClick={() => navigate('/account-settings/subscription')}
-                              className="sm:flex sm:items-center sm:justify-center bg-orange-500 py-1 px-2 text-white rounded-md transition-colors hover:bg-orange-600"
-                            >
-                              <Lock className="h-4 w-4 mr-1" />
-                              <span className="sm:hidden inline">Upgrade</span>
-                            </button>
-                          ) : interviewQuestionsLists?.some(
-                            (q) => q.questionId === item._id
-                          ) ? (
-                            <button
-                              type="button"
-                              onClick={() => onClickRemoveQuestion(item?._id)}
-                              className="sm:flex sm:items-center sm:justify-center rounded-md md:ml-4 bg-gray-500 px-2 py-1 text-white hover:bg-gray-600 transition-colors"
-                            >
-                              <span className="sm:hidden inline">Remove</span>
-                              <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 px-2 text-white rounded-md transition-colors"
-                              onClick={() => onClickAddButton(item)}
-                            >
-                              <span className="sm:hidden inline">Add</span>
-                              <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                            </button>
+                        )}
+                        {(type === "interviewerSection" ||
+                          type === "feedback") && (
+                            <div className="p-1 flex justify-center w-[8%]">
+                              {item.isLocked ? (
+                                <button
+                                  type="button"
+                                  onClick={() => navigate('/account-settings/subscription')}
+                                  className="sm:flex sm:items-center sm:justify-center bg-orange-500 py-1 px-2 text-white rounded-md transition-colors hover:bg-orange-600"
+                                >
+                                  <Lock className="h-4 w-4 mr-1" />
+                                  <span className="sm:hidden inline">Upgrade</span>
+                                </button>
+                              ) : interviewQuestionsLists?.some(
+                                (q) => q.questionId === item._id
+                              ) ? (
+                                <button
+                                  type="button"
+                                  onClick={() => onClickRemoveQuestion(item?._id)}
+                                  className="sm:flex sm:items-center sm:justify-center rounded-md md:ml-4 bg-gray-500 px-2 py-1 text-white hover:bg-gray-600 transition-colors"
+                                >
+                                  <span className="sm:hidden inline">Remove</span>
+                                  <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 px-2 text-white rounded-md transition-colors"
+                                  onClick={() => onClickAddButton(item)}
+                                >
+                                  <span className="sm:hidden inline">Add</span>
+                                  <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
+                                </button>
+                              )}
+                            </div>
                           )}
-                        </div>
-                      )}
-                      {type === "assessment" && (
-                        <div className="w-[8%] flex justify-center">
-                          {addedSections.some((s) =>
-                            s.Questions.some((q) => q.questionId === item._id)
-                          ) ? (
-                            <button
-                              type="button"
-                              onClick={() => onClickRemoveQuestion(item?._id)}
-                              className="sm:flex sm:items-center sm:justify-center rounded-md bg-red-500 px-2 py-1 text-white hover:bg-red-600 transition-colors"
-                            >
-                              <span className="sm:hidden inline">Remove</span>
-                              <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                            </button>
-                          ) : (
-                            // (
-                            //   <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
-                            //     ✓ <span className="sm:hidden inline">Added</span>
-                            //   </span>
-                            // )
-                            <button
-                              type="button"
-                              className={`sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${
-                                addedSections.reduce(
+                        {type === "assessment" && (
+                          <div className="w-[8%] flex justify-center">
+                            {addedSections.some((s) =>
+                              s.Questions.some((q) => q.questionId === item._id)
+                            ) ? (
+                              <button
+                                type="button"
+                                onClick={() => onClickRemoveQuestion(item?._id)}
+                                className="sm:flex sm:items-center sm:justify-center rounded-md bg-red-500 px-2 py-1 text-white hover:bg-red-600 transition-colors"
+                              >
+                                <span className="sm:hidden inline">Remove</span>
+                                <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
+                              </button>
+                            ) : (
+                              // (
+                              //   <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
+                              //     ✓ <span className="sm:hidden inline">Added</span>
+                              //   </span>
+                              // )
+                              <button
+                                type="button"
+                                className={`sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${addedSections.reduce(
                                   (acc, s) => acc + s.Questions.length,
                                   0
                                 ) >= questionsLimit
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
-                              onClick={() => onClickAddButton(item)}
-                              disabled={
-                                addedSections.reduce(
-                                  (acc, s) => acc + s.Questions.length,
-                                  0
-                                ) >= questionsLimit
-                              }
-                            >
-                              <span className="sm:hidden inline">Add</span>
-                              <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                            </button>
-                          )}
-                        </div>
-                      )}
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
+                                  }`}
+                                onClick={() => onClickAddButton(item)}
+                                disabled={
+                                  addedSections.reduce(
+                                    (acc, s) => acc + s.Questions.length,
+                                    0
+                                  ) >= questionsLimit
+                                }
+                              >
+                                <span className="sm:hidden inline">Add</span>
+                                <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
+                              </button>
+                            )}
+                          </div>
+                        )}
 
-                      {!type && !fromScheduleLater && (
-                        <div className="flex justify-center relative">
-                          <button
-                            type="button"
-                            className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
-                            onClick={() => toggleDropdown(item._id)}
-                          >
-                            Add{" "}
-                            <span className="sm:hidden md:hidden inline">
-                              to list
-                            </span>
-                          </button>
-                          {dropdownOpen === item._id && (
-                            <MyQuestionList
-                              question={item}
-                              closeDropdown={closeDropdown}
-                              isInterviewType={
-                                dropdownValue === "Interview Questions"
-                              }
-                            />
-                          )}
-                        </div>
-                      )}
-                    </div>
+                        {!type && !fromScheduleLater && (
+                          <div className="flex justify-center relative">
+                            <button
+                              type="button"
+                              className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
+                              onClick={() => toggleDropdown(item._id)}
+                            >
+                              Add{" "}
+                              <span className="sm:hidden md:hidden inline">
+                                to list
+                              </span>
+                            </button>
+                            {dropdownOpen === item._id && (
+                              <MyQuestionList
+                                question={item}
+                                closeDropdown={closeDropdown}
+                                isInterviewType={
+                                  dropdownValue === "Interview Questions"
+                                }
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <div className="p-4 border-b relative">
                         <div className="flex items-start w-full pt-2 gap-2">
                           <span className="sm:text-sm font-semibold">
@@ -1388,29 +1339,28 @@ const SuggestedQuestionsComponent = ({
                           </p>
                         </div>
                         {item.questionType === "MCQ" && item.options && (
-                            <div className="mb-2 ml-12 mt-2">
-                              <ul className="list-none">
-                                {(() => {
-                                  const isAnyOptionLong = item.options.some(
-                                    (option) => option.length > 55
-                                  );
-                                  return item.options.map((option, idx) => (
-                                    <li
-                                      key={idx}
-                                      className={`${
-                                        isAnyOptionLong
-                                          ? "block w-full"
-                                          : "inline-block w-1/2"
+                          <div className="mb-2 ml-12 mt-2">
+                            <ul className="list-none">
+                              {(() => {
+                                const isAnyOptionLong = item.options.some(
+                                  (option) => option.length > 55
+                                );
+                                return item.options.map((option, idx) => (
+                                  <li
+                                    key={idx}
+                                    className={`${isAnyOptionLong
+                                        ? "block w-full"
+                                        : "inline-block w-1/2"
                                       } mb-2`}
-                                    >
-                                      <span className="text-gray-700">
-                                        {option}
-                                      </span>
-                                    </li>
-                                  ));
-                                })()}
-                              </ul>
-                            </div>
+                                  >
+                                    <span className="text-gray-700">
+                                      {option}
+                                    </span>
+                                  </li>
+                                ));
+                              })()}
+                            </ul>
+                          </div>
                         )}
                       </div>
                       <div className="p-4">

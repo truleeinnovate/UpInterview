@@ -67,6 +67,8 @@ export const useQuestions = (filters = {}) => {
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
 
+  
+
   const {
     data: myQuestionsList = {},
     isLoading: isMyQuestionsLoading,
@@ -123,9 +125,30 @@ export const useQuestions = (filters = {}) => {
     refetchOnReconnect: false,
   });
 
+   // Build query parameters for backend
+  const buildQueryParams = (filters) => {
+    const params = {
+      tenantId,
+      ownerId,
+      page: filters?.page || 1,
+      limit: filters?.limit || 10
+    };
+
+    // Add filters only if they have values
+    if (filters?.questionType) params.questionType = filters.questionType;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.page) params.page = filters.page;
+    if (filters?.difficultyLevel?.length) params.difficultyLevel = filters.difficultyLevel.join(',');
+    if (filters?.category?.length) params.category = filters.category.join(',');
+    if (filters?.technology?.length) params.technology = filters.technology.join(',');
+    if (filters?.questionTypes?.length) params.questionTypes = filters.questionTypes.join(',');
+
+    return params;
+  };
+
   // 3️⃣ Fetch Suggested Questions
   const {
-    data: suggestedQuestionsData = { questions: [], usageLimit: null },
+    data: suggestedQuestionsData = { questions: [], usageLimit: null, pagination: {} },
     isLoading: isSuggestedQuestionsLoading,
     isError: isSuggestedQuestionsError,
     error: suggestedQuestionsError,
@@ -133,10 +156,11 @@ export const useQuestions = (filters = {}) => {
   } = useQuery({
     queryKey: ['suggestedQuestions', filters, tenantId, ownerId],
     queryFn: async () => {
-      const params = {
-        tenantId,
-        ownerId
-      };
+       const params = buildQueryParams(filters);
+      // const params = {
+      //   tenantId,
+      //   ownerId
+      // };
       if (filters?.questionType) {
         params.questionType = filters.questionType;
       }
@@ -148,6 +172,13 @@ export const useQuestions = (filters = {}) => {
         return {
           questions: response.data.questions.map((q) => ({ ...q, isAdded: false })),
           usageLimit: response.data.usageLimit,
+           pagination: response.data.pagination || { // Ensure pagination object
+          currentPage: filters?.page || 1,
+          totalPages: 1,
+          totalQuestions: response.data.questions?.length || 0,
+          hasNext: false,
+          hasPrev: false
+        },
           totalQuestions: response.data.totalQuestions,
           accessibleQuestions: response.data.accessibleQuestions,
           lockedQuestions: response.data.lockedQuestions,
@@ -155,7 +186,7 @@ export const useQuestions = (filters = {}) => {
           typeBreakdown: response.data.typeBreakdown
         };
       }
-      return { questions: [], usageLimit: null, totalQuestions: null, accessibleQuestions: null, lockedQuestions: null, questionTypeFilter: null, typeBreakdown: null };
+      return { questions: [], pagination: {}, usageLimit: null, totalQuestions: null, accessibleQuestions: null, lockedQuestions: null, questionTypeFilter: null, typeBreakdown: null };
     },
     retry: 1,
     staleTime: 1000 * 60 * 10, // 10 minutes
@@ -172,6 +203,7 @@ export const useQuestions = (filters = {}) => {
   const lockedQuestions = suggestedQuestionsData.lockedQuestions;
   const questionTypeFilter = suggestedQuestionsData.questionTypeFilter;
   const typeBreakdown = suggestedQuestionsData.typeBreakdown;
+  const pagination = suggestedQuestionsData.pagination;
 
   // 4️⃣ Custom Hook: Fetch Question by Suggested ID
   const useQuestionBySuggestedId = (suggestedQuestionId) =>
@@ -216,9 +248,7 @@ export const useQuestions = (filters = {}) => {
         payload.suggestedQuestionId = questionData.suggestedQuestionId;
       }
 
-      console.log('Payload:', payload);
-      console.log('isEdit:', isEdit);
-      console.log('questionId:', questionId);
+  
 
       const url = isEdit
         ? `${config.REACT_APP_API_URL}/newquestion/${questionId}`
@@ -226,12 +256,11 @@ export const useQuestions = (filters = {}) => {
 
       const method = isEdit ? 'patch' : 'post';
       const response = await axios[method](url, payload);
-      console.log('Mutation response:', response.data);
+
       return response.data;
     },
     onSuccess: (data, variables) => {
-      console.log('saveOrUpdateQuestion mutation succeeded');
-      
+    
       // Optimistically update the cache
       queryClient.setQueryData(['questions', filters], (oldData) => {
         if (!oldData) return oldData;
@@ -452,6 +481,7 @@ export const useQuestions = (filters = {}) => {
 
   return {
     myQuestionsList,
+    pagination,
     createdLists,
     suggestedQuestions,
     questionBankUsageLimit,

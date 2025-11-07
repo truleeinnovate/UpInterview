@@ -52,7 +52,7 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { useInterviewerDetails } from "../../../../../utils/CommonFunctionRoundTemplates";
 import { notify } from "../../../../../services/toastService";
 import ScheduledAssessmentResultView from "../../Assessment-Tab/AssessmentViewDetails/ScheduledAssessmentResultView";
-
+import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
 const RoundCard = ({
   round,
   interviewData,
@@ -74,7 +74,10 @@ const RoundCard = ({
   // } = useCustomContext();
   const { deleteRoundMutation, updateInterviewRound } =
     useInterviews();
-  const { useScheduledAssessments, fetchAssessmentQuestions, fetchAssessmentResults, assessmentData } = useAssessments();
+  const {  fetchAssessmentQuestions, fetchAssessmentResults, assessmentData } = useAssessments();
+
+  
+
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
   const [showRejectionModal, setShowRejectionModal] = useState(false);
@@ -289,11 +292,11 @@ const RoundCard = ({
 
 
   // New state for candidate assessment data
-  const [candidateAssessment, setCandidateAssessment] = useState(null);
-  const [currentScheduledAssessment, setCurrentScheduledAssessment] = useState(null);
+  let [candidateAssessment, setCandidateAssessment] = useState(null);
+  let [currentScheduledAssessment, setCurrentScheduledAssessment] = useState(null);
 
   // Always call hooks unconditionally at the top level
-  const { data: scheduledAssessments = [] } = useScheduledAssessments(
+  let { data: scheduledAssessments = [] } = useScheduleAssessments(
     round.roundTitle === "Assessment" ? round?.assessmentId : null
   );
 
@@ -301,12 +304,12 @@ const RoundCard = ({
   useEffect(() => {
     if (round.roundTitle === "Assessment" && round.scheduleAssessmentId && scheduledAssessments.length > 0) {
       // Find the specific scheduled assessment
-      const filteredAssessment = scheduledAssessments.find(
+      let filteredAssessment = scheduledAssessments.find(
         assessment => assessment._id === round.scheduleAssessmentId
       );
       // console.log("filteredAssessment", filteredAssessment);
       // Find the candidate-specific data
-      const candidateData = filteredAssessment?.candidates?.find(
+      let candidateData = filteredAssessment?.candidates?.find(
         candidate => candidate.candidateId?._id === interviewData?.candidateId?._id
       );
 

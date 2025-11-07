@@ -21,8 +21,11 @@ export const usePositions = (filters = {}) => {
     refetch,
   } = useQuery({
     queryKey: ['positions', filters],
+  
+    
     queryFn: async () => {
-      const data = await fetchFilterData('position',filters);
+      const data = await fetchFilterData('position',effectivePermissions,filters);
+        console.log("filters",filters);
       console.log("positionData",data);
       return data;
     },
@@ -35,10 +38,12 @@ export const usePositions = (filters = {}) => {
     refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
-  // Then in your component
-const positionData = responseData.positions || responseData.data || [];
-const totalCount = responseData.total || positionData.length;
-// const totalPages = responseData.totalPages || Math.ceil(totalCount / rowsPerPage); 
+//   // Then in your component
+// const positionData = responseData.positions || responseData.data || [];
+// const totalCount = responseData.total || positionData.length;
+
+const positionData = responseData.data?.positions || responseData.positions || responseData.data || [];
+const total = responseData.data?.total || responseData.total || positionData.length;
 
   const positionMutation = useMutation({
     mutationFn: async ({ id, data }) => {
@@ -209,6 +214,7 @@ const totalCount = responseData.total || positionData.length;
   return {
     positionData,
     isLoading,
+    total,
     isQueryLoading,
     isMutationLoading,
     isError,

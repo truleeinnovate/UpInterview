@@ -2,13 +2,13 @@
 // v1.0.1 - Ashok - improved first should open by default
 // v1.0.2 - Ashok - Improved responsiveness
 
-import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types";
+import { useState, useEffect } from "react";
+
 import RoundCard from "./RoundCard";
-import { Button } from "../../CommonCode-AllTabs/ui/button";
-import { Edit, ChevronDown, ChevronUp } from "lucide-react";
-import { Calendar, XCircle } from 'lucide-react';
-import { useAssessments } from "../../../../../apiHooks/useAssessments";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
+// import { useAssessments } from "../../../../../apiHooks/useAssessments";
+import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
 
 const VerticalRoundsView = ({
     rounds,
@@ -17,9 +17,9 @@ const VerticalRoundsView = ({
     onEditRound,
     onInitiateAction
 }) => {
-    // console.log('Received rounds:', rounds);
-    // console.log('onInitiateAction prop:', onInitiateAction);
-    const { useScheduledAssessments } = useAssessments();
+
+    // const { useScheduledAssessments } = useScheduleAssessments();
+    // const { scheduleData } = useScheduleAssessments();
     // Sort rounds by sequence
     const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
 
@@ -70,12 +70,12 @@ const VerticalRoundsView = ({
         return str.charAt(0).toUpperCase() + str.slice(1);
     };
     // v1.0.0 ---------------------------------------------------------->
-    const [candidateAssessment, setCandidateAssessment] = useState(null);
-    const [currentScheduledAssessment, setCurrentScheduledAssessment] = useState(null);
+    let [candidateAssessment, setCandidateAssessment] = useState(null);
+    let [currentScheduledAssessment, setCurrentScheduledAssessment] = useState(null);
 
 
     // Assessment round status handling
-    const getAssessmentRoundStatus = (round) => {
+    let getAssessmentRoundStatus = (round) => {
         if (round.roundTitle === "Assessment" && candidateAssessment) {
             return candidateAssessment.status || 'Pending';
         }
@@ -84,7 +84,7 @@ const VerticalRoundsView = ({
 
 
     // 🔑 Hook to fetch scheduled assessments
-    const { data: scheduledAssessments = [] } = useScheduledAssessments(
+    let { data: scheduledAssessments = [] } = useScheduleAssessments(
         sortedRounds.some(r => r.roundTitle === "Assessment")
             ? sortedRounds.find(r => r.roundTitle === "Assessment")?.assessmentId
             : null
@@ -94,10 +94,10 @@ const VerticalRoundsView = ({
     useEffect(() => {
         sortedRounds.forEach((round) => {
             if (round.roundTitle === "Assessment" && round.scheduleAssessmentId && scheduledAssessments.length > 0) {
-                const filteredAssessment = scheduledAssessments.find(
+                let  filteredAssessment = scheduledAssessments?.find(
                     assessment => assessment._id === round.scheduleAssessmentId
                 );
-                const candidateData = filteredAssessment?.candidates?.find(
+                let candidateData = filteredAssessment?.candidates?.find(
                     candidate => candidate.candidateId?._id === interviewData?.candidateId?._id
                 );
 
@@ -139,7 +139,7 @@ const VerticalRoundsView = ({
     return (
         <div className="space-y-4">
             {sortedRounds.map((round) => {
-                const roundStatus = round.roundTitle === "Assessment"
+                let roundStatus = round.roundTitle === "Assessment"
                     ? getAssessmentRoundStatus(round)
                     : round?.status;
                 return (

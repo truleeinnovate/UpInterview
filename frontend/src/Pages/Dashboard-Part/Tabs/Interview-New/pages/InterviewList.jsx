@@ -35,7 +35,6 @@ import { notify } from "../../../../../services/toastService.js";
 
 function InterviewList() {
   const { effectivePermissions } = usePermissions();
-  const { interviewData, isLoading, deleteInterviewMutation } = useInterviews();
   const navigate = useNavigate();
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectPositionView, setSelectPositionView] = useState(false);
@@ -44,19 +43,69 @@ function InterviewList() {
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
+
+  const rowsPerPage = 10;
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     tech: [],
-    experience: { min: "", max: "" },
+    // experience: { min: "", max: "" },
     interviewType: [],
     interviewMode: [],
-    position: [],
-    company: [],
+    // position: [],
+    // company: [],
     roundStatus: [],
     interviewer: [],
     createdDate: "", // '', 'last7', 'last30', 'last90'
     interviewDate: { from: "", to: "" },
   });
+
+
+  const { 
+    interviewData,
+    total,
+    currentPage: serverCurrentPage,
+    totalPages: serverTotalPages,
+    isLoading, deleteInterviewMutation } = useInterviews(
+      {
+      searchQuery: searchQuery, // FIX: Changed from 'search' to 'searchQuery'
+      status: selectedFilters.status,
+      // tech: selectedFilters.tech,
+      // experienceMin: selectedFilters.experience.min,
+      // experienceMax: selectedFilters.experience.max,
+      interviewType: selectedFilters.interviewType,
+      interviewMode: selectedFilters.interviewMode,
+      // position: selectedFilters.position,
+      // company: selectedFilters.company,
+      roundStatus: selectedFilters.roundStatus,
+      interviewer: selectedFilters.interviewer,
+      createdDate: selectedFilters.createdDate,
+      interviewDateFrom: selectedFilters.interviewDate.from,
+      interviewDateTo: selectedFilters.interviewDate.to,
+    },
+    currentPage + 1,
+    rowsPerPage
+
+      //     {
+      //   search: searchQuery,
+      //   status: selectedFilters.status,
+      //   tech: selectedFilters.tech,
+      //   experienceMin: selectedFilters.experience.min,
+      //   experienceMax: selectedFilters.experience.max,
+      //   interviewType: selectedFilters.interviewType,
+      //   interviewMode: selectedFilters.interviewMode,
+      //   position: selectedFilters.position,
+      //   company: selectedFilters.company,
+      //   roundStatus: selectedFilters.roundStatus,
+      //   interviewer: selectedFilters.interviewer,
+      //   createdDate: selectedFilters.createdDate,
+      //   interviewDateFrom: selectedFilters.interviewDate.from,
+      //   interviewDateTo: selectedFilters.interviewDate.to,
+      // },
+      // currentPage + 1, // server pages start at 1
+      // rowsPerPage
+    );
+
+
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedTech, setSelectedTech] = useState([]);
   const [experience, setExperience] = useState({ min: "", max: "" });
@@ -173,18 +222,18 @@ function InterviewList() {
     setSelectedFilters(filters);
     setIsFilterActive(
       filters.status.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        filters.experience.max ||
-        filters.interviewType.length > 0 ||
-        filters.interviewMode.length > 0 ||
-        filters.position.length > 0 ||
-        filters.company.length > 0 ||
-        filters.roundStatus.length > 0 ||
-        filters.interviewer.length > 0 ||
-        filters.createdDate ||
-        filters.interviewDate.from ||
-        filters.interviewDate.to
+      filters.tech.length > 0 ||
+      filters.experience.min ||
+      filters.experience.max ||
+      filters.interviewType.length > 0 ||
+      filters.interviewMode.length > 0 ||
+      filters.position.length > 0 ||
+      filters.company.length > 0 ||
+      filters.roundStatus.length > 0 ||
+      filters.interviewer.length > 0 ||
+      filters.createdDate ||
+      filters.interviewDate.from ||
+      filters.interviewDate.to
     );
     setCurrentPage(0);
   }, []);
@@ -197,31 +246,31 @@ function InterviewList() {
     );
   };
 
-  const handleTechToggle = (tech) => {
-    setSelectedTech((prev) =>
-      prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech]
-    );
-  };
+  // const handleTechToggle = (tech) => {
+  //   setSelectedTech((prev) =>
+  //     prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech]
+  //   );
+  // };
 
-  const handleExperienceChange = (e, type) => {
-    const value = Math.max(0, Math.min(15, Number(e.target.value) || ""));
-    setExperience((prev) => ({
-      ...prev,
-      [type]: value,
-    }));
-  };
+  // const handleExperienceChange = (e, type) => {
+  //   const value = Math.max(0, Math.min(15, Number(e.target.value) || ""));
+  //   setExperience((prev) => ({
+  //     ...prev,
+  //     [type]: value,
+  //   }));
+  // };
 
-  const handleInterviewTypeToggle = (type) => {
-    setSelectedInterviewTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    );
-  };
+  // const handleInterviewTypeToggle = (type) => {
+  //   setSelectedInterviewTypes((prev) =>
+  //     prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+  //   );
+  // };
 
-  const handleInterviewModeToggle = (mode) => {
-    setSelectedInterviewModes((prev) =>
-      prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]
-    );
-  };
+  // const handleInterviewModeToggle = (mode) => {
+  //   setSelectedInterviewModes((prev) =>
+  //     prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]
+  //   );
+  // };
 
   const handlePositionToggle = (position) => {
     setSelectedPositions((prev) =>
@@ -315,6 +364,8 @@ function InterviewList() {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
   };
+  console.log("interviewData",interviewData);
+  
 
   const handleFilterIconClick = () => {
     if (interviewData?.length !== 0) {
@@ -334,179 +385,196 @@ function InterviewList() {
     str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
   // v1.0.1 ------------------------------------------------------------------>
 
-  const FilteredData = () => {
-    if (!Array.isArray(interviewData)) return [];
-    return interviewData.filter((interview) => {
-      const fieldsToSearch = [
-        interview.candidateId?.FirstName,
-        interview.candidateId?.LastName,
-        interview.candidateId?.Email,
-        interview.positionId?.title,
-        interview.positionId?.companyname,
-        interview.interviewTitle,
-        interview.interviewType,
-        interview.status,
-        interview.interviewCode,
-      ].filter(Boolean);
+  // const FilteredData = () => {
+  //   if (!Array.isArray(interviewData)) return [];
+  //   return interviewData.filter((interview) => {
+  //     const fieldsToSearch = [
+  //       interview.candidateId?.FirstName,
+  //       interview.candidateId?.LastName,
+  //       interview.candidateId?.Email,
+  //       interview.positionId?.title,
+  //       interview.positionId?.companyname,
+  //       interview.interviewTitle,
+  //       interview.interviewType,
+  //       interview.status,
+  //       interview.interviewCode,
+  //     ].filter(Boolean);
 
-      // v1.0.1 <---------------------------------------------------------------
-      // const matchesSearchQuery = fieldsToSearch.some((field) =>
-      //   field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      // );
+  //     // v1.0.1 <---------------------------------------------------------------
+  //     // const matchesSearchQuery = fieldsToSearch.some((field) =>
+  //     //   field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+  //     // );
 
-      const normalizedQuery = normalizeSpaces(searchQuery);
+  //     const normalizedQuery = normalizeSpaces(searchQuery);
 
-      // Full name both orders
-      const fullNameNormal = normalizeSpaces(
-        `${interview.candidateId?.FirstName || ""} ${
-          interview.candidateId?.LastName || ""
-        }`
-      );
-      const fullNameReverse = normalizeSpaces(
-        `${interview.candidateId?.LastName || ""} ${
-          interview.candidateId?.FirstName || ""
-        }`
-      );
+  //     // Full name both orders
+  //     const fullNameNormal = normalizeSpaces(
+  //       `${interview.candidateId?.FirstName || ""} ${interview.candidateId?.LastName || ""
+  //       }`
+  //     );
+  //     const fullNameReverse = normalizeSpaces(
+  //       `${interview.candidateId?.LastName || ""} ${interview.candidateId?.FirstName || ""
+  //       }`
+  //     );
 
-      const matchesSearchQuery =
-        fieldsToSearch.some((field) =>
-          normalizeSpaces(field).includes(normalizedQuery)
-        ) ||
-        fullNameNormal.includes(normalizedQuery) ||
-        fullNameReverse.includes(normalizedQuery);
+  //     const matchesSearchQuery =
+  //       fieldsToSearch.some((field) =>
+  //         normalizeSpaces(field).includes(normalizedQuery)
+  //       ) ||
+  //       fullNameNormal.includes(normalizedQuery) ||
+  //       fullNameReverse.includes(normalizedQuery);
 
-      // v1.0.1 --------------------------------------------------------------->
-      const matchesStatus =
-        selectedFilters.status.length === 0 ||
-        selectedFilters.status.includes(interview.status);
+  //     // v1.0.1 --------------------------------------------------------------->
+  //     const matchesStatus =
+  //       selectedFilters.status.length === 0 ||
+  //       selectedFilters.status.includes(interview.status);
 
-      const matchesTech =
-        selectedFilters.tech.length === 0 ||
-        interview.candidateId?.skills?.some((skill) =>
-          selectedFilters.tech.includes(skill.SkillName || skill.skill)
-        );
+  //     const matchesTech =
+  //       selectedFilters.tech.length === 0 ||
+  //       interview.candidateId?.skills?.some((skill) =>
+  //         selectedFilters.tech.includes(skill.SkillName || skill.skill)
+  //       );
 
-      const matchesExperience =
-        (!selectedFilters.experience.min ||
-          interview.candidateId?.CurrentExperience >=
-            Number(selectedFilters.experience.min)) &&
-        (!selectedFilters.experience.max ||
-          interview.candidateId?.CurrentExperience <=
-            Number(selectedFilters.experience.max));
+  //     const matchesExperience =
+  //       (!selectedFilters.experience.min ||
+  //         interview.candidateId?.CurrentExperience >=
+  //         Number(selectedFilters.experience.min)) &&
+  //       (!selectedFilters.experience.max ||
+  //         interview.candidateId?.CurrentExperience <=
+  //         Number(selectedFilters.experience.max));
 
-      // New filter matches
-      const matchesInterviewType =
-        selectedFilters.interviewType.length === 0 ||
-        selectedFilters.interviewType.includes(interview.interviewType);
+  //     // New filter matches
+  //     const matchesInterviewType =
+  //       selectedFilters.interviewType.length === 0 ||
+  //       selectedFilters.interviewType.includes(interview.interviewType);
 
-      const matchesInterviewMode =
-        selectedFilters.interviewMode.length === 0 ||
-        selectedFilters.interviewMode.includes(interview.interviewMode);
+  //     const matchesInterviewMode =
+  //       selectedFilters.interviewMode.length === 0 ||
+  //       selectedFilters.interviewMode.includes(interview.interviewMode);
 
-      const matchesPosition =
-        selectedFilters.position.length === 0 ||
-        selectedFilters.position.includes(interview.positionId?.title);
+  //     const matchesPosition =
+  //       selectedFilters.position.length === 0 ||
+  //       selectedFilters.position.includes(interview.positionId?.title);
 
-      const matchesCompany =
-        selectedFilters.company.length === 0 ||
-        selectedFilters.company.includes(interview.positionId?.companyname);
+  //     const matchesCompany =
+  //       selectedFilters.company.length === 0 ||
+  //       selectedFilters.company.includes(interview.positionId?.companyname);
 
-      const matchesRoundStatus =
-        selectedFilters.roundStatus.length === 0 ||
-        interview.rounds?.some((round) =>
-          selectedFilters.roundStatus.includes(round.status)
-        );
+  //     const matchesRoundStatus =
+  //       selectedFilters.roundStatus.length === 0 ||
+  //       interview.rounds?.some((round) =>
+  //         selectedFilters.roundStatus.includes(round.status)
+  //       );
 
-      const matchesInterviewer =
-        selectedFilters.interviewer.length === 0 ||
-        interview.rounds?.some((round) =>
-          round.interviewers?.some((interviewer) =>
-            selectedFilters.interviewer.includes(interviewer.name)
-          )
-        );
+  //     const matchesInterviewer =
+  //       selectedFilters.interviewer.length === 0 ||
+  //       interview.rounds?.some((round) =>
+  //         round.interviewers?.some((interviewer) =>
+  //           selectedFilters.interviewer.includes(interviewer.name)
+  //         )
+  //       );
 
-      // Date filters
-      const matchesCreatedDate = () => {
-        if (!selectedFilters.createdDate) return true;
-        const createdAt = new Date(interview.createdAt);
-        const now = new Date();
-        const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+  //     // Date filters
+  //     const matchesCreatedDate = () => {
+  //       if (!selectedFilters.createdDate) return true;
+  //       const createdAt = new Date(interview.createdAt);
+  //       const now = new Date();
+  //       const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
 
-        switch (selectedFilters.createdDate) {
-          case "last7":
-            return daysDiff <= 7;
-          case "last30":
-            return daysDiff <= 30;
-          case "last90":
-            return daysDiff <= 90;
-          default:
-            return true;
-        }
-      };
+  //       switch (selectedFilters.createdDate) {
+  //         case "last7":
+  //           return daysDiff <= 7;
+  //         case "last30":
+  //           return daysDiff <= 30;
+  //         case "last90":
+  //           return daysDiff <= 90;
+  //         default:
+  //           return true;
+  //       }
+  //     };
 
-      const matchesInterviewDate = () => {
-        if (
-          !selectedFilters.interviewDate.from &&
-          !selectedFilters.interviewDate.to
-        ) {
-          return true;
-        }
+  //     const matchesInterviewDate = () => {
+  //       if (
+  //         !selectedFilters.interviewDate.from &&
+  //         !selectedFilters.interviewDate.to
+  //       ) {
+  //         return true;
+  //       }
 
-        const hasValidDate = interview.rounds?.some((round) => {
-          if (!round.dateTime) return false;
-          const roundDate = new Date(round.dateTime.split(" - ")[0]);
+  //       const hasValidDate = interview.rounds?.some((round) => {
+  //         if (!round.dateTime) return false;
+  //         const roundDate = new Date(round.dateTime.split(" - ")[0]);
 
-          if (
-            selectedFilters.interviewDate.from &&
-            selectedFilters.interviewDate.to
-          ) {
-            return (
-              roundDate >= new Date(selectedFilters.interviewDate.from) &&
-              roundDate <= new Date(selectedFilters.interviewDate.to)
-            );
-          } else if (selectedFilters.interviewDate.from) {
-            return roundDate >= new Date(selectedFilters.interviewDate.from);
-          } else if (selectedFilters.interviewDate.to) {
-            return roundDate <= new Date(selectedFilters.interviewDate.to);
-          }
-          return true;
-        });
+  //         if (
+  //           selectedFilters.interviewDate.from &&
+  //           selectedFilters.interviewDate.to
+  //         ) {
+  //           return (
+  //             roundDate >= new Date(selectedFilters.interviewDate.from) &&
+  //             roundDate <= new Date(selectedFilters.interviewDate.to)
+  //           );
+  //         } else if (selectedFilters.interviewDate.from) {
+  //           return roundDate >= new Date(selectedFilters.interviewDate.from);
+  //         } else if (selectedFilters.interviewDate.to) {
+  //           return roundDate <= new Date(selectedFilters.interviewDate.to);
+  //         }
+  //         return true;
+  //       });
 
-        return hasValidDate;
-      };
+  //       return hasValidDate;
+  //     };
 
-      return (
-        matchesSearchQuery &&
-        matchesStatus &&
-        matchesTech &&
-        matchesExperience &&
-        matchesInterviewType &&
-        matchesInterviewMode &&
-        matchesPosition &&
-        matchesCompany &&
-        matchesRoundStatus &&
-        matchesInterviewer &&
-        matchesCreatedDate() &&
-        matchesInterviewDate()
-      );
-    });
-  };
+  //     return (
+  //       matchesSearchQuery &&
+  //       matchesStatus &&
+  //       matchesTech &&
+  //       matchesExperience &&
+  //       matchesInterviewType &&
+  //       matchesInterviewMode &&
+  //       matchesPosition &&
+  //       matchesCompany &&
+  //       matchesRoundStatus &&
+  //       matchesInterviewer &&
+  //       matchesCreatedDate() &&
+  //       matchesInterviewDate()
+  //     );
+  //   });
+  // };
 
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
+
+  // const totalPages = Math.ceil(interviewData?.length / rowsPerPage);
+  // Use server-side pagination values
+const totalPages = serverTotalPages || 1;
+  // const nextPage = () => {
+  //   if (currentPage < totalPages - 1) {
+  //     setCurrentPage((prev) => prev + 1);
+  //   }
+  // };
+  
+  // const prevPage = () => {
+  //   if (currentPage > 0) {
+  //     setCurrentPage((prev) => prev - 1);
+  //   }
+  // };
+
   const nextPage = () => {
     if (currentPage < totalPages - 1) {
       setCurrentPage((prev) => prev + 1);
     }
   };
+  
   const prevPage = () => {
     if (currentPage > 0) {
       setCurrentPage((prev) => prev - 1);
     }
   };
+
   const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + rowsPerPage, interviewData.length);
+  // const currentFilteredRows = interviewData.slice(startIndex, endIndex);
+const currentFilteredRows = interviewData;
+
+console.log("currentFilteredRows",currentFilteredRows);
 
   // v1.0.3 <------------------------------------------------------
   const capitalizeFirstLetter = (str) =>
@@ -545,10 +613,10 @@ function InterviewList() {
           >
             <div className="flex items-center">
               <div className="flex-shrink-0 h-8 w-8">
-                {candidate?.imageUrl ? (
+                {candidate?.ImageData ? (
                   <img
-                    src={candidate.imageUrl}
-                    alt={candidate.LastName}
+                    src={candidate?.ImageData?.path}
+                    alt={candidate?.LastName}
                     className="h-8 w-8 rounded-full object-cover"
                   />
                 ) : (
@@ -566,12 +634,12 @@ function InterviewList() {
                 >
                   {(candidate?.FirstName
                     ? candidate.FirstName.charAt(0).toUpperCase() +
-                      candidate.FirstName.slice(1)
+                    candidate.FirstName.slice(1)
                     : "") +
                     " " +
                     (candidate?.LastName
                       ? candidate.LastName.charAt(0).toUpperCase() +
-                        candidate.LastName.slice(1)
+                      candidate.LastName.slice(1)
                       : "")}
                 </div>
                 <div className="text-sm text-gray-500 truncate">
@@ -591,9 +659,8 @@ function InterviewList() {
         const position = row.positionId;
         return (
           <Tooltip
-            label={`${position?.title || "Unknown"} • ${
-              position?.companyname || "No Company"
-            } • ${position?.Location || "No location"}`}
+            label={`${position?.title || "Unknown"} • ${position?.companyname || "No Company"
+              } • ${position?.Location || "No location"}`}
           >
             <div className="truncate max-w-[120px]">
               <div
@@ -602,7 +669,7 @@ function InterviewList() {
               >
                 {position?.title
                   ? position.title.charAt(0).toUpperCase() +
-                    position.title.slice(1)
+                  position.title.slice(1)
                   : "Unknown"}
               </div>
               <div className="text-sm text-gray-500 truncate">
@@ -678,9 +745,8 @@ function InterviewList() {
               <div
                 className="bg-custom-blue h-2 rounded-full"
                 style={{
-                  width: `${
-                    totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0
-                  }%`,
+                  width: `${totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0
+                    }%`,
                 }}
               ></div>
             </div>
@@ -788,40 +854,39 @@ function InterviewList() {
     },
   ];
 
-  console.log("currentFilteredRows", currentFilteredRows);
 
 
   // Table Actions Configuration
   const tableActions = [
     ...(effectivePermissions.Interviews?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: handleViewInterview,
-          },
-        ]
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: handleViewInterview,
+        },
+      ]
       : []),
     ...(effectivePermissions.Interviews?.Edit
       ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: handleEditInterview,
-          },
-        ]
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: handleEditInterview,
+        },
+      ]
       : []),
     ...(effectivePermissions.Interviews?.Delete
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: handleDeleteInterview,
-          },
-        ]
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: handleDeleteInterview,
+        },
+      ]
       : []),
   ];
 
@@ -848,7 +913,7 @@ function InterviewList() {
               onFilterClick={handleFilterIconClick}
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
-              dataLength={interviewData?.length}
+              dataLength={total}
               searchPlaceholder="Search Interviews..."
               filterIconRef={filterIconRef}
             />
@@ -893,106 +958,106 @@ function InterviewList() {
                   <div className="lg:hidden xl:hidden 2xl:hidden space-y-4 p-4">
                     {isLoading
                       ? Array(3)
-                          .fill(0)
-                          .map((_, index) => (
-                            <motion.div
-                              key={`placeholder-${index}`}
-                              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 skeleton-animation"
-                              initial={false}
-                              animate={{ height: "auto" }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-center">
-                                  <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gray-200"></div>
-                                  <div className="ml-3 space-y-2">
-                                    <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                                    <div className="h-3 w-48 bg-gray-200 rounded"></div>
-                                  </div>
-                                </div>
-                                <div className="h-6 w-24 bg-gray-200 rounded"></div>
-                              </div>
-                              <div className="space-y-3">
-                                <div>
-                                  <div className="flex items-center justify-between">
-                                    <div className="h-4 w-40 bg-gray-200 rounded"></div>
-                                    <div className="h-3 w-20 bg-gray-200 rounded"></div>
-                                  </div>
-                                  <div className="h-3 w-64 bg-gray-200 rounded mt-1"></div>
-                                </div>
-                                <div>
-                                  <div className="flex justify-between items-center mb-1">
-                                    <div className="h-3 w-16 bg-gray-200 rounded"></div>
-                                    <div className="h-3 w-24 bg-gray-200 rounded"></div>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-2"></div>
+                        .fill(0)
+                        .map((_, index) => (
+                          <motion.div
+                            key={`placeholder-${index}`}
+                            className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 skeleton-animation"
+                            initial={false}
+                            animate={{ height: "auto" }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gray-200"></div>
+                                <div className="ml-3 space-y-2">
+                                  <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                                  <div className="h-3 w-48 bg-gray-200 rounded"></div>
                                 </div>
                               </div>
-                            </motion.div>
-                          ))
-                      : currentFilteredRows.map((interview) => {
-                          const candidate = interview.candidateId;
-                          const position = interview.positionId;
-                          const rounds = interview.rounds || [];
-                          const completedRounds = rounds.filter(
-                            (round) => round.status === "Completed"
-                          ).length;
-                          const totalRounds = rounds.length;
-                          const nextRound =
-                            rounds
-                              .filter((round) =>
-                                ["Scheduled", "RequestSent"].includes(
-                                  round.status
-                                )
+                              <div className="h-6 w-24 bg-gray-200 rounded"></div>
+                            </div>
+                            <div className="space-y-3">
+                              <div>
+                                <div className="flex items-center justify-between">
+                                  <div className="h-4 w-40 bg-gray-200 rounded"></div>
+                                  <div className="h-3 w-20 bg-gray-200 rounded"></div>
+                                </div>
+                                <div className="h-3 w-64 bg-gray-200 rounded mt-1"></div>
+                              </div>
+                              <div>
+                                <div className="flex justify-between items-center mb-1">
+                                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                                  <div className="h-3 w-24 bg-gray-200 rounded"></div>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2"></div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))
+                      : currentFilteredRows?.map((interview) => {
+                        const candidate = interview.candidateId;
+                        const position = interview.positionId;
+                        const rounds = interview.rounds || [];
+                        const completedRounds = rounds.filter(
+                          (round) => round.status === "Completed"
+                        ).length;
+                        const totalRounds = rounds.length;
+                        const nextRound =
+                          rounds
+                            .filter((round) =>
+                              ["Scheduled", "RequestSent"].includes(
+                                round.status
                               )
-                              .sort((a, b) => a.sequence - b.sequence)[0] ||
-                            null;
-                          const nextRoundInterviewers =
-                            nextRound?.interviewers?.map((interviewer) => ({
-                              ...interviewer,
-                              isExternal:
-                                nextRound?.interviewerType === "external",
-                            })) || [];
-                          const isExpanded = expandedRows[interview._id];
+                            )
+                            .sort((a, b) => a.sequence - b.sequence)[0] ||
+                          null;
+                        const nextRoundInterviewers =
+                          nextRound?.interviewers?.map((interviewer) => ({
+                            ...interviewer,
+                            isExternal:
+                              nextRound?.interviewerType === "external",
+                          })) || [];
+                        const isExpanded = expandedRows[interview._id];
 
-                          return (
-                            <motion.div
-                              key={interview._id}
-                              className="bg-red-500 rounded-lg shadow-sm border border-gray-200 p-4"
-                              initial={false}
-                              animate={{ height: isExpanded ? "auto" : "auto" }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-center">
-                                  <div className="flex-shrink-0 h-12 w-12">
-                                    {candidate?.imageUrl ? (
-                                      <img
-                                        src={candidate.imageUrl}
-                                        alt={candidate.LastName}
-                                        className="h-12 w-12 rounded-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="h-12 w-12 rounded-full bg-custom-blue flex items-center justify-center text-white text-lg font-semibold">
-                                        {candidate?.LastName?.charAt(0) || "?"}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="ml-3">
-                                    <div className="flex items-center">
-                                      {/* v1.0.3 <----------------------------------------------- */}
-                                      <div className="text-base font-medium text-gray-700">
-                                        {(capitalizeFirstLetter(
-                                          candidate?.FirstName
-                                        ) || "") +
-                                          " " +
-                                          (capitalizeFirstLetter(
-                                            candidate?.LastName
-                                          ) || "")}
-                                      </div>
-                                      {/* v1.0.3 -----------------------------------------------> */}
-                                      {effectivePermissions.Candidates
-                                        ?.View && (
+                        return (
+                          <motion.div
+                            key={interview._id}
+                            className="bg-red-500 rounded-lg shadow-sm border border-gray-200 p-4"
+                            initial={false}
+                            animate={{ height: isExpanded ? "auto" : "auto" }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-12 w-12">
+                                  {candidate?.imageUrl ? (
+                                    <img
+                                      src={candidate.imageUrl}
+                                      alt={candidate.LastName}
+                                      className="h-12 w-12 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="h-12 w-12 rounded-full bg-custom-blue flex items-center justify-center text-white text-lg font-semibold">
+                                      {candidate?.LastName?.charAt(0) || "?"}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="ml-3">
+                                  <div className="flex items-center">
+                                    {/* v1.0.3 <----------------------------------------------- */}
+                                    <div className="text-base font-medium text-gray-700">
+                                      {(capitalizeFirstLetter(
+                                        candidate?.FirstName
+                                      ) || "") +
+                                        " " +
+                                        (capitalizeFirstLetter(
+                                          candidate?.LastName
+                                        ) || "")}
+                                    </div>
+                                    {/* v1.0.3 -----------------------------------------------> */}
+                                    {effectivePermissions.Candidates
+                                      ?.View && (
                                         <button
                                           onClick={() => handleView(candidate)}
                                           className="ml-2 text-custom-blue hover:text-custom-blue/80"
@@ -1000,166 +1065,165 @@ function InterviewList() {
                                           <ExternalLink className="h-3 w-3" />
                                         </button>
                                       )}
-                                    </div>
-                                    <div className="text-sm text-gray-500">
-                                      {candidate?.Email || "No email"}
-                                    </div>
                                   </div>
-                                </div>
-                                <StatusBadge
-                                  status={interview.status}
-                                  size="lg"
-                                />
-                              </div>
-
-                              <div className="space-y-3">
-                                <div>
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center">
-                                      <div className="text-sm font-medium text-gray-700">
-                                        {position?.title || "Unknown"}
-                                      </div>
-                                      {effectivePermissions.Positions?.View && (
-                                        <button
-                                          onClick={() =>
-                                            handleViewPosition(position)
-                                          }
-                                          className="ml-2 text-custom-blue hover:text-custom-blue/80"
-                                        >
-                                          <ExternalLink className="h-3 w-3" />
-                                        </button>
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-gray-500">
-                                      {interview.createdAt
-                                        ? new Date(
-                                            interview.createdAt
-                                          ).toLocaleDateString()
-                                        : "N/A"}
-                                    </div>
-                                  </div>
-                                  {/* v1.0.3 <----------------------------------------------- */}
                                   <div className="text-sm text-gray-500">
-                                    {capitalizeFirstLetter(
-                                      position?.companyname
-                                    ) || "No Company"}{" "}
-                                    •{" "}
-                                    {capitalizeFirstLetter(
-                                      position?.Location
-                                    ) || "No location"}
-                                  </div>
-                                  {/* v1.0.3 -----------------------------------------------> */}
-                                </div>
-
-                                <div>
-                                  <div className="flex justify-between items-center mb-1">
-                                    <span className="text-sm text-gray-700">
-                                      Progress
-                                    </span>
-                                    <span className="text-sm text-gray-500">
-                                      {completedRounds} of {totalRounds} rounds
-                                    </span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div
-                                      className="bg-custom-blue h-2 rounded-full"
-                                      style={{
-                                        width: `${
-                                          totalRounds > 0
-                                            ? (completedRounds / totalRounds) *
-                                              100
-                                            : 0
-                                        }%`,
-                                      }}
-                                    ></div>
+                                    {candidate?.Email || "No email"}
                                   </div>
                                 </div>
                               </div>
+                              <StatusBadge
+                                status={interview.status}
+                                size="lg"
+                              />
+                            </div>
 
-                              <button
-                                onClick={() =>
-                                  toggleRowExpansion(interview._id)
-                                }
-                                className="mt-4 w-full flex items-center justify-center py-2 text-sm text-gray-500 hover:text-gray-700"
-                              >
-                                {isExpanded ? (
-                                  <>
-                                    <span>Show less</span>
-                                    <ChevronUp className="ml-1 h-4 w-4" />
-                                  </>
-                                ) : (
-                                  <>
-                                    <span>Show more</span>
-                                    <ChevronDown className="ml-1 h-4 w-4" />
-                                  </>
-                                )}
-                              </button>
+                            <div className="space-y-3">
+                              <div>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center">
+                                    <div className="text-sm font-medium text-gray-700">
+                                      {position?.title || "Unknown"}
+                                    </div>
+                                    {effectivePermissions.Positions?.View && (
+                                      <button
+                                        onClick={() =>
+                                          handleViewPosition(position)
+                                        }
+                                        className="ml-2 text-custom-blue hover:text-custom-blue/80"
+                                      >
+                                        <ExternalLink className="h-3 w-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {interview.createdAt
+                                      ? new Date(
+                                        interview.createdAt
+                                      ).toLocaleDateString()
+                                      : "N/A"}
+                                  </div>
+                                </div>
+                                {/* v1.0.3 <----------------------------------------------- */}
+                                <div className="text-sm text-gray-500">
+                                  {capitalizeFirstLetter(
+                                    position?.companyname
+                                  ) || "No Company"}{" "}
+                                  •{" "}
+                                  {capitalizeFirstLetter(
+                                    position?.Location
+                                  ) || "No location"}
+                                </div>
+                                {/* v1.0.3 -----------------------------------------------> */}
+                              </div>
 
-                              {isExpanded && (
-                                <div className="mt-4 pt-4 border-t border-gray-200">
-                                  {nextRound ? (
-                                    <div className="space-y-3">
-                                      {/* v1.0.3 <-------------------------------------------- */}
+                              <div>
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-sm text-gray-700">
+                                    Progress
+                                  </span>
+                                  <span className="text-sm text-gray-500">
+                                    {completedRounds} of {totalRounds} rounds
+                                  </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-custom-blue h-2 rounded-full"
+                                    style={{
+                                      width: `${totalRounds > 0
+                                          ? (completedRounds / totalRounds) *
+                                          100
+                                          : 0
+                                        }%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() =>
+                                toggleRowExpansion(interview._id)
+                              }
+                              className="mt-4 w-full flex items-center justify-center py-2 text-sm text-gray-500 hover:text-gray-700"
+                            >
+                              {isExpanded ? (
+                                <>
+                                  <span>Show less</span>
+                                  <ChevronUp className="ml-1 h-4 w-4" />
+                                </>
+                              ) : (
+                                <>
+                                  <span>Show more</span>
+                                  <ChevronDown className="ml-1 h-4 w-4" />
+                                </>
+                              )}
+                            </button>
+
+                            {isExpanded && (
+                              <div className="mt-4 pt-4 border-t border-gray-200">
+                                {nextRound ? (
+                                  <div className="space-y-3">
+                                    {/* v1.0.3 <-------------------------------------------- */}
+                                    <div>
+                                      <div className="text-sm font-medium text-gray-700 mb-2">
+                                        Next Round:{" "}
+                                        {capitalizeFirstLetter(
+                                          nextRound.roundTitle
+                                        )}
+                                      </div>
+                                      <div className="flex items-center">
+                                        <StatusBadge
+                                          status={nextRound.status}
+                                          size="sm"
+                                        />
+                                        <span className="ml-2 text-xs text-gray-500">
+                                          {capitalizeFirstLetter(
+                                            nextRound.interviewType
+                                          )}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    {/* v1.0.3 <--------------------------------------------> */}
+                                    {nextRoundInterviewers.length > 0 && (
                                       <div>
                                         <div className="text-sm font-medium text-gray-700 mb-2">
-                                          Next Round:{" "}
-                                          {capitalizeFirstLetter(
-                                            nextRound.roundTitle
+                                          Interviewers
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                          {nextRoundInterviewers.map(
+                                            (interviewer) => (
+                                              <InterviewerAvatar
+                                                key={interviewer?._id}
+                                                interviewer={interviewer}
+                                                size="md"
+                                              />
+                                            )
                                           )}
                                         </div>
-                                        <div className="flex items-center">
-                                          <StatusBadge
-                                            status={nextRound.status}
-                                            size="sm"
-                                          />
-                                          <span className="ml-2 text-xs text-gray-500">
-                                            {capitalizeFirstLetter(
-                                              nextRound.interviewType
-                                            )}
-                                          </span>
-                                        </div>
                                       </div>
-                                      {/* v1.0.3 <--------------------------------------------> */}
-                                      {nextRoundInterviewers.length > 0 && (
-                                        <div>
-                                          <div className="text-sm font-medium text-gray-700 mb-2">
-                                            Interviewers
-                                          </div>
-                                          <div className="flex flex-wrap gap-2">
-                                            {nextRoundInterviewers.map(
-                                              (interviewer) => (
-                                                <InterviewerAvatar
-                                                  key={interviewer?._id}
-                                                  interviewer={interviewer}
-                                                  size="md"
-                                                />
-                                              )
-                                            )}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <div className="text-sm text-gray-500">
-                                      No Upcoming Rounds
-                                    </div>
-                                  )}
-                                  {effectivePermissions.Interviews?.View && (
-                                    <button
-                                      onClick={() =>
-                                        handleViewInterview(interview)
-                                      }
-                                      className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                    >
-                                      View Full Details
-                                      <ArrowRight className="ml-1 h-4 w-4" />
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                            </motion.div>
-                          );
-                        })}
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="text-sm text-gray-500">
+                                    No Upcoming Rounds
+                                  </div>
+                                )}
+                                {effectivePermissions.Interviews?.View && (
+                                  <button
+                                    onClick={() =>
+                                      handleViewInterview(interview)
+                                    }
+                                    className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                  >
+                                    View Full Details
+                                    <ArrowRight className="ml-1 h-4 w-4" />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </motion.div>
+                        );
+                      })}
                   </div>
                 </>
               )}

@@ -24,7 +24,7 @@ const QuestionBank = ({
   interviewQuestionsLists,
   removedQuestionIds,
 }) => {
-  console.log("type:", type);
+
 
   const { checkPermission, isInitialized } = usePermissionCheck();
   const { effectivePermissions } = usePermissions();

@@ -61,21 +61,10 @@ const InterviewDetail = () => {
         isError,
         error,
     } = useInterviews();
-    const [modalAction, setModalAction] = useState(null); // 'reschedule' or 'cancel'
-    const [selectedRound, setSelectedRound] = useState(null);
-    const [calculatedFees, setCalculatedFees] = useState(null);
-
-    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-    const [pendingStatus, setPendingStatus] = useState(null);
-    const [pendingReason, setPendingReason] = useState("");
-
     const interview = interviewData?.find((interview) => interview._id === id);
-    console.log('interview:-', interview)
-    console.log('interview:-', interview.status)
     const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [selectCandidateView, setSelectCandidateView] = useState(false);
-    // const [selectedPosition, setSelectedPosition] = useState(null);
-    // const [selectPositionView, setSelectPositionView] = useState(false);
+  
     const handleView = (candidate) => {
         if (!candidate) return; // Prevents error if candidate is undefined
         setSelectedCandidate(candidate);
@@ -595,9 +584,9 @@ const InterviewDetail = () => {
                                         {/* v1.0.1 ---------------------------------------------------------------------> */}
                                         <div className="flex flex-col sm:flex-row items-start sm:items-center">
                                             <div className="mr-0 mb-3 sm:mb-0 sm:mr-3">
-                                                {candidate?.imageUrl ? (
+                                                {candidate?.ImageData ? (
                                                     <img
-                                                        src={candidate.imageUrl}
+                                                         src={candidate?.ImageData?.path}
                                                         alt={candidate?.LastName}
                                                         className="h-12 w-12 rounded-full object-cover"
                                                     />

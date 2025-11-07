@@ -56,17 +56,7 @@ const createList = async (req, res) => {
     if (!isValid) {
       return res.status(400).json({ message: 'Validation failed', errors });
     }
-    //-----v1.0.0----->
-        //console.log("effectivePermissions",res.locals?.effectivePermissions)
-        //<-----v1.0.1---
-        // Permission: Tasks.Create (or super admin override)
-        // const canCreate =
-        // await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Create')
-        // //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Create')
-        // if (!canCreate) {
-        //   return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Create permission' });
-        // }
-        //-----v1.0.1--->
+   
     const newList = await QuestionbankFavList.create({
       label,
       ownerId,

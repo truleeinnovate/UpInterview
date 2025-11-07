@@ -296,49 +296,79 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         break;
 
       case 'interview':
-        // console.log('[26] Processing Interview model');
-        const interviews = await DataModel.find(query)
-          .populate({ path: 'candidateId', model: 'Candidate' })
-          .populate({ path: 'positionId', model: 'Position' })
-          .populate({ path: 'templateId', model: 'InterviewTemplate' })
-          .lean();
 
-        // console.log('[27] Found', interviews.length, 'interviews');
-        const interviewIds = interviews.map((interview) => interview._id);
-        // console.log('[28] Interview IDs for related data:', interviewIds);
-        // <------------------------------- v1.0.1 
-        const roundsData = await InterviewRounds.find({
-          interviewId: { $in: interviewIds },
-          // ------------------------------ v1.0.1 >
-        })
-          .populate({
-            path: 'interviewers',
-            model: 'Contacts',
-            select: 'firstName lastName email',
-          })
-          .lean();
+      const interviewQueryParams = { 
+    searchQuery: req.query.searchQuery,
+    status: req.query.status, // FIX: Changed from interviewStatus to status
+    tech: req.query.tech,
+    experienceMin: req.query.experienceMin,
+    experienceMax: req.query.experienceMax,
+    interviewType: req.query.interviewType,
+    interviewMode: req.query.interviewMode,
+    position: req.query.position,
+    company: req.query.company,
+    roundStatus: req.query.roundStatus,
+    interviewer: req.query.interviewer,
+    createdDate: req.query.createdDate,
+    interviewDateFrom: req.query.interviewDateFrom,
+    interviewDateTo: req.query.interviewDateTo,
+    page: parseInt(req.query.page) || 1,
+    limit: parseInt(req.query.limit) || 10
+  };
 
-        // console.log('[29] Found', roundsData.length, 'interview rounds');
+      
+       data = await handleInterviewFiltering({
+        query,
+          DataModel,
+          ...interviewQueryParams
+        });
+        console.log("data",data);
+        
+      
+      
+      
+      // const interviews = await DataModel.find(query)
+        //   .populate({ path: 'candidateId', model: 'Candidate' })
+        //   .populate({ path: 'positionId', model: 'Position' })
+        //   .populate({ path: 'templateId', model: 'InterviewTemplate' })
+        //   .lean();
 
-        const interviewQuestions = await InterviewQuestions.find({
-          interviewId: { $in: interviewIds },
-          // <------------------------------- v1.0.1 
-        })
-          .select('roundId snapshot')
-          .lean();
+        // // console.log('[27] Found', interviews.length, 'interviews');
+        // const interviewIds = interviews.map((interview) => interview._id);
+        // // console.log('[28] Interview IDs for related data:', interviewIds);
+        // // <------------------------------- v1.0.1 
+        // const roundsData = await InterviewRounds.find({
+        //   interviewId: { $in: interviewIds },
+        //   // ------------------------------ v1.0.1 >
+        // })
+        //   .populate({
+        //     path: 'interviewers',
+        //     model: 'Contacts',
+        //     select: 'firstName lastName email',
+        //   })
+        //   .lean();
 
-        // console.log('[30] Found', interviewQuestions.length, 'interview questions');
-        // <------------------------------- v1.0.2 
-        const roundsWithQuestions = roundsData.map((round) => ({
-          ...round,
-          questions: interviewQuestions.filter((q) => q.roundId.toString() === round._id.toString()),
-        }));
+        // // console.log('[29] Found', roundsData.length, 'interview rounds');
 
-        data = interviews.map((interview) => ({
-          // <------------------------------- v1.0.2 
-          ...interview,
-          rounds: roundsWithQuestions.filter((round) => round.interviewId.toString() === interview._id.toString()),
-        }));
+        // const interviewQuestions = await InterviewQuestions.find({
+        //   interviewId: { $in: interviewIds },
+        //   // <------------------------------- v1.0.1 
+        // })
+        //   .select('roundId snapshot')
+        //   .lean();
+
+        // // console.log('[30] Found', interviewQuestions.length, 'interview questions');
+        // // <------------------------------- v1.0.2 
+        // const roundsWithQuestions = roundsData.map((round) => ({
+        //   ...round,
+        //   questions: interviewQuestions.filter((q) => q.roundId.toString() === round._id.toString()),
+        // }));
+
+        // data = interviews.map((interview) => ({
+        //   // <------------------------------- v1.0.2 
+        //   ...interview,
+        //   rounds: roundsWithQuestions.filter((round) => round.interviewId.toString() === interview._id.toString()),
+        // }));
         // ------------------------------ v1.0.2 >
         // console.log('[31] Final interview data with rounds and questions prepared');
         break;
@@ -473,26 +503,20 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         // query search params based on that will get the data
         // query search params based on that will get the data
         const {
-          page: positionPage = 1,
-          limit: positionLimit = 10,
-          search: positionSearch,
-          location: positionLocation,
-          tech: positionTech,
-          company: positionCompany,
-          experienceMin: positionExperienceMin,
-          experienceMax: positionExperienceMax,
-          salaryMin: positionSalaryMin,
-          salaryMax: positionSalaryMax,
-          createdDate: positionCreatedDate
+          page, limit, searchQuery,
+          location, tech, company,
+          experienceMin, experienceMax,
+          salaryMin, salaryMax,
+          createdDate
         } = req.query;
 
-        const parsedPositionPage = parseInt(positionPage) || 1;
-        const parsedPositionLimit = parseInt(positionLimit) || 10;
+        const parsedPositionPage = parseInt(page) || 1;
+        const parsedPositionLimit = parseInt(limit) || 10;
         const positionSkip = (parsedPositionPage - 1) * parsedPositionLimit;
 
         // Apply search
-        if (positionSearch) {
-          const searchRegex = new RegExp(positionSearch, 'i');
+        if (searchQuery) {
+          const searchRegex = new RegExp(searchQuery, 'i');
           query.$or = [
             { title: searchRegex },
             { companyname: searchRegex },
@@ -502,26 +526,26 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         }
 
         // Apply location filter
-        if (positionLocation) {
-          const locations = Array.isArray(positionLocation) ? positionLocation : [positionLocation];
+        if (location) {
+          const locations = Array.isArray(location) ? location : [location];
           query.Location = { $in: locations };
         }
 
         // Apply tech/skills filter
-        if (positionTech) {
-          const techs = Array.isArray(positionTech) ? positionTech : [positionTech];
+        if (tech) {
+          const techs = Array.isArray(tech) ? tech : [tech];
           query['skills.skill'] = { $in: techs };
         }
 
         // Apply company filter
-        if (positionCompany) {
-          const companies = Array.isArray(positionCompany) ? positionCompany : [positionCompany];
+        if (company) {
+          const companies = Array.isArray(company) ? company : [company];
           query.companyname = { $in: companies };
         }
 
         // Apply experience filter
-        const positionExpMin = parseInt(positionExperienceMin) || 0;
-        const positionExpMax = parseInt(positionExperienceMax) || Infinity;
+        const positionExpMin = parseInt(experienceMin) || 0;
+        const positionExpMax = parseInt(experienceMax) || Infinity;
         if (positionExpMin > 0 || positionExpMax < Infinity) {
           query.$and = query.$and || [];
           if (positionExpMin > 0) query.$and.push({ minexperience: { $gte: positionExpMin } });
@@ -529,30 +553,37 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         }
 
         // Apply salary filter
-        const positionSalMin = parseInt(positionSalaryMin) || 0;
-        const positionSalMax = parseInt(positionSalaryMax) || Infinity;
+        const positionSalMin = parseInt(salaryMin) || 0;
+        const positionSalMax = parseInt(salaryMax) || Infinity;
+
+        // Apply salary filter - CORRECT WAY
         if (positionSalMin > 0 || positionSalMax < Infinity) {
           query.$and = query.$and || [];
-          if (positionSalMin > 0) query.$and.push({
-            $or: [
-              { minSalary: { $gte: positionSalMin } },
-              { maxSalary: { $gte: positionSalMin } }
-            ]
-          });
-          if (positionSalMax < Infinity) query.$and.push({
-            $or: [
-              { minSalary: { $lte: positionSalMax } },
-              { maxSalary: { $lte: positionSalMax } }
-            ]
-          });
+
+          if (positionSalMin > 0) {
+            query.$and.push({
+              $or: [
+                { maxSalary: { $gte: positionSalMin } },
+                { minSalary: { $gte: positionSalMin } }
+              ]
+            });
+          }
+          if (positionSalMax < Infinity) {
+            query.$and.push({
+              $or: [
+                { minSalary: { $lte: positionSalMax } },
+                { maxSalary: { $lte: positionSalMax } }
+              ]
+            });
+          }
         }
 
         // Apply created date filter
-        if (positionCreatedDate === 'last7') {
+        if (createdDate === 'last7') {
           const date = new Date();
           date.setDate(date.getDate() - 7);
           query.createdAt = { $gte: date };
-        } else if (positionCreatedDate === 'last30') {
+        } else if (createdDate === 'last30') {
           const date = new Date();
           date.setDate(date.getDate() - 30);
           query.createdAt = { $gte: date };
@@ -581,7 +612,6 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         };
 
         data = dataObj;
-        // console.log('[33] Found', data.positions.length, 'Position records out of', total);
         break;
 
       // data = await DataModel.find(query)
@@ -660,101 +690,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         break;
 
       case "candidate":
-        //   candidate query base on query will get the data from db 
-        // const {
-        //   page = 1,
-        //   limit = 10,
-        //   search,
-        //   status,
-        //   tech,
-        //   experienceMin,
-        //   experienceMax,
-        //   relevantExperienceMin,
-        //   relevantExperienceMax,
-        //   roles,
-        //   universities,
-        //   createdDate
-        // } = req.query;
 
-        // const parsedPage = parseInt(page) || 1;
-        // const parsedLimit = parseInt(limit) || 10;
-        // const skip = (parsedPage - 1) * parsedLimit;
-
-        // // Apply search
-        // if (search) {
-        //   const searchRegex = new RegExp(search, 'i');
-        //   query.$or = [
-        //     { FirstName: searchRegex },
-        //     { LastName: searchRegex },
-        //     { Email: searchRegex },
-        //     { Phone: searchRegex }
-        //   ];
-        // }
-
-        // // Apply filters
-        // if (status) {
-        //   const statuses = Array.isArray(status) ? status : [status];
-        //   query.HigherQualification = { $in: statuses };
-        // }
-
-        // if (tech) {
-        //   const techs = Array.isArray(tech) ? tech : [tech];
-        //   query['skills.skill'] = { $in: techs };
-        // }
-
-        // const expMin = parseInt(experienceMin) || 0;
-        // const expMax = parseInt(experienceMax) || Infinity;
-        // if (expMin > 0 || expMax < Infinity) {
-        //   query.CurrentExperience = {};
-        //   if (expMin > 0) query.CurrentExperience.$gte = expMin;
-        //   if (expMax < Infinity) query.CurrentExperience.$lte = expMax;
-        // }
-
-        // const relExpMin = parseInt(relevantExperienceMin) || 0;
-        // const relExpMax = parseInt(relevantExperienceMax) || Infinity;
-        // if (relExpMin > 0 || relExpMax < Infinity) {
-        //   query.RelevantExperience = {};
-        //   if (relExpMin > 0) query.RelevantExperience.$gte = relExpMin;
-        //   if (relExpMax < Infinity) query.RelevantExperience.$lte = relExpMax;
-        // }
-
-        // if (roles) {
-        //   const roleList = Array.isArray(roles) ? roles : [roles];
-        //   query.CurrentRole = { $in: roleList };
-        // }
-
-        // if (universities) {
-        //   const uniList = Array.isArray(universities) ? universities : [universities];
-        //   query.UniversityCollege = { $in: uniList };
-        // }
-
-        // if (createdDate === 'last7') {
-        //   const date = new Date();
-        //   date.setDate(date.getDate() - 7);
-        //   query.createdAt = { $gte: date };
-        // } else if (createdDate === 'last30') {
-        //   const date = new Date();
-        //   date.setDate(date.getDate() - 30);
-        //   query.createdAt = { $gte: date };
-        // }
-
-        // // Fetch paginated data with sort
-        // data = await Candidate.find(query)
-        //   .sort({ createdAt: -1 })
-        //   .skip(skip)
-        //   .limit(parsedLimit)
-        //   .lean();
-
-        // // Get total count
-        // total = await Candidate.countDocuments(query);
-
-        // dataObj = {
-        //   candidate: data, total
-        // }
-
-        // data = dataObj
-        // break;
-        // candidate query base on query will get the data from db 
         const {
           page: candidatePage = 1,
           limit: candidateLimit = 10,
@@ -876,5 +812,211 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
   }
   // console.log('--- REQUEST PROCESSING COMPLETE ---');
 });
+
+
+async function handleInterviewFiltering(options) {
+  const {
+    query,
+    DataModel,
+    searchQuery,
+    status,
+    tech,
+    experienceMin,
+    experienceMax,
+    interviewType,
+    interviewMode,
+    position,
+    company,
+    roundStatus,
+    interviewer,
+    createdDate,
+    interviewDateFrom,
+    interviewDateTo,
+    page = 1,
+    limit = 10
+  } = options;
+
+  console.log('🔍 Backend filtering started with:', {
+    searchQuery,
+    status,
+    tenantId: query.tenantId,
+    page,
+    limit
+  });
+
+  try {
+    // Start with base query (tenant/organization filtering)
+    let matchQuery = { ...query };
+
+ // In handleInterviewFiltering
+if (searchQuery && searchQuery.trim() !== '') {
+  const searchQueryTrimmed = searchQuery.trim();
+  const searchRegex = new RegExp(searchQueryTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+  
+  const searchWords = searchQueryTrimmed.toLowerCase().split(/\s+/).filter(Boolean);
+
+  const fullNameOr = searchWords.length > 1 ? [
+    {
+      $and: [
+        { 'candidateId.FirstName': new RegExp(searchWords[0], 'i') },
+        { 'candidateId.LastName': new RegExp(searchWords[1], 'i') }
+      ]
+    },
+    {
+      $and: [
+        { 'candidateId.FirstName': new RegExp(searchWords[1], 'i') },
+        { 'candidateId.LastName': new RegExp(searchWords[0], 'i') }
+      ]
+    }
+  ] : [];
+
+  matchQuery.$or = [
+    { 'candidateId.FirstName': searchRegex },
+    { 'candidateId.LastName': searchRegex },
+    { 'candidateId.Email': searchRegex },
+    { 'positionId.title': searchRegex },
+    { 'positionId.companyname': searchRegex },
+    { interviewCode: searchRegex },
+    { status: searchRegex },
+    ...fullNameOr
+  ];
+}
+
+    // ✅ Status filter
+    if (status && status.length > 0) {
+      const statusArray = Array.isArray(status) ? status : [status];
+      matchQuery.status = { $in: statusArray };
+    }
+
+    // ✅ Interview Type filter
+    if (interviewType && interviewType.length > 0) {
+      const typeArray = Array.isArray(interviewType) ? interviewType : [interviewType];
+      matchQuery.interviewType = { $in: typeArray };
+    }
+
+    // ✅ Interview Mode filter
+    if (interviewMode && interviewMode.length > 0) {
+      const modeArray = Array.isArray(interviewMode) ? interviewMode : [interviewMode];
+      matchQuery.interviewMode = { $in: modeArray };
+    }
+
+    // ✅ Created Date filter
+    if (createdDate) {
+      const date = new Date();
+      switch (createdDate) {
+        case 'last7':
+          date.setDate(date.getDate() - 7);
+          matchQuery.createdAt = { $gte: date };
+          break;
+        case 'last30':
+          date.setDate(date.getDate() - 30);
+          matchQuery.createdAt = { $gte: date };
+          break;
+        case 'last90':
+          date.setDate(date.getDate() - 90);
+          matchQuery.createdAt = { $gte: date };
+          break;
+        default:
+          if (createdDate.includes('-')) {
+            matchQuery.createdAt = { $gte: new Date(createdDate) };
+          }
+      }
+    }
+
+    console.log('📋 Final MongoDB matchQuery:', JSON.stringify(matchQuery, null, 2));
+
+    // Use regular find with populate instead of aggregation for better reliability
+    let interviews = await DataModel.find(matchQuery)
+      .populate({
+        path: 'candidateId',
+        model: 'Candidate',
+        select: 'FirstName LastName Email Phone skills CurrentExperience ImageData'
+      })
+      .populate({
+        path: 'positionId',
+        model: 'Position',
+        select: 'title companyname Location jobDescription'
+      })
+      .populate({
+        path: 'templateId',
+        model: 'InterviewTemplate'
+      })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    console.log(`✅ Found ${interviews.length} interviews after main query`);
+
+    // Get total count for pagination
+    const totalCount = await DataModel.countDocuments(matchQuery);
+    console.log(`📊 Total count: ${totalCount}`);
+
+    // If no interviews found, return empty result early
+    if (!interviews.length) {
+      return {
+        data: [],
+        total: 0,
+        page: parseInt(page),
+        totalPages: 0
+      };
+    }
+
+    // Get rounds for all interviews
+    const interviewIds = interviews.map(interview => interview._id);
+    const roundsData = await InterviewRounds.find({
+      interviewId: { $in: interviewIds }
+    })
+      .populate({
+        path: 'interviewers',
+        model: 'Contacts',
+        select: 'firstName lastName email'
+      })
+      .lean();
+
+    console.log(`🔄 Found ${roundsData.length} rounds for interviews`);
+
+    // Get questions for all rounds
+    const roundIds = roundsData.map(round => round._id);
+    const interviewQuestions = await InterviewQuestions.find({
+      roundId: { $in: roundIds }
+    })
+      .select('roundId snapshot')
+      .lean();
+
+    console.log(`❓ Found ${interviewQuestions.length} interview questions`);
+
+    // Combine rounds with questions
+    const roundsWithQuestions = roundsData.map(round => ({
+      ...round,
+      questions: interviewQuestions.filter(q => 
+        q.roundId && q.roundId.toString() === round._id.toString()
+      )
+    }));
+
+    // Combine interviews with rounds
+    const combinedData = interviews.map(interview => ({
+      ...interview,
+      rounds: roundsWithQuestions.filter(round => 
+        round.interviewId && round.interviewId.toString() === interview._id.toString()
+      )
+    }));
+
+    console.log(`🎉 Final combined data: ${combinedData.length} interviews`);
+
+    return {
+      data: combinedData,
+      total: totalCount,
+      page: parseInt(page),
+      totalPages: Math.ceil(totalCount / limit)
+    };
+
+  } catch (error) {
+    console.error('❌ Error in interview filtering:', error);
+    throw error;
+  }
+}
+
+
 
 module.exports = router;
