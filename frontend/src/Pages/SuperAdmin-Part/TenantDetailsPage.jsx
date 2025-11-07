@@ -1,5 +1,7 @@
 // v1.0.0 - Ashok - The Tenant View is not working in the live app.
 // I'm currently working on fixing the issue
+// v1.0.1 - Ashok - Added status
+
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Tab } from "../../Components/SuperAdminComponents/common/Tab";
@@ -27,6 +29,8 @@ import { useTenantById } from "../../apiHooks/superAdmin/useTenants";
 // import { usePermissions } from "../../Context/PermissionsContext";
 // import Loading from "../../Components/Loading";
 import Loader from "../../Components/SuperAdminComponents/common/Loader";
+import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 function TenantDetailsPage() {
   const { id } = useParams();
@@ -85,9 +89,6 @@ function TenantDetailsPage() {
     );
   }
 
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-25 backdrop-blur-sm">
       <div
@@ -101,7 +102,14 @@ function TenantDetailsPage() {
         {/* Fixed Header */}
         <div className="px-6 py-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-custom-blue">Tenant</h1>
+            <div className="flex items-center gap-6">
+              <h1 className="text-2xl font-bold text-custom-blue">Tenant</h1>
+              {tenant && (
+                <StatusBadge
+                  status={capitalizeFirstLetter(tenant?.tenant?.status)}
+                />
+              )}
+            </div>
             <div className="flex space-x-2">
               <button
                 onClick={toggleViewMode}

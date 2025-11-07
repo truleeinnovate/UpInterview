@@ -1,20 +1,10 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - Changed question card UI
+
 import { ChevronDown, ChevronUp } from "lucide-react";
+import QuestionCard from "./QuestionCard/QuestionCard";
 
 function QuestionsTab({ sections, toggleStates, toggleArrow1 }) {
-  const getDifficultyColorClass = (difficulty) => {
-    switch (difficulty) {
-      case "Easy":
-        return "bg-green-500";
-      case "Medium":
-        return "bg-yellow-500";
-      case "Hard":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
-
   return (
     <div className="">
       <div className="space-y-5">
@@ -61,37 +51,7 @@ function QuestionsTab({ sections, toggleStates, toggleArrow1 }) {
                         key={question._id}
                         className="p-5 hover:bg-gray-50 transition-colors group"
                       >
-                        <div className="flex gap-4">
-                          <div className="relative flex flex-col items-center pt-0.5">
-                            <div
-                              className={`w-2.5 h-10 rounded-full ${getDifficultyColorClass(
-                                question.snapshot?.difficultyLevel
-                              )}`}
-                              title={question.snapshot?.difficultyLevel}
-                            ></div>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start gap-3">
-                              <div className="flex-1 min-w-0">
-                                {/* v1.0.0 <---------------------------------------------------- */}
-                                <div className="flex items-baseline gap-2">
-                                  <span className="text-gray-500 text-sm font-medium">
-                                    {question.order}.
-                                  </span>
-                                  <p className="sm:text-sm text-gray-800 font-medium truncate">
-                                    {question.snapshot?.questionText}
-                                  </p>
-                                </div>
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                  <span className="sm:text-sm inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {question.snapshot?.questionType}
-                                  </span>
-                                </div>
-                                {/* v1.0.0 ----------------------------------------------------> */}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                        <QuestionCard question={question} />
                       </div>
                     ))
                   ) : (
