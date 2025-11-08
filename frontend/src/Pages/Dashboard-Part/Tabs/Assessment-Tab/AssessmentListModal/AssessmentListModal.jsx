@@ -14,6 +14,7 @@ const AssessmentListModal = ({
   ownerId,
   setSelected,
   selectionType,
+  setErrors,
 }) => {
   const [newList, setNewList] = useState({
     categoryOrTechnology: "",
@@ -116,6 +117,10 @@ const AssessmentListModal = ({
       onClose();
       setNewList({ categoryOrTechnology: "", name: "" });
       setError("");
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        categoryOrTechnology: "",
+      }));
     } catch (error) {
       console.error("Create List Error:", error);
       setError("Server error, please try again.");

@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  reduce error solved
 // v1.0.1  -  Ashraf  -  displaying more fileds in result
 // v1.0.2  -  Ashok   -  Improved responsiveness
+// v1.0.3  -  Ashok   -  Added type and scheduleAssessmentId to get specific schedule assessment
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
@@ -14,6 +15,8 @@ function AssessmentResultsTab({
   toggleArrow1,
   isFullscreen,
   assessmentQuestions,
+  type,
+  scheduledAssessmentId,
 }) {
   const [results, setResults] = useState([]);
   //console.log("result",results)
@@ -27,7 +30,15 @@ function AssessmentResultsTab({
     const getResults = async () => {
       const { data, error } = await fetchAssessmentResults(assessment?._id);
       if (!error) {
-        setResults(data);
+        // If type is provided, filter by scheduledAssessmentId
+        if (type && scheduledAssessmentId) {
+          const filtered = data.filter(
+            (item) => item.scheduleId === scheduledAssessmentId
+          );
+          setResults(filtered);
+        } else {
+          setResults(data);
+        }
       } else {
         console.error("Error loading results:", error);
       }
@@ -45,13 +56,12 @@ function AssessmentResultsTab({
   const handleViewResult = (candidate, schedule) => {
     // console.log("candidate", candidate);
     // console.log("schedule", schedule);
-   
+
     setSelectedCandidate(candidate);
     setSelectedSchedule(schedule);
     setShowResultView(true);
   };
-// console.log("results ",results )
-  
+  // console.log("results ",results )
 
   const closeResultView = () => {
     setShowResultView(false);
@@ -120,7 +130,7 @@ function AssessmentResultsTab({
       />
     );
   }
-console.log("results ",results )
+  console.log("results ", results);
   return (
     // v1.0.2 <----------------------------------
     <div className="sm:px-2 p-4">

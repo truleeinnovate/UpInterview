@@ -22,6 +22,7 @@ function ScheduleAssDetails() {
   const { state } = useLocation();
   const schedule = state?.schedule;
   //console.log('schedule--', schedule);
+  console.log('SCHEDULE ============================================>', schedule);
 
   const {
     fetchScheduledAssessments,
@@ -35,6 +36,9 @@ function ScheduleAssDetails() {
   const [toggleStates, setToggleStates] = useState([]);
   const [assessmentQuestions, setAssessmentQuestions] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(true);
+
+  console.log("SCHEDULE ASSESSMENTS ============================> ", fetchScheduledAssessments);
+  console.log("ASSESSMENT ===========================> ", assessment)
 
   useEffect(() => {
     const loadData = async () => {
@@ -235,6 +239,8 @@ function ScheduleAssDetails() {
                 toggleArrow1={toggleArrow1}
                 isFullscreen={isFullscreen}
                 assessmentQuestions={assessmentQuestions}
+                type="fromAssessment"
+                scheduledAssessmentId={schedule._id}
               />
             </div>
           )}
