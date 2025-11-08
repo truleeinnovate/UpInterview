@@ -17,7 +17,6 @@ import {
   validateAvailabilityForm,
 } from "../../../../../../utils/MyProfileValidations";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { useCustomContext } from "../../../../../../Context/Contextfetch";
 
 import Availability from "../../../../Tabs/CommonCode-AllTabs/Availability";
 import {
@@ -44,7 +43,6 @@ const EditAvailabilityDetails = ({
   onSuccess,
   availabilityData,
 }) => {
-  const { usersRes } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();

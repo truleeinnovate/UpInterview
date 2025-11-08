@@ -11,7 +11,6 @@ import StatusChangeModal from "./StatusChangeModal.jsx";
 import StatusHistory from "./StatusHistory.jsx";
 import axios from "axios";
 import { config } from "../../../../config.js";
-import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import {
   Minimize,
@@ -52,7 +51,6 @@ const getStatusColor = (status) => {
 };
 
 function SupportDetails() {
-  const { userRole } = useCustomContext();
   const {
     effectivePermissions,
     superAdminPermissions,

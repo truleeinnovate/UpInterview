@@ -542,15 +542,17 @@ const MainAppRoutes = ({
                     {/* Protected Routes */}
                     <Route
                         element={
-                            <ProtectedRoute>
-                                <CustomProvider>
-                                    <PermissionsProvider>
-                                        <PageSetter />
-                                        {shouldRenderNavbar && <CombinedNavbar />}
-                                        <Outlet />
-                                    </PermissionsProvider>
-                                </CustomProvider>
-                            </ProtectedRoute>
+                            <>
+                            {/* <ProtectedRoute> */}
+                                    {/* <CustomProvider> */}
+                                    {/* <PermissionsProvider> */}
+                                    {/* <PageSetter /> */}
+                                    {shouldRenderNavbar && <CombinedNavbar />}
+                                    <Outlet />
+                                    {/* </PermissionsProvider> */}
+                                    {/* </CustomProvider> */}
+                            {/* </ProtectedRoute> */}
+                            </>
                         }
                     >
                         <Route path="/home" element={<Home />} />
@@ -1407,74 +1409,6 @@ const App = () => {
     const showLogoPaths = [];
     const noNavbarPaths = [];
 
-    // Preload permissions on app startup if user is authenticated
-    // useEffect(() => {
-    //   if (authToken && !hasValidCachedPermissions()) {
-    //     // <--------------------- v1.0.0
-    //     preloadPermissions().catch(() => {});
-    //     // v1.0.0 --------------------->
-    //   }
-
-    //   // Sync user type with localStorage to ensure consistency
-    //   if (authToken) {
-    //     AuthCookieManager.syncUserType();
-    //   }
-    //   // <---------------------- v1.0.4
-
-    //   // Initialize cross-tab authentication sync
-    //   const cleanupAuthListener = AuthCookieManager.setupCrossTabAuthListener();
-
-    //   // Check browser permissions and capabilities
-    //   const browserPermissions = AuthCookieManager.checkBrowserPermissions();
-
-    //   // console.log('Browser permissions check:', browserPermissions);
-
-    //   // Detect new browser context
-    //   if (AuthCookieManager.isNewBrowserContext()) {
-    //     // console.log('New browser context detected - syncing auth state');
-    //     AuthCookieManager.syncAuthAcrossTabs();
-    //   }
-
-    //   // Request notification permission if not granted (only for authenticated users)
-    //   if (authToken && !browserPermissions.notifications) {
-    //     // Delay the permission request to avoid blocking the UI
-    //     setTimeout(async () => {
-    //       try {
-    //         await AuthCookieManager.requestNotificationPermission();
-    //       } catch (error) {
-    //         console.warn("Failed to request notification permission:", error);
-    //       }
-    //     }, 2000); // Wait 2 seconds after app loads
-    //   }
-
-    //   // Listen for token expiration events
-    //   const handleTokenExpired = async (event) => {
-    //     // console.log('Token expired event received:', event.detail);
-
-    //     // Use the dedicated token expiration handler
-    //     await AuthCookieManager.handleTokenExpiration();
-    //   };
-
-    //   window.addEventListener("tokenExpired", handleTokenExpired);
-
-    //   // Start token validation if user is authenticated
-    //   let tokenValidationCleanup = null;
-    //   if (authToken) {
-    //     tokenValidationCleanup = AuthCookieManager.startTokenValidation();
-    //   }
-
-    //   return () => {
-    //     if (cleanupAuthListener) {
-    //       cleanupAuthListener();
-    //     }
-    //     if (tokenValidationCleanup) {
-    //       tokenValidationCleanup();
-    //     }
-    //     window.removeEventListener("tokenExpired", handleTokenExpired);
-    //   };
-    // }, [authToken]); // Only run when authToken changes (login/logout)
-    // ---------------------- v1.0.4 >
-
     useEffect(() => {
         const emitter = getActivityEmitter();
         const handleShowExpiration = () => setSessionExpired(true);
@@ -1500,25 +1434,27 @@ const App = () => {
                     persistOptions={persistOptions}
                     onSuccess={onSuccess}
                 >
-                    <CustomProvider>
-                        <UserDataLoader>
-                            <ToastProvider />
-                            {isPublicPath ? (
-                                <AuthRoutes />
-                            ) : (
-                                <PermissionsProvider>
-                                    <MainAppRoutes
-                                        location={location}
-                                        organization={organization}
-                                        sessionExpired={sessionExpired}
-                                        setSessionExpired={setSessionExpired}
-                                        showLogoPaths={showLogoPaths}
-                                        noNavbarPaths={noNavbarPaths}
-                                    />
-                                </PermissionsProvider>
-                            )}
-                        </UserDataLoader>
-                    </CustomProvider>
+                    <UserDataLoader>
+                        <ToastProvider />
+                        {isPublicPath ? (
+                            <AuthRoutes />
+                        ) : (
+                            <ProtectedRoute>
+                                <CustomProvider>
+                                    <PermissionsProvider>
+                                        <MainAppRoutes
+                                            location={location}
+                                            organization={organization}
+                                            sessionExpired={sessionExpired}
+                                            setSessionExpired={setSessionExpired}
+                                            showLogoPaths={showLogoPaths}
+                                            noNavbarPaths={noNavbarPaths}
+                                        />
+                                    </PermissionsProvider>
+                                </CustomProvider>
+                            </ProtectedRoute>
+                        )}
+                    </UserDataLoader>
                 </PersistQueryClientProvider>
             </QueryClientProvider>
         </SuspenseWithLoading>

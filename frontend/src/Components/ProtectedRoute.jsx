@@ -5,21 +5,16 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
-import { CustomProvider, useCustomContext } from '../Context/Contextfetch';
-import { PermissionsProvider, usePermissions } from '../Context/PermissionsContext';
+import { PermissionsProvider } from '../Context/PermissionsContext';
 import { startActivityTracking } from '../utils/activityTracker';
 import { getActivityEmitter } from '../utils/activityTracker';
 // <---------------------- v1.0.1
-// import {
-//   debugTokenSources,
-//   // debugCookieState,
-//   handleTokenExpiration
-// } from '../utils/AuthCookieManager/AuthCookieManager';
 import AuthCookieManager from '../utils/AuthCookieManager/AuthCookieManager';
 
 // ---------------------- v1.0.1 >
 import Loading from './Loading';
 import { config } from '../config';
+import { useUserProfile } from '../apiHooks/useUsers';
 
 const ProtectedRoute = ({ children }) => {
     const [isChecking, setIsChecking] = useState(true);
@@ -31,10 +26,6 @@ const ProtectedRoute = ({ children }) => {
     const authToken = AuthCookieManager.getAuthToken(); // Simple getter
     const impersonationToken = AuthCookieManager.getImpersonationToken(); // Simple getter
     // ---------------------- v1.0.1 >
-    const tokenPayload = authToken ? decodeJwt(authToken) : null;
-    const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
-    const { usersData } = useCustomContext() || {};
-    const { isInitialized } = usePermissions() || { isInitialized: false };
     // <---------------------------- v1.0.0
 
     const loginType = sessionStorage.getItem('sessionExpiredLoginType');
@@ -221,20 +212,16 @@ const ProtectedRoute = ({ children }) => {
     }
 
     const ProtectedContent = ({ children }) => {
-        const { usersData } = useCustomContext() || {};
+        const { userProfile } = useUserProfile() || {};
+
         // <---------------------- v1.0.1
         // Use the same token validation logic
         const currentAuthToken = AuthCookieManager.getAuthToken();
-        const currentImpersonationToken = AuthCookieManager.getImpersonationToken();
         const currentTokenPayload = currentAuthToken ? decodeJwt(currentAuthToken) : null;
-        const currentImpersonationPayload = currentImpersonationToken ? decodeJwt(currentImpersonationToken) : null;
 
-        // Determine which token to use for user data
-        const effectiveTokenPayload = currentImpersonationPayload?.impersonatedUserId ? currentImpersonationPayload : currentTokenPayload;
+
         // ---------------------- v1.0.1 >
-        const userId = effectiveTokenPayload?.userId || effectiveTokenPayload?.impersonatedUserId;
-        const currentUserData = usersData?.find(user => user._id === userId);
-
+        const currentUserData = userProfile;
         const organization = currentUserData?.tenantId;
 
         const currentDomain = window.location.hostname;
@@ -269,9 +256,7 @@ const ProtectedRoute = ({ children }) => {
 
     return (
         <PermissionsProvider>
-            <CustomProvider>
                 <ProtectedContent>{children}</ProtectedContent>
-            </CustomProvider>
         </PermissionsProvider>
     );
 };

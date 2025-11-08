@@ -10,7 +10,6 @@ import AuthCookieManager from "../../../../../../utils/AuthCookieManager/AuthCoo
 
 const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type,  }) => {
 
-  // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
 
   const [contactData, setContactData] = useState({});

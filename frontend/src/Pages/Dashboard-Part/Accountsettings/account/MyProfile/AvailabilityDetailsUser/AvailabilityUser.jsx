@@ -17,7 +17,6 @@ const AvailabilityUser = ({
   onEditClick,
   // externalData = null
 }) => {
-  // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
   const [contactData, setContactData] = useState({});
   const [selectedTimezone, setSelectedTimezone] = useState("");

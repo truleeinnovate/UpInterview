@@ -34,7 +34,6 @@ import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
 import { Button } from "../../CommonCode-AllTabs/ui/button";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { useInterviewerDetails } from "../../../../../utils/CommonFunctionRoundTemplates";
 import { config } from "../../../../../config";
 import { useAssessments } from "../../../../../apiHooks/useAssessments";
@@ -54,15 +53,6 @@ const PositionRoundCard = ({
   isActive = false,
   hideHeader = false,
 }) => {
-  console.log("round-------", round);
-
-  // const {
-  //   sectionQuestions,
-  //   fetchQuestionsForAssessment,
-  //   questionsLoading,
-  //   questionsError,
-  //   setSectionQuestions,
-  // } = useCustomContext();
   const { deleteRoundMutation } = usePositions();
   const { fetchAssessmentQuestions } = useAssessments();
 

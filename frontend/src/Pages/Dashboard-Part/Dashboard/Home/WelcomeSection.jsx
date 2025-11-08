@@ -1,13 +1,13 @@
 // v1.0.0 - Ashok - Improved responsiveness
 
 import { motion } from 'framer-motion';
-import { useCustomContext } from "../../../../Context/Contextfetch";
 import { useSingleContact } from "../../../../apiHooks/useUsers";
+import { useUserProfile } from "../../../../apiHooks/useUsers";
 
 const WelcomeSection = () => {
-  const { userProfile } = useCustomContext();
+  const { userProfile } = useUserProfile();
   const { singleContact, isLoading } = useSingleContact();
-  
+
   // Capitalize first letter of first and last names
   const formatName = (name) => {
     if (!name) return '';
@@ -17,7 +17,7 @@ const WelcomeSection = () => {
   // Use singleContact data if available, fallback to userProfile
   const firstName = formatName(singleContact?.firstName || userProfile?.firstName);
   const lastName = formatName(singleContact?.lastName || userProfile?.lastName);
-  
+
   return (
     // v1.0.0 <---------------------------------------------------------------------------
     <div className="flex flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row md:items-center justify-between mb-8 space-y-4 md:space-y-0">
