@@ -122,6 +122,13 @@ const ENTITY_CONFIG = {
     fieldName: 'assessmentTemplateCode',
     maxRetries: 5
   },
+  // ScheduleAssessment
+  'ASMT': { 
+    startNumber: 1, 
+    padLength: 5,
+    fieldName: 'scheduledAssessmentCode',
+    maxRetries: 5
+  },
   // Interview Template
   'INT-TPL': { 
     startNumber: 1, 

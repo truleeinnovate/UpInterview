@@ -5,11 +5,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { config } from '../config';
-
-// Master data cache times - since master data rarely changes
-const ONE_DAY = 1000 * 60 * 60 * 24; // 24 hours
-const ONE_WEEK = ONE_DAY * 7; // 7 days
-const TWO_WEEKS = ONE_DAY * 14; // 14 days
+import { ONE_DAY, ONE_WEEK, TWO_WEEKS } from '../utils/queryClient';
 
 const useOnDemandQuery = (key, path, staleTime = ONE_WEEK, retry = 1) =>
   useQuery({

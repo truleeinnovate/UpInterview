@@ -78,9 +78,11 @@ exports.individualLogin = async (req, res) => {
     }
 
     // ---------------- OUTSOURCE INTERVIEWER ----------------
+    const outsourceRequestCode = await generateUniqueId('OINT', OutsourceInterviewer, 'outsourceRequestCode');
     let newInterviewer = null;
     if (currentStep === 3 && userData.isFreelancer) {
       newInterviewer = new OutsourceInterviewer({
+        outsourceRequestCode:outsourceRequestCode,
         ownerId,
         contactId: savedContact._id,
         requestedRate: savedContact.rates || contactData.rates || {
