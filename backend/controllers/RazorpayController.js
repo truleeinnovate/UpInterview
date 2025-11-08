@@ -1376,46 +1376,6 @@ const handleSubscriptionActivated = async (subscription,res) => {
                 }
             };
 
-        } else {
-            // Create a new subscription record if it doesn't exist
-            const startDate = new Date();
-            const endDate = currentEnd ?
-                new Date(currentEnd * 1000) :
-                calculateEndDate(notes.billingCycle);
-
-            const newSubscription = new CustomerSubscription({
-                userId: ownerId,
-                tenantId: tenantId,
-                planId: subscriptionPlanId,
-                razorpaySubscriptionId: subscriptionId,
-                status: SUBSCRIPTION_STATUSES.ACTIVE,
-                startDate: startDate,
-                endDate: endDate,
-                billingCycle: notes.billingCycle || 'monthly',
-                autoRenew: true
-            });
-
-            await newSubscription.save();
-
-             // Success logging for each event type
-            res.locals.logData = {
-                tenantId: tenantId || "",
-                ownerId: ownerId || "",
-                processName: 'Subscription Plan Activated', // Always include processName
-                status: 'success',
-                message: `Subscription Plan Activated processed successfully`,
-                // event: req.body.event,
-                // entityId: req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id,
-                requestBody: {
-                    subscription
-                },
-                responseBody: {
-                    newSubscription
-                }
-            };
-
-
-            console.log('Created new active subscription record');
         }
 
         console.log(`Updated subscription status for user ${ownerId} to active`);

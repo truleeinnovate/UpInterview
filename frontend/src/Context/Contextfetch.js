@@ -159,46 +159,46 @@ const CustomProvider = ({ children }) => {
   const [notificationsData] = useState([]);
 
   // Fetch groups
-  const [groups, setGroups] = useState([]);
+  // const [groups, setGroups] = useState([]);
 
-  const fetchGroupsData = useCallback(async () => {
-    if (!tenantId) {
-      setGroups([]);
-      setLoading(false);
-      return;
-    }
+  // const fetchGroupsData = useCallback(async () => {
+  //   if (!tenantId) {
+  //     setGroups([]);
+  //     setLoading(false);
+  //     return;
+  //   }
 
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/groups/data`,
-        {
-          params: {
-            tenantId: tenantId,
-          },
-        }
-      );
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/groups/data`,
+  //       {
+  //         params: {
+  //           tenantId: tenantId,
+  //         },
+  //       }
+  //     );
 
-      if (response.data && Array.isArray(response.data)) {
-        setGroups(response.data);
-      } else {
-        console.error("Invalid groups data format:", response.data);
-        setGroups([]);
-      }
-    } catch (error) {
-      console.error(
-        "Error fetching groups:",
-        error.response?.data?.error || error.message
-      );
-      setGroups([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId]);
+  //     if (response.data && Array.isArray(response.data)) {
+  //       setGroups(response.data);
+  //     } else {
+  //       console.error("Invalid groups data format:", response.data);
+  //       setGroups([]);
+  //     }
+  //   } catch (error) {
+  //     console.error(
+  //       "Error fetching groups:",
+  //       error.response?.data?.error || error.message
+  //     );
+  //     setGroups([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [tenantId]);
 
 
-  useEffect(() => {
-    fetchGroupsData();
-  }, [fetchGroupsData]);
+  // useEffect(() => {
+  //   fetchGroupsData();
+  // }, [fetchGroupsData]);
 
   // users
   const [usersData, setUsersData] = useState([]);
@@ -523,98 +523,99 @@ const CustomProvider = ({ children }) => {
     },
   });
 
-  const [currentPlan, setcurrentPlan] = useState([]);
-  // const [loading, setLoading] = useState(true);
-  // this will check that that plans is already set or not
+  // COMMENTED OUT: Redundant - Already have useSubscription hook that provides the same data
+  // const [currentPlan, setcurrentPlan] = useState([]);
+  // // const [loading, setLoading] = useState(true);
+  // // this will check that that plans is already set or not
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const Sub_res = await axios.get(
-          `${config.REACT_APP_API_URL}/subscription-plans/user/${userId}`
-        );
-        const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
-        // If subscription exists, set it; otherwise, keep it empty
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const Sub_res = await axios.get(
+  //         `${config.REACT_APP_API_URL}/subscription-plans/user/${userId}`
+  //       );
+  //       const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
+  //       // If subscription exists, set it; otherwise, keep it empty
 
-        if (Subscription_data.subscriptionPlanId) {
-          setcurrentPlan(Subscription_data);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+  //       if (Subscription_data.subscriptionPlanId) {
+  //         setcurrentPlan(Subscription_data);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   };
 
-    if (userId) {
-      fetchData();
-    }
-  }, [userId]);
+  //   if (userId) {
+  //     fetchData();
+  //   }
+  // }, [userId]);
 
-  const [walletBalance, SetWalletBalance] = useState([]);
-  // const [loading, setLoading] = useState(true);
-  // this will check that that plans is already set or not
+  // COMMENTED OUT: Redundant - Already have useWallet hook that provides the same data
+  // const [walletBalance, SetWalletBalance] = useState([]);
 
-  useEffect(() => {
-    const fetchWalletData = async () => {
-      try {
-        const WalletBalance_res = await axios.get(
-          `${config.REACT_APP_API_URL}/wallet/${userId}`
-        );
-        const WalletBalance_data = WalletBalance_res.data || {};
+  // useEffect(() => {
+  //   const fetchWalletData = async () => {
+  //     try {
+  //       const WalletBalance_res = await axios.get(
+  //         `${config.REACT_APP_API_URL}/wallet/${userId}`
+  //       );
+  //       const WalletBalance_data = WalletBalance_res.data || {};
 
-        if (WalletBalance_data) {
-          SetWalletBalance(WalletBalance_data);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+  //       if (WalletBalance_data) {
+  //         SetWalletBalance(WalletBalance_data);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   };
 
-    if (userId) {
-      fetchWalletData();
-    }
-  }, [userId]);
+  //   if (userId) {
+  //     fetchWalletData();
+  //   }
+  // }, [userId]);
 
-  const [tickets, setTickets] = useState([]);
+  // COMMENTED OUT: Redundant - Already have useSupportTickets hook that provides the same data
+  // const [tickets, setTickets] = useState([]);
 
-  const getTickets = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/get-tickets`
-      );
-      let filteredTickets = response.data.tickets || [];
+  // const getTickets = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/get-tickets`
+  //     );
+  //     let filteredTickets = response.data.tickets || [];
 
-      if (userRole === "SuperAdmin" || userRole === "Support Team") {
-        setTickets(filteredTickets);
-      } else if (userRole === "Admin" && tenantId) {
-        filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.tenantId === tenantId
-        );
-        setTickets(filteredTickets);
-      } else if (userRole === "Individual" && userId) {
-        filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.ownerId === userId
-        );
-        setTickets(filteredTickets);
-      } else if (userId) {
-        filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.assignedToId === userId
-        );
-        setTickets(filteredTickets);
-      } else {
-        setTickets([]);
-      }
-    } catch (error) {
-      console.error("Error fetching tickets:", error);
-      setTickets([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [userRole, tenantId, userId]);
+  //     if (userRole === "SuperAdmin" || userRole === "Support Team") {
+  //       setTickets(filteredTickets);
+  //     } else if (userRole === "Admin" && tenantId) {
+  //       filteredTickets = filteredTickets.filter(
+  //         (ticket) => ticket.tenantId === tenantId
+  //       );
+  //       setTickets(filteredTickets);
+  //     } else if (userRole === "Individual" && userId) {
+  //       filteredTickets = filteredTickets.filter(
+  //         (ticket) => ticket.ownerId === userId
+  //       );
+  //       setTickets(filteredTickets);
+  //     } else if (userId) {
+  //       filteredTickets = filteredTickets.filter(
+  //         (ticket) => ticket.assignedToId === userId
+  //       );
+  //       setTickets(filteredTickets);
+  //     } else {
+  //       setTickets([]);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching tickets:", error);
+  //     setTickets([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [userRole, tenantId, userId]);
 
-  useEffect(() => {
-    getTickets();
-  }, [getTickets]);
+  // useEffect(() => {
+  //   getTickets();
+  // }, [getTickets]);
 
   // <-- interview rounds to show the data in the home for upcoming interviews -->
   const [interviewRounds, setInterviewRounds] = useState([]);
@@ -678,11 +679,11 @@ const CustomProvider = ({ children }) => {
         toggleUserStatus,
         deleteUser,
 
-        // wallet Balance
-        walletBalance,
+        // wallet Balance - COMMENTED: Use useWallet hook instead
+        // walletBalance,
 
-        // subscription current plan
-        currentPlan,
+        // subscription current plan - COMMENTED: Use useSubscription hook instead
+        // currentPlan,
 
         // teams
         // teamsData,
@@ -707,8 +708,8 @@ const CustomProvider = ({ children }) => {
         userProfile,
 
         // groups
-        groups,
-        fetchGroupsData,
+        // groups,
+        // fetchGroupsData,
 
         // users
         usersData,
@@ -731,7 +732,8 @@ const CustomProvider = ({ children }) => {
         setLoadingInterviewer,
         fetchInterviewers,
 
-        tickets,
+        // tickets - COMMENTED: Use useSupportTickets hook instead
+        // tickets,
         userRole,
 
         interviewRounds,
