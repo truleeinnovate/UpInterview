@@ -473,6 +473,30 @@ const SuspenseWithLoading = ({ fallback, children }) => (
     <Suspense fallback={<Loading />}>{children}</Suspense>
 );
 
+// Component to handle authentication routes
+const AuthRoutes = () => (
+    <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/select-profession" element={<SelectProfession />} />
+        <Route path="/create-profile" element={<ProfileWizard />} />
+        <Route path="/subscription-plans" element={<SubscriptionPlan />} />
+        <Route path="/organization/signup" element={<OrganizationSignUp />} />
+        <Route path="/organization-login" element={<OrganizationLogin />} />
+        <Route path="/individual-login" element={<WelcomePageUpinterviewIndividual />} />
+        <Route path="/callback" element={<LinkedInCallback />} />
+        <Route path="/oauth2callback" element={<OAuthCallback />} />
+        <Route path="/join-meeting" element={<JoinMeeting />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/verify-user-email" element={<VerifyUserEmail />} />
+        <Route path="/resetPassword" element={<ResetPassword />} />
+        <Route path="/forgot-password" element={<ForgetPassword />} />
+        <Route path="/pending-approval" element={<PendingApproval />} />
+        <Route path="/subscription-success" element={<SubscriptionSuccess />} />
+        <Route path="/payment-details" element={<><CardDetails /><SubscriptionPlan /></>} />
+        <Route path="/subscription-payment-details" element={<><AccountSettingsSidebar /><div className="ml-80"><Subscription /></div></>} />
+    </Routes>
+);
+
 // Move all logic that uses usePermissions into this component
 const MainAppRoutes = ({
     location,
@@ -499,17 +523,6 @@ const MainAppRoutes = ({
     const showLogo = showLogoPaths.includes(location.pathname);
     const shouldRenderNavbar = !noNavbarPaths.includes(location.pathname);
 
-    // Show loading when permissions are being loaded and not initialized
-    // if (loading || !isInitialized) {
-    //   return (
-    //     <Loading
-    //       message="Loading permissions..."
-    //       size="large"
-    //       className="fixed inset-0 z-50 bg-white"
-    //     />
-    //   );
-    // }
-
     // Permission check function
     const hasPermission = (objectName, permissionType = "ViewTab") => {
         if (!combinedPermissions[objectName]) return false;
@@ -526,72 +539,6 @@ const MainAppRoutes = ({
                 <SessionExpiration />
 
                 <Routes>
-                    {/* Public Routes */}
-                    <Route path="/" element={<LandingPage />} />
-                    {/* <Route path="/select-user-type" element={<UserTypeSelection />} /> */}
-                    <Route path="/select-profession" element={<SelectProfession />} />
-                    <Route path="/create-profile" element={<ProfileWizard />} />
-                    <Route path="/subscription-plans" element={<SubscriptionPlan />} />
-                    <Route
-                        path="/organization/signup"
-                        element={<OrganizationSignUp />}
-                    />
-                    <Route path="/organization-login" element={<OrganizationLogin />} />
-                    <Route
-                        path="/individual-login"
-                        element={<WelcomePageUpinterviewIndividual />}
-                    />
-                    <Route path="/callback" element={<LinkedInCallback />} />
-                    <Route path="/oauth2callback" element={<OAuthCallback />} />
-                    <Route path="/join-meeting" element={<JoinMeeting />} />
-
-                    {/* <Route path ='/join-meeting' element={<VideoCAllActionButtons />} /> */}
-
-                    <Route
-                        path="/payment-details"
-                        element={
-                            <>
-                                <CardDetails />
-                                <SubscriptionPlan />
-                            </>
-                        }
-                    />
-                    <Route
-                        path="/subscription-payment-details"
-                        element={
-                            <>
-                                <AccountSettingsSidebar />
-                                <div className="ml-80">
-                                    <Subscription />
-                                </div>
-                            </>
-                        }
-                    />
-                    <Route path="/verify-email" element={<VerifyEmail />} />
-                    <Route path="/verify-user-email" element={<VerifyUserEmail />} />
-                    <Route
-                        path="/subscription-success"
-                        element={<SubscriptionSuccess />}
-                    />
-                    <Route path="/resetPassword" element={<ResetPassword />} />
-                    <Route path="/forgot-password" element={<ForgetPassword />} />
-                    <Route path="/assessmenttest" element={<AssessmentTest />} />
-                    <Route path="/pending-approval" element={<PendingApproval />} />
-
-                    {/* <------------------------------- v1.0.5 */}
-                    {/* Video Call Public Routes */}
-                    <Route path="/video-call" element={<VideoCallLanding />} />
-                    <Route path="/video-call/join" element={<VideoCallJoinRoom />} />
-                    <Route
-                        path="/video-call/join/:roomID"
-                        element={<VideoCallJoinRoom />}
-                    />
-                    <Route
-                        path="/video-call/room/:roomID/:userName"
-                        element={<VideoCallRoom />}
-                    />
-                    {/* v1.0.5 ------------------------------> */}
-
                     {/* Protected Routes */}
                     <Route
                         element={
@@ -840,7 +787,10 @@ const MainAppRoutes = ({
                         {hasPermission("Billing") && (
                             <Route path="billing-details" element={<BillingSubtabs />}>
                                 <Route index element={null} />
-                                <Route path="details/:id" element={<UserInvoiceDetails />} />
+                                <Route
+                                    path="details/:id"
+                                    element={<UserInvoiceDetails />}
+                                />
                             </Route>
                         )}
 
@@ -919,15 +869,11 @@ const MainAppRoutes = ({
                                     path="interviewer-groups"
                                     element={<InterviewerGroups />}
                                 >
-
-
                                     <Route index element={null} />
                                     <Route
                                         path="interviewer-group-form"
                                         element={<InterviewerGroupFormPopup />}
                                     />
-
-
                                     <Route
                                         path="interviewer-group-edit-form/:id"
                                         element={<InterviewerGroupFormPopup />}
@@ -966,9 +912,6 @@ const MainAppRoutes = ({
                                     />
                                 </Route>
                             )}
-
-
-
 
                             {hasPermission("Subscription") && (
                                 <>
@@ -1072,7 +1015,6 @@ const MainAppRoutes = ({
                   />
                 </>
               )} */}
-
 
                         {/* Interview Templates - CORRECTED ROUTING STRUCTURE */}
                         {hasPermission("InterviewTemplates") && (
@@ -1222,8 +1164,6 @@ const MainAppRoutes = ({
                                 element={<InterviewRequest />}
                             />
                         )} */}
-
-
 
                         {/* only show below tabs when super admin logged in */}
                         {userType === "superAdmin" && (
@@ -1408,7 +1348,6 @@ const MainAppRoutes = ({
                                     element={<InterviewerRatesPage />}
                                 />
                                 {hasPermission("Interviews") && (
-
                                     <Route path="/admin-interviews" element={<Interviewers />} />
                                 )}
                                 <Route path="/master-data" element={<MasterData />} />
@@ -1432,57 +1371,41 @@ const MainAppRoutes = ({
 
 const App = () => {
     const location = useLocation();
-    // <---------------------- v1.0.4
-    const authToken = getAuthToken(); // Use validated token getter
-    // ---------------------- v1.0.4 >
+    const authToken = getAuthToken();
     const tokenPayload = decodeJwt(authToken);
     const organization = tokenPayload?.organization;
     const [sessionExpired, setSessionExpired] = useState(false);
 
-    // <----------------v1.0.6
-    const showLogoPaths = useMemo(
-        () => [
-            // "/organization-signup",
-            // "/organization-login",
-            // "/individual-login",
-            // "/select-user-type",
-            // "/select-profession",
-            //   "/create-profile",
-            // "/subscription-plans",
-            // "/payment-details",
-            // "/verify-email",
-        ],
-        []
-    );
-    // v1.0.6------------------>
-
-    const noNavbarPaths = useMemo(
-        () => [
+    // Check if current path is a public path
+    const isPublicPath = useMemo(() => {
+        return [
             "/",
-            "/select-user-type",
-            "/price",
             "/select-profession",
             "/create-profile",
-            "/assessmenttest",
-            "/assessmenttext",
-            "/assessmentsubmit",
-            "/candidatevc",
+            "/organization/signup",
             "/organization-login",
             "/individual-login",
-            "/organization-signup",
-            "/callback",
-            "/jitsimeetingstart",
-            "/organization",
-            "/payment-details",
-            "/subscription-plans",
             "/verify-email",
-            "/video-call",
-            "/video-call/join",
-            "/video-call/room",
-            "/join-meeting",
-        ],
-        []
-    );
+            "/verify-user-email",
+            "/resetPassword",
+            "/forgot-password",
+            "/pending-approval",
+            "/subscription-success",
+            "/payment-details",
+            "/subscription-payment-details",
+            "/callback",
+            "/oauth2callback",
+            "/join-meeting"
+        ].some(path =>
+            location.pathname === path ||
+            location.pathname.startsWith(path + '/') ||
+            (path.endsWith('*') && location.pathname.startsWith(path.slice(0, -1)))
+        );
+    }, [location.pathname]);
+
+    // No need for showLogoPaths and noNavbarPaths in the new structure
+    const showLogoPaths = [];
+    const noNavbarPaths = [];
 
     // Preload permissions on app startup if user is authenticated
     // useEffect(() => {
@@ -1578,19 +1501,23 @@ const App = () => {
                     onSuccess={onSuccess}
                 >
                     <CustomProvider>
-                        <PermissionsProvider>
-                            <UserDataLoader>
-                                <ToastProvider />
-                                <MainAppRoutes
-                                    location={location}
-                                    organization={organization}
-                                    sessionExpired={sessionExpired}
-                                    setSessionExpired={setSessionExpired}
-                                    showLogoPaths={showLogoPaths}
-                                    noNavbarPaths={noNavbarPaths}
-                                />
-                            </UserDataLoader>
-                        </PermissionsProvider>
+                        <UserDataLoader>
+                            <ToastProvider />
+                            {isPublicPath ? (
+                                <AuthRoutes />
+                            ) : (
+                                <PermissionsProvider>
+                                    <MainAppRoutes
+                                        location={location}
+                                        organization={organization}
+                                        sessionExpired={sessionExpired}
+                                        setSessionExpired={setSessionExpired}
+                                        showLogoPaths={showLogoPaths}
+                                        noNavbarPaths={noNavbarPaths}
+                                    />
+                                </PermissionsProvider>
+                            )}
+                        </UserDataLoader>
                     </CustomProvider>
                 </PersistQueryClientProvider>
             </QueryClientProvider>
