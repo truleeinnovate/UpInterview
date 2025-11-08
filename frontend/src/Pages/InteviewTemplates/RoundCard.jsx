@@ -33,7 +33,6 @@ import {
 
 import toast from "react-hot-toast";
 import InterviewerAvatar from "./InterviewerAvatar";
-import { useCustomContext } from "../../Context/Contextfetch";
 import { useInterviewerDetails } from "../../utils/CommonFunctionRoundTemplates";
 import { Button } from "../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
 import { useAssessments } from "../../apiHooks/useAssessments";

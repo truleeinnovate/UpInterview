@@ -31,7 +31,6 @@ import Cookies from "js-cookie";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import NotificationPanel from "../../Pages/Push-Notification/NotificationPanel.jsx";
 import { smartLogout } from "../../utils/AuthCookieManager/AuthCookieManager";
-import { useCustomContext } from "../../Context/Contextfetch.js";
 import { usePermissions } from "../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../utils/permissionUtils";
 import AuthCookieManager from "../../utils/AuthCookieManager/AuthCookieManager";
@@ -52,7 +51,6 @@ const CombinedNavbar = React.memo(() => {
   const authToken = getAuthToken();
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
-  const { userProfile } = useCustomContext();
   const { singleContact, isLoading: singleContactLoading } = useSingleContact();
   const navigate = useNavigate();
   const userType = AuthCookieManager.getUserType();
