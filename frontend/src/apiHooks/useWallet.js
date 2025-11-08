@@ -22,8 +22,17 @@ export const useWallet = (userIdOverride) => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/wallet/${userId}`,
       );
-      const walletArr = response?.data?.walletDetials;
-      return Array.isArray(walletArr) && walletArr.length > 0 ? walletArr[0] : null;
+      // Return the full wallet data object to match context structure
+      // This maintains backward compatibility while also allowing access to walletDetials if needed
+      const walletData = response?.data || {};
+      const walletArr = walletData?.walletDetials;
+      
+      // If walletDetials exists and has items, merge the first item properties into the main object
+      if (Array.isArray(walletArr) && walletArr.length > 0) {
+        return { ...walletData, ...walletArr[0] };
+      }
+      
+      return walletData;
     },
     enabled: !!userId && !!hasViewPermission && isInitialized,
     retry: 1,
