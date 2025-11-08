@@ -176,9 +176,9 @@ const Availability = ({
           const startMins = convertToMinutes(startTime);
           const endMins = convertToMinutes(endTime);
           
-          // Check for minimum 15-minute gap
-          if (endMins - startMins < 15) {
-            notify.error('Time slot must be at least 15 minutes');
+          // Check for minimum 60-minute gap
+          if (endMins - startMins < 60) {
+            notify.error('Time slot must be at least 60 minutes');
             return;
           }
           
@@ -222,10 +222,10 @@ const Availability = ({
       const startInMinutes = startHour * 60 + startMinute;
       const endInMinutes = endHour * 60 + endMinute;
       
-      // Check if end time is less than start time + 15 minutes (not equal to)
-      if (endInMinutes < startInMinutes + 15) {
+      // Check if end time is less than start time + 60 minutes (not equal to)
+      if (endInMinutes < startInMinutes + 60) {
         // If the new start time would make the slot invalid, show message and revert it
-        notify.error('End time must be at least 15 minutes after start time');
+        notify.error('End time must be at least 60 minutes after start time');
         newTimes[shortDay][index][field] = previousValue;
         return;
       }
