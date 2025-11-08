@@ -1024,24 +1024,24 @@ const CombinedNavbar = React.memo(() => {
                     )}
                     {enhancedCheckPermission("Interviews") && (
                       <NavLink
-                        to="/interviews"
+                        to="/admin-interviews"
                         className={`${
                           userType === "superAdmin"
                             ? "h-[52px] flex items-center relative"
                             : "h-full flex items-center relative px-1"
                         } ${
-                          isActive("/interviews")
+                          isActive("/admin-interviews")
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
-                          navigate("/interviews");
+                          navigate("/admin-interviews");
                         }}
                       >
                         Interviews
-                        {isActive("/interviews") && (
+                        {isActive("/admin-interviews") && (
                           <div
                             className={`absolute ${
                               userType === "superAdmin"

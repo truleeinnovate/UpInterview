@@ -1402,11 +1402,15 @@ const MainAppRoutes = ({
                                 {/* v1.0.9 <--------------------------------------------------------------------- */}
                                 {/* v1.0.8 <--------------------------------------------------------------------- */}
                                 {/* v1.0.7 <--------------------------------------------------------------- */}
+
                                 <Route
                                     path="/interviewer-rates"
                                     element={<InterviewerRatesPage />}
                                 />
-                                <Route path="/interviews" element={<Interviewers />} />
+                                {hasPermission("Interviews") && (
+
+                                    <Route path="/admin-interviews" element={<Interviewers />} />
+                                )}
                                 <Route path="/master-data" element={<MasterData />} />
                                 <Route path="/master-data/:type" element={<MasterTable />} />
                                 {/* v2.0.0 <------------------------------------------------- */}
