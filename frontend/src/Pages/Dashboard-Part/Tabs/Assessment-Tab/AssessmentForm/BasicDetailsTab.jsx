@@ -18,6 +18,11 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { X } from "lucide-react";
 import { notify } from "../../../../../services/toastService.js";
 import AssessmentListModal from "../AssessmentListModal/AssessmentListModal.jsx";
+import DropdownSelect, {
+  selectBaseStyles,
+  StickyFooterMenuList,
+  preserveStickyOptionFilter,
+} from "../../../../../Components/Dropdowns/DropdownSelect.jsx"; // adjust import path if needed
 
 const BasicDetailsTab = ({
   isEditing,
@@ -74,7 +79,7 @@ const BasicDetailsTab = ({
   categories,
   selected,
   setSelected,
-  handleAssessmentListChange
+  handleAssessmentListChange,
 }) => {
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
@@ -445,7 +450,7 @@ const BasicDetailsTab = ({
               <div></div> {/* Empty div to maintain grid structure */}
             </div>
             {/* Assessment List */}
-            <div>
+            {/* <div>
               <DropdownWithSearchField
                 containerRef={categoryOrTechnologyRef}
                 label="Category/Technology"
@@ -482,7 +487,50 @@ const BasicDetailsTab = ({
                 error={errors.categoryOrTechnology}
                 placeholder="Select List"
               />
-              <div></div> {/* Empty div to maintain grid structure */}
+              <div></div>
+            </div> */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category/Technology <span className="text-red-500">*</span>
+              </label>
+              <DropdownSelect
+                ref={categoryOrTechnologyRef}
+                name="categoryOrTechnology"
+                placeholder="Select List"
+                value={
+                  selected
+                    ? {
+                        value: selected,
+                        label:
+                          categories?.find((c) => c._id === selected)
+                            ?.categoryOrTechnology || "Select List",
+                      }
+                    : null
+                }
+                options={[
+                  ...(categories
+                    ?.filter((category) => category?.type === "custom")
+                    ?.map((category) => ({
+                      value: category._id,
+                      label: category.categoryOrTechnology,
+                    })) || []),
+                  {
+                    value: "__other__",
+                    label: "+ Create List",
+                    isCustomOption: false, // italic + bold (as per your styles)
+                  },
+                ]}
+                onChange={handleAssessmentListChange}
+                components={{
+                  MenuList: StickyFooterMenuList, // keeps "Create New" fixed at bottom
+                }}
+                filterOption={preserveStickyOptionFilter("__other__")}
+                hasError={!!errors.categoryOrTechnology}
+                styles={selectBaseStyles(!!errors.categoryOrTechnology)}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+              />
+              <div></div>
             </div>
           </div>
         </div>
