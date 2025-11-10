@@ -10,15 +10,15 @@ import {
   MapPin,
   Briefcase,
 } from "lucide-react";
-import { useCustomContext } from "../../../../Context/Contextfetch";
+import useInterviewers from "../../../../hooks/useInterviewers";
 
 const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
-  const { interviewers } = useCustomContext();
+  const { interviewers, loading, error } = useInterviewers();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState("right");
 
-  // Extract the data array from interviewers, default to empty array
-  const interviewersList = interviewers?.data || [];
+  // Use interviewers array directly from the hook
+  const interviewersList = Array.isArray(interviewers) ? interviewers : [];
 
   // Map backend data to frontend expected fields
   const formattedInterviewers = interviewersList

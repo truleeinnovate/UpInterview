@@ -138,22 +138,22 @@ const CustomProvider = ({ children }) => {
   const queryClient = useQueryClient();
 
   // outsource interviewers
-  const [outsourceInterviewers, setOutsourceInterviewers] = useState([]);
-  const fetchOutsourceInterviewers = useCallback(async () => {
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/outsourceInterviewers`
-      );
-      const reversedData = response.data.reverse();
-      setOutsourceInterviewers(reversedData);
-    } catch (err) {
-      // console.error('❌ Error fetching interviewers:', err);
-    }
-  }, []);
+  // const [outsourceInterviewers, setOutsourceInterviewers] = useState([]);
+  // const fetchOutsourceInterviewers = useCallback(async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/outsourceInterviewers`
+  //     );
+  //     const reversedData = response.data.reverse();
+  //     setOutsourceInterviewers(reversedData);
+  //   } catch (err) {
+  //     // console.error('❌ Error fetching interviewers:', err);
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    fetchOutsourceInterviewers();
-  }, [fetchOutsourceInterviewers]);
+  // useEffect(() => {
+  //   fetchOutsourceInterviewers();
+  // }, [fetchOutsourceInterviewers]);
 
   // notifications
   const [notificationsData] = useState([]);
@@ -297,41 +297,41 @@ const CustomProvider = ({ children }) => {
   // }, [impersonatedUserId]);
 
   // getting interviewers and showing it in the home (available interviewers) and interviewers
-  const [interviewers, setInterviewers] = useState([]);
-  const [loadingInterviewer, setLoadingInterviewer] = useState(false);
+  // const [interviewers, setInterviewers] = useState([]);
+  // const [loadingInterviewer, setLoadingInterviewer] = useState(false);
 
-  const fetchInterviewers = useCallback(async () => {
-    if (!tenantId) return;
+  // const fetchInterviewers = useCallback(async () => {
+  //   if (!tenantId) return;
 
-    let isMounted = true;
+  //   let isMounted = true;
 
-    try {
-      setLoadingInterviewer(true);
-      // console.log("Fetching interviewers for tenantId:", tenantId);
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`
-      );
+  //   try {
+  //     setLoadingInterviewer(true);
+  //     // console.log("Fetching interviewers for tenantId:", tenantId);
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`
+  //     );
 
-      if (isMounted) {
-        // console.log("Interviewers data received:", response.data);
-        setInterviewers(response.data);
-      }
-    } catch (err) {
-      // console.error("Error fetching interviewers:", err.message);
-    } finally {
-      if (isMounted) {
-        setLoadingInterviewer(false);
-      }
-    }
+  //     if (isMounted) {
+  //       // console.log("Interviewers data received:", response.data);
+  //       setInterviewers(response.data);
+  //     }
+  //   } catch (err) {
+  //     // console.error("Error fetching interviewers:", err.message);
+  //   } finally {
+  //     if (isMounted) {
+  //       setLoadingInterviewer(false);
+  //     }
+  //   }
 
-    return () => {
-      isMounted = false;
-    };
-  }, [tenantId]);
+  //   return () => {
+  //     isMounted = false;
+  //   };
+  // }, [tenantId]);
 
-  useEffect(() => {
-    fetchInterviewers();
-  }, [fetchInterviewers]);
+  // useEffect(() => {
+  //   fetchInterviewers();
+  // }, [fetchInterviewers]);
 
   // Query for fetching users
   const {
@@ -690,8 +690,8 @@ const CustomProvider = ({ children }) => {
         // fetchTeamsData,
 
         // outsource interviewers
-        outsourceInterviewers,
-        fetchOutsourceInterviewers,
+        // outsourceInterviewers,
+        // fetchOutsourceInterviewers,
 
         // master data
         // skills,
@@ -727,10 +727,10 @@ const CustomProvider = ({ children }) => {
         // singlecontact - now using useSingleContact hook from apiHooks
         // fetchContacts,
 
-        interviewers,
-        loadingInterviewer,
-        setLoadingInterviewer,
-        fetchInterviewers,
+        // interviewers,
+        // loadingInterviewer,
+        // setLoadingInterviewer,
+        // fetchInterviewers,
 
         // tickets - COMMENTED: Use useSupportTickets hook instead
         // tickets,

@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import SchedulerSectionComponent from "./InterviewMiniTabs/SchedulerSection";
 import InterviewerSectionComponent from "./InterviewMiniTabs/InterviewerSection";
-import { useCustomContext } from "../../../../../Context/Contextfetch";
+// import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { Video } from "lucide-react";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 
@@ -51,7 +51,7 @@ const InterviewsMiniTabComponent = ({
 }) => {
   useScrollLock(true);
   const [interviewMiniTab, setInterviewMiniTab] = useState(1);
-  const { SchedulerSectionData, setSchedulerSectionData } = useCustomContext();
+  // const { SchedulerSectionData, setSchedulerSectionData } = useCustomContext();
   console.log("interviewData", interviewData);
   console.log("interviewer Section Data", interviewerSectionData);
   console.log("📊 InterviewData structure:", {

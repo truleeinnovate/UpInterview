@@ -13,6 +13,7 @@ import {
   Expand,
 } from "lucide-react";
 import { useCustomContext } from "../../../../../../Context/Contextfetch";
+import useInterviewers from "../../../../../../hooks/useInterviewers";
 import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
 // v1.0.1 <------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
@@ -27,7 +28,8 @@ const InternalInterviews = ({
   selectedGroupName = "",
   selectedGroupId
 }) => {
-  const { interviewers, groups } = useCustomContext();
+  const {  groups } = useCustomContext();
+  const { interviewers } = useInterviewers();
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -122,10 +124,7 @@ const InternalInterviews = ({
 
   const FilteredData = useMemo(() => {
     if (viewType === "individuals") {
-      const interviewersArray =
-        interviewers?.data && Array.isArray(interviewers.data)
-          ? interviewers.data
-          : [];
+      const interviewersArray = Array.isArray(interviewers) ? interviewers : [];
       return interviewersArray
         .filter((interviewer) => {
           // <------------------------------- v1.0.0

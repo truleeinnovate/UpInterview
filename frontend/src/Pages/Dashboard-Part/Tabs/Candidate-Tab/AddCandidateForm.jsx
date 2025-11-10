@@ -497,7 +497,7 @@ const AddCandidateForm = ({
       RelevantExperience: "",
       skills: [],
       CurrentRole: "",
-      CountryCode: "",
+      // CountryCode: "",
       Technology: "",
     });
 
