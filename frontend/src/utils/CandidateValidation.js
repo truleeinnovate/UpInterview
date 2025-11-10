@@ -10,7 +10,6 @@ const validatePhoneNumber = (phone) => {
     return re.test(String(phone));
 };
 
-
 const getErrorMessage = (field, value, formData) => {
     const messages = {
         FirstName: "First Name is required",
@@ -20,9 +19,9 @@ const getErrorMessage = (field, value, formData) => {
         // Gender: "Gender is required",
         HigherQualification: "Higher Qualification is required",
         // UniversityCollege: "University/College is required",
-        CurrentExperience: "Current Experience is required",
+        CurrentExperience: "Total Experience is required",
         RelevantExperience: "Relevant Experience is required",
-        RelevantExperienceGreater: "Relevant Experience cannot be greater than Current Experience",
+        RelevantExperienceGreater: "Relevant Experience cannot be greater than Total Experience",
         Position: "Position is required",
         skills: "First 3 rows are required",
         invalidEmail: "Invalid Email address",
@@ -126,6 +125,5 @@ const validateCandidateForm = (formData, entries, errors) => {
 
     return { formIsValid, newErrors };
 };
-
 
 export { validateCandidateForm, getErrorMessage };

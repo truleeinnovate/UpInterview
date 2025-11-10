@@ -1054,11 +1054,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                 consistency
               </>,
               <>
-                <span className="font-medium">Custom Interview Path:</span>{" "}
-                <span className="font-semibold text-blue-700">
-                  If you don't select a template, you can build custom interview
-                  rounds tailored specifically for this position
-                </span>
+                <span className="font-medium">Custom Interview Path:</span> If you don't select a template, you can build custom interview rounds tailored specifically for this position
               </>,
               <>
                 <span className="font-medium">Flexible Approach:</span> Create
@@ -1182,7 +1178,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           error={errors.minsalary}
                           min={0}
                           max={1000000000}
-                          label="Min Salary(Annual)"
+                          label="Min Salary (Annual)"
                           name="minSalary"
                           required={formData.maxSalary ? true : false}
                         />
@@ -1193,7 +1189,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           max={1000000000}
                           inputRef={fieldRefs.maxSalary}
                           error={errors.maxsalary}
-                          label="Max Salary(Annual)"
+                          label="Max Salary (Annual)"
                           name="maxSalary"
                           required={formData.minSalary ? true : false}
                         />

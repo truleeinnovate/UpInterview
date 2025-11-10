@@ -11,7 +11,7 @@ import Cookies from "js-cookie";
 import { Maximize, Minimize, X } from "lucide-react";
 import axios from "axios";
 import { validateGroupForm } from "../../../../../utils/InterviewGroupValidations";
-import { useCustomContext } from "../../../../../Context/Contextfetch";
+import useInterviewers from "../../../../../hooks/useInterviewers";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../../config";
 import {
@@ -30,7 +30,7 @@ import { useCreateGroup, useGroupById, useGroupsQuery, useUpdateGroup } from "..
 
 const InterviewerGroupFormPopup = () => {
   const { id } = useParams();
-  const {  interviewers } = useCustomContext();
+  const { interviewers } = useInterviewers();
   const [formData, setFormData] = useState({
     name: "",
     description: "",

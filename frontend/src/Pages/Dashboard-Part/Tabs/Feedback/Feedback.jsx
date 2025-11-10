@@ -27,11 +27,11 @@ import {
   Star,
   XCircle,
 } from "lucide-react";
-import toast from "react-hot-toast";
+// import toast from "react-hot-toast";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 import SummarizedFeedbackModal from "./SummarizedFeedbackModal.jsx";
-import { useCustomContext } from "../../../../Context/Contextfetch.js";
+// import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import FeedbackKanban from "./FeedbackKanban.jsx";
 
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
@@ -66,7 +66,7 @@ const Feedback = () => {
   const ownerId = tokenPayload?.userId;
 
   // Get context data (removed unused variables)
-  const { user } = useCustomContext();
+  // const { user } = useCustomContext();
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
