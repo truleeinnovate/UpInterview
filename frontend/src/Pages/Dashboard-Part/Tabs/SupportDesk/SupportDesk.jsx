@@ -135,7 +135,6 @@ function SupportDesk() {
   const impersonationPayload = impersonationToken
     ? decodeJwt(impersonationToken)
     : null;
-  // const { userRole } = useCustomContext();
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const currentUserId = tokenPayload?.userId;

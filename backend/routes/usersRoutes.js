@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  getUsers,
+  // getUsers,
   getInterviewers,
   UpdateUser,
   getUsersByTenant,
@@ -62,7 +62,7 @@ router.get("/platform-users", getPlatformUsers);
 // =================================================================>
 
 // Define the route for fetching users
-router.get("/", getUsers);
+// router.get("/", getUsers);
 
 // Get user by ownerId
 

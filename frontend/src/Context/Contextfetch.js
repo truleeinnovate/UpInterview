@@ -19,11 +19,11 @@ const CustomContext = createContext();
 const CustomProvider = ({ children }) => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload?.userId;
+  // const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
-  const impersonatedUserId = Cookies.get("impersonatedUserId");
+  // const impersonatedUserId = Cookies.get("impersonatedUserId");
 
-  const [userRole, setuserRole] = useState("Admin");
+  // const [userRole, setuserRole] = useState("Admin");
 
   // const { sharingPermissionscontext = {} } = usePermissions() || {};
   // const sharingPermissions = useMemo(
@@ -35,21 +35,21 @@ const CustomProvider = ({ children }) => {
   // const [iter] = useState(6);
   // const [searchText, setSearchText] = useState('');
   // const [isOpen, setIsopen] = useState(false);
-  const [page, setPage] = useState("Home");
+  // const [page, setPage] = useState("Home");
   // const [popupVisibility, setPopupVisibility] = useState(false);
   // const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
   // const [createdLists, setCreatedLists] = useState([]);
 
 
-  const [feedbackTabErrors, setFeedbackTabError] = useState({
-    interviewQuestion: true,
-    skills: true,
-    overallImpression: true,
-  });
+  // const [feedbackTabErrors, setFeedbackTabError] = useState({
+  //   interviewQuestion: true,
+  //   skills: true,
+  //   overallImpression: true,
+  // });
   // const [suggestedQuestions, setSuggestedQuestions] = useState([]);
   // const [suggestedQuestionsFilteredData, setSuggestedQuestionsFilteredData] = useState([]);
   // const [myQuestionsList, setMyQuestionsList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   // const [locations, setLocations] = useState([]);
   // const [industries, setIndustries] = useState([]);
   // const [currentRole, setCurrentRole] = useState([]);
@@ -61,25 +61,25 @@ const CustomProvider = ({ children }) => {
   // const [companies, setCompanies] = useState([]);
   // const [technologies, setTechnology] = useState([]);
 
-  // users data
-  const [userProfile, setUserProfile] = useState(null);
+  // // users data
+  // const [userProfile, setUserProfile] = useState(null);
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/auth/users/${userId}`
-        );
-        setUserProfile(response.data);
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchUserProfile = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/auth/users/${userId}`
+  //       );
+  //       setUserProfile(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching user profile:", error);
+  //     }
+  //   };
 
-    if (userId) {
-      fetchUserProfile();
-    }
-  }, [userId]);
+  //   if (userId) {
+  //     fetchUserProfile();
+  //   }
+  // }, [userId]);
 
   // Fetch My Questions Data
   // const fetchMyQuestionsData = useCallback(async () => {
@@ -156,7 +156,7 @@ const CustomProvider = ({ children }) => {
   // }, [fetchOutsourceInterviewers]);
 
   // notifications
-  const [notificationsData] = useState([]);
+  // const [notificationsData] = useState([]);
 
   // Fetch groups
   // const [groups, setGroups] = useState([]);
@@ -201,24 +201,24 @@ const CustomProvider = ({ children }) => {
   // }, [fetchGroupsData]);
 
   // users
-  const [usersData, setUsersData] = useState([]);
-  // console.log('usersData in context to check subdomain :-', usersData)
+  // const [usersData, setUsersData] = useState([]);
+  // // console.log('usersData in context to check subdomain :-', usersData)
 
-  // Fetch users data
-  const fetchUsersData = async () => {
-    try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/users`, {
-        withCredentials: true
-      });
-      setUsersData(response.data);
-    } catch (error) {
-      console.error("Error fetching users data:", error);
-    }
-  };
+  // // Fetch users data
+  // const fetchUsersData = async () => {
+  //   try {
+  //     const response = await axios.get(`${config.REACT_APP_API_URL}/users`, {
+  //       withCredentials: true
+  //     });
+  //     setUsersData(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching users data:", error);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchUsersData();
-  }, []);
+  // useEffect(() => {
+  //   fetchUsersData();
+  // }, []);
 
   // organization code
   const {
@@ -257,24 +257,24 @@ const CustomProvider = ({ children }) => {
     },
   });
 
-  const [contacts, setContacts] = useState([]);
+  // const [contacts, setContacts] = useState([]);
 
-  const fetchContactsData = async () => {
-    try {
-      const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
-      const allUsers_data = allUsers.data;
+  // const fetchContactsData = async () => {
+  //   try {
+  //     const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
+  //     const allUsers_data = allUsers.data;
 
-      setContacts(allUsers_data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      // setLoading(false);
-    }
-  };
+  //     setContacts(allUsers_data);
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error);
+  //   } finally {
+  //     // setLoading(false);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchContactsData();
-  }, []);
+  // useEffect(() => {
+  //   fetchContactsData();
+  // }, []);
 
   // Removed singlecontact logic - now using useSingleContact hook from apiHooks
 
@@ -334,6 +334,7 @@ const CustomProvider = ({ children }) => {
   // }, [fetchInterviewers]);
 
   // Query for fetching users
+  //this api helps to get users data based on tenantId to show all tenant users in users tab
   const {
     data: usersRes = [],
     isLoading: usersLoading,
@@ -659,8 +660,8 @@ const CustomProvider = ({ children }) => {
         // setPopupVisibility,
         // feedbackTabErrors,
         // setFeedbackTabError,
-        page,
-        setPage,
+        // page,
+        // setPage,
         // isOpen,
         // setIsopen,
         // iter,
@@ -669,7 +670,7 @@ const CustomProvider = ({ children }) => {
         // setPagination,
         // pagination,
 
-        loading,
+        // loading,
 
         // users
         usersRes,
@@ -703,17 +704,17 @@ const CustomProvider = ({ children }) => {
         // industries,
         // currentRole,
         // notifications
-        notificationsData,
+        // notificationsData,
         // user
-        userProfile,
+        // userProfile,
 
         // groups
         // groups,
         // fetchGroupsData,
 
         // users
-        usersData,
-        fetchUsersData,
+        // usersData,
+        // fetchUsersData,
 
         // organization
         organizationData,
@@ -721,9 +722,9 @@ const CustomProvider = ({ children }) => {
         addOrUpdateOrganization,
 
         // contacts
-        fetchContactsData,
-        contacts,
-        setContacts,
+        // fetchContactsData,
+        // contacts,
+        // setContacts,
         // singlecontact - now using useSingleContact hook from apiHooks
         // fetchContacts,
 
@@ -734,7 +735,7 @@ const CustomProvider = ({ children }) => {
 
         // tickets - COMMENTED: Use useSupportTickets hook instead
         // tickets,
-        userRole,
+        // userRole,
 
         interviewRounds,
         fetchInterviewRounds,
