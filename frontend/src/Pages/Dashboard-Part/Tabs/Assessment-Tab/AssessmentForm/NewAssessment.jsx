@@ -4,6 +4,7 @@
 // v1.0.3  -  Ashok   -  Added scroll to first error functionality
 // v1.0.4  -  Ashok   - Improved responsiveness
 // v1.0.5  -  Ashok   - Fixed responsive issues
+// v1.0.6  -  Ashok   - Fixed dropdown onchange handler
 
 import React, {
   useState,
@@ -408,29 +409,51 @@ const NewAssessment = () => {
     }
   };
 
+  // const handleAssessmentListChange = (e) => {
+  //   const value = e?.value;
+
+  //   if (value === "__other__") {
+  //     // open modal when user selects + Create List
+  //     setIsCategoryModalOpen(true);
+  //     return;
+  //   }
+
+  //   // Update selected and form data normally
+  //   setSelected(value);
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     categoryOrTechnology: value,
+  //   }));
+
+  //   // Clear related error
+  //   setErrors((prevErrors) => ({
+  //     ...prevErrors,
+  //     categoryOrTechnology: "",
+  //   }));
+  // };
+
   const handleAssessmentListChange = (e) => {
-  const value = e?.target?.value || e?.value;
+    const value = e?.value;
 
-  if (value === "create_new") {
-    // open modal when user selects + Create List
-    setIsCategoryModalOpen(true);
-    return;
-  }
+    if (value === "__other__") {
+      // open modal when user selects + Create List
+      setIsCategoryModalOpen(true);
+      return;
+    }
 
-  // Update selected and form data normally
-  setSelected(value);
-  setFormData((prevData) => ({
-    ...prevData,
-    categoryOrTechnology: value,
-  }));
+    // Update selected and form data normally
+    setSelected(value);
+    setFormData((prevData) => ({
+      ...prevData,
+      categoryOrTechnology: value,
+    }));
 
-  // Clear related error
-  setErrors((prevErrors) => ({
-    ...prevErrors,
-    categoryOrTechnology: "",
-  }));
-};
-
+    // Clear related error
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      categoryOrTechnology: "",
+    }));
+  };
 
   const [isQuestionLimitErrorPopupOpen, setIsQuestionLimitErrorPopupOpen] =
     useState(false);
@@ -1775,7 +1798,9 @@ const NewAssessment = () => {
                           }
                           categories={categories}
                           setCategories={setCategories}
-                          handleAssessmentListChange={handleAssessmentListChange}
+                          handleAssessmentListChange={
+                            handleAssessmentListChange
+                          }
                           selected={selected}
                           setSelected={setSelected}
                           onCategorySelect={handleCategorySelect}
@@ -2011,6 +2036,7 @@ const NewAssessment = () => {
                     setOptions={setCategories}
                     setSelected={setSelected}
                     selectionType="id"
+                    setErrors={setErrors}
                   />
                 )}
               </div>

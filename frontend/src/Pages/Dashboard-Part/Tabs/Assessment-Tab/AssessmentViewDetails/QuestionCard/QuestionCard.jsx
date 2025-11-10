@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - fixed issues
+
 const QuestionCard = ({ question }) => {
   const { questionText, questionType, options, correctAnswer } =
     question.snapshot;
@@ -19,43 +21,27 @@ const QuestionCard = ({ question }) => {
     switch (questionType) {
       case "MCQ":
         // Extract the actual answer text from "C) number"
-        const correctOption = correctAnswer.replace(/^.*\)\s*/, "").trim();
 
         return (
-          <div className="mt-3">
+          <div>
             {/* Options grid */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2">
               {options.map((option, index) => {
-                const isCorrect = option.trim() === correctOption;
                 return (
                   <div
                     key={index}
-                    className={`flex items-center p-3 rounded-lg transition-colors
-                    ${isCorrect ? "bg-white" : "bg-white"}
-                  `}
+                    className="flex items-center p-3 rounded-lg transition-colors"
                   >
-                    <span>
-                      {String.fromCharCode(65 + index)}) {option}
-                    </span>
+                    <span>{option}</span>
                   </div>
                 );
               })}
             </div>
 
             {/* Correct answer below */}
-            <div className="flex items-center gap-2 mt-4 p-3">
-              <span className="text-gray-600 font-semibold">
-                Correct Answer:
-              </span>
-              <span className="text-gray-900 font-bold">
-                {(() => {
-                  const correctIndex = options.findIndex(
-                    (opt) => opt.trim() === correctOption
-                  );
-                  const optionLetter = String.fromCharCode(65 + correctIndex);
-                  return `${optionLetter}) ${correctOption}`;
-                })()}
-              </span>
+            <div className="flex items-center gap-2 p-3">
+              <span className="text-gray-600">Answer:</span>
+              <span className="text-gray-900 font-medium">{correctAnswer}</span>
             </div>
           </div>
         );
@@ -117,17 +103,6 @@ const QuestionCard = ({ question }) => {
       </div>
       <div className="border border-t border-b-0 border-l-0 border-r-0">
         <div className="py-2 px-4">{renderByType()}</div>
-        <div className="flex items-start justify-between mb-2 py-2 px-4">
-          <p className="flex items-center gap-1 font-medium text-gray-900 pr-2">
-            Tags:
-            <span className="text-gray-700 font-normal">
-              {Array.isArray(question?.snapshot?.tags) &&
-              question.snapshot.tags.length > 0
-                ? question.snapshot.tags.join(", ")
-                : "—"}
-            </span>
-          </p>
-        </div>
       </div>
     </div>
   );

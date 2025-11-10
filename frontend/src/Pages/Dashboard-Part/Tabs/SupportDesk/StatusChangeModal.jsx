@@ -24,9 +24,6 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
   const { singleContact} = useSingleContact();
   console.log("singleContact=====",singleContact.firstName)
 
-  //const { superAdminProfile } = useCustomContext();
-  //console.log("superAdminProfile--====",superAdminProfile)
-
   const [newStatus, setNewStatus] = useState("");
   const [comment, setComment] = useState("");
   const [userComment, setUserComment] = useState("");

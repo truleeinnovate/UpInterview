@@ -138,18 +138,18 @@ const CustomDropdown = ({
 
 // Main AddTenantForm Component
 const AddTenantForm = ({ mode }) => {
-  const {
-    skills,
-    college,
-    qualification,
-    currentRole,
-    // candidateData,
-    // addOrUpdateCandidate
-  } = useCustomContext();
+  // const {
+  //   skills,
+  //   college,
+  //   qualification,
+  //   currentRole,
+  //   // candidateData,
+  //   // addOrUpdateCandidate
+  // } = useCustomContext();
 
   const { addOrUpdateCandidate, candidateData } = useCandidates();
 
-  console.log("currentRole", currentRole);
+  // console.log("currentRole", currentRole);
 
   const { id } = useParams();
   const navigate = useNavigate();

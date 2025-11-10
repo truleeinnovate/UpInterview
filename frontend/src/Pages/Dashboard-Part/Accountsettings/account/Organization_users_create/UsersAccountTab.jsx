@@ -42,8 +42,8 @@ const UsersAccountTab = () => {
   const userType = AuthCookieManager.getUserType();
 
   const { effectivePermissions, superAdminPermissions } = usePermissions();
-  const { usersRes, usersLoading, currentPlan, toggleUserStatus } =
-    useCustomContext();
+  const { usersRes, usersLoading, toggleUserStatus } = useCustomContext();
+  // currentPlan removed - use useSubscription hook if needed
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("table");

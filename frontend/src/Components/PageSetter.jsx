@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useCustomContext } from '../Context/Contextfetch';
+// import { useCustomContext } from '../Context/Contextfetch';
 
 const PageSetter = () => {
-  const { setPage } = useCustomContext();
+  // const { setPage } = useCustomContext();
   const location = useLocation();
 
   useEffect(() => {
@@ -66,8 +66,10 @@ const PageSetter = () => {
     });
 
     // console.log(`[PageSetter] Setting page to: ${page}`);
-    setPage(page);
-  }, [location.pathname, setPage]);
+    // setPage(page);
+  }, [location.pathname,
+    //  setPage
+    ]);
 
   return null; // Render nothing
 };

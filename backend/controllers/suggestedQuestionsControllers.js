@@ -431,14 +431,16 @@ const getQuestions = async (req, res) => {
     const [assessments, interviews, totalAssessments, totalInterviews] = await Promise.all([
       // Assessment questions
       AssessmentQuestion.find(buildFilterQuery('assessment') || {})
-        .sort({ createdAt: -1 })
+        // .sort({ createdAt: -1 })
+          .sort({ _id : -1 })
         .skip(skip)
         .limit(limitNum)
         .lean(),
       
       // Interview questions  
       InterviewQuestion.find(buildFilterQuery('interview') || {})
-        .sort({ createdAt: -1 })
+        // .sort({ createdAt: -1 })
+        .sort({ _id : -1 })
         .skip(skip)
         .limit(limitNum)
         .lean(),
