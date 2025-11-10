@@ -31,7 +31,6 @@ const { InterviewRounds } = require('../models/Interview/InterviewRounds.js');
 const InterviewQuestions = require('../models/Interview/selectedInterviewQuestion.js');
 const { Users } = require('../models/Users');
 const { permissionMiddleware } = require('../middleware/permissionMiddleware');
-const { authContextMiddleware } = require("../middleware/authContext.js");
 // <-------------------------------v1.0.6
 const ScheduledAssessmentSchema = require('../models/Assessment/assessmentsSchema.js');
 
@@ -116,59 +115,39 @@ const getModelMapping = (permissions) => {
   }, {});
 };
 
-router.get('/:model', permissionMiddleware,authContextMiddleware, async (req, res) => {
+router.get('/:model', permissionMiddleware, async (req, res) => {
   try {
     const { model } = req.params;
-    const {
-      actingAsUserId,
-      actingAsTenantId,
-      onBehalfOfUserId,
-      isImpersonating,
-      isSuperAdminOnly,
-      isEffectiveOnly,
-    } = res.locals.auth;
-
-    console.log('[permissionMiddleware] Processing permissions:', {
-      actingAsUserId,
-      actingAsTenantId,
-      onBehalfOfUserId,
-      isImpersonating,
-      isSuperAdminOnly,
-      isEffectiveOnly,
-    });
 
     // Get user information from res.locals (set by permissionMiddleware)
-    // let { userId, tenantId } = res.locals;
-    let userId = actingAsUserId;
-    let tenantId = actingAsTenantId;
+    let { userId, tenantId } = res.locals;
 
+    // If res.locals doesn't have user info, try to extract from token directly
+    if (!userId || !tenantId) {
+      // console.log('[2.1] No user info in res.locals, trying direct token extraction');
 
-    // // If res.locals doesn't have user info, try to extract from token directly
-    // if (!userId || !tenantId) {
-    //   // console.log('[2.1] No user info in res.locals, trying direct token extraction');
+      // Try to get token from cookies first, then from Authorization header
+      let authToken = req.cookies.authToken;
 
-    //   // Try to get token from cookies first, then from Authorization header
-    //   let authToken = req.cookies.authToken;
+      if (!authToken) {
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          authToken = authHeader.substring(7);
+          // console.log('[2.2] Got token from Authorization header');
+        }
+      }
 
-    //   if (!authToken) {
-    //     const authHeader = req.headers.authorization;
-    //     if (authHeader && authHeader.startsWith('Bearer ')) {
-    //       authToken = authHeader.substring(7);
-    //       // console.log('[2.2] Got token from Authorization header');
-    //     }
-    //   }
-
-    //   if (authToken) {
-    //     try {
-    //       const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-    //       userId = decoded.userId;
-    //       tenantId = decoded.tenantId;
-    //       // console.log('[2.3] Extracted user info from token:', { userId, tenantId });
-    //     } catch (err) {
-    //       console.error('[2.4] JWT verification failed:', err.message);
-    //     }
-    //   }
-    // }
+      if (authToken) {
+        try {
+          const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
+          userId = decoded.userId;
+          tenantId = decoded.tenantId;
+          // console.log('[2.3] Extracted user info from token:', { userId, tenantId });
+        } catch (err) {
+          console.error('[2.4] JWT verification failed:', err.message);
+        }
+      }
+    }
 
     if (!userId || !tenantId) {
 
@@ -318,37 +297,37 @@ router.get('/:model', permissionMiddleware,authContextMiddleware, async (req, re
 
       case 'interview':
 
-      const interviewQueryParams = { 
-    searchQuery: req.query.searchQuery,
-    status: req.query.status, // FIX: Changed from interviewStatus to status
-    tech: req.query.tech,
-    experienceMin: req.query.experienceMin,
-    experienceMax: req.query.experienceMax,
-    interviewType: req.query.interviewType,
-    interviewMode: req.query.interviewMode,
-    position: req.query.position,
-    company: req.query.company,
-    roundStatus: req.query.roundStatus,
-    interviewer: req.query.interviewer,
-    createdDate: req.query.createdDate,
-    interviewDateFrom: req.query.interviewDateFrom,
-    interviewDateTo: req.query.interviewDateTo,
-    page: parseInt(req.query.page) || 1,
-    limit: parseInt(req.query.limit) || 10
-  };
+        const interviewQueryParams = {
+          searchQuery: req.query.searchQuery,
+          status: req.query.status, // FIX: Changed from interviewStatus to status
+          tech: req.query.tech,
+          experienceMin: req.query.experienceMin,
+          experienceMax: req.query.experienceMax,
+          interviewType: req.query.interviewType,
+          interviewMode: req.query.interviewMode,
+          position: req.query.position,
+          company: req.query.company,
+          roundStatus: req.query.roundStatus,
+          interviewer: req.query.interviewer,
+          createdDate: req.query.createdDate,
+          interviewDateFrom: req.query.interviewDateFrom,
+          interviewDateTo: req.query.interviewDateTo,
+          page: parseInt(req.query.page) || 1,
+          limit: parseInt(req.query.limit) || 10
+        };
 
-      
-       data = await handleInterviewFiltering({
-        query,
+
+        data = await handleInterviewFiltering({
+          query,
           DataModel,
           ...interviewQueryParams
         });
-        console.log("data",data);
-        
-      
-      
-      
-      // const interviews = await DataModel.find(query)
+        console.log("data", data);
+
+
+
+
+        // const interviews = await DataModel.find(query)
         //   .populate({ path: 'candidateId', model: 'Candidate' })
         //   .populate({ path: 'positionId', model: 'Position' })
         //   .populate({ path: 'templateId', model: 'InterviewTemplate' })
@@ -617,7 +596,8 @@ router.get('/:model', permissionMiddleware,authContextMiddleware, async (req, re
             model: 'Contacts',
             select: 'firstName lastName email',
           })
-          .sort({ createdAt: -1 })
+           .sort({ _id : -1 })
+          // .sort({ createdAt: -1 })
           .skip(positionSkip)
           .limit(parsedPositionLimit)
           .lean();
@@ -791,7 +771,8 @@ router.get('/:model', permissionMiddleware,authContextMiddleware, async (req, re
 
         // Fetch paginated data with sort
         const candidateData = await Candidate.find(query)
-          .sort({ createdAt: -1 })
+         .sort({ _id : -1 })
+          // .sort({ createdAt: -1 })
           .skip(candidateSkip)
           .limit(parsedCandidateLimit)
           .lean();
@@ -869,39 +850,39 @@ async function handleInterviewFiltering(options) {
     // Start with base query (tenant/organization filtering)
     let matchQuery = { ...query };
 
- // In handleInterviewFiltering
-if (searchQuery && searchQuery.trim() !== '') {
-  const searchQueryTrimmed = searchQuery.trim();
-  const searchRegex = new RegExp(searchQueryTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-  
-  const searchWords = searchQueryTrimmed.toLowerCase().split(/\s+/).filter(Boolean);
+    // In handleInterviewFiltering
+    if (searchQuery && searchQuery.trim() !== '') {
+      const searchQueryTrimmed = searchQuery.trim();
+      const searchRegex = new RegExp(searchQueryTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
 
-  const fullNameOr = searchWords.length > 1 ? [
-    {
-      $and: [
-        { 'candidateId.FirstName': new RegExp(searchWords[0], 'i') },
-        { 'candidateId.LastName': new RegExp(searchWords[1], 'i') }
-      ]
-    },
-    {
-      $and: [
-        { 'candidateId.FirstName': new RegExp(searchWords[1], 'i') },
-        { 'candidateId.LastName': new RegExp(searchWords[0], 'i') }
-      ]
+      const searchWords = searchQueryTrimmed.toLowerCase().split(/\s+/).filter(Boolean);
+
+      const fullNameOr = searchWords.length > 1 ? [
+        {
+          $and: [
+            { 'candidateId.FirstName': new RegExp(searchWords[0], 'i') },
+            { 'candidateId.LastName': new RegExp(searchWords[1], 'i') }
+          ]
+        },
+        {
+          $and: [
+            { 'candidateId.FirstName': new RegExp(searchWords[1], 'i') },
+            { 'candidateId.LastName': new RegExp(searchWords[0], 'i') }
+          ]
+        }
+      ] : [];
+
+      matchQuery.$or = [
+        { 'candidateId.FirstName': searchRegex },
+        { 'candidateId.LastName': searchRegex },
+        { 'candidateId.Email': searchRegex },
+        { 'positionId.title': searchRegex },
+        { 'positionId.companyname': searchRegex },
+        { interviewCode: searchRegex },
+        { status: searchRegex },
+        ...fullNameOr
+      ];
     }
-  ] : [];
-
-  matchQuery.$or = [
-    { 'candidateId.FirstName': searchRegex },
-    { 'candidateId.LastName': searchRegex },
-    { 'candidateId.Email': searchRegex },
-    { 'positionId.title': searchRegex },
-    { 'positionId.companyname': searchRegex },
-    { interviewCode: searchRegex },
-    { status: searchRegex },
-    ...fullNameOr
-  ];
-}
 
     // ✅ Status filter
     if (status && status.length > 0) {
@@ -1010,7 +991,7 @@ if (searchQuery && searchQuery.trim() !== '') {
     // Combine rounds with questions
     const roundsWithQuestions = roundsData.map(round => ({
       ...round,
-      questions: interviewQuestions.filter(q => 
+      questions: interviewQuestions.filter(q =>
         q.roundId && q.roundId.toString() === round._id.toString()
       )
     }));
@@ -1018,7 +999,7 @@ if (searchQuery && searchQuery.trim() !== '') {
     // Combine interviews with rounds
     const combinedData = interviews.map(interview => ({
       ...interview,
-      rounds: roundsWithQuestions.filter(round => 
+      rounds: roundsWithQuestions.filter(round =>
         round.interviewId && round.interviewId.toString() === interview._id.toString()
       )
     }));

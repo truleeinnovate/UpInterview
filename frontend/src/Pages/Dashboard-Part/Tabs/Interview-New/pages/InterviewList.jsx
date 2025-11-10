@@ -48,11 +48,11 @@ function InterviewList() {
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     tech: [],
-    // experience: { min: "", max: "" },
+    experience: { min: "", max: "" },
     interviewType: [],
     interviewMode: [],
-    // position: [],
-    // company: [],
+    position: [],
+    company: [],
     roundStatus: [],
     interviewer: [],
     createdDate: "", // '', 'last7', 'last30', 'last90'
@@ -69,13 +69,13 @@ function InterviewList() {
       {
       searchQuery: searchQuery, // FIX: Changed from 'search' to 'searchQuery'
       status: selectedFilters.status,
-      // tech: selectedFilters.tech,
-      // experienceMin: selectedFilters.experience.min,
-      // experienceMax: selectedFilters.experience.max,
+      tech: selectedFilters.tech,
+      experienceMin: selectedFilters.experience.min,
+      experienceMax: selectedFilters.experience.max,
       interviewType: selectedFilters.interviewType,
       interviewMode: selectedFilters.interviewMode,
-      // position: selectedFilters.position,
-      // company: selectedFilters.company,
+      position: selectedFilters.position,
+      company: selectedFilters.company,
       roundStatus: selectedFilters.roundStatus,
       interviewer: selectedFilters.interviewer,
       createdDate: selectedFilters.createdDate,

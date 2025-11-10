@@ -2,9 +2,9 @@
 const InternalLog = require("../models/InternalLog");
 
 exports.createLog = async (logDetails) => {
-   console.log("logDetails", logDetails);
+  //  console.log("logDetails", logDetails);
   try {
-   console.log("logDetails", logDetails);
+  //  console.log("logDetails", logDetails);
     const log = new InternalLog(logDetails);
     await log.save();
     return log;
@@ -35,7 +35,8 @@ exports.getLogs = async (req, res) => {
 
     const [logs, total] = await Promise.all([
       InternalLog.find(query)
-        .sort({ createdAt: -1 })
+       .sort({ _id : -1 })
+        // .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
       InternalLog.countDocuments(query),
