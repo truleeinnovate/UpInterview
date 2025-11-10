@@ -28,8 +28,8 @@ const buildToastFromAxiosError = (err) => {
           const path = Array.isArray(e.path)
             ? e.path.join(".")
             : typeof e.path === "string"
-            ? e.path
-            : undefined;
+              ? e.path
+              : undefined;
           if (path && e.message) details.push(`${path}: ${e.message}`);
           else if (e.message) details.push(e.message);
           else {
@@ -59,10 +59,13 @@ axios.defaults.withCredentials = true;
 
 export const useSupportTickets = () => {
   const queryClient = useQueryClient();
-  const { userRole } = useCustomContext(); // “SuperAdmin”, “Admin”, “Individual”, …
+  // const { userRole } = useCustomContext(); // “SuperAdmin”, “Admin”, “Individual”, …
   const impersonationToken = Cookies.get('impersonationToken');
-  const impersonationPayload  = impersonationToken ? decodeJwt(impersonationToken) : null;
-  const { effectivePermissions, superAdminPermissions,impersonatedUser_roleName,effectivePermissions_RoleName } = usePermissions();
+  const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
+  const { effectivePermissions, superAdminPermissions, impersonatedUser_roleName, effectivePermissions_RoleName } = usePermissions();
+  const userRole = effectivePermissions_RoleName;//need to work on passing role dynamic -ashraf
+
+
 
   /* --------------------------------------------------------------------- */
   /*  Auth token                                                            */
@@ -74,7 +77,7 @@ export const useSupportTickets = () => {
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
 
-  console.log("impersonatedUser_roleName=====",impersonatedUser_roleName)
+  console.log("impersonatedUser_roleName=====", impersonatedUser_roleName)
 
   /* --------------------------------------------------------------------- */
   /*  QUERY: fetch tickets                                                  */
@@ -87,9 +90,9 @@ export const useSupportTickets = () => {
       );
 
       const all = data?.tickets ?? [];
-      console.log("all---",all)
-      console.log("userRole---",userRole)
-      console.log("impersonatedUser_roleName---",impersonatedUser_roleName)
+      console.log("all---", all)
+      console.log("userRole---", userRole)
+      console.log("impersonatedUser_roleName---", impersonatedUser_roleName)
 
       if (impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team") return all;
       // if (impersonatedUser_roleName === "Support_Team") {
@@ -108,7 +111,7 @@ export const useSupportTickets = () => {
       }
       if (userRole === "Individual" && userId)
         return all.filter((t) => t.ownerId === userId);
-      
+
 
       return [];
     } catch (err) {
@@ -123,7 +126,7 @@ export const useSupportTickets = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["supportTickets", userRole, tenantId, userId,impersonatedUser_roleName],
+    queryKey: ["supportTickets", userRole, tenantId, userId, impersonatedUser_roleName],
     queryFn: fetchTickets,
     enabled: !!userRole, // wait until role is known
     staleTime: 1000 * 60 * 5, // 5 min
@@ -140,15 +143,15 @@ export const useSupportTickets = () => {
       ticketId,
       attachmentFile,
       isAttachmentFileRemoved,
-      
+
     }) => {
 
-        // Prepare the payload with tenantId and ownerId
-const payload = {
-  ...data,
-  tenantId: data.tenantId || tenantId, // Use provided tenantId or fallback to token tenantId
-  ownerId: data.ownerId || userId,     // Use provided ownerId or fallback to token userId
-};
+      // Prepare the payload with tenantId and ownerId
+      const payload = {
+        ...data,
+        tenantId: data.tenantId || tenantId, // Use provided tenantId or fallback to token tenantId
+        ownerId: data.ownerId || userId,     // Use provided ownerId or fallback to token userId
+      };
 
 
 
@@ -163,7 +166,7 @@ const payload = {
       });
 
       const updatedTicketId = res.data.ticket._id;
-      
+
       if (isAttachmentFileRemoved && !attachmentFile) {
         await uploadFile(null, "attachment", "support", updatedTicketId);
       } else if (attachmentFile instanceof File) {

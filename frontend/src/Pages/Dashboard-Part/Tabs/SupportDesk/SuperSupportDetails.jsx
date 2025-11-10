@@ -51,8 +51,7 @@ const getStatusColor = (status) => {
   }
 };
 
-function SupportDetails() {
-  // const { userRole } = useCustomContext();
+function SupportDetails() {;
   const {
     effectivePermissions,
     superAdminPermissions,
