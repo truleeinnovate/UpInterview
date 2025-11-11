@@ -4,7 +4,6 @@
 import React, { useState } from "react";
 import SchedulerSectionComponent from "./InterviewMiniTabs/SchedulerSection";
 import InterviewerSectionComponent from "./InterviewMiniTabs/InterviewerSection";
-// import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { Video } from "lucide-react";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 

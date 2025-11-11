@@ -1250,6 +1250,10 @@ app.use("/assessments", AssessmentRouter);
 const assessmentQuestionsRoutes = require("./routes/assessmentQuestionsRoutes.js");
 app.use("/assessment-questions", assessmentQuestionsRoutes);
 
+// Integration Routes
+const integrationRoutes = require('./routes/integrationRoutes');
+app.use('/integrations', integrationRoutes);
+
 const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoute.js");
 app.use("/schedule-assessment", scheduledAssessmentRouter);
 
@@ -1387,8 +1391,8 @@ app.use("/subscription-update", subscriptionUpdateRoutes);
 const subscriptionRenewalRoutes = require("./routes/subscriptionRenewalRoutes.js");
 app.use("/subscription-renewal", subscriptionRenewalRoutes);
 
-const interviewRoundsRoutes = require("./routes/interviewRoundsRoutes.js");
-app.use("/interviewRounds", interviewRoundsRoutes);
+// const interviewRoundsRoutes = require("./routes/interviewRoundsRoutes.js");
+// app.use("/interviewRounds", interviewRoundsRoutes);
 
 // internal logs
 const internalLogRoutes = require("./routes/internalLogRoutes");

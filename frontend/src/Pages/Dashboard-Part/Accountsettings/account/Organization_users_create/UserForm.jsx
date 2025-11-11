@@ -5,9 +5,11 @@
 // v1.0.4 - Ashok - Improved responsiveness and added common code to popup and added delete confirmation popup for image
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Camera, X, Trash } from "lucide-react";
-import classNames from "classnames";
-import Modal from "react-modal";
+import { Camera,
+  //  X,
+    Trash } from "lucide-react";
+// import classNames from "classnames";
+// import Modal from "react-modal";
 import Cookies from "js-cookie";
 import { useNavigate, useLocation } from "react-router-dom";
 import { validateUserForm } from "../../../../../utils/AppUserValidation";
@@ -19,11 +21,11 @@ import {
 } from "../../../../../utils/workEmailValidation.js";
 import { validateFile } from "../../../../../utils/FileValidation/FileValidation.js";
 import { useRolesQuery } from "../../../../../apiHooks/useRoles.js";
-import {
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
-} from "@heroicons/react/24/outline";
-import Loading from "../../../../../Components/Loading.js";
+// import {
+//   ArrowsPointingInIcon,
+//   ArrowsPointingOutIcon,
+// } from "@heroicons/react/24/outline";
+// import Loading from "../../../../../Components/Loading.js";
 import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import {

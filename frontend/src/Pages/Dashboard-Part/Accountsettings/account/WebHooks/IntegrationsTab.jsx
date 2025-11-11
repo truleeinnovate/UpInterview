@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Power, PowerOff } from "lucide-react";
 import { createPortal } from "react-dom";
+import { config } from "../../../../../config";
 
 const IntegrationsTab = () => {
   const [integrations, setIntegrations] = useState([]);
@@ -63,11 +64,15 @@ const IntegrationsTab = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submission started', { isEditing: !!editingIntegration, formData });
+    
     try {
       const url = editingIntegration
-        ? `/api/integrations/${editingIntegration.id}`
-        : "/api/integrations";
+        ? `${config.REACT_APP_API_URL}/integrations/${editingIntegration.id}`
+        : `${config.REACT_APP_API_URL}/integrations`;
       const method = editingIntegration ? "PUT" : "POST";
+      
+      console.log('Making API request:', { url, method, data: formData });
 
       const response = await fetch(url, {
         method,
@@ -75,11 +80,20 @@ const IntegrationsTab = () => {
         body: JSON.stringify(formData),
       });
 
+      console.log('API Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
       if (response.ok) {
+        console.log('Request successful, refreshing integrations...');
         await fetchIntegrations();
         setShowModal(false);
         setEditingIntegration(null);
-        setFormData({
+        
+        const resetFormData = {
           name: "",
           organization: "",
           webhookUrl: "",
@@ -93,10 +107,25 @@ const IntegrationsTab = () => {
             hmacSecret: "",
             oauth2: { clientId: "", clientSecret: "", tokenUrl: "", scope: "" },
           },
+        };
+        
+        console.log('Form reset and modal closed');
+        setFormData(resetFormData);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
         });
       }
     } catch (error) {
-      console.error("Error saving integration:", error);
+      console.error('Error in handleSubmit:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        formData: formData
+      });
     }
   };
 
