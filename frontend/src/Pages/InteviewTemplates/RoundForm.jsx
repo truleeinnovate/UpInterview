@@ -38,13 +38,17 @@ import DropdownWithSearchField from "../../Components/FormFields/DropdownWithSea
 import InputField from "../../Components/FormFields/InputField.jsx";
 import DescriptionField from "../../Components/FormFields/DescriptionField.jsx";
 import { ROUND_TITLES } from "../Dashboard-Part/Tabs/CommonCode-AllTabs/roundTitlesConfig.js";
-import { useCustomContext } from "../../Context/Contextfetch.js";
+// import { useCustomContext } from "../../Context/Contextfetch.js";
+import { useInterviewGroups } from "../../apiHooks/useInterviewGroups.js";
+
 
 function RoundFormTemplates() {
   const { templatesData, isMutationLoading, addOrUpdateRound, saveTemplate } =
     useInterviewTemplates();
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
-  const { groups } = useCustomContext();
+  // const { groups } = useCustomContext();
+  const { groups } = useInterviewGroups();
+
   // console.log("assessmentData",assessmentData);
 
   // const { resolveInterviewerDetails } = useInterviewerDetails();
@@ -1068,8 +1072,8 @@ function RoundFormTemplates() {
                                   </span>
                                   <ChevronUp
                                     className={`transform transition-transform ${expandedSections[sectionId]
-                                        ? ""
-                                        : "rotate-180"
+                                      ? ""
+                                      : "rotate-180"
                                       }`}
                                   />
                                 </button>
@@ -1108,10 +1112,10 @@ function RoundFormTemplates() {
                                               </div>
                                               <ChevronDown
                                                 className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
-                                                    question._id
-                                                  ]
-                                                    ? "transform rotate-180"
-                                                    : ""
+                                                  question._id
+                                                ]
+                                                  ? "transform rotate-180"
+                                                  : ""
                                                   }`}
                                               />
                                             </div>
@@ -1154,10 +1158,10 @@ function RoundFormTemplates() {
                                                               <div
                                                                 key={optIdx}
                                                                 className={`text-sm p-2 rounded border ${option ===
-                                                                    question.snapshot
-                                                                      .correctAnswer
-                                                                    ? "bg-green-50 border-green-200 text-green-800"
-                                                                    : "bg-gray-50 border-gray-200"
+                                                                  question.snapshot
+                                                                    .correctAnswer
+                                                                  ? "bg-green-50 border-green-200 text-green-800"
+                                                                  : "bg-gray-50 border-gray-200"
                                                                   }`}
                                                               >
                                                                 {option}
@@ -1242,8 +1246,8 @@ function RoundFormTemplates() {
                           variant="outline"
                           size="sm"
                           className={`${formData.interviewerType === "External"
-                              ? "opacity-50 cursor-not-allowed"
-                              : ""
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
                             }`}
                           disabled={formData.interviewerType === "External"}
                           title={
@@ -1271,8 +1275,8 @@ function RoundFormTemplates() {
                           variant="outline"
                           size="sm"
                           className={`${formData.interviewerType === "External"
-                              ? "opacity-50 cursor-not-allowed"
-                              : ""
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
                             }`}
                           disabled={formData.interviewerType === "External"}
                           title={
@@ -1298,8 +1302,8 @@ function RoundFormTemplates() {
                         variant="outline"
                         size="sm"
                         className={`${formData.interviewerType === "Internal"
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
                           }`}
                         disabled={formData.interviewerType === "Internal"}
                         title={
@@ -1523,8 +1527,8 @@ function RoundFormTemplates() {
                                   <li
                                     key={qIndex}
                                     className={`flex justify-between items-center p-3 border rounded-md ${isMandatory
-                                        ? "border-red-500"
-                                        : "border-gray-300"
+                                      ? "border-red-500"
+                                      : "border-gray-300"
                                       }`}
                                   >
                                     <span className="sm:text-sm text-gray-900 font-medium">

@@ -7,7 +7,6 @@ import { ViewDetailsButton, EditButton } from "../../common/Buttons";
 // import { SidePopup } from '../../common/SidePopup'
 // import { InterviewerGroupFormPopup } from './InterviewerGroupFormPopup'
 // import { teamMembers } from '../../mockData/teamData'
-import { useCustomContext } from "../../../../../Context/Contextfetch";
 // import axios from 'axios'
 import Cookies from "js-cookie";
 import { Outlet, useNavigate } from "react-router-dom";
@@ -16,7 +15,6 @@ import { useGroupsQuery } from "../../../../../apiHooks/useInterviewerGroups";
 
 const InterviewerGroups = () => {
   // <------------------------- v1.0.0
-  // const { groups, groupsLoading } = useCustomContext();
   const { data: groups = [],
      isLoading: groupsLoading, 
     error: groupError

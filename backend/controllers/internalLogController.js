@@ -2,9 +2,9 @@
 const InternalLog = require("../models/InternalLog");
 
 exports.createLog = async (logDetails) => {
-   console.log("logDetails", logDetails);
+  //  console.log("logDetails", logDetails);
   try {
-   console.log("logDetails", logDetails);
+  //  console.log("logDetails", logDetails);
     const log = new InternalLog(logDetails);
     await log.save();
     return log;
@@ -35,7 +35,8 @@ exports.getLogs = async (req, res) => {
 
     const [logs, total] = await Promise.all([
       InternalLog.find(query)
-        .sort({ createdAt: -1 })
+       .sort({ _id : -1 })
+        // .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
       InternalLog.countDocuments(query),
@@ -98,29 +99,127 @@ exports.deleteLog = async (req, res) => {
 };
 
 // SUPER ADMIN added by Ashok ------------------------------------->
+// SUPER ADMIN added by Venkatesh - Enhanced with pagination and filters
 exports.getLogsSummary = async (req, res) => {
   try {
-    // v1.0.0 <---------------------------------------------------------------
-    const logs = await InternalLog.find().sort({ _id: -1 });
-    // v1.0.0 <---------------------------------------------------------------
+    const {
+      page = 0,
+      limit = 10,
+      search = '',
+      status = '',
+      severity = '',
+      processName = '',
+      startDate = '',
+      endDate = ''
+    } = req.query;
 
-    const totalLogs = logs.length;
-    const errorLogs = logs.filter((log) => log.status === "error").length;
-    const warningLogs = logs.filter((log) => log.status === "warning").length;
-    const successLogs = logs.filter((log) => log.status === "success").length;
+    const skip = parseInt(page) * parseInt(limit);
+    const limitNum = parseInt(limit);
+
+    // Build query
+    let query = {};
+
+    // Search across multiple fields
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { logId: searchRegex },
+        { processName: searchRegex },
+        { message: searchRegex },
+        { serverName: searchRegex },
+        { requestEndPoint: searchRegex }
+      ];
+    }
+
+    // Filter by status
+    if (status) {
+      query.status = { $in: status.split(',') };
+    }
+
+    // Filter by severity
+    if (severity) {
+      query.severity = { $in: severity.split(',') };
+    }
+
+    // Filter by process name
+    if (processName) {
+      query.processName = new RegExp(processName, 'i');
+    }
+
+    // Date range filter
+    if (startDate || endDate) {
+      query.timeStamp = {};
+      if (startDate) {
+        query.timeStamp.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        const endDateTime = new Date(endDate);
+        endDateTime.setHours(23, 59, 59, 999);
+        query.timeStamp.$lte = endDateTime;
+      }
+    }
+
+    // Get total count for pagination
+    const total = await InternalLog.countDocuments(query);
+
+    // Fetch paginated logs
+    const logs = await InternalLog.find(query)
+      .sort({ timeStamp: -1, _id: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean();
+
+    // Calculate summary stats for ALL logs (not just paginated)
+    const summaryStats = await InternalLog.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: null,
+          totalLogs: { $sum: 1 },
+          errorLogs: {
+            $sum: { $cond: [{ $eq: ['$status', 'error'] }, 1, 0] }
+          },
+          warningLogs: {
+            $sum: { $cond: [{ $eq: ['$status', 'warning'] }, 1, 0] }
+          },
+          successLogs: {
+            $sum: { $cond: [{ $eq: ['$status', 'success'] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    const stats = summaryStats[0] || {
+      totalLogs: 0,
+      errorLogs: 0,
+      warningLogs: 0,
+      successLogs: 0
+    };
 
     res.status(200).json({
-      totalLogs,
-      errorLogs,
-      warningLogs,
-      successLogs,
-      logs,
+      data: logs,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limitNum),
+        totalItems: total,
+        hasNext: skip + limitNum < total,
+        hasPrev: parseInt(page) > 0,
+        itemsPerPage: limitNum
+      },
+      stats: {
+        totalLogs: stats.totalLogs,
+        errorLogs: stats.errorLogs,
+        warningLogs: stats.warningLogs,
+        successLogs: stats.successLogs
+      },
+      status: true
     });
   } catch (error) {
     console.error("Error fetching log summary:", error);
     res.status(500).json({
       message: "Server error while fetching logs",
       details: error.message,
+      status: false
     });
   }
 };

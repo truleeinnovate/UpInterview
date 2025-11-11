@@ -182,10 +182,11 @@ const ToolbarDropdown = ({
                 top: menuPosition.top,
                 left: menuPosition.left,
                 width: menuPosition.width,
-                zIndex: 99999,
-                maxHeight: "55vh",
+                zIndex: 99999, // Change this line to set a maximum height for 5 items
+                maxHeight: "200px",
                 overflow: "auto",
                 marginTop: 0,
+                scrollbarWidth: "thin",
               }}
               className="bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden"
             >

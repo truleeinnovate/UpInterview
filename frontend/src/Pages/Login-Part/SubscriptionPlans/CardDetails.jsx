@@ -8,7 +8,6 @@ import Cookies from "js-cookie";
 import { config } from '../../../config.js'
 import axios from "axios";
 import { handleMembershipChange } from "../../../utils/PaymentpageValidations.js";
-//import { useCustomContext } from "../../../Context/Contextfetch";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../apiHooks/useUsers.js";
 import { useSubscription } from "../../../apiHooks/useSubscription";

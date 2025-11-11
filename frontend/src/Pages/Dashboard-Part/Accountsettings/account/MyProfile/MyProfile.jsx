@@ -8,7 +8,6 @@ import AdvancedDetails from "./AdvancedDetails/AdvacedDetails";
 import InterviewUserDetails from "./InterviewDetails/InterviewDetails";
 import AvailabilityUser from "./AvailabilityDetailsUser/AvailabilityUser";
 import { DocumentsSection } from "./DocumentsDetails/DocumentsSection";
-import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
