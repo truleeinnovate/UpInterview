@@ -6,8 +6,6 @@ import { Minimize, Expand, X } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { useUserProfile, useSingleContact } from "../../../../apiHooks/useUsers.js";
-// import { useCustomContext } from "../../../../Context/Contextfetch.js";
-
 
 const statusOptions = ["New", "Assigned", "Inprogress", "Resolved", "Close"];
 

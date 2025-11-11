@@ -5,7 +5,6 @@ import { config } from "../config";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
-import { useCustomContext } from "../Context/Contextfetch";
 import { uploadFile } from "../apiHooks/imageApis";
 import { usePermissions } from "../Context/PermissionsContext";
 

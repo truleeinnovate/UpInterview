@@ -22,7 +22,6 @@ import {
   Circle,
   FileText,
 } from "lucide-react";
-// import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useCandidates } from "../../../../../apiHooks/useCandidates";

@@ -10,7 +10,7 @@ import InterviewDetails from "./InterviewDetails";
 import classNames from "classnames";
 import Sidebar from "./Sidebar";
 import { Outlet, useParams } from "react-router-dom";
-import AddCandidateForm from "../AddCandidateForm";
+// import AddCandidateForm from "../AddCandidateForm";
 // v1.0.0 <--------------------------------------------------------
 import {
   Users,
@@ -50,10 +50,10 @@ const MainContent = () => {
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectedInterview, setSelectedInterview] = useState(null);
   const { id } = useParams();
-  const [searchQuery, setSearchQuery] = useState("");
+  // const [searchQuery, setSearchQuery] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editModeOn, setEditModeOn] = useState(false);
-  const [slideShow, setSlideShow] = useState(false);
+  // const [slideShow, setSlideShow] = useState(false);
 
   // Get candidate data from the useCandidates hook
   const { candidateData } = useCandidates();

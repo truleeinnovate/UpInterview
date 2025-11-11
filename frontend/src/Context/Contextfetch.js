@@ -619,25 +619,25 @@ const CustomProvider = ({ children }) => {
   // }, [getTickets]);
 
   // <-- interview rounds to show the data in the home for upcoming interviews -->
-  const [interviewRounds, setInterviewRounds] = useState([]);
+  // const [interviewRounds, setInterviewRounds] = useState([]);
 
-  const fetchInterviewRounds = useCallback(async () => {
-    try {
-      // Fetch all interview rounds with interviewId populated
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/interviewRounds?populate=interviewId`
-      );
-      // You may need to adjust the API endpoint to support population if not already
-      setInterviewRounds(response.data.reverse());
-    } catch (error) {
-      console.error("Error fetching interview rounds:", error);
-      setInterviewRounds([]);
-    }
-  }, []);
+  // const fetchInterviewRounds = useCallback(async () => {
+  //   try {
+  //     // Fetch all interview rounds with interviewId populated
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/interviewRounds?populate=interviewId`
+  //     );
+  //     // You may need to adjust the API endpoint to support population if not already
+  //     setInterviewRounds(response.data.reverse());
+  //   } catch (error) {
+  //     console.error("Error fetching interview rounds:", error);
+  //     setInterviewRounds([]);
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    fetchInterviewRounds();
-  }, [fetchInterviewRounds]);
+  // useEffect(() => {
+  //   fetchInterviewRounds();
+  // }, [fetchInterviewRounds]);
 
   return (
     <CustomContext.Provider
@@ -737,8 +737,8 @@ const CustomProvider = ({ children }) => {
         // tickets,
         // userRole,
 
-        interviewRounds,
-        fetchInterviewRounds,
+        // interviewRounds,
+        // fetchInterviewRounds,
 
 
 

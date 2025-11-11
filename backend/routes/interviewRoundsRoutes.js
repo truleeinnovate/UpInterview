@@ -1,7 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const { getAllInterviewRounds } = require('../controllers/interviewRoundsController.js');
+// const express = require('express');
+// const router = express.Router();
+// const { getAllInterviewRounds } = require('../controllers/interviewRoundsController.js');
 
-router.get('/', getAllInterviewRounds);
+// router.get('/', getAllInterviewRounds);
 
-module.exports = router;
+// module.exports = router;

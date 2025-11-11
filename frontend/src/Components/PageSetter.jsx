@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-// import { useCustomContext } from '../Context/Contextfetch';
 
 const PageSetter = () => {
   // const { setPage } = useCustomContext();
