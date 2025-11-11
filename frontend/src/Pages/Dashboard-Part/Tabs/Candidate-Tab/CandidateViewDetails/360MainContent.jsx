@@ -1,7 +1,7 @@
 // v1.0.0 - Ashok - Changed icons
 // v1.0.1 - Ashok - Adding loading view
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo } from "react";
 import InterviewRounds from "./InterviewRounds";
 import AppliedPositions from "./AppliedPositions";
 import Timeline from "./Timeline";
@@ -10,11 +10,9 @@ import InterviewDetails from "./InterviewDetails";
 import classNames from "classnames";
 import Sidebar from "./Sidebar";
 import { Outlet, useParams } from "react-router-dom";
-import axios from "axios";
 import AddCandidateForm from "../AddCandidateForm";
 // v1.0.0 <--------------------------------------------------------
 import {
-  User,
   Users,
   Briefcase,
   Calendar,
@@ -22,13 +20,12 @@ import {
   Activity,
 } from "lucide-react";
 // v1.0.0 -------------------------------------------------------->
-import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
+import { useInterviews } from "../../../../../apiHooks/useInterviews";
+import { useCandidates } from "../../../../../apiHooks/useCandidates";
 import Documents from "./Documents";
-import Loading from "../../../../../Components/Loading";
 // v1.0.0 <--------------------------------------------------------
 import ActivityComponent from "../../CommonCode-AllTabs/Activity";
 // v1.0.0 -------------------------------------------------------->
-import { config } from "../../../../../config";
 
 // v1.0.0 <--------------------------------------------------------
 // const tabs = [
@@ -53,42 +50,30 @@ const MainContent = () => {
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectedInterview, setSelectedInterview] = useState(null);
   const { id } = useParams();
-  const [candidate, setCandidate] = useState(null);
-  const [positions, setPositions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editModeOn, setEditModeOn] = useState(false);
   const [slideShow, setSlideShow] = useState(false);
 
-  console.log("candidate 360 Details", candidate);
-  console.log("positions 360 Details", positions);
-
-  // const {
-  //   interviewData
-  // } = useCustomContext();
-
+  // Get candidate data from the useCandidates hook
+  const { candidateData } = useCandidates();
   const { interviewData } = useInterviews();
 
+  // Find the current candidate from the cached data
+  const candidate = useMemo(() => {
+    return candidateData?.find(c => c._id === id);
+  }, [candidateData, id]);
+
+  // Extract positions from candidate data
+  const positions = useMemo(() => {
+    return candidate?.appliedPositions || [];
+  }, [candidate]);
+
+  // Find interview data for the current candidate
   const interview = interviewData.find((data) => data?.candidateId?._id === id);
-  // console.log("interview",interview);
-  console.log("candidate?._id", candidate?._id);
 
-  useEffect(() => {
-    fetchCandidate();
-  }, [id]);
-
-  const fetchCandidate = async () => {
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/candidate/${id}`
-      );
-      const { appliedPositions, ...candidateData } = response.data;
-      setCandidate(candidateData);
-      setPositions(appliedPositions || []);
-    } catch (error) {
-      console.error("Error fetching candidate:", error);
-    }
-  };
+  console.log("candidate 360 Details", candidate);
+  console.log("positions 360 Details", positions);
 
   // if (!candidate) return <Loading />
 
