@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Power, PowerOff } from "lucide-react";
 import { createPortal } from "react-dom";
 import { config } from "../../../../../config";
+import { getAuthToken } from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 
 const IntegrationsTab = () => {
   const [integrations, setIntegrations] = useState([]);
@@ -51,16 +52,29 @@ const IntegrationsTab = () => {
     fetchIntegrations();
   }, []);
 
-  const fetchIntegrations = async () => {
-    try {
-      const response = await fetch("/api/integrations");
-      const data = await response.json();
-      setIntegrations(data.data || []);
-    } catch (error) {
-      console.error("Error fetching integrations:", error);
-      setIntegrations([]);
+const fetchIntegrations = async () => {
+  try {
+    const authToken = getAuthToken();
+    const response = await fetch(`${config.REACT_APP_API_URL}/integrations`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      throw new Error('Failed to fetch integrations');
     }
-  };
+    
+    const data = await response.json();
+    setIntegrations(data.data || []);
+  } catch (error) {
+    console.error('Error fetching integrations:', error);
+    // Consider adding user feedback here (e.g., toast notification)
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();

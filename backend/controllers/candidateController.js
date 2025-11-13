@@ -7,6 +7,7 @@ const { validateCandidateData, candidateUpdateSchema } = require('../validations
 const { Candidate } = require('../models/candidate.js');
 const { Interview } = require('../models/Interview/Interview.js');
 const { CandidateAssessment } = require('../models/Assessment/candidateAssessment.js');
+const { triggerWebhook, EVENT_TYPES } = require('../services/webhookService');
 
 
 
@@ -89,6 +90,25 @@ const addCandidatePostCall = async (req, res) => {
     });
 
     await newCandidate.save();
+
+    // Trigger webhook for candidate creation
+    try {
+      await triggerWebhook(
+        EVENT_TYPES.CANDIDATE_CREATED,
+        {
+          id: newCandidate._id,
+          firstName: newCandidate.FirstName,
+          lastName: newCandidate.LastName,
+          email: newCandidate.Email,
+          positionId: newCandidate.PositionId,
+          createdAt: newCandidate.createdAt,
+          updatedAt: newCandidate.updatedAt
+        },
+        newCandidate.tenantId
+      );
+    } catch (error) {
+      console.error('Error triggering webhook for candidate creation:', error);
+    }
 
     // Generate feed
     res.locals.feedData = {
@@ -263,22 +283,44 @@ const updateCandidatePatchCall = async (req, res) => {
     if (changes.length === 0) {
       return res.status(200).json({
         status: 'no_changes',
-        message: 'No changes detected, candidate details remain the same',
+        message: 'No changes detected',
+        data: null
       });
     }
 
     // Perform the update
+    const updateData = {
+      ...updateFields,
+      updatedBy: ownerId
+    };
+
     const updatedCandidate = await Candidate.findByIdAndUpdate(
       candidateId,
-      {
-        ...updateFields,
-        updatedBy: ownerId 
-      },
-      { new: true }
+      updateData,
+      { new: true, runValidators: true }
     );
 
     if (!updatedCandidate) {
       return res.status(404).json({ message: "Candidate not found after update" });
+    }
+
+    // Trigger webhook for candidate update
+    try {
+      await triggerWebhook(
+        EVENT_TYPES.CANDIDATE_UPDATED,
+        {
+          id: updatedCandidate._id,
+          firstName: updatedCandidate.FirstName,
+          lastName: updatedCandidate.LastName,
+          email: updatedCandidate.Email,
+          positionId: updatedCandidate.PositionId,
+          updatedFields: Object.keys(updateFields),
+          updatedAt: updatedCandidate.updatedAt
+        },
+        updatedCandidate.tenantId
+      );
+    } catch (error) {
+      console.error('Error triggering webhook for candidate update:', error);
     }
 
     

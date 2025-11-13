@@ -339,7 +339,7 @@ async function createAssessmentExpiryWarningNotification(scheduledAssessment, ho
 // Cron job for assessment reminders and expiry checks (runs every hour)
 const runAssessmentReminderJob = async () => {
   if (mongoose.connection.readyState !== 1) {
-    console.warn('[ASSESSMENT REMINDERS] Skipping: MongoDB not connected');
+    // console.warn('[ASSESSMENT REMINDERS] Skipping: MongoDB not connected');
     return;
   }
 
@@ -378,11 +378,11 @@ const runAssessmentReminderJob = async () => {
       status: 'scheduled'  // Only find assessments that are still 'scheduled'
     });
     
-    console.log(`[ASSESSMENT REMINDERS] Found ${expiredAssessments.length} expired assessments`);
-    console.log(`[ASSESSMENT REMINDERS] Current time: ${now.format()}, checking assessments with expiry < ${now.toDate()}`);
+    // console.log(`[ASSESSMENT REMINDERS] Found ${expiredAssessments.length} expired assessments`);
+    // console.log(`[ASSESSMENT REMINDERS] Current time: ${now.format()}, checking assessments with expiry < ${now.toDate()}`);
     
     for (const assessment of expiredAssessments) {
-      console.log(`[ASSESSMENT REMINDERS] Processing expired assessment: ${assessment._id} (${assessment.order}), current status: ${assessment.status}`);
+      // console.log(`[ASSESSMENT REMINDERS] Processing expired assessment: ${assessment._id} (${assessment.order}), current status: ${assessment.status}`);
       
       // FIRST: Atomically update the status to prevent concurrent processing
       // This ensures that even if multiple instances are running, only one will succeed
@@ -400,11 +400,11 @@ const runAssessmentReminderJob = async () => {
       
       // If the atomic update didn't find a document (status already changed), skip
       if (!atomicUpdate) {
-        console.log(`[ASSESSMENT REMINDERS] ⚠️ Assessment ${assessment._id} (${assessment.order}) already processed by another instance, skipping`);
+        // console.log(`[ASSESSMENT REMINDERS] ⚠️ Assessment ${assessment._id} (${assessment.order}) already processed by another instance, skipping`);
         continue;
       }
       
-      console.log(`[ASSESSMENT REMINDERS] Successfully updated assessment ${assessment._id} status to: expired`);
+      // console.log(`[ASSESSMENT REMINDERS] Successfully updated assessment ${assessment._id} status to: expired`);
       
       // Now check if we've already created a notification for this assessment
       let existingExpiryNotification = await PushNotification.findOne({
@@ -422,21 +422,21 @@ const runAssessmentReminderJob = async () => {
         ]
       });
       
-      console.log(`[ASSESSMENT REMINDERS] Existing notification check for ${assessment._id}: ${existingExpiryNotification ? 'FOUND' : 'NOT FOUND'}`);
+      // console.log(`[ASSESSMENT REMINDERS] Existing notification check for ${assessment._id}: ${existingExpiryNotification ? 'FOUND' : 'NOT FOUND'}`);
       
       if (!existingExpiryNotification) {
         // Create notification for expiry (only once)
         await createAssessmentStatusUpdateNotification(atomicUpdate, 'scheduled', 'expired');
-        console.log(`[ASSESSMENT REMINDERS] ✅ Created expiry notification for assessment ${assessment._id} (${assessment.order})`);
+        // console.log(`[ASSESSMENT REMINDERS] ✅ Created expiry notification for assessment ${assessment._id} (${assessment.order})`);
       } else {
-        console.log(`[ASSESSMENT REMINDERS] ℹ️ Notification already exists for assessment ${assessment._id} (${assessment.order}), skipping notification creation`);
+        // console.log(`[ASSESSMENT REMINDERS] ℹ️ Notification already exists for assessment ${assessment._id} (${assessment.order}), skipping notification creation`);
       }
     }
 
     // console.log('[ASSESSMENT REMINDERS] Job completed successfully');
 
   } catch (error) {
-    console.error('[ASSESSMENT REMINDERS] Job Error:', error);
+    // console.error('[ASSESSMENT REMINDERS] Job Error:', error);
   }
 };
 
@@ -449,7 +449,7 @@ function scheduleAssessmentReminderCron() {
     try {
       await runAssessmentReminderJob();
     } catch (err) {
-      console.error('[ASSESSMENT REMINDERS] Cron job error:', err);
+      // console.error('[ASSESSMENT REMINDERS] Cron job error:', err);
     }
   });
 
