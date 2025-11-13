@@ -51,12 +51,22 @@ function ReceiptsTable({ organizationId, viewMode }) {
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
   // const [isLoading, setIsLoading] = useState(false);
-
   // const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [selectedReceiptId, setSelectedReceiptId] = useState(null);
   // const [receipts, setReceipts] = useState([]);
 
-  const { receipts, isLoading } = useReceipts(organizationId); // from apiHooks
+  const [selectedStatus, setSelectedStatus] = useState([]);
+
+  const rowsPerPage = 10;
+  const toApiReceiptStatus = (arr) => arr.join(",");
+  const { receipts, pagination, stats, isLoading } = useReceipts({
+    page: currentPage,
+    limit: rowsPerPage,
+    search: searchQuery,
+    status: toApiReceiptStatus(selectedStatus),
+    tenantId: organizationId || "",
+    organizationId
+  }); // from apiHooks
   const { receipt: selectedReceipt } = useReceiptById(selectedReceiptId); // from apiHooks
 
   const handleCurrentStatusToggle = (status) => {
@@ -68,7 +78,6 @@ function ReceiptsTable({ organizationId, viewMode }) {
   };
 
   const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedCurrentStatus, setCurrentStatus] = useState("active");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
@@ -187,42 +196,21 @@ function ReceiptsTable({ organizationId, viewMode }) {
     }
   };
 
-  const FilteredData = () => {
-    if (!Array.isArray(dataToUse)) return [];
-    return dataToUse.filter((receipt) => {
-      const fieldsToSearch = [
-        receipt?.receiptCode ? receipt?.receiptCode : receipt?.receiptCode,
-        receipt?.status ? receipt?.status : receipt?.status,
-      ].filter((field) => field !== null && field !== undefined);
+  
 
-      const matchesStatus =
-        selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(receipt.status);
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      return matchesSearchQuery && matchesStatus;
-    });
-  };
-
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
+  const totalPages = pagination?.totalPages || 0;
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
+    if (pagination?.hasNext) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
   const prevPage = () => {
-    if (currentPage > 0) {
+    if (pagination?.hasPrev && currentPage > 0) {
       setCurrentPage((prevPage) => prevPage - 1);
     }
   };
 
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -620,36 +608,19 @@ function ReceiptsTable({ organizationId, viewMode }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Receipts</div>
-            <div className="text-xl font-semibold">{receipts?.length || 0}</div>
+            <div className="text-xl font-semibold">{stats?.totalReceipts ?? receipts?.length ?? 0}</div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Amount</div>
-            <div className="text-xl font-semibold">
-              {formatCurrency(
-                receipts?.reduce((sum, r) => sum + r.amount, 0)
-              ) || 0}
-            </div>
+            <div className="text-xl font-semibold">{formatCurrency(stats?.totalAmount ?? receipts?.reduce((sum, r) => sum + (r.amount || 0), 0)) || 0}</div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Discounts</div>
-            <div className="text-xl font-semibold text-success-600">
-              {formatCurrency(
-                receipts?.reduce((sum, r) => sum + r.discount, 0)
-              ) || 0}
-            </div>
+            <div className="text-xl font-semibold text-success-600">{formatCurrency(stats?.totalDiscount ?? receipts?.reduce((sum, r) => sum + (r.discount || 0), 0)) || 0}</div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Success Rate</div>
-            <div className="text-xl font-semibold">
-              {receipts.length !== 0
-                ? (
-                    (receipts.filter((r) => r.status === "success").length /
-                      receipts.length) *
-                    100
-                  ).toFixed(1)
-                : 0}
-              %
-            </div>
+            <div className="text-xl font-semibold">{typeof stats?.successRate === "number" ? stats.successRate.toFixed(1) : (receipts.length !== 0 ? ((receipts.filter((r) => r.status === "success").length / receipts.length) * 100).toFixed(1) : 0)}%</div>
           </div>
         </div>
 
@@ -681,7 +652,7 @@ function ReceiptsTable({ organizationId, viewMode }) {
                 {view === "table" ? (
                   <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                     <TableView
-                      data={currentFilteredRows}
+                      data={receipts}
                       columns={tableColumns}
                       loading={isLoading}
                       actions={tableActions}
@@ -692,7 +663,7 @@ function ReceiptsTable({ organizationId, viewMode }) {
                 ) : (
                   <div className="w-full">
                     <KanbanView
-                      data={currentFilteredRows.map((payment) => ({
+                      data={receipts.map((payment) => ({
                         ...payment,
                         id: payment._id,
                         title: payment.receiptCode || "N/A",
