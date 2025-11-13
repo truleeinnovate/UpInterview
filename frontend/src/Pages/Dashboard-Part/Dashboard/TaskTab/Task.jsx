@@ -28,6 +28,7 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
+import { useUsers } from "../../../../apiHooks/useUsers.js";
 //-------v1.0.2--------->
 
 // v1.0.1 <--------------------------------------------------
@@ -143,7 +144,10 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
 const Task = () => {
   const { effectivePermissions } = usePermissions();
   //<-------v1.0.2---------
-  const { usersRes = [] } = useCustomContext();
+  // const { usersRes = [] } = useCustomContext();
+  // ------------------------------------------- from apiHooks ----------------------------------
+  const { usersRes = [] } = useUsers();
+  // ------------------------------------------- from apiHooks ----------------------------------
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;

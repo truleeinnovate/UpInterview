@@ -15,6 +15,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { validateUserForm } from "../../../../../utils/AppUserValidation";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
+import { useUsers } from "../../../../../apiHooks/useUsers.js";
 import {
   validateWorkEmail,
   checkEmailExists,
@@ -71,7 +72,11 @@ const UserForm = ({ mode }) => {
     // ------------------------------ v1.0.0 >
   }, [allRoles, userType]);
   // ------------------------------ v1.0.0 >
-  const { addOrUpdateUser } = useCustomContext();
+  // const { addOrUpdateUser } = useCustomContext();
+  // --------------------------------- api Hooks ----------------------------
+  const { addOrUpdateUser } = useUsers();
+  // --------------------------------- api Hooks ----------------------------
+
   const navigate = useNavigate();
   const location = useLocation();
   const initialUserData = location.state?.userData;

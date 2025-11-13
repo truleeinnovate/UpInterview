@@ -20,6 +20,7 @@ import AvailabilityUser from "../Dashboard-Part/Accountsettings/account/MyProfil
 import { DocumentsSection } from "../Dashboard-Part/Accountsettings/account/MyProfile/DocumentsDetails/DocumentsSection";
 import BasicDetailsEditPage from "../Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage";
 import { useCustomContext } from "../../Context/Contextfetch";
+import { useUsers } from "../../apiHooks/useUsers";
 import EditAdvacedDetails from "../Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails";
 import EditInterviewDetails from "../Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails";
 import EditAvailabilityDetails from "../Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails";
@@ -28,7 +29,10 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     const interviewer = selectedInterviewersData.contactId;
 
     const { outsourceInterviewers } = useOutsourceInterviewers();
-    const { refetchUsers } = useCustomContext();
+    // const { refetchUsers } = useCustomContext();
+    // ---------------------------------- api Hooks ---------------------------------------
+    const { refetchUsers } = useUsers();
+    // ---------------------------------- api Hooks ---------------------------------------
     // Removed unused states as we're using MyProfile components now
     const [activeTab, setActiveTab] = useState("Basic Details");
     const [isExpanded, setIsExpanded] = useState(false);
