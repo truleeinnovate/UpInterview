@@ -164,7 +164,7 @@ exports.getLogsSummary = async (req, res) => {
 
     // Fetch paginated logs
     const logs = await InternalLog.find(query)
-      .sort({ timeStamp: -1, _id: -1 })
+      .sort({_id: -1 })
       .skip(skip)
       .limit(limitNum)
       .lean();

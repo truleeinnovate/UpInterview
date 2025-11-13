@@ -137,10 +137,12 @@ const getTaskById = async (req, res) => {
   res.locals.loggedByController = true;
   //<-----v1.0.1---
   // Permission: Tasks.Create (or super admin override)
-  const canCreate =
-    await hasPermission(res.locals?.effectivePermissions?.Tasks, 'View')
-  if (!canCreate) {
-    return res.status(403).json({ message: 'Forbidden: missing Tasks.View permission' });
+  const perms = res.locals?.effectivePermissions?.Tasks;
+  if (perms !== undefined) {
+    const canView = await hasPermission(perms, 'View');
+    if (!canView) {
+      return res.status(403).json({ message: 'Forbidden: missing Tasks.View permission' });
+    }
   }
   //-----v1.0.1--->
 
