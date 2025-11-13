@@ -6,6 +6,7 @@ const { validatePosition, validateRoundData, validateRoundPatchData, positionVal
 const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Interview } = require("../models/Interview/Interview.js");
 const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
+const { triggerWebhook, EVENT_TYPES } = require('../services/webhookService');
 
 
 //  post call for position
@@ -124,7 +125,30 @@ const createPosition = async (req, res) => {
 
     // Save to database
     const position = new Position(positionData);
-    const newPosition = await position.save();
+    await position.save();
+
+    // Trigger webhook for position creation
+    try {
+      await triggerWebhook(
+        EVENT_TYPES.POSITION_CREATED,
+        {
+          id: position._id,
+          title: position.title,
+          companyName: position.companyname,
+          minExperience: position.minexperience,
+          maxExperience: position.maxexperience,
+          skills: position.skills,
+          noOfPositions: position.NoofPositions,
+          location: position.Location,
+          createdAt: position.createdAt,
+          updatedAt: position.updatedAt,
+          positionCode: position.positionCode
+        },
+        position.tenantId
+      );
+    } catch (error) {
+      console.error('Error triggering webhook for position creation:', error);
+    }
 
     // Feed and log data
     let feedData = res.locals.feedData = {
@@ -135,7 +159,7 @@ const createPosition = async (req, res) => {
         description: `Position was created`,
       },
       ownerId: req.body.ownerId,
-      parentId: newPosition._id,
+      parentId: position._id,
       parentObject: "Position",
       metadata: req.body,
       severity: res.statusCode >= 500 ? "high" : "low",
@@ -153,13 +177,13 @@ const createPosition = async (req, res) => {
       requestBody: req.body,
       status: "success",
       message: "Position created successfully",
-      responseBody: newPosition,
+      responseBody: position,
     };
 
     return res.status(201).json({
       status: "success",
       message: "Position created successfully",
-      data: newPosition,
+      data: position,
     });
   } catch (error) {
     console.error("❌ Error creating position:", error.message);
@@ -313,14 +337,42 @@ const updatePosition = async (req, res) => {
       console.log("Change: Data", change);
     }
 
+    const updateData = {
+      $set: positionData
+    };
+
+    // Update the position
     const updatedPosition = await Position.findByIdAndUpdate(
       positionId,
-      { $set: positionData },
-      { new: true }
+      updateData,
+      { new: true, runValidators: true }
     );
 
     if (!updatedPosition) {
-      return res.status(404).json({ message: "Position not found." });
+      return res.status(404).json({ message: 'Position not found' });
+    }
+
+    // Trigger webhook for position update
+    try {
+      await triggerWebhook(
+        EVENT_TYPES.POSITION_UPDATED,
+        {
+          id: updatedPosition._id,
+          title: updatedPosition.title,
+          companyName: updatedPosition.companyname,
+          minExperience: updatedPosition.minexperience,
+          maxExperience: updatedPosition.maxexperience,
+          skills: updatedPosition.skills,
+          noOfPositions: updatedPosition.NoofPositions,
+          location: updatedPosition.Location,
+          updatedAt: updatedPosition.updatedAt,
+          positionCode: updatedPosition.positionCode,
+          updatedFields: Object.keys(updateData.$set)
+        },
+        updatedPosition.tenantId
+      );
+    } catch (error) {
+      console.error('Error triggering webhook for position update:', error);
     }
 
     await updatedPosition.save()

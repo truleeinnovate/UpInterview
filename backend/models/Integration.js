@@ -30,6 +30,11 @@ const integrationSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    baseUrl: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     authentication: {
       type: {
         type: String,
@@ -114,7 +119,7 @@ const integrationSchema = new mongoose.Schema(
 );
 
 // Indexes
-integrationSchema.index({ name: 1, organization: 1 }, { unique: true });
+// integrationSchema.index({ name: 1, organization: 1 }, { unique: true });
 
 const Integration = mongoose.model('Integration', integrationSchema);
 
