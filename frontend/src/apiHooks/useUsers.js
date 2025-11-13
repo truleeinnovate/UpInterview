@@ -1,7 +1,16 @@
+// v1.0.0 - Ashok - Added new apis for users migrated from Context
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../config"; // assuming similar structure
 import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
+import { uploadFile } from "../apiHooks/imageApis";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
+
+const authToken = Cookies.get("authToken");
+const tokenPayload = decodeJwt(authToken);
+const tenantId = tokenPayload?.tenantId;
 
 // ✅ Custom hook to fetch user profile with optimized caching
 export const useUserProfile = (usersId) => {
@@ -16,8 +25,10 @@ export const useUserProfile = (usersId) => {
     queryKey: ["userProfile", currentUser],
     queryFn: async () => {
       if (!currentUser) return null;
-      const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${currentUser}`);
-      
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/users/owner/${currentUser}`
+      );
+
       // console.log("response.data",response.data);
 
       return response.data || null;
@@ -46,7 +57,9 @@ export const useSingleContact = () => {
     queryKey: ["singleContact", currentUser],
     queryFn: async () => {
       if (!currentUser) return null;
-      const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${currentUser}`);
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/users/owner/${currentUser}`
+      );
       return response.data || null;
     },
     staleTime: 1000 * 60 * 30, // 30 minutes
@@ -64,7 +77,10 @@ export const useSingleContact = () => {
 export const useRequestEmailChange = () =>
   useMutation({
     mutationFn: (payload) =>
-      axios.post(`${config.REACT_APP_API_URL}/emails/auth/request-email-change`, payload),
+      axios.post(
+        `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
+        payload
+      ),
   });
 
 // ✅ Optimized mutation for updating contact details
@@ -73,8 +89,10 @@ export const useUpdateContactDetail = () => {
 
   return useMutation({
     mutationFn: ({ resolvedId, data }) =>
-     
-      axios.patch(`${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`, data),
+      axios.patch(
+        `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
+        data
+      ),
 
     onSuccess: (response, { data }) => {
       const ownerId = data?.id;
@@ -89,4 +107,163 @@ export const useUpdateContactDetail = () => {
       }
     },
   });
+};
+
+// ------------------------------ These are moved from ContextFetch -------------------------------
+export const useUsers = () => {
+  const queryClient = useQueryClient();
+
+  // ✅ Fetch Users
+  const {
+    data: usersRes = [],
+    isLoading: usersLoading,
+    refetch: refetchUsers,
+  } = useQuery({
+    queryKey: ["users", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return []; // Skip fetch if tenantId missing
+
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/users/${tenantId}`
+      );
+
+      // Process image URLs
+      const processedUsers = response.data
+        .map((contact) => {
+          if (contact.imageData?.filename) {
+            const imageUrl = `${
+              config.REACT_APP_API_URL
+            }/${contact.imageData.path.replace(/\\/g, "/")}`;
+            return { ...contact, imageUrl };
+          }
+          return contact;
+        })
+        .reverse();
+
+      return processedUsers;
+    },
+    staleTime: 1000 * 60 * 30, // data fresh for 30 minutes
+    cacheTime: 1000 * 60 * 60, // keep cache for 60 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    enabled: !!tenantId, // fetch only when tenantId exists
+  });
+
+  // ✅ Add or Update User
+  const addOrUpdateUser = useMutation({
+    mutationFn: async ({ userData, file, isFileRemoved, editMode }) => {
+      console.log("addOrUpdateUser mutation payload:", { userData, editMode });
+
+      const payload = {
+        UserData: {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          tenantId: userData.tenantId, // Will be null for super admins
+          phone: userData.phone,
+          roleId: userData.roleId,
+          countryCode: userData.countryCode,
+          status: userData.status,
+          isProfileCompleted: false,
+          isEmailVerified: true,
+          type: userData.type, // Include type
+          ...(editMode && { _id: userData._id }), // Only include _id in edit mode
+          editMode,
+        },
+        contactData: {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          phone: userData.phone,
+          tenantId: userData.tenantId, // Will be null for super admins
+          countryCode: userData.countryCode,
+        },
+      };
+
+      console.log(
+        "Sending payload to /Organization/new-user-Creation:",
+        payload
+      );
+
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/Organization/new-user-Creation`,
+        payload
+      );
+
+      // UPLOADING FILES LIKE IMAGES AND RESUMES
+      if (isFileRemoved && !file) {
+        console.log("Removing file for contactId:", response.data.contactId);
+        await uploadFile(null, "image", "contact", response.data.contactId);
+      } else if (file instanceof File) {
+        console.log("Uploading file for contactId:", response.data.contactId);
+        await uploadFile(file, "image", "contact", response.data.contactId);
+      }
+
+      // Send welcome email only for new user creation
+      if (!editMode) {
+        console.log(`Sending welcome email to: ${userData.email}`);
+        await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
+          email: userData.email,
+          type: "usercreatepass",
+        });
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      console.log("User operation successful, invalidating users query");
+      queryClient.invalidateQueries(["users"]);
+    },
+    onError: (error) => {
+      console.error("User operation error:", error);
+    },
+  });
+
+  // ✅ Toggle User Status
+  const toggleUserStatus = useMutation({
+    mutationFn: async ({ userId, newStatus }) => {
+      const response = await axios.patch(
+        `${config.REACT_APP_API_URL}/users/${userId}/status`,
+        {
+          status: newStatus, // or you could send the new status explicitly
+          updatedBy: `${userId}`, // Track who made the change
+        }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["users"]); // Refresh the users list
+    },
+    onError: (error) => {
+      console.error("Status toggle error:", error);
+      // toast.error("Failed to update user status");
+    },
+  });
+
+  // ✅ Delete User
+  const deleteUser = useMutation({
+    mutationFn: async (userId) => {
+      const response = await axios.delete(
+        `${config.REACT_APP_API_URL}/users/${userId}`
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["users"]); // Refresh the users list
+    },
+    onError: (error) => {
+      console.error("Delete user error:", error);
+      // toast.error("Failed to delete user");
+    },
+  });
+
+  return {
+    usersRes,
+    usersLoading,
+    refetchUsers,
+    addOrUpdateUser,
+    toggleUserStatus,
+    deleteUser,
+  };
 };

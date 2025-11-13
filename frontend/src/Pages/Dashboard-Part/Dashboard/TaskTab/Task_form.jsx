@@ -4,6 +4,7 @@
 // v1.0.3 - Ashok - Improved responsiveness and used common code for popup
 // v1.0.4 - Ranjith -  added due date changes
 // v1.0.5 - Ashok -  Fixed style issue
+// v1.0.6 - Ashok -  Changed api from Context to apiHooks
 
 import React, { useState, useEffect, useRef, useCallback } from "react"; //<---v1.0.2-----
 import axios from "axios";
@@ -16,6 +17,7 @@ import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 import { useInterviews } from "../../../../apiHooks/useInterviews.js";
 import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
+import { useUsers } from "../../../../apiHooks/useUsers.js";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import LoadingButton from "../../../../Components/LoadingButton.jsx";
@@ -57,7 +59,11 @@ const TaskForm = ({
   const { mockInterviewData } = useMockInterviews();
   //console.log("mockInterviewData:",mockInterviewData)
 
-  const { usersRes } = useCustomContext();
+  // const { usersRes } = useCustomContext();
+  // ---------------------------- from apiHooks ---------------------------------------
+  const { usersRes } = useUsers();
+  // ---------------------------- from apiHooks ---------------------------------------
+
 
   // Mutations must be inside the component
   const createTaskMutation = useCreateTask();
@@ -390,7 +396,7 @@ const TaskForm = ({
           "Positions",
           "Interviews",
           "MockInterviews",
-          "Assessments"
+          "Assessments",
         ]);
       } finally {
         setCategoriesLoading(false);
@@ -399,13 +405,19 @@ const TaskForm = ({
     fetchObjectsData();
   }, []);
 
-  const { data: fetchedTask, isLoading: isLoadingTask, error: fetchError } = useTaskById(taskId);
+  const {
+    data: fetchedTask,
+    isLoading: isLoadingTask,
+    error: fetchError,
+  } = useTaskById(taskId);
 
   // Log fetch errors for debugging
   useEffect(() => {
     if (fetchError) {
       console.error("Error fetching task data:", fetchError);
-      notify.error("Failed to load task data. Please check your connection and try again.");
+      notify.error(
+        "Failed to load task data. Please check your connection and try again."
+      );
     }
   }, [fetchError]);
 
@@ -442,59 +454,60 @@ const TaskForm = ({
           </div>
         ) : (
           <>
-        {/* v1.0.5 ----------------------------------> */}
-        {/* added to Task Form Guideliness by Ranjith */}
-        <div className="mb-4">
-          <InfoGuide
-            title="Task Creation Guidelines"
-            items={[
-              <>
-                <span className="font-medium">Clear Task Titles:</span> Use
-                descriptive titles that summarize the task objective
-              </>,
-              <>
-                <span className="font-medium">Priority Setting:</span> Assign
-                appropriate priority levels (High, Medium, Low, Normal) based on
-                urgency
-              </>,
-              <>
-                <span className="font-medium">Status Tracking:</span> Update
-                task status as it progresses (New → In Progress → Completed)
-              </>,
-              <>
-                <span className="font-medium">Responsible Assignment:</span>{" "}
-                Clearly assign tasks to specific team members or yourself
-              </>,
-              <>
-                <span className="font-medium">Context Linking:</span> Connect
-                tasks to relevant candidates, positions, interviews, or
-                assessments
-              </>,
-              <>
-                <span className="font-medium">Realistic Due Dates:</span> Set
-                deadlines with at least 2 hours buffer from current time
-              </>,
-              <>
-                <span className="font-medium">Detailed Comments:</span> Provide
-                clear instructions, context, and expected outcomes
-              </>,
-              <>
-                <span className="font-medium">Automated Validation:</span> Form
-                validation ensures all required fields are completed
-              </>,
-              <>
-                <span className="font-medium">Error Highlighting:</span> Invalid
-                fields are automatically highlighted and scrolled into view
-              </>,
-              <>
-                <span className="font-medium">Flexible Editing:</span> Tasks can
-                be updated anytime as priorities or circumstances change
-              </>,
-            ]}
-          />
-        </div>
+            {/* v1.0.5 ----------------------------------> */}
+            {/* added to Task Form Guideliness by Ranjith */}
+            <div className="mb-4">
+              <InfoGuide
+                title="Task Creation Guidelines"
+                items={[
+                  <>
+                    <span className="font-medium">Clear Task Titles:</span> Use
+                    descriptive titles that summarize the task objective
+                  </>,
+                  <>
+                    <span className="font-medium">Priority Setting:</span>{" "}
+                    Assign appropriate priority levels (High, Medium, Low,
+                    Normal) based on urgency
+                  </>,
+                  <>
+                    <span className="font-medium">Status Tracking:</span> Update
+                    task status as it progresses (New → In Progress → Completed)
+                  </>,
+                  <>
+                    <span className="font-medium">Responsible Assignment:</span>{" "}
+                    Clearly assign tasks to specific team members or yourself
+                  </>,
+                  <>
+                    <span className="font-medium">Context Linking:</span>{" "}
+                    Connect tasks to relevant candidates, positions, interviews,
+                    or assessments
+                  </>,
+                  <>
+                    <span className="font-medium">Realistic Due Dates:</span>{" "}
+                    Set deadlines with at least 2 hours buffer from current time
+                  </>,
+                  <>
+                    <span className="font-medium">Detailed Comments:</span>{" "}
+                    Provide clear instructions, context, and expected outcomes
+                  </>,
+                  <>
+                    <span className="font-medium">Automated Validation:</span>{" "}
+                    Form validation ensures all required fields are completed
+                  </>,
+                  <>
+                    <span className="font-medium">Error Highlighting:</span>{" "}
+                    Invalid fields are automatically highlighted and scrolled
+                    into view
+                  </>,
+                  <>
+                    <span className="font-medium">Flexible Editing:</span> Tasks
+                    can be updated anytime as priorities or circumstances change
+                  </>,
+                ]}
+              />
+            </div>
 
-        {/* <div className="py-4 bg-white z-10 mb-2">
+            {/* <div className="py-4 bg-white z-10 mb-2">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <div className="flex items-start space-x-3 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
                   <Info className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5" />
@@ -531,232 +544,236 @@ const TaskForm = ({
               </div>
             </div> */}
 
-        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 mb-6">
-            <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
-              {/* Title */}
-              <div className="space-y-1">
-                <InputField
-                  inputRef={fieldRefs.title}
-                  label="Title"
-                  required
-                  name="title"
-                  value={formData.title}
-                  onChange={(e) => handleInputChange("title", e.target.value)}
-                  error={errors.title}
-                  placeholder="Enter Title"
-                />
-              </div>
-              {/* individual assigned to*/}
-              {organization ? (
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 gap-6 mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
+                  {/* Title */}
+                  <div className="space-y-1">
+                    <InputField
+                      inputRef={fieldRefs.title}
+                      label="Title"
+                      required
+                      name="title"
+                      value={formData.title}
+                      onChange={(e) =>
+                        handleInputChange("title", e.target.value)
+                      }
+                      error={errors.title}
+                      placeholder="Enter Title"
+                    />
+                  </div>
+                  {/* individual assigned to*/}
+                  {organization ? (
+                    <div className="space-y-1">
+                      <DropdownWithSearchField
+                        containerRef={fieldRefs.assignedTo}
+                        label="Assigned To"
+                        required
+                        name="assignedToId"
+                        value={formData.assignedToId || ""}
+                        options={(usersRes || []).map((user) => ({
+                          value: user._id,
+                          label:
+                            `${user.firstName || ""} ${
+                              user.lastName || ""
+                            }`.trim() || user.email,
+                        }))}
+                        onChange={(e) => {
+                          const selectedUserId = e.target.value;
+                          const selectedUser = (usersRes || []).find(
+                            (u) => u._id === selectedUserId
+                          );
+                          setFormData((prev) => ({
+                            ...prev,
+                            assignedTo: selectedUser
+                              ? `${selectedUser.firstName || ""} ${
+                                  selectedUser.lastName || ""
+                                }`.trim()
+                              : "",
+                            assignedToId: selectedUserId,
+                          }));
+                          setErrors((prev) => ({ ...prev, assignedTo: "" }));
+                        }}
+                        error={errors.assignedTo}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <InputField
+                        inputRef={fieldRefs.assignedTo}
+                        label="Assigned To"
+                        required
+                        name="assignedTo"
+                        value={formData.assignedTo}
+                        onChange={(e) =>
+                          handleInputChange("assignedTo", e.target.value)
+                        }
+                        error={errors.assignedTo}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
+                  {/* Priority */}
+                  <div className="space-y-1">
+                    <DropdownWithSearchField
+                      containerRef={fieldRefs.priority}
+                      label="Priority"
+                      required
+                      name="priority"
+                      value={selectedPriority}
+                      options={(priorities || []).map((p) => ({
+                        value: p,
+                        label: p,
+                      }))}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setSelectedPriority(v);
+                        setFormData((prev) => ({ ...prev, priority: v }));
+                        setErrors((prev) => ({ ...prev, priority: "" }));
+                      }}
+                      error={errors.priority}
+                    />
+                  </div>
+
+                  {/* Status */}
+                  <div className="space-y-1">
+                    <DropdownWithSearchField
+                      containerRef={fieldRefs.status}
+                      label="Status"
+                      required
+                      name="status"
+                      value={selectedStatus}
+                      options={(statuses || []).map((s) => ({
+                        value: s,
+                        label: s,
+                      }))}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setSelectedStatus(v);
+                        setFormData((prev) => ({ ...prev, status: v }));
+                        setErrors((prev) => ({ ...prev, status: "" }));
+                      }}
+                      error={errors.status}
+                    />
+                  </div>
+                </div>
+                {/* Related To */}
                 <div className="space-y-1">
-                  <DropdownWithSearchField
-                    containerRef={fieldRefs.assignedTo}
-                    label="Assigned To"
-                    required
-                    name="assignedToId"
-                    value={formData.assignedToId || ""}
-                    options={(usersRes || []).map((user) => ({
-                      value: user._id,
-                      label:
-                        `${user.firstName || ""} ${
-                          user.lastName || ""
-                        }`.trim() || user.email,
-                    }))}
+                  <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                    <div className="w-full">
+                      <DropdownWithSearchField
+                        containerRef={fieldRefs.relatedToCategory}
+                        label="Related To"
+                        required
+                        name="relatedToCategory"
+                        value={selectedCategoryRelatedTo}
+                        options={(categoriesRelatedTo || []).map((c) => ({
+                          value: c,
+                          label: c,
+                        }))}
+                        onChange={(e) =>
+                          handleCategorySelectRelatedTo(e.target.value)
+                        }
+                        error={errors.relatedToCategory}
+                        disabled={categoriesLoading}
+                      />
+                    </div>
+                    <div className="w-full">
+                      <DropdownWithSearchField
+                        containerRef={fieldRefs.relatedToOption}
+                        label="Record"
+                        required
+                        name="relatedToOption"
+                        value={selectedOptionIdRelatedTo}
+                        options={getOptionsForSelectedCategory().map((opt) => ({
+                          value: opt.id,
+                          label: opt.name,
+                        }))}
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          const opt = getOptionsForSelectedCategory().find(
+                            (o) => o.id === id
+                          );
+                          handleOptionSelectRelatedTo(opt?.name || "", id);
+                        }}
+                        error={errors.relatedToOption}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Due Date */}
+                <div className="space-y-1">
+                  <label
+                    htmlFor="scheduledDate"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Due Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    id="scheduledDate"
+                    name="scheduledDate"
+                    //lang="en-US"
+                    //<---v1.0.2-----
+                    ref={fieldRefs.dueDate} //<---v1.0.1------
+                    value={scheduledDate}
                     onChange={(e) => {
-                      const selectedUserId = e.target.value;
-                      const selectedUser = (usersRes || []).find(
-                        (u) => u._id === selectedUserId
-                      );
-                      setFormData((prev) => ({
-                        ...prev,
-                        assignedTo: selectedUser
-                          ? `${selectedUser.firstName || ""} ${
-                              selectedUser.lastName || ""
-                            }`.trim()
-                          : "",
-                        assignedToId: selectedUserId,
+                      const val = e.target.value;
+                      const minVal = twoHoursFromNowLocal();
+                      setScheduledDate(val && val < minVal ? minVal : val);
+                      setErrors((prevErrors) => ({
+                        ...prevErrors,
+                        dueDate: "",
                       }));
-                      setErrors((prev) => ({ ...prev, assignedTo: "" }));
                     }}
-                    error={errors.assignedTo}
+                    min={twoHoursFromNowLocal()}
+                    //----v1.0.2----->
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   />
+                  {errors.dueDate && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.dueDate}
+                    </p>
+                  )}
                 </div>
-              ) : (
+
+                {/* Comments */}
                 <div className="space-y-1">
-                  <InputField
-                    inputRef={fieldRefs.assignedTo}
-                    label="Assigned To"
-                    required
-                    name="assignedTo"
-                    value={formData.assignedTo}
+                  <DescriptionField
+                    inputRef={fieldRefs.description}
+                    label="Comments"
+                    name="comments"
+                    value={formData.comments}
                     onChange={(e) =>
-                      handleInputChange("assignedTo", e.target.value)
+                      setFormData({ ...formData, comments: e.target.value })
                     }
-                    error={errors.assignedTo}
+                    error={errors.comments}
+                    rows={5}
                   />
                 </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
-              {/* Priority */}
-              <div className="space-y-1">
-                <DropdownWithSearchField
-                  containerRef={fieldRefs.priority}
-                  label="Priority"
-                  required
-                  name="priority"
-                  value={selectedPriority}
-                  options={(priorities || []).map((p) => ({
-                    value: p,
-                    label: p,
-                  }))}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setSelectedPriority(v);
-                    setFormData((prev) => ({ ...prev, priority: v }));
-                    setErrors((prev) => ({ ...prev, priority: "" }));
-                  }}
-                  error={errors.priority}
-                />
-              </div>
-
-              {/* Status */}
-              <div className="space-y-1">
-                <DropdownWithSearchField
-                  containerRef={fieldRefs.status}
-                  label="Status"
-                  required
-                  name="status"
-                  value={selectedStatus}
-                  options={(statuses || []).map((s) => ({
-                    value: s,
-                    label: s,
-                  }))}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setSelectedStatus(v);
-                    setFormData((prev) => ({ ...prev, status: v }));
-                    setErrors((prev) => ({ ...prev, status: "" }));
-                  }}
-                  error={errors.status}
-                />
-              </div>
-            </div>
-            {/* Related To */}
-            <div className="space-y-1">
-              <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                <div className="w-full">
-                  <DropdownWithSearchField
-                    containerRef={fieldRefs.relatedToCategory}
-                    label="Related To"
-                    required
-                    name="relatedToCategory"
-                    value={selectedCategoryRelatedTo}
-                    options={(categoriesRelatedTo || []).map((c) => ({
-                      value: c,
-                      label: c,
-                    }))}
-                    onChange={(e) =>
-                      handleCategorySelectRelatedTo(e.target.value)
-                    }
-                    error={errors.relatedToCategory}
-                    disabled={categoriesLoading}
-                  />
+                {/* v1.0.5 <---------------------------------------- */}
+                <div className="flex justify-end space-x-3">
+                  {/* v1.0.5 ----------------------------------------> */}
+                  <button
+                    onClick={onClose}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Cancel
+                  </button>
+                  <LoadingButton
+                    onClick={handleSubmit}
+                    isLoading={isSaving}
+                    loadingText={taskId ? "Updating..." : "Creating..."}
+                  >
+                    {taskId ? "Update Task" : "Create Task"}
+                  </LoadingButton>
                 </div>
-                <div className="w-full">
-                  <DropdownWithSearchField
-                    containerRef={fieldRefs.relatedToOption}
-                    label="Record"
-                    required
-                    name="relatedToOption"
-                    value={selectedOptionIdRelatedTo}
-                    options={getOptionsForSelectedCategory().map((opt) => ({
-                      value: opt.id,
-                      label: opt.name,
-                    }))}
-                    onChange={(e) => {
-                      const id = e.target.value;
-                      const opt = getOptionsForSelectedCategory().find(
-                        (o) => o.id === id
-                      );
-                      handleOptionSelectRelatedTo(opt?.name || "", id);
-                    }}
-                    error={errors.relatedToOption}
-                  />
-                </div>
+                {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
               </div>
-            </div>
-
-            {/* Due Date */}
-            <div className="space-y-1">
-              <label
-                htmlFor="scheduledDate"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Due Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="datetime-local"
-                id="scheduledDate"
-                name="scheduledDate"
-                //lang="en-US"
-                //<---v1.0.2-----
-                ref={fieldRefs.dueDate} //<---v1.0.1------
-                value={scheduledDate}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const minVal = twoHoursFromNowLocal();
-                  setScheduledDate(val && val < minVal ? minVal : val);
-                  setErrors((prevErrors) => ({
-                    ...prevErrors,
-                    dueDate: "",
-                  }));
-                }}
-                min={twoHoursFromNowLocal()}
-                //----v1.0.2----->
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
-              {errors.dueDate && (
-                <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>
-              )}
-            </div>
-
-            {/* Comments */}
-            <div className="space-y-1">
-              <DescriptionField
-                inputRef={fieldRefs.description}
-                label="Comments"
-                name="comments"
-                value={formData.comments}
-                onChange={(e) =>
-                  setFormData({ ...formData, comments: e.target.value })
-                }
-                error={errors.comments}
-                rows={5}
-              />
-            </div>
-            {/* v1.0.5 <---------------------------------------- */}
-            <div className="flex justify-end space-x-3">
-              {/* v1.0.5 ----------------------------------------> */}
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Cancel
-              </button>
-              <LoadingButton
-                onClick={handleSubmit}
-                isLoading={isSaving}
-                loadingText={taskId ? "Updating..." : "Creating..."}
-              >
-                {taskId ? "Update Task" : "Create Task"}
-              </LoadingButton>
-            </div>
-            {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-          </div>
-        </form>
+            </form>
           </>
         )}
       </div>

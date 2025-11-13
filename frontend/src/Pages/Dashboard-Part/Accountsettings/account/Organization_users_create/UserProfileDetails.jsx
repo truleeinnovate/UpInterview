@@ -15,6 +15,7 @@ import classNames from "classnames";
 // import genderlessImage from "../../../Images/transgender.png";
 // v1.0.0 -------------------------------------------------------------->
 import { useCustomContext } from "../../../../../Context/Contextfetch";
+import { useUsers } from "../../../../../apiHooks/useUsers";
 import BasicDetails from "../MyProfile/BasicDetails/BasicDetails";
 import AdvancedDetails from "../MyProfile/AdvancedDetails/AdvacedDetails";
 import InterviewUserDetails from "../MyProfile/InterviewDetails/InterviewDetails";
@@ -78,7 +79,10 @@ const UserProfileDetails = ({ type }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const userData = location.state?.userData;
-  const { toggleUserStatus, refetchUsers } = useCustomContext();
+  // const { toggleUserStatus, refetchUsers } = useCustomContext();
+  // ------------------------------ from apiHooks ----------------------------------------
+  const { toggleUserStatus, refetchUsers } = useUsers();
+  // ------------------------------ from apiHooks ----------------------------------------
   const [activeTab, setActiveTab] = useState("basic");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
