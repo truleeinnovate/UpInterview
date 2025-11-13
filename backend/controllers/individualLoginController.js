@@ -7,6 +7,7 @@ const Tenant = require("../models/Tenant");
 const RolesPermissionObject = require('../models/RolesPermissionObject');
 const { getAuthCookieOptions } = require('../utils/cookieUtils');
 const { validateIndividualSignup } = require('../validations/IndivindualLoginValidation.js');
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 exports.individualLogin = async (req, res) => {
   try {
