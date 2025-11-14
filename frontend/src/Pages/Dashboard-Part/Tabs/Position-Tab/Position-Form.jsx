@@ -8,6 +8,7 @@
 // v1.0.5 - Ranjith - rounds shown as horizontal stepper pathway
 // v1.0.6 - Ashok - Reduced horizontal padding (style issue)
 // v1.0.7 - Ashok - Improved scroll functionality
+// v1.0.8 - Ashok - Fixed style issues
 
 import { useEffect, useState, useRef } from "react";
 import AssessmentDetails from "./AssessmentType";
@@ -264,12 +265,15 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         } else {
           // If either is empty, clear cross-field errors
           if (
-            next.minexperience === "Min Experience cannot be greater than Max" || 
-        next.minexperience === "Min and Max Experience cannot be equal"
+            next.minexperience ===
+              "Min Experience cannot be greater than Max" ||
+            next.minexperience === "Min and Max Experience cannot be equal"
           )
             next.minexperience = "";
-          if (next.maxexperience === "Max Experience cannot be less than Min"  || 
-        next.maxexperience === "Max and Min Experience cannot be equal")
+          if (
+            next.maxexperience === "Max Experience cannot be less than Min" ||
+            next.maxexperience === "Max and Min Experience cannot be equal"
+          )
             next.maxexperience = "";
         }
       }
@@ -304,20 +308,23 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         }
 
         if (!Number.isNaN(minS) && !Number.isNaN(maxS)) {
-         if (minS === maxS) {
-      next.minsalary = "Minimum and Maximum Salary cannot be equal";
-      next.maxsalary = "Maximum and Minimum Salary cannot be equal";
-    } else if (minS > maxS) {
+          if (minS === maxS) {
+            next.minsalary = "Minimum and Maximum Salary cannot be equal";
+            next.maxsalary = "Maximum and Minimum Salary cannot be equal";
+          } else if (minS > maxS) {
             next.minsalary = "Minimum Salary cannot be greater than Maximum";
             next.maxsalary = "Maximum Salary cannot be less than Minimum";
           } else {
             if (
-              next.minsalary === "Minimum Salary cannot be greater than Maximum" || 
-         next.minsalary === "Minimum and Maximum Salary cannot be equal"
+              next.minsalary ===
+                "Minimum Salary cannot be greater than Maximum" ||
+              next.minsalary === "Minimum and Maximum Salary cannot be equal"
             )
               next.minsalary = "";
-            if (next.maxsalary === "Maximum Salary cannot be less than Minimum" || 
-          next.maxsalary === "Maximum and Minimum Salary cannot be equal")
+            if (
+              next.maxsalary === "Maximum Salary cannot be less than Minimum" ||
+              next.maxsalary === "Maximum and Minimum Salary cannot be equal"
+            )
               next.maxsalary = "";
           }
         }
@@ -335,10 +342,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry
       );
       setEntries(updatedEntries);
@@ -646,8 +653,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save position"
+          error.message ||
+          "Failed to save position"
       );
 
       if (error.response && error.response.status === 400) {
@@ -1054,7 +1061,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                 consistency
               </>,
               <>
-                <span className="font-medium">Custom Interview Path:</span> If you don't select a template, you can build custom interview rounds tailored specifically for this position
+                <span className="font-medium">Custom Interview Path:</span> If
+                you don't select a template, you can build custom interview
+                rounds tailored specifically for this position
               </>,
               <>
                 <span className="font-medium">Flexible Approach:</span> Create
@@ -1180,7 +1189,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           max={1000000000}
                           label="Min Salary (Annual)"
                           name="minSalary"
-                          required={formData.maxSalary ? true : false}
+                          // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
                           value={formData.maxSalary}
@@ -1191,7 +1200,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           error={errors.maxsalary}
                           label="Max Salary (Annual)"
                           name="maxSalary"
-                          required={formData.minSalary ? true : false}
+                          // required={formData.minSalary ? true : false}
                         />
                       </div>
                     </div>
@@ -1208,7 +1217,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         max={100}
                         label="No. of Positions"
                         name="NoofPositions"
-                      // required
+                        // required
                       />
 
                       <div>

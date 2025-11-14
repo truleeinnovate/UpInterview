@@ -293,7 +293,7 @@ const PositionSlideDetails = () => {
                 <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
-                      <Building2 className="w-4 h-4 text-blue-600" />
+                      <Building2 className="w-4 h-4 text-custom-blue" />
                       <span className="text-sm">Company Name</span>
                     </div>
                     <p className="text-sm font-medium text-gray-800 truncate">
@@ -450,7 +450,7 @@ const PositionSlideDetails = () => {
                 </h4>
               </div>
               <div className="flex flex-wrap gap-2">
-                <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                <div className="px-3 py-1 bg-custom-blue/10 text-custom-blue rounded-full text-sm">
                   <span className="font-medium">
                     {internalInterviewerCount}
                   </span>{" "}

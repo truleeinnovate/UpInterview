@@ -12,6 +12,7 @@
 // v1.0.7 - Ashok - Fixed issues in responsiveness
 // v1.0.8 - Ashok - Fixed responsiveness issues
 // v1.0.9 - Ashok - Fixed scroll to first error field issue
+// v2.0.0 - Ashok - Fixed style issues and added some logic to reset custom skill
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { format } from "date-fns";
@@ -99,7 +100,6 @@ const AddCandidateForm = ({
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  
 
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);
@@ -639,6 +639,11 @@ const AddCandidateForm = ({
       }
 
       resetFormData();
+      // Reset custom skill rows inside SkillsField component
+      // This should now correctly call the function in SkillsField
+      if (fieldRefs.skills.current?.resetCustomSkills) {
+        fieldRefs.skills.current.resetCustomSkills();
+      }
 
       if (!isAddCandidate) {
         // setTimeout(() => {
@@ -892,7 +897,7 @@ const AddCandidateForm = ({
                     inputRef={fieldRefs.FirstName}
                     label="First Name"
                     name="FirstName"
-                    required={false}
+                    required
                     error={errors.FirstName}
                   />
                   <InputField
