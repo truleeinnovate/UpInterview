@@ -84,19 +84,30 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
   return (
     <div ref={menuRef} className="flex items-center gap-2 relative">
       {/* Always visible actions */}
-      {mainActions.map((action) => (
-        <button
-          key={action.key}
-          onClick={(e) => {
-            e.stopPropagation();
-            action.onClick(item, e);
-          }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title={action.label}
-        >
-          {action.icon}
-        </button>
-      ))}
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
 
       {/* More button (shows dropdown) */}
       {overflowActions.length > 0 && (
@@ -483,6 +494,8 @@ function Candidate({
       //-----v1.0.4-------->
     };
     setSelectedFilters(filters);
+    console.log("setSelectedFilters ",filters);
+    
     setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 ||
@@ -666,7 +679,10 @@ function Candidate({
       header: "Candidate Name",
       render: (value, row) => (
         // console.log("row ",row,value),
-        <div className="flex items-center">
+        <div
+          className="flex items-center"
+          title={`${row?.FirstName} ${row?.LastName}`}
+        >
           <div className="h-8 w-8 flex-shrink-0">
             {row?.ImageData ? (
               <img
@@ -683,7 +699,7 @@ function Candidate({
               </div>
             )}
           </div>
-          <div className="ml-3">
+          <div className="ml-3" title={`${row?.FirstName} ${row?.LastName}`}>
             <div
               // v1.0.9 <------------------------------------------------------------------------------
               className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
@@ -723,13 +739,11 @@ function Candidate({
       key: "Email",
       header: "Email",
       render: (value) => (
-        <div className="flex items-center gap-2">
-          <Mail className="w-4 h-4" />
-          {/* v1.0.9 <--------------------------------- */}
-          <span className="truncate max-w-[140px]">
+        <div className="flex items-center gap-2" title={value}>
+          <Mail className="w-4 h-4 text-gray-500" />
+          <span className="truncate max-w-[140px] cursor-default" title={value}>
             {value || "Not Provided"}
           </span>
-          {/* v1.0.9 ---------------------------------> */}
         </div>
       ),
     },
@@ -743,7 +757,10 @@ function Candidate({
       header: "Higher Qualification",
       render: (value) => (
         // v1.0.9 <----------------------------------------------
-        <span className="block truncate max-w-[140px]">
+        <span
+          className="block truncate max-w-[140px] cursor-default"
+          title={value}
+        >
           {value || "Not Provided"}
         </span>
         // v1.0.9 ---------------------------------------------->
@@ -752,18 +769,23 @@ function Candidate({
     {
       key: "CurrentExperience",
       header: "Total Experience",
-      render: (value) => value || "Not Provided",
+      render: (value) => (
+        <span className="pl-12">{value || "Not Provided"}</span>
+      ),
     },
     {
       key: "skills",
       header: "Skills",
       render: (value) => (
         // v1.0.9 <-----------------------------------------------------------------------------
-        <div className="flex flex-wrap gap-1">
+        <div
+          className="flex flex-wrap gap-1 cursor-default"
+          title={value?.map((skill) => skill.skill)?.join(", ")}
+        >
           {value.slice(0, 1).map((skill, idx) => (
             <span
               key={idx}
-              className="px-2 py-0.5 bg-custom-bg text-custom-blue rounded-full text-xs"
+              className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue rounded-full text-xs"
             >
               {skill.skill || "Not Provided"}
             </span>
@@ -906,7 +928,7 @@ function Candidate({
           {
             key: "360-view",
             label: "360° View",
-            icon: <Rotate3d size={24} className="text-custom-blue" />,
+            icon: <CircleUser className="w-4 h-4 text-purple-600" />,
             onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
           },
           ...(effectivePermissions.Candidates?.Edit
@@ -1147,7 +1169,12 @@ function Candidate({
     {
       key: "email",
       header: "Email",
-      render: (value, row) => <span>{row?.Email}</span> || "N/A",
+      render: (value, row) =>
+        (
+          <span className="cursor-default" title={row?.Email}>
+            {row?.Email}
+          </span>
+        ) || "N/A",
     },
     // v2.0.0 <-------------------------------------------------------------
     {
@@ -1174,22 +1201,30 @@ function Candidate({
       header: "Skills",
       render: (skills) =>
         skills && skills.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
+          <div
+            className="flex flex-wrap gap-1 cursor-default"
+            title={skills?.map((skill) => skill.skill)?.join(", ")}
+          >
             {skills?.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {skills?.length > 0 ? (
-                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
-                    {skills[0].skill?.length > 12
-                      ? skills[0].skill.slice(0, 12) + "..."
-                      : skills[0].skill}
-                  </span>
+                  <div>
+                    <span className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue text-xs rounded-full">
+                      {skills[0].skill?.length > 12
+                        ? skills[0].skill.slice(0, 12) + "..."
+                        : skills[0].skill}
+                    </span>
+                    {skills.length > 1 && (
+                      <span
+                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full cursor-default"
+                        title={skills.map((s) => s.skill).join(", ")}
+                      >
+                        +{skills.length - 1}
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   <span className="text-gray-400 text-xs">No Skills</span>
-                )}
-                {skills?.length > 0 && (
-                  <span className="text-gray-500 text-xs">
-                    +{skills.length - 0} more
-                  </span>
                 )}
               </div>
             )}

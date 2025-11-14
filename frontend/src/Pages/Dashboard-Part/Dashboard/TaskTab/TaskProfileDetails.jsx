@@ -12,6 +12,8 @@ import Activity from "../../Tabs/CommonCode-AllTabs/Activity.jsx";
 // v1.0.0 <---------------------------------------------------------------
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 // v1.0.0 --------------------------------------------------------------->
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 
 const TaskProfileDetails = ({ task, onClosetask }) => {
   const { isMutationLoading } = useCandidates();
@@ -28,7 +30,6 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
   const handleClose = () => {
     navigate("/task");
   };
-
 
   if (!task) return <div>Loading...</div>;
 
@@ -82,9 +83,11 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                   {/* Main Details */}
                   <div className="text-center mb-6">
                     <h3 className="sm:text-xl text-2xl font-bold text-gray-900">
-                      {task.title.charAt(0).toUpperCase() + task.title.slice(1)}
+                      {capitalizeFirstLetter(task?.title) || "N/A"}
                     </h3>
-                    <p className="text-gray-600 mt-1">{task.description}</p>
+                    <p className="text-gray-600 mt-1">
+                      {capitalizeFirstLetter(task?.description)}
+                    </p>
                   </div>
 
                   {/* Task Information Grid */}
@@ -114,7 +117,9 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Task ID</p>
-                            <p className="sm:text-sm text-gray-700">{task.taskCode}</p>
+                            <p className="sm:text-sm text-gray-700">
+                              {task.taskCode}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -136,7 +141,13 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Status</p>
-                            <p className="sm:text-sm text-gray-700">{task.status}</p>
+                            <p className="sm:text-sm text-gray-700">
+                              {
+                                <StatusBadge
+                                  status={capitalizeFirstLetter(task?.status)}
+                                />
+                              }
+                            </p>
                           </div>
                         </div>
 
@@ -159,7 +170,13 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Priority</p>
-                            <p className="sm:text-sm text-gray-700">{task.priority}</p>
+                            <p className="sm:text-sm text-gray-700">
+                              {
+                                <StatusBadge
+                                  status={capitalizeFirstLetter(task?.priority)}
+                                />
+                              }
+                            </p>
                           </div>
                         </div>
 

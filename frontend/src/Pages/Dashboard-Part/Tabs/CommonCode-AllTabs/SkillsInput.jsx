@@ -1,7 +1,15 @@
 // ----- v1.0.0 ----- Venkatesh----improve dropdown styles and placeholder text in small devices shown in ellipsis and border border-gray-300 added
 // v1.0.1 - Ashok - added useForward ref to implement scroll to first error functionality
 // v1.0.2 - Ashok - added responsiveness
-import { useState, useEffect, useRef, forwardRef } from "react";
+// v1.0.3 - Ashok - added function to reset custom skill after form submission
+
+import {
+  useState,
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { ReactComponent as FaTrash } from "../../../../icons/FaTrash.svg";
 // Removed FaEdit import - not needed for always-editable rows
 import { ReactComponent as FaPlus } from "../../../../icons/FaPlus.svg";
@@ -17,13 +25,13 @@ const SkillsField = forwardRef(
       onAddSkill,
 
       onDeleteSkill,
-      onUpdateEntry,  // New prop for updating entries
-      onSkillsValidChange,  // New prop to notify parent when skills validity changes
-      
+      onUpdateEntry, // New prop for updating entries
+      onSkillsValidChange, // New prop to notify parent when skills validity changes
+
       skills,
-      
+
       onOpenSkills,
-      showValidation = false,  // New prop to control when validation errors are shown
+      showValidation = false, // New prop to control when validation errors are shown
     },
     ref
   ) => {
@@ -34,19 +42,17 @@ const SkillsField = forwardRef(
 
     const expertiseOptions = ["Basic", "Medium", "Expert"];
     const experienceOptions = [
-    "0-1 Years",
-    "1-2 Years",
-    "2-3 Years",
-    "4-5 Years",
-    "5-6 Years",
-    "6-7 Years",
-    "7-8 Years",
-    "8-9 Years",
-    "9-10 Years",
-    "10+ Years",
-  ];
-
-    
+      "0-1 Years",
+      "1-2 Years",
+      "2-3 Years",
+      "4-5 Years",
+      "5-6 Years",
+      "6-7 Years",
+      "7-8 Years",
+      "8-9 Years",
+      "9-10 Years",
+      "10+ Years",
+    ];
 
     const confirmDelete = () => {
       if (deleteIndex !== null) {
@@ -70,9 +76,9 @@ const SkillsField = forwardRef(
       // Get all selected skills from OTHER rows (not the current row)
       const otherSelectedSkills = entries
         .filter((_, idx) => idx !== rowIndex) // Exclude current row
-        .map(e => e.skill)
+        .map((e) => e.skill)
         .filter(Boolean); // Remove empty values
-      
+
       // Return skills that are either:
       // 1. Not selected in any other row, OR
       // 2. Currently selected in this row (so it remains visible)
@@ -82,9 +88,12 @@ const SkillsField = forwardRef(
           !otherSelectedSkills.includes(skill.SkillName) ||
           skill.SkillName === currentRowSkill
       );
-      
+
       // Add "Other" option at the end for custom skills
-      return [...availableSkills.map(s => ({ SkillName: s.SkillName })), { SkillName: "__other__" }];
+      return [
+        ...availableSkills.map((s) => ({ SkillName: s.SkillName })),
+        { SkillName: "__other__" },
+      ];
     };
     const experienceOptionsRS = experienceOptions.map((e) => ({
       value: e,
@@ -97,7 +106,8 @@ const SkillsField = forwardRef(
 
     // Function to add a new skill row
     const handleAddSkillRow = () => {
-      if (entries.length < 10) { // Max 10 rows
+      if (entries.length < 10) {
+        // Max 10 rows
         onAddSkill(null); // Don't set editing index for new rows
       }
     };
@@ -108,21 +118,22 @@ const SkillsField = forwardRef(
     useEffect(() => {
       const newRowErrors = {};
       let firstThreeRowsComplete = true;
-      
+
       entries.forEach((entry, index) => {
-        const isCompleteRow = entry.skill && entry.experience && entry.expertise;
+        const isCompleteRow =
+          entry.skill && entry.experience && entry.expertise;
         const hasAnyValue = entry.skill || entry.experience || entry.expertise;
-        
+
         // First 3 rows are mandatory
         if (index < 3) {
           // Check if row is complete for first three rows requirement
           if (!isCompleteRow) {
             firstThreeRowsComplete = false;
-            
+
             // Only show errors if showValidation is true (after submit attempt)
             if (showValidation) {
               const errors = {};
-              
+
               if (!entry.skill) {
                 errors.skill = true;
               }
@@ -132,7 +143,7 @@ const SkillsField = forwardRef(
               if (!entry.expertise) {
                 errors.expertise = true;
               }
-              
+
               if (Object.keys(errors).length > 0) {
                 newRowErrors[index] = errors;
               }
@@ -142,7 +153,7 @@ const SkillsField = forwardRef(
           // Additional rows (4+) - only validate if partially filled and showValidation is true
           if (hasAnyValue && !isCompleteRow && showValidation) {
             const errors = {};
-            
+
             if (!entry.skill) {
               errors.skill = true;
             }
@@ -152,16 +163,16 @@ const SkillsField = forwardRef(
             if (!entry.expertise) {
               errors.expertise = true;
             }
-            
+
             if (Object.keys(errors).length > 0) {
               newRowErrors[index] = errors;
             }
           }
         }
       });
-      
+
       setRowErrors(newRowErrors);
-      
+
       // Notify parent component about skills validity
       // Skills are valid when first 3 rows are complete
       if (onSkillsValidChange) {
@@ -189,7 +200,7 @@ const SkillsField = forwardRef(
           if (entry.skill) {
             // Check if the skill exists in the predefined skills list
             const isSkillInList = skills.some(
-              skill => skill.SkillName === entry.skill
+              (skill) => skill.SkillName === entry.skill
             );
             // If not in list and not the special "__other__" value, it's custom
             if (!isSkillInList && entry.skill !== "__other__") {
@@ -199,10 +210,18 @@ const SkillsField = forwardRef(
         });
         // Only update if there are custom skills to set
         if (Object.keys(customSkillStates).length > 0) {
-          setIsCustomSkill(prev => ({ ...prev, ...customSkillStates }));
+          setIsCustomSkill((prev) => ({ ...prev, ...customSkillStates }));
         }
       }
     }, [entries, skills]);
+
+    // In SkillsField.js
+    useImperativeHandle(ref, () => ({
+      // Change name to match the call in handleSubmit
+      resetCustomSkills() {
+        setIsCustomSkill({});
+      },
+    }));
 
     return (
       <div ref={ref}>
@@ -233,22 +252,27 @@ const SkillsField = forwardRef(
         <div className="space-y-2 mb-4 mt-5">
           {entries.map((entry, index) => (
             <div key={index}>
-              <div
-                className={`border p-2 rounded-lg bg-gray-100 w-full flex`}
-              >
+              <div className={`border p-2 rounded-lg bg-gray-100 w-full flex`}>
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 bg-white rounded w-full p-2 mr-3 gap-2">
                     <div className="px-1">
                       <DropdownWithSearchField
                         options={getAvailableSkillsForRow(index).map((s) => ({
-                          value: s.SkillName === "__other__" ? "__other__" : s.SkillName,
-                          label: s.SkillName === "__other__" ? "Other" : s.SkillName,
+                          value:
+                            s.SkillName === "__other__"
+                              ? "__other__"
+                              : s.SkillName,
+                          label:
+                            s.SkillName === "__other__" ? "Other" : s.SkillName,
                         }))}
                         isSearchable
                         value={entry.skill}
                         onChange={(e) => {
                           if (onUpdateEntry && e?.target?.value !== undefined) {
-                            onUpdateEntry(index, { ...entry, skill: e.target.value });
+                            onUpdateEntry(index, {
+                              ...entry,
+                              skill: e.target.value,
+                            });
                           }
                         }}
                         placeholder="Select Skill"
@@ -257,7 +281,10 @@ const SkillsField = forwardRef(
                         error={rowErrors[index]?.skill ? "Skill required" : ""}
                         isCustomName={isCustomSkill[index] || false}
                         setIsCustomName={(value) => {
-                          setIsCustomSkill({ ...isCustomSkill, [index]: value });
+                          setIsCustomSkill({
+                            ...isCustomSkill,
+                            [index]: value,
+                          });
                         }}
                       />
                       {/* {rowErrors[index]?.skill && (
@@ -275,16 +302,20 @@ const SkillsField = forwardRef(
                         }
                         onChange={(opt) => {
                           if (onUpdateEntry) {
-                            onUpdateEntry(index, { ...entry, experience: opt?.value || "" });
+                            onUpdateEntry(index, {
+                              ...entry,
+                              experience: opt?.value || "",
+                            });
                           }
                         }}
                         placeholder="Select Experience"
                         classNamePrefix="rs"
                         hasError={rowErrors[index]?.experience}
-                        
                       />
                       {rowErrors[index]?.experience && (
-                        <span className="text-red-500 text-xs mt-1">Experience required</span>
+                        <span className="text-red-500 text-xs mt-1">
+                          Experience required
+                        </span>
                       )}
                     </div>
                     <div className="px-1">
@@ -298,16 +329,20 @@ const SkillsField = forwardRef(
                         }
                         onChange={(opt) => {
                           if (onUpdateEntry) {
-                            onUpdateEntry(index, { ...entry, expertise: opt?.value || "" });
+                            onUpdateEntry(index, {
+                              ...entry,
+                              expertise: opt?.value || "",
+                            });
                           }
                         }}
                         placeholder="Select Expertise"
                         classNamePrefix="rs"
                         hasError={rowErrors[index]?.expertise}
-
                       />
                       {rowErrors[index]?.expertise && (
-                        <span className="text-red-500 text-xs mt-1">Expertise required</span>
+                        <span className="text-red-500 text-xs mt-1">
+                          Expertise required
+                        </span>
                       )}
                     </div>
                   </div>

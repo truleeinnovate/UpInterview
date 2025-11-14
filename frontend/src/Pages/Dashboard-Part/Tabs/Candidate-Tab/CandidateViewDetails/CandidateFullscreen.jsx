@@ -1,5 +1,6 @@
 // v1.0.0 ------ Venkatesh--- added skills width to full and skills added in column wise
 // v1.0.1 - Ashok - fixed displaying profile pic and added resume filed
+// v1.0.2 - Ashok - added shimmer loading view
 
 import Modal from "react-modal";
 import {
@@ -22,7 +23,7 @@ import { useCandidates } from "../../../../../apiHooks/useCandidates";
 Modal.setAppElement("#root");
 
 const CandidateFullscreen = () => {
-  const { candidateData } = useCandidates();
+  const { candidateData, isQueryLoading } = useCandidates();
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});
   const { id } = useParams();
@@ -50,12 +51,187 @@ const CandidateFullscreen = () => {
     };
   }, [id, candidateData]);
 
-  // if (!candidate)
-  //   return (
-  //     <div className="text-center h-full w-full justify-center items-center">
-  //       <Loading />
-  //     </div>
-  //   );
+  const CandidateLoadingView = () => (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 bg-white p-4 flex justify-between items-center z-50">
+        <h2 className="text-2xl font-semibold text-custom-blue">Candidate</h2>
+        <div className="flex items-center gap-2">
+          <button
+            className=" hover:bg-gray-100 rounded-lg transition-colors"
+            title="Edit"
+          >
+            <Edit className="w-5 h-5 text-gray-500 hover:text-custom-blue" />
+          </button>
+
+          <button className=" hover:bg-gray-100 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6">
+          {/* Profile Section */}
+          <div className="flex justify-center items-center gap-4 mb-6">
+            <div className="w-24 h-24 shimmer rounded-full" />
+            <div className="text-center space-y-2">
+              <div className="w-40 h-5 shimmer rounded-md mx-auto" />
+              <div className="w-28 h-4 shimmer rounded-md mx-auto" />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* Personal Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl p-6 shadow-sm border">
+                <div className="w-40 h-5 shimmer rounded mb-6" />
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 shimmer rounded-lg" />
+                      <div className="space-y-2">
+                        <div className="w-20 h-3 shimmer rounded" />
+                        <div className="w-28 h-4 shimmer rounded" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 shimmer rounded-lg" />
+                      <div className="space-y-2">
+                        <div className="w-24 h-3 shimmer rounded" />
+                        <div className="w-28 h-4 shimmer rounded" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 shimmer rounded-lg" />
+                      <div className="space-y-2">
+                        <div className="w-20 h-3 shimmer rounded" />
+                        <div className="w-20 h-4 shimmer rounded" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Info + Professional Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Contact */}
+              <div className="bg-white rounded-xl p-6 shadow-sm border">
+                <div className="w-40 h-5 shimmer rounded mb-6" />
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 shimmer rounded-lg" />
+                      <div className="w-32 h-4 shimmer rounded" />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 shimmer rounded-lg" />
+                      <div className="w-24 h-4 shimmer rounded" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Professional */}
+              <div className="bg-white rounded-xl p-6 shadow-sm border">
+                <div className="w-48 h-5 shimmer rounded mb-6" />
+
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 shimmer rounded-lg" />
+                      <div className="space-y-2">
+                        <div className="w-24 h-3 shimmer rounded" />
+                        <div className="w-24 h-4 shimmer rounded" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 shimmer rounded-lg" />
+                      <div className="space-y-2">
+                        <div className="w-28 h-3 shimmer rounded" />
+                        <div className="w-32 h-4 shimmer rounded" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 shimmer rounded-lg" />
+                      <div className="space-y-2">
+                        <div className="w-20 h-3 shimmer rounded" />
+                        <div className="w-24 h-4 shimmer rounded" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 shimmer rounded-lg" />
+                      <div className="space-y-2">
+                        <div className="w-24 h-3 shimmer rounded" />
+                        <div className="w-28 h-4 shimmer rounded" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Resume */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 shimmer rounded-lg" />
+                    <div className="space-y-2 w-full">
+                      <div className="w-20 h-3 shimmer rounded" />
+                      <div className="w-full h-4 shimmer rounded" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Skills Section */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border">
+              <div className="w-32 h-5 shimmer rounded mb-4" />
+
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="flex gap-2 w-full px-3 py-3 rounded-full border border-gray-200"
+                  >
+                    <div className="flex-1 h-6 shimmer rounded-full" />
+                    <div className="flex-1 h-6 shimmer rounded-full" />
+                    <div className="flex-1 h-6 shimmer rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Latest Interview */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border">
+              <div className="w-48 h-5 shimmer rounded mb-4" />
+
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <div className="w-32 h-4 shimmer rounded" />
+                  <div className="w-24 h-4 shimmer rounded" />
+                </div>
+                <div className="w-40 h-4 shimmer rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isQueryLoading) {
+    return <CandidateLoadingView />;
+  }
 
   const content = (
     <div className="h-full flex flex-col">

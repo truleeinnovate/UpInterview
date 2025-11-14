@@ -14,12 +14,10 @@ import { Eye, MoreVertical, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
-import { parseISO, isValid, format } from "date-fns"; // Import date-fns functions
 import Header from "../../../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar.jsx";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import TableView from "../../../../Components/Shared/Table/TableView.jsx";
-// import KanbanView from "./KanbanView.jsx";
 import KanbanView from "../../../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
@@ -27,13 +25,10 @@ import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { usePermissionCheck } from "../../../../utils/permissionUtils";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
-// v1.0.4 <-----------------------------------------------------------
 import { useMediaQuery } from "react-responsive";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
-// v1.0.4 ----------------------------------------------------------->
 import { formatDateTime } from "../../../../utils/dateFormatter";
 
-// v1.0.6 <---------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
   const menuRef = useRef(null);
@@ -118,7 +113,6 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
     </div>
   );
 };
-// v1.0.6 --------------------------------------------------------------------->
 
 function SupportDesk() {
   const { checkPermission, isInitialized } = usePermissionCheck();
@@ -128,8 +122,7 @@ function SupportDesk() {
     impersonatedUser_roleName,
     effectivePermissions_RoleName,
   } = usePermissions();
-  console.log("impersonatedUser_roleName", impersonatedUser_roleName);
-  const { tickets, isLoading } = useSupportTickets();
+
   const impersonationToken = Cookies.get("impersonationToken");
   const impersonationPayload = impersonationToken
     ? decodeJwt(impersonationToken)
@@ -147,35 +140,40 @@ function SupportDesk() {
     issueTypes: [],
     priorities: [],
     createdDate: "",
-  }); //<-------v1.0.3--------
+  }); 
   const [viewMode, setViewMode] = useState("table");
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
-  //<-------v1.0.3--------
   const [isIssueTypeOpen, setIsIssueTypeOpen] = useState(false);
   const [selectedIssueTypes, setSelectedIssueTypes] = useState([]);
   const [isPriorityOpen, setIsPriorityOpen] = useState(false);
   const [selectedPriorities, setSelectedPriorities] = useState([]);
   const [isCreatedOpen, setIsCreatedOpen] = useState(false);
   const [createdDate, setCreatedDate] = useState(""); // '', 'last7', 'last30'
-  //-------v1.0.3-------->
   const navigate = useNavigate();
   const filterIconRef = useRef(null);
+  const { tickets,  isLoading } = useSupportTickets(
+    {
+      search: searchQuery,
+      status: selectedFilters.status,
+      issueTypes: selectedFilters.issueTypes,
+      priorities: selectedFilters.priorities,
+      createdDate: selectedFilters.createdDate,
+      page: currentPage, // This is now properly sent to backend
+      limit: itemsPerPage,
+    }
+  );
+
+  // console.log("totalCount ---> ", tickets?.totalCount);
+
+  const totalPages = Math.ceil(tickets?.totalCount / itemsPerPage); 
+  const currentFilteredRows = tickets?.tickets || []
 
   // v1.0.4 <-----------------------------------------------------------
   const isTablet = useMediaQuery({ maxWidth: 1024 });
-
-  // useEffect(() => {
-  //   const handleResize = () => {
-  //     setViewMode(window.innerWidth < 1024 ? "kanban" : "table");
-  //   };
-  //   handleResize();
-  //   window.addEventListener("resize", handleResize);
-  //   return () => window.removeEventListener("resize", handleResize);
-  // }, []);
-
   useScrollLock(viewMode === "kanban"); // when view is kanban disable outer scrollbar
 
+  // handling kanban view and table view 
   useEffect(() => {
     // Only run on isTablet change
     if (isTablet) {
@@ -184,32 +182,21 @@ function SupportDesk() {
       setViewMode("table");
     }
   }, [isTablet]);
-  // v1.0.4 ----------------------------------------------------------->
+
 
   // Permission check after all hooks
   if (!isInitialized || !checkPermission("SupportDesk")) {
     return null;
   }
 
+  // handling search input 
   const handleSearchInputChange = (e) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(0);
+    const value = e.target.value;
+    setSearchQuery(value);
+    setCurrentPage(0); // Reset to first page when searching
   };
 
-  const handleFilterChange = (filters) => {
-    setSelectedFilters(filters);
-    //<-------v1.0.3--------
-    const active =
-      (filters.status?.length || 0) > 0 ||
-      (filters.issueTypes?.length || 0) > 0 ||
-      (filters.priorities?.length || 0) > 0 ||
-      (!!filters.createdDate && filters.createdDate !== "");
-    setIsFilterActive(active);
-    //-------v1.0.3-------->
-    setIsFilterPopupOpen(false);
-    setCurrentPage(0);
-  };
-
+  // clear all filters
   const handleClearFilters = () => {
     setSelectedFilters({
       status: [],
@@ -232,81 +219,29 @@ function SupportDesk() {
     //-------v1.0.3-------->
   };
 
+  //  handling filter pop up  showing 
   const handleFilterIconClick = () => {
-    if (tickets?.length !== 0) {
+    if (tickets?.tickets?.length !== 0) {
       setIsFilterPopupOpen((prev) => !prev);
     }
   };
 
-  const FilteredData = () => {
-    if (!Array.isArray(tickets)) return [];
-    return tickets.filter((ticket) => {
-      const ticketId = ticket.ticketCode?.toLowerCase() || "";
-      const contact = ticket.contact?.toLowerCase() || "";
-      const matchesSearchQuery =
-        !searchQuery ||
-        ticketId.includes(searchQuery.toLowerCase()) ||
-        contact.includes(searchQuery.toLowerCase()) ||
-        ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase());
-      //ticket.assignedTo?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesStatus =
-        //<-------v1.0.3--------
-        (selectedFilters.status?.length || 0) === 0 ||
-        selectedFilters.status.includes(ticket.status);
-
-      const matchesIssueType =
-        (selectedFilters.issueTypes?.length || 0) === 0 ||
-        selectedFilters.issueTypes.includes(ticket.issueType);
-
-      const matchesPriority =
-        (selectedFilters.priorities?.length || 0) === 0 ||
-        selectedFilters.priorities.includes(ticket.priority);
-
-      const matchesCreatedDate = (() => {
-        const preset = selectedFilters.createdDate;
-        if (!preset) return true; // Any time
-        const createdAt = ticket.createdAt ? parseISO(ticket.createdAt) : null;
-        if (!createdAt || !isValid(createdAt)) return false;
-        const now = new Date();
-        const days = preset === "last7" ? 7 : preset === "last30" ? 30 : null;
-        if (!days) return true;
-        const cutoff = new Date(now);
-        cutoff.setDate(now.getDate() - days);
-        return createdAt >= cutoff;
-      })();
-
-      return (
-        matchesSearchQuery &&
-        matchesStatus &&
-        matchesIssueType &&
-        matchesPriority &&
-        matchesCreatedDate
-      );
-      //-------v1.0.3-------->
-    });
-  };
-
-  const totalPages = Math.ceil(FilteredData().length / itemsPerPage);
-  const startIndex = currentPage * itemsPerPage;
-  const currentFilteredRows = FilteredData().slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
-  console.log("currentFilteredRows", currentFilteredRows);
-
+//  handling next page pagination
   const nextPage = () => {
     if (currentPage < totalPages - 1) {
-      setCurrentPage((prev) => prev + 1);
+      setCurrentPage(prev => prev + 1);
     }
   };
 
+//  handling prev page pagination
   const prevPage = () => {
     if (currentPage > 0) {
-      setCurrentPage((prev) => prev - 1);
+      setCurrentPage(prev => prev - 1);
     }
   };
 
+  //  formating date
   const formatDate = (isoString) => {
     if (!isoString) return "";
     const date = new Date(isoString);
@@ -320,18 +255,8 @@ function SupportDesk() {
     });
   };
 
-  // const hasActionAccess = (ticket) => {
-  //   if (impersonatedUser_roleName === "Super_Admin") {
-  //     return true;
-  //   } else if (impersonatedUser_roleName === "Support_Team") {
-  //     return ticket.assignedToId === currentUserId || ticket.owner === currentUserId;
-  //   } else if (effectivePermissions_RoleName === "Admin") {
-  //     return true;
-  //   } else {
-  //     return ticket.assignedToId === currentUserId;
-  //   }
-  // };
 
+  //  table column 
   const tableColumns = [
     {
       key: "ticketCode",
@@ -342,16 +267,16 @@ function SupportDesk() {
           onClick={() => {
             const path =
               effectivePermissions_RoleName === "Admin" ||
-              effectivePermissions_RoleName === "Individual_Freelancer" ||
-              effectivePermissions_RoleName === "Individual"
+                effectivePermissions_RoleName === "Individual_Freelancer" ||
+                effectivePermissions_RoleName === "Individual"
                 ? `/support-desk/${row?._id}`
                 : row.assignedToId ===
-                    impersonationPayload.impersonatedUserId &&
+                  impersonationPayload.impersonatedUserId &&
                   impersonatedUser_roleName === "Support_Team"
-                ? `/support-desk/view/${row?._id}`
-                : impersonatedUser_roleName === "Super_Admin"
-                ? `/support-desk/view/${row?._id}`
-                : `/support-desk/${row?._id}`;
+                  ? `/support-desk/view/${row?._id}`
+                  : impersonatedUser_roleName === "Super_Admin"
+                    ? `/support-desk/view/${row?._id}`
+                    : `/support-desk/${row?._id}`;
             navigate(path, { state: { ticketData: row } });
           }}
         >
@@ -393,22 +318,22 @@ function SupportDesk() {
       ),
     },
     ...(impersonatedUser_roleName === "Super_Admin" ||
-    impersonatedUser_roleName === "Support_Team"
+      impersonatedUser_roleName === "Support_Team"
       ? [
-          {
-            key: "priority",
-            header: "Priority",
-            render: (value) => (
-              <span
-                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
-                  value
-                )}`}
-              >
-                {value || "N/A"}
-              </span>
-            ),
-          },
-        ]
+        {
+          key: "priority",
+          header: "Priority",
+          render: (value) => (
+            <span
+              className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
+                value
+              )}`}
+            >
+              {value || "N/A"}
+            </span>
+          ),
+        },
+      ]
       : []),
     {
       key: "createdAt",
@@ -416,18 +341,19 @@ function SupportDesk() {
       render: (value, row) => formatDateTime(row.createdAt) || "N/A",
     },
     ...(impersonatedUser_roleName === "Super_Admin" ||
-    impersonatedUser_roleName === "Support_Team"
+      impersonatedUser_roleName === "Support_Team"
       ? [
-          {
-            key: "assignedTo",
-            header: "Assigned To",
-            render: (value) =>
-              value?.charAt(0).toUpperCase() + value.slice(1) || "N/A",
-          },
-        ]
+        {
+          key: "assignedTo",
+          header: "Assigned To",
+          render: (value) =>
+            value?.charAt(0).toUpperCase() + value.slice(1) || "N/A",
+        },
+      ]
       : []),
   ];
 
+  // Based on priority color shoing data 
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
       case "high":
@@ -441,6 +367,7 @@ function SupportDesk() {
     }
   };
 
+    //  table column actions 
   const tableActions = [
     {
       key: "view",
@@ -449,34 +376,34 @@ function SupportDesk() {
       onClick: (row) => {
         const path =
           effectivePermissions_RoleName === "Admin" ||
-          effectivePermissions_RoleName === "Individual_Freelancer" ||
-          effectivePermissions_RoleName === "Individual"
+            effectivePermissions_RoleName === "Individual_Freelancer" ||
+            effectivePermissions_RoleName === "Individual"
             ? `/support-desk/${row._id}`
             : row.assignedToId === impersonationPayload.impersonatedUserId &&
               impersonatedUser_roleName === "Support_Team"
-            ? `/support-desk/view/${row._id}`
-            : impersonatedUser_roleName === "Super_Admin"
-            ? `/support-desk/view/${row._id}`
-            : `/support-desk/${row._id}`;
+              ? `/support-desk/view/${row._id}`
+              : impersonatedUser_roleName === "Super_Admin"
+                ? `/support-desk/view/${row._id}`
+                : `/support-desk/${row._id}`;
         navigate(path, { state: { ticketData: row } });
       },
       //disabled: (row) => !hasActionAccess(row),
     },
     ...(effectivePermissions_RoleName === "Admin" ||
-    effectivePermissions_RoleName === "Individual_Freelancer" ||
-    effectivePermissions_RoleName === "Individual"
+      effectivePermissions_RoleName === "Individual_Freelancer" ||
+      effectivePermissions_RoleName === "Individual"
       ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) =>
-              navigate(`/support-desk/edit-ticket/${row._id}`, {
-                state: { ticketData: row },
-              }),
-            //disabled: (row) => !hasActionAccess(row),
-          },
-        ]
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (row) =>
+            navigate(`/support-desk/edit-ticket/${row._id}`, {
+              state: { ticketData: row },
+            }),
+          //disabled: (row) => !hasActionAccess(row),
+        },
+      ]
       : []),
   ];
 
@@ -526,15 +453,22 @@ function SupportDesk() {
   };
 
   const handleApplyFilters = () => {
-    handleFilterChange({
+    const filters = {
       status: selectedStatus,
       issueTypes: selectedIssueTypes,
       priorities: selectedPriorities,
       createdDate: createdDate,
-    });
-    //-------v1.0.3-------->
+    };
+    setSelectedFilters(filters);
+    const active =
+      filters?.status.length > 0 ||
+      filters?.issueTypes.length > 0 ||
+      filters?.priorities.length > 0 ||
+      (!!filters?.createdDate && filters?.createdDate !== "");
+    setIsFilterActive(active);
+    setIsFilterPopupOpen(false);
+    setCurrentPage(0); // Reset page
   };
-
   // v1.0.6 <----------------------------------------------------------------------
 
   const kanbanColumns = [
@@ -582,12 +516,12 @@ function SupportDesk() {
     },
     ...(impersonatedUser_roleName === "Super_Admin"
       ? [
-          {
-            key: "assignedTo",
-            header: "Assigned To",
-            render: (value) => value || "N/A",
-          },
-        ]
+        {
+          key: "assignedTo",
+          header: "Assigned To",
+          render: (value) => value || "N/A",
+        },
+      ]
       : []),
   ];
 
@@ -628,22 +562,24 @@ function SupportDesk() {
           ),
       },
       ...(effectivePermissions_RoleName === "Admin" ||
-      effectivePermissions_RoleName === "Individual_Freelancer" ||
-      effectivePermissions_RoleName === "Individual"
+        effectivePermissions_RoleName === "Individual_Freelancer" ||
+        effectivePermissions_RoleName === "Individual"
         ? [
-            {
-              key: "edit",
-              label: "Edit Ticket",
-              icon: <Pencil className="w-4 h-4 text-green-600" />,
-              onClick: () =>
-                navigate(`/support-desk/edit-ticket/${ticket._id}`, {
-                  state: { ticketData: ticket },
-                }),
-            },
-          ]
+          {
+            key: "edit",
+            label: "Edit Ticket",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: () =>
+              navigate(`/support-desk/edit-ticket/${ticket._id}`, {
+                state: { ticketData: ticket },
+              }),
+          },
+        ]
         : []),
     ];
   };
+
+
 
   // v1.0.6 ---------------------------------------------------------------------->
 
@@ -675,13 +611,23 @@ function SupportDesk() {
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
-              dataLength={tickets?.length}
+              dataLength={tickets?.tickets?.length}
               searchPlaceholder="Search by ID or Contact..."
               filterIconRef={filterIconRef}
             />
           </div>
         </main>
       </div>
+
+      {
+        tickets?.length === 0 &&
+
+        <div className="flex items-center justify-center h-screen">
+          <p className="text-gray-600">No tickets found</p>
+        </div>
+
+
+      }
       {/* v1.0.4 <------------------------------------------------------------------------------ */}
       {/* <main className="fixed top-48 left-0 right-0 bg-background"> */}
       {/* v1.0.5 <------------------------------------------------------------------------------------ */}
@@ -722,7 +668,7 @@ function SupportDesk() {
                   navigate(
                     effectivePermissions_RoleName === "Admin" ||
                       effectivePermissions_RoleName ===
-                        "Individual_Freelancer" ||
+                      "Individual_Freelancer" ||
                       effectivePermissions_RoleName === "Individual"
                       ? `/support-desk/${ticket._id}`
                       : `/support-desk/view/${ticket._id}`,
@@ -767,7 +713,7 @@ function SupportDesk() {
                             onChange={() => handleStatusToggle(option)}
                             // v1.0.2 <-------------------------------------------------------------
                             className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                            // v1.0.2 ------------------------------------------------------------->
+                          // v1.0.2 ------------------------------------------------------------->
                           />
                           <span className="text-sm">{option}</span>
                         </label>

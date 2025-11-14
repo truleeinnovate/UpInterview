@@ -33,8 +33,6 @@ input[type="text"][autocomplete="new-password"] {
   appearance: none !important;
 }
 
-
-
 /* Hide browser's default password reveal button for Edge, Chrome, etc. */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
@@ -67,8 +65,6 @@ input:-webkit-autofill + button,
 input:-webkit-autofill ~ button[type="button"] {
   z-index: 10 !important;
 }
-
-
 
 /* Optional: Handle focus and autofill states */
 .password-mask:focus {
@@ -135,14 +131,15 @@ input:-webkit-autofill ~ button[type="button"] {
   }
 }
 
-
 /* Hide text caret on all elements except inputs, textareas, and explicitly contenteditable elements */
 *:not(input):not(textarea):not([contenteditable="true"]) {
   caret-color: transparent;
 }
 
 /* Explicitly show caret inside form fields */
-input, textarea, [contenteditable="true"] {
+input,
+textarea,
+[contenteditable="true"] {
   caret-color: #000;
 }
 
@@ -244,20 +241,20 @@ input, textarea, [contenteditable="true"] {
 
 /* Status badge custom colors */
 /* src/index.css or src/globals.css */
-.badge-success {
-  @apply bg-green-100 text-green-700 border-green-300 rounded-full px-2 py-1 text-xs font-medium;
+.badge-warning {
+  @apply bg-yellow-100 text-yellow-700 rounded-full px-2 py-1 text-xs font-medium;
 }
 
-.badge-warning {
-  @apply bg-yellow-100 text-yellow-700 border-yellow-300 rounded-full px-2 py-1 text-xs font-medium;
+.badge-support {
+  @apply bg-purple-100 text-purple-700 rounded-full px-2 py-1 text-xs font-medium;
 }
 
 .badge-error {
-  @apply bg-rose-100 text-rose-700 border-rose-300 rounded-full px-2 py-1 text-xs font-medium;
+  @apply bg-rose-100 text-rose-700 rounded-full px-2 py-1 text-xs font-medium;
 }
 
 .badge-neutral {
-  @apply bg-blue-100 text-blue-700 border-blue-300 rounded-full px-2 py-1 text-xs font-medium;
+  @apply bg-gray-100 text-gray-700 rounded-full px-2 py-1 text-xs font-medium;
 }
 
 /* Custom skeleton animation */

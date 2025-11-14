@@ -8,6 +8,7 @@
 // v1.0.5 - Ranjith - rounds shown as horizontal stepper pathway
 // v1.0.6 - Ashok - Reduced horizontal padding (style issue)
 // v1.0.7 - Ashok - Improved scroll functionality
+// v1.0.8 - Ashok - Fixed style issues
 
 import { useEffect, useState, useRef } from "react";
 import AssessmentDetails from "./AssessmentType";
@@ -62,11 +63,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
   // Determine the correct path to return to based on current location and state
-  const fromPath =
-    location.state?.from ||
-    (location.pathname.includes("/position/new-position")
-      ? "/position"
-      : "/position");
+  // const fromPath =
+  //   location.state?.from ||
+  //   (location.pathname.includes("/position/new-position")
+  //     ? "/position"
+  //     : "/position");
 
   // v1.0.1 <----------------------------------------------------------------------
   const fieldRefs = {
@@ -108,21 +109,17 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [isCustomCompany, setIsCustomCompany] = useState(false);
   const [companySearchTerm, setCompanySearchTerm] = useState("");
   const companyDropdownRef = useRef(null);
-
-  const handleCompanySelect = (company) => {
-    if (company === "others") {
-      setIsCustomCompany(true);
-      setFormData((prev) => ({ ...prev, companyName: "" }));
-    } else {
-      setIsCustomCompany(false);
-      setFormData((prev) => ({ ...prev, companyName: company.CompanyName }));
-    }
-    setShowDropdownCompany(false);
-    setCompanySearchTerm("");
-    if (errors.companyname) {
-      setErrors((prevErrors) => ({ ...prevErrors, companyname: "" }));
-    }
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSkill, setSelectedSkill] = useState("");
+  const [entries, setEntries] = useState([]);
+  const [selectedExp, setSelectedExp] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [hasMovedToRounds, setHasMovedToRounds] = useState(false);
+  const [currentStage, setCurrentStage] = useState("basic");
+  const [allSelectedSkills, setAllSelectedSkills] = useState([]);
 
   // Handle click outside company dropdown
   useEffect(() => {
@@ -142,37 +139,22 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     };
   }, []);
 
+  
+
+  
+
+  const skillpopupcancelbutton = () => {
+    setIsModalOpen(false);
+    setSearchTerm("");
+  };
+  
+
   const filteredCompanies = companies?.filter((company) =>
     company.CompanyName?.toString()
       .toLowerCase()
       .includes(companySearchTerm.toLowerCase())
   );
 
-  const [showDropdownTemplate, setShowDropdownTemplate] = useState(false);
-
-  // const handleTemplateSelect = (template) => {
-  //   setFormData((prev) => ({ ...prev, template: template })); // Store entire template object
-  //   setShowDropdownTemplate(false);
-  // };
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSkill, setSelectedSkill] = useState("");
-  const [entries, setEntries] = useState([]);
-
-  const [selectedExp, setSelectedExp] = useState("");
-
-  const [selectedLevel, setSelectedLevel] = useState("");
-  const [editingIndex, setEditingIndex] = useState(null);
-
-  const skillpopupcancelbutton = () => {
-    setIsModalOpen(false);
-    setSearchTerm("");
-  };
-  const [currentStep, setCurrentStep] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const [hasMovedToRounds, setHasMovedToRounds] = useState(false);
-  const [currentStage, setCurrentStage] = useState("basic");
 
   useEffect(() => {
     if (currentStage !== "basic") {
@@ -180,7 +162,78 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }
   }, [currentStage]);
 
-  const [allSelectedSkills, setAllSelectedSkills] = useState([]);
+    useEffect(() => {
+    if (id) {
+      const selectedPosition = positionData.find((pos) => pos._id === id);
+      setIsEdit(true);
+      console.log("selectedPosition", selectedPosition);
+      const matchingTemplate = templatesData.find(
+        (template) => template?._id === selectedPosition?.templateId
+      );
+      //setPositionId(id);
+
+      const companyName = selectedPosition?.companyname || "";
+
+      // Check if the company name exists in the companies list
+      // Guard: wait until companies are loaded before deciding custom mode
+      if (companyName && Array.isArray(companies) && companies.length > 0) {
+        const companyExists = companies.some(
+          (company) => company.CompanyName === companyName
+        );
+        if (!companyExists) {
+          setIsCustomCompany(true);
+        } else {
+          setIsCustomCompany(false);
+        }
+      } else if (
+        companyName &&
+        (!Array.isArray(companies) || companies.length === 0)
+      ) {
+        // Defer decision; will re-run when companies update
+        setIsCustomCompany(true);
+      }
+
+      setFormData({
+        title: selectedPosition?.title || "",
+        companyName: companyName,
+        minexperience: selectedPosition?.minexperience || 0,
+        maxexperience: selectedPosition?.maxexperience || 0,
+        minSalary: selectedPosition?.minSalary || "",
+        maxSalary: selectedPosition?.maxSalary || "",
+        jobDescription: selectedPosition?.jobDescription || "",
+        additionalNotes: selectedPosition?.additionalNotes || "",
+        NoofPositions: selectedPosition?.NoofPositions?.toString() || "",
+        Location: selectedPosition?.Location || "",
+        template: matchingTemplate || {},
+        // template: matchingTemplate
+        //   ? {
+        //     ...matchingTemplate
+        //   }
+        //   : {},
+      });
+
+      console.log("selectedPosition template", formData?.template);
+
+      const formattedSkills =
+        selectedPosition?.skills?.map((skill) => ({
+          skill: skill.skill || "",
+          experience: skill.experience || "",
+          expertise: skill.expertise || "",
+          _id: skill._id || "",
+        })) || [];
+
+      setEntries(formattedSkills);
+      // setAllSelectedSkills(formattedSkills)
+      setAllSelectedSkills(
+        selectedPosition?.skills?.map((skill) => skill.skill) || []
+      );
+
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionData, id, companies, templatesData]);
+
+
 
   const isNextEnabled = () => {
     if (currentStep === 0) {
@@ -210,7 +263,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     return false;
   };
 
-  console.log("formDataData", formData);
+
 
   // Mapped options for shared DropdownWithSearchField
   const companyOptionsRS = (companies || [])
@@ -264,12 +317,15 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         } else {
           // If either is empty, clear cross-field errors
           if (
-            next.minexperience === "Min Experience cannot be greater than Max" || 
-        next.minexperience === "Min and Max Experience cannot be equal"
+            next.minexperience ===
+              "Min Experience cannot be greater than Max" ||
+            next.minexperience === "Min and Max Experience cannot be equal"
           )
             next.minexperience = "";
-          if (next.maxexperience === "Max Experience cannot be less than Min"  || 
-        next.maxexperience === "Max and Min Experience cannot be equal")
+          if (
+            next.maxexperience === "Max Experience cannot be less than Min" ||
+            next.maxexperience === "Max and Min Experience cannot be equal"
+          )
             next.maxexperience = "";
         }
       }
@@ -304,20 +360,23 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         }
 
         if (!Number.isNaN(minS) && !Number.isNaN(maxS)) {
-         if (minS === maxS) {
-      next.minsalary = "Minimum and Maximum Salary cannot be equal";
-      next.maxsalary = "Maximum and Minimum Salary cannot be equal";
-    } else if (minS > maxS) {
+          if (minS === maxS) {
+            next.minsalary = "Minimum and Maximum Salary cannot be equal";
+            next.maxsalary = "Maximum and Minimum Salary cannot be equal";
+          } else if (minS > maxS) {
             next.minsalary = "Minimum Salary cannot be greater than Maximum";
             next.maxsalary = "Maximum Salary cannot be less than Minimum";
           } else {
             if (
-              next.minsalary === "Minimum Salary cannot be greater than Maximum" || 
-         next.minsalary === "Minimum and Maximum Salary cannot be equal"
+              next.minsalary ===
+                "Minimum Salary cannot be greater than Maximum" ||
+              next.minsalary === "Minimum and Maximum Salary cannot be equal"
             )
               next.minsalary = "";
-            if (next.maxsalary === "Maximum Salary cannot be less than Minimum" || 
-          next.maxsalary === "Maximum and Minimum Salary cannot be equal")
+            if (
+              next.maxsalary === "Maximum Salary cannot be less than Minimum" ||
+              next.maxsalary === "Maximum and Minimum Salary cannot be equal"
+            )
               next.maxsalary = "";
           }
         }
@@ -335,10 +394,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry
       );
       setEntries(updatedEntries);
@@ -396,79 +455,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     // setAllSelectedSkills(entries.map(e => e.skill));
   };
 
-  useEffect(() => {
-    if (id) {
-      const selectedPosition = positionData.find((pos) => pos._id === id);
-      setIsEdit(true);
-      console.log("selectedPosition", selectedPosition);
-      const matchingTemplate = templatesData.find(
-        (template) => template.title === selectedPosition?.selectedTemplete
-      );
-      //setPositionId(id);
 
-      const companyName = selectedPosition?.companyname || "";
-
-      // Check if the company name exists in the companies list
-      // Guard: wait until companies are loaded before deciding custom mode
-      if (companyName && Array.isArray(companies) && companies.length > 0) {
-        const companyExists = companies.some(
-          (company) => company.CompanyName === companyName
-        );
-        if (!companyExists) {
-          setIsCustomCompany(true);
-        } else {
-          setIsCustomCompany(false);
-        }
-      } else if (
-        companyName &&
-        (!Array.isArray(companies) || companies.length === 0)
-      ) {
-        // Defer decision; will re-run when companies update
-        setIsCustomCompany(true);
-      }
-
-      setFormData({
-        title: selectedPosition?.title || "",
-        companyName: companyName,
-        minexperience: selectedPosition?.minexperience || 0,
-        maxexperience: selectedPosition?.maxexperience || 0,
-        minSalary: selectedPosition?.minSalary || "",
-        maxSalary: selectedPosition?.maxSalary || "",
-        jobDescription: selectedPosition?.jobDescription || "",
-        additionalNotes: selectedPosition?.additionalNotes || "",
-        NoofPositions: selectedPosition?.NoofPositions?.toString() || "",
-        Location: selectedPosition?.Location || "",
-        template: matchingTemplate || {},
-        // template: matchingTemplate
-        //   ? {
-        //     ...matchingTemplate
-        //   }
-        //   : {},
-      });
-
-      const formattedSkills =
-        selectedPosition?.skills?.map((skill) => ({
-          skill: skill.skill || "",
-          experience: skill.experience || "",
-          expertise: skill.expertise || "",
-          _id: skill._id || "",
-        })) || [];
-
-      setEntries(formattedSkills);
-      // setAllSelectedSkills(formattedSkills)
-      setAllSelectedSkills(
-        selectedPosition?.skills?.map((skill) => skill.skill) || []
-      );
-      // setAllSelectedExperiences(
-      //   selectedPosition.skills?.map((skill) => skill.experience) || []
-      // );
-      // setAllSelectedExpertises(
-      //   selectedPosition.skills?.map((skill) => skill.expertise) || []
-      // );
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positionData, id, companies, templatesData]);
 
   const handleSubmit = async (
     e,
@@ -646,8 +633,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save position"
+          error.message ||
+          "Failed to save position"
       );
 
       if (error.response && error.response.status === 400) {
@@ -1054,7 +1041,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                 consistency
               </>,
               <>
-                <span className="font-medium">Custom Interview Path:</span> If you don't select a template, you can build custom interview rounds tailored specifically for this position
+                <span className="font-medium">Custom Interview Path:</span> If
+                you don't select a template, you can build custom interview
+                rounds tailored specifically for this position
               </>,
               <>
                 <span className="font-medium">Flexible Approach:</span> Create
@@ -1180,7 +1169,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           max={1000000000}
                           label="Min Salary (Annual)"
                           name="minSalary"
-                          required={formData.maxSalary ? true : false}
+                          // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
                           value={formData.maxSalary}
@@ -1191,7 +1180,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           error={errors.maxsalary}
                           label="Max Salary (Annual)"
                           name="maxSalary"
-                          required={formData.minSalary ? true : false}
+                          // required={formData.minSalary ? true : false}
                         />
                       </div>
                     </div>
@@ -1208,7 +1197,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         max={100}
                         label="No. of Positions"
                         name="NoofPositions"
-                      // required
+                        // required
                       />
 
                       <div>

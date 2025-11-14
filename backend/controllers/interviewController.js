@@ -36,6 +36,205 @@ const { MockInterviewRound } = require("../models/MockInterview/mockinterviewRou
 
 
 //  post call for interview page 
+// const createInterview = async (req, res) => {
+//     try {
+//         const {
+//             candidateId,
+//             positionId,
+//             templateId,
+//             status,
+//             orgId,
+//             userId,
+//             // interviewId,
+//             updatingInterviewStatus,
+//             completionReason,
+//         } = req.body;
+//         let candidate = null;
+
+//         // Skip candidate/position check if just updating status
+
+//         console.log("req.body interview", req.body);
+
+//         if (!candidateId) {
+//             return res.status(400).json({
+//                 field: "candidateId",
+//                 message: "Candidate is required"
+//             });
+//         }
+
+//         if (!positionId) {
+//             return res.status(400).json({
+//                 field: "positionId",
+//                 message: "Position is required"
+//             });
+//         }
+
+
+//         if (!updatingInterviewStatus) {
+//             candidate = await Candidate.findById(candidateId);
+//             if (!candidate) {
+//                 return res.status(404).json({ message: "Candidate not found" });
+//             }
+//         }
+
+//         const template = await InterviewTemplate.findById(templateId);
+
+//         let interview;
+//         let interviewData = {
+//             candidateId,
+//             positionId,
+//             templateId: template ? templateId : undefined,
+//             ownerId: userId,
+//             tenantId: orgId || undefined,
+//             completionReason,
+//             status,
+//         };
+
+//         // Generate interviewCode for new interview with tenant ID
+//         const interviewCode = await generateUniqueId('INT', Interview, 'interviewCode', orgId);
+        
+//    if (!interviewCode) {
+//     return res.status(500).json({
+//         message: "Failed to generate interview code"
+//     });
+// }
+
+//         // Create interview
+//          interview = await Interview.create({
+//             ...interviewData,
+//             interviewCode,
+//         });
+
+
+//         //console.log("nextNumber interview", interview);
+
+//         // Create push notification for interview creation
+//         try {
+//             await createInterviewCreatedNotification(interview);
+//         } catch (notificationError) {
+//             console.error('[INTERVIEW] Error creating notification:', notificationError);
+//             // Continue execution even if notification fails
+//         }
+
+//         // Handle rounds and questions if not just updating status
+//         if (!updatingInterviewStatus) {
+//             const position = await Position.findById(positionId);
+//             let roundsToSave = [];
+
+//             if (position?.templateId?.toString() === templateId?.toString()) {
+//                 roundsToSave = position.rounds || [];
+//             } else if (
+//                 position?.templateId &&
+//                 position?.templateId.toString() !== templateId?.toString()
+//             ) {
+//                 roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
+//             } else if (
+//                 !position?.templateId &&
+//                 position?.rounds?.length > 0 &&
+//                 templateId
+//             ) {
+//                 roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
+//             } else if (!position?.templateId && position?.rounds?.length > 0) {
+//                 roundsToSave = position.rounds;
+//             } else if (templateId) {
+//                 roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
+//             }
+
+
+//             if (roundsToSave.length > 0) {
+
+//                 // Process each round with proper field mapping
+//                 for (let index = 0; index < roundsToSave.length; index++) {
+//                     const round = roundsToSave[index];
+
+//                     // Create round document with proper field mapping
+//                     const roundDoc = new InterviewRounds({
+//                         interviewId: interview._id,
+//                         sequence: index + 1, // Use index-based sequence
+//                         roundTitle: round.roundTitle || "",
+//                         interviewMode: round.interviewMode || "",
+//                         interviewType: round.interviewType || "", // This field was missing in your mapping
+//                         interviewerType: round.interviewerType || "",
+//                         selectedInterviewersType: round.selectedInterviewersType || "", // This field doesn't exist in schema
+//                         duration: round.duration || "", // Map interviewDuration to duration
+//                         instructions: round.instructions || "",
+//                         dateTime: round.dateTime || "",
+//                         interviewers: round.interviewers || [], // This should be ObjectId array
+//                         status: "Draft",
+//                         // meetLink: round.meetLink || [],
+//                         meetingId: round.meetingId || "",
+//                         assessmentId: round.assessmentId || null,
+//                         // questions: [], // Initialize as empty array
+//                         rejectionReason: round.rejectionReason || "",
+//                         minimumInterviewers: round.minimumInterviewers || "", // This field doesn't exist in schema
+//                         interviewerGroupId: round.interviewerGroupId || null, // This field doesn't exist in schema
+//                     });
+
+//                     // Save the round document
+//                     const savedRound = await roundDoc.save();
+
+//                     // Create notification if round has scheduled date and interviewer
+//                     if (savedRound.dateTime || savedRound.interviewers?.length > 0) {
+//                         try {
+//                             await createInterviewRoundScheduledNotification(savedRound);
+//                         } catch (notificationError) {
+//                             console.error('[INTERVIEW] Error creating round scheduled notification:', notificationError);
+//                             // Continue execution even if notification fails
+//                         }
+//                     }
+
+//                     // Handle questions if they exist and are valid
+//                     if (
+//                         round.questions &&
+//                         Array.isArray(round.questions) &&
+//                         round.questions.length > 0
+//                     ) {
+//                         try {
+//                             // Validate questions structure
+//                             const validQuestions = round.questions.every(
+//                                 (q) =>
+//                                     q && (q.questionId || q._id) && (q.snapshot || q.question)
+//                             );
+
+//                             if (validQuestions) {
+//                                 // Transform questions to match expected format
+//                                 const transformedQuestions = round.questions.map((q) => ({
+//                                     questionId: q.questionId || q._id,
+//                                     snapshot: q.snapshot || q,
+//                                 }));
+
+//                                 await handleInterviewQuestions(
+//                                     interview._id,
+//                                     savedRound._id,
+//                                     transformedQuestions
+//                                 );
+
+//                             } else {
+//                                 console.warn(
+//                                     `Invalid questions structure for round ${savedRound._id}, skipping questions.`
+//                                 );
+//                             }
+//                         } catch (questionError) {
+//                             console.error(
+//                                 `Error saving questions for round ${savedRound._id}:`,
+//                                 questionError
+//                             );
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+
+//         res.status(201).json(interview);
+//     } catch (error) {
+//         console.error("Error creating interview:", error);
+//         res
+//             .status(500)
+//             .json({ message: "Internal server error", error: error.message });
+//     }
+// };
+
+//  post call for interview page
 const createInterview = async (req, res) => {
     try {
         const {
@@ -50,35 +249,35 @@ const createInterview = async (req, res) => {
             completionReason,
         } = req.body;
         let candidate = null;
-
+ 
         // Skip candidate/position check if just updating status
-
+ 
         console.log("req.body interview", req.body);
-
+ 
         if (!candidateId) {
             return res.status(400).json({
                 field: "candidateId",
                 message: "Candidate is required"
             });
         }
-
+ 
         if (!positionId) {
             return res.status(400).json({
                 field: "positionId",
                 message: "Position is required"
             });
         }
-
-
+ 
+ 
         if (!updatingInterviewStatus) {
             candidate = await Candidate.findById(candidateId);
             if (!candidate) {
                 return res.status(404).json({ message: "Candidate not found" });
             }
         }
-
+ 
         const template = await InterviewTemplate.findById(templateId);
-
+ 
         let interview;
         let interviewData = {
             candidateId,
@@ -89,19 +288,19 @@ const createInterview = async (req, res) => {
             completionReason,
             status,
         };
-
+ 
         // Generate interviewCode for new interview with tenant ID
         const interviewCode = await generateUniqueId('INT', Interview, 'interviewCode', orgId);
-        
+       
         // Create interview
          interview = await Interview.create({
             ...interviewData,
             interviewCode,
         });
-
-
+ 
+ 
         //console.log("nextNumber interview", interview);
-
+ 
         // Create push notification for interview creation
         try {
             await createInterviewCreatedNotification(interview);
@@ -109,12 +308,12 @@ const createInterview = async (req, res) => {
             console.error('[INTERVIEW] Error creating notification:', notificationError);
             // Continue execution even if notification fails
         }
-
+ 
         // Handle rounds and questions if not just updating status
         if (!updatingInterviewStatus) {
             const position = await Position.findById(positionId);
             let roundsToSave = [];
-
+ 
             if (position?.templateId?.toString() === templateId?.toString()) {
                 roundsToSave = position.rounds || [];
             } else if (
@@ -133,14 +332,14 @@ const createInterview = async (req, res) => {
             } else if (templateId) {
                 roundsToSave = template?.rounds?.length > 0 ? template.rounds : [];
             }
-
-
+ 
+ 
             if (roundsToSave.length > 0) {
-
+ 
                 // Process each round with proper field mapping
                 for (let index = 0; index < roundsToSave.length; index++) {
                     const round = roundsToSave[index];
-
+ 
                     // Create round document with proper field mapping
                     const roundDoc = new InterviewRounds({
                         interviewId: interview._id,
@@ -163,10 +362,10 @@ const createInterview = async (req, res) => {
                         minimumInterviewers: round.minimumInterviewers || "", // This field doesn't exist in schema
                         interviewerGroupId: round.interviewerGroupId || null, // This field doesn't exist in schema
                     });
-
+ 
                     // Save the round document
                     const savedRound = await roundDoc.save();
-
+ 
                     // Create notification if round has scheduled date and interviewer
                     if (savedRound.dateTime || savedRound.interviewers?.length > 0) {
                         try {
@@ -176,7 +375,7 @@ const createInterview = async (req, res) => {
                             // Continue execution even if notification fails
                         }
                     }
-
+ 
                     // Handle questions if they exist and are valid
                     if (
                         round.questions &&
@@ -189,20 +388,20 @@ const createInterview = async (req, res) => {
                                 (q) =>
                                     q && (q.questionId || q._id) && (q.snapshot || q.question)
                             );
-
+ 
                             if (validQuestions) {
                                 // Transform questions to match expected format
                                 const transformedQuestions = round.questions.map((q) => ({
                                     questionId: q.questionId || q._id,
                                     snapshot: q.snapshot || q,
                                 }));
-
+ 
                                 await handleInterviewQuestions(
                                     interview._id,
                                     savedRound._id,
                                     transformedQuestions
                                 );
-
+ 
                             } else {
                                 console.warn(
                                     `Invalid questions structure for round ${savedRound._id}, skipping questions.`
@@ -218,7 +417,7 @@ const createInterview = async (req, res) => {
                 }
             }
         }
-
+ 
         res.status(201).json(interview);
     } catch (error) {
         console.error("Error creating interview:", error);

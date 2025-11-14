@@ -26,8 +26,7 @@ import StandardTemplatesToolbar from "./StandardTemplates/StandardTemplatesHeade
 import DeleteConfirmModal from "../Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
 
 const InterviewTemplates = () => {
-  const { templatesData, isLoading, saveTemplate, deleteInterviewTemplate } =
-    useInterviewTemplates();
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const itemsPerPage = 10;
@@ -50,42 +49,27 @@ const InterviewTemplates = () => {
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
   const [isFormatOpen, setIsFormatOpen] = useState(false);
 
-    //  Ranjith added delete Candidate functionality
-    const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-    const [deleteInterviewTemplates, setDeleteInterviewTemplates] = useState(null);
+  //  Ranjith added delete Candidate functionality
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [deleteInterviewTemplates, setDeleteInterviewTemplates] = useState(null);
 
-  // Template cloning states
-  // const [templateToClone, setTemplateToClone] = useState(null);
-  // const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
-  // Keep URL in sync with tab state
-  useEffect(() => {
-    console.log("Current active tab:", activeTab);
-    const params = new URLSearchParams(window.location.search);
-
-    // Only update URL if it doesn't match the current tab
-    if (params.get("tab") !== activeTab) {
-      console.log("Updating URL to match active tab:", activeTab);
-      params.set("tab", activeTab);
-      navigate({ search: params.toString() }, { replace: true });
-    }
-  }, [activeTab, navigate]);
+  
 
   // Handle tab change from URL (e.g., browser back/forward)
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const tabFromUrl = params.get("tab");
-      console.log("URL changed, tab from URL:", tabFromUrl);
 
       if (
         tabFromUrl &&
         (tabFromUrl === "standard" || tabFromUrl === "custom")
       ) {
-        console.log("Updating active tab from URL:", tabFromUrl);
+
         setActiveTab(tabFromUrl);
       } else if (!tabFromUrl) {
         // If no tab in URL, set default and update URL
-        console.log("No tab in URL, setting to default");
+
         setActiveTab("standard");
         params.set("tab", "standard");
         navigate({ search: params.toString() }, { replace: true });
@@ -117,13 +101,77 @@ const InterviewTemplates = () => {
     createdDate: "",
   });
 
+  // Filter states - move these to URL params or state
+  // const [filters, setFilters] = useState({
+  //   search: searchParams.get('search') || '',
+  //   status: searchParams.get('status') ? searchParams.get('status').split(',') : [],
+  //   formats: searchParams.get('formats') ? searchParams.get('formats').split(',') : [],
+  //   roundsMin: searchParams.get('roundsMin') || '',
+  //   roundsMax: searchParams.get('roundsMax') || '',
+  //   createdDate: searchParams.get('createdDate') || '',
+  //   modifiedDate: searchParams.get('modifiedDate') || '',
+  //   page: parseInt(searchParams.get('page')) || 1,
+  //   limit: parseInt(searchParams.get('limit')) || 10,
+  //   type: searchParams.get('type') || 'custom',
+  //   sortBy: searchParams.get('sortBy') || 'createdAt',
+  //   sortOrder: searchParams.get('sortOrder') || 'desc',
+  // });
+
   // Refs
   const filterIconRef = useRef(null);
+
+ // Reset states when tab changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setSearchQuery("");
+    setSelectedStatus([]);
+    setSelectedFormats([]);
+    setRoundsRange({ min: "", max: "" });
+    setCreatedDatePreset("");
+    setIsFilterActive(false);
+  }, [activeTab]);
+
+  const { templatesData,
+    totalCount,
+    // currentPage,
+    // itemsPerPage,
+    isLoading, saveTemplate, deleteInterviewTemplate } =
+    useInterviewTemplates({
+      search: searchQuery,
+      status: selectedStatus,
+      formats: selectedFormats,
+      rounds: roundsRange,
+      createdDate: createdDatePreset,
+      page: currentPage,
+      limit: itemsPerPage,
+      type: activeTab
+      //  === 'standard' ? 'standard' : 'custom'
+    });
+
+    const totalPages = Math.ceil(totalCount / 10);
+
+    console.log("activeTab params", activeTab);
+
+    // Template cloning states
+  // const [templateToClone, setTemplateToClone] = useState(null);
+  // const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
+  // Keep URL in sync with tab state
+  useEffect(() => {
+    // console.log("Current active tab:", activeTab);
+    const params = new URLSearchParams(window.location.search);
+
+    // Only update URL if it doesn't match the current tab
+    if (params.get("tab") !== activeTab) {
+      params.set("tab", activeTab);
+      navigate({ search: params.toString() }, { replace: true });
+    }
+  }, [activeTab, navigate]);
 
   // Derived state
   const normalizedTemplates = useMemo(() => {
     if (!templatesData || !Array.isArray(templatesData)) return [];
-    return templatesData.filter((template) => template.type === "custom");
+    return templatesData
+    // .filter((template) => template.type === "custom");
   }, [templatesData]);
 
   // const standardCount = templatesData?.filter(t => t.type === 'standard').length || 0;
@@ -174,10 +222,10 @@ const InterviewTemplates = () => {
     setSelectedFilters(filters);
     setIsFilterActive(
       filters.status.length > 0 ||
-        filters.rounds.min !== "" ||
-        filters.rounds.max !== "" ||
-        filters.modifiedDate !== "" ||
-        filters.createdDate !== ""
+      filters.rounds.min !== "" ||
+      filters.rounds.max !== "" ||
+      filters.modifiedDate !== "" ||
+      filters.createdDate !== ""
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -212,95 +260,98 @@ const InterviewTemplates = () => {
   const normalizeSpaces = (str) =>
     str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
 
-  const filteredTemplates = useMemo(() => {
-    return normalizedTemplates.filter((template) => {
-      const normalizedQuery = normalizeSpaces(searchQuery);
-      const fieldsToSearch = [
-        template.title,
-        template.interviewTemplateCode,
-        template.status,
-        template.rounds?.length?.toString(),
-      ].filter(Boolean);
- 
-      const matchesSearchQuery =
-        searchQuery === "" ||
-        fieldsToSearch.some((field) =>
-          normalizeSpaces(field).includes(normalizedQuery)
-        );
- 
-      const matchesStatus =
-        selectedFilters.status.length === 0 ||
-        selectedFilters.status.includes(
-          template.status
-            ? template.status.charAt(0).toUpperCase() + template.status.slice(1)
-            : "Active"
-        );
- 
-      const roundsCount = template.rounds?.length || 0;
-      const matchesRounds =
-        (selectedFilters.rounds.min === "" ||
-          roundsCount >= Number(selectedFilters.rounds.min)) &&
-        (selectedFilters.rounds.max === "" ||
-          roundsCount <= Number(selectedFilters.rounds.max));
- 
-      const matchesModifiedDate = () => {
-        if (!selectedFilters.modifiedDate) return true;
-        if (!template.updatedAt) return false;
-        const modifiedAt = new Date(template.updatedAt);
-        const now = new Date();
-        const daysDiff = Math.floor((now - modifiedAt) / (1000 * 60 * 60 * 24));
-        switch (selectedFilters.modifiedDate) {
-          case "last7":
-            return daysDiff <= 7;
-          case "last30":
-            return daysDiff <= 30;
-          case "last90":
-            return daysDiff <= 90;
-          default:
-            return true;
-        }
-      };
- 
-      const matchesCreatedDate = () => {
-        if (!selectedFilters.createdDate) return true;
-        if (!template.createdAt) return false;
-        const createdAt = new Date(template.createdAt);
-        const now = new Date();
-        const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-        switch (selectedFilters.createdDate) {
-          case "last7":
-            return daysDiff <= 7;
-          case "last30":
-            return daysDiff <= 30;
-          case "last90":
-            return daysDiff <= 90;
-          default:
-            return true;
-        }
-      };
- 
-      const matchesFormat =
-        selectedFilters.formats.length === 0 ||
-        (template.format && selectedFilters.formats.includes(template.format));
- 
-      return (
-        matchesSearchQuery &&
-        matchesStatus &&
-        matchesRounds &&
-        matchesFormat &&
-        matchesModifiedDate() &&
-        matchesCreatedDate()
-      );
-    });
-  }, [normalizedTemplates, searchQuery, selectedFilters]);
+  // const filteredTemplates = useMemo(() => {
+  //   return normalizedTemplates.filter((template) => {
+  //     const normalizedQuery = normalizeSpaces(searchQuery);
+  //     const fieldsToSearch = [
+  //       template.title,
+  //       template.interviewTemplateCode,
+  //       template.status,
+  //       template.rounds?.length?.toString(),
+  //     ].filter(Boolean);
 
-  const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
+  //     const matchesSearchQuery =
+  //       searchQuery === "" ||
+  //       fieldsToSearch.some((field) =>
+  //         normalizeSpaces(field).includes(normalizedQuery)
+  //       );
+
+  //     const matchesStatus =
+  //       selectedFilters.status.length === 0 ||
+  //       selectedFilters.status.includes(
+  //         template.status
+  //           ? template.status.charAt(0).toUpperCase() + template.status.slice(1)
+  //           : "Active"
+  //       );
+
+  //     const roundsCount = template.rounds?.length || 0;
+  //     const matchesRounds =
+  //       (selectedFilters.rounds.min === "" ||
+  //         roundsCount >= Number(selectedFilters.rounds.min)) &&
+  //       (selectedFilters.rounds.max === "" ||
+  //         roundsCount <= Number(selectedFilters.rounds.max));
+
+  //     const matchesModifiedDate = () => {
+  //       if (!selectedFilters.modifiedDate) return true;
+  //       if (!template.updatedAt) return false;
+  //       const modifiedAt = new Date(template.updatedAt);
+  //       const now = new Date();
+  //       const daysDiff = Math.floor((now - modifiedAt) / (1000 * 60 * 60 * 24));
+  //       switch (selectedFilters.modifiedDate) {
+  //         case "last7":
+  //           return daysDiff <= 7;
+  //         case "last30":
+  //           return daysDiff <= 30;
+  //         case "last90":
+  //           return daysDiff <= 90;
+  //         default:
+  //           return true;
+  //       }
+  //     };
+
+  //     const matchesCreatedDate = () => {
+  //       if (!selectedFilters.createdDate) return true;
+  //       if (!template.createdAt) return false;
+  //       const createdAt = new Date(template.createdAt);
+  //       const now = new Date();
+  //       const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+  //       switch (selectedFilters.createdDate) {
+  //         case "last7":
+  //           return daysDiff <= 7;
+  //         case "last30":
+  //           return daysDiff <= 30;
+  //         case "last90":
+  //           return daysDiff <= 90;
+  //         default:
+  //           return true;
+  //       }
+  //     };
+
+  //     const matchesFormat =
+  //       selectedFilters.formats.length === 0 ||
+  //       (template.format && selectedFilters.formats.includes(template.format));
+
+  //     return (
+  //       matchesSearchQuery &&
+  //       matchesStatus &&
+  //       matchesRounds &&
+  //       matchesFormat &&
+  //       matchesModifiedDate() &&
+  //       matchesCreatedDate()
+  //     );
+  //   });
+  // }, [normalizedTemplates, searchQuery, selectedFilters]);
+
+  // const totalPages = Math.ceil(normalizedTemplates.length / itemsPerPage);
+
+
   const startIndex = currentPage * itemsPerPage;
   const endIndex = Math.min(
     startIndex + itemsPerPage,
-    filteredTemplates.length
+    normalizedTemplates.length
   );
-  const paginatedTemplates = filteredTemplates.slice(startIndex, endIndex);
+  const paginatedTemplates = normalizedTemplates;
+  // .slice(startIndex, endIndex)
 
   const handlePreviousPage = () => {
     if (currentPage > 0) {
@@ -333,7 +384,7 @@ const InterviewTemplates = () => {
       navigate(`/interview-templates/${template._id}/edit?${params.toString()}`);
     }
   };
-  
+
 
   const capitalizeFirstLetter = (str) => {
     if (!str) return "";
@@ -348,30 +399,30 @@ const InterviewTemplates = () => {
     setDeleteInterviewTemplates(template);
     setShowDeleteConfirmModal(true);
 
-    
+
   };
 
-   // Your existing handleConfirmDelete function
-    const handleConfirmDelete = async () => {
-    
-      if (deleteInterviewTemplates?._id) {
-        try {
-          let res = await deleteInterviewTemplate(deleteInterviewTemplates?._id);
-    //     console.log("tempalte response", res);
-          // notify.success("Interview template deleted successfully");
-          setShowDeleteConfirmModal(false);
-          setDeleteInterviewTemplates(null);
-        } catch (error) {
-          // Error is already handled in the mutation
-          console.error("Failed to delete interview:", error);
-          setShowDeleteConfirmModal(false);
-          setDeleteInterviewTemplates(null);
-          const backendMessage =
-            error?.response?.data?.message || "Failed to delete position";
-          notify.error(backendMessage);
-        }
+  // Your existing handleConfirmDelete function
+  const handleConfirmDelete = async () => {
+
+    if (deleteInterviewTemplates?._id) {
+      try {
+        let res = await deleteInterviewTemplate(deleteInterviewTemplates?._id);
+
+        // notify.success("Interview template deleted successfully");
+        setShowDeleteConfirmModal(false);
+        setDeleteInterviewTemplates(null);
+      } catch (error) {
+        // Error is already handled in the mutation
+        console.error("Failed to delete interview:", error);
+        setShowDeleteConfirmModal(false);
+        setDeleteInterviewTemplates(null);
+        const backendMessage =
+          error?.response?.data?.message || "Failed to delete position";
+        notify.error(backendMessage);
       }
-    };
+    }
+  };
 
   const formatOptionsfortable = [
     { label: "Online / Virtual", value: "online" },
@@ -530,7 +581,7 @@ const InterviewTemplates = () => {
           <div
             className="text-sm font-medium text-custom-blue cursor-pointer"
             onClick={() =>
-               handleView(row)}
+              handleView(row)}
           >
             {formattedValue}
           </div>
@@ -604,48 +655,48 @@ const InterviewTemplates = () => {
   const tableActions = [
     ...(effectivePermissions.InterviewTemplates?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: handleView,
-          },
-        ]
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: handleView,
+        },
+      ]
       : []),
     ...(effectivePermissions.InterviewTemplates?.Edit
       ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: handleEdit,
-          },
-        ]
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: handleEdit,
+        },
+      ]
       : []),
     ...(effectivePermissions.InterviewTemplates?.Delete
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: handleDelete,
-          },
-        ]
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: handleDelete,
+        },
+      ]
       : []),
     ...(effectivePermissions.InterviewTemplates?.Clone
       ? [
-          {
-            key: "clone",
-            label: "Clone",
-            icon: <Files className="w-4 h-4 text-custom-blue" />,
-            // onClick: handleClone,
-            onClick: handleCloneClick,
-          },
-        ]
+        {
+          key: "clone",
+          label: "Clone",
+          icon: <Files className="w-4 h-4 text-custom-blue" />,
+          // onClick: handleClone,
+          onClick: handleCloneClick,
+        },
+      ]
       : []),
   ];
 
-  
+
 
   return (
     <div className="bg-background min-h-screen">
@@ -688,14 +739,14 @@ const InterviewTemplates = () => {
                 onFilterClick={handleFilterIconClick}
                 isFilterActive={isFilterActive}
                 isFilterPopupOpen={isFilterPopupOpen}
-                dataLength={normalizedTemplates.length}
+                dataLength={totalCount}
                 searchPlaceholder="Search Interview Templates..."
                 filterIconRef={filterIconRef}
                 // v1.0.6 <----------------------------------------
                 templatesData={paginatedTemplates}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
-                // v1.0.6 ---------------------------------------->
+              // v1.0.6 ---------------------------------------->
               />
             </div>
             <div className="sm:px-0">
@@ -899,14 +950,14 @@ const InterviewTemplates = () => {
                   </div>
                 </FilterPopup>
 
-                 {/* Ranjith added deleted functionality  */}
-      <DeleteConfirmModal
-        isOpen={showDeleteConfirmModal}
-        onClose={() => setShowDeleteConfirmModal(false)}
-        onConfirm={handleConfirmDelete}
-        title="interview Template"
-        entityName={deleteInterviewTemplates?.title}
-      />
+                {/* Ranjith added deleted functionality  */}
+                <DeleteConfirmModal
+                  isOpen={showDeleteConfirmModal}
+                  onClose={() => setShowDeleteConfirmModal(false)}
+                  onConfirm={handleConfirmDelete}
+                  title="interview Template"
+                  entityName={deleteInterviewTemplates?.title}
+                />
               </motion.div>
             </div>
           </div>

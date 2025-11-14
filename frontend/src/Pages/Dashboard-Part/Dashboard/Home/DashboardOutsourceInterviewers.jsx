@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - Fixed minor issues while displaying name, role, image
 
 import React, { useState, useEffect } from "react";
 import {
@@ -11,6 +12,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import useInterviewers from "../../../../hooks/useInterviewers";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
   const { interviewers, loading, error } = useInterviewers();
@@ -23,37 +25,32 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
   // Map backend data to frontend expected fields
   const formattedInterviewers = interviewersList
     .map((availability) => {
-      const contact = availability.contact || {};
-      const nextSlot = availability.days?.[0]?.timeSlots?.[0];
+      const contact = availability?.contact || {};
+      const nextSlot = availability?.days?.[0]?.timeSlots?.[0];
       return {
-        id: availability._id,
-        name: contact.Name
-          ? contact.Name.charAt(0).toUpperCase() +
-            contact.Name.charAt(1).toLowerCase()
+        id: availability?._id,
+        name: contact?.firstName
+          ? capitalizeFirstLetter(contact?.firstName) +
+            " " +
+            capitalizeFirstLetter(contact?.lastName)
           : "Unknown",
-        role: contact.CurrentRole || "N/A",
-        image: contact.ImageData?.path
-          ? `${process.env.REACT_APP_API_URL}/${contact.ImageData.path.replace(
-              /\\/g,
-              "/"
-            )}`
-          : "https://via.placeholder.com/50",
-        rating: 4.5,
-        department: contact.industry || "N/A",
-        company: contact.industry || "N/A",
-        location: contact.location || "N/A",
+        role: contact?.currentRole || "N/A",
+        image: contact?.imageData?.path || "N/A",
+        department: contact?.industry || "N/A",
+        company: contact?.industry || "N/A",
+        location: contact?.location || "N/A",
         completedInterviews: 0,
         nextAvailable: nextSlot
-          ? `${availability.days[0].day}, ${nextSlot.startTime} - ${nextSlot.endTime}`
+          ? `${availability?.days[0].day}, ${nextSlot?.startTime} - ${nextSlot?.endTime}`
           : "N/A",
-        type: contact.isFreelancer === "true" ? "External" : "Internal",
+        type: contact?.isFreelancer === "true" ? "External" : "Internal",
         availability: nextSlot ? "Available" : "Unavailable",
       };
     })
     .filter((interviewer) => interviewer.type === "External");
 
   // Get first 3 interviewers only
-  const displayInterviewers = formattedInterviewers.slice(0, 3);
+  const displayInterviewers = formattedInterviewers?.slice(0, 3);
 
   // Auto-rotate slides
   useEffect(() => {
@@ -109,8 +106,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
             >
               <div className="flex items-start gap-4">
                 <div className="flex flex-col items-center gap-2">
-                  {interviewer.image &&
-                  interviewer.image !== "https://via.placeholder.com/50" ? (
+                  {interviewer.image && interviewer.image ? (
                     <img
                       src={interviewer.image}
                       alt={interviewer.name}
@@ -119,8 +115,8 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
                       <span className="text-white font-semibold text-lg">
-                        {interviewer.name.split(" ")[1]?.[0]?.toUpperCase() ||
-                          interviewer.name.split(" ")[0]?.[0]?.toUpperCase()}
+                        {interviewer?.name.split(" ")[1]?.[0]?.toUpperCase() ||
+                          interviewer?.name.split(" ")[0]?.[0]?.toUpperCase()}
                       </span>
                     </div>
                   )}
@@ -139,10 +135,10 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <h3 className="text-sm font-semibold text-gray-900 truncate">
-                        {interviewer.name}
+                        {interviewer?.name}
                       </h3>
                       <p className="text-xs text-gray-600">
-                        {interviewer.role}
+                        {interviewer?.role}
                       </p>
                     </div>
                     <div className="flex items-center space-x-1">
@@ -151,7 +147,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                         className="text-yellow-400 fill-yellow-400"
                       />
                       <span className="text-sm text-gray-600">
-                        {interviewer.rating}
+                        {interviewer?.rating}
                       </span>
                     </div>
                   </div>
@@ -160,34 +156,34 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                     <div className="flex items-center space-x-[2px] text-xs text-gray-500">
                       <Building size={14} />
                       <span className="truncate block max-w-[120px]">
-                        {interviewer.department || interviewer.company}
+                        {interviewer?.department || interviewer?.company}
                       </span>
                     </div>
                     <div className="flex items-center space-x-[2px] text-xs text-gray-500 -ml-6">
                       <MapPin size={14} />
-                      <span>{interviewer.location}</span>
+                      <span>{interviewer?.location}</span>
                     </div>
                     <div className="flex items-center space-x-[2px] text-xs text-gray-500">
                       <Briefcase size={14} />
-                      <span>{interviewer.completedInterviews} Interviews</span>
+                      <span>{interviewer?.completedInterviews} Interviews</span>
                     </div>
                     <div className="flex items-center space-x-[2px] text-xs text-gray-500 -ml-6">
                       <Calendar size={14} />
                       <span>
-                        {interviewer.nextAvailable === "N/A" ? (
+                        {interviewer?.nextAvailable === "N/A" ? (
                           "N/A"
                         ) : (
                           <>
-                            {interviewer.nextAvailable
-                              .split(",")[0]
-                              .trim()
-                              .substring(0, 3)}
+                            {interviewer?.nextAvailable
+                              ?.split(",")[0]
+                              ?.trim()
+                              ?.substring(0, 3)}
                             ,&nbsp;
-                            {interviewer.nextAvailable
-                              .split(",")[1]
-                              .split("-")[0]
-                              .trim()}
-                            -{interviewer.nextAvailable.split("-")[1].trim()}
+                            {interviewer?.nextAvailable
+                              ?.split(",")[1]
+                              ?.split("-")[0]
+                              ?.trim()}
+                            -{interviewer?.nextAvailable?.split("-")[1]?.trim()}
                           </>
                         )}
                       </span>
@@ -197,13 +193,13 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                   <div className="flex items-center justify-between">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
-                        interviewer.availability === "Available"
+                        interviewer?.availability === "Available"
                           ? "bg-green-100 text-green-600"
                           : "bg-yellow-100 text-yellow-600"
                       }`}
                     >
                       <CheckCircle size={14} className="mr-1" />
-                      {interviewer.availability}
+                      {interviewer?.availability}
                     </span>
                     {/* <div className="flex items-center space-x-2">
                       <button className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-300">
@@ -222,9 +218,9 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
       </div>
 
       {/* Navigation dots */}
-      {displayInterviewers.length > 1 && (
+      {displayInterviewers?.length > 1 && (
         <div className="flex justify-center mt-4 space-x-2">
-          {displayInterviewers.map((_, index) => (
+          {displayInterviewers?.map((_, index) => (
             <button
               key={index}
               onClick={() => {

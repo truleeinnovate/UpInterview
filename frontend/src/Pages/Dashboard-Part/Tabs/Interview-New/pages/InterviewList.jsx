@@ -63,7 +63,7 @@ function InterviewList() {
   const { 
     interviewData,
     total,
-    currentPage: serverCurrentPage,
+    // currentPage: currentPage + 1,
     totalPages: serverTotalPages,
     isLoading, deleteInterviewMutation } = useInterviews(
       {
@@ -365,6 +365,10 @@ function InterviewList() {
     setCurrentPage(0);
   };
   console.log("interviewData",interviewData);
+  console.log("total",total);
+  console.log("currentPage",currentPage);
+  // console.log("totalPages",totalPages);
+  console.log("isLoading",isLoading);
   
 
   const handleFilterIconClick = () => {
@@ -544,7 +548,8 @@ function InterviewList() {
 
   // const totalPages = Math.ceil(interviewData?.length / rowsPerPage);
   // Use server-side pagination values
-const totalPages = serverTotalPages || 1;
+// const totalPages = serverTotalPages || 1;
+  const totalPages = Math.ceil(total / rowsPerPage);
   // const nextPage = () => {
   //   if (currentPage < totalPages - 1) {
   //     setCurrentPage((prev) => prev + 1);
