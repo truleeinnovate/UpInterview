@@ -179,7 +179,7 @@ const MainContent = () => {
             <div className="w-full px-4 py-4">
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-4 py-6 h-[calc(100vh-200px)] overflow-y-auto">
                 {/* Simulate sections */}
-                <div className="flex w-full justify-between">
+                <div className="flex w-full justify-between mb-6">
                   <h3 className="text-2xl font-bold text-custom-blue sm:text-lg">
                     Interview Process
                   </h3>
@@ -187,8 +187,54 @@ const MainContent = () => {
                     Add Interview
                   </button>
                 </div>
-                <div className="space-y-4 text-gray-500 text-center mt-16">
-                  Loading...
+                <div className="space-y-4">
+                  {[1, 2].map((_, i) => (
+                    <div
+                      key={i}
+                      className="border border-gray-200 rounded-xl overflow-hidden bg-white"
+                    >
+                      {/* Header shimmer */}
+                      <div className="flex items-center justify-between p-4 bg-gray-50">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-white rounded-lg shadow-sm">
+                            <div className="w-5 h-5 shimmer rounded-md" />
+                          </div>
+                          <div>
+                            <div className="w-32 h-4 shimmer rounded-md mb-1" />
+                            <div className="w-24 h-3 shimmer rounded-md" />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 shimmer rounded-lg" />
+                          <div className="w-8 h-8 shimmer rounded-lg" />
+                        </div>
+                      </div>
+
+                      {/* Expanded section shimmer */}
+                      <div className="p-4 space-y-4">
+                        {[1, 2].map((_, j) => (
+                          <div
+                            key={j}
+                            className="border-l-4 border-gray-200 pl-4 py-2 space-y-2"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-2">
+                                <div className="w-28 h-4 shimmer rounded-md" />
+                                <div className="w-24 h-3 shimmer rounded-md" />
+                              </div>
+                              <div className="text-right space-y-2">
+                                <div className="w-20 h-3 shimmer rounded-md ml-auto" />
+                                <div className="flex items-center gap-2 justify-end">
+                                  <div className="w-16 h-5 shimmer rounded-full" />
+                                  <div className="w-6 h-6 shimmer rounded-lg" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -352,7 +398,7 @@ const MainContent = () => {
                     "px-4 py-2.5 mr-2 font-medium transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap text-sm",
                     activeTab === tab.id
                       ? "border-b-2 border-custom-blue text-custom-blue"
-                      : "text-gray-600 rounded-lg hover:bg-gray-100 shadow-sm"
+                      : "text-gray-600 rounded-lg hover:bg-gray-100"
                   )}
                 >
                   {/* v1.0.0 <------------------------------------------------------- */}
@@ -366,10 +412,10 @@ const MainContent = () => {
           </div>
         </div>
 
-        <main className="flex md:pt-3 h-full bg-gray-50">
+        <main className="flex md:pt-3 bg-gray-50">
           <div className="w-full px-4 py-4">
             {/* Content Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6 h-[calc(100vh-200px)] sm:h-auto overflow-y-auto">
+            <div className="bg-white rounded-lg border border-gray-100 p-3 sm:p-4 md:p-6 h-[calc(100vh-140px)] sm:h-auto overflow-y-auto">
               <div className="relative">
                 {activeTab === "interviews" && (
                   <>

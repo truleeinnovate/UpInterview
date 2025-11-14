@@ -48,7 +48,7 @@ const InputField = ({
         aria-invalid={!!error}
         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
         border ${error ? "border-red-500 focus:ring-red-500 focus:outline-red-300" : "border-gray-300"}
-        focus:outline-none focus:ring-2 ${error ? "" : "focus:ring-custom-blue focus:border-custom-blue"} ${className}`}
+        focus:outline-none focus:ring-0 ${error ? "" : "focus:ring-custom-blue focus:border-custom-blue/70"} ${className}`}
         placeholder={computedPlaceholder}
       />
       {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
