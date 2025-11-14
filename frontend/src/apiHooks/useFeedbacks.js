@@ -7,11 +7,14 @@ import toast from 'react-hot-toast';
 export const useFeedbacks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const hasViewPermission = effectivePermissions?.Feedback?.View;
+  const params = filters;
+
+
 
   return useQuery({
     queryKey: ['feedbacks', filters],
     queryFn: async () => {
-      const data = await fetchFilterData('feedback', effectivePermissions);
+      const data = await fetchFilterData('feedback', effectivePermissions,params);
       return data.reverse();
     },
     enabled: !!hasViewPermission && isInitialized,

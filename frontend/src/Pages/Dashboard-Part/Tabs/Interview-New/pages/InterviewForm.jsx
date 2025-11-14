@@ -154,14 +154,14 @@ const InterviewForm = () => {
 
   useEffect(() => {
     if (isEditing && interview && templatesData.length > 0) {
-      console.log("Interview data:", interview);
+      // console.log("Interview data:", interview);
 
       setCandidateId(interview.candidateId?._id || "");
       setPositionId(interview.positionId?._id || "");
 
       // Fix for template - handle the nested object structure
       if (interview.templateId) {
-        console.log("Template data:", interview.templateId);
+        // console.log("Template data:", interview.templateId);
 
         let templateIdToSet = null;
 
@@ -197,11 +197,11 @@ const InterviewForm = () => {
     }
   }, [isEditing, interview, templatesData]);
 
-  console.log("Render state:", {
-    templateId,
-    templatesDataLength: templatesData?.length,
-    selectedTemplate: templatesData?.find((t) => t._id === templateId)?.title,
-  });
+  // console.log("Render state:", {
+  //   templateId,
+  //   templatesDataLength: templatesData?.length,
+  //   selectedTemplate: templatesData?.find((t) => t._id === templateId)?.title,
+  // });
 
   useEffect(() => {
     if (positionId) {
