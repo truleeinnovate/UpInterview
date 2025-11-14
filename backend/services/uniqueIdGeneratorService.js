@@ -156,6 +156,13 @@ const ENTITY_CONFIG = {
     fieldName: 'interviewTemplateCode',
     maxRetries: 5
   },
+  //loggingServices
+  'ILOG': { 
+    startNumber: 1, 
+    padLength: 5,
+    fieldName: 'logId',
+    maxRetries: 5
+  },
   // Default configuration for custom prefixes
   'DEFAULT': { 
     startNumber: 50001, 
@@ -217,26 +224,27 @@ async function generateUniqueId(
       }
 
       // 3) Rare case: legacy data ahead of counter. Bump counter to current max and retry.
-      const maxExisting = await getMaxExistingNumber(
-        Model,
-        effectiveFieldName,
-        prefix,
-        tenantId,
-        effectiveStartNumber
-      );
+      //  const maxExisting = await getMaxExistingNumber(
+      //   Model,
+      //   effectiveFieldName,
+      //   prefix,
+      //   tenantId,
+      //   effectiveStartNumber
+      // );
 
-      await SequenceCounter.findOneAndUpdate(
-        { key },
-        { $max: { seq: Math.max(maxExisting, nextSeq) } },
-        { upsert: true }
-      );
+      // await SequenceCounter.findOneAndUpdate(
+      //   { key },
+      //   { $max: { seq: Math.max(maxExisting, nextSeq) } },
+      //   { upsert: true }
+      // );
 
-      console.warn(
-        `[UniqueID] Detected existing ${uniqueId} in ${Model.modelName}. Advanced sequence to ${Math.max(
-          maxExisting,
-          nextSeq
-        )} and retrying...`
-      );
+      // console.warn(
+      //   `[UniqueID] Detected existing ${uniqueId} in ${Model.modelName}. Advanced sequence to ${Math.max(
+      //     maxExisting,
+      //     nextSeq
+      //   )} and retrying...`
+      // );
+      continue;
     } catch (error) {
       // For database connection errors, throw immediately
       if (error?.name === 'MongoNetworkError' || error?.name === 'MongoServerError') {
