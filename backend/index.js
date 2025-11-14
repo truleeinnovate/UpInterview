@@ -265,6 +265,8 @@ const rawBodyParser = require("body-parser").raw({ type: "*/*" });
 // Raw body parser for webhook endpoints
 app.use((req, res, next) => {
     if (
+        req.originalUrl === "/payment-webhook" ||
+        req.path === "/payment-webhook" ||
         req.originalUrl === "/payment/webhook" ||
         req.path === "/payment/webhook"
     ) {

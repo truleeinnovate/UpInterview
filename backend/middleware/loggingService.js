@@ -23,13 +23,11 @@ exports.integrationLoggingMiddleware = async (req, res, next) => {
 
     // v1.0.0 <---------------------------------------------------------------
     // Generate custom logId (INTG-00001, INTG-00002, ...)
-    let nextLogId = await generateUniqueId('ILOG', InternalLog, 'logId');
-    
     // v1.0.0 --------------------------------------------------------------->
 
     // Override res.json to ensure we only log once
     const originalJson = res.json;
-    res.json = function (body) {
+    res.json = async function (body) {
         if (res.locals.shouldLog) {
             res.locals.shouldLog = false; // Prevent further logging
 
@@ -37,7 +35,7 @@ exports.integrationLoggingMiddleware = async (req, res, next) => {
 
             const logDetails = {
                 // v1.0.0 <---------------------------------------------------------------
-                logId: nextLogId,
+                logId: await generateUniqueId('ILOG', InternalLog, 'logId'),
                 // v1.0.0 --------------------------------------------------------------->
                 tenantId: '',
                 ownerId: '',
@@ -65,7 +63,7 @@ exports.integrationLoggingMiddleware = async (req, res, next) => {
             // Create log asynchronously
             internalLogController.createLog(logDetails)
                 // .then(log => console.log('Log created:', log.logId))
-                // .catch(error => console.error('Error creating log:', error.message));
+                .catch(error => console.error('Error creating log:', error.message));
         }
 
         return originalJson.call(this, body);
@@ -133,17 +131,14 @@ exports.internalLoggingMiddleware = async (req, res, next) => {
 
     // v1.0.0 <---------------------------------------------------------------
     // Generate custom logId (ILOG-00001, ILOG-00002, ...)
-    
-    let nextLogId = await generateUniqueId('ILOG', InternalLog, 'logId');
-    
     // v1.0.0 --------------------------------------------------------------->
-    res.json = function (body) {
+    res.json = async function (body) {
         const logData = res.locals.logData;
         if (logData) {
             const logDetails = {
                 ...logData,
                 // v1.0.0 <---------------------------------------------------------------
-                logId: nextLogId,
+                logId: await generateUniqueId('ILOG', InternalLog, 'logId'),
                 // v1.0.0 --------------------------------------------------------------->
                 executionTime: `${Date.now() - startTime}ms`,
                 requestEndPoint: req.originalUrl,
@@ -166,7 +161,7 @@ exports.internalLoggingMiddleware = async (req, res, next) => {
             // Log details
             internalLogController.createLog(logDetails)
                 // .then(() => console.log('Log created:', logDetails))
-                // .catch((error) => console.error('Error creating log:', error.message));
+                .catch((error) => console.error('Error creating log:', error.message));
         }
 
         return originalJson.call(this, body);

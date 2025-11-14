@@ -943,7 +943,7 @@ async function handleInterviewFiltering(options) {
         path: 'templateId',
         model: 'InterviewTemplate'
       })
-      .sort({ createdAt: -1 })
+      .sort({ _id: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .lean();
