@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Power, PowerOff } from "lucide-react";
 import { createPortal } from "react-dom";
+import InputField from "../../../../../Components/FormFields/InputField";
 import { config } from "../../../../../config";
 import { getAuthToken } from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 
@@ -549,46 +550,9 @@ const fetchIntegrations = async () => {
                   </div>
 
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Platform Template (Optional)
-                    </label>
-                    <select
-                      value={formData.platformTemplate || ""}
-                      onChange={(e) =>
-                        handlePlatformTemplateChange(e.target.value)
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                    >
-                      <option value="">Select a platform template...</option>
-                      <optgroup label="Enterprise Platforms">
-                        <option value="sap_successfactors">
-                          SAP SuccessFactors
-                        </option>
-                        <option value="workday">Workday</option>
-                        <option value="adp">ADP Workforce Now</option>
-                        <option value="ultipro">UltiPro</option>
-                      </optgroup>
-                      <optgroup label="Modern ATS Platforms">
-                        <option value="greenhouse">Greenhouse</option>
-                        <option value="lever">Lever</option>
-                        <option value="smartrecruiters">SmartRecruiters</option>
-                        <option value="zoho_recruit">Zoho Recruit</option>
-                        <option value="bamboohr">BambooHR</option>
-                        <option value="icims">iCIMS</option>
-                      </optgroup>
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Select a platform to automatically configure
-                      authentication and recommended events
-                    </p>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name
-                    </label>
-                    <input
-                      type="text"
+                    <InputField
+                      label="Name"
+                      name="name"
                       value={formData.name}
                       onChange={(e) =>
                         setFormData((prev) => ({
@@ -596,18 +560,15 @@ const fetchIntegrations = async () => {
                           name: e.target.value,
                         }))
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                       placeholder="e.g., Acme HRMS Integration"
                       required
                     />
                   </div>
 
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Organization
-                    </label>
-                    <input
-                      type="text"
+                    <InputField
+                      label="Organization"
+                      name="organization"
                       value={formData.organization}
                       onChange={(e) =>
                         setFormData((prev) => ({
@@ -615,7 +576,6 @@ const fetchIntegrations = async () => {
                           organization: e.target.value,
                         }))
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                       placeholder="e.g., Acme Corp"
                       required
                     />
