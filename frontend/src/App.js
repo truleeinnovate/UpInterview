@@ -1384,6 +1384,7 @@ const App = () => {
             "/",
             "/select-profession",
             "/create-profile",
+            "/subscription-plans",
             "/organization/signup",
             "/organization-login",
             "/individual-login",
