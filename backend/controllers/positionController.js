@@ -142,7 +142,7 @@ const createPosition = async (req, res) => {
       message: `Position was created successfully`,
     };
 
-    console.log("feedData", feedData);
+
 
 
 
@@ -186,7 +186,7 @@ const updatePosition = async (req, res) => {
 
   const positionId = req.params.id;
   const { tenantId, ownerId, ...updateFields } = req.body;
-  console.log("updateFields", updateFields);
+
 
 
   // Validate incoming PATCH data
@@ -298,7 +298,7 @@ const updatePosition = async (req, res) => {
 
     // If no changes detected, return early without setting any log/feed data
     if (changes.length === 0) {
-      console.log("✅ No actual changes detected");
+  
       return res.status(200).json({
         status: "no_changes",
         message: "No changes detected, position details remain the same",
@@ -306,12 +306,11 @@ const updatePosition = async (req, res) => {
       });
     }
 
-    console.log("📊 Actual changes detected:", changes.length);
-    console.log("Changes:", changes);
 
-    for (const change of changes) {
-      console.log("Change: Data", change);
-    }
+
+    // for (const change of changes) {
+    //   console.log("Change: Data", change);
+    // }
 
     const updatedPosition = await Position.findByIdAndUpdate(
       positionId,
@@ -739,7 +738,6 @@ const saveInterviewRoundPosition = async (req, res) => {
   try {
     const { positionId, round, roundId } = req.body;
 
-    console.log("round round", round);
 
     //res.locals.loggedByController = true;
     //console.log("effectivePermissions",res.locals?.effectivePermissions)
@@ -842,8 +840,7 @@ const saveInterviewRoundPosition = async (req, res) => {
         r.roundTitle === newRound.roundTitle
     );
 
-    console.log("round.savedRound", savedRound);
-    console.log("round.ownerId", req.body.ownerId);
+    
 
     // Feed and log data
     res.locals.feedData = {
@@ -1183,66 +1180,53 @@ const updateInterviewRound = async (req, res) => {
   res.locals.processName = 'Update Interview Round';
 
   try {
-    console.log("=== PATCH /positions/:positionId/rounds/:roundId called ===");
-    console.log("Request received at:", new Date().toISOString());
-
+   
     // Log request parameters
     const { positionId: rawPositionId, roundId: rawRoundId } = req.params;
     const { tenantId, ownerId, round: updates } = req.body;
 
-    console.log("📍 Request Parameters:");
-    console.log("  - positionId:", rawPositionId);
-    console.log("  - roundId:", rawRoundId);
-
-    console.log("📥 Incoming Updates from Request Body:");
-    console.log("  - updates object:", JSON.stringify(updates, null, 2));
-
+ 
     // ---------- Validate ObjectId ----------
-    console.log("🔍 Validating ObjectIds...");
+   
     if (!mongoose.Types.ObjectId.isValid(rawPositionId)) {
       console.log("❌ Invalid Position ID:", rawPositionId);
       return res.status(400).json({ message: "Invalid Position ID" });
     }
 
     if (!mongoose.Types.ObjectId.isValid(rawRoundId)) {
-      console.log("❌ Invalid Round ID:", rawRoundId);
+      // console.log("❌ Invalid Round ID:", rawRoundId);
       return res.status(400).json({ message: "Invalid Round ID" });
     }
-    console.log("✅ ObjectIds validated successfully");
+
 
     // ---------- Fetch Position ----------
-    console.log("📋 Fetching position from database...");
+   
     const position = await Position.findById(rawPositionId);
     if (!position) {
-      console.log("❌ Position not found:", rawPositionId);
+     
       return res.status(404).json({ message: "Position not found." });
     }
-    console.log("✅ Position found:", position._id);
+  
 
     // ---------- Fetch Round ----------
-    console.log("📋 Fetching round from position...");
+  
     const round = position.rounds.id(rawRoundId);
     if (!round) {
       console.log("❌ Round not found:", rawRoundId);
       return res.status(404).json({ message: "Round not found." });
     }
-    console.log("✅ Round found:", round._id);
-    console.log("📊 Current round data:", JSON.stringify(round.toObject(), null, 2));
-
+   
     // ---------- Handle assessment rounds ----------
-    console.log("🔍 Checking for assessment round updates...");
+    
     if (updates.assessmentId) {
-      console.log("🎯 Assessment round detected - clearing interviewer fields");
-      console.log("📝 Before clearing - interviewerType:", round.interviewerType);
-
+     
       updates.interviewerType = '';
       updates.interviewerGroupId = '';
       updates.interviewerViewType = '';
       updates.selectedInterviewersType = '';
       updates.interviewers = [];
 
-      console.log("📝 After clearing - interviewerType:", updates.interviewerType);
-
+    
       if (updates.roundTitle && updates.roundTitle.toLowerCase() !== "assessment") {
         console.log("🔄 Non-assessment round detected - resetting assessmentId");
         updates.assessmentId = null;
@@ -1250,17 +1234,14 @@ const updateInterviewRound = async (req, res) => {
     }
 
     // ---------- Handle interviewer type transitions ----------
-    console.log("🔍 Checking for interviewer type transitions...");
+   
     if (!updates.assessmentId) {
       if (updates.interviewerType && updates.interviewerType !== round.interviewerType) {
-        console.log(`🔄 Changing interviewerType from '${round.interviewerType}' to '${updates.interviewerType}'`);
-
+      
         if (updates.interviewerType === 'Internal') {
-          console.log("🏢 Internal interviewer type - clearing selectedInterviewersType");
           updates.selectedInterviewersType = '';
         } else if (updates.interviewerType === 'External') {
-          console.log("🌐 External interviewer type - clearing group and interviewers");
-          updates.interviewerGroupId = '';
+        updates.interviewerGroupId = '';
           updates.interviewers = [];
         }
       } else {
@@ -1269,10 +1250,9 @@ const updateInterviewRound = async (req, res) => {
     }
 
     // ---------- Validate Updates ----------
-    console.log("🔍 Validating update data...");
+   
     const roundObjectForValidation = { ...updates };
-    console.log("📋 Data being validated:", JSON.stringify(roundObjectForValidation, null, 2));
-
+   
     const { error } = validateRoundPatchData.validate(roundObjectForValidation, { abortEarly: false });
     if (error) {
       const errors = {};
@@ -1282,38 +1262,32 @@ const updateInterviewRound = async (req, res) => {
       console.log("❌ Validation errors:", errors);
       return res.status(400).json({ status: "error", errors });
     }
-    console.log("✅ Validation passed");
+    
 
     // ---------- Apply Updates ----------
-    console.log("🔄 Applying updates to round...");
-    console.log("📊 Current round state before updates:", JSON.stringify(round.toObject(), null, 2));
-
+  
     // Track changes for logging and feed
     const changes = [];
 
     Object.keys(updates).forEach((key) => {
-      console.log(`   Processing field: ${key}`);
-
+   
       const oldValue = round[key];
       let newValue = updates[key];
 
       if (key === "assessmentId") {
         if (updates.assessmentId) {
-          console.log(`   ↳ Setting assessmentId to ObjectId: ${updates.assessmentId}`);
-          newValue = new mongoose.Types.ObjectId(updates.assessmentId);
+        newValue = new mongoose.Types.ObjectId(updates.assessmentId);
           round[key] = newValue;
         } else {
-          console.log(`   ↳ Clearing assessmentId`);
+      
           newValue = null;
           round[key] = null;
         }
       } else if (key === "interviewers" && Array.isArray(updates.interviewers)) {
-        console.log(`   ↳ Setting interviewers array with ${updates.interviewers.length} items`);
-        newValue = updates.interviewers.map((id) => new mongoose.Types.ObjectId(id));
+       newValue = updates.interviewers.map((id) => new mongoose.Types.ObjectId(id));
         round[key] = newValue;
       } else {
-        console.log(`   ↳ Setting ${key} from '${round[key]}' to '${updates[key]}'`);
-        round[key] = newValue;
+      round[key] = newValue;
       }
 
       // Track changes for logging and feed
@@ -1326,12 +1300,10 @@ const updateInterviewRound = async (req, res) => {
       }
     });
 
-    console.log("📊 Round state after updates:", JSON.stringify(round.toObject(), null, 2));
-
+   
     // If no changes detected, return early WITHOUT setting feed/log data
     if (changes.length === 0) {
-      console.log("✅ No changes detected, returning without feed/log data");
-      return res.status(200).json({
+    return res.status(200).json({
         status: 'no_changes',
         message: 'No changes detected, round details remain the same',
         data: round,
@@ -1340,27 +1312,20 @@ const updateInterviewRound = async (req, res) => {
 
     // ---------- Reorder Rounds if Sequence Changed ----------
     if (updates.sequence !== undefined && updates.sequence !== round.sequence) {
-      console.log(`🔄 Reordering rounds - moving to sequence ${updates.sequence}`);
-      console.log(`   Current sequence: ${round.sequence}`);
-
+    
       position.rounds = position.rounds.filter((r) => !r._id.equals(rawRoundId));
       const desiredIndex = Math.max(updates.sequence - 1, 0);
       position.rounds.splice(desiredIndex, 0, round);
 
       position.rounds.forEach((r, idx) => {
-        console.log(`   Setting round ${r._id} sequence from ${r.sequence} to ${idx + 1}`);
-        r.sequence = idx + 1;
+      r.sequence = idx + 1;
       });
     }
 
     // ---------- Save Position ----------
-    console.log("💾 Saving position to database...");
+  
     await position.save();
-    console.log("✅ Round updated successfully:", round._id);
-    console.log("📊 Final round data:", JSON.stringify(round.toObject(), null, 2));
-
-    console.log("📋 Changes detected:", changes.length);
-    console.log("Changes:", changes);
+   
 
     // ONLY set feedData and logData when there are actual changes
     res.locals.feedData = {

@@ -49,5 +49,7 @@ const TicketSchema = new mongoose.Schema(
 // Add indexes for createdAt and updatedAt
 TicketSchema.index({ createdAt: 1 }); // Index for ascending order
 TicketSchema.index({ updatedAt: 1 }); // Index for ascending order
+TicketSchema.index({ tenantId: 1 }); // Add index for better performance
+TicketSchema.index({ ownerId: 1 }); // Add index for better performance
 
 module.exports = mongoose.model("SupportUser", TicketSchema);

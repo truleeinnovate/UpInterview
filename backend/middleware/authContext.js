@@ -104,7 +104,7 @@ const authContextMiddleware = (req, res, next) => {
       impersonationToken,
     };
 
-    console.log("res.locals.auth", res.locals.auth);
+    // console.log("res.locals.auth", res.locals.auth);
 
     // -----------------------------------------------------------------
     // 8. CONTINUE

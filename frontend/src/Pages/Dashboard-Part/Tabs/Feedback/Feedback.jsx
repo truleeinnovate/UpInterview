@@ -44,19 +44,15 @@ const Feedback = () => {
   const navigate = useNavigate();
   useScrollLock(true);
   const { interviewData, isLoading: interviewsLoading } = useInterviews();
-  const {
-    data: feedbacksData,
-    isLoading: feedbacksLoading,
-    error: feedbacksError,
-  } = useFeedbacks();
+ 
 
-  console.log("[Feedback] Debug:", {
-    interviewData: !!interviewData,
-    feedbacksData: !!feedbacksData,
-    feedbacksLoading,
-    feedbacksError: !!feedbacksError,
-    feedbacksDataLength: feedbacksData?.length || 0,
-  });
+  // console.log("[Feedback] Debug:", {
+  //   interviewData: !!interviewData,
+  //   feedbacksData: !!feedbacksData,
+  //   feedbacksLoading,
+  //   feedbacksError: !!feedbacksError,
+  //   feedbacksDataLength: feedbacksData?.length || 0,
+  // });
   // ------------------------------v1.0.3 >
 
   const authToken = Cookies.get("authToken");
@@ -101,18 +97,44 @@ const Feedback = () => {
   const [isInterviewDateOpen, setIsInterviewDateOpen] = useState(false);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
   // ------------------------------v1.0.3 >
+  // State for filters and pagination
+  const [filters, setFilters] = useState({
+    page: 0,
+    limit: 10,
+    search: '',
+    status: [],
+    positions: [],
+    modes: [],
+    interviewers: [],
+    recommendations: [],
+    ratingMin: '',
+    ratingMax: '',
+    interviewDate: ''
+  });
+
+ const {
+    data: feedbacksResponse,
+    isLoading: feedbacksLoading,
+    error: feedbacksError,
+  } = useFeedbacks(filters);
+
   // Use data from the hook
-  const feedbacks = feedbacksData || [];
+  // const feedbacks = feedbacksData || [];
+   // Extract data from response
+  const feedbacks = feedbacksResponse?.feedbacks || [];
+  const paginationInfo = feedbacksResponse?.pagination || {
+    currentPage: 0,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10
+  };
   const loading = feedbacksLoading;
   const error = feedbacksError;
   // Removed modal-related state variables as modal is now in separate component
 
   // Update filtered feedbacks when feedbacks data changes
   useEffect(() => {
-    console.log("[Feedback] useEffect - feedbacks changed:", {
-      feedbacksLength: feedbacks.length,
-      currentFilteredLength: filteredFeedbacks.length,
-    });
+   
 
     // Only update if the arrays are actually different
     if (
@@ -139,6 +161,27 @@ const Feedback = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+   // Update filters when search query changes (with debounce)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setFilters(prev => ({
+        ...prev,
+        search: searchQuery,
+        page: 0 // Reset to first page when searching
+      }));
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // Update current page in filters
+  useEffect(() => {
+    setFilters(prev => ({
+      ...prev,
+      page: paginationInfo.currentPage
+    }));
+  }, [paginationInfo.currentPage]);
 
   // Sync filter states when popup opens
   useEffect(() => {
@@ -234,6 +277,21 @@ const Feedback = () => {
     setSelectedRecommendations(tempSelectedRecommendations);
     setSelectedRating(tempRatingRange);
     setSelectedInterviewDate(tempInterviewDatePreset);
+    
+     // Update the API filters
+    setFilters(prev => ({
+      ...prev,
+      status: tempSelectedStatus,
+      positions: tempSelectedPositions,
+      modes: tempSelectedModes,
+      interviewers: tempSelectedInterviewers,
+      recommendations: tempSelectedRecommendations,
+      ratingMin: tempRatingRange.min,
+      ratingMax: tempRatingRange.max,
+      interviewDate: tempInterviewDatePreset,
+      page: 0 // Reset to first page when applying filters
+    }));
+    
     setIsFilterActive(
       tempSelectedStatus.length > 0 ||
         tempSelectedPositions.length > 0 ||
@@ -245,95 +303,96 @@ const Feedback = () => {
         tempInterviewDatePreset !== ""
     );
     setFilterPopupOpen(false);
+     setFilteredFeedbacks(feedbacks);
 
-    const filtered = feedbacks.filter((f) => {
-      // Status filter
-      const matchesStatus =
-        tempSelectedStatus.length === 0 ||
-        tempSelectedStatus.includes(f.status || "");
+    // const filtered = feedbacks.filter((f) => {
+    //   // Status filter
+    //   const matchesStatus =
+    //     tempSelectedStatus.length === 0 ||
+    //     tempSelectedStatus.includes(f.status || "");
 
-      // Position filter
-      const matchesPosition =
-        tempSelectedPositions.length === 0 ||
-        (f.positionId && tempSelectedPositions.includes(f.positionId._id));
+    //   // Position filter
+    //   const matchesPosition =
+    //     tempSelectedPositions.length === 0 ||
+    //     (f.positionId && tempSelectedPositions.includes(f.positionId._id));
 
-      // Interview Mode filter
-      const matchesMode =
-        tempSelectedModes.length === 0 ||
-        (f.interviewRoundId?.interviewMode &&
-          tempSelectedModes.includes(f.interviewRoundId.interviewMode));
+    //   // Interview Mode filter
+    //   const matchesMode =
+    //     tempSelectedModes.length === 0 ||
+    //     (f.interviewRoundId?.interviewMode &&
+    //       tempSelectedModes.includes(f.interviewRoundId.interviewMode));
 
-      // Interviewer filter
-      const matchesInterviewer =
-        tempSelectedInterviewers.length === 0 ||
-        (f.interviewerId &&
-          tempSelectedInterviewers.includes(f.interviewerId._id));
+    //   // Interviewer filter
+    //   const matchesInterviewer =
+    //     tempSelectedInterviewers.length === 0 ||
+    //     (f.interviewerId &&
+    //       tempSelectedInterviewers.includes(f.interviewerId._id));
 
-      // Recommendation filter
-      const matchesRecommendation =
-        tempSelectedRecommendations.length === 0 ||
-        (f.overallImpression?.recommendation &&
-          tempSelectedRecommendations.includes(
-            f.overallImpression.recommendation
-          ));
+    //   // Recommendation filter
+    //   const matchesRecommendation =
+    //     tempSelectedRecommendations.length === 0 ||
+    //     (f.overallImpression?.recommendation &&
+    //       tempSelectedRecommendations.includes(
+    //         f.overallImpression.recommendation
+    //       ));
 
-      // Rating range filter
-      const rating = f.overallImpression?.overallRating || 0;
-      const matchesRating =
-        (tempRatingRange.min === "" || rating >= Number(tempRatingRange.min)) &&
-        (tempRatingRange.max === "" || rating <= Number(tempRatingRange.max));
+    //   // Rating range filter
+    //   const rating = f.overallImpression?.overallRating || 0;
+    //   const matchesRating =
+    //     (tempRatingRange.min === "" || rating >= Number(tempRatingRange.min)) &&
+    //     (tempRatingRange.max === "" || rating <= Number(tempRatingRange.max));
 
-      // Interview date filter
-      const matchesInterviewDate = () => {
-        if (!tempInterviewDatePreset) return true;
-        if (!f.interviewRoundId?.dateTime) return false;
-        const interviewDate = new Date(
-          f.interviewRoundId.dateTime.split(" ")[0]
-        );
-        const now = new Date();
-        const daysDiff = Math.floor(
-          (now - interviewDate) / (1000 * 60 * 60 * 24)
-        );
+    //   // Interview date filter
+    //   const matchesInterviewDate = () => {
+    //     if (!tempInterviewDatePreset) return true;
+    //     if (!f.interviewRoundId?.dateTime) return false;
+    //     const interviewDate = new Date(
+    //       f.interviewRoundId.dateTime.split(" ")[0]
+    //     );
+    //     const now = new Date();
+    //     const daysDiff = Math.floor(
+    //       (now - interviewDate) / (1000 * 60 * 60 * 24)
+    //     );
 
-        switch (tempInterviewDatePreset) {
-          case "last7":
-            return daysDiff <= 7;
-          case "last30":
-            return daysDiff <= 30;
-          case "last90":
-            return daysDiff <= 90;
-          default:
-            return true;
-        }
-      };
+    //     switch (tempInterviewDatePreset) {
+    //       case "last7":
+    //         return daysDiff <= 7;
+    //       case "last30":
+    //         return daysDiff <= 30;
+    //       case "last90":
+    //         return daysDiff <= 90;
+    //       default:
+    //         return true;
+    //     }
+    //   };
 
-      // Search filter
-      const candidateName = f.candidateId
-        ? `${f.candidateId.FirstName || ""} ${f.candidateId.LastName || ""}`
-        : "";
-      const positionTitle = f.positionId?.title || "";
-      const fields = [
-        f.feedbackCode,
-        candidateName,
-        positionTitle,
-        f.status,
-      ].filter(Boolean);
-      const matchesSearch = fields.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    //   // Search filter
+    //   const candidateName = f.candidateId
+    //     ? `${f.candidateId.FirstName || ""} ${f.candidateId.LastName || ""}`
+    //     : "";
+    //   const positionTitle = f.positionId?.title || "";
+    //   const fields = [
+    //     f.feedbackCode,
+    //     candidateName,
+    //     positionTitle,
+    //     f.status,
+    //   ].filter(Boolean);
+    //   const matchesSearch = fields.some((field) =>
+    //     field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+    //   );
 
-      return (
-        matchesStatus &&
-        matchesPosition &&
-        matchesMode &&
-        matchesInterviewer &&
-        matchesRecommendation &&
-        matchesRating &&
-        matchesInterviewDate() &&
-        matchesSearch
-      );
-    });
-    setFilteredFeedbacks(filtered);
+    //   return (
+    //     matchesStatus &&
+    //     matchesPosition &&
+    //     matchesMode &&
+    //     matchesInterviewer &&
+    //     matchesRecommendation &&
+    //     matchesRating &&
+    //     matchesInterviewDate() &&
+    //     matchesSearch
+    //   );
+    // });
+    // setFilteredFeedbacks(filtered);
   };
   // ------------------------------v1.0.3 >
   const handleClearFilters = () => {
@@ -353,6 +412,20 @@ const Feedback = () => {
     setTempInterviewDatePreset("");
     setIsFilterActive(false);
     setFilteredFeedbacks(feedbacks);
+
+     // Clear API filters
+    setFilters(prev => ({
+      ...prev,
+      status: [],
+      positions: [],
+      modes: [],
+      interviewers: [],
+      recommendations: [],
+      ratingMin: "",
+      ratingMax: "",
+      interviewDate: "",
+      page: 0
+    }));
   };
 
   const handleFilterIconClick = () => {
@@ -368,52 +441,71 @@ const Feedback = () => {
     setCurrentPage(0);
     const normalizedQuery = normalizeSpaces(e.target.value);
 
-    const filtered = feedbacks.filter((f) => {
-      // Enhanced search across more fields
-      const candidateName = f.candidateId
-        ? `${f.candidateId.FirstName || ""} ${f.candidateId.LastName || ""}`
-        : "";
-      const candidateEmail = f.candidateId?.Email || "";
-      const positionTitle = f.positionId?.title || "";
-      const positionCompany = f.positionId?.companyname || "";
-      const positionLocation = f.positionId?.Location || "";
-      const interviewerName = f.interviewerId
-        ? `${f.interviewerId.firstName || ""} ${f.interviewerId.lastName || ""}`
-        : "";
-      const interviewMode = f.interviewRoundId?.interviewMode || "";
-      const recommendation = f.overallImpression?.recommendation || "";
+    // const filtered = feedbacks.filter((f) => {
+    //   // Enhanced search across more fields
+    //   const candidateName = f.candidateId
+    //     ? `${f.candidateId.FirstName || ""} ${f.candidateId.LastName || ""}`
+    //     : "";
+    //   const candidateEmail = f.candidateId?.Email || "";
+    //   const positionTitle = f.positionId?.title || "";
+    //   const positionCompany = f.positionId?.companyname || "";
+    //   const positionLocation = f.positionId?.Location || "";
+    //   const interviewerName = f.interviewerId
+    //     ? `${f.interviewerId.firstName || ""} ${f.interviewerId.lastName || ""}`
+    //     : "";
+    //   const interviewMode = f.interviewRoundId?.interviewMode || "";
+    //   const recommendation = f.overallImpression?.recommendation || "";
 
-      const fields = [
-        f.feedbackCode,
-        candidateName,
-        candidateEmail,
-        positionTitle,
-        positionCompany,
-        positionLocation,
-        interviewerName,
-        interviewMode,
-        f.status,
-        recommendation,
-      ].filter(Boolean);
+    //   const fields = [
+    //     f.feedbackCode,
+    //     candidateName,
+    //     candidateEmail,
+    //     positionTitle,
+    //     positionCompany,
+    //     positionLocation,
+    //     interviewerName,
+    //     interviewMode,
+    //     f.status,
+    //     recommendation,
+    //   ].filter(Boolean);
 
-      const matchesSearch =
-        e.target.value === "" ||
-        fields.some((field) =>
-          normalizeSpaces(field).includes(normalizedQuery)
-        );
-      return matchesSearch;
-    });
-    setFilteredFeedbacks(filtered);
+    //   const matchesSearch =
+    //     e.target.value === "" ||
+    //     fields.some((field) =>
+    //       normalizeSpaces(field).includes(normalizedQuery)
+    //     );
+    //   return matchesSearch;
+    // });
+    // setFilteredFeedbacks(filtered);
   };
   // ------------------------------v1.0.3 >
+  // const nextPage = () => {
+  //   setCurrentPage((prev) =>
+  //     Math.min(prev + 1, Math.ceil(filteredFeedbacks.length / rowsPerPage) - 1)
+  //   );
+  // };
+
+  // const prevPage = () => {
+  //   setCurrentPage((prev) => Math.max(prev - 1, 0));
+  // };
+
+   // Pagination handlers
   const nextPage = () => {
-    setCurrentPage((prev) =>
-      Math.min(prev + 1, Math.ceil(filteredFeedbacks.length / rowsPerPage) - 1)
-    );
+    if (paginationInfo.currentPage < paginationInfo.totalPages - 1) {
+      setFilters(prev => ({
+        ...prev,
+        page: prev.page + 1
+      }));
+    }
   };
 
   const prevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 0));
+    if (paginationInfo.currentPage > 0) {
+      setFilters(prev => ({
+        ...prev,
+        page: prev.page - 1
+      }));
+    }
   };
 
   const handleView = (feedback) => {

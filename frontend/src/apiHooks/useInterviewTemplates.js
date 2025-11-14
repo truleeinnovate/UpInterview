@@ -11,7 +11,7 @@ import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
 
-export const useInterviewTemplates = () => {
+export const useInterviewTemplates = (filters = {}) => {
     const queryClient = useQueryClient();
     const { effectivePermissions } = usePermissions();
     const hasViewPermission = effectivePermissions?.InterviewTemplates?.View;
@@ -22,6 +22,16 @@ export const useInterviewTemplates = () => {
     const tenantId = tokenPayload?.tenantId;
     const organization = tokenPayload?.organization;
     const initialLoad = useRef(true);
+    // const params = filters;
+
+      // Build params object with all filters INCLUDING type
+    const params = {
+        ...filters,
+        // Ensure type is explicitly included
+        type: filters.type 
+    };
+
+    console.log("params", params);
 
     const queryParams = useMemo(() => ({
         tenantId,
@@ -31,16 +41,17 @@ export const useInterviewTemplates = () => {
     }), [tenantId, userId, organization, authToken]);
 
     const {
-        data: templatesData = [],
+        data: responseData = {},
         isLoading: isQueryLoading,
         isError,
         error,
     } = useQuery({
-        queryKey: ['interviewTemplates'],
+        queryKey: ['interviewTemplates', filters],
         queryFn: async () => {
-            const data = await fetchFilterData('interviewtemplate'); // <- lowercase to match backend
+            const data = await fetchFilterData('interviewtemplate', params); // <- lowercase to match backend
             // v1.0.1 <------------------------------------------------------
             //   return data.reverse();
+            console.log("interviewTemplates data", data);
             return data;
             // v1.0.1 ------------------------------------------------------>
         },
@@ -48,6 +59,13 @@ export const useInterviewTemplates = () => {
         retry: 1,
         staleTime: 1000 * 60 * 5
     });
+    const templatesData = responseData?.data || [];
+    const totalPages = responseData?.totalPages || 0;
+    const totalCount = responseData?.totalItems || 0;
+    const currentPage = responseData?.currentPage || 1;
+    const itemsPerPage = responseData?.itemsPerPage || 10;
+
+
 
     // Save template mutation
     const saveTemplate = useMutation({
@@ -104,7 +122,7 @@ export const useInterviewTemplates = () => {
     //     },
     // });
 
-   
+
     const addOrUpdateRound = useMutation({
         mutationFn: async ({ id, roundData, roundId, template }) => {
             const headers = { Authorization: `Bearer ${queryParams.authToken}` };
@@ -184,7 +202,7 @@ export const useInterviewTemplates = () => {
             const token = Cookies.get('authToken');
             const tokenPayload = decodeJwt(token);
             const tenantId = tokenPayload?.tenantId;
-            
+
             if (!tenantId) {
                 throw new Error('Tenant ID not found in authentication token');
             }
@@ -237,6 +255,10 @@ export const useInterviewTemplates = () => {
 
     return {
         templatesData,
+        totalPages,
+        totalCount,
+        currentPage,
+        itemsPerPage,
         isLoading,
         isQueryLoading,
         isMutationLoading,

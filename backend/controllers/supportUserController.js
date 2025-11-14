@@ -23,10 +23,10 @@ exports.createTicket = async (req, res) => {
     const {
       issueType,
       description,
-// v1.0.0 <----------------------------------------------------
-      
+      // v1.0.0 <----------------------------------------------------
+
       subject,
-// v1.0.0 --------------------------------------------->
+      // v1.0.0 --------------------------------------------->
 
       status,
       contact,
@@ -43,7 +43,7 @@ exports.createTicket = async (req, res) => {
       return res.status(400).json({ message: "Validation failed", errors });
       //----v1.0.1---->
     }
-    
+
     res.locals.loggedByController = true;
     //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
@@ -78,8 +78,8 @@ exports.createTicket = async (req, res) => {
 
     await supportNotif.notifyOnTicketCreated(ticket);
 
-     // Feed and log data
-     res.locals.feedData = {
+    // Feed and log data
+    res.locals.feedData = {
       tenantId: req.body.tenantId,
       feedType: "info",
       action: {
@@ -131,40 +131,282 @@ exports.createTicket = async (req, res) => {
   }
 };
 
+// exports.getTicket = async (req, res) => {
+//   try {
+
+
+
+//     // res.locals.loggedByController = true;
+//     // //<-----v1.0.1---
+//     // // Permission: Tasks.Create (or super admin override)
+//     // const canCreate =
+//     // await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'View') ||
+//     // await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'View')
+//     // if (!canCreate) {
+//     //   return res.status(403).json({ message: 'Forbidden: missing SupportDesk.View permission' });
+//     // }
+//     //-----v1.0.1--->
+
+//     const tickets = await SupportUser.find().sort({ _id: -1 }).lean();
+//     return res.status(200).send({
+//       success: true,
+//       message: "Tickets retrieved successfully",
+//       tickets,
+//     });
+//   } catch (error) {
+//     console.log("Error retrieving tickets:", error);
+//     return res.status(500).json({
+//       message: "Failed to retrieve tickets",
+//       errors: { general: error.message },
+//     });
+//   }
+// };
+
+
+// Backend API should accept these query parameters:
+// - search: string (search in ticketCode, contact, subject)
+// - status: string[] (multiple status values)
+// - issueType: string[] (multiple issue type values)
+// - priority: string[] (multiple priority values)
+// - createdDate: string ('last7', 'last30')
+// - page: number
+// - limit: number
+// - tenantId: string
+// - userId: string
+// - organization: string
+
+
+
 exports.getTicket = async (req, res) => {
   try {
+    const {
+      search = "",
+      status = [],
+      issueTypes = [],
+      priorities = [],
+      createdDate = "",
+      page = 0,
+      limit = 10,
+      tenantId,
+      organization,
+      userId,
+      userRole,
+      impersonatedUser_roleName,
+    } = req.query;
 
-    // res.locals.loggedByController = true;
-    // //<-----v1.0.1---
-    // // Permission: Tasks.Create (or super admin override)
-    // const canCreate =
-    // await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'View') ||
-    // await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'View')
-    // if (!canCreate) {
-    //   return res.status(403).json({ message: 'Forbidden: missing SupportDesk.View permission' });
-    // }
-    //-----v1.0.1--->
+    const query = {};
 
-    const tickets = await SupportUser.find().sort({ _id: -1 }).lean();
-    return res.status(200).send({
+    /* --------------------------------------------------------------------- */
+    /*  🧠 Role-based filtering                                               */
+    /* --------------------------------------------------------------------- */
+    if (impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team") {
+      // unrestricted
+    } else if (!userRole) {
+      query._id = null;
+    } else if (!organization) {
+      if (userRole === "Admin" && userId) {
+        query.ownerId = userId;
+      }
+    } else {
+      if (userRole === "Admin" && tenantId) {
+        query.tenantId = tenantId;
+      }
+    }
+
+    if (userRole === "Individual" && userId) {
+      query.ownerId = userId;
+    }
+
+    /* --------------------------------------------------------------------- */
+    /*  🔍 Search filter (combined, additive)                                 */
+    /* --------------------------------------------------------------------- */
+    const searchConditions = [];
+    if (search && search.trim() !== "") {
+      const trimmed = search.trim();
+      searchConditions.push({
+        $or: [
+          { ticketCode: { $regex: trimmed, $options: "i" } },
+          { contact: { $regex: trimmed, $options: "i" } },
+          { subject: { $regex: trimmed, $options: "i" } },
+          { issueType: { $regex: trimmed, $options: "i" } },
+          { priority: { $regex: trimmed, $options: "i" } },
+        ],
+      });
+    }
+
+    /* --------------------------------------------------------------------- */
+    /*  🧩 Other filters                                                      */
+    /* --------------------------------------------------------------------- */
+    if (Array.isArray(status) && status.length > 0) {
+      query.status = { $in: status };
+    } else if (typeof status === "string" && status) {
+      query.status = { $in: status.split(",") };
+    }
+
+    if (Array.isArray(issueTypes) && issueTypes.length > 0) {
+      query.issueType = { $in: issueTypes };
+    } else if (typeof issueTypes === "string" && issueTypes) {
+      query.issueType = { $in: issueTypes.split(",") };
+    }
+
+    if (Array.isArray(priorities) && priorities.length > 0) {
+      query.priority = { $in: priorities };
+    } else if (typeof priorities === "string" && priorities) {
+      query.priority = { $in: priorities.split(",") };
+    }
+
+    // 📅 Date filter
+    if (createdDate) {
+      const days = createdDate === "last7" ? 7 : createdDate === "last30" ? 30 : null;
+      if (days) {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+        query.createdAt = { $gte: cutoff };
+      }
+    }
+
+    /* --------------------------------------------------------------------- */
+    /*  ✅ Merge all conditions properly                                      */
+    /* --------------------------------------------------------------------- */
+    let finalQuery = { ...query };
+    if (searchConditions.length > 0) {
+      finalQuery = { $and: [query, ...searchConditions] };
+    }
+
+    // console.log("🚀 Final Ticket Query =>", JSON.stringify(finalQuery, null, 2));
+
+    /* --------------------------------------------------------------------- */
+    /*  🔢 Pagination + Fetch                                                */
+    /* --------------------------------------------------------------------- */
+    const skip = parseInt(page) * parseInt(limit);
+    const tickets = await SupportUser.find(finalQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    const totalCount = await SupportUser.countDocuments(finalQuery);
+
+    return res.status(200).json({
       success: true,
       message: "Tickets retrieved successfully",
       tickets,
+      totalCount,
+      page: parseInt(page),
+      limit: parseInt(limit),
     });
-  } catch (error) {
-    console.log("Error retrieving tickets:", error);
+  } catch (err) {
+    console.error("Error retrieving tickets:", err);
     return res.status(500).json({
+      success: false,
       message: "Failed to retrieve tickets",
-      errors: { general: error.message },
+      error: err.message,
     });
   }
 };
+
+
+
+// exports.getTicket = async (req, res) => {
+//   try {
+//     const {
+//       search,
+//       status,
+//       issueType,
+//       priority,
+//       createdDate,
+//       page = 0,
+//       limit = 10,
+//       tenantId,
+//       userId,
+//       organization
+//     } = req.query;
+
+//     console.log("Received query parameters:", req.query);
+//     let query = {};
+
+//     // Tenant/organization filtering
+//     if (tenantId) {
+//       query.tenantId = tenantId;
+//     }
+//     if (organization) {
+//       query.organization = organization;
+//     }
+
+//     // Search filter
+//     if (search) {
+//       query.$or = [
+//         { ticketCode: { $regex: search, $options: 'i' } },
+//         { contact: { $regex: search, $options: 'i' } },
+//         { subject: { $regex: search, $options: 'i' } }
+//       ];
+//     }
+
+//     // Status filter
+//     if (status) {
+//       const statusArray = typeof status === 'string' ? status.split(',') : Array.isArray(status) ? status : [];
+//       if (statusArray.length > 0) {
+//         query.status = { $in: statusArray };
+//       }
+//     }
+
+//     // Same for issueType and priority
+//     if (issueType) {
+//       const issueTypeArray = typeof issueType === 'string' ? issueType.split(',') : Array.isArray(issueType) ? issueType : [];
+//       if (issueTypeArray.length > 0) {
+//         query.issueType = { $in: issueTypeArray };
+//       }
+//     }
+
+//     if (priority) {
+//       const priorityArray = typeof priority === 'string' ? priority.split(',') : Array.isArray(priority) ? priority : [];
+//       if (priorityArray.length > 0) {
+//         query.priority = { $in: priorityArray };
+//       }
+//     }
+
+//     // Created Date filter
+//     if (createdDate) {
+//       const days = createdDate === 'last7' ? 7 : createdDate === 'last30' ? 30 : null;
+//       if (days) {
+//         const cutoffDate = new Date();
+//         cutoffDate.setDate(cutoffDate.getDate() - days);
+//         query.createdAt = { $gte: cutoffDate };
+//       }
+//     }
+
+//     // Pagination
+//     const skip = parseInt(page) * parseInt(limit);
+//     const tickets = await SupportUser.find(query)
+//       .sort({ _id: -1 })
+//       .skip(skip)
+//       .limit(parseInt(limit))
+//       .lean();
+
+//     const totalCount = await SupportUser.countDocuments(query);
+
+//     return res.status(200).send({
+//       success: true,
+//       message: "Tickets retrieved successfully",
+//       tickets,
+//       totalCount,
+//       page: parseInt(page),
+//       limit: parseInt(limit)
+//     });
+//   } catch (error) {
+//     console.log("Error retrieving tickets:", error);
+//     return res.status(500).json({
+//       message: "Failed to retrieve tickets",
+//       errors: { general: error.message },
+//     });
+//   }
+// };
 
 exports.getTicketBasedonId = async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
-     //<----v1.0.1----
+      //<----v1.0.1----
       return res
         .status(400)
         .json({ message: "Validation failed", errors: { id: "Ticket id is required" } });
@@ -263,7 +505,7 @@ exports.getTicketBasedonId = async (req, res) => {
 //      if (!currentTicket) {
 //        return res.status(404).json({ message: "Ticket not found" });
 //      }
- 
+
 //      // Prepare update data
 //      const updateData = {
 //        issueType: issueType || currentTicket.issueType,
@@ -272,22 +514,22 @@ exports.getTicketBasedonId = async (req, res) => {
 //        assignedTo: assignedTo || currentTicket.assignedTo,
 //        assignedToId: assignedToId || currentTicket.assignedToId,
 //      };
- 
+
 //      // Compare current values with updateFields to identify changes
 //      const changes = Object.entries(updateData)
 //        .filter(([key, newValue]) => {
 //          const oldValue = currentTicket[key];
-         
+
 //          // Handle different data types appropriately
 //          if (Array.isArray(oldValue) && Array.isArray(newValue)) {
 //            return JSON.stringify(oldValue) !== JSON.stringify(newValue);
 //          }
-         
+
 //          // Handle object comparison
 //          if (typeof oldValue === 'object' && typeof newValue === 'object' && oldValue !== null && newValue !== null) {
 //            return JSON.stringify(oldValue) !== JSON.stringify(newValue);
 //          }
-         
+
 //          // Handle primitive values
 //          return oldValue !== newValue;
 //        })
@@ -299,8 +541,8 @@ exports.getTicketBasedonId = async (req, res) => {
 //        console.log("changes", changes);
 //        console.log("changes length",changes.length);
 //        console.log("changes length",currentTicket);
-       
- 
+
+
 //      // Check if there are no changes
 //      if (changes.length === 0) {
 //        return res.status(200).json({
@@ -309,19 +551,19 @@ exports.getTicketBasedonId = async (req, res) => {
 //          data:currentTicket
 //        });
 //      }
- 
+
 //      // Update the ticket
 //      const ticket = await SupportUser.findByIdAndUpdate(
 //        id,
 //        updateData,
 //        { new: true, runValidators: true }
 //      );
- 
+
 //      if (!ticket) {
 //        return res.status(404).json({ message: "Ticket not found" });
 //      }
 //      console.log("changes", changes);
- 
+
 //      // Prepare feed and log data with change history
 //      res.locals.feedData = {
 //        tenantId: currentTicket.tenantId,
@@ -341,7 +583,7 @@ exports.getTicketBasedonId = async (req, res) => {
 //        })),
 //        history: changes,
 //      };
- 
+
 //      res.locals.logData = {
 //        tenantId: currentTicket.tenantId,
 //        ownerId: currentTicket.ownerId,
@@ -352,7 +594,7 @@ exports.getTicketBasedonId = async (req, res) => {
 //        responseBody: ticket,
 //        changes: changes, // Include changes in log data
 //      };
- 
+
 
 //     return res.status(200).send({
 //       status: 'Ticket updated successfully',
@@ -362,7 +604,7 @@ exports.getTicketBasedonId = async (req, res) => {
 //     });
 //   } catch (error) {
 //     console.log(error);
-      
+
 //     // Error logging
 //       res.locals.logData = {
 //         tenantId: req.body.tenantId,
@@ -388,22 +630,22 @@ exports.updateTicketById = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const {ownerId,tenantId, issueType, description, subject, assignedTo, assignedToId } = req.body;
+    const { ownerId, tenantId, issueType, description, subject, assignedTo, assignedToId } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
         .status(400)
         .json({ message: "Validation failed", errors: { id: "Invalid ticket id" } });
     }
-    
+
     const { errors, isValid } = validateUpdateSupportTicket(req.body);
     if (!isValid) {
       return res.status(400).json({ message: "Validation failed", errors });
     }
 
     // console.log("logData", logo);
-    console.log("ownerId",ownerId);
-    console.log("tenantId",tenantId);
+    console.log("ownerId", ownerId);
+    console.log("tenantId", tenantId);
 
     // const canCreate =
     //   await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Edit') ||
@@ -428,15 +670,15 @@ exports.updateTicketById = async (req, res) => {
     const changes = Object.entries(updateData)
       .filter(([key, newValue]) => {
         const oldValue = currentTicket[key];
-        
+
         if (Array.isArray(oldValue) && Array.isArray(newValue)) {
           return JSON.stringify(oldValue) !== JSON.stringify(newValue);
         }
-        
+
         if (typeof oldValue === 'object' && typeof newValue === 'object' && oldValue !== null && newValue !== null) {
           return JSON.stringify(oldValue) !== JSON.stringify(newValue);
         }
-        
+
         return oldValue !== newValue;
       })
       .map(([key, newValue]) => ({
@@ -444,9 +686,9 @@ exports.updateTicketById = async (req, res) => {
         oldValue: currentTicket[key],
         newValue,
       }));
-      console.log("changes", changes);
-      console.log("changes length", changes.length);
-      
+    console.log("changes", changes);
+    console.log("changes length", changes.length);
+
 
     // FIX: Return the current ticket data when no changes are made
     if (changes.length === 0) {
@@ -459,7 +701,7 @@ exports.updateTicketById = async (req, res) => {
     }
     console.log("changes", changes);
     console.log("changes length", changes.length);
-    
+
 
     const ticket = await SupportUser.findByIdAndUpdate(
       id,
@@ -471,7 +713,7 @@ exports.updateTicketById = async (req, res) => {
       return res.status(404).json({ message: "Ticket not found" });
     }
 
-     res.locals.feedData = {
+    res.locals.feedData = {
       tenantId: tenantId,
       feedType: "update",
       action: {
@@ -501,8 +743,8 @@ exports.updateTicketById = async (req, res) => {
       responseBody: ticket,
       changes: changes,
     };
-    
-    
+
+
 
     return res.status(200).send({
       status: 'Ticket updated successfully',
@@ -512,7 +754,7 @@ exports.updateTicketById = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-      
+
     res.locals.logData = {
       tenantId: req.body.tenantId,
       ownerId: req.body.ownerId,
@@ -534,7 +776,7 @@ exports.updateSupportTicket = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, comment, userComment, user, updatedByUserId, notifyUser } = req.body;
-    
+
     //<----v1.0.1----
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
@@ -587,7 +829,7 @@ exports.updateSupportTicket = async (req, res) => {
       nextStatus: updatedTicket.status,
       ticket: updatedTicket,
     });
-    
+
     return res.status(200).json(updatedTicket);
   } catch (error) {
     console.error("Error updating ticket:", error);

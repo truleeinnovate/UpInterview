@@ -65,10 +65,21 @@ const validateRoundData = Joi.object({
     }),
   }),
 
-  interviewerType: Joi.string().when("roundTitle", {
-    is: "Assessment",
-    then: Joi.optional(),
-    otherwise: Joi.string().required().messages({
+  // interviewerType: Joi.string().when("roundTitle", {
+  //   is: "Assessment",
+  //   then: Joi.optional(),
+  //   otherwise: Joi.string().required().messages({
+  //     "string.empty": "Interviewer type is required",
+  //     "any.required": "Interviewer type is required",
+  //   }),
+  // }),
+
+  interviewerType: Joi.string()
+  .allow(null, '')
+  .optional()
+  .when("roundTitle", {
+    is: Joi.exist().not("Assessment"),
+    then: Joi.string().required().messages({
       "string.empty": "Interviewer type is required",
       "any.required": "Interviewer type is required",
     }),

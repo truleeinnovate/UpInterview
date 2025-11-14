@@ -393,9 +393,8 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
                     ownerId,
                 });
 
-                console.log("response", response);
-                // console.log("initialFormState---",  onClose);
-                // console.log("FeedbackIssueType---",  FeedbackIssueType);
+                
+                
 
                 // notify.success(
                 //   response.status === "Ticket created successfully"
@@ -403,7 +402,25 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
                 //    : "Ticket Updated successfully"
                 // );
 
-                //  console.log("response", response);
+              
+
+                if (
+                    response.status === "Ticket created successfully" ||
+                    response.status === "Ticket updated successfully" ||
+                    response.status === "no_changes"
+                ) {
+                    // setTimeout(() => {
+                        if (onClose) {
+                            onClose();
+                        } else {
+                            navigate(-1);
+                        }
+                    // });
+
+                 
+                    setFormState(initialFormState);
+
+                          //  console.log("response", response);
                 if (response.status === "Ticket created successfully") {
                     notify.success("Ticket Created successfully");
                 } else if (
@@ -415,43 +432,9 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
                     // Handle cases where the API returns a non-success status
                     throw new Error(response.message || "Failed to save ticket");
                 }
-
-                if (
-                    response.status === "Ticket created successfully" ||
-                    response.status === "Ticket updated successfully" ||
-                    response.status === "no_changes"
-                ) {
-                    setTimeout(() => {
-                        if (onClose) {
-                            onClose();
-                        } else {
-                            navigate(-1);
-                        }
-                    }, 1000);
-
-                    //  Close immediately
-                    // if (onClose) {
-                    //   onClose();
-                    // } else {
-                    //   navigate(-1);
-                    // }
-                    setFormState(initialFormState);
                 }
 
-                //  console.log("response", response);
-                // toast.success(
-                //   response.status === "Ticket created successfully"
-                //     ? "Ticket Created successfully"
-                //    : "Ticket Updated successfully"
-                // );
-
-                //  <---------------- added by ranjith
-
-                // if (onClose) {
-                //   onClose(); // Call the onClose prop if provided
-                // } else {
-                //   navigate("/support-desk"); // Fallback to navigation
-                // }
+            
 
                 // ----------------------->
                 // navigate("/support-desk");

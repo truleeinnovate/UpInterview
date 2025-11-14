@@ -71,12 +71,12 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
     refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
-  
+  // console.log("responseData", responseData);
   // Extract data and total from response
   const interviewData = responseData?.data?.data || [];
-  const total = responseData.total || 0;
-  const currentPage = responseData.page || 1;
-  const totalPages = responseData.totalPages || 1;
+  const total = responseData?.data?.total || 0;
+  const currentPage = responseData?.data?.page || 1;
+  const totalPages = responseData?.data?.totalPages || 1;
 
   console.log("interviewData", interviewData);
   console.log("total", total);
@@ -127,10 +127,10 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
     },
     onSuccess: (data) => {
       // Optimistically update the cache
-      queryClient.setQueryData(['interviews', params], (oldData) => {
-        if (!oldData) return oldData;
-        return [data, ...oldData];
-      });
+      // queryClient.setQueryData(['interviews', params], (oldData) => {
+      //   if (!oldData) return oldData;
+      //   return [data, ...oldData];
+      // });
 
       queryClient.invalidateQueries(['interviews']);
       navigate(`/interviews/${data._id}`);
