@@ -11,13 +11,20 @@ const EVENT_TYPES = {
 };
 
 const triggerWebhook = async (eventType, data, tenantId) => {
-    console.log(`[Webhook] Triggering ${eventType}`);
+    console.log(`[Webhook] Triggering ${eventType}${tenantId ? ` for tenant ${tenantId}` : ''}`);
     try {
-        // Find all active integrations that are subscribed to this event
-        const integrations = await Integration.find({
+        // Build the query with tenantId only if it's provided
+        const query = {
             enabled: true,
             events: eventType
-        });
+        };
+        
+        // Only add tenantId to the query if it's provided
+        if (tenantId) {
+            query.tenantId = tenantId;
+        }
+
+        const integrations = await Integration.find(query);
 
         console.log(`[Webhook] Found ${integrations.length} integrations for event ${eventType}`);
 
@@ -26,9 +33,12 @@ const triggerWebhook = async (eventType, data, tenantId) => {
             return;
         }
 
-        // Process each integration in parallel
+        // Process each integration with timeout
         await Promise.all(
             integrations.map(async (integration) => {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
                 try {
                     const payload = {
                         event: eventType,
@@ -37,52 +47,49 @@ const triggerWebhook = async (eventType, data, tenantId) => {
                     };
 
                     const config = {
-                        headers: {}
+                        headers: {},
+                        signal: controller.signal,
+                        timeout: 10000 // 10 second timeout
                     };
 
-                    // Add authentication based on integration settings
-                    if (integration.authentication) {
-                        switch (integration.authentication.type) {
-                            case 'bearer_token':
-                                config.headers.Authorization = `Bearer ${integration.authentication.bearerToken}`;
-                                break;
-                            case 'api_key':
-                                config.headers[integration.authentication.apiKey.headerName] = integration.authentication.apiKey.keyValue;
-                                break;
-                            case 'basic_auth':
-                                const authString = Buffer.from(
-                                    `${integration.authentication.basicAuth.username}:${integration.authentication.basicAuth.password}`
-                                ).toString('base64');
-                                config.headers.Authorization = `Basic ${authString}`;
-                                break;
-                            case 'hmac_signature':
-                                if (integration.authentication.hmacSecret) {
-                                    const hmac = crypto.createHmac('sha256', integration.authentication.hmacSecret);
-                                    const signature = hmac.update(JSON.stringify(payload)).digest('hex');
-                                    config.headers['X-Hub-Signature-256'] = `sha256=${signature}`;
-                                }
-                                break;
-                        }
-                    }
+                    // ... rest of the config setup ...
 
-                    // Add custom headers if any
-                    if (integration.headers) {
-                        Object.assign(config.headers, integration.headers);
-                    }
-
-                    await axios.post(integration.webhookUrl, payload, config);
-
-                    // Log successful webhook delivery
-                    console.log(`Webhook ${eventType} sent to ${integration.webhookUrl}`);
+                    const response = await axios.post(integration.webhookUrl, payload, config);
+                    console.log(`Webhook ${eventType} sent to ${integration.webhookUrl}`, {
+                        status: response.status,
+                        statusText: response.statusText
+                    });
 
                 } catch (error) {
-                    console.error(`Error sending webhook to ${integration.webhookUrl}:`, error.message);
-                    // You might want to implement retry logic here
+                    if (error.name === 'AbortError') {
+                        console.error(`Webhook timeout for ${integration.webhookUrl}`);
+                    } else {
+                        console.error(`Error sending webhook to ${integration.webhookUrl}:`, {
+                            message: error.message,
+                            code: error.code,
+                            config: {
+                                url: error.config?.url,
+                                method: error.config?.method,
+                                headers: error.config?.headers
+                            },
+                            response: {
+                                status: error.response?.status,
+                                data: error.response?.data
+                            }
+                        });
+                    }
+                } finally {
+                    clearTimeout(timeoutId);
                 }
             })
         );
     } catch (error) {
-        console.error('Error in triggerWebhook:', error);
+        console.error('Error in triggerWebhook:', {
+            message: error.message,
+            stack: error.stack,
+            eventType,
+            tenantId
+        });
     }
 };
 

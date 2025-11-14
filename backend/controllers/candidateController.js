@@ -8,9 +8,6 @@ const { Candidate } = require('../models/candidate.js');
 const { Interview } = require('../models/Interview/Interview.js');
 const { CandidateAssessment } = require('../models/Assessment/candidateAssessment.js');
 const { triggerWebhook, EVENT_TYPES } = require('../services/webhookService');
-
-
-
  
 // Add a new Candidate
 const addCandidatePostCall = async (req, res) => {
