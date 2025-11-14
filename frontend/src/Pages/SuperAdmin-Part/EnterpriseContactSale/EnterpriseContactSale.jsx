@@ -239,10 +239,14 @@ const EnterpriseContactSale = () => {
             key: "status",
             header: "STATUS",
             render: (row) => {
-                const status = typeof row === "object" ? row?.status : row;
+                let status = typeof row === "object" ? row?.status : row;
+                // Capitalize first letter and make rest lowercase
+                const formattedStatus = status 
+                    ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+                    : 'New';
                 return (
                     <StatusBadge
-                        status={status || 'new'}
+                        status={formattedStatus}
                         getStatusColor={getStatusColor}
                         getStatusIcon={getStatusIcon}
                     />

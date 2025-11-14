@@ -36,9 +36,6 @@ const authContextMiddleware = (req, res, next) => {
     let authToken = req.cookies.authToken || '';
     let impersonationToken = req.cookies.impersonationToken || '';
 
-    console.log("authToken", authToken);
-    console.log("impersonationToken", impersonationToken);
-
     // -----------------------------------------------------------------
     // 2. FALLBACK: Authorization header (Bearer token)
     // -----------------------------------------------------------------

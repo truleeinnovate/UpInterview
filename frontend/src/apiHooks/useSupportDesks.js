@@ -5,7 +5,6 @@ import { config } from "../config";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
-import { useCustomContext } from "../Context/Contextfetch";
 import { uploadFile } from "../apiHooks/imageApis";
 import { usePermissions } from "../Context/PermissionsContext";
 
@@ -59,10 +58,12 @@ axios.defaults.withCredentials = true;
 
 export const useSupportTickets = (filters = {}) => {
   const queryClient = useQueryClient();
-  const { userRole } = useCustomContext(); // “SuperAdmin”, “Admin”, “Individual”, …
+  // const { userRole } = useCustomContext(); // “SuperAdmin”, “Admin”, “Individual”, …
   const impersonationToken = Cookies.get('impersonationToken');
   const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
   const { effectivePermissions, superAdminPermissions, impersonatedUser_roleName, effectivePermissions_RoleName } = usePermissions();
+  const userRole = effectivePermissions_RoleName;//need to work on passing role dynamic -ashraf
+
 
 
   /* --------------------------------------------------------------------- */

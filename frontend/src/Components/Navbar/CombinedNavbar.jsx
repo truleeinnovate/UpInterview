@@ -31,7 +31,6 @@ import Cookies from "js-cookie";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import NotificationPanel from "../../Pages/Push-Notification/NotificationPanel.jsx";
 import { smartLogout } from "../../utils/AuthCookieManager/AuthCookieManager";
-import { useCustomContext } from "../../Context/Contextfetch.js";
 import { usePermissions } from "../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../utils/permissionUtils";
 import AuthCookieManager from "../../utils/AuthCookieManager/AuthCookieManager";
@@ -52,7 +51,6 @@ const CombinedNavbar = React.memo(() => {
   const authToken = getAuthToken();
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
-  const { userProfile } = useCustomContext();
   const { singleContact, isLoading: singleContactLoading } = useSingleContact();
   const navigate = useNavigate();
   const userType = AuthCookieManager.getUserType();
@@ -1024,24 +1022,24 @@ const CombinedNavbar = React.memo(() => {
                     )}
                     {enhancedCheckPermission("Interviews") && (
                       <NavLink
-                        to="/interviews"
+                        to="/admin-interviews"
                         className={`${
                           userType === "superAdmin"
                             ? "h-[52px] flex items-center relative"
                             : "h-full flex items-center relative px-1"
                         } ${
-                          isActive("/interviews")
+                          isActive("/admin-interviews")
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
-                          navigate("/interviews");
+                          navigate("/admin-interviews");
                         }}
                       >
                         Interviews
-                        {isActive("/interviews") && (
+                        {isActive("/admin-interviews") && (
                           <div
                             className={`absolute ${
                               userType === "superAdmin"

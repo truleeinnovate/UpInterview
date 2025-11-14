@@ -58,9 +58,18 @@ function PaymentsTable({ organizationId, viewMode }) {
   // const [selectedPayment, setSelectedPayment] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // const [payments, setPayments] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState([]);
 
-  const { payments, isLoading } = usePayments(organizationId); // from apiHooks
+  const rowsPerPage = 10;
+  const toApiPaymentStatus = (arr) => arr.map((s) => (s === "success" ? "captured" : s)).join(",");
+  const { payments, pagination, stats, isLoading } = usePayments({
+    page: currentPage,
+    limit: rowsPerPage,
+    search: searchQuery,
+    status: toApiPaymentStatus(selectedStatus),
+    tenantId: organizationId || "",
+    organizationId
+  }); // from apiHooks
   const { payment: selectedPayment } = usePaymentById(selectedPaymentId); // from apiHooks
 
   const handleCurrentStatusToggle = (status) => {
@@ -72,7 +81,7 @@ function PaymentsTable({ organizationId, viewMode }) {
   };
 
   const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState([]);
+  
   const [selectedCurrentStatus, setCurrentStatus] = useState("active");
 
   // Reset filters when popup opens
@@ -191,43 +200,21 @@ function PaymentsTable({ organizationId, viewMode }) {
     }
   };
 
-  const FilteredData = () => {
-    if (!Array.isArray(dataToUse)) return [];
-    return dataToUse.filter((payment) => {
-      const fieldsToSearch = [
-        payment?.paymentCode ? payment?.paymentCode : payment?.paymentCode,
-        payment?.status ? payment?.status : payment?.status,
-      ].filter((field) => field !== null && field !== undefined);
+  
 
-      const matchesStatus =
-        selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(payment.status);
-
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      return matchesSearchQuery && matchesStatus;
-    });
-  };
-
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
+  const totalPages = pagination?.totalPages || 0;
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
+    if (pagination?.hasNext) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
   const prevPage = () => {
-    if (currentPage > 0) {
+    if (pagination?.hasPrev && currentPage > 0) {
       setCurrentPage((prevPage) => prevPage - 1);
     }
   };
 
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -720,25 +707,19 @@ function PaymentsTable({ organizationId, viewMode }) {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Payments</div>
-            <div className="text-xl font-semibold">{payments?.length || 0}</div>
+            <div className="text-xl font-semibold">{stats?.totalPayments ?? payments?.length ?? 0}</div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Successful</div>
-            <div className="text-xl font-semibold text-success-600">
-              {payments?.filter((p) => p.status === "captured").length || 0}
-            </div>
+            <div className="text-xl font-semibold text-success-600">{stats?.successfulPayments ?? (payments?.filter((p) => p.status === "captured").length || 0)}</div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Pending</div>
-            <div className="text-xl font-semibold text-warning-600">
-              {payments?.filter((p) => p.status === "pending").length || 0}
-            </div>
+            <div className="text-xl font-semibold text-warning-600">{stats?.pendingPayments ?? (payments?.filter((p) => p.status === "pending").length || 0)}</div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Failed</div>
-            <div className="text-xl font-semibold text-error-600">
-              {payments?.filter((p) => p.status === "failed").length || 0}
-            </div>
+            <div className="text-xl font-semibold text-error-600">{stats?.failedPayments ?? (payments?.filter((p) => p.status === "failed").length || 0)}</div>
           </div>
         </div>
 
@@ -769,7 +750,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                 {view === "table" ? (
                   <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                     <TableView
-                      data={currentFilteredRows}
+                      data={payments}
                       columns={tableColumns}
                       loading={isLoading}
                       actions={tableActions}
@@ -780,7 +761,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                 ) : (
                   <div className="w-full">
                     <KanbanView
-                      data={currentFilteredRows.map((payment) => ({
+                      data={payments.map((payment) => ({
                         ...payment,
                         id: payment._id,
                         title: payment.paymentCode || "N/A",

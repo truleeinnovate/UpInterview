@@ -10,20 +10,20 @@ import {
   MapPin,
   Briefcase,
 } from "lucide-react";
-import { useCustomContext } from "../../../../Context/Contextfetch.js";
+import useInterviewers from "../../../../hooks/useInterviewers";
 
 const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
-  const { interviewers } = useCustomContext();
+  const { interviewers, loading, error } = useInterviewers();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState("right");
 
-  // Extract the data array from interviewers, default to empty array
-  const interviewersList = interviewers?.data || [];
+  // Use interviewers array directly from the hook
+  const interviewersList = Array.isArray(interviewers) ? interviewers : [];
 
   const formattedInterviewers = React.useMemo(() => {
-    if (!interviewers?.data) return [];
+    if (!interviewers || !Array.isArray(interviewers)) return [];
 
-    return interviewers.data
+    return interviewers
       .filter((interviewer) => interviewer.type === "internal")
       .map((interviewer) => {
         const contact = interviewer.contact || {};

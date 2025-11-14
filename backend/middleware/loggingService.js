@@ -5,6 +5,7 @@ const historyFeedsController = require('../controllers/feedsController.js');
 // v1.0.0 <------------------------------------------------------------------
 const InternalLog = require("../models/InternalLog.js");
 const IntegrationLogs = require("../models/IntegrationLogs.js");
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService.js');
 // v1.0.0 ------------------------------------------------------------------>
 
 
@@ -22,19 +23,8 @@ exports.integrationLoggingMiddleware = async (req, res, next) => {
 
     // v1.0.0 <---------------------------------------------------------------
     // Generate custom logId (INTG-00001, INTG-00002, ...)
-    const lastLog = await IntegrationLogs.findOne({})
-        .sort({ _id: -1 })
-        .select('logId')
-        .lean();
-
-    let nextLogId = 'INTG-00001';
-    if (lastLog?.logId) {
-        const match = lastLog.logId.match(/INTG-(\d+)/);
-        if (match) {
-            const nextNumber = parseInt(match[1], 10) + 1;
-            nextLogId = `INTG-${String(nextNumber).padStart(5, '0')}`;
-        }
-    }
+    let nextLogId = await generateUniqueId('ILOG', InternalLog, 'logId');
+    
     // v1.0.0 --------------------------------------------------------------->
 
     // Override res.json to ensure we only log once
@@ -47,7 +37,7 @@ exports.integrationLoggingMiddleware = async (req, res, next) => {
 
             const logDetails = {
                 // v1.0.0 <---------------------------------------------------------------
-                logId: lastLog,
+                logId: nextLogId,
                 // v1.0.0 --------------------------------------------------------------->
                 tenantId: '',
                 ownerId: '',
@@ -143,19 +133,9 @@ exports.internalLoggingMiddleware = async (req, res, next) => {
 
     // v1.0.0 <---------------------------------------------------------------
     // Generate custom logId (ILOG-00001, ILOG-00002, ...)
-    const lastLog = await InternalLog.findOne({})
-        .sort({ _id: -1 })
-        .select('logId')
-        .lean();
-
-    let nextLogId = 'ILOG-00001';
-    if (lastLog?.logId) {
-        const match = lastLog.logId.match(/ILOG-(\d+)/);
-        if (match) {
-            const nextNumber = parseInt(match[1], 10) + 1;
-            nextLogId = `ILOG-${String(nextNumber).padStart(5, '0')}`;
-        }
-    }
+    
+    let nextLogId = await generateUniqueId('ILOG', InternalLog, 'logId');
+    
     // v1.0.0 --------------------------------------------------------------->
     res.json = function (body) {
         const logData = res.locals.logData;

@@ -5,6 +5,7 @@
  path from local to cloud storage url
  */
 // v1.0.4 - Ashok - Improved responsiveness
+// v1.0.5 - Ashok - Moved users api to hooks
 
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -19,6 +20,7 @@ import {
   Info,
 } from "lucide-react";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
+import { useUsers } from "../../../../../apiHooks/useUsers";
 import Header from "../../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../../Components/Shared/Table/TableView";
@@ -42,8 +44,11 @@ const UsersAccountTab = () => {
   const userType = AuthCookieManager.getUserType();
 
   const { effectivePermissions, superAdminPermissions } = usePermissions();
-  const { usersRes, usersLoading, currentPlan, toggleUserStatus } =
-    useCustomContext();
+  // const { usersRes, usersLoading, toggleUserStatus } = useCustomContext();
+  // ---------------------------------from Hooks---------------------------------------------
+  const { usersRes, usersLoading, toggleUserStatus } = useUsers();
+  // ---------------------------------from Hooks---------------------------------------------
+  // currentPlan removed - use useSubscription hook if needed
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("table");

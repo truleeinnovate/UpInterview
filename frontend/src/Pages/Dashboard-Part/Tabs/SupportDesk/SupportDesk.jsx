@@ -118,7 +118,7 @@ function SupportDesk() {
   const { checkPermission, isInitialized } = usePermissionCheck();
   const {
     effectivePermissions,
-    superAdminPermissions,
+    // superAdminPermissions,
     impersonatedUser_roleName,
     effectivePermissions_RoleName,
   } = usePermissions();

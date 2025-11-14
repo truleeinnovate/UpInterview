@@ -1,0 +1,38 @@
+const express = require('express');
+const router = express.Router();
+const integrationController = require('../controllers/integrationController');
+
+// Import existing middleware
+const { authContextMiddleware } = require('../middleware/authContext');
+const { permissionMiddleware } = require('../middleware/permissionMiddleware');
+
+// Apply auth and permission middleware to all routes except webhook
+router.use(authContextMiddleware);
+router.use(permissionMiddleware);
+
+// Routes
+router
+  .route('/')
+  .get(integrationController.getIntegrations)
+  .post(integrationController.createIntegration);
+
+// Make authenticated API call
+router.post(
+  '/:id/call',
+  integrationController.makeApiCall
+);
+
+// Webhook endpoint (public, but protected by signature verification)
+router.post(
+  '/webhook/:id',
+  // Skip auth middleware for webhooks
+  (req, res, next) => {
+    req.skipAuth = true;
+    next();
+  },
+  express.json(),
+  integrationController.handleWebhook
+);
+
+// Export the router
+module.exports = router;

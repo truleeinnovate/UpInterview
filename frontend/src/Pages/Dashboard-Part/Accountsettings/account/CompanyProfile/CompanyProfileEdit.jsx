@@ -6,7 +6,6 @@
 // v1.0.6 - Ashok - Improved responsiveness and added common code to popup
 
 // import { companyProfile, companySizes, industries } from '../mockData/companyData'
-// import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useRef, useState } from "react";
 import Modal from "react-modal";
 import classNames from "classnames";

@@ -36,9 +36,10 @@ function InternalLogsPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
-    severity: [],
-    currentStatus: "",
+    severity: []
   });
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const ITEMS_PER_PAGE = 10;
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
@@ -52,7 +53,23 @@ function InternalLogsPage() {
   const [selectedLogId, setSelectedLogId] = useState(null);
   // const [logs, setLogs] = useState([]);
 
-  const { logs, isLoading } = useInternalLogs(); // from apiHooks
+  // Debounce search for better performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(0); // Reset to first page on search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Get logs with pagination and filters
+  const { logs, pagination, stats, isLoading, refetch } = useInternalLogs({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: debouncedSearch,
+    status: selectedFilters.status.join(','),
+    severity: selectedFilters.severity.join(',')
+  });
   const { log: selectedLog } = useInternalLogById(selectedLogId); // from apiHooks
   // v1.0.0 <------------------------------------------------------------------------
   console.log("2. INTERNAL LOGS AFTER RESPONSE: ", logs);
@@ -69,7 +86,6 @@ function InternalLogsPage() {
 
   const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
-  const [selectedCurrentStatus, setCurrentStatus] = useState("active");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const [isSeverityOpen, setIsSeverityOpen] = useState(false);
@@ -88,7 +104,6 @@ function InternalLogsPage() {
     if (isFilterPopupOpen) {
       setSelectedStatus(selectedFilters.status);
       setSelectedSeverity(selectedFilters.severity);
-      setCurrentStatus(selectedFilters.currentStatus);
       setIsCurrentStatusOpen(false);
       setIsSeverityOpen(false);
     }
@@ -97,12 +112,10 @@ function InternalLogsPage() {
   const handleClearAll = () => {
     const clearedFilters = {
       status: [],
-      severity: [],
-      currentStatus: "",
+      severity: []
     };
     setSelectedStatus([]);
     setSelectedSeverity([]);
-    setCurrentStatus("");
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
     setIsFilterActive(false);
@@ -112,15 +125,12 @@ function InternalLogsPage() {
   const handleApplyFilters = () => {
     const filters = {
       status: selectedStatus,
-      severity: selectedSeverity,
-      currentStatus: selectedCurrentStatus,
+      severity: selectedSeverity
     };
     setSelectedFilters(filters);
     setCurrentPage(0);
     setIsFilterActive(
-      filters.status.length > 0 ||
-        filters.severity.length > 0 ||
-        filters.currentStatus.length > 0
+      filters.status.length > 0 || filters.severity.length > 0
     );
     setFilterPopupOpen(false);
   };
@@ -183,61 +193,31 @@ function InternalLogsPage() {
     }
   }, [isTablet]);
 
-  const dataToUse = logs;
-
   const handleFilterIconClick = () => {
-    if (dataToUse?.length !== 0) {
+    if (pagination?.totalItems > 0 || logs?.length > 0) {
       setFilterPopupOpen((prev) => !prev);
     }
   };
 
-  const FilteredData = () => {
-    if (!Array.isArray(dataToUse)) return [];
+  // Use server-side paginated data directly
+  const currentFilteredRows = logs || [];
+  const totalPages = pagination?.totalPages || 0;
 
-    return dataToUse.filter((log) => {
-      const fieldsToSearch = [
-        log?.logId ? log?.logId : log?._id,
-        log?.status,
-        log?.severity,
-      ].filter((field) => field !== null && field !== undefined);
-
-      const matchesStatus =
-        selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(log.status);
-
-      const matchesSeverity =
-        selectedFilters?.severity.length === 0 ||
-        selectedFilters.severity.includes(log.severity);
-
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      return matchesSearchQuery && matchesStatus && matchesSeverity;
-    });
-  };
-
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
+    if (pagination?.hasNext) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
+
   const prevPage = () => {
-    if (currentPage > 0) {
+    if (pagination?.hasPrev) {
       setCurrentPage((prevPage) => prevPage - 1);
     }
   };
 
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
-
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on search
+  const handleSearch = (value) => {
+    setSearchQuery(value);
+    // Pagination reset is handled in debounce effect
   };
 
   const formatDate = (dateString) => {
@@ -737,25 +717,25 @@ function InternalLogsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Logs</div>
-            <div className="text-xl font-semibold">{logs?.length}</div>
+            <div className="text-xl font-semibold">{stats?.totalLogs || 0}</div>
           </div>
           {/* v1.0.0 <---------------------------------------------------------------------------------------------------------------------- */}
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Success</div>
             <div className="text-xl font-semibold text-success-600">
-              {logs?.filter((log) => log.status === "success").length}
+              {stats?.successLogs || 0}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Warnings</div>
             <div className="text-xl font-semibold text-warning-600">
-              {logs?.filter((log) => log.status === "warning").length}
+              {stats?.warningLogs || 0}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Errors</div>
             <div className="text-xl font-semibold text-error-600">
-              {logs?.filter((log) => log.status === "error").length}
+              {stats?.errorLogs || 0}
             </div>
           </div>
           {/* v1.0.0 ----------------------------------------------------------------------------------------------------------------------> */}
@@ -767,7 +747,7 @@ function InternalLogsPage() {
             view={view}
             setView={setView}
             searchQuery={searchQuery}
-            onSearch={handleSearch}
+            onSearch={(e) => handleSearch(e.target.value)}
             currentPage={currentPage}
             totalPages={totalPages}
             onPrevPage={prevPage}
@@ -775,7 +755,7 @@ function InternalLogsPage() {
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
-            dataLength={dataToUse?.length}
+            dataLength={logs?.length || 0}
             searchPlaceholder="Search logs..."
             filterIconRef={filterIconRef}
           />

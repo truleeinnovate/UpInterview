@@ -1,6 +1,8 @@
 /* v1.0.0 - Ashok - changed maleImage (man.png), femaleImage (woman.png) and genderlessImage (transgender.png) 
  path from local to cloud storage url
  */
+// v1.0.1 - Ashok - changed api from Context to apiHooks
+
 /* eslint-disable no-lone-blocks */
 // import PropTypes from 'prop-types';
 import { motion } from "framer-motion";
@@ -24,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 // import axios from 'axios';
 // import { config } from '../../../../../config';
 import { useCustomContext } from "../../../../../Context/Contextfetch";
+import { useUsers } from "../../../../../apiHooks/useUsers";
 import { useState } from "react";
 import ConfirmationModal from "./ConfirmModel";
 
@@ -37,7 +40,10 @@ const KanbanView = ({
   toggleSidebar,
 }) => {
   const navigate = useNavigate();
-  const { toggleUserStatus } = useCustomContext();
+  // const { toggleUserStatus } = useCustomContext();
+  // -------------------------------------- from apiHooks ----------------------------------------
+  const { toggleUserStatus } = useUsers();
+  // -------------------------------------- from apiHooks ----------------------------------------
 
   // State for confirmation popup
   const [showConfirmation, setShowConfirmation] = useState(false);

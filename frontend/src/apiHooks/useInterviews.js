@@ -300,14 +300,14 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
     },
     onSuccess: (data, variables) => {
       // Optimistically update the cache
-      queryClient.setQueryData(['interviews', params], (oldData) => {
-        if (!oldData) return oldData;
-        return oldData.map(interview =>
-          interview._id === variables.interviewId
-            ? { ...interview, status: variables.status }
-            : interview
-        );
-      });
+      // queryClient.setQueryData(['interviews', params], (oldData) => {
+      //   if (!oldData) return oldData;
+      //   return oldData.map(interview =>
+      //     interview._id === variables.interviewId
+      //       ? { ...interview, status: variables.status }
+      //       : interview
+      //   );
+      // });
 
       queryClient.invalidateQueries(['interviews']);
     },

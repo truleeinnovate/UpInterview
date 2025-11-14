@@ -5,25 +5,28 @@
 // v1.0.4 - Ashok - Improved responsiveness and added common code to popup and added delete confirmation popup for image
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Camera, X, Trash } from "lucide-react";
-import classNames from "classnames";
-import Modal from "react-modal";
+import { Camera,
+  //  X,
+    Trash } from "lucide-react";
+// import classNames from "classnames";
+// import Modal from "react-modal";
 import Cookies from "js-cookie";
 import { useNavigate, useLocation } from "react-router-dom";
 import { validateUserForm } from "../../../../../utils/AppUserValidation";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
+import { useUsers } from "../../../../../apiHooks/useUsers.js";
 import {
   validateWorkEmail,
   checkEmailExists,
 } from "../../../../../utils/workEmailValidation.js";
 import { validateFile } from "../../../../../utils/FileValidation/FileValidation.js";
 import { useRolesQuery } from "../../../../../apiHooks/useRoles.js";
-import {
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
-} from "@heroicons/react/24/outline";
-import Loading from "../../../../../Components/Loading.js";
+// import {
+//   ArrowsPointingInIcon,
+//   ArrowsPointingOutIcon,
+// } from "@heroicons/react/24/outline";
+// import Loading from "../../../../../Components/Loading.js";
 import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import {
@@ -69,7 +72,11 @@ const UserForm = ({ mode }) => {
     // ------------------------------ v1.0.0 >
   }, [allRoles, userType]);
   // ------------------------------ v1.0.0 >
-  const { addOrUpdateUser } = useCustomContext();
+  // const { addOrUpdateUser } = useCustomContext();
+  // --------------------------------- api Hooks ----------------------------
+  const { addOrUpdateUser } = useUsers();
+  // --------------------------------- api Hooks ----------------------------
+
   const navigate = useNavigate();
   const location = useLocation();
   const initialUserData = location.state?.userData;

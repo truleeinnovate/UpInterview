@@ -6,26 +6,26 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react"; //<----v1.0.1-----
 import {
-    X,
+    // X,
     Star,
     ExternalLink,
     ChevronDown,
     ChevronUp,
     Search,
-    Minimize,
+    // Minimize,
     Info,
     Clock,
     Users,
-    Expand,
+    // Expand,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
 import InterviewerAvatar from "../../../CommonCode-AllTabs/InterviewerAvatar.jsx";
 import InterviewerDetailsModal from "../Internal-Or-Outsource/OutsourceInterviewerDetail.jsx";
 import { useCustomContext } from "../../../../../../Context/Contextfetch.js";
-import Wallet from "../../../../Accountsettings/account/wallet/Wallet.jsx";
+// import Wallet from "../../../../Accountsettings/account/wallet/Wallet.jsx";
 import { useWallet } from "../../../../../../apiHooks/useWallet"; //<----v1.0.1-----
-import toast, { Toaster } from "react-hot-toast"; //<----v1.0.1-----
+import { Toaster } from "react-hot-toast"; //<----v1.0.1-----
 import { WalletTopupPopup } from "../../../../Accountsettings/account/wallet/WalletTopupPopup.jsx";
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 import Cookies from 'js-cookie';

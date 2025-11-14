@@ -1,7 +1,7 @@
 // v1.0.0 - Ashok - Changed icons
 // v1.0.1 - Ashok - Adding loading view
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo } from "react";
 import InterviewRounds from "./InterviewRounds";
 import AppliedPositions from "./AppliedPositions";
 import Timeline from "./Timeline";
@@ -10,25 +10,24 @@ import InterviewDetails from "./InterviewDetails";
 import classNames from "classnames";
 import Sidebar from "./Sidebar";
 import { Outlet, useParams } from "react-router-dom";
-import axios from "axios";
-import AddCandidateForm from "../AddCandidateForm";
+// import AddCandidateForm from "../AddCandidateForm";
 // v1.0.0 <--------------------------------------------------------
 import {
-  User,
   Users,
   Briefcase,
   Calendar,
   FileText,
   Activity,
+  ArrowLeft,
+  Pencil,
 } from "lucide-react";
 // v1.0.0 -------------------------------------------------------->
-import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
+import { useInterviews } from "../../../../../apiHooks/useInterviews";
+import { useCandidates } from "../../../../../apiHooks/useCandidates";
 import Documents from "./Documents";
-import Loading from "../../../../../Components/Loading";
 // v1.0.0 <--------------------------------------------------------
 import ActivityComponent from "../../CommonCode-AllTabs/Activity";
 // v1.0.0 -------------------------------------------------------->
-import { config } from "../../../../../config";
 
 // v1.0.0 <--------------------------------------------------------
 // const tabs = [
@@ -53,42 +52,30 @@ const MainContent = () => {
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectedInterview, setSelectedInterview] = useState(null);
   const { id } = useParams();
-  const [candidate, setCandidate] = useState(null);
-  const [positions, setPositions] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  // const [searchQuery, setSearchQuery] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editModeOn, setEditModeOn] = useState(false);
-  const [slideShow, setSlideShow] = useState(false);
+  // const [slideShow, setSlideShow] = useState(false);
+
+  // Get candidate data from the useCandidates hook
+  const { candidateData } = useCandidates();
+  const { interviewData } = useInterviews();
+
+  // Find the current candidate from the cached data
+  const candidate = useMemo(() => {
+    return candidateData?.find((c) => c._id === id);
+  }, [candidateData, id]);
+
+  // Extract positions from candidate data
+  const positions = useMemo(() => {
+    return candidate?.appliedPositions || [];
+  }, [candidate]);
+
+  // Find interview data for the current candidate
+  const interview = interviewData.find((data) => data?.candidateId?._id === id);
 
   console.log("candidate 360 Details", candidate);
   console.log("positions 360 Details", positions);
-
-  // const {
-  //   interviewData
-  // } = useCustomContext();
-
-  const { interviewData } = useInterviews();
-
-  const interview = interviewData.find((data) => data?.candidateId?._id === id);
-  // console.log("interview",interview);
-  console.log("candidate?._id", candidate?._id);
-
-  useEffect(() => {
-    fetchCandidate();
-  }, [id]);
-
-  const fetchCandidate = async () => {
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/candidate/${id}`
-      );
-      const { appliedPositions, ...candidateData } = response.data;
-      setCandidate(candidateData);
-      setPositions(appliedPositions || []);
-    } catch (error) {
-      console.error("Error fetching candidate:", error);
-    }
-  };
 
   // if (!candidate) return <Loading />
 
@@ -117,10 +104,18 @@ const MainContent = () => {
             {/* Header */}
             <div className="flex justify-between items-center mb-3">
               <div className="flex items-center gap-1.5">
-                <div className="h-6 w-24 rounded shimmer"></div>
+                <button
+                  className="p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+                  title="Back to Dashboard"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <h2 className="text-lg font-bold text-custom-blue">Profile</h2>
               </div>
               <div className="flex gap-1.5">
-                <div className="h-6 w-6 rounded-full shimmer"></div>
+                <button className="p-1.5 rounded-full bg-custom-bg text-custom-blue transition-colors">
+                  <Pencil className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
@@ -161,10 +156,22 @@ const MainContent = () => {
         {/* Main content shimmer */}
         <div className="flex-1 overflow-y-auto">
           {/* Tabs shimmer */}
-          <div className="w-full px-4 py-2 bg-white border-b border-gray-200 flex gap-3">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-8 w-28 rounded shimmer"></div>
-            ))}
+          <div className="w-full px-4 py-2 bg-white border-b border-gray-200">
+            <div className="overflow-x-auto scrollbar-hide -mx-1 px-1 flex items-center justify-start">
+              <nav className="flex flex-nowrap items-center gap-1 min-w-max">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    className={classNames(
+                      "px-4 py-2.5 mr-2 font-medium transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap text-sm text-gray-600 rounded-lg hover:bg-gray-100 shadow-sm"
+                    )}
+                  >
+                    <tab.icon className="w-5 h-5" />
+                    <span>{tab.name}</span>
+                  </button>
+                ))}
+              </nav>
+            </div>
           </div>
 
           {/* Content shimmer */}
@@ -173,8 +180,12 @@ const MainContent = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-4 py-6 h-[calc(100vh-200px)] overflow-y-auto">
                 {/* Simulate sections */}
                 <div className="flex w-full justify-between">
-                  <div className="shimmer h-8 w-44"></div>
-                  <div className="shimmer h-8 w-32"></div>
+                  <h3 className="text-2xl font-bold text-custom-blue sm:text-lg">
+                    Interview Process
+                  </h3>
+                  <button className="px-4 py-2 bg-custom-blue text-white rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20 sm:text-sm">
+                    Add Interview
+                  </button>
                 </div>
                 <div className="space-y-4 text-gray-500 text-center mt-16">
                   Loading...

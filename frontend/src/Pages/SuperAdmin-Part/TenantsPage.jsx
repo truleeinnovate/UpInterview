@@ -37,27 +37,44 @@ import { notify } from "../../services/toastService.js";
 function TenantsPage() {
   const [deleteTenant, setDeleteTenant] = useState(null);
   const { superAdminPermissions, isInitialized } = usePermissions();
-  const { tenants, isLoading } = useTenants();
   const { deleteTenantData } = useTenantById(deleteTenant?._id);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [view, setView] = useState("table");
-  // const [selectedTenant, setSelectedTenant] = useState(null);
-  // const [selectTenantView, setSelectTenantView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  // const [editModeOn, setEditModeOn] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
-    currentStatus: "",
+    subscriptionStatus: [],
+    plan: []
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
-  const filterIconRef = useRef(null); // Ref for filter icon
-  // const [user, setUser] = useState("Admin");
-
+  const filterIconRef = useRef(null);
+  const ITEMS_PER_PAGE = 10;
   const [selectedType, setSelectedType] = useState("all");
+
+  // Debounce search for better performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(0); // Reset to first page on search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Get tenants with pagination and filters
+  const { tenants, pagination, isLoading, refetch } = useTenants({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: debouncedSearch,
+    status: selectedFilters.status.join(','),
+    subscriptionStatus: selectedFilters.subscriptionStatus.join(','),
+    plan: selectedFilters.plan.join(','),
+    type: selectedType === "all" ? "" : selectedType
+  });
 
   // Use React Query for data fetching with proper dependency on permissions
   // const {
@@ -97,25 +114,33 @@ function TenantsPage() {
   };
 
   const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
+  const [isSubscriptionStatusOpen, setIsSubscriptionStatusOpen] = useState(false);
+  const [isPlanOpen, setIsPlanOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
-  const [selectedCurrentStatus, setCurrentStatus] = useState("active");
+  const [selectedSubscriptionStatus, setSelectedSubscriptionStatus] = useState([]);
+  const [selectedPlan, setSelectedPlan] = useState([]);
 
   // Reset filters when popup opens
   useEffect(() => {
     if (isFilterPopupOpen) {
       setSelectedStatus(selectedFilters.status);
-      setCurrentStatus(selectedFilters.currentStatus);
+      setSelectedSubscriptionStatus(selectedFilters.subscriptionStatus);
+      setSelectedPlan(selectedFilters.plan);
       setIsCurrentStatusOpen(false);
+      setIsSubscriptionStatusOpen(false);
+      setIsPlanOpen(false);
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
   const handleClearAll = () => {
     const clearedFilters = {
       status: [],
-      currentStatus: "",
+      subscriptionStatus: [],
+      plan: []
     };
     setSelectedStatus([]);
-    setCurrentStatus("");
+    setSelectedSubscriptionStatus([]);
+    setSelectedPlan([]);
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
     setIsFilterActive(false);
@@ -125,12 +150,15 @@ function TenantsPage() {
   const handleApplyFilters = () => {
     const filters = {
       status: selectedStatus,
-      currentStatus: selectedCurrentStatus,
+      subscriptionStatus: selectedSubscriptionStatus,
+      plan: selectedPlan
     };
     setSelectedFilters(filters);
     setCurrentPage(0);
     setIsFilterActive(
-      filters.status.length > 0 || filters.currentStatus.length > 0
+      filters.status.length > 0 || 
+      filters.subscriptionStatus.length > 0 || 
+      filters.plan.length > 0
     );
     setFilterPopupOpen(false);
   };
@@ -147,63 +175,31 @@ function TenantsPage() {
     }
   }, [isTablet]);
 
-  const dataToUse = tenants;
-
   const handleFilterIconClick = () => {
-    if (dataToUse?.length !== 0) {
+    if (pagination?.totalItems > 0 || tenants?.length > 0) {
       setFilterPopupOpen((prev) => !prev);
     }
   };
 
-  const FilteredData = () => {
-    if (!Array.isArray(dataToUse)) return [];
-
-    return dataToUse.filter((organization) => {
-      const fieldsToSearch = [
-        organization.firstName,
-        organization.lastName,
-        organization.Email,
-        organization.Phone,
-        organization.company,
-        organization.status,
-      ].filter((field) => field !== null && field !== undefined);
-
-      const matchesStatus =
-        selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(organization.status);
-
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      const matchesType =
-        selectedType === "all" || organization.type === selectedType;
-
-      return matchesSearchQuery && matchesStatus && matchesType;
-    });
-  };
-
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
+  // Use server-side paginated data directly
+  const currentFilteredRows = tenants || [];
+  const totalPages = pagination?.totalPages || 0;
+  
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
+    if (pagination?.hasNext) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
+  
   const prevPage = () => {
-    if (currentPage > 0) {
+    if (pagination?.hasPrev) {
       setCurrentPage((prevPage) => prevPage - 1);
     }
   };
 
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
-
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on search
+  const handleSearch = (value) => {
+    setSearchQuery(value);
+    // Pagination reset is handled in debounce effect
   };
 
   // Simple loading state - only show loading if we have no data and are loading
@@ -478,15 +474,32 @@ function TenantsPage() {
       "draft",
     ];
 
+    const subscriptionStatusOptions = [
+      "active",
+      "expired",
+      "halted",
+      "cancelled",
+      "pending"
+    ];
+
+    const planOptions = [
+      "Starter",
+      "Professional",
+      "Enterprise",
+      "Free",
+      "Premium",
+      "Expert"
+    ];
+
     return (
       <div className="space-y-3">
-        {/* Current Status Section */}
+        {/* Tenant Status Section */}
         <div>
           <div
             className="flex justify-between items-center cursor-pointer"
             onClick={() => setIsCurrentStatusOpen(!isCurrentStatusOpen)}
           >
-            <span className="font-medium text-gray-700">Current Status</span>
+            <span className="font-medium text-gray-700">Tenant Status</span>
             {isCurrentStatusOpen ? (
               <ChevronUp className="text-xl text-gray-700" />
             ) : (
@@ -509,7 +522,89 @@ function TenantsPage() {
                           onChange={() => handleCurrentStatusToggle(status)}
                           className="accent-custom-blue"
                         />
+                        <span>{status.replace('_', ' ')}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Subscription Status Section */}
+        <div>
+          <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => setIsSubscriptionStatusOpen(!isSubscriptionStatusOpen)}
+          >
+            <span className="font-medium text-gray-700">Subscription Status</span>
+            {isSubscriptionStatusOpen ? (
+              <ChevronUp className="text-xl text-gray-700" />
+            ) : (
+              <ChevronDown className="text-xl text-gray-700" />
+            )}
+          </div>
+          {isSubscriptionStatusOpen && (
+            <div className="mt-1 space-y-2 pl-2">
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                    {subscriptionStatusOptions.map((status) => (
+                      <label
+                        key={status}
+                        className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedSubscriptionStatus.includes(status)}
+                          onChange={() => setSelectedSubscriptionStatus(prev => 
+                            prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+                          )}
+                          className="accent-custom-blue"
+                        />
                         <span>{status}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Plan Section */}
+        <div>
+          <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => setIsPlanOpen(!isPlanOpen)}
+          >
+            <span className="font-medium text-gray-700">Plan</span>
+            {isPlanOpen ? (
+              <ChevronUp className="text-xl text-gray-700" />
+            ) : (
+              <ChevronDown className="text-xl text-gray-700" />
+            )}
+          </div>
+          {isPlanOpen && (
+            <div className="mt-1 space-y-2 pl-2">
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                    {planOptions.map((plan) => (
+                      <label
+                        key={plan}
+                        className="flex items-center space-x-2 cursor-pointer text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedPlan.includes(plan)}
+                          onChange={() => setSelectedPlan(prev => 
+                            prev.includes(plan) ? prev.filter(p => p !== plan) : [...prev, plan]
+                          )}
+                          className="accent-custom-blue"
+                        />
+                        <span>{plan}</span>
                       </label>
                     ))}
                   </div>
@@ -539,7 +634,10 @@ function TenantsPage() {
                     ? "bg-gray-100 text-gray-900"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
-                onClick={() => setSelectedType("all")}
+                onClick={() => {
+                  setSelectedType("all");
+                  setCurrentPage(0);
+                }}
               >
                 All
               </button>
@@ -549,7 +647,10 @@ function TenantsPage() {
                     ? "bg-gray-100 text-gray-900"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
-                onClick={() => setSelectedType("organization")}
+                onClick={() => {
+                  setSelectedType("organization");
+                  setCurrentPage(0);
+                }}
               >
                 Organizations
               </button>
@@ -559,7 +660,10 @@ function TenantsPage() {
                     ? "bg-gray-100 text-gray-900"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
-                onClick={() => setSelectedType("individual")}
+                onClick={() => {
+                  setSelectedType("individual");
+                  setCurrentPage(0);
+                }}
               >
                 Individuals
               </button>
@@ -568,7 +672,7 @@ function TenantsPage() {
             <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-6 gap-4 px-1.5 w-full">
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Total Tenants</div>
-                <div className="text-xl font-semibold">{tenants?.length}</div>
+                <div className="text-xl font-semibold">{pagination?.totalItems || 0}</div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Active</div>
@@ -626,7 +730,7 @@ function TenantsPage() {
               view={view}
               setView={setView}
               searchQuery={searchQuery}
-              onSearch={handleSearch}
+              onSearch={(e) => handleSearch(e.target.value)}
               currentPage={currentPage}
               totalPages={totalPages}
               onPrevPage={prevPage}
@@ -634,7 +738,7 @@ function TenantsPage() {
               onFilterClick={handleFilterIconClick}
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
-              dataLength={dataToUse?.length}
+              dataLength={tenants?.length || 0}
               searchPlaceholder="Search tenants..."
               filterIconRef={filterIconRef} // Pass ref to Toolbar
             />
@@ -647,13 +751,7 @@ function TenantsPage() {
               {view === "table" ? (
                 <div className="w-full mb-8">
                   <TableView
-                    data={
-                      selectedType === "all"
-                        ? currentFilteredRows
-                        : currentFilteredRows.filter(
-                            (t) => t.type === selectedType
-                          )
-                    }
+                    data={currentFilteredRows}
                     columns={tableColumns}
                     loading={isLoading}
                     actions={tableActions}
@@ -664,12 +762,7 @@ function TenantsPage() {
               ) : (
                 <div className="w-full">
                   <KanbanView
-                    data={(selectedType === "all"
-                      ? currentFilteredRows
-                      : currentFilteredRows.filter(
-                          (t) => t.type === selectedType
-                        )
-                    ).map((tenant) => ({
+                    data={currentFilteredRows.map((tenant) => ({
                       ...tenant,
                       id: tenant._id,
                       title: tenant.firstName || "N/A",

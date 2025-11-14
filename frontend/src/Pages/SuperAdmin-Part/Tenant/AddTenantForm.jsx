@@ -5,12 +5,12 @@ import classNames from "classnames";
 import { format } from "date-fns";
 // import axios from 'axios';
 import { Search } from "lucide-react";
-import { ReactComponent as FaTimes } from "../../../icons/FaTimes.svg";
-import { ReactComponent as FaTrash } from "../../../icons/FaTrash.svg";
-import { ReactComponent as FaEdit } from "../../../icons/FaEdit.svg";
+// import { ReactComponent as FaTimes } from "../../../icons/FaTimes.svg";
+// import { ReactComponent as FaTrash } from "../../../icons/FaTrash.svg";
+// import { ReactComponent as FaEdit } from "../../../icons/FaEdit.svg";
 import { ReactComponent as FaPlus } from "../../../icons/FaPlus.svg";
-import { useCustomContext } from "../../../Context/Contextfetch";
-import CustomDatePicker from "../../../utils/CustomDatePicker";
+// import { useCustomContext } from "../../../Context/Contextfetch";
+// import CustomDatePicker from "../../../utils/CustomDatePicker";
 // import {
 //   validateTenantForm,
 //   getErrorMessage,
@@ -138,18 +138,18 @@ const CustomDropdown = ({
 
 // Main AddTenantForm Component
 const AddTenantForm = ({ mode }) => {
-  const {
-    skills,
-    college,
-    qualification,
-    currentRole,
-    // candidateData,
-    // addOrUpdateCandidate
-  } = useCustomContext();
+  // const {
+  //   skills,
+  //   college,
+  //   qualification,
+  //   currentRole,
+  //   // candidateData,
+  //   // addOrUpdateCandidate
+  // } = useCustomContext();
 
   const { addOrUpdateCandidate, candidateData } = useCandidates();
 
-  console.log("currentRole", currentRole);
+  // console.log("currentRole", currentRole);
 
   const { id } = useParams();
   const navigate = useNavigate();

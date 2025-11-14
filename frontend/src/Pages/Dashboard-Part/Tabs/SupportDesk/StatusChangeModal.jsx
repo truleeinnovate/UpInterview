@@ -6,8 +6,6 @@ import { Minimize, Expand, X } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { useUserProfile, useSingleContact } from "../../../../apiHooks/useUsers.js";
-import { useCustomContext } from "../../../../Context/Contextfetch.js";
-
 
 const statusOptions = ["New", "Assigned", "Inprogress", "Resolved", "Close"];
 
@@ -23,9 +21,6 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
   //console.log('impersonationPayload:', impersonationPayload.impersonatedUserId);
   const { singleContact} = useSingleContact();
   console.log("singleContact=====",singleContact.firstName)
-
-  //const { superAdminProfile } = useCustomContext();
-  //console.log("superAdminProfile--====",superAdminProfile)
 
   const [newStatus, setNewStatus] = useState("");
   const [comment, setComment] = useState("");

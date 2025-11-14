@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Power, PowerOff } from "lucide-react";
 import { createPortal } from "react-dom";
+import { config } from "../../../../../config";
+import { getAuthToken } from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 
 const IntegrationsTab = () => {
   const [integrations, setIntegrations] = useState([]);
@@ -50,24 +52,41 @@ const IntegrationsTab = () => {
     fetchIntegrations();
   }, []);
 
-  const fetchIntegrations = async () => {
-    try {
-      const response = await fetch("/api/integrations");
-      const data = await response.json();
-      setIntegrations(data.data || []);
-    } catch (error) {
-      console.error("Error fetching integrations:", error);
-      setIntegrations([]);
+const fetchIntegrations = async () => {
+  try {
+    const authToken = getAuthToken();
+    const response = await fetch(`${config.REACT_APP_API_URL}/integrations`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      throw new Error('Failed to fetch integrations');
     }
-  };
+    
+    const data = await response.json();
+    setIntegrations(data.data || []);
+  } catch (error) {
+    console.error('Error fetching integrations:', error);
+    // Consider adding user feedback here (e.g., toast notification)
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submission started', { isEditing: !!editingIntegration, formData });
+    
     try {
       const url = editingIntegration
-        ? `/api/integrations/${editingIntegration.id}`
-        : "/api/integrations";
+        ? `${config.REACT_APP_API_URL}/integrations/${editingIntegration.id}`
+        : `${config.REACT_APP_API_URL}/integrations`;
       const method = editingIntegration ? "PUT" : "POST";
+      
+      console.log('Making API request:', { url, method, data: formData });
 
       const response = await fetch(url, {
         method,
@@ -75,11 +94,20 @@ const IntegrationsTab = () => {
         body: JSON.stringify(formData),
       });
 
+      console.log('API Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
       if (response.ok) {
+        console.log('Request successful, refreshing integrations...');
         await fetchIntegrations();
         setShowModal(false);
         setEditingIntegration(null);
-        setFormData({
+        
+        const resetFormData = {
           name: "",
           organization: "",
           webhookUrl: "",
@@ -93,10 +121,25 @@ const IntegrationsTab = () => {
             hmacSecret: "",
             oauth2: { clientId: "", clientSecret: "", tokenUrl: "", scope: "" },
           },
+        };
+        
+        console.log('Form reset and modal closed');
+        setFormData(resetFormData);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
         });
       }
     } catch (error) {
-      console.error("Error saving integration:", error);
+      console.error('Error in handleSubmit:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        formData: formData
+      });
     }
   };
 

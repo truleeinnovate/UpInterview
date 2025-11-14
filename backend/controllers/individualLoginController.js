@@ -7,6 +7,7 @@ const Tenant = require("../models/Tenant");
 const RolesPermissionObject = require('../models/RolesPermissionObject');
 const { getAuthCookieOptions } = require('../utils/cookieUtils');
 const { validateIndividualSignup } = require('../validations/IndivindualLoginValidation.js');
+const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 exports.individualLogin = async (req, res) => {
   try {
@@ -78,9 +79,11 @@ exports.individualLogin = async (req, res) => {
     }
 
     // ---------------- OUTSOURCE INTERVIEWER ----------------
+    const outsourceRequestCode = await generateUniqueId('OINT', OutsourceInterviewer, 'outsourceRequestCode');
     let newInterviewer = null;
     if (currentStep === 3 && userData.isFreelancer) {
       newInterviewer = new OutsourceInterviewer({
+        outsourceRequestCode:outsourceRequestCode,
         ownerId,
         contactId: savedContact._id,
         requestedRate: savedContact.rates || contactData.rates || {

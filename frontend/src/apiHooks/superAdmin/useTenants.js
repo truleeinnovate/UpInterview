@@ -5,8 +5,19 @@ import axios from "axios";
 import { config } from "../../config";
 import { usePermissions } from "../../Context/PermissionsContext";
 
-// All tenants list
-export const useTenants = () => {
+// All tenants list with pagination and filters
+export const useTenants = ({
+  page = 0,
+  limit = 10,
+  search = '',
+  status = '',
+  subscriptionStatus = '',
+  plan = '',
+  createdDate = '',
+  minUsers = '',
+  maxUsers = '',
+  type = ''
+} = {}) => {
   const queryClient = useQueryClient();
   const { superAdminPermissions, isInitialized } = usePermissions();
 
@@ -16,19 +27,32 @@ export const useTenants = () => {
   // Simple enabled logic - enable if we have permissions or if initialized
   const isEnabled = Boolean(hasAnyPermissions || isInitialized);
 
+  // Build query params
+  const queryParams = new URLSearchParams();
+  queryParams.append('page', page.toString());
+  queryParams.append('limit', limit.toString());
+  if (search) queryParams.append('search', search);
+  if (status) queryParams.append('status', status);
+  if (subscriptionStatus) queryParams.append('subscriptionStatus', subscriptionStatus);
+  if (plan) queryParams.append('plan', plan);
+  if (createdDate) queryParams.append('createdDate', createdDate);
+  if (minUsers) queryParams.append('minUsers', minUsers);
+  if (maxUsers) queryParams.append('maxUsers', maxUsers);
+  if (type) queryParams.append('type', type);
+
   const {
-    data: tenants = [],
+    data,
     isLoading,
     isError,
     error,
     refetch,
   } = useQuery({
-    queryKey: ["tenants"],
+    queryKey: ["tenants", page, limit, search, status, subscriptionStatus, plan, createdDate, minUsers, maxUsers, type],
     queryFn: async () => {
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/Organization/all-organizations`
+        `${config.REACT_APP_API_URL}/Organization/all-organizations?${queryParams.toString()}`
       );
-      return response.data.organizations.reverse() || [];
+      return response.data;
     },
     enabled: isEnabled,
     staleTime: 1000 * 60 * 5,
@@ -37,6 +61,7 @@ export const useTenants = () => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
+    keepPreviousData: true, // Keep previous data while fetching new page
   });
 
   // Add or Update Tenant
@@ -65,7 +90,15 @@ export const useTenants = () => {
   });
 
   return {
-    tenants,
+    tenants: data?.data || [],
+    pagination: data?.pagination || {
+      currentPage: 0,
+      totalPages: 0,
+      totalItems: 0,
+      hasNext: false,
+      hasPrev: false,
+      itemsPerPage: limit
+    },
     isLoading,
     isError,
     error,

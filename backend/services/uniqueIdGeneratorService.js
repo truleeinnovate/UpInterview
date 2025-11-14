@@ -19,6 +19,26 @@
 
 const mongoose = require('mongoose');
 
+// Sequence counter model for atomic ID generation
+// One document per sequence scope (prefix or prefix:tenantId)
+const sequenceCounterSchema = new mongoose.Schema(
+  {
+    key: { type: String, required: true, unique: true }, // e.g., 'INT' or 'INT:<tenantId>'
+    seq: { type: Number, required: true },
+    meta: {
+      prefix: { type: String },
+      padLength: { type: Number },
+      startNumber: { type: Number },
+      tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', default: null }
+    },
+    updatedAt: { type: Date, default: Date.now }
+  },
+  { collection: 'sequence_counters' }
+);
+
+const SequenceCounter =
+  mongoose.models.SequenceCounter || mongoose.model('SequenceCounter', sequenceCounterSchema);
+
 /**
  * Configuration for different entity types
  * Can be extended for specific requirements per entity
@@ -122,11 +142,25 @@ const ENTITY_CONFIG = {
     fieldName: 'assessmentTemplateCode',
     maxRetries: 5
   },
+  // ScheduleAssessment
+  'ASMT': { 
+    startNumber: 1, 
+    padLength: 5,
+    fieldName: 'scheduledAssessmentCode',
+    maxRetries: 5
+  },
   // Interview Template
   'INT-TPL': { 
     startNumber: 1, 
     padLength: 5,
     fieldName: 'interviewTemplateCode',
+    maxRetries: 5
+  },
+  //loggingServices
+  'ILOG': { 
+    startNumber: 1, 
+    padLength: 5,
+    fieldName: 'logId',
     maxRetries: 5
   },
   // Default configuration for custom prefixes
@@ -162,97 +196,70 @@ async function generateUniqueId(
 ) {
   // Get configuration for this prefix
   const config = ENTITY_CONFIG[prefix] || ENTITY_CONFIG['DEFAULT'];
-  
+
   // Use provided values or fall back to config
   const effectiveFieldName = fieldName || config.fieldName;
-  const effectivePadLength = padLength || config.padLength;
-  const effectiveStartNumber = startNumber || config.startNumber;
-  const effectiveMaxRetries = maxRetries || config.maxRetries;
-  
-  let attempts = 0;
-  
-  while (attempts < effectiveMaxRetries) {
+  const effectivePadLength = padLength ?? config.padLength;
+  const effectiveStartNumber = startNumber ?? config.startNumber;
+  const effectiveMaxRetries = Math.max(1, maxRetries ?? config.maxRetries);
+
+  const key = getSequenceKey(prefix, tenantId);
+
+  for (let attempts = 0; attempts < effectiveMaxRetries; attempts++) {
     try {
-      // Find the last document with this field to get the highest number
-      const query = {};
-      query[effectiveFieldName] = { 
-        $exists: true,
-        $regex: new RegExp(`^${prefix}-\\d+$`)  // Only match proper format
-      };
-      
-      // Add tenant filter for organization-level entities
-      if (tenantId) {
-        query.tenantId = tenantId;
-      }
-      
-      // Sort by the actual field in descending order to get the highest code
-      const sortQuery = {};
-      sortQuery[effectiveFieldName] = -1;
-      
-      const lastDoc = await Model.findOne(query)
-        .sort(sortQuery)
-        .select(effectiveFieldName)
-        .lean();
-      
-      let nextNumber = effectiveStartNumber;
-      
-      if (lastDoc && lastDoc[effectiveFieldName]) {
-        // Extract number from PREFIX-XXXXX format
-        const regex = new RegExp(`${prefix}-(\\d+)`);
-        const match = lastDoc[effectiveFieldName].match(regex);
-        
-        if (match) {
-          const lastNumber = parseInt(match[1], 10);
-          // Increment from last number or start from effectiveStartNumber
-          nextNumber = lastNumber >= effectiveStartNumber ? lastNumber + 1 : effectiveStartNumber;
-        }
-      }
-      
-      // Add attempts offset to reduce collision probability in concurrent scenarios
-      const uniqueNumber = nextNumber + attempts;
-      const uniqueId = `${prefix}-${String(uniqueNumber).padStart(effectivePadLength, '0')}`;
-      
-      // Check if this ID already exists (handles race conditions)
-      const existingQuery = {};
-      existingQuery[effectiveFieldName] = uniqueId;
-      
-      // Also filter by tenantId if provided
-      if (tenantId) {
-        existingQuery.tenantId = tenantId;
-      }
-      
-      const existingDoc = await Model.findOne(existingQuery).lean();
-      
-      if (!existingDoc) {
-        // ID is unique, return it
-        console.log(`[UniqueID] Generated ${uniqueId} for ${Model.modelName}${tenantId ? ` (tenant: ${tenantId})` : ''} (attempt ${attempts + 1})`);
+      // 1) Atomically get the next sequence number for this scope
+      const nextSeq = await getNextSequence(prefix, tenantId, effectiveStartNumber, effectivePadLength);
+      const uniqueId = `${prefix}-${String(nextSeq).padStart(effectivePadLength, '0')}`;
+
+      // 2) Quick existence check (should almost never hit in normal flow)
+      const existingQuery = { [effectiveFieldName]: uniqueId };
+      if (tenantId) existingQuery.tenantId = tenantId;
+      const exists = await Model.exists(existingQuery);
+
+      if (!exists) {
+        console.log(
+          `[UniqueID] Generated ${uniqueId} for ${Model.modelName}${tenantId ? ` (tenant: ${tenantId})` : ''} (seq)`
+        );
         return uniqueId;
       }
-      
-      // If ID exists, log and retry
-      console.warn(`[UniqueID] ${uniqueId} already exists in ${Model.modelName}, retrying...`);
-      attempts++;
-      
+
+      // 3) Rare case: legacy data ahead of counter. Bump counter to current max and retry.
+      //  const maxExisting = await getMaxExistingNumber(
+      //   Model,
+      //   effectiveFieldName,
+      //   prefix,
+      //   tenantId,
+      //   effectiveStartNumber
+      // );
+
+      // await SequenceCounter.findOneAndUpdate(
+      //   { key },
+      //   { $max: { seq: Math.max(maxExisting, nextSeq) } },
+      //   { upsert: true }
+      // );
+
+      // console.warn(
+      //   `[UniqueID] Detected existing ${uniqueId} in ${Model.modelName}. Advanced sequence to ${Math.max(
+      //     maxExisting,
+      //     nextSeq
+      //   )} and retrying...`
+      // );
+      continue;
     } catch (error) {
-      console.error(`[UniqueID] Error generating ID for ${Model.modelName}:`, error);
-      
       // For database connection errors, throw immediately
-      if (error.name === 'MongoNetworkError' || error.name === 'MongoServerError') {
+      if (error?.name === 'MongoNetworkError' || error?.name === 'MongoServerError') {
         throw error;
       }
-      
-      attempts++;
-      
-      // For other errors, continue trying
-      if (attempts >= effectiveMaxRetries) {
+
+      if (attempts === effectiveMaxRetries - 1) {
         throw new Error(
           `Failed to generate unique ID for ${Model.modelName} after ${effectiveMaxRetries} attempts: ${error.message}`
         );
       }
     }
   }
-  
-  // If we exhausted all retries, throw error
+
+  // Should not reach here due to return/throw in loop
   throw new Error(
     `Unable to generate unique ${effectiveFieldName} for ${Model.modelName} after ${effectiveMaxRetries} attempts. Please try again.`
   );
@@ -323,6 +330,111 @@ function configurePrefix(prefix, config) {
     ...config
   };
 }
+
+
+/**
+ * Helpers (internal)
+ */
+
+function getSequenceKey(prefix, tenantId) {
+  return tenantId ? `${prefix}:${tenantId}` : prefix;
+}
+
+async function getNextSequence(prefix, tenantId, startNumber, padLength) {
+  const key = getSequenceKey(prefix, tenantId);
+  const now = new Date();
+
+  // Use aggregation pipeline update to avoid modifier conflicts on the same path
+  // seq = (ifNull(seq, start-1)) + 1
+  const pipeline = [
+    {
+      $set: {
+        seq: {
+          $add: [
+            { $ifNull: [ '$seq', Math.max((startNumber ?? 1) - 1, 0) ] },
+            1
+          ]
+        },
+        updatedAt: now,
+        meta: {
+          prefix,
+          padLength,
+          startNumber,
+          tenantId: tenantId || null
+        }
+      }
+    }
+  ];
+
+  // Use native driver to avoid Mongoose modifier-path conflict checks
+  const coll = SequenceCounter.collection;
+  let res;
+  try {
+    res = await coll.findOneAndUpdate(
+      { key },
+      pipeline,
+      { upsert: true, returnDocument: 'after' }
+    );
+  } catch (e) {
+    try {
+      // Fallback for older drivers/servers without pipeline update support
+      // 1) Ensure document exists with starting value (no conflict on seq)
+      await coll.updateOne(
+        { key },
+        {
+          $setOnInsert: {
+            seq: Math.max((startNumber ?? 1) - 1, 0),
+            meta: { prefix, padLength, startNumber, tenantId: tenantId || null }
+          },
+          $set: { updatedAt: now }
+        },
+        { upsert: true }
+      );
+
+      // 2) Atomically increment to get next sequence
+      res = await coll.findOneAndUpdate(
+        { key },
+        { $inc: { seq: 1 }, $set: { updatedAt: now } },
+        { returnDocument: 'after' }
+      );
+    } catch (e2) {
+      // Last-chance fallback for very old drivers
+      res = await coll.findOneAndUpdate(
+        { key },
+        { $inc: { seq: 1 }, $set: { updatedAt: now } },
+        { upsert: true, returnOriginal: false }
+      );
+    }
+  }
+
+  const doc = res?.value || res;
+  return doc.seq;
+}
+
+async function getMaxExistingNumber(Model, fieldName, prefix, tenantId, startNumber) {
+  const query = {
+    [fieldName]: {
+      $exists: true,
+      $regex: new RegExp(`^${prefix}-\\d+$`)
+    }
+  };
+  if (tenantId) query.tenantId = tenantId;
+
+  const sortQuery = { [fieldName]: -1 };
+  const lastDoc = await Model.findOne(query).sort(sortQuery).select(fieldName).lean();
+
+  if (lastDoc?.[fieldName]) {
+    const regex = new RegExp(`${prefix}-(\\d+)`);
+    const match = lastDoc[fieldName].match(regex);
+    if (match) {
+      const lastNumber = parseInt(match[1], 10) || 0;
+      return Math.max(lastNumber, (startNumber ?? 1) - 1);
+    }
+  }
+
+  return (startNumber ?? 1) - 1;
+}
+
 
 module.exports = {
   generateUniqueId,

@@ -9,6 +9,7 @@
 // v1.0.8  -  Ashok   - added common code for kanban
 // v1.0.9  -  Ashok   - added clickable title to navigate to details page at kanban
 // v2.0.0  -  Ashok   - added max salary annually for filters
+// v2.0.1  -  Ashok   - added common code for empty state messages when fetch, search and filter etc.
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -42,6 +43,7 @@ import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal";
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
 import { formatDateTime } from "../../../../utils/dateFormatter";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage";
 
 const capitalizeFirstLetter = (string) => {
   if (!string) return "";
@@ -142,7 +144,6 @@ const PositionTab = () => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const { locations, skills, companies } = useMasterData(); //<-----v1.03-----
 
-
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("table");
@@ -208,7 +209,7 @@ const PositionTab = () => {
     salaryMax: selectedFilters.salaryMax, // Add this line
     createdDate: selectedFilters.createdDate,
     page: currentPage + 1,
-    limit: rowsPerPage
+    limit: rowsPerPage,
   };
 
   const {
@@ -264,8 +265,6 @@ const PositionTab = () => {
   }, [companies]);
   //-----v1.03----->
 
-
-
   // v1.0.2 <------------------------------------------------------
   // useEffect(() => {
   //   const handleResize = () => {
@@ -302,7 +301,8 @@ const PositionTab = () => {
           ? String(selectedFilters.salaryMin)
           : ""
       );
-      setSalaryMax( // Add this block
+      setSalaryMax(
+        // Add this block
         selectedFilters.salaryMax !== undefined &&
           selectedFilters.salaryMax !== null
           ? String(selectedFilters.salaryMax)
@@ -396,13 +396,13 @@ const PositionTab = () => {
     setCurrentPage(0);
     setIsFilterActive(
       filters.location.length > 0 ||
-      filters.tech.length > 0 ||
-      filters.company.length > 0 ||
-      filters.experience.min > 0 ||
-      filters.experience.max < 15 ||
-      filters.salaryMin > 0 ||
-      filters.salaryMax > 0 ||
-      !!filters.createdDate
+        filters.tech.length > 0 ||
+        filters.company.length > 0 ||
+        filters.experience.min > 0 ||
+        filters.experience.max < 15 ||
+        filters.salaryMin > 0 ||
+        filters.salaryMax > 0 ||
+        !!filters.createdDate
     );
     setFilterPopupOpen(false);
   };
@@ -417,7 +417,6 @@ const PositionTab = () => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
   };
-
 
   // const totalPages = Math.ceil(positionData.length / rowsPerPage);
   // const nextPage = () => {
@@ -454,7 +453,6 @@ const PositionTab = () => {
   // const currentFilteredRows = positionData.slice(startIndex, endIndex);
 
   const currentFilteredRows = positionData || [];
-
 
   const statusOptions = STATUS_OPTIONS.map((s) => ({
     value: s,
@@ -524,6 +522,24 @@ const PositionTab = () => {
     closeStatusModal();
   };
   //----v1.02----->
+
+  // v2.0.1 <-------------------------------------------------------------------------------
+  // Calculate filter/search activity
+  const isSearchActive = searchQuery.length > 0 || isFilterActive;
+
+  // Get the actual total count (before filtering on client, from server response)
+  const initialDataCount = total || 0;
+
+  // Get the count of currently displayed rows (will be 0 if filters/search yielded nothing)
+  const currentFilteredCount = currentFilteredRows?.length || 0;
+
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    "Positions"
+  );
+  // v2.0.1 ------------------------------------------------------------------------------->
 
   const tableColumns = [
     {
@@ -616,44 +632,44 @@ const PositionTab = () => {
   const tableActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-        {
-          key: "view",
-          label: "View Details",
-          icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: (row) => handleView(row),
-        },
-      ]
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: (row) => handleView(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-        //<----v1.02-----
-        {
-          key: "change_status",
-          label: "Change Status",
-          icon: <Repeat className="w-4 h-4 text-green-600" />,
-          onClick: (row) => openStatusModal(row),
-        },
-        //----v1.02----->
-        {
-          key: "edit",
-          label: "Edit",
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: (row) => handleEdit(row),
-        },
-      ]
+          //<----v1.02-----
+          {
+            key: "change_status",
+            label: "Change Status",
+            icon: <Repeat className="w-4 h-4 text-green-600" />,
+            onClick: (row) => openStatusModal(row),
+          },
+          //----v1.02----->
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => handleEdit(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-        {
-          key: "delete",
-          label: "Delete",
-          icon: <Trash className="w-4 h-4 text-red-600" />,
-          onClick: (row) => {
-            setShowDeleteConfirmModal(true);
-            setDeletePosition(row);
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (row) => {
+              setShowDeleteConfirmModal(true);
+              setDeletePosition(row);
+            },
           },
-        },
-      ]
+        ]
       : []),
   ];
   // v1.0.5 <----------------------------------------------------------------------------------
@@ -717,47 +733,47 @@ const PositionTab = () => {
   const kanbanActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-        {
-          key: "view",
-          label: "View Details",
-          icon: <Eye className="w-4 h-4 text-blue-600" />,
-          onClick: (row) => handleView(row),
-        },
-      ]
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => handleView(row),
+          },
+        ]
       : []),
 
     ...(effectivePermissions.Positions?.Edit
       ? [
-        {
-          key: "change_status",
-          label: "Change Status",
-          icon: <Repeat className="w-4 h-4 text-green-600" />,
-          onClick: (row) => openStatusModal(row),
-        },
-      ]
+          {
+            key: "change_status",
+            label: "Change Status",
+            icon: <Repeat className="w-4 h-4 text-green-600" />,
+            onClick: (row) => openStatusModal(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-        {
-          key: "edit",
-          label: "Edit",
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: (row) => handleEdit(row),
-        },
-      ]
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => handleEdit(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-        {
-          key: "delete",
-          label: "Delete",
-          icon: <Trash className="w-4 h-4 text-red-600" />,
-          onClick: (row) => {
-            setShowDeleteConfirmModal(true);
-            setDeletePosition(row);
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (row) => {
+              setShowDeleteConfirmModal(true);
+              setDeletePosition(row);
+            },
           },
-        },
-      ]
+        ]
       : []),
   ];
   // v1.0.8 ---------------------------------------------------------------------------------->
@@ -823,7 +839,7 @@ const PositionTab = () => {
                     columns={tableColumns}
                     loading={isLoading}
                     actions={tableActions}
-                    emptyState="No Positions Found."
+                    emptyState={emptyStateMessage}
                   />
                 </div>
               ) : (
@@ -846,7 +862,7 @@ const PositionTab = () => {
                       />
                     )}
                     onTitleClick={(item) => handleView(item)}
-                    emptyState="No positions found."
+                    emptyState={emptyStateMessage}
                     kanbanTitle="Position"
                   />
                   {/* v1.0.8 ------------------------------------------------------------> */}
@@ -928,7 +944,7 @@ const PositionTab = () => {
                                 onChange={() => handleLocationToggle(location)}
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                              // v1.0.1 --------------------------------------------------------------->
+                                // v1.0.1 --------------------------------------------------------------->
                               />
                               <span className="text-sm">{location}</span>
                             </label>
@@ -969,7 +985,7 @@ const PositionTab = () => {
                                 }
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                              // v1.0.1 <---------------------------------------------------------------
+                                // v1.0.1 <---------------------------------------------------------------
                               />
                               <span className="text-sm">{skill.SkillName}</span>
                             </label>

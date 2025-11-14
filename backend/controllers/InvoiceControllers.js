@@ -117,37 +117,107 @@ const createInvoice = async (req, res) => {
   }
 };
 
-// SUPER ADMIN added by Ashok ----------------------------------->
+// SUPER ADMIN - Server-side pagination and filters
 const getInvoices = async (req, res) => {
   try {
-    const invoices = await Invoice.find().sort({ _id: -1}).lean();
+    const {
+      page = 0,
+      limit = 10,
+      search = "",
+      status = "",
+      type = "",
+      startDate = "", // filter by createdAt lower bound
+      endDate = "",
+      tenantId = "",
+      ownerId = "",
+      minAmount = "",
+      maxAmount = "",
+    } = req.query;
 
-    // Calculate aggregates
-    const totalInvoices = invoices.length;
+    const skip = parseInt(page) * parseInt(limit);
+    const limitNum = parseInt(limit);
 
-    const totalAmount = invoices.reduce(
-      (sum, invoice) => sum + (invoice.totalAmount || 0),
-      0
-    );
-    const totalPaid = invoices.reduce(
-      (sum, invoice) => sum + (invoice.amountPaid || 0),
-      0
-    );
-    const totalOutstanding = invoices.reduce(
-      (sum, invoice) => sum + (invoice.outstandingAmount || 0),
-      0
-    );
+    // Build query
+    const query = {};
 
-    // Avoid division by zero
-    const collectionRate =
-      totalAmount > 0 ? ((totalPaid / totalAmount) * 100).toFixed(2) : "0.00";
+    if (search) {
+      const regex = new RegExp(search, "i");
+      query.$or = [
+        { invoiceCode: regex },
+        { planName: regex },
+        { type: regex },
+        { comments: regex },
+      ];
+    }
 
-    res.status(200).json({
-      totalInvoices,
-      totalAmount,
-      totalOutstanding,
-      collectionRate: `${collectionRate}%`,
-      invoices,
+    if (status) {
+      query.status = { $in: status.split(",") };
+    }
+
+    if (type) {
+      query.type = { $in: type.split(",") };
+    }
+
+    if (tenantId) {
+      query.tenantId = tenantId;
+    }
+
+    if (ownerId) {
+      query.ownerId = ownerId;
+    }
+
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = new Date(startDate);
+      if (endDate) {
+        const d = new Date(endDate);
+        d.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = d;
+      }
+    }
+
+    if (minAmount || maxAmount) {
+      query.totalAmount = {};
+      if (minAmount) query.totalAmount.$gte = Number(minAmount);
+      if (maxAmount) query.totalAmount.$lte = Number(maxAmount);
+    }
+
+    const total = await Invoice.countDocuments(query);
+
+    const invoices = await Invoice.find(query)
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean();
+
+    // Aggregates calculated across the full filtered set, not only the page
+    // For performance, re-run a lean aggregate on the same query
+    const allAgg = await Invoice.find(query).select("totalAmount amountPaid outstandingAmount").lean();
+    const totalInvoices = total;
+    const totalAmount = allAgg.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
+    const totalPaid = allAgg.reduce((sum, inv) => sum + (inv.amountPaid || 0), 0);
+    const totalOutstanding = allAgg.reduce((sum, inv) => sum + (inv.outstandingAmount || 0), 0);
+    const collectionRate = totalAmount > 0 ? Number(((totalPaid / totalAmount) * 100).toFixed(2)) : 0;
+
+    return res.status(200).json({
+      data: invoices,
+      invoices, // backward compatibility
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limitNum) || 0,
+        totalItems: total,
+        hasNext: skip + limitNum < total,
+        hasPrev: parseInt(page) > 0,
+        itemsPerPage: limitNum,
+      },
+      stats: {
+        totalInvoices,
+        totalAmount,
+        totalPaid,
+        totalOutstanding,
+        collectionRate,
+      },
+      status: true,
     });
   } catch (error) {
     console.error("Detailed error:", {
@@ -155,9 +225,10 @@ const getInvoices = async (req, res) => {
       stack: error.stack,
       name: error.name,
     });
-    res.status(500).json({
+    return res.status(500).json({
       error: "Server error",
       details: error.message,
+      status: false,
     });
   }
 };

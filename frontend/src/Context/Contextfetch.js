@@ -19,11 +19,11 @@ const CustomContext = createContext();
 const CustomProvider = ({ children }) => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload?.userId;
+  // const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
-  const impersonatedUserId = Cookies.get("impersonatedUserId");
+  // const impersonatedUserId = Cookies.get("impersonatedUserId");
 
-  const [userRole, setuserRole] = useState("Admin");
+  // const [userRole, setuserRole] = useState("Admin");
 
   // const { sharingPermissionscontext = {} } = usePermissions() || {};
   // const sharingPermissions = useMemo(
@@ -35,21 +35,21 @@ const CustomProvider = ({ children }) => {
   // const [iter] = useState(6);
   // const [searchText, setSearchText] = useState('');
   // const [isOpen, setIsopen] = useState(false);
-  const [page, setPage] = useState("Home");
+  // const [page, setPage] = useState("Home");
   // const [popupVisibility, setPopupVisibility] = useState(false);
   // const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
   // const [createdLists, setCreatedLists] = useState([]);
 
 
-  const [feedbackTabErrors, setFeedbackTabError] = useState({
-    interviewQuestion: true,
-    skills: true,
-    overallImpression: true,
-  });
+  // const [feedbackTabErrors, setFeedbackTabError] = useState({
+  //   interviewQuestion: true,
+  //   skills: true,
+  //   overallImpression: true,
+  // });
   // const [suggestedQuestions, setSuggestedQuestions] = useState([]);
   // const [suggestedQuestionsFilteredData, setSuggestedQuestionsFilteredData] = useState([]);
   // const [myQuestionsList, setMyQuestionsList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   // const [locations, setLocations] = useState([]);
   // const [industries, setIndustries] = useState([]);
   // const [currentRole, setCurrentRole] = useState([]);
@@ -61,25 +61,25 @@ const CustomProvider = ({ children }) => {
   // const [companies, setCompanies] = useState([]);
   // const [technologies, setTechnology] = useState([]);
 
-  // users data
-  const [userProfile, setUserProfile] = useState(null);
+  // // users data
+  // const [userProfile, setUserProfile] = useState(null);
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/auth/users/${userId}`
-        );
-        setUserProfile(response.data);
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchUserProfile = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/auth/users/${userId}`
+  //       );
+  //       setUserProfile(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching user profile:", error);
+  //     }
+  //   };
 
-    if (userId) {
-      fetchUserProfile();
-    }
-  }, [userId]);
+  //   if (userId) {
+  //     fetchUserProfile();
+  //   }
+  // }, [userId]);
 
   // Fetch My Questions Data
   // const fetchMyQuestionsData = useCallback(async () => {
@@ -138,87 +138,87 @@ const CustomProvider = ({ children }) => {
   const queryClient = useQueryClient();
 
   // outsource interviewers
-  const [outsourceInterviewers, setOutsourceInterviewers] = useState([]);
-  const fetchOutsourceInterviewers = useCallback(async () => {
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/outsourceInterviewers`
-      );
-      const reversedData = response.data.reverse();
-      setOutsourceInterviewers(reversedData);
-    } catch (err) {
-      // console.error('❌ Error fetching interviewers:', err);
-    }
-  }, []);
+  // const [outsourceInterviewers, setOutsourceInterviewers] = useState([]);
+  // const fetchOutsourceInterviewers = useCallback(async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/outsourceInterviewers`
+  //     );
+  //     const reversedData = response.data.reverse();
+  //     setOutsourceInterviewers(reversedData);
+  //   } catch (err) {
+  //     // console.error('❌ Error fetching interviewers:', err);
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    fetchOutsourceInterviewers();
-  }, [fetchOutsourceInterviewers]);
+  // useEffect(() => {
+  //   fetchOutsourceInterviewers();
+  // }, [fetchOutsourceInterviewers]);
 
   // notifications
-  const [notificationsData] = useState([]);
+  // const [notificationsData] = useState([]);
 
   // Fetch groups
-  const [groups, setGroups] = useState([]);
+  // const [groups, setGroups] = useState([]);
 
-  const fetchGroupsData = useCallback(async () => {
-    if (!tenantId) {
-      setGroups([]);
-      setLoading(false);
-      return;
-    }
+  // const fetchGroupsData = useCallback(async () => {
+  //   if (!tenantId) {
+  //     setGroups([]);
+  //     setLoading(false);
+  //     return;
+  //   }
 
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/groups/data`,
-        {
-          params: {
-            tenantId: tenantId,
-          },
-        }
-      );
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/groups/data`,
+  //       {
+  //         params: {
+  //           tenantId: tenantId,
+  //         },
+  //       }
+  //     );
 
-      if (response.data && Array.isArray(response.data)) {
-        setGroups(response.data);
-      } else {
-        console.error("Invalid groups data format:", response.data);
-        setGroups([]);
-      }
-    } catch (error) {
-      console.error(
-        "Error fetching groups:",
-        error.response?.data?.error || error.message
-      );
-      setGroups([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId]);
+  //     if (response.data && Array.isArray(response.data)) {
+  //       setGroups(response.data);
+  //     } else {
+  //       console.error("Invalid groups data format:", response.data);
+  //       setGroups([]);
+  //     }
+  //   } catch (error) {
+  //     console.error(
+  //       "Error fetching groups:",
+  //       error.response?.data?.error || error.message
+  //     );
+  //     setGroups([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [tenantId]);
 
 
-  useEffect(() => {
-    fetchGroupsData();
-  }, [fetchGroupsData]);
+  // useEffect(() => {
+  //   fetchGroupsData();
+  // }, [fetchGroupsData]);
 
   // users
-  const [usersData, setUsersData] = useState([]);
-  // console.log('usersData in context to check subdomain :-', usersData)
+  // const [usersData, setUsersData] = useState([]);
+  // // console.log('usersData in context to check subdomain :-', usersData)
 
-  // Fetch users data
-  const fetchUsersData = async () => {
-    try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/users`, {
-        withCredentials: true
-      });
-      setUsersData(response.data);
-    } catch (error) {
-      console.error("Error fetching users data:", error);
-    }
-  };
+  // // Fetch users data
+  // const fetchUsersData = async () => {
+  //   try {
+  //     const response = await axios.get(`${config.REACT_APP_API_URL}/users`, {
+  //       withCredentials: true
+  //     });
+  //     setUsersData(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching users data:", error);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchUsersData();
-  }, []);
+  // useEffect(() => {
+  //   fetchUsersData();
+  // }, []);
 
   // organization code
   const {
@@ -257,24 +257,24 @@ const CustomProvider = ({ children }) => {
     },
   });
 
-  const [contacts, setContacts] = useState([]);
+  // const [contacts, setContacts] = useState([]);
 
-  const fetchContactsData = async () => {
-    try {
-      const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
-      const allUsers_data = allUsers.data;
+  // const fetchContactsData = async () => {
+  //   try {
+  //     const allUsers = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
+  //     const allUsers_data = allUsers.data;
 
-      setContacts(allUsers_data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      // setLoading(false);
-    }
-  };
+  //     setContacts(allUsers_data);
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error);
+  //   } finally {
+  //     // setLoading(false);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchContactsData();
-  }, []);
+  // useEffect(() => {
+  //   fetchContactsData();
+  // }, []);
 
   // Removed singlecontact logic - now using useSingleContact hook from apiHooks
 
@@ -297,43 +297,44 @@ const CustomProvider = ({ children }) => {
   // }, [impersonatedUserId]);
 
   // getting interviewers and showing it in the home (available interviewers) and interviewers
-  const [interviewers, setInterviewers] = useState([]);
-  const [loadingInterviewer, setLoadingInterviewer] = useState(false);
+  // const [interviewers, setInterviewers] = useState([]);
+  // const [loadingInterviewer, setLoadingInterviewer] = useState(false);
 
-  const fetchInterviewers = useCallback(async () => {
-    if (!tenantId) return;
+  // const fetchInterviewers = useCallback(async () => {
+  //   if (!tenantId) return;
 
-    let isMounted = true;
+  //   let isMounted = true;
 
-    try {
-      setLoadingInterviewer(true);
-      // console.log("Fetching interviewers for tenantId:", tenantId);
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`
-      );
+  //   try {
+  //     setLoadingInterviewer(true);
+  //     // console.log("Fetching interviewers for tenantId:", tenantId);
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`
+  //     );
 
-      if (isMounted) {
-        // console.log("Interviewers data received:", response.data);
-        setInterviewers(response.data);
-      }
-    } catch (err) {
-      // console.error("Error fetching interviewers:", err.message);
-    } finally {
-      if (isMounted) {
-        setLoadingInterviewer(false);
-      }
-    }
+  //     if (isMounted) {
+  //       // console.log("Interviewers data received:", response.data);
+  //       setInterviewers(response.data);
+  //     }
+  //   } catch (err) {
+  //     // console.error("Error fetching interviewers:", err.message);
+  //   } finally {
+  //     if (isMounted) {
+  //       setLoadingInterviewer(false);
+  //     }
+  //   }
 
-    return () => {
-      isMounted = false;
-    };
-  }, [tenantId]);
+  //   return () => {
+  //     isMounted = false;
+  //   };
+  // }, [tenantId]);
 
-  useEffect(() => {
-    fetchInterviewers();
-  }, [fetchInterviewers]);
+  // useEffect(() => {
+  //   fetchInterviewers();
+  // }, [fetchInterviewers]);
 
   // Query for fetching users
+  //this api helps to get users data based on tenantId to show all tenant users in users tab
   const {
     data: usersRes = [],
     isLoading: usersLoading,
@@ -523,119 +524,120 @@ const CustomProvider = ({ children }) => {
     },
   });
 
-  const [currentPlan, setcurrentPlan] = useState([]);
-  // const [loading, setLoading] = useState(true);
-  // this will check that that plans is already set or not
+  // COMMENTED OUT: Redundant - Already have useSubscription hook that provides the same data
+  // const [currentPlan, setcurrentPlan] = useState([]);
+  // // const [loading, setLoading] = useState(true);
+  // // this will check that that plans is already set or not
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const Sub_res = await axios.get(
-          `${config.REACT_APP_API_URL}/subscription-plans/user/${userId}`
-        );
-        const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
-        // If subscription exists, set it; otherwise, keep it empty
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const Sub_res = await axios.get(
+  //         `${config.REACT_APP_API_URL}/subscription-plans/user/${userId}`
+  //       );
+  //       const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
+  //       // If subscription exists, set it; otherwise, keep it empty
 
-        if (Subscription_data.subscriptionPlanId) {
-          setcurrentPlan(Subscription_data);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+  //       if (Subscription_data.subscriptionPlanId) {
+  //         setcurrentPlan(Subscription_data);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   };
 
-    if (userId) {
-      fetchData();
-    }
-  }, [userId]);
+  //   if (userId) {
+  //     fetchData();
+  //   }
+  // }, [userId]);
 
-  const [walletBalance, SetWalletBalance] = useState([]);
-  // const [loading, setLoading] = useState(true);
-  // this will check that that plans is already set or not
+  // COMMENTED OUT: Redundant - Already have useWallet hook that provides the same data
+  // const [walletBalance, SetWalletBalance] = useState([]);
 
-  useEffect(() => {
-    const fetchWalletData = async () => {
-      try {
-        const WalletBalance_res = await axios.get(
-          `${config.REACT_APP_API_URL}/wallet/${userId}`
-        );
-        const WalletBalance_data = WalletBalance_res.data || {};
+  // useEffect(() => {
+  //   const fetchWalletData = async () => {
+  //     try {
+  //       const WalletBalance_res = await axios.get(
+  //         `${config.REACT_APP_API_URL}/wallet/${userId}`
+  //       );
+  //       const WalletBalance_data = WalletBalance_res.data || {};
 
-        if (WalletBalance_data) {
-          SetWalletBalance(WalletBalance_data);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+  //       if (WalletBalance_data) {
+  //         SetWalletBalance(WalletBalance_data);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   };
 
-    if (userId) {
-      fetchWalletData();
-    }
-  }, [userId]);
+  //   if (userId) {
+  //     fetchWalletData();
+  //   }
+  // }, [userId]);
 
-  const [tickets, setTickets] = useState([]);
+  // COMMENTED OUT: Redundant - Already have useSupportTickets hook that provides the same data
+  // const [tickets, setTickets] = useState([]);
 
-  const getTickets = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/get-tickets`
-      );
-      let filteredTickets = response.data.tickets || [];
+  // const getTickets = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/get-tickets`
+  //     );
+  //     let filteredTickets = response.data.tickets || [];
 
-      if (userRole === "SuperAdmin" || userRole === "Support Team") {
-        setTickets(filteredTickets);
-      } else if (userRole === "Admin" && tenantId) {
-        filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.tenantId === tenantId
-        );
-        setTickets(filteredTickets);
-      } else if (userRole === "Individual" && userId) {
-        filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.ownerId === userId
-        );
-        setTickets(filteredTickets);
-      } else if (userId) {
-        filteredTickets = filteredTickets.filter(
-          (ticket) => ticket.assignedToId === userId
-        );
-        setTickets(filteredTickets);
-      } else {
-        setTickets([]);
-      }
-    } catch (error) {
-      console.error("Error fetching tickets:", error);
-      setTickets([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [userRole, tenantId, userId]);
+  //     if (userRole === "SuperAdmin" || userRole === "Support Team") {
+  //       setTickets(filteredTickets);
+  //     } else if (userRole === "Admin" && tenantId) {
+  //       filteredTickets = filteredTickets.filter(
+  //         (ticket) => ticket.tenantId === tenantId
+  //       );
+  //       setTickets(filteredTickets);
+  //     } else if (userRole === "Individual" && userId) {
+  //       filteredTickets = filteredTickets.filter(
+  //         (ticket) => ticket.ownerId === userId
+  //       );
+  //       setTickets(filteredTickets);
+  //     } else if (userId) {
+  //       filteredTickets = filteredTickets.filter(
+  //         (ticket) => ticket.assignedToId === userId
+  //       );
+  //       setTickets(filteredTickets);
+  //     } else {
+  //       setTickets([]);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching tickets:", error);
+  //     setTickets([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [userRole, tenantId, userId]);
 
-  useEffect(() => {
-    getTickets();
-  }, [getTickets]);
+  // useEffect(() => {
+  //   getTickets();
+  // }, [getTickets]);
 
   // <-- interview rounds to show the data in the home for upcoming interviews -->
-  const [interviewRounds, setInterviewRounds] = useState([]);
+  // const [interviewRounds, setInterviewRounds] = useState([]);
 
-  const fetchInterviewRounds = useCallback(async () => {
-    try {
-      // Fetch all interview rounds with interviewId populated
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/interviewRounds?populate=interviewId`
-      );
-      // You may need to adjust the API endpoint to support population if not already
-      setInterviewRounds(response.data.reverse());
-    } catch (error) {
-      console.error("Error fetching interview rounds:", error);
-      setInterviewRounds([]);
-    }
-  }, []);
+  // const fetchInterviewRounds = useCallback(async () => {
+  //   try {
+  //     // Fetch all interview rounds with interviewId populated
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/interviewRounds?populate=interviewId`
+  //     );
+  //     // You may need to adjust the API endpoint to support population if not already
+  //     setInterviewRounds(response.data.reverse());
+  //   } catch (error) {
+  //     console.error("Error fetching interview rounds:", error);
+  //     setInterviewRounds([]);
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    fetchInterviewRounds();
-  }, [fetchInterviewRounds]);
+  // useEffect(() => {
+  //   fetchInterviewRounds();
+  // }, [fetchInterviewRounds]);
 
   return (
     <CustomContext.Provider
@@ -658,8 +660,8 @@ const CustomProvider = ({ children }) => {
         // setPopupVisibility,
         // feedbackTabErrors,
         // setFeedbackTabError,
-        page,
-        setPage,
+        // page,
+        // setPage,
         // isOpen,
         // setIsopen,
         // iter,
@@ -668,7 +670,7 @@ const CustomProvider = ({ children }) => {
         // setPagination,
         // pagination,
 
-        loading,
+        // loading,
 
         // users
         usersRes,
@@ -678,19 +680,19 @@ const CustomProvider = ({ children }) => {
         toggleUserStatus,
         deleteUser,
 
-        // wallet Balance
-        walletBalance,
+        // wallet Balance - COMMENTED: Use useWallet hook instead
+        // walletBalance,
 
-        // subscription current plan
-        currentPlan,
+        // subscription current plan - COMMENTED: Use useSubscription hook instead
+        // currentPlan,
 
         // teams
         // teamsData,
         // fetchTeamsData,
 
         // outsource interviewers
-        outsourceInterviewers,
-        fetchOutsourceInterviewers,
+        // outsourceInterviewers,
+        // fetchOutsourceInterviewers,
 
         // master data
         // skills,
@@ -702,17 +704,17 @@ const CustomProvider = ({ children }) => {
         // industries,
         // currentRole,
         // notifications
-        notificationsData,
+        // notificationsData,
         // user
-        userProfile,
+        // userProfile,
 
         // groups
-        groups,
-        fetchGroupsData,
+        // groups,
+        // fetchGroupsData,
 
         // users
-        usersData,
-        fetchUsersData,
+        // usersData,
+        // fetchUsersData,
 
         // organization
         organizationData,
@@ -720,22 +722,23 @@ const CustomProvider = ({ children }) => {
         addOrUpdateOrganization,
 
         // contacts
-        fetchContactsData,
-        contacts,
-        setContacts,
+        // fetchContactsData,
+        // contacts,
+        // setContacts,
         // singlecontact - now using useSingleContact hook from apiHooks
         // fetchContacts,
 
-        interviewers,
-        loadingInterviewer,
-        setLoadingInterviewer,
-        fetchInterviewers,
+        // interviewers,
+        // loadingInterviewer,
+        // setLoadingInterviewer,
+        // fetchInterviewers,
 
-        tickets,
-        userRole,
+        // tickets - COMMENTED: Use useSupportTickets hook instead
+        // tickets,
+        // userRole,
 
-        interviewRounds,
-        fetchInterviewRounds,
+        // interviewRounds,
+        // fetchInterviewRounds,
 
 
 

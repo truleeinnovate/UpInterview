@@ -7,7 +7,6 @@ import React, { useEffect, useRef, useState, useMemo } from "react";
 // removed unused lucide-react icons after refactor to shared components
 import classNames from "classnames";
 import Modal from "react-modal";
-// import { useCustomContext } from "../../../../../../Context/Contextfetch";
 // import axios from "axios";
 import {
   isEmptyObject,
@@ -52,11 +51,6 @@ const EditAdvacedDetails = ({
   onSuccess,
   basePath,
 }) => {
-  // onSave
-  // const {
-  //   singlecontact,
-  //   usersRes
-  // } = useCustomContext();
 
   const {
     // skills,
