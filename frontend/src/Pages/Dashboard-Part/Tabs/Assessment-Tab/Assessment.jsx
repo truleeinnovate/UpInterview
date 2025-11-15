@@ -9,6 +9,7 @@
 // v1.0.6  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.7  -  Ashok   -  improved responsiveness
 // v1.0.8  -  Ashok   -  disabled column and actions for standard type templates
+// v1.0.9  -  Ashok   -  added common code for empty state messages and fixed style issues
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -42,6 +43,7 @@ import { formatDateTime } from "../../../../utils/dateFormatter";
 import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal.jsx";
 import { notify } from "../../../../services/toastService.js";
 import Toolbar from "./AssessmentToolbar.jsx";
+import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
 
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => (
   <Dialog
@@ -596,6 +598,20 @@ const Assessment = () => {
     setAssessmentToDelete(null);
   };
 
+  // --- Dynamic Empty State Messages using Utility ---
+  const isSearchActive = searchQuery.length > 0 || isFilterActive;
+  // Use assessmentData.length as the initial total count
+  const initialDataCount = assessmentData?.length || 0;
+  const currentFilteredCount = currentFilteredRows?.length || 0;
+
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    "assessment templates" // Entity Name
+  );
+  // --- Dynamic Empty State Messages using Utility ---
+
   const tableColumns = [
     ...(activeTab === "custom"
       ? [
@@ -685,7 +701,7 @@ const Assessment = () => {
           {
             key: "edit",
             label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-custom-blue" />,
+            icon: <Pencil className="w-4 h-4 text-green-500" />,
             onClick: handleEdit,
             show: (row) => row.type !== "standard",
           },
@@ -768,7 +784,7 @@ const Assessment = () => {
                   actions={tableActions}
                   loading={isLoading}
                   // <-------------------------------v1.0.4
-                  emptyState="No assessments templates found."
+                  emptyState={emptyStateMessage}
                   // ------------------------------v1.0.4 >
                   className="table-fixed w-full"
                 />

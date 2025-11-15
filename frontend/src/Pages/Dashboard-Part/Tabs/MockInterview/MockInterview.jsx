@@ -5,6 +5,7 @@
 // v1.0.4  -  Ashok   -  Improved responsiveness
 // v1.0.5  -  Ashok   -  added common code for kanban
 // v1.0.6  -  Ashok   -  added clickable title to navigate to details page at kanban
+// v1.0.7  -  Ashok   -  added common code to empty state messages and fixed style issues
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -31,6 +32,9 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 // v1.0.2 <-----------------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.2 ----------------------------------------------------------------------------------->
+import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../../../utils/dateFormatter.js";
 
 // v1.0.5 <----------------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -56,7 +60,7 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
 
   return (
     <div ref={menuRef} className="flex items-center gap-2 relative">
-      {mainActions.map((action) => (
+      {/* {mainActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -68,7 +72,32 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
         >
           {action.icon}
         </button>
-      ))}
+      ))} */}
+
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
 
       {overflowActions.length > 0 && (
         <div className="relative">
@@ -397,28 +426,31 @@ const MockInterview = () => {
     setCancelSchedule(false);
   };
 
-  // v1.0.1 <------------------------------------------------------
-  const capitalizeFirstLetter = (str) => {
-    if (!str) return "";
-    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
-  };
-  // v1.0.1 ------------------------------------------------------>
-
   // v1.0.5 <-------------------------------------------------------------
-  const formatDate = (isoString) => {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    return date.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  // const formatDate = (isoString) => {
+  //   if (!isoString) return "";
+  //   const date = new Date(isoString);
+  //   return date.toLocaleString("en-GB", {
+  //     day: "2-digit",
+  //     month: "short",
+  //     year: "numeric",
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //     hour12: true,
+  //   });
+  // };
   // v1.0.5 ------------------------------------------------------------->
 
+  // ------------------------- empty state message -------------------------------------
+  const isSearchActive = searchQuery.length > 0 || isFilterActive;
+  const initialDataCount = mockinterviewData?.length || 0;
+  const currentFilteredCount = currentFilteredRows?.length || 0;
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    "mock interviews"
+  ); // ------------------------- empty state message -------------------------------------
   const tableColumns = [
     {
       key: "mockInterviewCode",
@@ -517,16 +549,17 @@ const MockInterview = () => {
       key: "createdAt",
       header: "Created On",
       render: (value) => {
-        if (!value) return "Not Provided";
-        const date = new Date(value);
-        return date.toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        });
+        // if (!value) return "Not Provided";
+        // const date = new Date(value);
+        // return date.toLocaleString("en-GB", {
+        //   day: "2-digit",
+        //   month: "2-digit",
+        //   year: "numeric",
+        //   hour: "numeric",
+        //   minute: "2-digit",
+        //   hour12: true,
+        // });
+        return formatDateTime(value);
       },
     },
   ];
@@ -535,7 +568,7 @@ const MockInterview = () => {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => navigate(`/mock-interview-details/${row._id}`),
     },
     {
@@ -607,7 +640,7 @@ const MockInterview = () => {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) =>
         navigate(`/mock-interview-details/${row._id}`, {
           state: { from: location.pathname },
@@ -681,7 +714,7 @@ const MockInterview = () => {
                   ...interview,
                   id: interview?._id,
                   title: interview?.mockInterviewCode,
-                  subTitle: formatDate(interview.createdAt),
+                  subTitle: formatDateTime(interview.createdAt),
                   navigateTo: `/mock-interview-details/${interview._id}`,
                 }))}
                 columns={kanbanColumns}
@@ -691,7 +724,7 @@ const MockInterview = () => {
                     kanbanActions={kanbanActions}
                   />
                 )}
-                emptyState="No mock interviews found."
+                emptyState={emptyStateMessage}
                 kanbanTitle="Mock Interview"
               />
             ) : (
@@ -703,7 +736,7 @@ const MockInterview = () => {
                   columns={tableColumns}
                   actions={tableActions}
                   loading={isLoading}
-                  emptyState="No interviews found."
+                  emptyState={emptyStateMessage}
                   className="table-fixed w-full"
                 />
               </div>

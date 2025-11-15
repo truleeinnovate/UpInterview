@@ -8,6 +8,7 @@
 // v1.0.7  -  Ashok   -  Improved responsiveness
 // v1.0.8  -  Ashok   -  Added common code to kanban
 // v1.0.9  -  Ashok   -  added clickable title to navigate to details page at kanban
+// v2.0.0  -  Ashok   -  added common code for empty state messages
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -52,8 +53,10 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 import KanbanView from "../../../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.5 ------------------------------------------------------------------------------------->
-
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 // v1.0.8 <--------------------------------------------------------------------------
+import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
+
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
   const menuRef = useRef(null);
@@ -77,7 +80,7 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
 
   return (
     <div ref={menuRef} className="flex items-center gap-2 relative">
-      {mainActions.map((action) => (
+      {/* {mainActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -89,7 +92,31 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
         >
           {action.icon}
         </button>
-      ))}
+      ))} */}
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
 
       {overflowActions.length > 0 && (
         <div className="relative">
@@ -416,11 +443,11 @@ const ScheduleAssessment = () => {
     setSelectedCreatedDate(tempCreatedDatePreset);
     setIsFilterActive(
       tempSelectedStatus.length > 0 ||
-      tempSelectedTemplates.length > 0 ||
-      tempOrderRange.min !== "" ||
-      tempOrderRange.max !== "" ||
-      tempExpiryDatePreset !== "" ||
-      tempCreatedDatePreset !== ""
+        tempSelectedTemplates.length > 0 ||
+        tempOrderRange.min !== "" ||
+        tempOrderRange.max !== "" ||
+        tempExpiryDatePreset !== "" ||
+        tempCreatedDatePreset !== ""
     );
     setFilterPopupOpen(false);
   };
@@ -530,14 +557,14 @@ const ScheduleAssessment = () => {
   //   }
   // };
 
-const handleActionClick = (schedule, action) => {
-  const assessmentTemplateId = getAssessmentTemplateId(schedule);
+  const handleActionClick = (schedule, action) => {
+    const assessmentTemplateId = getAssessmentTemplateId(schedule);
 
-  // setSelectedAssessmentTemplateId(assessmentTemplateId);
-  setSelectedSchedule(schedule); // ← Critical!
-  setSelectedAction(action);
-  setIsActionPopupOpen(true);
-};
+    // setSelectedAssessmentTemplateId(assessmentTemplateId);
+    setSelectedSchedule(schedule); // ← Critical!
+    setSelectedAction(action);
+    setIsActionPopupOpen(true);
+  };
 
   const handleActionSuccess = () => {
     // The useAssessments mutations will automatically invalidate and refresh the data
@@ -567,6 +594,18 @@ const handleActionClick = (schedule, action) => {
   };
   // v1.0.5 ------------------------------------------------------------->
   //  v1.0.8 ----------------------------------------------------------->
+
+  // ------------------------ empty state message -------------------------------
+  const isSearchActive = searchQuery.length > 0 || isFilterActive;
+  const initialDataCount = scheduleData?.length || 0;
+  const currentFilteredCount = currentRows?.length || 0;
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    "Assessments"
+  );
+  // ------------------------ empty state message -------------------------------
 
   // <-------------------------------v1.0.3
   const tableColumns = [
@@ -656,13 +695,13 @@ const handleActionClick = (schedule, action) => {
   const tableActions = [
     ...(effectivePermissions.Assessments?.View
       ? [
-        {
-          key: "view",
-          label: "View",
-          icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: handleView,
-        },
-      ]
+          {
+            key: "view",
+            label: "View",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: handleView,
+          },
+        ]
       : []),
     // <-------------------------------v1.0.3
     {
@@ -690,20 +729,10 @@ const handleActionClick = (schedule, action) => {
   ];
 
   // v1.0.5 <---------------------------------------------------------------------------------------
-  const capitalizeFirstLetter = (str) => {
-    if (!str) return "";
-    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
-  };
+
   // v1.0.8 <---------------------------------------------------------------------------------------
   // Kanban Columns Configuration
   const kanbanColumns = [
-    {
-      key: "order",
-      header: "Order",
-      render: (value, row) => (
-        <div className="font-medium">{row?.order || "N/A"}</div>
-      ),
-    },
     {
       key: "isActive",
       header: "Is Active",
@@ -820,7 +849,7 @@ const handleActionClick = (schedule, action) => {
                   columns={tableColumns}
                   actions={tableActions}
                   loading={isLoading}
-                  emptyState="No assessments found."
+                  emptyState={emptyStateMessage}
                   className="table-fixed w-full"
                 />
               </div>
@@ -833,7 +862,7 @@ const handleActionClick = (schedule, action) => {
                 data={currentRows.map((assessment) => ({
                   ...assessment,
                   id: assessment._id,
-                  title: assessment?.scheduledAssessmentCode || "N/A",
+                  title: assessment?.order || "N/A",
                   subTitle: formatDate(assessment?.createdAt),
                 }))}
                 columns={kanbanColumns}
@@ -844,7 +873,7 @@ const handleActionClick = (schedule, action) => {
                   />
                 )}
                 onTitleClick={handleView}
-                emptyState="No Assessments found."
+                emptyState={emptyStateMessage}
                 kanbanTitle="Assessment"
               />
               // v1.0.8 ------------------------------------------------------------------------>
@@ -1039,7 +1068,7 @@ const handleActionClick = (schedule, action) => {
             setSelectedAction("");
             // setSelectedAssessmentTemplateId(null);
           }}
-          schedule={selectedSchedule}           // ← Pass full schedule
+          schedule={selectedSchedule} // ← Pass full schedule
           onSuccess={handleActionSuccess}
           defaultAction={selectedAction}
         />

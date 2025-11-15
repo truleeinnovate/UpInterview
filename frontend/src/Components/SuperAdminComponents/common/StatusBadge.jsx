@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - improved responsiveness
 // v1.0.1 - Ashok - updated colors
+// v1.0.2 - Ashok - added colors
 
 function StatusBadge({ status, text }) {
   const getStatusClass = () => {
@@ -16,6 +17,7 @@ function StatusBadge({ status, text }) {
       case "accepted":
       case "opened":
       case "normal":
+      case "scheduled":
         return "bg-custom-blue/10 text-custom-blue rounded-full px-2 py-1 font-semibold";
       case "pending":
       case "awaiting":

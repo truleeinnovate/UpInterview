@@ -24,9 +24,9 @@ import StandardTemplates from "./StandardTemplates/StandardTemplates.jsx";
 import { notify } from "../../services/toastService.js";
 import StandardTemplatesToolbar from "./StandardTemplates/StandardTemplatesHeader.jsx";
 import DeleteConfirmModal from "../Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
+import { getEmptyStateMessage } from "../../utils/EmptyStateMessage/emptyStateMessage.js";
 
 const InterviewTemplates = () => {
-
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const itemsPerPage = 10;
@@ -51,9 +51,8 @@ const InterviewTemplates = () => {
 
   //  Ranjith added delete Candidate functionality
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [deleteInterviewTemplates, setDeleteInterviewTemplates] = useState(null);
-
-  
+  const [deleteInterviewTemplates, setDeleteInterviewTemplates] =
+    useState(null);
 
   // Handle tab change from URL (e.g., browser back/forward)
   useEffect(() => {
@@ -65,7 +64,6 @@ const InterviewTemplates = () => {
         tabFromUrl &&
         (tabFromUrl === "standard" || tabFromUrl === "custom")
       ) {
-
         setActiveTab(tabFromUrl);
       } else if (!tabFromUrl) {
         // If no tab in URL, set default and update URL
@@ -120,7 +118,7 @@ const InterviewTemplates = () => {
   // Refs
   const filterIconRef = useRef(null);
 
- // Reset states when tab changes
+  // Reset states when tab changes
   useEffect(() => {
     setCurrentPage(1);
     setSearchQuery("");
@@ -131,28 +129,31 @@ const InterviewTemplates = () => {
     setIsFilterActive(false);
   }, [activeTab]);
 
-  const { templatesData,
+  const {
+    templatesData,
     totalCount,
     // currentPage,
     // itemsPerPage,
-    isLoading, saveTemplate, deleteInterviewTemplate } =
-    useInterviewTemplates({
-      search: searchQuery,
-      status: selectedStatus,
-      formats: selectedFormats,
-      rounds: roundsRange,
-      createdDate: createdDatePreset,
-      page: currentPage,
-      limit: itemsPerPage,
-      type: activeTab
-      //  === 'standard' ? 'standard' : 'custom'
-    });
+    isLoading,
+    saveTemplate,
+    deleteInterviewTemplate,
+  } = useInterviewTemplates({
+    search: searchQuery,
+    status: selectedStatus,
+    formats: selectedFormats,
+    rounds: roundsRange,
+    createdDate: createdDatePreset,
+    page: currentPage,
+    limit: itemsPerPage,
+    type: activeTab,
+    //  === 'standard' ? 'standard' : 'custom'
+  });
 
-    const totalPages = Math.ceil(totalCount / 10);
+  const totalPages = Math.ceil(totalCount / 10);
 
-    console.log("activeTab params", activeTab);
+  console.log("activeTab params", activeTab);
 
-    // Template cloning states
+  // Template cloning states
   // const [templateToClone, setTemplateToClone] = useState(null);
   // const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
   // Keep URL in sync with tab state
@@ -170,7 +171,7 @@ const InterviewTemplates = () => {
   // Derived state
   const normalizedTemplates = useMemo(() => {
     if (!templatesData || !Array.isArray(templatesData)) return [];
-    return templatesData
+    return templatesData;
     // .filter((template) => template.type === "custom");
   }, [templatesData]);
 
@@ -222,10 +223,10 @@ const InterviewTemplates = () => {
     setSelectedFilters(filters);
     setIsFilterActive(
       filters.status.length > 0 ||
-      filters.rounds.min !== "" ||
-      filters.rounds.max !== "" ||
-      filters.modifiedDate !== "" ||
-      filters.createdDate !== ""
+        filters.rounds.min !== "" ||
+        filters.rounds.max !== "" ||
+        filters.modifiedDate !== "" ||
+        filters.createdDate !== ""
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -344,7 +345,6 @@ const InterviewTemplates = () => {
 
   // const totalPages = Math.ceil(normalizedTemplates.length / itemsPerPage);
 
-
   const startIndex = currentPage * itemsPerPage;
   const endIndex = Math.min(
     startIndex + itemsPerPage,
@@ -381,10 +381,11 @@ const InterviewTemplates = () => {
     if (effectivePermissions.InterviewTemplates?.Edit) {
       const params = new URLSearchParams();
       params.set("tab", activeTab);
-      navigate(`/interview-templates/${template._id}/edit?${params.toString()}`);
+      navigate(
+        `/interview-templates/${template._id}/edit?${params.toString()}`
+      );
     }
   };
-
 
   const capitalizeFirstLetter = (str) => {
     if (!str) return "";
@@ -398,13 +399,10 @@ const InterviewTemplates = () => {
 
     setDeleteInterviewTemplates(template);
     setShowDeleteConfirmModal(true);
-
-
   };
 
   // Your existing handleConfirmDelete function
   const handleConfirmDelete = async () => {
-
     if (deleteInterviewTemplates?._id) {
       try {
         let res = await deleteInterviewTemplate(deleteInterviewTemplates?._id);
@@ -568,6 +566,20 @@ const InterviewTemplates = () => {
   // };
   // v1.0.5 ------------------------------------------------------------------------>
 
+  // ------------ Dynamic Empty State Messages using Utility (For Custom Tab) -----------------
+  const isSearchActive = searchQuery.length > 0 || isFilterActive;
+  // Use the totalCount from the API hook
+  const initialDataCount = totalCount || 0;
+  const currentFilteredCount = paginatedTemplates?.length || 0;
+
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    "interview templates" // Entity Name
+  );
+  // ------------ Dynamic Empty State Messages using Utility (For Custom Tab) -----------------
+
   const tableColumns = [
     {
       key: "title",
@@ -580,8 +592,7 @@ const InterviewTemplates = () => {
         return (
           <div
             className="text-sm font-medium text-custom-blue cursor-pointer"
-            onClick={() =>
-              handleView(row)}
+            onClick={() => handleView(row)}
           >
             {formattedValue}
           </div>
@@ -655,48 +666,46 @@ const InterviewTemplates = () => {
   const tableActions = [
     ...(effectivePermissions.InterviewTemplates?.View
       ? [
-        {
-          key: "view",
-          label: "View Details",
-          icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: handleView,
-        },
-      ]
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: handleView,
+          },
+        ]
       : []),
     ...(effectivePermissions.InterviewTemplates?.Edit
       ? [
-        {
-          key: "edit",
-          label: "Edit",
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: handleEdit,
-        },
-      ]
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: handleEdit,
+          },
+        ]
       : []),
     ...(effectivePermissions.InterviewTemplates?.Delete
       ? [
-        {
-          key: "delete",
-          label: "Delete",
-          icon: <Trash className="w-4 h-4 text-red-600" />,
-          onClick: handleDelete,
-        },
-      ]
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: handleDelete,
+          },
+        ]
       : []),
     ...(effectivePermissions.InterviewTemplates?.Clone
       ? [
-        {
-          key: "clone",
-          label: "Clone",
-          icon: <Files className="w-4 h-4 text-custom-blue" />,
-          // onClick: handleClone,
-          onClick: handleCloneClick,
-        },
-      ]
+          {
+            key: "clone",
+            label: "Clone",
+            icon: <Files className="w-4 h-4 text-custom-blue" />,
+            // onClick: handleClone,
+            onClick: handleCloneClick,
+          },
+        ]
       : []),
   ];
-
-
 
   return (
     <div className="bg-background min-h-screen">
@@ -746,7 +755,7 @@ const InterviewTemplates = () => {
                 templatesData={paginatedTemplates}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
-              // v1.0.6 ---------------------------------------->
+                // v1.0.6 ---------------------------------------->
               />
             </div>
             <div className="sm:px-0">
@@ -766,7 +775,7 @@ const InterviewTemplates = () => {
                       columns={tableColumns}
                       actions={tableActions}
                       loading={isLoading}
-                      emptyState="No Templates Found."
+                      emptyState={emptyStateMessage}
                       className="table-fixed w-full"
                     />
                   </div>

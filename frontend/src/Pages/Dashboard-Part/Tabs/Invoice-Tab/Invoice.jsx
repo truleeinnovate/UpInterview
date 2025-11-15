@@ -6,6 +6,7 @@
 // v1.0.5  - Ashok   - changed check box color to brand color in filters
 // v1.0.6  - Ashok   - added common code for kanban
 // v1.0.7  - Ashok   - added clickable title to navigate to details page at kanban
+// v1.0.8  - Ashok   - fixed style issues
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
@@ -29,6 +30,8 @@ import InvoiceKanban from "../../../../Components/Shared/KanbanCommon/KanbanComm
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import { formatDateTime } from "../../../../utils/dateFormatter";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
 
 // v1.0.6 <----------------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -54,7 +57,7 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
 
   return (
     <div ref={menuRef} className="flex items-center gap-2 relative">
-      {mainActions.map((action) => (
+      {/* {mainActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -66,7 +69,32 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
         >
           {action.icon}
         </button>
-      ))}
+      ))} */}
+
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
 
       {overflowActions.length > 0 && (
         <div className="relative">
@@ -304,71 +332,6 @@ const InvoiceTab = () => {
   const [isFilterActive, setIsFilterActive] = useState(false);
   const filterIconRef = useRef(null);
 
-  const tableColumns = [
-    {
-      key: "invoiceNumber",
-      header: "Invoice Number",
-      //   v1.0.1 <-------------------------------------------------------------------------
-      //   render: (value) => value || "N/A",
-      render: (value, row) => (
-        <button
-          className="text-custom-blue font-semibold hover:cursor-pointer"
-          onClick={() =>
-            navigate(`details/${row.id}`, { state: { invoiceData: row } })
-          }
-        >
-          {value || "N/A"}
-        </button>
-      ),
-      //   v1.0.1 ------------------------------------------------------------------------->
-    },
-    {
-      key: "plan",
-      header: "Plan",
-      render: (value) => value || "N/A",
-    },
-    {
-      key: "amount",
-      header: "Amount",
-      render: (value) => (value && value.total ? `₹${value.total}` : 0),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (value) => (
-        <span
-          className={`px-2 py-2 rounded-full text-xs ${
-            value === "paid"
-              ? "bg-green-100 text-green-800"
-              : value === "pending"
-              ? "bg-yellow-100 text-yellow-800"
-              : value === "cancelled"
-              ? "bg-red-100 text-red-800"
-              : "bg-gray-100 text-gray-800"
-          }`}
-        >
-          {value ? value.charAt(0).toUpperCase() + value.slice(1) : "N/A"}
-        </span>
-      ),
-    },
-    {
-      key: "dates",
-      header: "Created At",
-      render: (value) =>
-        value && value.createdAt ? formatDateTime(value.createdAt) : "N/A",
-    },
-  ];
-
-  const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <FileText className="w-4 h-4 text-custom-blue" />,
-      onClick: (row) =>
-        navigate(`details/${row.id}`, { state: { invoiceData: row } }),
-    },
-  ];
-
   const FilteredData = () => {
     if (!Array.isArray(billingData)) return [];
 
@@ -426,23 +389,91 @@ const InvoiceTab = () => {
     });
 
   // v1.0.6 <----------------------------------------------------------------------------------
-  const capitalizeFirstLetter = (str) => {
-    if (!str) return "";
-    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
-  };
+  // const formatDate = (isoString) => {
+  //   if (!isoString) return "";
+  //   const date = new Date(isoString);
+  //   return date.toLocaleString("en-GB", {
+  //     day: "2-digit",
+  //     month: "short",
+  //     year: "numeric",
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //     hour12: true,
+  //   });
+  // };
 
-  const formatDate = (isoString) => {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    return date.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  // ------------------------- Dynamic Empty State Messages using Utility -----------------------
+  const isSearchActive = searchQuery.length > 0 || isFilterActive;
+  // Use the length of the raw data (before pagination) as the initial count
+  const initialDataCount = billingData.length || 0;
+  const currentFilteredCount = currentFilteredRows?.length || 0;
+
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    "invoices" // Entity Name
+  );
+  // ------------------------- Dynamic Empty State Messages using Utility -----------------------
+
+  const tableColumns = [
+    {
+      key: "invoiceNumber",
+      header: "Invoice Number",
+      //   v1.0.1 <-------------------------------------------------------------------------
+      //   render: (value) => value || "N/A",
+      render: (value, row) => (
+        <button
+          className="text-custom-blue font-semibold hover:cursor-pointer"
+          onClick={() =>
+            navigate(`details/${row.id}`, { state: { invoiceData: row } })
+          }
+        >
+          {value || "N/A"}
+        </button>
+      ),
+      //   v1.0.1 ------------------------------------------------------------------------->
+    },
+    {
+      key: "plan",
+      header: "Plan",
+      render: (value) => value || "N/A",
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      render: (value) => (value && value.total ? `₹${value.total}` : 0),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value) => (
+        <span className={`px-2 py-2 rounded-full text-xs `}>
+          {value ? (
+            <StatusBadge status={capitalizeFirstLetter(value)} />
+          ) : (
+            "N/A"
+          )}
+        </span>
+      ),
+    },
+    {
+      key: "dates",
+      header: "Created At",
+      render: (value) =>
+        value && value.createdAt ? formatDateTime(value.createdAt) : "N/A",
+    },
+  ];
+
+  const tableActions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <FileText className="w-4 h-4 text-custom-blue" />,
+      onClick: (row) =>
+        navigate(`details/${row.id}`, { state: { invoiceData: row } }),
+    },
+  ];
 
   const kanbanColumns = [
     {
@@ -468,7 +499,7 @@ const InvoiceTab = () => {
       header: "End Date",
       render: (value, row) => (
         <span className="text-gray-800 font-medium">
-          {row?.dates?.endDate ? formatDate(row?.dates?.endDate) : "N/A"}
+          {row?.dates?.endDate ? formatDateTime(row?.dates?.endDate) : "N/A"}
         </span>
       ),
     },
@@ -485,7 +516,7 @@ const InvoiceTab = () => {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <span className="text-gray-800 font-medium truncate">
+        <span>
           <StatusBadge status={capitalizeFirstLetter(row?.status)} />
         </span>
       ),
@@ -496,7 +527,7 @@ const InvoiceTab = () => {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) =>
         navigate(`details/${row.id}`, { state: { invoiceData: row } }),
     },
@@ -551,7 +582,7 @@ const InvoiceTab = () => {
                     columns={tableColumns}
                     loading={loading}
                     actions={tableActions}
-                    emptyState="No invoices found."
+                    emptyState={emptyStateMessage}
                   />
                 </div>
               ) : (
@@ -562,7 +593,7 @@ const InvoiceTab = () => {
                       ...invoice,
                       id: invoice?._id,
                       title: invoice?.paymentId,
-                      subTitle: formatDate(invoice?.dates?.createdAt),
+                      subTitle: formatDateTime(invoice?.dates?.createdAt),
                     }))}
                     columns={kanbanColumns}
                     renderActions={(item) => (
@@ -576,7 +607,7 @@ const InvoiceTab = () => {
                         state: { invoiceData: row },
                       });
                     }}
-                    emptyState="No invoices found."
+                    emptyState={emptyStateMessage}
                     kanbanTitle="Invoice"
                   />
                 </div>
