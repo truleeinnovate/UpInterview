@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 
 const taskSchema = new mongoose.Schema({
-  taskCode:{type:String,unique:true, required: true},
+  taskCode:{type:String, required: true},
   title: { type: String, required: true},
   assignedTo: { type: String, required: true },
   assignedToId: { type: String },
@@ -23,6 +23,9 @@ const taskSchema = new mongoose.Schema({
   ownerId: {type:String, required:true},
   tenantId: {type:String},
 }, { timestamps: true });
+
+// Ensure taskCode is unique within each tenant (organization-level numbering)
+taskSchema.index({ tenantId: 1, taskCode: 1 }, { unique: true });
 
 const Task = mongoose.models.Task || mongoose.model('Task', taskSchema);
 module.exports = Task;
