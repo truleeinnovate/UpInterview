@@ -3,6 +3,7 @@
 // v1.0.2 - Ashok - Improved loading view
 // v1.0.3 - Ashok - Fixed issue in loading view
 // v1.0.4 - Ashok - Adjusted height
+// v1.0.5 - Ashok - Fixed style issues
 
 import { motion } from "framer-motion";
 import { Calendar, Layers, Trash, Files, Eye, Pencil } from "lucide-react";
@@ -216,10 +217,10 @@ const KanbanView = ({
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => onView(template)}
-                            className="text-custom-blue hover:bg-custom-blue/80 p-2 rounded-lg"
+                            className="text-custom-blue hover:bg-custom-blue/10 p-2 rounded-lg"
                             title="View"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-4 h-4 text-custom-blue" />
                           </motion.button>
                         )}
                         {effectivePermissions.InterviewTemplates?.Edit &&
@@ -228,7 +229,7 @@ const KanbanView = ({
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
                               onClick={() => onEdit(template)}
-                              className="text-purple-500 hover:bg-purple-50 p-2 rounded-lg"
+                              className="text-green-500 hover:bg-green-50 p-2 rounded-lg"
                               title="Edit"
                             >
                               <Pencil className="w-4 h-4" />

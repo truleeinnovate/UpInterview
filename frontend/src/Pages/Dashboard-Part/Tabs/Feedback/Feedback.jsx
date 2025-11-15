@@ -4,6 +4,7 @@
 // v1.0.3  -  Ashraf  -  added api get from apimodel
 // v1.0.4  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.5  -  Ashok   -  Improved responsiveness
+// v1.0.6  -  Ashok   -  Fixed style issues and added common code to empty state message
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -38,12 +39,12 @@ import Cookies from "js-cookie";
 import { useInterviews } from "../../../../apiHooks/useInterviews.js";
 // <------------------------v1.0.3
 import { useFeedbacks } from "../../../../apiHooks/useFeedbacks.js";
+import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
 
 const Feedback = () => {
   const navigate = useNavigate();
   useScrollLock(true);
   const { interviewData, isLoading: interviewsLoading } = useInterviews();
- 
 
   // console.log("[Feedback] Debug:", {
   //   interviewData: !!interviewData,
@@ -100,18 +101,18 @@ const Feedback = () => {
   const [filters, setFilters] = useState({
     page: 0,
     limit: 10,
-    search: '',
+    search: "",
     status: [],
     positions: [],
     modes: [],
     interviewers: [],
     recommendations: [],
-    ratingMin: '',
-    ratingMax: '',
-    interviewDate: ''
+    ratingMin: "",
+    ratingMax: "",
+    interviewDate: "",
   });
 
- const {
+  const {
     data: feedbacksResponse,
     isLoading: feedbacksLoading,
     error: feedbacksError,
@@ -119,13 +120,13 @@ const Feedback = () => {
 
   // Use data from the hook
   // const feedbacks = feedbacksData || [];
-   // Extract data from response
+  // Extract data from response
   const feedbacks = feedbacksResponse?.feedbacks || [];
   const paginationInfo = feedbacksResponse?.pagination || {
     currentPage: 0,
     totalPages: 1,
     totalItems: 0,
-    itemsPerPage: 10
+    itemsPerPage: 10,
   };
   const loading = feedbacksLoading;
   const error = feedbacksError;
@@ -133,8 +134,6 @@ const Feedback = () => {
 
   // Update filtered feedbacks when feedbacks data changes
   useEffect(() => {
-   
-
     // Only update if the arrays are actually different
     if (
       feedbacks.length !== filteredFeedbacks.length ||
@@ -161,13 +160,13 @@ const Feedback = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-   // Update filters when search query changes (with debounce)
+  // Update filters when search query changes (with debounce)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setFilters(prev => ({
+      setFilters((prev) => ({
         ...prev,
         search: searchQuery,
-        page: 0 // Reset to first page when searching
+        page: 0, // Reset to first page when searching
       }));
     }, 300); // 300ms debounce
 
@@ -176,9 +175,9 @@ const Feedback = () => {
 
   // Update current page in filters
   useEffect(() => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      page: paginationInfo.currentPage
+      page: paginationInfo.currentPage,
     }));
   }, [paginationInfo.currentPage]);
 
@@ -276,9 +275,9 @@ const Feedback = () => {
     setSelectedRecommendations(tempSelectedRecommendations);
     setSelectedRating(tempRatingRange);
     setSelectedInterviewDate(tempInterviewDatePreset);
-    
-     // Update the API filters
-    setFilters(prev => ({
+
+    // Update the API filters
+    setFilters((prev) => ({
       ...prev,
       status: tempSelectedStatus,
       positions: tempSelectedPositions,
@@ -288,9 +287,9 @@ const Feedback = () => {
       ratingMin: tempRatingRange.min,
       ratingMax: tempRatingRange.max,
       interviewDate: tempInterviewDatePreset,
-      page: 0 // Reset to first page when applying filters
+      page: 0, // Reset to first page when applying filters
     }));
-    
+
     setIsFilterActive(
       tempSelectedStatus.length > 0 ||
         tempSelectedPositions.length > 0 ||
@@ -302,7 +301,7 @@ const Feedback = () => {
         tempInterviewDatePreset !== ""
     );
     setFilterPopupOpen(false);
-     setFilteredFeedbacks(feedbacks);
+    setFilteredFeedbacks(feedbacks);
 
     // const filtered = feedbacks.filter((f) => {
     //   // Status filter
@@ -412,8 +411,8 @@ const Feedback = () => {
     setIsFilterActive(false);
     setFilteredFeedbacks(feedbacks);
 
-     // Clear API filters
-    setFilters(prev => ({
+    // Clear API filters
+    setFilters((prev) => ({
       ...prev,
       status: [],
       positions: [],
@@ -423,7 +422,7 @@ const Feedback = () => {
       ratingMin: "",
       ratingMax: "",
       interviewDate: "",
-      page: 0
+      page: 0,
     }));
   };
 
@@ -488,21 +487,21 @@ const Feedback = () => {
   //   setCurrentPage((prev) => Math.max(prev - 1, 0));
   // };
 
-   // Pagination handlers
+  // Pagination handlers
   const nextPage = () => {
     if (paginationInfo.currentPage < paginationInfo.totalPages - 1) {
-      setFilters(prev => ({
+      setFilters((prev) => ({
         ...prev,
-        page: prev.page + 1
+        page: prev.page + 1,
       }));
     }
   };
 
   const prevPage = () => {
     if (paginationInfo.currentPage > 0) {
-      setFilters(prev => ({
+      setFilters((prev) => ({
         ...prev,
-        page: prev.page - 1
+        page: prev.page - 1,
       }));
     }
   };
@@ -578,6 +577,20 @@ const Feedback = () => {
       </div>
     );
   };
+
+  // -------------------------- Dynamic Empty State Messages using Utility -------------------------
+  const isSearchActive = searchQuery.length > 0 || isFilterActive;
+  // Use totalItems from the server response as the initial count
+  const initialDataCount = paginationInfo.totalItems || 0;
+  const currentFilteredCount = filteredFeedbacks.length || 0;
+
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    "feedback" // Entity Name
+  );
+  // -------------------------- Dynamic Empty State Messages using Utility -------------------------
 
   const tableColumns = [
     {
@@ -768,7 +781,7 @@ const Feedback = () => {
     {
       key: "edit",
       label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-custom-blue" />,
+      icon: <Pencil className="w-4 h-4 text-green-500" />,
       onClick: handleEdit,
       show: (row) => row.status === "draft", // Only show edit button for draft status
     },
@@ -824,7 +837,7 @@ const Feedback = () => {
                     columns={tableColumns}
                     actions={tableActions}
                     loading={loading}
-                    emptyState="No feedback found."
+                    emptyState={emptyStateMessage}
                     className="table-fixed w-full"
                   />
                 </div>

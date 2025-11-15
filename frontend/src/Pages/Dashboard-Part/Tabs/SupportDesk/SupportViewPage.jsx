@@ -3,6 +3,7 @@
 // v1.0.2 - Ashraf - Added subject field
 // v1.0.3 - Ashok  - Fixed responsive issues
 // v1.0.4 - Ashok  - Fixed issues
+// v1.0.5 - Ashok  - Fixed style issues
 
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback } from "react";
@@ -28,7 +29,7 @@ import Activity from "../CommonCode-AllTabs/Activity";
 //const validReopenStatus = ["resolved", "cancel"];
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { formatDateTime } from "../../../../utils/dateFormatter";
-
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const SupportViewPage = () => {
   const navigate = useNavigate();
@@ -70,42 +71,8 @@ const SupportViewPage = () => {
   //   return null;
   // }
   const content = (
-    <div
-    // className={`${isFullScreen ? "min-h-screen" : "h-full"} flex flex-col`}
-    >
-      {/* <div className="p-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <h2 className="text-2xl font-semibold text-custom-blue">
-              Support Ticket Details
-            </h2>
-          </div>
-       
-       
- 
-        <div className="flex items-center space-x-2">
-          
-            <button
-              onClick={() => setIsFullScreen(!isFullScreen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
-            >
-              {isFullScreen ? (
-                <Minimize className="w-5 h-5 text-gray-500" />
-              ) : (
-                <Expand className="w-5 h-5 text-gray-500" />
-              )}
-            </button>
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          </div>
-      </div>
-  */}
-      {/* Subtabs Navigation */}
+    <div>
+      {/* Sub tabs Navigation */}
       <div className="flex items-center ">
         <div className="flex border-b border-gray-200 ">
           <button
@@ -147,15 +114,7 @@ const SupportViewPage = () => {
                 {/* v1.0.4 ----------------------------------------------------------------> */}
                 {ticketData?.ticketCode}
               </h3>
-              <StatusBadge
-                status={ticketData?.status}
-                text={
-                  ticketData?.status
-                    ? ticketData?.status.charAt(0).toUpperCase() +
-                      ticketData?.status.slice(1)
-                    : "Not Provided"
-                }
-              />
+              <StatusBadge status={capitalizeFirstLetter(ticketData?.status)} />
               {/*common status code add by Venkatesh*/}
               {/*-------v1.0.1-------------->*/}
             </div>
@@ -183,8 +142,11 @@ const SupportViewPage = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Subject</p>
-                  <p className="text-gray-700">
-                    {ticketData?.subject || "N/A"}
+                  <p
+                    className="text-gray-700 truncate max-w-[200px] cursor-default"
+                    title={capitalizeFirstLetter(ticketData?.subject)}
+                  >
+                    {capitalizeFirstLetter(ticketData?.subject) || "N/A"}
                   </p>
                 </div>
               </div>
@@ -196,7 +158,7 @@ const SupportViewPage = () => {
                 <div>
                   <p className="text-sm text-gray-500">Issue Type</p>
                   <p className="text-gray-700">
-                    {ticketData?.issueType || "N/A"}
+                    {capitalizeFirstLetter(ticketData?.issueType) || "N/A"}
                   </p>
                 </div>
               </div>
@@ -207,8 +169,7 @@ const SupportViewPage = () => {
                 <div>
                   <p className="text-sm text-gray-500">Contact</p>
                   <p className="text-gray-700">
-                    {ticketData?.contact?.charAt(0).toUpperCase() +
-                      ticketData?.contact?.slice(1) || "N/A"}
+                    {capitalizeFirstLetter(ticketData?.contact) || "N/A"}
                   </p>
                 </div>
               </div>
@@ -219,8 +180,7 @@ const SupportViewPage = () => {
                 <div>
                   <p className="text-sm text-gray-500">Organization</p>
                   <p className="text-gray-700">
-                    {ticketData?.organization?.charAt(0).toUpperCase() +
-                      ticketData?.organization?.slice(1) || "N/A"}
+                    {capitalizeFirstLetter(ticketData?.organization) || "N/A"}
                   </p>
                 </div>
               </div>
@@ -237,7 +197,8 @@ const SupportViewPage = () => {
               </div>
               <div className="flex-grow whitespace-pre-wrap break-words break-all">
                 <p className="text-gray-700">
-                  {ticketData?.description || "No description provided."}
+                  {capitalizeFirstLetter(ticketData?.description) ||
+                    "No description provided."}
                 </p>
               </div>
             </div>
@@ -254,7 +215,7 @@ const SupportViewPage = () => {
                 </div>
                 <div className="flex-1">
                   <p className="text-gray-700 whitespace-pre-wrap">
-                    {ticketData?.resolution}
+                    {capitalizeFirstLetter(ticketData?.resolution)}
                   </p>
                 </div>
               </div>
@@ -372,37 +333,9 @@ const SupportViewPage = () => {
 
   return (
     <>
-      {/* <div
-        className={`${
-          isFullScreen
-            ? "fixed inset-0"
-            : "fixed inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2"
-        } bg-white shadow-2xl border-l border-gray-200 z-50 overflow-hidden`}
-      >
-        <div className="relative w-full max-w-4xl max-h-full overflow-y-auto">
-          <div className="relative bg-white rounded-lg shadow">
-            <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-50 flex items-center justify-end">
-              <div
-                className={`bg-white shadow-lg overflow-auto ${
-                  isFullScreen
-                    ? "w-full h-full"
-                    : "w-[50%] h-[100%] sm:w-[100%] sm:h-[100%]"
-                }`}
-              > */}
       <SidebarPopup title="Support Ticket Details" onClose={() => navigate(-1)}>
         {content}
       </SidebarPopup>
-      {/* </div>
-            </div>
-          </div>
-        </div>
-      </div> */}
-
-      {/* {openForm && (
-        <SupportForm
-          getTickets={() => {}}
-        />
-      )} */}
     </>
   );
 };
