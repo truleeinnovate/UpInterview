@@ -50,7 +50,7 @@ const createTask = async (req, res) => {
   }
   //------v1.0.0--->
   
-  // Generate taskCode with tenant ID
+  // Generate taskCode with tenant ID (organization-level numbering)
   const { title, assignedTo, assignedToId, priority, status, relatedTo, dueDate, comments, ownerId, tenantId } = req.body;
   const taskCode = await generateUniqueId('TSK', Task, 'taskCode', tenantId);
   const task = new Task({
