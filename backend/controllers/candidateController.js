@@ -8,7 +8,7 @@ const { Candidate } = require('../models/candidate.js');
 const { Interview } = require('../models/Interview/Interview.js');
 const { CandidateAssessment } = require('../models/Assessment/candidateAssessment.js');
 const { triggerWebhook, EVENT_TYPES } = require('../services/webhookService');
- 
+
 // Add a new Candidate
 const addCandidatePostCall = async (req, res) => {
 
@@ -18,15 +18,15 @@ const addCandidatePostCall = async (req, res) => {
   let newCandidate = null;
 
   try {
-     // Joi validation
-     const { isValid, errors } = validateCandidateData(req.body);
-     if (!isValid) {
-       return res.status(400).json({
-         status: "error",
-         message: "Validation failed",
-         errors,
-       });
-     }
+    // Joi validation
+    const { isValid, errors } = validateCandidateData(req.body);
+    if (!isValid) {
+      return res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors,
+      });
+    }
 
 
     const {
@@ -57,12 +57,12 @@ const addCandidatePostCall = async (req, res) => {
     //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
-  //   const canCreate =
-  //   await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Create')
-  //  //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Create')
-  //   if (!canCreate) {
-  //     return res.status(403).json({ message: 'Forbidden: missing Candidates.Create permission' });
-  //   }
+    //   const canCreate =
+    //   await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Create')
+    //  //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Create')
+    //   if (!canCreate) {
+    //     return res.status(403).json({ message: 'Forbidden: missing Candidates.Create permission' });
+    //   }
     //-----v1.0.1--->
 
     newCandidate = new Candidate({
@@ -90,7 +90,7 @@ const addCandidatePostCall = async (req, res) => {
 
     // Trigger webhook for candidate creation
     try {
-      await triggerWebhook(
+      triggerWebhook(
         EVENT_TYPES.CANDIDATE_CREATED,
         {
           id: newCandidate._id,
@@ -102,9 +102,11 @@ const addCandidatePostCall = async (req, res) => {
           updatedAt: newCandidate.updatedAt
         },
         newCandidate.tenantId
-      );
+      ).catch(error => {
+        console.error('Webhook error (non-blocking):', error);
+      });
     } catch (error) {
-      console.error('Error triggering webhook for candidate creation:', error);
+      console.error('Error triggering webhook for candidate creating:', error);
     }
 
     // Generate feed
@@ -171,39 +173,39 @@ const updateCandidatePatchCall = async (req, res) => {
   const { tenantId, ownerId, ...updateFields } = req.body;
 
   try {
-// this is ranjith code
-        // ✅ Step 1: Validate incoming request body
-        const { error } = candidateUpdateSchema.validate(req.body, {
-          abortEarly: false,
-        });
-    
-        if (error) {
-          const errors = error.details.reduce((acc, err) => {
-            acc[err.context.key] = err.message;
-            return acc;
-          }, {});
-          return res.status(400).json({
-            status: "error",
-            message: "Validation failed",
-            errors,
-          });
-        }
+    // this is ranjith code
+    // ✅ Step 1: Validate incoming request body
+    const { error } = candidateUpdateSchema.validate(req.body, {
+      abortEarly: false,
+    });
 
-    
-//  this is venkatesh code
+    if (error) {
+      const errors = error.details.reduce((acc, err) => {
+        acc[err.context.key] = err.message;
+        return acc;
+      }, {});
+      return res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors,
+      });
+    }
+
+
+    //  this is venkatesh code
     //res.locals.loggedByController = true;
     //----v1.0.1---->
 
-        //console.log("effectivePermissions",res.locals?.effectivePermissions)
-        //<-----v1.0.1---
-        // Permission: Tasks.Create (or super admin override)
-        // const canCreate =
-        // await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Edit')
-        // //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Edit')
-        // if (!canCreate) {
-        //   return res.status(403).json({ message: 'Forbidden: missing Candidates.Edit permission' });
-        // }
-        //-----v1.0.1--->
+    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    // const canCreate =
+    // await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Edit')
+    // //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Edit')
+    // if (!canCreate) {
+    //   return res.status(403).json({ message: 'Forbidden: missing Candidates.Edit permission' });
+    // }
+    //-----v1.0.1--->
 
     // feeds related data
     const currentCandidate = await Candidate.findById(candidateId).lean();
@@ -212,69 +214,69 @@ const updateCandidatePatchCall = async (req, res) => {
       return res.status(404).json({ message: "Candidate not found" });
     }
 
-    
-
-  
 
 
 
-      // ✅ Utility function to detect empty values  // added by Ranjith
-      
-      const isEmptyValue = (val) => {
-        return (
-          val === null ||
-          val === undefined ||
-          (typeof val === "string" && val.trim() === "")
-        );
-      };
-  
-      // ✅ Compare current values with updateFields to identify changes // changed by Ranjith
-      const changes = Object.entries(updateFields)
-        .filter(([key, newValue]) => {
-          const oldValue = currentCandidate[key];
-  
-          // ✅ Skip when both old & new are empty  // added by Ranjith
-          if (isEmptyValue(oldValue) && isEmptyValue(newValue)) {
-            return false;
-          }
-  
-          // Normalize PositionId (convert to string for comparison)
-          if (key === "PositionId") {
-            return oldValue?.toString() !== newValue?.toString();
-          }
-  
-          // Handle arrays (e.g., `skills`)
-          if (Array.isArray(oldValue) && Array.isArray(newValue)) {
-            const normalizeArray = (array) =>
-              array
-                .map((item) => {
-                  const { _id, ...rest } = item; // Ignore _id for comparison
-                  return rest;
-                })
-                .sort((a, b) => a.skill.localeCompare(b.skill));
-  
-            return (
-              JSON.stringify(normalizeArray(oldValue)) !==
-              JSON.stringify(normalizeArray(newValue))
-            );
-          }
-  
-          // Handle dates
-          if (
-            (oldValue instanceof Date || new Date(oldValue).toString() !== "Invalid Date") &&
-            (newValue instanceof Date || new Date(newValue).toString() !== "Invalid Date")
-          ) {
-            return new Date(oldValue).toISOString() !== new Date(newValue).toISOString();
-          }
-  
-          // Default comparison for strings, numbers, etc.
-          return oldValue !== newValue;
-        })
-        .map(([key, newValue]) => ({
-          fieldName: key,
-          oldValue: currentCandidate[key],
-          newValue,
-        }));
+
+
+
+    // ✅ Utility function to detect empty values  // added by Ranjith
+
+    const isEmptyValue = (val) => {
+      return (
+        val === null ||
+        val === undefined ||
+        (typeof val === "string" && val.trim() === "")
+      );
+    };
+
+    // ✅ Compare current values with updateFields to identify changes // changed by Ranjith
+    const changes = Object.entries(updateFields)
+      .filter(([key, newValue]) => {
+        const oldValue = currentCandidate[key];
+
+        // ✅ Skip when both old & new are empty  // added by Ranjith
+        if (isEmptyValue(oldValue) && isEmptyValue(newValue)) {
+          return false;
+        }
+
+        // Normalize PositionId (convert to string for comparison)
+        if (key === "PositionId") {
+          return oldValue?.toString() !== newValue?.toString();
+        }
+
+        // Handle arrays (e.g., `skills`)
+        if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+          const normalizeArray = (array) =>
+            array
+              .map((item) => {
+                const { _id, ...rest } = item; // Ignore _id for comparison
+                return rest;
+              })
+              .sort((a, b) => a.skill.localeCompare(b.skill));
+
+          return (
+            JSON.stringify(normalizeArray(oldValue)) !==
+            JSON.stringify(normalizeArray(newValue))
+          );
+        }
+
+        // Handle dates
+        if (
+          (oldValue instanceof Date || new Date(oldValue).toString() !== "Invalid Date") &&
+          (newValue instanceof Date || new Date(newValue).toString() !== "Invalid Date")
+        ) {
+          return new Date(oldValue).toISOString() !== new Date(newValue).toISOString();
+        }
+
+        // Default comparison for strings, numbers, etc.
+        return oldValue !== newValue;
+      })
+      .map(([key, newValue]) => ({
+        fieldName: key,
+        oldValue: currentCandidate[key],
+        newValue,
+      }));
 
     // If no changes detected, return early
     if (changes.length === 0) {
@@ -303,7 +305,7 @@ const updateCandidatePatchCall = async (req, res) => {
 
     // Trigger webhook for candidate update
     try {
-      await triggerWebhook(
+      triggerWebhook(
         EVENT_TYPES.CANDIDATE_UPDATED,
         {
           id: updatedCandidate._id,
@@ -315,12 +317,14 @@ const updateCandidatePatchCall = async (req, res) => {
           updatedAt: updatedCandidate.updatedAt
         },
         updatedCandidate.tenantId
-      );
+      ).catch(error => {
+        console.error('Webhook error (non-blocking):', error);
+      });
     } catch (error) {
       console.error('Error triggering webhook for candidate update:', error);
     }
 
-    
+
 
 
     // Generate feed
@@ -340,7 +344,7 @@ const updateCandidatePatchCall = async (req, res) => {
       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
         fieldName,
         message: isEmptyValue(oldValue) ? isEmptyValue(newValue)
-        : `${fieldName} updated from `
+          : `${fieldName} updated from `
         , // '${oldValue}' to '${newValue}'
       })),
       history: changes,
@@ -456,7 +460,7 @@ const getCandidatesData = async (req, res) => {
 };
 
 // Dedicated search endpoint for better performance
-const searchCandidates =    async (req, res) => {
+const searchCandidates = async (req, res) => {
   try {
     const { search, filters = {}, limit = 50 } = req.body;
 
@@ -496,24 +500,24 @@ const searchCandidates =    async (req, res) => {
 const getCandidates = async (req, res) => {
   try {
     const { tenantId, ownerId } = req.query;
-  
+
     const query = tenantId ? { tenantId } : ownerId ? { ownerId } : {};
-  
+
 
     res.locals.loggedByController = true;
-    
+
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
-  //   const canCreate =
-  //   await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
-  //  //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
-  //   if (!canCreate) {
-  //     return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
-  //   }
+    //   const canCreate =
+    //   await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
+    //  //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
+    //   if (!canCreate) {
+    //     return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
+    //   }
     //-----v1.0.1--->
 
     const candidates = await Candidate.find(query).lean();
-  
+
     res.json(candidates);
   } catch (error) {
     console.error('[getCandidates] Error:', error.message);
@@ -528,7 +532,7 @@ const getCandidateById = async (req, res) => {
     const { id } = req.params;
 
     if (!id) {
-      
+
       return res.status(400).json({ message: "Candidate ID is required" });
     }
 
@@ -536,16 +540,16 @@ const getCandidateById = async (req, res) => {
 
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
-  //   const canCreate =
-  //   await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
-  //  //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
-  //   if (!canCreate) {
-  //     return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
-  //   }
+    //   const canCreate =
+    //   await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
+    //  //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
+    //   if (!canCreate) {
+    //     return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
+    //   }
     //-----v1.0.1--->
 
     const candidate = await Candidate.findById(id).lean();
-   
+
     if (!candidate) {
       return res.status(404).json({ message: "Candidate not found" });
     }
@@ -570,7 +574,7 @@ const getCandidateById = async (req, res) => {
       }
     ]);
 
-   
+
     const positionDetails = candidatePositions.map(pos => ({
       positionId: pos.positionId,
       status: pos.status,
@@ -602,7 +606,7 @@ const getCandidateById = async (req, res) => {
       appliedPositions: positionDetails || []
     };
 
-  
+
     res.status(200).json(response);
   } catch (error) {
     console.error("🔥 [getCandidateById] Error:", error);
@@ -684,7 +688,7 @@ const bulkAddCandidates = async (req, res) => {
   // Mark that logging will be handled by the controller
   res.locals.loggedByController = true;
   res.locals.processName = 'Bulk Create Candidates';
-  
+
   try {
     // Check if request body is an array
     if (!Array.isArray(req.body)) {
@@ -755,9 +759,9 @@ const bulkAddCandidates = async (req, res) => {
     }
 
     // Bulk insert valid candidates
-    const insertedCandidates = await Candidate.insertMany(validCandidates, { 
+    const insertedCandidates = await Candidate.insertMany(validCandidates, {
       ordered: false, // Continue inserting even if some fail
-      rawResult: false 
+      rawResult: false
     });
 
     // Generate feeds for successful insertions (only for first few to avoid overwhelming)
@@ -847,7 +851,7 @@ const bulkAddCandidates = async (req, res) => {
 };
 
 
-module.exports = { getCandidates, addCandidatePostCall, updateCandidatePatchCall,searchCandidates,getCandidatesData, getCandidateById,deleteCandidate, bulkAddCandidates }
+module.exports = { getCandidates, addCandidatePostCall, updateCandidatePatchCall, searchCandidates, getCandidatesData, getCandidateById, deleteCandidate, bulkAddCandidates }
 
 
 

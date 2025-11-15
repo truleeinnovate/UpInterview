@@ -91,7 +91,6 @@ app.use((req, res, next) => {
     next();
 });
 
-
 // Add OPTIONS handlers for main routes
 const handleOptions = (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");

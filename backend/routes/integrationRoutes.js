@@ -16,6 +16,11 @@ router
   .get(integrationController.getIntegrations)
   .post(integrationController.createIntegration);
 
+router
+  .route('/:id')
+  .put(integrationController.updateIntegration)
+  .delete(integrationController.deleteIntegration);
+
 // Make authenticated API call
 router.post(
   '/:id/call',

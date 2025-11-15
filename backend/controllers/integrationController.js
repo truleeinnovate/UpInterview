@@ -305,6 +305,148 @@ exports.handleWebhook = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Update an integration
+// @route   PUT /integrations/:id
+// @access  Private
+exports.updateIntegration = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const updateData = req.body;
+  
+  try {
+    // Find the integration by ID
+    let integration = await Integration.findById(id);
+    
+    if (!integration) {
+      return res.status(404).json({
+        success: false,
+        message: 'Integration not found'
+      });
+    }
+
+    // Update the integration with new data
+    integration = await Integration.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    // Log the update
+    await createLog({
+      ownerId: req.user?.id || 'system',
+      status: 'success',
+      message: 'Integration updated successfully',
+      requestEndPoint: `/integrations/${id}`,
+      requestMethod: 'PUT',
+      requestBody: updateData,
+      responseStatusCode: 200,
+      integrationName: integration.name,
+      flowType: 'update-integration'
+    });
+
+    res.status(200).json({
+      success: true,
+      data: integration
+    });
+  } catch (error) {
+    console.error('Error updating integration:', error);
+    
+    // Log the error
+    await createLog({
+      ownerId: req.user?.id || 'system',
+      status: 'error',
+      errorCode: 'UPDATE_ERROR',
+      message: 'Failed to update integration',
+      requestEndPoint: `/integrations/${id}`,
+      requestMethod: 'PUT',
+      requestBody: updateData,
+      responseStatusCode: 500,
+      responseError: error.message,
+      integrationName: updateData.name || 'unknown',
+      flowType: 'update-integration',
+      severity: 'high'
+    });
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update integration',
+      error: error.message
+    });
+  }
+});
+
+// @desc    Delete an integration
+// @route   DELETE /integrations/:id
+// @access  Private
+exports.deleteIntegration = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const requestId = uuidv4();
+  const startTime = Date.now();
+
+  try {
+    const integration = await Integration.findById(id);
+    
+    if (!integration) {
+      await createLog({
+        requestId,
+        status: 'error',
+        errorCode: 'NOT_FOUND',
+        message: 'Integration not found',
+        requestEndPoint: `/integrations/${id}`,
+        requestMethod: 'DELETE',
+        responseStatusCode: 404,
+        duration: Date.now() - startTime,
+      });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Integration not found',
+        requestId,
+      });
+    }
+
+    await Integration.findByIdAndDelete(id);
+
+    await createLog({
+      requestId,
+      status: 'success',
+      message: 'Successfully deleted integration',
+      requestEndPoint: `/integrations/${id}`,
+      requestMethod: 'DELETE',
+      responseStatusCode: 200,
+      duration: Date.now() - startTime,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Integration deleted successfully',
+      data: { id },
+      requestId,
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    
+    await createLog({
+      requestId,
+      status: 'error',
+      errorCode: 'INTEGRATION_DELETE_ERROR',
+      message: 'Error deleting integration',
+      requestEndPoint: `/integrations/${id}`,
+      requestMethod: 'DELETE',
+      responseError: error.message,
+      responseStatusCode: 500,
+      duration,
+      severity: 'high',
+    });
+
+    console.error(`[${requestId}] Error deleting integration:`, error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting integration',
+      error: error.message,
+      requestId,
+    });
+  }
+});
+
 // @desc    Get all integrations
 // @route   GET /integrations
 // @access  Private
