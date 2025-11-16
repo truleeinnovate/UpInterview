@@ -1255,6 +1255,10 @@ app.use("/assessment-questions", assessmentQuestionsRoutes);
 const integrationRoutes = require('./routes/integrationRoutes');
 app.use('/integrations', integrationRoutes);
 
+// API Key Routes
+const apiKeyRoutes = require('./routes/apiKeyRoutes');
+app.use('/apikeys', apiKeyRoutes);
+
 const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoute.js");
 app.use("/schedule-assessment", scheduledAssessmentRouter);
 

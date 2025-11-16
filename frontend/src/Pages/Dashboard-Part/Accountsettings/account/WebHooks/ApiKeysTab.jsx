@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { createPortal } from "react-dom";
+import { config } from "../../../../../config";
 
 const ApiKeysTab = () => {
   const [apiKeys, setApiKeys] = useState([]);
@@ -11,15 +12,35 @@ const ApiKeysTab = () => {
     permissions: ["read"],
   });
 
+  // NEW: Retrieve auth token (adjust key if using context/store instead of localStorage)
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("authToken"); // Or use useAuth hook: const { token } = useAuth();
+    if (!token) {
+      // Optional: Redirect to login or show error
+      console.warn("No auth token found. Redirecting to login...");
+      // window.location.href = "/login"; // Uncomment if needed
+      return {};
+    }
+    return {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json", // Only needed for POST/PUT
+    };
+  };
+
   useEffect(() => {
     fetchApiKeys();
   }, []);
 
   const fetchApiKeys = async () => {
     try {
-      const response = await fetch("/api/api-keys");
+      // UPDATED: Add auth headers (Content-Type not needed for GET, but harmless)
+      const headers = getAuthHeaders();
+      const response = await fetch(`${config.REACT_APP_API_URL}/apikeys`, { headers });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
       const data = await response.json();
-      setApiKeys(Array.isArray(data) ? data : []);
+      setApiKeys(Array.isArray(data.data) ? data.data : []); // UPDATED: Backend returns { data: [...] }, so access .data
     } catch (error) {
       console.error("Error fetching API keys:", error);
       setApiKeys([]);
@@ -29,19 +50,25 @@ const ApiKeysTab = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/api-keys", {
+      // UPDATED: Add auth headers
+      const headers = getAuthHeaders();
+      const response = await fetch(`${config.REACT_APP_API_URL}/apikeys`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(formData),
       });
 
-      if (response.ok) {
-        await fetchApiKeys();
-        setShowModal(false);
-        setFormData({ organization: "", permissions: ["read"] });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+
+      // UPDATED: Backend returns { data: apiKey }, but we refetch list anyway
+      await fetchApiKeys();
+      setShowModal(false);
+      setFormData({ organization: "", permissions: ["read"] });
     } catch (error) {
       console.error("Error creating API key:", error);
+      // Optional: Show user-friendly toast/error modal
     }
   };
 
@@ -52,7 +79,15 @@ const ApiKeysTab = () => {
       )
     ) {
       try {
-        await fetch(`/api/api-keys/${id}`, { method: "DELETE" });
+        // UPDATED: Add auth headers
+        const headers = getAuthHeaders();
+        const response = await fetch(`${config.REACT_APP_API_URL}/apikeys/${id}`, { 
+          method: "DELETE",
+          headers: { ...headers, "Content-Type": "application/json" } // Content-Type optional for DELETE
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         await fetchApiKeys();
       } catch (error) {
         console.error("Error deleting API key:", error);
@@ -60,6 +95,7 @@ const ApiKeysTab = () => {
     }
   };
 
+  // Rest of the component unchanged...
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     // You could add a toast notification here
@@ -130,8 +166,8 @@ const ApiKeysTab = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {(Array.isArray(apiKeys) ? apiKeys : []).map((apiKey) => (
-                <tr key={apiKey.id}>
+              {apiKeys.map((apiKey) => ( // UPDATED: Removed redundant Array.isArray check (already handled in fetch)
+                <tr key={apiKey.id || apiKey._id}> {/* UPDATED: Use _id if id not present (Mongoose uses _id) */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {apiKey.organization}
@@ -140,14 +176,14 @@ const ApiKeysTab = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-2">
                       <code className="text-sm bg-gray-100 px-2 py-1 rounded font-mono">
-                        {maskKey(apiKey.key, visibleKeys[apiKey.id])}
+                        {maskKey(apiKey.key, visibleKeys[apiKey.id || apiKey._id])}
                       </code>
                       <button
-                        onClick={() => toggleKeyVisibility(apiKey.id)}
+                        onClick={() => toggleKeyVisibility(apiKey.id || apiKey._id)}
                         className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                        title={visibleKeys[apiKey.id] ? "Hide" : "Show"}
+                        title={visibleKeys[apiKey.id || apiKey._id] ? "Hide" : "Show"}
                       >
-                        {visibleKeys[apiKey.id] ? (
+                        {visibleKeys[apiKey.id || apiKey._id] ? (
                           <EyeOff className="w-4 h-4" />
                         ) : (
                           <Eye className="w-4 h-4" />
@@ -164,10 +200,7 @@ const ApiKeysTab = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-wrap gap-1">
-                      {(apiKey.permissions && Array.isArray(apiKey.permissions)
-                        ? apiKey.permissions
-                        : []
-                      ).map((permission) => (
+                      {(apiKey.permissions || []).map((permission) => ( // UPDATED: Safer null-check
                         <span
                           key={permission}
                           className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
@@ -195,7 +228,7 @@ const ApiKeysTab = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
-                      onClick={() => handleDelete(apiKey.id)}
+                      onClick={() => handleDelete(apiKey.id || apiKey._id)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title="Delete"
                     >
@@ -208,7 +241,7 @@ const ApiKeysTab = () => {
           </table>
         </div>
 
-        {(Array.isArray(apiKeys) ? apiKeys : []).length === 0 && (
+        {apiKeys.length === 0 && ( // UPDATED: Simplified check
           <div className="p-12 text-center">
             <p className="text-gray-500 mb-4">No API keys generated yet.</p>
             <button
@@ -221,7 +254,7 @@ const ApiKeysTab = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal unchanged */}
       {showModal &&
         createPortal(
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
