@@ -6,6 +6,7 @@
  */
 // v1.0.4 - Ashok - Improved responsiveness
 // v1.0.5 - Ashok - Moved users api to hooks
+// v1.0.6 - Ashok - fixed style issues
 
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -39,6 +40,8 @@ import { config } from "../../../../../config";
 import axios from "axios";
 import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 import StatusBadge from "../../../../../Components/SuperAdminComponents/common/StatusBadge";
+import { getEmptyStateMessage } from "../../../../../utils/EmptyStateMessage/emptyStateMessage";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const UsersAccountTab = () => {
   const userType = AuthCookieManager.getUserType();
@@ -70,7 +73,7 @@ const UsersAccountTab = () => {
   // Select data and loading state based on type
   const dataSource = userType === "superAdmin" ? superAdminUsers : usersRes;
   const loading = userType === "superAdmin" ? superAdminLoading : usersLoading;
-  console.log("SETTINGS USERS =================================> : ", usersRes);
+
   // Fetch super admin users when type is superAdmin
   useEffect(() => {
     if (userType === "superAdmin") {
@@ -257,10 +260,21 @@ const UsersAccountTab = () => {
     navigate(`edit/${user._id}`, { state: { userData: user } });
   };
 
-    const capitalizeFirstLetter = (str) => {
-    if (!str) return "";
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
+  // --- START: Dynamic Empty State Messages using Utility ---
+  const isSearchActive = searchQuery.length > 0 || isFilterActive;
+  // Use the length of the raw data (before filtering/pagination) as the initial count
+  const initialDataCount = dataSource?.length || 0;
+  const currentFilteredCount = currentFilteredRows?.length || 0;
+
+  let entityName = userType === "superAdmin" ? "super admins" : "users";
+
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    entityName
+  );
+  // --- END: Dynamic Empty State Messages using Utility ---
 
   // Table Columns Configuration
   const tableColumns = [
@@ -300,16 +314,8 @@ const UsersAccountTab = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {`${
-                row.firstName
-                  ? row.firstName.charAt(0).toUpperCase().trim() +
-                    row.firstName.slice(1).trim()
-                  : ""
-              } ${
-                row.lastName
-                  ? row.lastName.charAt(0).toUpperCase().trim() +
-                    row.lastName.slice(1)
-                  : ""
+              {`${row.firstName ? capitalizeFirstLetter(row.firstName) : ""} ${
+                row.lastName ? capitalizeFirstLetter(row.lastName) : ""
               }`.trim() || "Unknown"}
             </div>
           </div>
@@ -319,7 +325,11 @@ const UsersAccountTab = () => {
     {
       key: "email",
       header: "Email",
-      render: (value) => value || "Not Provided",
+      render: (value) => (
+        <span className="cursor-default" title={value}>
+          {value ? value : "Not Provided"}
+        </span>
+      ),
     },
     {
       key: "phone",
@@ -327,19 +337,17 @@ const UsersAccountTab = () => {
       render: (value) => value || "Not Provided",
     },
     { key: "label", header: "Role", render: (value) => value || "Not Found" },
-     {
+    {
       key: "status",
       header: "Status",
       render: (value) => {
-        return value ?  (
-       
+        return value ? (
           <StatusBadge status={capitalizeFirstLetter(value)} />
-     
         ) : (
           <span className="text-gray-400 text-sm">N/A</span>
-        );  
+        );
       },
-    }
+    },
     // {
     //   key: "status",
     //   header: "Status",
@@ -458,7 +466,7 @@ const UsersAccountTab = () => {
                   //     }
                   //   );
                   // } else {
-                    navigate("new");
+                  navigate("new");
                   // }
                 }}
                 addButtonText="Add User"
@@ -496,11 +504,12 @@ const UsersAccountTab = () => {
                       columns={tableColumns}
                       loading={loading}
                       actions={tableActions}
-                      emptyState={
-                        userType === "superAdmin"
-                          ? "No super admins found."
-                          : "No users found."
-                      }
+                      // emptyState={
+                      //   userType === "superAdmin"
+                      //     ? "No super admins found."
+                      //     : "No users found."
+                      // }
+                      emptyState={emptyStateMessage}
                     />
                   </div>
                 ) : (

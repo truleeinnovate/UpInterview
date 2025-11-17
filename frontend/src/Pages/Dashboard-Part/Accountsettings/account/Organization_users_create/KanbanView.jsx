@@ -2,6 +2,7 @@
  path from local to cloud storage url
  */
 // v1.0.1 - Ashok - changed api from Context to apiHooks
+// v1.0.2 - Ashok - fixed style issues
 
 /* eslint-disable no-lone-blocks */
 // import PropTypes from 'prop-types';
@@ -15,6 +16,7 @@ import {
   Info,
   CheckCircle,
   XCircle,
+  CheckSquare,
 } from "lucide-react";
 // v1.0.0 <--------------------------------------------------------------
 // import maleImage from "../../../Images/man.png";
@@ -29,6 +31,8 @@ import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { useUsers } from "../../../../../apiHooks/useUsers";
 import { useState } from "react";
 import ConfirmationModal from "./ConfirmModel";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import StatusBadge from "../../../../../Components/SuperAdminComponents/common/StatusBadge";
 
 const KanbanView = ({
   currentFilteredRows,
@@ -180,6 +184,7 @@ const KanbanView = ({
                       } hover:bg-blue-50 rounded-lg transition-colors`}
                       // className="hover:bg-gray-200 w-full p-1 rounded pl-3 cursor-pointer flex items-center gap-2"
                       onClick={() => handleStatusToggle(users)}
+                      title="Toggle Status"
                     >
                       {users.status === "active" ? (
                         <CheckCircle
@@ -221,18 +226,47 @@ const KanbanView = ({
 
                 {/* Contact information */}
                 <div className="space-y-2 text-sm">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center gap-1.5 text-gray-600">
-                      <Mail className="w-4 h-4" />
-                      <span className="truncate">{users?.email || ""}</span>
+                  <div className="grid grid-cols-1 gap-2">
+                    <div className="grid grid-cols-2 items-center">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-custom-blue" />
+                        <span className="text-gray-500">Mail</span>
+                      </div>
+                      <span
+                        className="truncate text-gray-800 font-semibold cursor-default"
+                        title={users?.email}
+                      >
+                        {users?.email || ""}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-gray-600">
-                      <Phone className="w-4 h-4" />
+                    <div className="grid grid-cols-2 items-center">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-custom-blue" />
+                        <span className="text-gray-500">Phone</span>
+                      </div>
                       <span>{users?.phone || "N/A"}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-gray-600">
-                      <Briefcase className="w-4 h-4" />
-                      <span>{users?.label || "N/A"}</span>
+                    <div className="grid grid-cols-2 items-center">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-custom-blue" />
+                        <span className="text-gray-500">Role</span>
+                      </div>
+                      <span>
+                        {capitalizeFirstLetter(users?.label) || "N/A"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 items-center">
+                      <div className="flex items-center gap-2">
+                        <CheckSquare className="w-4 h-4 text-custom-blue" />
+                        <span className="text-gray-500">Status</span>
+                      </div>
+                      <span>
+                        {(
+                          <StatusBadge
+                            status={capitalizeFirstLetter(users?.status)}
+                          />
+                        ) || "N/A"}
+                      </span>
                     </div>
                   </div>
                 </div>

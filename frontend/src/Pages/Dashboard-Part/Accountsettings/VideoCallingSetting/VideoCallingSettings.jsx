@@ -2,6 +2,7 @@
 // v1.0.0 - Ashok - fixed z-index style issue for confirmation popup
 // v1.0.1 - Ashok - fixed responsiveness issues, added shimmer loader, fixed re-rendering issue
 // v1.0.2 - Ashok - Improved loading view
+// v1.0.3 - Ashok - Fixed loading view
 
 import { useEffect, useState } from "react";
 import {
@@ -68,8 +69,8 @@ export function VideoCallingSettings() {
     // isOrganization,
   } = useVideoSettingsQuery();
 
-    // Add this line to fix all setSettings errors:
-    // const [settings, setSettings] = useState(data?.data || null);
+  // Add this line to fix all setSettings errors:
+  // const [settings, setSettings] = useState(data?.data || null);
 
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -382,8 +383,6 @@ export function VideoCallingSettings() {
         ownerId: ownerId,
       };
 
-    
-
       // Make PATCH request to update settings
       const response = await axios.patch(
         `${config.REACT_APP_API_URL}/video-details/update-settings`,
@@ -591,11 +590,21 @@ export function VideoCallingSettings() {
       // v1.0.2 <----------------------------------------------------------------------------
       <div className="space-y-6 sm:mt-6 md:mt-6">
         {/* Header */}
-        <div className="flex justify-between items-center px-2">
+        {/* <div className="flex justify-between items-center px-2">
           <div className="h-6 w-48 rounded shimmer"></div>
           <div className="flex items-center space-x-2">
             <div className="h-8 w-24 rounded shimmer"></div>
           </div>
+        </div> */}
+        <div className="flex justify-between items-center px-2">
+          <h2 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl font-bold">
+            Video Calling Settings
+          </h2>
+          <button
+            className="text-sm px-4 py-2 bg-[#217989] text-white rounded-lg hover:bg-[#1a6b7a] disabled:bg-gray-400 flex items-center space-x-2"
+          >
+            Save Settings
+          </button>
         </div>
 
         {/* Provider Selection */}

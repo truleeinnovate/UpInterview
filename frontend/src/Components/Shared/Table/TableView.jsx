@@ -3,6 +3,7 @@
 // v1.0.2  -  Ashok   -  added functionality for auto close menu when clicking outside
 // v1.0.3  -  Ashok   -  added custom height prop for table container
 // v1.0.4  -  Ashok   -  increased number of loading rows from 5 to 10
+// v1.0.5  -  Ashok   -  fixed outline
 
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -210,7 +211,7 @@ const TableView = ({
                             (row.id || row._id || JSON.stringify(row)) && (
                             <Menu.Items
                               static
-                              className="absolute left-0 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+                              className="absolute left-0 w-48 bg-white rounded-lg shadow-xl border border-gray-300 outline-none py-1 z-50"
                               style={{
                                 transform: "translateX(-75%)",
                                 ...(openUpwards

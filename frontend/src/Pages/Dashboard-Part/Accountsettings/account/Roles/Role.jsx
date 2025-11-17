@@ -333,6 +333,7 @@
 // v1.0.2  -  Ashok   -  added font semibold for view more button
 // v1.0.3  -  [Your Name]  -  moved override fetching to useRolesQuery, removed unnecessary reloads
 // v1.0.4 - Ashok - Improved responsiveness
+// v1.0.5 - Ashok - Fixed loading view
 
 import { useState, useMemo } from "react";
 import Cookies from "js-cookie";
@@ -377,9 +378,17 @@ const Role = () => {
   const RoleSkeleton = () => {
     return (
       <div className="space-y-6 mb-4">
-        <div className="flex justify-between items-center mt-3 px-3">
-          <div className="h-6 bg-gray-200 skeleton-animation rounded w-48"></div>
-          <div className="h-8 bg-gray-200 skeleton-animation rounded w-24"></div>
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg text-custom-blue font-semibold">
+            Roles & Permissions
+          </h2>
+          {userType === "superAdmin" && permissions?.Roles?.Create && (
+            <button
+              className="px-4 py-1 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90"
+            >
+              Create Role
+            </button>
+          )}
         </div>
         <div className="bg-white px-3 rounded-lg shadow py-3 mx-3">
           <div className="flex justify-between items-center mb-4">
