@@ -280,7 +280,7 @@ exports.getTicket = async (req, res) => {
     /* --------------------------------------------------------------------- */
     const skip = parseInt(page) * parseInt(limit);
     const tickets = await SupportUser.find(finalQuery)
-      .sort({ createdAt: -1 })
+      .sort({ _id: -1 })
       .skip(skip)
       .limit(parseInt(limit))
       .lean();

@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { toast } from "react-toastify";
 import { notify } from "../services/toastService";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";

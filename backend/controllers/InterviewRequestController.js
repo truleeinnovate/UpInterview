@@ -115,29 +115,139 @@ exports.createRequest = async (req, res) => {
 
 exports.getAllRequests = async (req, res) => {
   try {
-    const requests = await InterviewRequest.find()
-      .populate({
-        path: "positionId",
-        model: "Position",
-        select: "title",
-        match: (doc) =>
-          mongoose.Types.ObjectId.isValid(doc.positionId) ? {} : null,
-      })
-      .populate({
-        path: "candidateId",
-        model: "Candidate",
-        select: "skills",
-      })
-      // v1.0.0 <------------------------------------------------------------------------
-      .populate({
-        path: "interviewerId",
-        model: "Contacts",
-        select: "firstName lastName email phone currentRole imageData skills", // customize fields
-      });
-    // v1.0.0 ------------------------------------------------------------------------>
-    res.status(200).json(requests);
+    const hasPaginationParams = (
+      'page' in req.query ||
+      'limit' in req.query ||
+      'search' in req.query ||
+      'status' in req.query ||
+      'type' in req.query
+    );
+
+    if (!hasPaginationParams) {
+      // Legacy behavior: return full list (used by some existing UIs)
+      const requests = await InterviewRequest.find()
+        .populate({
+          path: "positionId",
+          model: "Position",
+          select: "title",
+          match: (doc) =>
+            mongoose.Types.ObjectId.isValid(doc.positionId) ? {} : null,
+        })
+        .populate({
+          path: "candidateId",
+          model: "Candidate",
+          select: "skills",
+        })
+        .populate({
+          path: "interviewerId",
+          model: "Contacts",
+          select: "firstName lastName email phone currentRole imageData skills",
+        })
+        .lean();
+      return res.status(200).json(requests);
+    }
+
+    // Paginated mode
+    const page = Math.max(parseInt(req.query.page, 10) || 0, 0);
+    const limitRaw = parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
+    const search = (req.query.search || '').trim();
+    const statusParam = (req.query.status || '').trim();
+    const typeParam = (req.query.type || '').trim();
+
+    const statusValues = statusParam ? statusParam.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    const pipeline = [
+      {
+        $lookup: {
+          from: 'contacts',
+          localField: 'interviewerId',
+          foreignField: '_id',
+          as: 'interviewer',
+        },
+      },
+      { $unwind: { path: '$interviewer', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'positions',
+          localField: 'positionId',
+          foreignField: '_id',
+          as: 'position',
+        },
+      },
+      { $unwind: { path: '$position', preserveNullAndEmptyArrays: true } },
+    ];
+
+    const match = {};
+    if (statusValues.length > 0) {
+      match.status = { $in: statusValues };
+    }
+    if (typeParam) {
+      match.interviewerType = { $regex: new RegExp(`^${typeParam}$`, 'i') };
+    }
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      match.$or = [
+        { interviewRequestCode: { $regex: regex } },
+        { interviewerType: { $regex: regex } },
+        { status: { $regex: regex } },
+        { 'interviewer.firstName': { $regex: regex } },
+        { 'interviewer.lastName': { $regex: regex } },
+        { 'interviewer.email': { $regex: regex } },
+        { 'position.title': { $regex: regex } },
+      ];
+    }
+    if (Object.keys(match).length > 0) {
+      pipeline.push({ $match: match });
+    }
+
+    pipeline.push({ $sort: { _id: -1 } });
+
+    pipeline.push({
+      $facet: {
+        data: [
+          { $skip: page * limit },
+          { $limit: limit },
+          { $addFields: { interviewerId: '$interviewer', positionId: '$position' } },
+          { $project: { interviewer: 0, position: 0 } },
+        ],
+        totalCount: [{ $count: 'count' }],
+        statusCounts: [ { $group: { _id: '$status', count: { $sum: 1 } } } ],
+      },
+    });
+
+    const result = await InterviewRequest.aggregate(pipeline);
+    const agg = result?.[0] || { data: [], totalCount: [], statusCounts: [] };
+    const totalItems = agg.totalCount?.[0]?.count || 0;
+    const data = agg.data || [];
+    const statsMap = (agg.statusCounts || []).reduce((acc, cur) => {
+      if (cur && cur._id) acc[cur._id] = cur.count || 0;
+      return acc;
+    }, {});
+    const stats = {
+      inprogress: statsMap.inprogress || 0,
+      accepted: statsMap.accepted || 0,
+      declined: statsMap.declined || 0,
+      expired: statsMap.expired || 0,
+      cancelled: statsMap.cancelled || 0,
+      withdrawn: statsMap.withdrawn || 0,
+    };
+
+    return res.status(200).json({
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalItems / limit) || 0,
+        totalItems,
+        hasNext: (page + 1) * limit < totalItems,
+        hasPrev: page > 0,
+        itemsPerPage: limit,
+      },
+      stats,
+      status: true,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error: error.message });
+    return res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 

@@ -11,7 +11,7 @@ exports.getApiKeys = asyncHandler(async (req, res) => {
 
   try {
     const apiKeys = await ApiKey.find({ createdBy: req.user.id })
-      .sort({ createdAt: -1 })
+      .sort({ _id: -1 })
       .select('-__v');
 
     const duration = Date.now() - startTime;

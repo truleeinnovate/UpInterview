@@ -6,15 +6,111 @@ const { Contacts } = require("../models/Contacts.js");
 
 exports.getAllInterviewers = async (req, res) => {
   try {
-    const interviewers = await OutsourceInterviewer.find().populate({
-      path: "contactId",
-      populate: {
-        path: "availability",
-        model: "InterviewAvailability",
+    const hasPaginationParams = (
+      'page' in req.query ||
+      'limit' in req.query ||
+      'search' in req.query ||
+      'status' in req.query
+    );
+
+    if (!hasPaginationParams) {
+      const interviewers = await OutsourceInterviewer.find().populate({
+        path: "contactId",
+        populate: {
+          path: "availability",
+          model: "InterviewAvailability",
+        },
+      });
+      return res.status(200).json(interviewers);
+    }
+
+    const page = Math.max(parseInt(req.query.page, 10) || 0, 0);
+    const limitRaw = parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
+    const search = (req.query.search || '').trim();
+    const statusParam = (req.query.status || '').trim();
+
+    const statusValues = statusParam
+      ? statusParam.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+
+    const pipeline = [
+      {
+        $lookup: {
+          from: 'contacts',
+          localField: 'contactId',
+          foreignField: '_id',
+          as: 'contact',
+        },
+      },
+      { $unwind: { path: '$contact', preserveNullAndEmptyArrays: true } },
+    ];
+
+    const match = {};
+    if (statusValues.length > 0) {
+      match.status = { $in: statusValues };
+    }
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      match.$or = [
+        { outsourceRequestCode: { $regex: regex } },
+        { 'contact.firstName': { $regex: regex } },
+        { 'contact.lastName': { $regex: regex } },
+        { 'contact.email': { $regex: regex } },
+        { 'contact.phone': { $regex: regex } },
+        { 'contact.skills': { $regex: regex } },
+      ];
+    }
+    if (Object.keys(match).length > 0) {
+      pipeline.push({ $match: match });
+    }
+
+    pipeline.push({ $sort: { _id: -1 } });
+
+    pipeline.push({
+      $facet: {
+        data: [
+          { $skip: page * limit },
+          { $limit: limit },
+          { $addFields: { contactId: '$contact' } },
+          { $project: { contact: 0 } },
+        ],
+        totalCount: [{ $count: 'count' }],
+        statusCounts: [
+          { $group: { _id: '$status', count: { $sum: 1 } } },
+        ],
       },
     });
 
-    res.status(200).json(interviewers);
+    const result = await OutsourceInterviewer.aggregate(pipeline);
+    const agg = result?.[0] || { data: [], totalCount: [], statusCounts: [] };
+    const totalItems = agg.totalCount?.[0]?.count || 0;
+    const data = agg.data || [];
+    const statsMap = (agg.statusCounts || []).reduce((acc, cur) => {
+      if (cur && cur._id) acc[cur._id] = cur.count || 0;
+      return acc;
+    }, {});
+    const stats = {
+      new: statsMap.new || 0,
+      underReview: statsMap.underReview || 0,
+      approved: statsMap.approved || 0,
+      rejected: statsMap.rejected || 0,
+      suspended: statsMap.suspended || 0,
+    };
+
+    return res.status(200).json({
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalItems / limit) || 0,
+        totalItems,
+        hasNext: (page + 1) * limit < totalItems,
+        hasPrev: page > 0,
+        itemsPerPage: limit,
+      },
+      stats,
+      status: true,
+    });
   } catch (error) {
     console.error("❌ Detailed error:", {
       message: error.message,

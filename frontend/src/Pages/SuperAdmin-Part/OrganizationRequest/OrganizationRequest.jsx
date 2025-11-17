@@ -1,5 +1,5 @@
 // v1.0.0 - Initial version
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import Toolbar from "../../../Components/Shared/Toolbar/Toolbar";
 import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup";
@@ -16,21 +16,13 @@ import SidebarPopup from "../../../Components/SuperAdminComponents/SidebarPopup/
 
 const OrganizationRequest = () => {
   const { superAdminPermissions } = usePermissions();
-  const {
-    organizationRequests = [],
-    isLoading,
-    updateOrganizationStatus,
-    refetch,
-  } = useOrganizationRequests();
+  
 
-  // Debug log to verify the function is available
-  console.log(
-    "updateOrganizationStatus function available:",
-    typeof updateOrganizationStatus === "function"
-  );
+  // Debug log removed
 
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -44,6 +36,20 @@ const OrganizationRequest = () => {
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   console.log("selectedOrganization", selectedOrganization);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const ITEMS_PER_PAGE = 10;
+
+  const {
+    organizationRequests = [],
+    pagination,
+    isLoading,
+    updateOrganizationStatus,
+    refetch,
+  } = useOrganizationRequests({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: debouncedSearch,
+    status: selectedFilters.status.join(","),
+  });
 
   // Handle status filter change
   const handleStatusFilter = (status) => {
@@ -165,15 +171,7 @@ const OrganizationRequest = () => {
   //     },
   // ];
 
-  // Filter options
-  const filterOptions = [
-    {
-      label: "Status",
-      options: ["Requested", "Approved", "Rejected", "Pending"],
-      selected: selectedFilters.status,
-      onSelect: handleStatusFilter,
-    },
-  ];
+  // Filter options removed (server-side filters used in FilterPopup below)
 
   // Handle view details
   const handleViewDetails = (organization) => {
@@ -218,37 +216,7 @@ const OrganizationRequest = () => {
   //     setCurrentPage(0);
   // };
 
-  // Apply filters to data
-  const filteredData = useMemo(() => {
-    return (organizationRequests || [])
-      .filter((org) => {
-        const matchesSearch =
-          searchQuery === "" ||
-          org.contact?.firstName
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          org.contact?.lastName
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          org.contact?.email
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          org.tenant?.company
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase());
-
-        const matchesStatus =
-          selectedFilters.status.length === 0 ||
-          selectedFilters.status.includes(org.status?.toLowerCase());
-
-        return matchesSearch && matchesStatus;
-      })
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt || b.createdAt) -
-          new Date(a.updatedAt || a.createdAt)
-      );
-  }, [organizationRequests, searchQuery, selectedFilters.status]);
+  const dataToUse = organizationRequests || [];
 
   // Toolbar actions
   // const toolbarActions = [
@@ -274,13 +242,25 @@ const OrganizationRequest = () => {
     }
   }, [selectedOrganizationId, organizationRequests]);
 
-  const rowsPerPage = 10;
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(
-    startIndex + rowsPerPage,
-    filteredData?.length || 0
-  );
-  const currentFilteredRows = filteredData.slice(startIndex, endIndex);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(0);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  const totalPages = pagination?.totalPages || 0;
+  const nextPage = () => {
+    if (pagination?.hasNext) {
+      setCurrentPage((p) => p + 1);
+    }
+  };
+  const prevPage = () => {
+    if (pagination?.hasPrev) {
+      setCurrentPage((p) => Math.max(0, p - 1));
+    }
+  };
 
   // const [selectedInterviewerId, setSelectedInterviewerId] = useState(null);
   // const [selectedInterviewer, setSelectedInterviewer] = useState(null);
@@ -433,10 +413,7 @@ const OrganizationRequest = () => {
     // },
   ];
 
-  useEffect(() => {
-    console.log("Organization requests:", organizationRequests);
-    console.log("Filtered data:", filteredData);
-  }, [organizationRequests, filteredData]);
+  // Debug logging removed
 
   return (
     <>
@@ -455,18 +432,15 @@ const OrganizationRequest = () => {
           view={view}
           setView={setView}
           searchQuery={searchQuery}
-          onSearch={(e) => setSearchQuery(e.target.value)}
+          onSearch={(e) => { setSearchQuery(e.target.value); setCurrentPage(0); }}
           currentPage={currentPage}
-          totalPages={Math.ceil(filteredData.length / 10)}
-          onPrevPage={() => currentPage > 0 && setCurrentPage(currentPage - 1)}
-          onNextPage={() =>
-            (currentPage + 1) * 10 < filteredData.length &&
-            setCurrentPage(currentPage + 1)
-          }
+          totalPages={totalPages}
+          onPrevPage={prevPage}
+          onNextPage={nextPage}
           onFilterClick={() => setFilterPopupOpen(!isFilterPopupOpen)}
           isFilterActive={isFilterActive}
           isFilterPopupOpen={isFilterPopupOpen}
-          dataLength={filteredData.length}
+          dataLength={pagination?.totalItems || dataToUse.length || 0}
           searchPlaceholder="Search organizations..."
           filterIconRef={filterIconRef}
         />
@@ -478,7 +452,7 @@ const OrganizationRequest = () => {
             {view === "table" ? (
               <div className="w-full mb-8 bg-red">
                 <TableView
-                  data={currentFilteredRows || []}
+                  data={dataToUse || []}
                   columns={tableColumns}
                   loading={isLoading}
                   actions={tableActions}
@@ -488,7 +462,7 @@ const OrganizationRequest = () => {
             ) : (
               <div className="w-full">
                 <KanbanView
-                  data={filteredData || []} // This is the full filtered dataset
+                  data={dataToUse || []}
                   onViewDetails={handleViewDetails}
                 />
               </div>
@@ -498,20 +472,32 @@ const OrganizationRequest = () => {
               <FilterPopup
                 isOpen={isFilterPopupOpen}
                 onClose={() => setFilterPopupOpen(false)}
-                filterOptions={filterOptions}
                 onClearAll={() => {
-                  setSelectedFilters({
-                    status: [],
-                    currentStatus: "",
-                  });
+                  setSelectedFilters({ status: [] });
                   setIsFilterActive(false);
+                  setCurrentPage(0);
                 }}
                 onApply={() => {
                   setIsFilterActive(selectedFilters.status.length > 0);
                   setFilterPopupOpen(false);
+                  setCurrentPage(0);
                 }}
-                anchorEl={filterIconRef.current}
-              />
+                filterIconRef={filterIconRef}
+              >
+                <div className="space-y-2 p-2">
+                  {['pending_review','in_contact','under_verification','approved','rejected'].map((st) => (
+                    <label key={st} className="flex items-center space-x-2 cursor-pointer text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedFilters.status.includes(st)}
+                        onChange={() => handleStatusFilter(st)}
+                        className="accent-custom-blue"
+                      />
+                      <span>{st.replace(/_/g,' ')}</span>
+                    </label>
+                  ))}
+                </div>
+              </FilterPopup>
             )}
           </motion.div>
         </div>

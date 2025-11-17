@@ -3,22 +3,30 @@ import axios from "axios";
 import { config } from "../../config";
 import { usePermissions } from "../../Context/PermissionsContext";
 
-// Hook to get all interview requests
-export const useInterviewRequests = () => {
+// Hook to get interview requests (supports server-side pagination and filters)
+export const useInterviewRequests = ({
+  page = 0,
+  limit = 10,
+  search = "",
+  status = "",
+  type = "",
+} = {}) => {
   const { superAdminPermissions, isInitialized } = usePermissions();
   const hasViewPermission = superAdminPermissions?.InterviewRequest?.View;
 
-  const {
-    data: interviewRequests = [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["interviewRequests"],
+  const params = new URLSearchParams();
+  if (page !== undefined && page !== null) params.append("page", page.toString());
+  if (limit !== undefined && limit !== null) params.append("limit", limit.toString());
+  if (search) params.append("search", search);
+  if (status) params.append("status", status);
+  if (type) params.append("type", type);
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["interviewRequests", page, limit, search, status, type],
     queryFn: async () => {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/interviewrequest`);
-      return response.data || [];
+      const url = `${config.REACT_APP_API_URL}/interviewrequest${params.toString() ? `?${params.toString()}` : ""}`;
+      const response = await axios.get(url);
+      return response.data;
     },
     enabled: isInitialized && !!hasViewPermission,
     staleTime: 1000 * 60 * 10,
@@ -27,10 +35,21 @@ export const useInterviewRequests = () => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
+    keepPreviousData: true,
   });
 
+  const defaultPagination = {
+    currentPage: page,
+    totalPages: 0,
+    totalItems: Array.isArray(data) ? data.length : 0,
+    hasNext: false,
+    hasPrev: false,
+    itemsPerPage: limit,
+  };
+
   return {
-    interviewRequests,
+    interviewRequests: Array.isArray(data) ? data : data?.data || [],
+    pagination: Array.isArray(data) ? defaultPagination : data?.pagination || defaultPagination,
     isLoading,
     isError,
     error,
