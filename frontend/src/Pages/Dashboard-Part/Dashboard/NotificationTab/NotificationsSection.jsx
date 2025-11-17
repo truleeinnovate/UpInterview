@@ -18,6 +18,7 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import { formatDateTime } from "../../../../utils/dateFormatter";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { useNotifications } from "../../../../apiHooks/notifications/useNotifications";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 
 const NotificationsSection = () => {
   const [activeTab, setActiveTab] = useState("email");
@@ -243,23 +244,27 @@ const NotificationsSection = () => {
                       <span
                         className={`px-2 py-1 rounded-xl text-xs font-medium ${
                           notification.priority === "high"
-                            ? "bg-red-100 text-red-600"
-                            : "bg-yellow-100 text-yellow-600"
+                            ? "bg-rose-100 text-rose-700"
+                            : "bg-yellow-100 text-yellow-700"
                         }`}
                       >
-                        {capitalizeFirstLetter(notification?.priority)}
+                        {
+                          <StatusBadge
+                            status={capitalizeFirstLetter(
+                              notification?.priority
+                            )}
+                          />
+                        }
                         <span className="sm:hidden inline ml-1">Priority</span>
                       </span>
                       <span
-                        className={`px-2 py-1 rounded-xl text-xs font-medium ${
-                          notification.status === "Success"
-                            ? "bg-green-100 text-green-600"
-                            : notification.status === "Failed"
-                            ? "bg-red-100 text-red-600"
-                            : "bg-blue-100 text-blue-600"
-                        }`}
+                        className={`px-2 py-1 rounded-xl text-xs font-medium`}
                       >
-                        {capitalizeFirstLetter(notification?.status)}
+                        {
+                          <StatusBadge
+                            status={capitalizeFirstLetter(notification?.status)}
+                          />
+                        }
                       </span>
                     </div>
                     <button

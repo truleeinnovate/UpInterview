@@ -1,5 +1,6 @@
 //<----v1.0.0-----Venkatesh-----backend via TanStack Query added
 // v1.0.1 - Ashok - Improved responsiveness
+// v1.0.2 - Ashok - fixed style issues and loading view
 
 import { useState, useEffect, useRef } from "react";
 import { ViewDetailsButton } from "../../common/Buttons";
@@ -144,12 +145,31 @@ const Wallet = () => {
       // </div>
       <div className="space-y-6 px-4 py-6">
         {/* Header skeleton */}
-        <div className="flex sm:flex-col sm:justify-start justify-between sm:items-start items-center">
+        {/* <div className="flex sm:flex-col sm:justify-start justify-between sm:items-start items-center">
           <div className="sm:text-xl md:tex-xl text-2xl font-bold sm:mb-4 h-8 w-32 bg-gray-200 skeleton-animation rounded"></div>
           <div className="flex space-x-3">
             <div className="sm:px-2 px-4 sm:py-1 py-2 h-10 w-20 bg-gray-200 skeleton-animation rounded-lg"></div>
             <div className="sm:px-2 px-4 sm:py-1 py-2 h-10 w-20 bg-gray-200 skeleton-animation rounded-lg"></div>
             <div className="sm:px-2 sm:py-1 h-10 w-10 bg-gray-200 skeleton-animation rounded-lg"></div>
+          </div>
+        </div> */}
+        <div className="flex sm:flex-col sm:justify-start justify-between sm:items-start items-center">
+          <h2 className="sm:text-xl md:tex-xl text-2xl font-bold sm:mb-4">
+            Wallet
+          </h2>
+          <div className="flex space-x-3">
+            <button className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-lg">
+              Bank Accounts
+            </button>
+            <button className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-lg">
+              Withdraw
+            </button>
+            <button
+              className={`sm:px-2 px-4 sm:py-1 py-2 bg-custom-blue text-white rounded-lg text-sm hover:bg-custom-blue/90
+              }`}
+            >
+              Top Up
+            </button>
           </div>
         </div>
 
@@ -166,18 +186,28 @@ const Wallet = () => {
                 <div className="h-4 w-32 bg-gray-200 skeleton-animation rounded"></div>
               </div>
             </div>
-            <div className="sm:text-start text-right">
+            {/* <div className="sm:text-start text-right">
               <div className="h-4 w-32 bg-gray-200 skeleton-animation rounded mb-2"></div>
               <div className="h-8 w-24 bg-gray-200 skeleton-animation rounded"></div>
+            </div> */}
+            <div className="sm:text-start text-right">
+              <p className="text-sm text-gray-500">Last updated:</p>
+              <ViewDetailsButton className="mt-2" />
             </div>
           </div>
         </div>
 
         {/* Transactions skeleton */}
         <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex sm:flex-col sm:justify-start justify-between sm:items-start items-center mb-4">
+          {/* <div className="flex sm:flex-col sm:justify-start justify-between sm:items-start items-center mb-4">
             <div className="h-6 w-40 bg-gray-200 skeleton-animation rounded mb-2"></div>
             <div className="h-6 w-32 bg-gray-200 skeleton-animation rounded"></div>
+          </div> */}
+          <div className="flex sm:flex-col sm:justify-start justify-between sm:items-start items-center mb-4">
+            <h3 className="text-lg font-medium">Transaction History</h3>
+            <button className="text-custom-blue hover:text-custom-blue/80">
+              Export Transactions
+            </button>
           </div>
           <div className="space-y-4">
             {[1, 2, 3].map((item) => (
@@ -253,7 +283,7 @@ const Wallet = () => {
               <h3 className="text-lg font-medium">Available Balance</h3>
               <div className="mt-3 flex items-center">
                 <span className="sm:text-xl text-3xl font-bold mr-2">
-                ₹
+                  ₹
                   {walletBalance?.balance
                     ? walletBalance.balance.toFixed(2)
                     : "0.00"}
@@ -275,13 +305,13 @@ const Wallet = () => {
                 <div>
                   <span className="text-gray-500">Pending Balance: </span>
                   <span className="text-sm font-medium">
-                  ₹{pendingBalance.toFixed(2)}
+                    ₹{pendingBalance.toFixed(2)}
                   </span>
                 </div>
                 <div>
                   <span className="text-gray-500">Hold Amount: </span>
                   <span className="text-sm font-medium text-yellow-600">
-                  ₹
+                    ₹
                     {walletBalance?.holdAmount
                       ? walletBalance?.holdAmount.toFixed(2)
                       : 0.0}
@@ -455,11 +485,9 @@ const Wallet = () => {
       )}
 
       {isWithdrawalHistoryOpen && (
-        <WithdrawalHistory
-          onClose={() => setIsWithdrawalHistoryOpen(false)}
-        />
+        <WithdrawalHistory onClose={() => setIsWithdrawalHistoryOpen(false)} />
       )}
-      
+
       <Outlet />
     </>
   );

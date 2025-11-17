@@ -3,6 +3,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 //<----v1.0.0---Venkatesh---add loading skelton view and api loading issues solved
 // v1.0.2 - Ashok - Improved responsiveness
+// v1.0.3 - Ashok - Fixed loading view
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -23,11 +24,11 @@ const Usage = () => {
     if (!dateStr) return "N/A";
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return "N/A";
-    
-    const dd = String(date.getDate()).padStart(2, '0');
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
+
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
     const yy = String(date.getFullYear()).slice(-2);
-    
+
     return `${dd}-${mm}-${yy}`;
   };
 
@@ -115,7 +116,8 @@ const Usage = () => {
   if (!isInitialized || loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 bg-gray-200 rounded shimmer" />
+        {/* <div className="h-8 w-48 bg-gray-200 rounded shimmer" /> */}
+        <h2 className="sm:text-xl text-2xl font-bold">Usage Analytics</h2>
 
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="h-5 w-40 bg-gray-200 rounded shimmer" />
@@ -141,7 +143,6 @@ const Usage = () => {
     );
   }
   // v1.0.2 ------------------------------------------------------------------------>
-
 
   // Permission check after initialization
   if (!checkPermission("Usage")) {
@@ -177,7 +178,9 @@ const Usage = () => {
   const bandwidthAttr = usage?.attributes?.find(
     (a) => (a.type || "") === "User Bandwidth"
   );
-  const bandwidthEntitled = Number(bandwidthAttr?.entitled || usage?.usersBandWidth || 0);
+  const bandwidthEntitled = Number(
+    bandwidthAttr?.entitled || usage?.usersBandWidth || 0
+  );
   const bandwidthUtilized = Number(bandwidthAttr?.utilized || 0);
 
   return (
@@ -192,7 +195,9 @@ const Usage = () => {
         <h3 className="text-lg font-medium">Current Period</h3>
         <p className="text-gray-600 mt-2">
           {usage?.period?.fromDate || usage?.period?.toDate
-            ? `${formatDate(usage?.period?.fromDate)} to ${formatDate(usage?.period?.toDate)}`
+            ? `${formatDate(usage?.period?.fromDate)} to ${formatDate(
+                usage?.period?.toDate
+              )}`
             : error || "—"}
         </p>
       </div>
@@ -207,7 +212,8 @@ const Usage = () => {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Used: {interviewerUtilized}</span>
               <span className="text-gray-600">
-                Limit: {interviewerEntitled === 0 ? "Unlimited" : interviewerEntitled}
+                Limit:{" "}
+                {interviewerEntitled === 0 ? "Unlimited" : interviewerEntitled}
               </span>
             </div>
             {interviewerEntitled !== 0 && (
@@ -237,7 +243,8 @@ const Usage = () => {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Used: {assessmentsUtilized}</span>
               <span className="text-gray-600">
-                Limit: {assessmentsEntitled === 0 ? "Unlimited" : assessmentsEntitled}
+                Limit:{" "}
+                {assessmentsEntitled === 0 ? "Unlimited" : assessmentsEntitled}
               </span>
             </div>
             {assessmentsEntitled !== 0 && (
@@ -263,14 +270,16 @@ const Usage = () => {
         {/* Question Bank Access - Only showing limit */}
         <div className="flex justify-between bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium">Question Bank Access</h3>
-          
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">
-                Limit: {questionBankEntitled === 0 ? "Unlimited" : `${questionBankEntitled} Questions`}
-              </span>
-            </div>
-            {/* No progress bar since we're not tracking usage */}
-         
+
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600">
+              Limit:{" "}
+              {questionBankEntitled === 0
+                ? "Unlimited"
+                : `${questionBankEntitled} Questions`}
+            </span>
+          </div>
+          {/* No progress bar since we're not tracking usage */}
         </div>
 
         {/* User Bandwidth */}
@@ -282,7 +291,10 @@ const Usage = () => {
                 Used: {bandwidthUtilized.toFixed(2)} GB
               </span>
               <span className="text-gray-600">
-                Limit: {bandwidthEntitled === 0 ? "Unlimited" : `${bandwidthEntitled} GB`}
+                Limit:{" "}
+                {bandwidthEntitled === 0
+                  ? "Unlimited"
+                  : `${bandwidthEntitled} GB`}
               </span>
             </div>
             {bandwidthEntitled !== 0 && (
@@ -307,38 +319,39 @@ const Usage = () => {
       </div>
 
       {/* Active Users */}
-    {organization && (
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-medium mb-4">Active Users</h3>
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-gray-600">
-            Current: {usage?.currentUsers ?? "—"}
-          </span>
-          <span className="text-gray-600">
-            Limit: {usage?.totalUsers === 0 ? "Unlimited" : usage?.totalUsers ?? "—"}
-          </span>
-        </div>
-        {usage?.totalUsers !== 0 && (
-          <div className="h-2 bg-gray-200 rounded-full">
-            <div
-              className="h-full bg-custom-blue rounded-full"
-              // v1.0.0 <------------------------------------------------------------------------------------------
-              style={{
-                width: `${
-                  usage?.totalUsers
-                    ? Math.min(
-                        (usage?.currentUsers / usage?.totalUsers) * 100,
-                        100
-                      )
-                    : 0
-                }%`,
-              }}
-              // v1.0.0 ------------------------------------------------------------------------------------------>
-            />
+      {organization && (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium mb-4">Active Users</h3>
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-gray-600">
+              Current: {usage?.currentUsers ?? "—"}
+            </span>
+            <span className="text-gray-600">
+              Limit:{" "}
+              {usage?.totalUsers === 0 ? "Unlimited" : usage?.totalUsers ?? "—"}
+            </span>
           </div>
-        )}
-      </div>
-    )}
+          {usage?.totalUsers !== 0 && (
+            <div className="h-2 bg-gray-200 rounded-full">
+              <div
+                className="h-full bg-custom-blue rounded-full"
+                // v1.0.0 <------------------------------------------------------------------------------------------
+                style={{
+                  width: `${
+                    usage?.totalUsers
+                      ? Math.min(
+                          (usage?.currentUsers / usage?.totalUsers) * 100,
+                          100
+                        )
+                      : 0
+                  }%`,
+                }}
+                // v1.0.0 ------------------------------------------------------------------------------------------>
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Usage Trends */}
       {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> */}
