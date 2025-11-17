@@ -11,25 +11,38 @@ import { notify } from "../../services/toastService";
 
 
 // Hook to get all outsource interviewers
-export const useOutsourceInterviewers = () => {
+export const useOutsourceInterviewers = (options) => {
   const { superAdminPermissions, isInitialized } = usePermissions();
   // const ownerId = AuthCookieManager.getCurrentTenantId();
   const hasViewPermission =
     superAdminPermissions?.OutsourceInterviewerRequest?.View;
 
+  // If no options passed, fetch full list (legacy mode)
+  const isPaginated = options && typeof options === 'object';
   const {
-    data: outsourceInterviewers = [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["outsourceInterviewers"],
+    page = 0,
+    limit = 10,
+    search = "",
+    status = "",
+  } = options || {};
+
+  const params = new URLSearchParams();
+  if (isPaginated) {
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
+    if (search) params.append("search", search);
+    if (status) params.append("status", status);
+  }
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: isPaginated
+      ? ["outsourceInterviewers", page, limit, search, status]
+      : ["outsourceInterviewers"],
     queryFn: async () => {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/outsourceInterviewers`
-      );
-      return response.data.reverse() || [];
+      const base = `${config.REACT_APP_API_URL}/outsourceInterviewers`;
+      const url = isPaginated && params.toString() ? `${base}?${params.toString()}` : base;
+      const response = await axios.get(url);
+      return response.data;
     },
     enabled: isInitialized && !!hasViewPermission,
     staleTime: 1000 * 60 * 10, // 10 minutes
@@ -38,10 +51,21 @@ export const useOutsourceInterviewers = () => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
+    keepPreviousData: true,
   });
 
+  const defaultPagination = {
+    currentPage: page,
+    totalPages: 0,
+    totalItems: Array.isArray(data) ? (data?.length || 0) : 0,
+    hasNext: false,
+    hasPrev: false,
+    itemsPerPage: limit,
+  };
+
   return {
-    outsourceInterviewers,
+    outsourceInterviewers: Array.isArray(data) ? (isPaginated ? data : [...data].reverse()) : data?.data || [],
+    pagination: Array.isArray(data) ? defaultPagination : data?.pagination || defaultPagination,
     isLoading,
     isError,
     error,

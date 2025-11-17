@@ -8,21 +8,56 @@ import { notify } from "../../services/toastService";
 axios.defaults.withCredentials = true;
 
 // Hook to get all withdrawal requests (superadmin) - SIMPLE VERSION
-export const useWithdrawalRequests = () => {
+export const useWithdrawalRequests = (options) => {
   const { superAdminPermissions, isInitialized } = usePermissions();
   const hasViewPermission = superAdminPermissions?.WithdrawalRequest?.View !== false;
 
+  // Support optional server-side pagination/search/filters
+  const isPaginated = options && typeof options === 'object';
   const {
-    data: withdrawalRequestsData = { withdrawalRequests: [], total: 0 },
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["withdrawalRequests"],
+    page = 0,
+    limit = 10,
+    search = '',
+    status = '',
+    mode = '',
+    minAmount = '',
+    maxAmount = '',
+    startDate = '',
+    endDate = '',
+  } = options || {};
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: isPaginated
+      ? [
+          "withdrawalRequests",
+          page,
+          limit,
+          search,
+          status,
+          mode,
+          minAmount,
+          maxAmount,
+          startDate,
+          endDate,
+        ]
+      : ["withdrawalRequests"],
     queryFn: async () => {
-      const url = `${config.REACT_APP_API_URL}/wallet/get-all-withdrawals-requests`;
-      const response = await axios.get(url);
+      const base = `${config.REACT_APP_API_URL}/wallet/get-all-withdrawals-requests`;
+      if (isPaginated) {
+        const params = new URLSearchParams();
+        params.append('page', String(page));
+        params.append('limit', String(limit));
+        if (search) params.append('search', search);
+        if (status) params.append('status', status);
+        if (mode) params.append('mode', mode);
+        if (minAmount !== '' && minAmount !== undefined) params.append('minAmount', String(minAmount));
+        if (maxAmount !== '' && maxAmount !== undefined) params.append('maxAmount', String(maxAmount));
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        const response = await axios.get(`${base}?${params.toString()}`);
+        return response.data;
+      }
+      const response = await axios.get(base);
       return response.data || { withdrawalRequests: [], total: 0 };
     },
     enabled: isInitialized && !!hasViewPermission,
@@ -32,12 +67,29 @@ export const useWithdrawalRequests = () => {
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     refetchOnReconnect: false,
+    keepPreviousData: true,
   });
 
+  // Normalize data across modes
+  const dataArray = Array.isArray(data)
+    ? data
+    : (data?.data || data?.withdrawalRequests || []);
+
+  const defaultPagination = {
+    currentPage: page,
+    totalPages: 0,
+    totalItems: Array.isArray(data) ? data.length : (data?.total || dataArray.length || 0),
+    hasNext: false,
+    hasPrev: false,
+    itemsPerPage: limit,
+  };
+
   return {
-    withdrawalRequests: withdrawalRequestsData?.withdrawalRequests || [],
-    total: withdrawalRequestsData?.total || 0,
-    hasMore: withdrawalRequestsData?.hasMore || false,
+    withdrawalRequests: dataArray,
+    pagination: Array.isArray(data) ? defaultPagination : (data?.pagination || defaultPagination),
+    total: data?.total ?? (Array.isArray(data) ? data.length : dataArray.length),
+    hasMore: data?.hasMore || false,
+    stats: data?.stats || null,
     isLoading,
     isError,
     error,

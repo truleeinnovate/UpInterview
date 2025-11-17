@@ -439,7 +439,7 @@ const getCandidatesData = async (req, res) => {
     // Fetch paginated data with only needed fields
     const candidates = await Candidate.find(query)
       .select('FirstName LastName Email Phone CurrentExperience skills HigherQualification ImageData createdAt CurrentRole')
-      .sort({ createdAt: -1 })
+      .sort({ _id: -1 })
       .skip(skip)
       .limit(limitNum)
       .lean(); // Use lean for better performance

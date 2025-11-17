@@ -84,7 +84,7 @@ exports.getIntegrationLogs = async (req, res) => {
 
     const [logs, total] = await Promise.all([
       IntegrationLog.find(query)
-        .sort({ createdAt: -1 })
+        .sort({ _id: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
       IntegrationLog.countDocuments(query),

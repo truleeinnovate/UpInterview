@@ -1926,20 +1926,179 @@ const processManualWithdrawal = async (req, res) => {
   }
 };
 
-// Get all withdrawal requests for superadmin - SIMPLE VERSION
+// Get all withdrawal requests for superadmin - supports optional pagination/search/filters
 const getAllWithdrawalRequests = async (req, res) => {
   try {
-    const withdrawalRequests = await WithdrawalRequest.find({})
-      .populate("bankAccountId")
-      .sort({ _id: -1 }) // Using _id for sorting (more reliable in all environments)
+    const hasPaginationParams = (
+      'page' in req.query ||
+      'limit' in req.query ||
+      'search' in req.query ||
+      'status' in req.query ||
+      'mode' in req.query ||
+      'minAmount' in req.query ||
+      'maxAmount' in req.query ||
+      'startDate' in req.query ||
+      'endDate' in req.query
+    );
 
-    const totalWithdrawalRequests = await WithdrawalRequest.countDocuments({});
+    if (!hasPaginationParams) {
+      // Legacy behavior: return full list with populate
+      const withdrawalRequests = await WithdrawalRequest.find({})
+        .populate("bankAccountId")
+        .sort({ _id: -1 });
 
-    res.status(200).json({
-      success: true,
-      withdrawalRequests: withdrawalRequests,
-      total: totalWithdrawalRequests,
-      hasMore: false
+      const totalWithdrawalRequests = await WithdrawalRequest.countDocuments({});
+
+      return res.status(200).json({
+        success: true,
+        withdrawalRequests,
+        total: totalWithdrawalRequests,
+        hasMore: false
+      });
+    }
+
+    // Paginated mode
+    const page = Math.max(parseInt(req.query.page, 10) || 0, 0);
+    const limitRaw = parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
+    const search = (req.query.search || '').trim();
+    const statusParam = (req.query.status || '').trim();
+    const modeParam = (req.query.mode || '').trim();
+    const minAmount = req.query.minAmount !== undefined && req.query.minAmount !== '' ? Number(req.query.minAmount) : undefined;
+    const maxAmount = req.query.maxAmount !== undefined && req.query.maxAmount !== '' ? Number(req.query.maxAmount) : undefined;
+    const startDate = req.query.startDate ? new Date(req.query.startDate) : undefined;
+    const endDate = req.query.endDate ? new Date(req.query.endDate) : undefined;
+
+    const statusValues = statusParam ? statusParam.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const modeValues = modeParam ? modeParam.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    const pipeline = [];
+
+    // Lookup bank account for search fields
+    pipeline.push({
+      $lookup: {
+        from: 'bankaccounts',
+        localField: 'bankAccountId',
+        foreignField: '_id',
+        as: 'bankAccount'
+      }
+    });
+    pipeline.push({ $unwind: { path: '$bankAccount', preserveNullAndEmptyArrays: true } });
+    // Keep legacy shape: expose populated doc as bankAccountId
+    pipeline.push({ $addFields: { bankAccountId: '$bankAccount' } });
+
+    const match = {};
+    if (statusValues.length > 0) {
+      match.status = { $in: statusValues };
+    }
+    if (modeValues.length > 0) {
+      match.mode = { $in: modeValues };
+    }
+    if (Number.isFinite(minAmount) || Number.isFinite(maxAmount)) {
+      match.amount = {};
+      if (Number.isFinite(minAmount)) match.amount.$gte = minAmount;
+      if (Number.isFinite(maxAmount)) match.amount.$lte = maxAmount;
+    }
+    if (startDate || endDate) {
+      match.createdAt = {};
+      if (startDate) match.createdAt.$gte = startDate;
+      if (endDate) {
+        const end = new Date(endDate);
+        // include entire end day if only date provided
+        if (!isNaN(end.getTime())) {
+          end.setHours(23, 59, 59, 999);
+          match.createdAt.$lte = end;
+        }
+      }
+    }
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      match.$or = [
+        { withdrawalCode: { $regex: regex } },
+        { ownerId: { $regex: regex } },
+        { razorpayPayoutId: { $regex: regex } },
+        { razorpayReferenceId: { $regex: regex } },
+        { 'bankAccount.bankName': { $regex: regex } },
+        { 'bankAccount.accountHolderName': { $regex: regex } },
+        { 'bankAccount.maskedAccountNumber': { $regex: regex } },
+      ];
+    }
+
+    if (Object.keys(match).length > 0) {
+      pipeline.push({ $match: match });
+    }
+
+    pipeline.push({ $sort: { _id: -1 } });
+
+    pipeline.push({
+      $facet: {
+        data: [
+          { $skip: page * limit },
+          { $limit: limit },
+        ],
+        totalCount: [ { $count: 'count' } ],
+        statusCounts: [
+          {
+            $group: {
+              _id: '$status',
+              count: { $sum: 1 },
+              totalAmount: { $sum: { $ifNull: ['$amount', 0] } },
+              totalNetAmount: { $sum: { $ifNull: ['$netAmount', 0] } },
+            }
+          }
+        ],
+      }
+    });
+
+    const aggResult = await WithdrawalRequest.aggregate(pipeline);
+    const agg = aggResult?.[0] || { data: [], totalCount: [], statusCounts: [] };
+    const data = agg.data || [];
+    const totalItems = agg.totalCount?.[0]?.count || 0;
+    const statusCounts = Array.isArray(agg.statusCounts) ? agg.statusCounts : [];
+
+    // Build stats map
+    const statsMap = statusCounts.reduce((acc, cur) => {
+      if (!cur || !cur._id) return acc;
+      acc[cur._id] = {
+        count: cur.count || 0,
+        totalAmount: cur.totalAmount || 0,
+        totalNetAmount: cur.totalNetAmount || 0,
+      };
+      return acc;
+    }, {});
+
+    const stats = {
+      pending: statsMap.pending?.count || 0,
+      processing: statsMap.processing?.count || 0,
+      completed: statsMap.completed?.count || 0,
+      failed: statsMap.failed?.count || 0,
+      cancelled: statsMap.cancelled?.count || 0,
+      totalAmount: Object.values(statsMap).reduce((s, v) => s + (v.totalAmount || 0), 0),
+      totalNetAmount: Object.values(statsMap).reduce((s, v) => s + (v.totalNetAmount || 0), 0),
+      pendingAmount: statsMap.pending?.totalAmount || 0,
+      pendingNetAmount: statsMap.pending?.totalNetAmount || 0,
+      processingAmount: statsMap.processing?.totalAmount || 0,
+      processingNetAmount: statsMap.processing?.totalNetAmount || 0,
+      completedAmount: statsMap.completed?.totalAmount || 0,
+      completedNetAmount: statsMap.completed?.totalNetAmount || 0,
+      failedAmount: statsMap.failed?.totalAmount || 0,
+      failedNetAmount: statsMap.failed?.totalNetAmount || 0,
+      cancelledAmount: statsMap.cancelled?.totalAmount || 0,
+      cancelledNetAmount: statsMap.cancelled?.totalNetAmount || 0,
+    };
+
+    return res.status(200).json({
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalItems / limit) || 0,
+        totalItems,
+        hasNext: (page + 1) * limit < totalItems,
+        hasPrev: page > 0,
+        itemsPerPage: limit,
+      },
+      stats,
+      status: true,
     });
   } catch (error) {
     console.error("Error fetching all withdrawal requests:", error);
@@ -2120,7 +2279,7 @@ const handlePayoutWebhook = async (req, res) => {
   return res.status(200).json({ received: true, message: "Manual processing mode active" });
 };
 
-// Original Razorpay webhook handler - kept for future use
+// Razorpay webhook handler - kept for future use
 // const handlePayoutWebhook = async (req, res) => {
 //   try {
 //     const webhookBody = req.body;

@@ -42,6 +42,13 @@ const WithdrawalRequests = () => {
   const filterIconRef = useRef(null);
   const ITEMS_PER_PAGE = 10;
 
+  // Debounced search to avoid frequent requests
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const h = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    return () => clearTimeout(h);
+  }, [searchQuery]);
+
   const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
   const [isModeOpen, setIsModeOpen] = useState(false);
   const [isAmountOpen, setIsAmountOpen] = useState(false);
@@ -56,68 +63,63 @@ const WithdrawalRequests = () => {
 
   const {
     withdrawalRequests = [],
+    pagination,
     isLoading,
     refetch,
-  } = useWithdrawalRequests();
+    stats,
+  } = useWithdrawalRequests({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: debouncedSearch,
+    status: (selectedFilters.status || []).join(","),
+    mode: (selectedFilters.mode || []).join(","),
+    minAmount: selectedFilters.amountRange?.min || "",
+    maxAmount: selectedFilters.amountRange?.max || "",
+    startDate: selectedFilters.dateRange?.start || "",
+    endDate: selectedFilters.dateRange?.end || "",
+  });
   const { withdrawalRequest } = useWithdrawalRequestById(selectedRequestId);
 
-  // Statistics cards data
-  const statistics = {
-    pending: (withdrawalRequests || []).filter((r) => r.status === "pending")
-      .length,
-    processing: (withdrawalRequests || []).filter(
-      (r) => r.status === "processing"
-    ).length,
-    completed: (withdrawalRequests || []).filter(
-      (r) => r.status === "completed"
-    ).length,
-    failed: (withdrawalRequests || []).filter((r) => r.status === "failed")
-      .length,
-    cancelled: (withdrawalRequests || []).filter(
-      (r) => r.status === "cancelled"
-    ).length,
-    // Calculate total amounts from ALL withdrawals (not just pending)
-    totalAmount: (withdrawalRequests || []).reduce(
-      (sum, r) => sum + (r.amount || 0),
-      0
-    ),
-    totalNetAmount: (withdrawalRequests || []).reduce(
-      (sum, r) => sum + (r.netAmount || 0),
-      0
-    ),
-    // Calculate amounts by status for breakdown
-    pendingAmount: (withdrawalRequests || [])
-      .filter((r) => r.status === "pending")
-      .reduce((sum, r) => sum + (r.amount || 0), 0),
-    processingAmount: (withdrawalRequests || [])
-      .filter((r) => r.status === "processing")
-      .reduce((sum, r) => sum + (r.amount || 0), 0),
-    completedAmount: (withdrawalRequests || [])
-      .filter((r) => r.status === "completed")
-      .reduce((sum, r) => sum + (r.amount || 0), 0),
-    failedAmount: (withdrawalRequests || [])
-      .filter((r) => r.status === "failed")
-      .reduce((sum, r) => sum + (r.amount || 0), 0),
-    cancelledAmount: (withdrawalRequests || [])
-      .filter((r) => r.status === "cancelled")
-      .reduce((sum, r) => sum + (r.amount || 0), 0),
-    // Calculate net amounts by status for breakdown
-    pendingNetAmount: (withdrawalRequests || [])
-      .filter((r) => r.status === "pending")
-      .reduce((sum, r) => sum + (r.netAmount || 0), 0),
-    processingNetAmount: (withdrawalRequests || [])
-      .filter((r) => r.status === "processing")
-      .reduce((sum, r) => sum + (r.netAmount || 0), 0),
-    completedNetAmount: (withdrawalRequests || [])
-      .filter((r) => r.status === "completed")
-      .reduce((sum, r) => sum + (r.netAmount || 0), 0),
-    failedNetAmount: (withdrawalRequests || [])
-      .filter((r) => r.status === "failed")
-      .reduce((sum, r) => sum + (r.netAmount || 0), 0),
-    cancelledNetAmount: (withdrawalRequests || [])
-      .filter((r) => r.status === "cancelled")
-      .reduce((sum, r) => sum + (r.netAmount || 0), 0),
-  };
+  // Statistics cards data (prefer server stats; fallback to current page calc)
+  const statistics = stats
+    ? {
+        pending: stats.pending || 0,
+        processing: stats.processing || 0,
+        completed: stats.completed || 0,
+        failed: stats.failed || 0,
+        cancelled: stats.cancelled || 0,
+        totalAmount: stats.totalAmount || 0,
+        totalNetAmount: stats.totalNetAmount || 0,
+        pendingAmount: stats.pendingAmount || 0,
+        processingAmount: stats.processingAmount || 0,
+        completedAmount: stats.completedAmount || 0,
+        failedAmount: stats.failedAmount || 0,
+        cancelledAmount: stats.cancelledAmount || 0,
+        pendingNetAmount: stats.pendingNetAmount || 0,
+        processingNetAmount: stats.processingNetAmount || 0,
+        completedNetAmount: stats.completedNetAmount || 0,
+        failedNetAmount: stats.failedNetAmount || 0,
+        cancelledNetAmount: stats.cancelledNetAmount || 0,
+      }
+    : {
+        pending: (withdrawalRequests || []).filter((r) => r.status === "pending").length,
+        processing: (withdrawalRequests || []).filter((r) => r.status === "processing").length,
+        completed: (withdrawalRequests || []).filter((r) => r.status === "completed").length,
+        failed: (withdrawalRequests || []).filter((r) => r.status === "failed").length,
+        cancelled: (withdrawalRequests || []).filter((r) => r.status === "cancelled").length,
+        totalAmount: (withdrawalRequests || []).reduce((sum, r) => sum + (r.amount || 0), 0),
+        totalNetAmount: (withdrawalRequests || []).reduce((sum, r) => sum + (r.netAmount || 0), 0),
+        pendingAmount: (withdrawalRequests || []).filter((r) => r.status === "pending").reduce((sum, r) => sum + (r.amount || 0), 0),
+        processingAmount: (withdrawalRequests || []).filter((r) => r.status === "processing").reduce((sum, r) => sum + (r.amount || 0), 0),
+        completedAmount: (withdrawalRequests || []).filter((r) => r.status === "completed").reduce((sum, r) => sum + (r.amount || 0), 0),
+        failedAmount: (withdrawalRequests || []).filter((r) => r.status === "failed").reduce((sum, r) => sum + (r.amount || 0), 0),
+        cancelledAmount: (withdrawalRequests || []).filter((r) => r.status === "cancelled").reduce((sum, r) => sum + (r.amount || 0), 0),
+        pendingNetAmount: (withdrawalRequests || []).filter((r) => r.status === "pending").reduce((sum, r) => sum + (r.netAmount || 0), 0),
+        processingNetAmount: (withdrawalRequests || []).filter((r) => r.status === "processing").reduce((sum, r) => sum + (r.netAmount || 0), 0),
+        completedNetAmount: (withdrawalRequests || []).filter((r) => r.status === "completed").reduce((sum, r) => sum + (r.netAmount || 0), 0),
+        failedNetAmount: (withdrawalRequests || []).filter((r) => r.status === "failed").reduce((sum, r) => sum + (r.netAmount || 0), 0),
+        cancelledNetAmount: (withdrawalRequests || []).filter((r) => r.status === "cancelled").reduce((sum, r) => sum + (r.netAmount || 0), 0),
+      };
 
   // Debug logging to check what's being calculated
   // console.log("Withdrawal Statistics Debug:", {
@@ -415,89 +417,10 @@ const WithdrawalRequests = () => {
     setCurrentPage(0); // Reset to first page when searching
   };
 
-  const filteredRequests = (withdrawalRequests || []).filter((request) => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      if (
-        !request.withdrawalCode?.toLowerCase().includes(query) &&
-        !request.ownerId?.toLowerCase().includes(query) &&
-        !request.bankAccountId?.accountHolderName
-          ?.toLowerCase()
-          .includes(query) &&
-        !request.bankAccountId?.bankName?.toLowerCase().includes(query) &&
-        !request.bankAccountId?.maskedAccountNumber
-          ?.toLowerCase()
-          .includes(query)
-      ) {
-        return false;
-      }
-    }
-
-    // Status filter
-    if (selectedFilters.status && selectedFilters.status.length > 0) {
-      if (!selectedFilters.status.includes(request.status)) {
-        return false;
-      }
-    }
-
-    // Mode filter
-    if (selectedFilters.mode && selectedFilters.mode.length > 0) {
-      const requestMode = request.mode || "manual";
-      if (!selectedFilters.mode.includes(requestMode)) {
-        return false;
-      }
-    }
-
-    // Amount range filter
-    if (selectedFilters.amountRange) {
-      const { min, max } = selectedFilters.amountRange;
-      if (min && request.amount < parseFloat(min)) {
-        return false;
-      }
-      if (max && request.amount > parseFloat(max)) {
-        return false;
-      }
-    }
-
-    // Date range filter
-    if (selectedFilters.dateRange) {
-      const { start, end } = selectedFilters.dateRange;
-      const requestDate = new Date(request.createdAt);
-      if (start && requestDate < new Date(start)) {
-        return false;
-      }
-      if (end && requestDate > new Date(end + "T23:59:59")) {
-        return false;
-      }
-    }
-
-    return true;
-  });
+  // Server-side search and filters are applied via the hook; current page data is returned
 
   // Calculate total pages based on view type
-  const getTotalPages = () => {
-    if (view === "table") {
-      return Math.ceil(filteredRequests.length / ITEMS_PER_PAGE) || 1;
-    } else {
-      // For Kanban view, calculate based on the status with most items
-      const statusCounts = {
-        pending: filteredRequests.filter((r) => r.status === "pending").length,
-        completed: filteredRequests.filter((r) => r.status === "completed")
-          .length,
-        failed: filteredRequests.filter((r) => r.status === "failed").length,
-      };
-      const maxCount = Math.max(
-        statusCounts.pending,
-        statusCounts.completed,
-        statusCounts.failed,
-        0
-      );
-      return maxCount > 0 ? Math.ceil(maxCount / ITEMS_PER_PAGE) : 1;
-    }
-  };
-
-  const totalPages = getTotalPages();
+  const totalPages = pagination?.totalPages || 1;
 
   // Reset page if current page exceeds total pages
   useEffect(() => {
@@ -735,7 +658,7 @@ const WithdrawalRequests = () => {
           onFilterClick={() => setFilterPopupOpen(!isFilterPopupOpen)}
           isFilterActive={isFilterActive}
           isFilterPopupOpen={isFilterPopupOpen}
-          dataLength={withdrawalRequests.length}
+          dataLength={pagination?.totalItems ?? withdrawalRequests.length}
           showViewToggles={true}
           searchPlaceholder="Search By User, Bank..."
         />
@@ -746,22 +669,19 @@ const WithdrawalRequests = () => {
       {view === "table" ? (
         <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
           <TableView
-            data={filteredRequests.slice(
-              currentPage * ITEMS_PER_PAGE,
-              (currentPage + 1) * ITEMS_PER_PAGE
-            )}
+            data={withdrawalRequests}
             columns={columns}
             onRowClick={handleRowClick}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
-            isLoading={isLoading}
+            loading={isLoading}
             itemsPerPage={ITEMS_PER_PAGE}
             customHeight="h-[calc(100vh-20.8rem)]"
           />
         </div>
       ) : (
         <KanbanView
-          withdrawalRequests={filteredRequests}
+          withdrawalRequests={withdrawalRequests}
           onCardClick={(request) => {
             setSelectedRequestId(request._id);
             setIsPopupOpen(true);
@@ -769,7 +689,7 @@ const WithdrawalRequests = () => {
           isLoading={isLoading}
           refetch={refetch}
           currentPage={currentPage}
-          itemsPerPage={ITEMS_PER_PAGE}
+          itemsPerPage={withdrawalRequests.length}
         />
       )}
 
