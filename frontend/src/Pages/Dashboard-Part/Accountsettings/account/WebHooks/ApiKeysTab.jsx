@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Plus, Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { createPortal } from "react-dom";
 import { config } from "../../../../../config";
@@ -9,90 +9,113 @@ const ApiKeysTab = () => {
   const [visibleKeys, setVisibleKeys] = useState({});
   const [formData, setFormData] = useState({
     organization: "",
-    permissions: ["read"],
+    permissions: ["users:read"],
+    description: "",
+    expiresAt: "",
+    rateLimit: {
+      requestsPerMinute: 60,
+      requestsPerHour: 1000,
+      requestsPerDay: 10000
+    },
+    ipAddress: "",
+    userAgent: ""
   });
 
   // NEW: Retrieve auth token (adjust key if using context/store instead of localStorage)
   const getAuthHeaders = () => {
-    const token = localStorage.getItem("authToken"); // Or use useAuth hook: const { token } = useAuth();
-    if (!token) {
-      // Optional: Redirect to login or show error
-      console.warn("No auth token found. Redirecting to login...");
-      // window.location.href = "/login"; // Uncomment if needed
-      return {};
-    }
-    return {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json", // Only needed for POST/PUT
+    // Simplified - no authentication required for now
+    const headers = {
+      "Content-Type": "application/json",
     };
+    return headers;
   };
+
+  const fetchApiKeys = useCallback(async () => {
+    try {
+      const response = await fetch(`${config.REACT_APP_API_URL}/apikeys`, {
+        headers: getAuthHeaders(),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setApiKeys(data.data || data); // Handle different response formats
+      } else {
+        console.error('Error fetching API keys:', response.statusText);
+        setApiKeys([]); // Set empty array on error
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+      setApiKeys([]); // Set empty array on network error
+    }
+  }, []);
 
   useEffect(() => {
     fetchApiKeys();
-  }, []);
-
-  const fetchApiKeys = async () => {
-    try {
-      // UPDATED: Add auth headers (Content-Type not needed for GET, but harmless)
-      const headers = getAuthHeaders();
-      const response = await fetch(`${config.REACT_APP_API_URL}/apikeys`, { headers });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const data = await response.json();
-      setApiKeys(Array.isArray(data.data) ? data.data : []); // UPDATED: Backend returns { data: [...] }, so access .data
-    } catch (error) {
-      console.error("Error fetching API keys:", error);
-      setApiKeys([]);
-    }
-  };
+  }, [fetchApiKeys]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('[Frontend] handleSubmit called');
+    console.log('[Frontend] Form data:', formData);
+    
     try {
-      // UPDATED: Add auth headers
       const headers = getAuthHeaders();
+      console.log('[Frontend] Making POST request to:', `${config.REACT_APP_API_URL}/apikeys`);
+      
       const response = await fetch(`${config.REACT_APP_API_URL}/apikeys`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(formData),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify({
+          organization: formData.organization,
+          permissions: formData.permissions,
+          description: formData.description || null,
+          expiresAt: formData.expiresAt || null,
+          rateLimit: formData.rateLimit,
+          ipAddress: formData.ipAddress ? formData.ipAddress.split(',').map(ip => ip.trim()).filter(ip => ip) : [],
+          userAgent: formData.userAgent || null
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      console.log('[Frontend] Response status:', response.status);
+      const data = await response.json();
+      console.log('[Frontend] Response data:', data);
 
-      // UPDATED: Backend returns { data: apiKey }, but we refetch list anyway
-      await fetchApiKeys();
-      setShowModal(false);
-      setFormData({ organization: "", permissions: ["read"] });
+      if (response.ok) {
+        // Success: close modal, reset form, refresh API keys list
+        setShowModal(false);
+        setFormData({ 
+          organization: "", 
+          permissions: ["users:read"],
+          description: "",
+          expiresAt: "",
+          rateLimit: {
+            requestsPerMinute: 60,
+            requestsPerHour: 1000,
+            requestsPerDay: 10000
+          },
+          ipAddress: "",
+          userAgent: ""
+        });
+        fetchApiKeys(); // Refresh the list
+        
+        // Show success message (optional)
+        console.log('API Key created successfully:', data);
+      } else {
+        // Error: show error message
+        console.error('Error creating API key:', data.message);
+        // You might want to set an error state here to show to the user
+      }
     } catch (error) {
-      console.error("Error creating API key:", error);
-      // Optional: Show user-friendly toast/error modal
+      console.error('Network error:', error);
+      // You might want to set an error state here to show to the user
     }
   };
 
   const handleDelete = async (id) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this API key? This action cannot be undone."
-      )
-    ) {
-      try {
-        // UPDATED: Add auth headers
-        const headers = getAuthHeaders();
-        const response = await fetch(`${config.REACT_APP_API_URL}/apikeys/${id}`, { 
-          method: "DELETE",
-          headers: { ...headers, "Content-Type": "application/json" } // Content-Type optional for DELETE
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        await fetchApiKeys();
-      } catch (error) {
-        console.error("Error deleting API key:", error);
-      }
-    }
+   
   };
 
   // Rest of the component unchanged...
@@ -258,7 +281,7 @@ const ApiKeysTab = () => {
       {showModal &&
         createPortal(
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-screen overflow-y-auto">
               <h3 className="text-lg font-semibold mb-4">
                 Generate New API Key
               </h3>
@@ -286,21 +309,206 @@ const ApiKeysTab = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Permissions
                   </label>
-                  <div className="space-y-2">
-                    {["read", "write", "delete"].map((permission) => (
-                      <label key={permission} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={formData.permissions.includes(permission)}
-                          onChange={() => handlePermissionChange(permission)}
-                          className="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
-                        />
-                        <span className="ml-2 text-sm text-gray-700 capitalize">
-                          {permission}
-                        </span>
-                      </label>
-                    ))}
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs text-gray-600 mb-2">Users</p>
+                      {["users:read", "users:write", "users:delete"].map((permission) => (
+                        <label key={permission} className="flex items-center mr-4">
+                          <input
+                            type="checkbox"
+                            checked={formData.permissions.includes(permission)}
+                            onChange={() => handlePermissionChange(permission)}
+                            className="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">
+                            {permission.split(':')[1]} Users
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 mb-2">Candidates</p>
+                      {["candidates:read", "candidates:write", "candidates:delete"].map((permission) => (
+                        <label key={permission} className="flex items-center mr-4">
+                          <input
+                            type="checkbox"
+                            checked={formData.permissions.includes(permission)}
+                            onChange={() => handlePermissionChange(permission)}
+                            className="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">
+                            {permission.split(':')[1]} Candidates
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 mb-2">Interviews</p>
+                      {["interviews:read", "interviews:write", "interviews:delete"].map((permission) => (
+                        <label key={permission} className="flex items-center mr-4">
+                          <input
+                            type="checkbox"
+                            checked={formData.permissions.includes(permission)}
+                            onChange={() => handlePermissionChange(permission)}
+                            className="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">
+                            {permission.split(':')[1]} Interviews
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 mb-2">System</p>
+                      {["analytics:read", "system:read", "system:write"].map((permission) => (
+                        <label key={permission} className="flex items-center mr-4">
+                          <input
+                            type="checkbox"
+                            checked={formData.permissions.includes(permission)}
+                            onChange={() => handlePermissionChange(permission)}
+                            className="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
+                          />
+                          <span className="ml-2 text-sm text-gray-700 capitalize">
+                            {permission.replace(':', ' ')}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description (Optional)
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                    placeholder="Describe the purpose of this API key..."
+                    rows="2"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Expiration Date (Optional)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.expiresAt}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        expiresAt: e.target.value,
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Leave empty for no expiration</p>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rate Limits (requests per minute/hour/day)
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <input
+                      type="number"
+                      value={formData.rateLimit.requestsPerMinute}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          rateLimit: {
+                            ...prev.rateLimit,
+                            requestsPerMinute: parseInt(e.target.value) || 60
+                          }
+                        }))
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                      placeholder="60"
+                      min="1"
+                      max="1000"
+                    />
+                    <input
+                      type="number"
+                      value={formData.rateLimit.requestsPerHour}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          rateLimit: {
+                            ...prev.rateLimit,
+                            requestsPerHour: parseInt(e.target.value) || 1000
+                          }
+                        }))
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                      placeholder="1000"
+                      min="1"
+                      max="10000"
+                    />
+                    <input
+                      type="number"
+                      value={formData.rateLimit.requestsPerDay}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          rateLimit: {
+                            ...prev.rateLimit,
+                            requestsPerDay: parseInt(e.target.value) || 10000
+                          }
+                        }))
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                      placeholder="10000"
+                      min="1"
+                      max="100000"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Default: 60/min, 1000/hour, 10000/day</p>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Allowed IP Addresses (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.ipAddress}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        ipAddress: e.target.value,
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                    placeholder="192.168.1.1, 10.0.0.1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Comma-separated list. Leave empty to allow any IP</p>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    User Agent (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.userAgent}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        userAgent: e.target.value,
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                    placeholder="MyApp/1.0"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Restrict to specific user agent</p>
                 </div>
 
                 <div className="flex justify-end space-x-3">
@@ -308,7 +516,19 @@ const ApiKeysTab = () => {
                     type="button"
                     onClick={() => {
                       setShowModal(false);
-                      setFormData({ organization: "", permissions: ["read"] });
+                      setFormData({
+                        organization: "",
+                        permissions: ["users:read"],
+                        description: "",
+                        expiresAt: "",
+                        rateLimit: {
+                          requestsPerMinute: 60,
+                          requestsPerHour: 1000,
+                          requestsPerDay: 10000,
+                        },
+                        ipAddress: "",
+                        userAgent: "",
+                      });
                     }}
                     className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                   >

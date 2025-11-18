@@ -44,13 +44,24 @@ const addCandidatePostCall = async (req, res) => {
       RelevantExperience,
       skills,
       PositionId,
-      ownerId,
-      tenantId,
       Technology,
     } = req.body;
 
+    // Automatically get ownerId and tenantId from API key authentication
+    const ownerId = req.user?.userId || req.body.ownerId;
+    const tenantId = req.tenantId || req.body.tenantId;
+
+    console.log('🔍 [Candidate] Context extraction:', {
+      fromApiKey: { userId: req.user?.userId, tenantId: req.tenantId },
+      fromBody: { ownerId: req.body.ownerId, tenantId: req.body.tenantId },
+      final: { ownerId, tenantId }
+    });
+
     if (!ownerId) {
-      return res.status(400).json({ error: "OwnerId field is required" });
+      return res.status(400).json({ 
+        error: "OwnerId field is required. Either provide it in the request body or use API key authentication.",
+        context: "Missing owner identification"
+      });
     }
 
     //res.locals.loggedByController = true;
