@@ -8,10 +8,6 @@ import { uploadFile } from "../apiHooks/imageApis";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
 
-const authToken = Cookies.get("authToken");
-const tokenPayload = decodeJwt(authToken);
-const tenantId = tokenPayload?.tenantId;
-
 // ✅ Custom hook to fetch user profile with optimized caching
 export const useUserProfile = (usersId) => {
   const currentUser = usersId ? usersId : AuthCookieManager.getCurrentUserId();
@@ -112,6 +108,10 @@ export const useUpdateContactDetail = () => {
 // ------------------------------ These are moved from ContextFetch -------------------------------
 export const useUsers = (filters = {}) => {
   const queryClient = useQueryClient();
+  // Derive auth and tenant per invocation (avoid stale module-level values)
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const tenantId = tokenPayload?.tenantId;
 
 
   // ✅ Build query string properly

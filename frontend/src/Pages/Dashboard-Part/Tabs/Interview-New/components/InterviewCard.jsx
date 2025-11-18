@@ -1,5 +1,6 @@
 //<-----v1.0.0-------Venkatesh---------add current round column
 // v1.0.1 - Ashok - made first letter capital
+// v1.0.2 - Ashok - fixed style issues
 
 import React, { useState, useEffect } from "react";
 import {
@@ -123,8 +124,8 @@ function InterviewCard({
                       className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover border-2 border-primary/20"
                     />
                   ) : (
-                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-custom-blue/10 flex items-center justify-center">
+                      <User className="h-5 w-5 sm:h-6 sm:w-6 text-custom-blue" />
                     </div>
                   )}
                 </div>

@@ -67,6 +67,14 @@ const WithdrawalKanban = ({
       (request) => request.status?.toLowerCase() === status
     );
     
+    // When itemsPerPage <= 0, disable local pagination and return all for this page
+    if (!itemsPerPage || itemsPerPage <= 0) {
+      return {
+        paginatedRequests: allRequests,
+        totalRequests: allRequests.length,
+      };
+    }
+
     // Apply pagination - get only the items for current page
     const startIndex = currentPage * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -104,6 +112,7 @@ const WithdrawalKanban = ({
 
   // Calculate the actual number of pages needed
   const getTotalPages = () => {
+    if (!itemsPerPage || itemsPerPage <= 0) return 1;
     const statusCounts = columns.map(col => {
       const requests = withdrawalRequests.filter(
         (request) => request.status?.toLowerCase() === col.id

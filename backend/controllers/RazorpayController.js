@@ -972,7 +972,7 @@ const handleWebhook = async (req, res) => {
         // Extract payment entity - handle different event types
         let payload;
 
-        if (event === 'payment.captured' || event === 'payment.authorized' || event === 'payment.failed') {
+        if (event === 'payment.captured' || event === 'payment.authorized' || event === 'payment.failed' || event === 'order.paid') {
             payload = req.body.payload.payment.entity;
         } else if (event && event.startsWith('subscription.')) {
             payload = req.body.payload.subscription?.entity || req.body.payload.subscription;
@@ -987,9 +987,10 @@ const handleWebhook = async (req, res) => {
 
 
         // Handle different events
-        // if ((event === 'payment.captured' || event === 'payment.authorized') && payload) {
-        //     await handlePaymentAuthorized(payload);
-        // } else
+        // if ((event === 'payment.captured' || event === 'payment.authorized' || event === 'order.paid') && payload) {
+        //     await upsertPaymentFromWebhook(payload, res);
+        // }
+        // else 
         if (event === 'subscription.authenticated' && payload) {
             await handleSubscriptionAuthenticated(payload,res);
         } else if (event === 'subscription.activated' && payload) {
@@ -1005,8 +1006,14 @@ const handleWebhook = async (req, res) => {
             await handleSubscriptionHalted(payload,res);
         } else if (event === 'subscription.cancelled' && payload) {
             await handleSubscriptionCancelled(payload,res);
+        } else if (event === 'subscription.paused' && payload) {
+            await handleSubscriptionPaused(payload, res);
+        } else if (event === 'subscription.resumed' && payload) {
+            await handleSubscriptionResumed(payload, res);
+        } else if (event === 'subscription.pending' && payload) {
+            await handleSubscriptionPending(payload, res);
         } else if (event === 'subscription.updated' && payload) {
-            await handleSubscriptionUpdated(payload);
+            await handleSubscriptionUpdated(payload, res);
         } else {
             console.log('Unhandled webhook event:', event);
         }
@@ -1052,6 +1059,80 @@ const handleWebhook = async (req, res) => {
         res.status(500).json({ error: 'Webhook processing failed' });
     }
 };
+
+// Upsert Payment record from Razorpay payment webhooks
+// NOTE: We only update existing Payment created during verifyPayment, because Payment schema requires ownerId
+// const upsertPaymentFromWebhook = async (payment, res) => {
+//     try {
+//         const paymentId = payment?.id;
+//         const orderId = payment?.order_id;
+//         const status = payment?.status; // authorized | captured | failed
+//         const method = payment?.method; // card | upi | netbanking
+//         const amount = typeof payment?.amount === 'number' ? payment.amount / 100 : undefined; // convert paise → INR
+
+//         if (!paymentId && !orderId) {
+//             console.log('[WEBHOOK] Missing payment identifiers; skipping upsert');
+//             return;
+//         }
+
+//         let existing = null;
+//         if (paymentId) {
+//             existing = await Payment.findOne({ razorpayPaymentId: paymentId });
+//         }
+//         if (!existing && orderId) {
+//             existing = await Payment.findOne({ razorpayOrderId: orderId });
+//         }
+
+//         if (!existing) {
+//             // Cannot create a new Payment without ownerId; rely on verifyPayment path to create it
+//             console.log('[WEBHOOK] Payment document not found for', { paymentId, orderId, status });
+//             return;
+//         }
+
+//         // Update fields safely
+//         if (paymentId) existing.razorpayPaymentId = paymentId;
+//         if (orderId) existing.razorpayOrderId = orderId;
+//         if (status) existing.status = status;
+//         if (amount) existing.amount = amount;
+//         if (method) existing.paymentMethod = method;
+
+//         // Persist fee/tax and other details in metadata
+//         existing.metadata = {
+//             ...(existing.metadata || {}),
+//             fee: payment?.fee,
+//             tax: payment?.tax,
+//             acquirer_data: payment?.acquirer_data,
+//             description: payment?.description,
+//             email: payment?.email,
+//             contact: payment?.contact,
+//             notes: payment?.notes
+//         };
+
+//         if (status === 'captured') {
+//             existing.paidAt = existing.paidAt || new Date();
+//         }
+
+//         await existing.save();
+
+//         // Logging context for our internal log middleware
+//         res.locals.logData = {
+//             tenantId: existing?.tenantId || "",
+//             ownerId: (existing?.ownerId && existing.ownerId.toString) ? existing.ownerId.toString() : (existing?.ownerId || ""),
+//             processName: 'Payment Webhook Upsert',
+//             status: 'success',
+//             message: `Updated payment from webhook`,
+//             requestBody: { paymentId, orderId, status },
+//             responseBody: { payment: existing._id }
+//         };
+//     } catch (err) {
+//         console.error('Error upserting payment from webhook:', err);
+//         res.locals.logData = {
+//             processName: 'Payment Webhook Upsert',
+//             status: 'error',
+//             message: err?.message || 'Unknown error'
+//         };
+//     }
+// };
 
 // Helper function to verify webhook signature
 // function verifyWebhookSignature(body, signature, secret) {
@@ -1691,6 +1772,140 @@ const handleSubscriptionHalted = async (subscription,res) => {
                     error
                 }
             };
+    }
+};
+
+// Handle subscription.paused event
+const handleSubscriptionPaused = async (subscription, res) => {
+    // Set up logging context
+    res.locals.loggedByController = true;
+    res.locals.processName = 'Subscription Plan Paused';
+    try {
+        console.log('Processing subscription paused event for:', subscription.id);
+
+        const customerSubscription = await CustomerSubscription.findOne({
+            razorpaySubscriptionId: subscription.id
+        });
+
+        if (!customerSubscription) {
+            console.error('Subscription not found in our records for paused:', subscription.id);
+            return;
+        }
+
+        customerSubscription.status = SUBSCRIPTION_STATUSES.PAUSED;
+        customerSubscription.endReason = subscription.pause_reason || 'paused';
+        await customerSubscription.save();
+
+        res.locals.logData = {
+            tenantId: subscription?.notes?.tenantId || "",
+            ownerId: subscription?.notes?.ownerId || "",
+            processName: 'Subscription Plan Paused',
+            status: 'success',
+            message: `Subscription paused processed successfully`,
+            requestBody: { subscription },
+            responseBody: { customerSubscription }
+        };
+    } catch (error) {
+        console.error('Error handling subscription paused event:', error);
+        res.locals.logData = {
+            tenantId: subscription?.notes?.tenantId || "",
+            ownerId: subscription?.notes?.ownerId || "",
+            processName: 'Subscription Plan Paused',
+            status: 'error',
+            message: `Subscription paused processing failed: ${error.message}`,
+            requestBody: { subscription },
+            responseBody: { error: error.message }
+        };
+    }
+};
+
+// Handle subscription.resumed event
+const handleSubscriptionResumed = async (subscription, res) => {
+    // Set up logging context
+    res.locals.loggedByController = true;
+    res.locals.processName = 'Subscription Plan Resumed';
+    try {
+        console.log('Processing subscription resumed event for:', subscription.id);
+
+        const customerSubscription = await CustomerSubscription.findOne({
+            razorpaySubscriptionId: subscription.id
+        });
+
+        if (!customerSubscription) {
+            console.error('Subscription not found in our records for resumed:', subscription.id);
+            return;
+        }
+
+        customerSubscription.status = SUBSCRIPTION_STATUSES.ACTIVE;
+        customerSubscription.endReason = null;
+        if (subscription.next_billing_at) {
+            customerSubscription.nextBillingDate = subscription.next_billing_at;
+        }
+        await customerSubscription.save();
+
+        res.locals.logData = {
+            tenantId: subscription?.notes?.tenantId || "",
+            ownerId: subscription?.notes?.ownerId || "",
+            processName: 'Subscription Plan Resumed',
+            status: 'success',
+            message: `Subscription resumed processed successfully`,
+            requestBody: { subscription },
+            responseBody: { customerSubscription }
+        };
+    } catch (error) {
+        console.error('Error handling subscription resumed event:', error);
+        res.locals.logData = {
+            tenantId: subscription?.notes?.tenantId || "",
+            ownerId: subscription?.notes?.ownerId || "",
+            processName: 'Subscription Plan Resumed',
+            status: 'error',
+            message: `Subscription resumed processing failed: ${error.message}`,
+            requestBody: { subscription },
+            responseBody: { error: error.message }
+        };
+    }
+};
+
+// Handle subscription.pending event
+const handleSubscriptionPending = async (subscription, res) => {
+    // Set up logging context
+    res.locals.loggedByController = true;
+    res.locals.processName = 'Subscription Plan Pending';
+    try {
+        console.log('Processing subscription pending event for:', subscription.id);
+
+        const customerSubscription = await CustomerSubscription.findOne({
+            razorpaySubscriptionId: subscription.id
+        });
+
+        if (!customerSubscription) {
+            console.error('Subscription not found in our records for pending:', subscription.id);
+            return;
+        }
+
+        customerSubscription.status = SUBSCRIPTION_STATUSES.PENDING;
+        await customerSubscription.save();
+
+        res.locals.logData = {
+            tenantId: subscription?.notes?.tenantId || "",
+            ownerId: subscription?.notes?.ownerId || "",
+            processName: 'Subscription Plan Pending',
+            status: 'success',
+            message: `Subscription pending processed successfully`,
+            requestBody: { subscription },
+            responseBody: { customerSubscription }
+        };
+    } catch (error) {
+        console.error('Error handling subscription pending event:', error);
+        res.locals.logData = {
+            tenantId: subscription?.notes?.tenantId || "",
+            ownerId: subscription?.notes?.ownerId || "",
+            processName: 'Subscription Plan Pending',
+            status: 'error',
+            message: `Subscription pending processing failed: ${error.message}`,
+            requestBody: { subscription },
+            responseBody: { error: error.message }
+        };
     }
 };
 

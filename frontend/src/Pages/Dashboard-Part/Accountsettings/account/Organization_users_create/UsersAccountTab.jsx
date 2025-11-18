@@ -6,6 +6,7 @@
  */
 // v1.0.4 - Ashok - Improved responsiveness
 // v1.0.5 - Ashok - Moved users api to hooks
+// v1.0.6 - Ashok - fixed style issues
 
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -39,6 +40,8 @@ import { config } from "../../../../../config";
 import axios from "axios";
 import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 import StatusBadge from "../../../../../Components/SuperAdminComponents/common/StatusBadge";
+import { getEmptyStateMessage } from "../../../../../utils/EmptyStateMessage/emptyStateMessage";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const UsersAccountTab = () => {
   const userType = AuthCookieManager.getUserType();
@@ -361,7 +364,11 @@ const handleApplyFilters = () => {
     {
       key: "email",
       header: "Email",
-      render: (value) => value || "Not Provided",
+      render: (value) => (
+        <span className="cursor-default" title={value}>
+          {value ? value : "Not Provided"}
+        </span>
+      ),
     },
     {
       key: "phone",
@@ -381,7 +388,7 @@ const handleApplyFilters = () => {
           <span className="text-gray-400 text-sm">N/A</span>
         );
       },
-    }
+    },
     // {
     //   key: "status",
     //   header: "Status",
@@ -543,11 +550,12 @@ const handleApplyFilters = () => {
                       columns={tableColumns}
                       loading={loading}
                       actions={tableActions}
-                      emptyState={
-                        userType === "superAdmin"
-                          ? "No super admins found."
-                          : "No users found."
-                      }
+                      // emptyState={
+                      //   userType === "superAdmin"
+                      //     ? "No super admins found."
+                      //     : "No users found."
+                      // }
+                      emptyState={emptyStateMessage}
                     />
                   </div>
                 ) : (

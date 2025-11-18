@@ -3,6 +3,7 @@
 // v1.0.2 - commented man.png, woman.png, transgender.png
 // v1.0.3 - Ashok - Improved responsiveness and added common code to popup
 // v1.0.4 - Ashok - Made capitalize some fields
+// v1.0.5 - Ashok - Fixed style issues
 
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
@@ -32,7 +33,9 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.0 ------------------------------------------------------------------->
 // v1.0.3 <----------------------------------------------------------------------
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 // v1.0.3 ---------------------------------------------------------------------->
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const UserInvoiceDetails = () => {
   const navigate = useNavigate();
@@ -74,11 +77,6 @@ const UserInvoiceDetails = () => {
     navigate("/billing-details");
     return null;
   }
-
-  // v1.0.4 <---------------------------------------------------------------------
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-  // v1.0.4 --------------------------------------------------------------------->
 
   // v1.0.3 <---------------------------------------------------------------------
   return (
@@ -146,7 +144,11 @@ const UserInvoiceDetails = () => {
                 <span className="text-gray-700">Status</span>
                 {/* v1.0.4 <----------------------------------------------- */}
                 <p className="text-black font-medium">
-                  {capitalizeFirstLetter(invoiceData?.status) || ""}
+                  {(
+                    <StatusBadge
+                      status={capitalizeFirstLetter(invoiceData?.status)}
+                    />
+                  ) || "N/A"}
                 </p>
                 {/* v1.0.4 -----------------------------------------------> */}
               </div>

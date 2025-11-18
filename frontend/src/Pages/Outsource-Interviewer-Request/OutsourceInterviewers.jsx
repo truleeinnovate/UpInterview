@@ -34,6 +34,7 @@ const OutsourceInterviewers = () => {
   const [view, setView] = useState("table");
   // const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   // const [editModeOn, setEditModeOn] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
@@ -52,9 +53,15 @@ const OutsourceInterviewers = () => {
   const [selectedInterviewer, setSelectedInterviewer] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
+  const ITEMS_PER_PAGE = 10;
   // eslint-disable-next-line no-unused-vars
-  const { outsourceInterviewers, isLoading, isError, error, refetch } =
-    useOutsourceInterviewers();
+  const { outsourceInterviewers, pagination, isLoading } =
+    useOutsourceInterviewers({
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+      search: debouncedSearch,
+      status: selectedFilters.status.join(","),
+    });
   console.log("outsourceInterviewers", outsourceInterviewers);
   // v1.0.0 <-------------------------------------------------------------------------
   useEffect(() => {
@@ -75,6 +82,15 @@ const OutsourceInterviewers = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(0);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -143,46 +159,20 @@ const OutsourceInterviewers = () => {
     }
   };
 
-  const FilteredData = () => {
-    if (!Array.isArray(dataToUse)) return [];
-    return dataToUse.filter((interviewer) => {
-      const fieldsToSearch = [
-        interviewer?.status,
-        interviewer?.interviewerNo,
-        interviewer?.contactId?.firstName,
-        interviewer?.contactId?.lastName,
-      ].filter((field) => field !== null && field !== undefined);
-
-      const matchesStatus =
-        selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(interviewer?.status);
-
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      return matchesSearchQuery && matchesStatus;
-    });
-  };
-
-  // Pagination
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
+  // Server-side pagination
+  const totalPages = pagination?.totalPages || 0;
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
-      setCurrentPage((prevPage) => prevPage + 1);
+    if (pagination?.hasNext) {
+      setCurrentPage((prev) => prev + 1);
     }
   };
   const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prevPage) => prevPage - 1);
+    if (pagination?.hasPrev) {
+      setCurrentPage((prev) => Math.max(0, prev - 1));
     }
   };
 
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  const currentFilteredRows = dataToUse;
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -481,6 +471,10 @@ const OutsourceInterviewers = () => {
       "active",
       "inactive",
       "blacklisted",
+      "underReview",
+      "approved",
+      "rejected",
+      "suspended",
     ];
 
     return (
@@ -574,7 +568,7 @@ const OutsourceInterviewers = () => {
           onFilterClick={handleFilterIconClick}
           isFilterPopupOpen={isFilterPopupOpen}
           isFilterActive={isFilterActive}
-          dataLength={dataToUse?.length}
+          dataLength={pagination?.totalItems || dataToUse?.length || 0}
           searchPlaceholder="Search interviewers..."
           filterIconRef={filterIconRef}
         />

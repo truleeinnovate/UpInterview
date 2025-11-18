@@ -129,7 +129,7 @@ const createPosition = async (req, res) => {
 
     // Trigger webhook for position creation
     try {
-      await triggerWebhook(
+      triggerWebhook(
         EVENT_TYPES.POSITION_CREATED,
         {
           id: position._id,
@@ -145,7 +145,9 @@ const createPosition = async (req, res) => {
           positionCode: position.positionCode
         },
         position.tenantId
-      );
+      ).catch(error => {
+        console.error('Webhook error (non-blocking):', error);
+      });
     } catch (error) {
       console.error('Error triggering webhook for position creation:', error);
     }
@@ -352,27 +354,25 @@ const updatePosition = async (req, res) => {
     }
 
     // Trigger webhook for position update
-    try {
-      await triggerWebhook(
-        EVENT_TYPES.POSITION_UPDATED,
-        {
-          id: updatedPosition._id,
-          title: updatedPosition.title,
-          companyName: updatedPosition.companyname,
-          minExperience: updatedPosition.minexperience,
-          maxExperience: updatedPosition.maxexperience,
-          skills: updatedPosition.skills,
-          noOfPositions: updatedPosition.NoofPositions,
-          location: updatedPosition.Location,
-          updatedAt: updatedPosition.updatedAt,
-          positionCode: updatedPosition.positionCode,
-          updatedFields: Object.keys(updateData.$set)
-        },
-        updatedPosition.tenantId
-      );
-    } catch (error) {
-      console.error('Error triggering webhook for position update:', error);
-    }
+    triggerWebhook(
+      EVENT_TYPES.POSITION_UPDATED,
+      {
+        id: updatedPosition._id,
+        title: updatedPosition.title,
+        companyName: updatedPosition.companyname,
+        minExperience: updatedPosition.minexperience,
+        maxExperience: updatedPosition.maxexperience,
+        skills: updatedPosition.skills,
+        noOfPositions: updatedPosition.NoofPositions,
+        location: updatedPosition.Location,
+        updatedAt: updatedPosition.updatedAt,
+        positionCode: updatedPosition.positionCode,
+        updatedFields: Object.keys(updateData.$set)
+      },
+      updatedPosition.tenantId
+    ).catch(error => {
+      console.error('Webhook error (non-blocking):', error);
+    });
 
     await updatedPosition.save()
 

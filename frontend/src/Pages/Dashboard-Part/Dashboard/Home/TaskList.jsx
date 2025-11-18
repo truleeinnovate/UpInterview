@@ -17,6 +17,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useTasks } from "../../../../apiHooks/useTasks";
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 
 const TaskList = () => {
   const { data: taskData = [], isLoading } = useTasks();
@@ -148,21 +150,15 @@ const TaskList = () => {
                     <div className="flex items-center space-x-2">
                       <h4 className="text-sm font-semibold text-gray-900">
                         {task.title
-                          ? task.title.charAt(0).toUpperCase() +
-                            task.title.slice(1)
+                          ? capitalizeFirstLetter(task.title)
                           : "Not Available"}
                       </h4>
-                      <span
-                        className={`px-2 py-0.5 rounded-lg text-xs font-medium ${
-                          task.priority.toLowerCase() === "high"
-                            ? "bg-red-100 text-red-600"
-                            : task.priority.toLowerCase() === "medium"
-                            ? "bg-yellow-100 text-yellow-600"
-                            : "bg-green-100 text-green-600"
-                        }`}
-                      >
-                        {task.priority.charAt(0).toUpperCase() +
-                          task.priority.slice(1)}
+                      <span className="px-2 py-0.5 rounded-lg text-xs font-medium">
+                        {
+                          <StatusBadge
+                            status={capitalizeFirstLetter(task.priority)}
+                          />
+                        }
                       </span>
                     </div>
                     <p className="text-xs text-gray-600">
@@ -177,22 +173,16 @@ const TaskList = () => {
                         <Clock size={14} />
                         <span>
                           {task.assignedTo
-                            ? task.assignedTo.charAt(0).toUpperCase() +
-                              task.assignedTo.slice(1)
+                            ? capitalizeFirstLetter(task.assignedTo)
                             : "Not Assigned"}
                         </span>
                       </div>
-                      <span
-                        className={`px-2 py-0.5 rounded-lg text-xs font-medium ${
-                          task.status.toLowerCase() === "completed"
-                            ? "bg-green-100 text-green-600"
-                            : task.status.toLowerCase() === "in-progress"
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-yellow-100 text-yellow-600"
-                        }`}
-                      >
-                        {task.status.charAt(0).toUpperCase() +
-                          task.status.slice(1)}
+                      <span className="px-2 py-0.5 rounded-lg text-xs font-medium">
+                        {
+                          <StatusBadge
+                            status={capitalizeFirstLetter(task.status)}
+                          />
+                        }
                       </span>
                     </div>
                   </div>

@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Fixed issues in responsiveness at delete at profile pic
 // v1.0.1 - Ashok - Added delete confirmation popup for the profile pic
+// v1.0.2 - Ashok - Fixed style issues
 
 import React, { useState } from "react";
 import { Trash } from "lucide-react";
@@ -36,7 +37,7 @@ const ProfilePhotoUpload = ({
         onClick={() => imageInputRef.current?.click()}
         className="relative group cursor-pointer"
       >
-        <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden transition-all duration-200 hover:border-blue-400 hover:shadow-lg">
+        <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-custom-blue/30 flex flex-col items-center justify-center overflow-hidden transition-all duration-200 hover:border-custom-blue/60 hover:shadow-lg">
           {imagePreview ? (
             <img
               src={imagePreview}
@@ -57,7 +58,7 @@ const ProfilePhotoUpload = ({
               <p className="text-xs text-gray-400">Upload Photo</p>
             </>
           )}
-          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full"></div>
+          {/* <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full"></div> */}
         </div>
         <input
           ref={imageInputRef}
@@ -73,7 +74,7 @@ const ProfilePhotoUpload = ({
             onClick={(e) => {
               e.stopPropagation();
               // onRemoveImage();
-               handleDeleteClick(); // <-- show popup instead of removing immediately
+              handleDeleteClick(); // <-- show popup instead of removing immediately
             }}
             // v1.0.0 <-------------------------------------------------------------------------------------------------
             className="absolute top-1 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"

@@ -13,7 +13,7 @@ const createQuestion = async (req, res) => {
     const Model = isInterview ? InterviewQuestion : AssessmentQuestion;
     const prefix = isInterview ? 'INTQ' : 'ASSQ';
 
-    const lastDoc = await Model.findOne().sort({ createdAt: -1 }).select('questionOrderId createdAt');
+    const lastDoc = await Model.findOne().sort({ _id: -1 }).select('questionOrderId createdAt');
     let nextOrderId = `${prefix}-00000`;
     if (lastDoc && lastDoc.questionOrderId) {
       const parts = String(lastDoc.questionOrderId).split('-');

@@ -28,6 +28,8 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 import { useMediaQuery } from "react-responsive";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 import { formatDateTime } from "../../../../utils/dateFormatter";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -53,7 +55,7 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
   return (
     <div ref={menuRef} className="flex items-center gap-2 relative">
       {/* Always visible actions */}
-      {mainActions.map((action) => (
+      {/* {mainActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -65,7 +67,31 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
         >
           {action.icon}
         </button>
-      ))}
+      ))} */}
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
 
       {/* More button (shows dropdown) */}
       {overflowActions.length > 0 && (
@@ -140,7 +166,7 @@ function SupportDesk() {
     issueTypes: [],
     priorities: [],
     createdDate: "",
-  }); 
+  });
   const [viewMode, setViewMode] = useState("table");
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
@@ -152,28 +178,26 @@ function SupportDesk() {
   const [createdDate, setCreatedDate] = useState(""); // '', 'last7', 'last30'
   const navigate = useNavigate();
   const filterIconRef = useRef(null);
-  const { tickets,  isLoading } = useSupportTickets(
-    {
-      search: searchQuery,
-      status: selectedFilters.status,
-      issueTypes: selectedFilters.issueTypes,
-      priorities: selectedFilters.priorities,
-      createdDate: selectedFilters.createdDate,
-      page: currentPage, // This is now properly sent to backend
-      limit: itemsPerPage,
-    }
-  );
+  const { tickets, isLoading } = useSupportTickets({
+    search: searchQuery,
+    status: selectedFilters.status,
+    issueTypes: selectedFilters.issueTypes,
+    priorities: selectedFilters.priorities,
+    createdDate: selectedFilters.createdDate,
+    page: currentPage, // This is now properly sent to backend
+    limit: itemsPerPage,
+  });
 
   // console.log("totalCount ---> ", tickets?.totalCount);
 
-  const totalPages = Math.ceil(tickets?.totalCount / itemsPerPage); 
-  const currentFilteredRows = tickets?.tickets || []
+  const totalPages = Math.ceil(tickets?.totalCount / itemsPerPage);
+  const currentFilteredRows = tickets?.tickets || [];
 
   // v1.0.4 <-----------------------------------------------------------
   const isTablet = useMediaQuery({ maxWidth: 1024 });
   useScrollLock(viewMode === "kanban"); // when view is kanban disable outer scrollbar
 
-  // handling kanban view and table view 
+  // handling kanban view and table view
   useEffect(() => {
     // Only run on isTablet change
     if (isTablet) {
@@ -183,13 +207,12 @@ function SupportDesk() {
     }
   }, [isTablet]);
 
-
   // Permission check after all hooks
   if (!isInitialized || !checkPermission("SupportDesk")) {
     return null;
   }
 
-  // handling search input 
+  // handling search input
   const handleSearchInputChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
@@ -219,25 +242,24 @@ function SupportDesk() {
     //-------v1.0.3-------->
   };
 
-  //  handling filter pop up  showing 
+  //  handling filter pop up  showing
   const handleFilterIconClick = () => {
     if (tickets?.tickets?.length !== 0) {
       setIsFilterPopupOpen((prev) => !prev);
     }
   };
 
-
-//  handling next page pagination
+  //  handling next page pagination
   const nextPage = () => {
     if (currentPage < totalPages - 1) {
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
-//  handling prev page pagination
+  //  handling prev page pagination
   const prevPage = () => {
     if (currentPage > 0) {
-      setCurrentPage(prev => prev - 1);
+      setCurrentPage((prev) => prev - 1);
     }
   };
 
@@ -255,105 +277,7 @@ function SupportDesk() {
     });
   };
 
-
-  //  table column 
-  const tableColumns = [
-    {
-      key: "ticketCode",
-      header: "Ticket ID",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => {
-            const path =
-              effectivePermissions_RoleName === "Admin" ||
-                effectivePermissions_RoleName === "Individual_Freelancer" ||
-                effectivePermissions_RoleName === "Individual"
-                ? `/support-desk/${row?._id}`
-                : row.assignedToId ===
-                  impersonationPayload.impersonatedUserId &&
-                  impersonatedUser_roleName === "Support_Team"
-                  ? `/support-desk/view/${row?._id}`
-                  : impersonatedUser_roleName === "Super_Admin"
-                    ? `/support-desk/view/${row?._id}`
-                    : `/support-desk/${row?._id}`;
-            navigate(path, { state: { ticketData: row } });
-          }}
-        >
-          {value || "N/A"}
-        </div>
-      ),
-    },
-    {
-      key: "contact",
-      header: "Contact",
-      render: (value) =>
-        value?.charAt(0).toUpperCase() + value.slice(1) || "N/A",
-    },
-    // v1.0.1 ---------------------------------------------------------------------------->
-
-    {
-      key: "subject",
-      header: "Subject",
-      render: (value) => value || "N/A",
-    },
-    // v1.0.1 ---------------------------------------------------------------------------->
-    {
-      key: "issueType",
-      header: "Issue Type",
-      render: (value) => value || "N/A",
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (value) => (
-        <StatusBadge
-          status={value}
-          text={
-            value
-              ? value.charAt(0).toUpperCase() + value.slice(1)
-              : "Not Provided"
-          }
-        />
-      ),
-    },
-    ...(impersonatedUser_roleName === "Super_Admin" ||
-      impersonatedUser_roleName === "Support_Team"
-      ? [
-        {
-          key: "priority",
-          header: "Priority",
-          render: (value) => (
-            <span
-              className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
-                value
-              )}`}
-            >
-              {value || "N/A"}
-            </span>
-          ),
-        },
-      ]
-      : []),
-    {
-      key: "createdAt",
-      header: "Created At",
-      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
-    },
-    ...(impersonatedUser_roleName === "Super_Admin" ||
-      impersonatedUser_roleName === "Support_Team"
-      ? [
-        {
-          key: "assignedTo",
-          header: "Assigned To",
-          render: (value) =>
-            value?.charAt(0).toUpperCase() + value.slice(1) || "N/A",
-        },
-      ]
-      : []),
-  ];
-
-  // Based on priority color shoing data 
+  // Based on priority color shoing data
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
       case "high":
@@ -366,46 +290,6 @@ function SupportDesk() {
         return "bg-gray-100 text-gray-800";
     }
   };
-
-    //  table column actions 
-  const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-custom-blue" />,
-      onClick: (row) => {
-        const path =
-          effectivePermissions_RoleName === "Admin" ||
-            effectivePermissions_RoleName === "Individual_Freelancer" ||
-            effectivePermissions_RoleName === "Individual"
-            ? `/support-desk/${row._id}`
-            : row.assignedToId === impersonationPayload.impersonatedUserId &&
-              impersonatedUser_roleName === "Support_Team"
-              ? `/support-desk/view/${row._id}`
-              : impersonatedUser_roleName === "Super_Admin"
-                ? `/support-desk/view/${row._id}`
-                : `/support-desk/${row._id}`;
-        navigate(path, { state: { ticketData: row } });
-      },
-      //disabled: (row) => !hasActionAccess(row),
-    },
-    ...(effectivePermissions_RoleName === "Admin" ||
-      effectivePermissions_RoleName === "Individual_Freelancer" ||
-      effectivePermissions_RoleName === "Individual"
-      ? [
-        {
-          key: "edit",
-          label: "Edit",
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: (row) =>
-            navigate(`/support-desk/edit-ticket/${row._id}`, {
-              state: { ticketData: row },
-            }),
-          //disabled: (row) => !hasActionAccess(row),
-        },
-      ]
-      : []),
-  ];
 
   const statusOptions = ["New", "Assigned", "Inprogress", "Resolved", "Close"];
   //<-------v1.0.3--------
@@ -471,21 +355,175 @@ function SupportDesk() {
   };
   // v1.0.6 <----------------------------------------------------------------------
 
+  // ------------------- Dynamic Empty State Messages using Utility ---------------------
+  const isSearchActive = searchQuery.length > 0 || isFilterActive; // Use totalCount from the API response for the initial count
+  const initialDataCount = tickets?.totalCount || 0;
+  const currentFilteredCount = currentFilteredRows?.length || 0;
+
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    "tickets" // Entity Name
+  );
+  // ------------------- Dynamic Empty State Messages using Utility ---------------------
+
+  //  table column
+  const tableColumns = [
+    {
+      key: "ticketCode",
+      header: "Ticket ID",
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => {
+            const path =
+              effectivePermissions_RoleName === "Admin" ||
+              effectivePermissions_RoleName === "Individual_Freelancer" ||
+              effectivePermissions_RoleName === "Individual"
+                ? `/support-desk/${row?._id}`
+                : row.assignedToId ===
+                    impersonationPayload.impersonatedUserId &&
+                  impersonatedUser_roleName === "Support_Team"
+                ? `/support-desk/view/${row?._id}`
+                : impersonatedUser_roleName === "Super_Admin"
+                ? `/support-desk/view/${row?._id}`
+                : `/support-desk/${row?._id}`;
+            navigate(path, { state: { ticketData: row } });
+          }}
+        >
+          {capitalizeFirstLetter(value) || "N/A"}
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      header: "Contact",
+      render: (value) => capitalizeFirstLetter(value) || "N/A",
+    },
+    // v1.0.1 ---------------------------------------------------------------------------->
+
+    {
+      key: "subject",
+      header: "Subject",
+      render: (value) => (
+        <div
+          className="cursor-default truncate max-w-[220px]"
+          title={capitalizeFirstLetter(value)}
+        >
+          {capitalizeFirstLetter(value) || "N/A"}
+        </div>
+      ),
+    },
+    // v1.0.1 ---------------------------------------------------------------------------->
+    {
+      key: "issueType",
+      header: "Issue Type",
+      render: (value) => capitalizeFirstLetter(value) || "N/A",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value) => (
+        <StatusBadge
+          status={value}
+          text={value ? capitalizeFirstLetter(value) : "Not Provided"}
+        />
+      ),
+    },
+    ...(impersonatedUser_roleName === "Super_Admin" ||
+    impersonatedUser_roleName === "Support_Team"
+      ? [
+          {
+            key: "priority",
+            header: "Priority",
+            render: (value) => (
+              <span
+                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
+                  value
+                )}`}
+              >
+                {<StatusBadge status={capitalizeFirstLetter(value)} /> || "N/A"}
+              </span>
+            ),
+          },
+        ]
+      : []),
+    {
+      key: "createdAt",
+      header: "Created At",
+      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
+    },
+    ...(impersonatedUser_roleName === "Super_Admin" ||
+    impersonatedUser_roleName === "Support_Team"
+      ? [
+          {
+            key: "assignedTo",
+            header: "Assigned To",
+            render: (value) => capitalizeFirstLetter(value) || "N/A",
+          },
+        ]
+      : []),
+  ];
+  //  table column actions
+  const tableActions = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
+      onClick: (row) => {
+        const path =
+          effectivePermissions_RoleName === "Admin" ||
+          effectivePermissions_RoleName === "Individual_Freelancer" ||
+          effectivePermissions_RoleName === "Individual"
+            ? `/support-desk/${row._id}`
+            : row.assignedToId === impersonationPayload.impersonatedUserId &&
+              impersonatedUser_roleName === "Support_Team"
+            ? `/support-desk/view/${row._id}`
+            : impersonatedUser_roleName === "Super_Admin"
+            ? `/support-desk/view/${row._id}`
+            : `/support-desk/${row._id}`;
+        navigate(path, { state: { ticketData: row } });
+      },
+      //disabled: (row) => !hasActionAccess(row),
+    },
+    ...(effectivePermissions_RoleName === "Admin" ||
+    effectivePermissions_RoleName === "Individual_Freelancer" ||
+    effectivePermissions_RoleName === "Individual"
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) =>
+              navigate(`/support-desk/edit-ticket/${row._id}`, {
+                state: { ticketData: row },
+              }),
+            //disabled: (row) => !hasActionAccess(row),
+          },
+        ]
+      : []),
+  ];
+
   const kanbanColumns = [
     {
       key: "contact",
       header: "Contact",
-      render: (value) => value || "N/A",
+      render: (value) => capitalizeFirstLetter(value) || "N/A",
     },
     {
       key: "issueType",
       header: "Issue Type",
-      render: (value) => value || "N/A",
+      render: (value) => capitalizeFirstLetter(value) || "N/A",
     },
     {
       key: "subject",
       header: "Subject",
-      render: (value) => value || "N/A",
+      render: (value) => (
+        <span className="cursor-default" title={capitalizeFirstLetter(value)}>
+          {capitalizeFirstLetter(value) || "N/A"}
+        </span>
+      ),
     },
     {
       key: "status",
@@ -493,11 +531,7 @@ function SupportDesk() {
       render: (value, row) => (
         <StatusBadge
           status={value}
-          text={
-            value
-              ? value.charAt(0).toUpperCase() + value.slice(1)
-              : "Not Provided"
-          }
+          text={value ? capitalizeFirstLetter(value) : "Not Provided"}
         />
       ),
     },
@@ -505,23 +539,20 @@ function SupportDesk() {
       key: "priority",
       header: "Priority",
       render: (value) => (
-        <span
-          className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(
-            value
-          )}`}
-        >
-          {value || "N/A"}
+        <span>
+          {<StatusBadge status={capitalizeFirstLetter(value)} /> ||
+            "Not Provided"}
         </span>
       ),
     },
     ...(impersonatedUser_roleName === "Super_Admin"
       ? [
-        {
-          key: "assignedTo",
-          header: "Assigned To",
-          render: (value) => value || "N/A",
-        },
-      ]
+          {
+            key: "assignedTo",
+            header: "Assigned To",
+            render: (value) => value || "N/A",
+          },
+        ]
       : []),
   ];
 
@@ -550,7 +581,7 @@ function SupportDesk() {
       {
         key: "view",
         label: "View Details",
-        icon: <Eye className="w-4 h-4 text-blue-600" />,
+        icon: <Eye className="w-4 h-4 text-custom-blue" />,
         onClick: () =>
           navigate(
             effectivePermissions_RoleName === "Admin" ||
@@ -562,24 +593,22 @@ function SupportDesk() {
           ),
       },
       ...(effectivePermissions_RoleName === "Admin" ||
-        effectivePermissions_RoleName === "Individual_Freelancer" ||
-        effectivePermissions_RoleName === "Individual"
+      effectivePermissions_RoleName === "Individual_Freelancer" ||
+      effectivePermissions_RoleName === "Individual"
         ? [
-          {
-            key: "edit",
-            label: "Edit Ticket",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: () =>
-              navigate(`/support-desk/edit-ticket/${ticket._id}`, {
-                state: { ticketData: ticket },
-              }),
-          },
-        ]
+            {
+              key: "edit",
+              label: "Edit Ticket",
+              icon: <Pencil className="w-4 h-4 text-green-600" />,
+              onClick: () =>
+                navigate(`/support-desk/edit-ticket/${ticket._id}`, {
+                  state: { ticketData: ticket },
+                }),
+            },
+          ]
         : []),
     ];
   };
-
-
 
   // v1.0.6 ---------------------------------------------------------------------->
 
@@ -619,15 +648,11 @@ function SupportDesk() {
         </main>
       </div>
 
-      {
-        tickets?.length === 0 &&
-
+      {tickets?.length === 0 && (
         <div className="flex items-center justify-center h-screen">
           <p className="text-gray-600">No tickets found</p>
         </div>
-
-
-      }
+      )}
       {/* v1.0.4 <------------------------------------------------------------------------------ */}
       {/* <main className="fixed top-48 left-0 right-0 bg-background"> */}
       {/* v1.0.5 <------------------------------------------------------------------------------------ */}
@@ -643,7 +668,7 @@ function SupportDesk() {
                   columns={tableColumns}
                   actions={tableActions}
                   loading={isLoading}
-                  emptyState="No tickets found."
+                  emptyState={emptyStateMessage}
                   className="table-fixed w-full"
                 />
               </div>
@@ -654,7 +679,7 @@ function SupportDesk() {
                   ...ticket,
                   id: ticket._id,
                   title: ticket?.ticketCode,
-                  subTitle: formatDate(ticket?.createdAt),
+                  subTitle: formatDateTime(ticket?.createdAt),
                 }))}
                 loading={isLoading}
                 columns={kanbanColumns}
@@ -668,14 +693,14 @@ function SupportDesk() {
                   navigate(
                     effectivePermissions_RoleName === "Admin" ||
                       effectivePermissions_RoleName ===
-                      "Individual_Freelancer" ||
+                        "Individual_Freelancer" ||
                       effectivePermissions_RoleName === "Individual"
                       ? `/support-desk/${ticket._id}`
                       : `/support-desk/view/${ticket._id}`,
                     { state: { ticketData: ticket } }
                   );
                 }}
-                emptyState="No tickets found."
+                emptyState={emptyStateMessage}
                 kanbanTitle="Ticket"
               />
               // v1.0.6 ---------------------------------------------------------------->
@@ -713,7 +738,7 @@ function SupportDesk() {
                             onChange={() => handleStatusToggle(option)}
                             // v1.0.2 <-------------------------------------------------------------
                             className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                          // v1.0.2 ------------------------------------------------------------->
+                            // v1.0.2 ------------------------------------------------------------->
                           />
                           <span className="text-sm">{option}</span>
                         </label>

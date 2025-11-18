@@ -8,6 +8,7 @@
 // v1.0.7 - Ashok - Added status badge
 // v1.0.8 - Ashok - Added common code kanban
 // v1.0.9 - Ashok - Added clickable title to navigate to details page at kanban
+// v2.0.0 - Ashok - Added common code for empty state messages and fixed style issues
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
@@ -52,8 +53,10 @@ import { notify } from "../../../../services/toastService.js";
 // v1.0.7 <------------------------------------------------------------
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 // v1.0.7 ------------------------------------------------------------>
-
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
 // v1.0.8 <-----------------------------------------------------------------------
+
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
   const menuRef = useRef(null);
@@ -529,10 +532,17 @@ const Task = () => {
     refetch();
   };
 
-  // v1.0.7 <------------------------------------------------------
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-  // v1.0.7 ------------------------------------------------------>
+  // --- START: Dynamic Empty State Messages using Utility ---
+  const isSearchActive = searchQuery.length > 0 || isFilterActive; // We use taskData.length as the initial count here since server-side pagination/filtering isn't used for total count in this component
+  const initialDataCount = taskData?.length || 0;
+  const currentFilteredCount = currentFilteredRows?.length || 0;
+
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    "Tasks" // Entity Name
+  ); // --- END: Dynamic Empty State Messages using Utility ---
 
   // v1.0.8 <----------------------------------------------------
   const formatDate = (isoString) => {
@@ -594,7 +604,12 @@ const Task = () => {
       header: "Related To",
       render: (value) => value?.objectName || "N/A",
     },
-    { key: "priority", header: "Priority", render: (value) => value || "N/A" },
+    {
+      key: "priority",
+      header: "Priority",
+      render: (value) =>
+        <StatusBadge status={capitalizeFirstLetter(value)} /> || "N/A",
+    },
     // v1.0.7 <---------------------------------------------------------------
     {
       key: "status",
@@ -741,7 +756,7 @@ const Task = () => {
                   columns={tableColumns}
                   loading={isLoading}
                   actions={tableActions}
-                  emptyState="No Tasks Found."
+                  emptyState={emptyStateMessage}
                 />
               </div>
             ) : (
@@ -765,7 +780,7 @@ const Task = () => {
                     />
                   )}
                   onTitleClick={(item) => handleTaskClick(item)}
-                  emptyState="No Tasks Found."
+                  emptyState={emptyStateMessage}
                   kanbanTitle="Task"
                 />
               </div>

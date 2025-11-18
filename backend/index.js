@@ -91,7 +91,6 @@ app.use((req, res, next) => {
     next();
 });
 
-
 // Add OPTIONS handlers for main routes
 const handleOptions = (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
@@ -265,6 +264,8 @@ const rawBodyParser = require("body-parser").raw({ type: "*/*" });
 // Raw body parser for webhook endpoints
 app.use((req, res, next) => {
     if (
+        req.originalUrl === "/payment-webhook" ||
+        req.path === "/payment-webhook" ||
         req.originalUrl === "/payment/webhook" ||
         req.path === "/payment/webhook"
     ) {
@@ -1253,6 +1254,10 @@ app.use("/assessment-questions", assessmentQuestionsRoutes);
 // Integration Routes
 const integrationRoutes = require('./routes/integrationRoutes');
 app.use('/integrations', integrationRoutes);
+
+// API Key Routes
+const apiKeyRoutes = require('./routes/apiKeyRoutes');
+app.use('/apikeys', apiKeyRoutes);
 
 const scheduledAssessmentRouter = require("./routes/scheduledAssessmentRoute.js");
 app.use("/schedule-assessment", scheduledAssessmentRouter);

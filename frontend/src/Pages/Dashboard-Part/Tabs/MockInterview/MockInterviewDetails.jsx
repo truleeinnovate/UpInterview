@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - add first letter capital function
 // v1.0.1 - Ashok - improved responsiveness
 // v1.0.2 - Ashok - changed placement of edit mock interview button
+// v1.0.3 - Ashok - fixed style related issues
 
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
@@ -345,7 +346,7 @@ const MockInterviewDetails = () => {
                                 <button
                                   // onClick={() => handleViewEntityDetails(candidate, 'candidate', 'sidebar')}
                                   onClick={() => handleView(candidate)}
-                                  className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                  className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-custom-blue bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
                                   View Details
                                 </button>
@@ -366,13 +367,13 @@ const MockInterviewDetails = () => {
                         <span className="text-sm text-gray-900 mr-2">
                           {completedRounds} of {totalRounds} rounds completed
                         </span>
-                        <span className="text-sm font-medium text-blue-700">
+                        <span className="text-sm font-medium text-custom-blue">
                           {progressPercentage.toFixed(0)}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
                         <div
-                          className="bg-blue-600 h-2.5 rounded-full"
+                          className="bg-custom-blue h-2.5 rounded-full"
                           style={{ width: `${progressPercentage}%` }}
                         ></div>
                       </div>
@@ -398,7 +399,7 @@ const MockInterviewDetails = () => {
                       </span>{" "}
                       Outsourced
                     </div>
-                    <div className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+                    <div className="px-3 py-1 bg-custom-blue/10 text-custom-blue rounded-full text-sm">
                       <span className="font-medium">
                         {allInterviewerIds.size}
                       </span>{" "}

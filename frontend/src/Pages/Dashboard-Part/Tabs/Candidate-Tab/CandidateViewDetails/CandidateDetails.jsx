@@ -142,7 +142,10 @@ const CandidateDetails = ({ mode, candidateId }) => {
               {/* <h3 className="text-2xl font-bold text-gray-900"> */}
               {/* v1.0.5 <--------------------------------------------------------------------- */}
               {/* <h3 className="sm:text-xl text-2xl font-bold text-gray-900"> */}
-              <h3 className="sm:text-sm md:text-md lg:text-2xl xl:text-2xl 2xl:text-2xl sm:font-semibold font-bold text-gray-900">
+              <h3
+                className="sm:text-sm md:text-md lg:text-2xl xl:text-2xl 2xl:text-2xl sm:font-semibold font-bold text-gray-900 truncate max-w-[360px] cursor-default"
+                title={`${candidate?.FirstName} ${candidate?.LastName}`}
+              >
                 {/* v1.0.5 ---------------------------------------------------------------------> */}
                 {candidate?.FirstName
                   ? candidate.FirstName.charAt(0).toUpperCase() +
@@ -179,7 +182,10 @@ const CandidateDetails = ({ mode, candidateId }) => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Name</p>
-                        <p className="text-gray-700">
+                        <p
+                          className="text-gray-700 truncate cursor-default max-w-[200px]"
+                          title={`${candidate?.FirstName} ${candidate?.LastName}`}
+                        >
                           {candidate?.FirstName
                             ? candidate.FirstName.charAt(0).toUpperCase() +
                               candidate.FirstName.slice(1)
@@ -238,7 +244,10 @@ const CandidateDetails = ({ mode, candidateId }) => {
                         <Mail className="w-5 h-5 text-gray-500" />
                       </div>
                       {/* v1.0.4 <------------------------------------------------------------------------------- */}
-                      <span className="text-gray-700 sm:truncate md:truncate md:max-w-[180px] lg:truncate lg:max-w-[180px]">
+                      <span
+                        title={candidate?.Email}
+                        className="text-gray-700 truncate max-w-[200px] cursor-default"
+                      >
                         {candidate?.Email || "N/A"}
                       </span>
                       {/* v1.0.4 <-------------------------------------------------------------------------------> */}

@@ -10,6 +10,7 @@
 // v1.0.9  -  Ashok   - added clickable title to navigate to details page at kanban
 // v2.0.0  -  Ashok   - added max salary annually for filters
 // v2.0.1  -  Ashok   - added common code for empty state messages when fetch, search and filter etc.
+// v2.0.2  -  Ashok   - fixed style issues
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -44,11 +45,7 @@ import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
 import { formatDateTime } from "../../../../utils/dateFormatter";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage";
-
-const capitalizeFirstLetter = (string) => {
-  if (!string) return "";
-  return string.charAt(0).toUpperCase() + string.slice(1);
-};
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 // v1.0.8 <---------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -76,7 +73,7 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
   return (
     <div ref={menuRef} className="flex items-center gap-2 relative">
       {/* Always visible actions */}
-      {mainActions.map((action) => (
+      {/* {mainActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -88,7 +85,32 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
         >
           {action.icon}
         </button>
-      ))}
+      ))} */}
+
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
 
       {/* More button (shows dropdown) */}
       {overflowActions.length > 0 && (
@@ -559,7 +581,7 @@ const PositionTab = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {row.title.charAt(0).toUpperCase() + row.title.slice(1) || "N/A"}
+              {capitalizeFirstLetter(row?.title) || "N/A"}
             </div>
           </div>
         </div>
@@ -568,9 +590,21 @@ const PositionTab = () => {
     {
       key: "companyname",
       header: "Company",
-      render: (value) => value || "N/A",
+      render: (value) => (
+        <span className="cursor-default" title={value}>
+          {value ? value : "Not Provided"}
+        </span>
+      ),
     },
-    { key: "Location", header: "Location", render: (value) => value || "N/A" },
+    {
+      key: "Location",
+      header: "Location",
+      render: (value) => (
+        <span className="cursor-default" title={value}>
+          {value ? value : "Not Provided"}
+        </span>
+      ),
+    },
     {
       key: "experience",
       header: "Experience",
@@ -587,11 +621,14 @@ const PositionTab = () => {
       header: "Skills",
       render: (value) => (
         // v1.0. <----------------------------------------------------------------------------
-        <div className="flex gap-1">
+        <div
+          className="flex gap-1 cursor-default"
+          title={value?.map((skill) => skill.skill)?.join(", ")}
+        >
           {value.slice(0, 1).map((skill, idx) => (
             <span
               key={idx}
-              className="px-2 py-0.5 bg-custom-bg text-custom-blue rounded-full text-xs"
+              className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue rounded-full text-xs"
             >
               {skill.skill || "N/A"}
             </span>
@@ -668,6 +705,11 @@ const PositionTab = () => {
     {
       key: "companyname",
       header: "Company",
+      render: (value) => (
+        <span className="cursor-default" title={value}>
+          {value ? value : "Not Provided"}
+        </span>
+      ),
     },
     {
       key: "experience",
@@ -682,7 +724,11 @@ const PositionTab = () => {
     {
       key: "Location",
       header: "Location",
-      render: (value) => value || "N/A",
+      render: (value) => (
+        <span className="cursor-default" title={value}>
+          {value ? value : "Not Provided"}
+        </span>
+      ),
     },
     {
       key: "status",
@@ -694,11 +740,14 @@ const PositionTab = () => {
       header: "Skills",
       render: (skills) =>
         skills && skills.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
+          <div
+            className="flex flex-wrap gap-1 cursor-default"
+            title={skills?.map((skill) => skill.skill)?.join(", ")}
+          >
             {skills?.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {skills?.length > 0 ? (
-                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                  <span className="px-2 py-0.5 bg-blue-100 bg-custom-blue/10 text-custom-blue text-xs rounded-full">
                     {skills[0].skill?.length > 12
                       ? skills[0].skill.slice(0, 12) + "..."
                       : skills[0].skill}
@@ -708,7 +757,7 @@ const PositionTab = () => {
                 )}
                 {skills?.length > 1 && (
                   <span className="text-gray-500 text-xs">
-                    +{skills.length - 1} more
+                    +{skills.length - 1}
                   </span>
                 )}
               </div>

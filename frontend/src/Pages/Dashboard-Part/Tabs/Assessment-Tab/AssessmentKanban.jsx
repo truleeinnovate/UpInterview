@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashok   -  updated loading view
 // v1.0.2  -  Ashok   -  fixed zoom in effect
 // v1.0.3  -  Ashok   -  hidden acton buttons when type "standard"
+// v1.0.4  -  Ashok   -  fixed style related issues
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -20,6 +21,7 @@ import { format } from "date-fns";
 import PropTypes from "prop-types";
 import Tooltip from "@mui/material/Tooltip";
 import { formatDateTime } from "../../../../utils/dateFormatter";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 
 const AssessmentKanban = ({
   assessments,
@@ -402,12 +404,10 @@ const AssessmentKanban = ({
 
                             <div className="flex items-center justify-between pt-2">
                               <motion.span
-                                className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                                  assessment.status
-                                )}`}
+                                className={`px-2 py-1 text-xs font-semibold rounded-full`}
                                 whileHover={{ scale: 1.05 }}
                               >
-                                {assessment.status}
+                                {<StatusBadge status={assessment?.status} />}
                               </motion.span>
                               <span className="text-xs text-gray-500">
                                 {assessmentSections[assessment._id] ?? 0}{" "}
