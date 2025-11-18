@@ -21,7 +21,7 @@ function StatusBadge({ status, text }) {
         return "bg-custom-blue/10 text-custom-blue rounded-full px-2 py-1 font-semibold";
       case "pending":
       case "awaiting":
-        return "bg-support px-2 py-1 rounded-full font-semibold";
+        return "badge-support px-2 py-1 rounded-full font-semibold";
       case "submitted":
       case "payment_pending":
       case "draft":

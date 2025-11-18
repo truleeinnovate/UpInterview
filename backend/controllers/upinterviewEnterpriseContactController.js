@@ -76,7 +76,7 @@ const getAllEnterpriseContacts = async (req, res) => {
 
   try {
     // Fetch all enterprise contacts, sorted by newest first
-    const contacts = await EnterpriseContact.find().sort({ createdAt: -1 });
+    const contacts = await EnterpriseContact.find().sort({ _id: -1 });
     console.log(`✅ Found ${contacts.length} enterprise contact submissions`);
 
     // Transform data for frontend

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { config } from '../../config';
 import axios from 'axios';
+import { usePermissions } from "../../Context/PermissionsContext";
 
 const fetchOrganizationRequests = async () => {
   try {
@@ -65,30 +66,54 @@ const fetchOrganizationRequests = async () => {
   }
 };
 
-export const useOrganizationRequests = () => {
+export const useOrganizationRequests = (options) => {
+  // Switch endpoint mode based on options, but call hooks unconditionally
+  const isPaginated = options && typeof options === 'object';
+  const { page = 0, limit = 10, search = '', status = '' } = options || {};
+
+  // Permissions gating similar to other super admin hooks
+  const { superAdminPermissions, isInitialized } = usePermissions();
+  const hasAnyPermissions = superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
+  const isEnabled = Boolean(hasAnyPermissions || isInitialized);
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: isPaginated
+      ? ['organizationRequests', page, limit, search, status]
+      : ['organizationRequests'],
+    queryFn: async () => {
+      const base = `${config.REACT_APP_API_URL}/organization-requests`;
+      if (isPaginated) {
+        const params = new URLSearchParams();
+        params.append('page', String(page));
+        params.append('limit', String(limit));
+        if (search) params.append('search', search);
+        if (status) params.append('status', status);
+        const response = await axios.get(`${base}?${params.toString()}`, { withCredentials: true });
+        return response.data;
+      }
+      // Legacy mode: fetch full list
+      return await fetchOrganizationRequests();
+    },
+    enabled: isEnabled,
+    refetchOnWindowFocus: false,
+    keepPreviousData: true,
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 15,
+    retry: 1,
+  });
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     status: [],
   });
 
-  const {
-    data: organizationRequests = [],
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['organizationRequests'],
-    queryFn: fetchOrganizationRequests,
-    // Enable refetching on window focus only if needed
-    refetchOnWindowFocus: false,
-  });
-
-  // Apply search and filters
-  const filteredData = organizationRequests.filter((request) => {
+  // Apply search and filters (legacy mode only); when server-side is used, this is a passthrough
+  const dataNormalized = Array.isArray(data) ? data : (data?.data || []);
+  const filteredData = dataNormalized.filter((request) => {
     // Search filter
     const matchesSearch =
       !searchQuery ||
-      Object.values(request).some(
+      Object.values(request || {}).some(
         (value) =>
           value &&
           value.toString().toLowerCase().includes(searchQuery.toLowerCase())
@@ -96,7 +121,7 @@ export const useOrganizationRequests = () => {
 
     // Status filter
     const matchesStatus =
-      filters.status.length === 0 || filters.status.includes(request.status);
+      filters.status.length === 0 || filters.status.includes(request?.status);
 
     return matchesSearch && matchesStatus;
   });
@@ -131,34 +156,44 @@ export const useOrganizationRequests = () => {
 
   const updateOrganizationStatus = async (id, updateData) => {
     try {
-        console.log(`[API] Updating status for request ${id} with data:`, updateData);
-        const response = await axios.put(
-            `${config.REACT_APP_API_URL}/organization-requests/${id}/status`,
-            updateData,
-            { withCredentials: true }
-        );
-        console.log(`[API] Status update successful for request ${id}`, response.data);
-        return response.data;
+      console.log(`[API] Updating status for request ${id} with data:`, updateData);
+      const response = await axios.put(
+        `${config.REACT_APP_API_URL}/organization-requests/${id}/status`,
+        updateData,
+        { withCredentials: true }
+      );
+      console.log(`[API] Status update successful for request ${id}`, response.data);
+      return response.data;
     } catch (error) {
-        console.error(`[API] Failed to update status for request ${id}:`, {
-            error: error.message,
-            response: error.response?.data,
-            status: error.response?.status
-        });
-        throw error;
+      console.error(`[API] Failed to update status for request ${id}:`, {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
     }
   };
 
+  const defaultPagination = {
+    currentPage: page,
+    totalPages: 0,
+    totalItems: Array.isArray(data) ? data.length : 0,
+    hasNext: false,
+    hasPrev: false,
+    itemsPerPage: limit,
+  };
+
   return {
-    organizationRequests: filteredData,
+    organizationRequests: isPaginated ? dataNormalized : filteredData,
+    pagination: Array.isArray(data) ? defaultPagination : data?.pagination || defaultPagination,
     isLoading,
+    isError,
     error,
     searchQuery,
     filters,
     handleSearch,
     updateFilters,
-    // updateRequestStatus,
-    updateOrganizationStatus, // Add this line
+    updateOrganizationStatus,
     refetch,
   };
 };

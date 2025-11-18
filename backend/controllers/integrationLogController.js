@@ -84,7 +84,7 @@ exports.getIntegrationLogs = async (req, res) => {
 
     const [logs, total] = await Promise.all([
       IntegrationLog.find(query)
-        .sort({ createdAt: -1 })
+        .sort({ _id: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
       IntegrationLog.countDocuments(query),
@@ -158,9 +158,111 @@ exports.deleteIntegrationLog = async (req, res) => {
 // v1.0.0 <-------------------------------------------------------
 exports.getAllIntegrationLogs = async (req, res) => {
   try {
-    const logs = await IntegrationLog.find().sort({ _id: -1 });
+    const hasParams = (
+      'page' in req.query ||
+      'limit' in req.query ||
+      'search' in req.query ||
+      'status' in req.query ||
+      'severity' in req.query
+    );
 
-    res.status(200).json(logs);
+    // Legacy behavior: return full list when no pagination/search/filter params
+    if (!hasParams) {
+      const logs = await IntegrationLog.find().sort({ _id: -1 });
+      return res.status(200).json(logs);
+    }
+
+    // Parsed params (page 0-based)
+    const page = Math.max(parseInt(req.query.page, 10) || 0, 0);
+    const limitRaw = parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
+    const search = (req.query.search || '').trim();
+    const statusCsv = (req.query.status || '').trim();
+    const severityCsv = (req.query.severity || '').trim();
+
+    const statuses = statusCsv ? statusCsv.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const severities = severityCsv ? severityCsv.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    // Build pipeline
+    const pipeline = [];
+
+    // Apply filters
+    const match = {};
+    if (statuses.length) {
+      match.status = { $in: statuses };
+    }
+    if (severities.length) {
+      match.severity = { $in: severities };
+    }
+    if (Object.keys(match).length) {
+      pipeline.push({ $match: match });
+    }
+
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      pipeline.push({
+        $match: {
+          $or: [
+            { logId: { $regex: regex } },
+            { processName: { $regex: regex } },
+            { status: { $regex: regex } },
+            { message: { $regex: regex } },
+            { serverName: { $regex: regex } },
+            { integrationName: { $regex: regex } },
+            { flowType: { $regex: regex } },
+            { requestEndPoint: { $regex: regex } },
+            { requestMethod: { $regex: regex } },
+            { code: { $regex: regex } },
+            { correlationId: { $regex: regex } },
+          ]
+        }
+      });
+    }
+
+    // Sort newest first
+    pipeline.push({ $sort: { _id: -1 } });
+
+    // Facet for pagination and stats (counts ignore pagination but respect filters/search)
+    pipeline.push({
+      $facet: {
+        data: [
+          { $skip: page * limit },
+          { $limit: limit },
+        ],
+        totalCount: [ { $count: 'count' } ],
+        statusAgg: [ { $group: { _id: '$status', count: { $sum: 1 } } } ],
+        severityAgg: [ { $group: { _id: '$severity', count: { $sum: 1 } } } ],
+      }
+    });
+
+    const result = await IntegrationLog.aggregate(pipeline);
+    const facet = result?.[0] || { data: [], totalCount: [], statusAgg: [], severityAgg: [] };
+
+    const data = facet.data || [];
+    const totalItems = facet.totalCount?.[0]?.count || 0;
+
+    // Transform status/severity aggs to maps
+    const statusCounts = {};
+    for (const s of facet.statusAgg || []) statusCounts[s._id || 'unknown'] = s.count;
+    const severityCounts = {};
+    for (const s of facet.severityAgg || []) severityCounts[s._id || 'unknown'] = s.count;
+
+    return res.status(200).json({
+      success: true,
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalItems / limit) || 0,
+        totalItems,
+        hasNext: (page + 1) * limit < totalItems,
+        hasPrev: page > 0,
+        itemsPerPage: limit,
+      },
+      stats: {
+        byStatus: statusCounts,
+        bySeverity: severityCounts,
+      }
+    });
   } catch (error) {
     res.status(500).json({
       success: false,

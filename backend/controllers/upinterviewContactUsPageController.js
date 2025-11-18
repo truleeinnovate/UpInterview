@@ -43,7 +43,7 @@ const getAllContactUsSubmissions = async (req, res) => {
 
   try {
     // Fetch all contacts, sorted by newest first
-    const contacts = await Contact.find().sort({ createdAt: -1 });
+    const contacts = await Contact.find().sort({ _id: -1 });
     console.log(`✅ Found ${contacts.length} contact submissions`);
 
     // Transform data for frontend

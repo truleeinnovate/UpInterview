@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - fixed style issues
 
 import { useEffect, useMemo, useState } from "react";
 import Cookies from "js-cookie";
@@ -12,23 +13,25 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
-import { useUserProfile, useSingleContact } from "../../../../../apiHooks/useUsers";
+import {
+  useUserProfile,
+  useSingleContact,
+} from "../../../../../apiHooks/useUsers";
 
 // Loading Skeleton for Basic Details
 const BasicDetailsSkeleton = () => {
   return (
-    <div className="bg-white rounded-lg p-4">
-      <div className="skeleton-animation">
+    <div className="mt-2 mx-2">
+      <div>
         {/* Header buttons skeleton */}
-        <div className="flex items-center justify-end py-2 mb-4">
-          <div className="h-8 bg-gray-200 rounded w-16"></div>
-          {/* v1.0.0 <---------------------------------------------------------- */}
-          {/* <div className="h-8 bg-gray-200 rounded w-16 ml-2"></div> */}
-          {/* v1.0.0 ----------------------------------------------------------> */}
+        <div className="flex items-center justify-end mb-4">
+          <button className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg ml-2 my-4 transition-colors">
+            Edit
+          </button>
         </div>
 
         {/* Content skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+        <div className="skeleton-animation bg-white rounded-lg px-4 py-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div key={i}>
               <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
@@ -44,15 +47,17 @@ const BasicDetailsSkeleton = () => {
 // Loading Skeleton for Advanced Details
 const AdvancedDetailsSkeleton = () => {
   return (
-    <div className="bg-white rounded-lg p-4">
-      <div className="skeleton-animation">
+    <div className="mt-2 mx-2">
+      <div>
         {/* Header buttons skeleton */}
-        <div className="flex items-center justify-end py-2 mb-4">
-          <div className="h-8 bg-gray-200 rounded w-16"></div>
+        <div className="flex items-center justify-end mb-4">
+          <button className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg ml-2 my-4 transition-colors">
+            Edit
+          </button>
         </div>
 
         {/* Content skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+        <div className="skeleton-animation bg-white rounded-lg px-4 py-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i}>
               <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
@@ -68,15 +73,17 @@ const AdvancedDetailsSkeleton = () => {
 // Loading Skeleton for Interview Details
 const InterviewDetailsSkeleton = () => {
   return (
-    <div className="bg-white rounded-lg p-4">
-      <div className="skeleton-animation">
+    <div className="mt-2 mx-2">
+      <div>
         {/* Header buttons skeleton */}
-        <div className="flex items-center justify-end py-2 mb-4">
-          <div className="h-8 bg-gray-200 rounded w-16"></div>
+        <div className="flex items-center justify-end mb-4">
+          <button className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg ml-2 my-4 transition-colors">
+            Edit
+          </button>
         </div>
 
         {/* Content skeleton */}
-        <div className="space-y-6">
+        <div className="skeleton-animation space-y-6 bg-white rounded-lg p-4 grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
           {[1, 2, 3].map((section) => (
             <div key={section}>
               <div className="h-5 bg-gray-200 rounded w-40 mb-3"></div>
@@ -99,15 +106,17 @@ const InterviewDetailsSkeleton = () => {
 // Loading Skeleton for Availability Details
 const AvailabilityDetailsSkeleton = () => {
   return (
-    <div className="bg-white rounded-lg p-4">
-      <div className="skeleton-animation">
+    <div className="mt-2 mx-2">
+      <div>
         {/* Header buttons skeleton */}
-        <div className="flex items-center justify-end py-2 mb-4">
-          <div className="h-8 bg-gray-200 rounded w-16"></div>
+        <div className="flex items-center justify-end mb-4">
+          <button className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg ml-2 my-4 transition-colors">
+            Edit
+          </button>
         </div>
 
         {/* Content skeleton */}
-        <div className="space-y-6">
+        <div className="skeleton-animation space-y-6 bg-white rounded-lg p-4 grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
           {[1, 2, 3, 4, 5, 6, 7].map((day) => (
             <div key={day} className="border-b pb-4">
               <div className="h-5 bg-gray-200 rounded w-24 mb-3"></div>
@@ -279,11 +288,11 @@ const MyProfile = () => {
   // });
 
   const tabsToShow = [
-    permissions?.MyProfile?.Basic && 'basic',
-    permissions?.MyProfile?.Advance && 'advanced',
-    permissions?.MyProfile?.Interview && 'interview',
-    permissions?.MyProfile?.Availability && 'availability',
-    permissions?.MyProfile?.Documents && 'documents',
+    permissions?.MyProfile?.Basic && "basic",
+    permissions?.MyProfile?.Advance && "advanced",
+    permissions?.MyProfile?.Interview && "interview",
+    permissions?.MyProfile?.Availability && "availability",
+    permissions?.MyProfile?.Documents && "documents",
   ].filter(Boolean);
 
   // console.log('📋 Tabs to show:', tabsToShow);

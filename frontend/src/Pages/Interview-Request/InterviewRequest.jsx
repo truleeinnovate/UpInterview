@@ -44,6 +44,7 @@ const InternalRequest = () => {
   const { superAdminPermissions } = usePermissions();
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   // const [editModeOn, setEditModeOn] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
@@ -67,12 +68,19 @@ const InternalRequest = () => {
   const [selectedRequestId, setSelectedRequestId] = useState(null);
   // const [selectedRequest, setSelectedRequest] = useState(null);
 
-  const { interviewRequests, isLoading } = useInterviewRequests(); // from apiHooks
+  const ITEMS_PER_PAGE = 10;
+  // v1.0.0 <------------------------------------------------------------------------
+  const [selectedType] = useState("all");
+  // v1.0.0 ------------------------------------------------------------------------>
+  const { interviewRequests, pagination, isLoading } = useInterviewRequests({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: debouncedSearch,
+    status: selectedFilters.status.join(","),
+    type: (typeof selectedType === 'string' && selectedType !== 'all') ? selectedType : "",
+  }); // server-side
   const { interviewRequest } = useInterviewRequestById(selectedRequestId); // from apiHooks
 
-  // v1.0.0 <------------------------------------------------------------------------
-  const [selectedType, setSelectedType] = useState("all");
-  // v1.0.0 ------------------------------------------------------------------------>
 
   useEffect(() => {
     const handleResize = () => {
@@ -82,6 +90,15 @@ const InternalRequest = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(0);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -187,7 +204,7 @@ const InternalRequest = () => {
   //   }
   // }, [selectedRequestId, interviewRequests]);
 
-  const dataToUse = interviewRequests;
+  const dataToUse = interviewRequests || [];
 
   const handleFilterIconClick = () => {
     if (dataToUse?.length !== 0) {
@@ -195,56 +212,29 @@ const InternalRequest = () => {
     }
   };
 
-  const FilteredData = () => {
-    if (!Array.isArray(dataToUse)) return [];
-    return dataToUse.filter((request) => {
-      const fieldsToSearch = [
-        request?.status,
-        request?.interviewRequestCode,
-        request?.interviewerType,
-      ].filter((field) => field !== null && field !== undefined);
-
-      const matchesStatus =
-        selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(request.status);
-
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      // v1.0.0 <------------------------------------------------------------------------
-      const matchesType =
-        selectedType.toLowerCase() === "all" ||
-        request.interviewerType?.toLowerCase() === selectedType.toLowerCase();
-
-      // v1.0.0 ------------------------------------------------------------------------>
-      return matchesSearchQuery && matchesStatus && matchesType;
-    });
-  };
-
-  // Pagination
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
+  // Server-side pagination
+  const totalPages = pagination?.totalPages || 0;
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
+    if (pagination?.hasNext) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
 
   const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prevPage) => prevPage - 1);
+    if (pagination?.hasPrev) {
+      setCurrentPage((prevPage) => Math.max(0, prevPage - 1));
     }
   };
 
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  const currentFilteredRows = selectedType === 'all'
+    ? dataToUse
+    : dataToUse.filter((request) =>
+        request.interviewerType?.toLowerCase() === selectedType.toLowerCase()
+      );
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on search
+    setCurrentPage(0); // Reset to first page on search (debounced fetch)
   };
 
   // if (isLoading) {
@@ -809,7 +799,7 @@ const InternalRequest = () => {
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
-            dataLength={dataToUse?.length}
+            dataLength={pagination?.totalItems || dataToUse?.length || 0}
             searchPlaceholder="Search requests..."
             filterIconRef={filterIconRef} // Pass ref to Toolbar
           />

@@ -1339,226 +1339,251 @@ const getAllInterviewRounds = async (req, res) => {
     try {
         const { type } = req.query || {};
         const isMock = type === 'mock';
+        const hasPaginationParams = (
+            'page' in req.query ||
+            'limit' in req.query ||
+            'search' in req.query ||
+            'status' in req.query ||
+            'organizationType' in req.query
+        );
 
-        // Build the query based on interview type
-        let interviewRounds;
+        // Parse pagination and filters
+        const page = Math.max(parseInt(req.query.page, 10) || 0, 0);
+        const limitRaw = parseInt(req.query.limit, 10);
+        const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
+        const search = (req.query.search || '').trim();
+        const statusParam = (req.query.status || '').trim();
+        const orgTypeParam = (req.query.organizationType || '').trim().toLowerCase();
+        const statusValues = statusParam ? statusParam.split(',').map(s => s.trim()).filter(Boolean) : [];
 
-        if (isMock) {
-            // For mock interviews, populate mockInterviewId
-            interviewRounds = await MockInterviewRound.find({ interviewerType: 'external' })
-                .populate({
-                    path: 'mockInterviewId',
-                    select: 'mockInterviewCode candidateName Role technology higherQualification skills currentExperience tenantId ownerId createdAt'
-                })
-                .populate('interviewers', 'firstName lastName email _id ownerId tenantId')
-                .lean()
-                .sort({ _id: -1 });
-        } else {
-            // For regular interviews, populate interviewId
-            interviewRounds = await InterviewRounds.find({ interviewerType: 'External' })
-                .populate({
-                    path: 'interviewId',
-                    select: 'interviewCode candidateId positionId status tenantId ownerId createdAt',
-                    populate: [
-                        {
-                            path: 'candidateId',
-                            select: 'FirstName LastName Email _id'
-                        },
-                        {
-                            path: 'positionId',
-                            select: 'title companyname Location _id'
+        // Base pipeline shared for both regular and mock
+        const interviewerTypeMatch = isMock ? 'external' : 'External';
+        const mainLookup = isMock
+            ? { from: 'mockinterviews', localField: 'mockInterviewId', foreignField: '_id', as: 'mainInterview' }
+            : { from: 'interviews', localField: 'interviewId', foreignField: '_id', as: 'mainInterview' };
+        const mainCodeField = isMock ? 'mockInterviewCode' : 'interviewCode';
+
+        const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
+
+        const pipeline = [
+            { $match: { interviewerType: interviewerTypeMatch } },
+            // Populate interviewers from contacts
+            {
+                $lookup: {
+                    from: 'contacts',
+                    localField: 'interviewers',
+                    foreignField: '_id',
+                    as: 'interviewerDocs'
+                }
+            },
+            // Lookup main interview/mock interview
+            { $lookup: mainLookup },
+            { $unwind: { path: '$mainInterview', preserveNullAndEmptyArrays: true } },
+            // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
+            ...(
+                isMock
+                ? [{
+                    $addFields: {
+                        mainTenantIdNormalized: {
+                            $cond: [
+                                {
+                                    $and: [
+                                        { $ne: ['$mainInterview.tenantId', null] },
+                                        { $eq: [ { $strLenCP: '$mainInterview.tenantId' }, 24 ] }
+                                    ]
+                                },
+                                { $toObjectId: '$mainInterview.tenantId' },
+                                null
+                            ]
                         }
+                    }
+                }]
+                : []
+            ),
+            // Lookup tenant for organization info
+            {
+                $lookup: {
+                    from: 'tenants',
+                    localField: isMock ? 'mainTenantIdNormalized' : 'mainInterview.tenantId',
+                    foreignField: '_id',
+                    as: 'tenant'
+                }
+            },
+            { $unwind: { path: '$tenant', preserveNullAndEmptyArrays: true } },
+            // Compute interviewerNames and interviewCode + org info
+            {
+                $addFields: {
+                    interviewerNamesArray: {
+                        $map: {
+                            input: { $ifNull: ['$interviewerDocs', []] },
+                            as: 'i',
+                            in: {
+                                $trim: {
+                                    input: {
+                                        $concat: [
+                                            { $ifNull: ['$$i.firstName', ''] },
+                                            ' ',
+                                            { $ifNull: ['$$i.lastName', ''] }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    interviewerNames: {
+                        $cond: [
+                            { $gt: [{ $size: '$interviewerNamesArray' }, 0] },
+                            {
+                                $reduce: {
+                                    input: '$interviewerNamesArray',
+                                    initialValue: '',
+                                    in: {
+                                        $concat: [
+                                            { $cond: [{ $eq: ['$$value', ''] }, '', { $concat: ['$$value', ', '] }] },
+                                            '$$this'
+                                        ]
+                                    }
+                                }
+                            },
+                            'No interviewers assigned'
+                        ]
+                    },
+                    interviewCode: {
+                        $cond: [
+                            { $ifNull: ['$mainInterview', false] },
+                            {
+                                $concat: [
+                                    { $ifNull: [`$mainInterview.${mainCodeField}`, 'N/A'] },
+                                    '-',
+                                    { $toString: { $ifNull: ['$sequence', 1] } }
+                                ]
+                            },
+                            'N/A'
+                        ]
+                    },
+                    organizationType: { $ifNull: ['$tenant.type', 'individual'] },
+                    organization: {
+                        $cond: [
+                            { $eq: ['$tenant.type', 'organization'] },
+                            { $ifNull: ['$tenant.company', 'Organization'] },
+                            'Individual'
+                        ]
+                    },
+                    dataType: isMock ? 'mock' : 'interview',
+                    createdOn: '$createdAt'
+                }
+            }
+        ];
+
+        // Apply filters in pipeline when requested
+        if (statusValues.length > 0) {
+            pipeline.push({ $match: { status: { $in: statusValues } } });
+        }
+        if (orgTypeParam) {
+            pipeline.push({ $match: { organizationType: orgTypeParam } });
+        }
+        if (search) {
+            const regex = new RegExp(search, 'i');
+            pipeline.push({
+                $match: {
+                    $or: [
+                        { interviewCode: { $regex: regex } },
+                        { interviewerNames: { $regex: regex } },
+                        { organization: { $regex: regex } },
+                        { roundTitle: { $regex: regex } },
+                        { interviewMode: { $regex: regex } },
+                        { interviewType: { $regex: regex } },
+                        { status: { $regex: regex } },
                     ]
-                })
-                .populate('interviewers', 'firstName lastName email _id ownerId tenantId')
-                .lean()
-                .sort({ _id: -1 });
+                }
+            });
         }
 
-        // Format the data for frontend
-        const formattedRounds = await Promise.all(interviewRounds.map(async (round) => {
-            // Get the main interview/mock interview reference
-            const mainInterview = isMock ? round.mockInterviewId : round.interviewId;
+        // Sort newest first
+        pipeline.push({ $sort: { _id: -1 } });
 
-            // Get organization/tenant info
-            let organizationType = 'individual'; // Default to individual
-            let organizationName = 'Individual';
+        // Final projection
+        const projectStage = {
+            $project: {
+                _id: 1,
+                interviewCode: 1,
+                interviewId: '$mainInterview._id',
+                sequence: 1,
+                roundTitle: 1,
+                interviewMode: 1,
+                interviewType: 1,
+                interviewerType: 1,
+                duration: 1,
+                instructions: 1,
+                dateTime: 1,
+                interviewerViewType: 1,
+                interviewerGroupId: 1,
+                interviewers: '$interviewerDocs',
+                interviewerNames: 1,
+                status: 1,
+                currentAction: 1,
+                previousAction: 1,
+                currentActionReason: 1,
+                previousActionReason: 1,
+                supportTickets: 1,
+                meetingId: 1,
+                meetPlatform: 1,
+                assessmentId: 1,
+                scheduleAssessmentId: 1,
+                rejectionReason: 1,
+                holdTransactionId: 1,
+                settlementStatus: 1,
+                settlementDate: 1,
+                settlementTransactionId: 1,
+                organizationType: 1,
+                organization: 1,
+                createdOn: 1,
+                updatedAt: '$updatedAt',
+                interviewStatus: '$mainInterview.status',
+                dataType: 1,
+            }
+        };
 
-            const tenantId = mainInterview?.tenantId;
-            if (tenantId) {
-                try {
-                    const Tenant = require('../models/Tenant');
-                    const tenant = await Tenant.findById(tenantId);
-                    if (tenant) {
-                        organizationType = tenant?.type;
-                        // Use company name for organizations, or firstName + lastName for individuals
-                        if (tenant?.type === 'organization') {
-                            organizationName = tenant.company || 'Organization';
-                        } else {
-                            organizationName = 'Individual';
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error fetching tenant:', error);
+        if (!hasPaginationParams) {
+            const fullPipeline = [...pipeline, projectStage];
+            const data = await collectionModel.aggregate(fullPipeline);
+            return res.status(200).json({ success: true, data, total: data.length });
+        }
+
+        // Paginated mode using $facet
+        const facetPipeline = [
+            {
+                $facet: {
+                    data: [
+                        projectStage,
+                        { $skip: page * limit },
+                        { $limit: limit },
+                    ],
+                    totalCount: [ { $count: 'count' } ],
                 }
             }
+        ];
 
+        const result = await collectionModel.aggregate([...pipeline, ...facetPipeline]);
+        const agg = result?.[0] || { data: [], totalCount: [] };
+        const data = agg.data || [];
+        const totalItems = agg.totalCount?.[0]?.count || 0;
 
-            // Format interviewer names
-            const interviewerNames = round.interviewers && round.interviewers.length > 0
-                ? round.interviewers
-                    .map(interviewer => {
-                        if (interviewer && (interviewer.firstName || interviewer.lastName)) {
-                            const name = `${interviewer.firstName || ''} ${interviewer.lastName || ''}`.trim();
-                            return name || 'Unknown';
-                        }
-                        return null;
-                    })
-                    .filter(name => name !== null)
-                    .join(', ')
-                : '';
-
-            const finalInterviewerNames = interviewerNames || 'No interviewers assigned';
-
-            // Skip fetching wallet transaction data in list view
-            // This data should only be fetched when viewing individual interview details
-            // to avoid N+1 query performance issues
-            let holdTransactionData = null;
-
-            // Comment out wallet queries for performance optimization
-            // Uncomment only if absolutely needed for list view
-            /*
-            if (round.holdTransactionId) {
-                try {
-                    // Find the wallet that contains this transaction
-                    // We need to search in the wallet's transactions array
-                    const wallet = await Wallet.findOne({
-                        'transactions._id': round.holdTransactionId
-                    });
-                    
-                    if (wallet) {
-                        // Find the specific transaction in the wallet
-                        holdTransactionData = wallet.transactions.find(
-                            t => t._id && t._id.toString() === round.holdTransactionId
-                        );
-                    }
-                    
-                    if (!holdTransactionData) {
-                        console.log(`Transaction ${round.holdTransactionId} not found in any wallet`);
-                    }
-                } catch (error) {
-                    console.error(`Error fetching transaction for round ${round._id}:`, error);
-                }
-            }
-            */
-
-            // Build the interview code based on type
-            let interviewCode = 'N/A';
-            if (isMock && mainInterview) {
-                interviewCode = `${mainInterview.mockInterviewCode}-${round.sequence}` || 'N/A';
-            } else if (!isMock && mainInterview) {
-                interviewCode = `${mainInterview.interviewCode}-${round.sequence}` || 'N/A';
-            }
-
-            // Build candidate info for mock interviews only
-            let candidateInfo = null;
-            if (isMock && mainInterview) {
-                // Mock interviews have all candidate details
-                candidateInfo = {
-                    name: mainInterview.candidateName || 'Unknown',
-                    //email: 'N/A', // Mock interviews don't have email
-                    higherQualification: mainInterview.higherQualification || 'N/A',
-                    currentExperience: mainInterview.currentExperience || 'N/A',
-                    Role: mainInterview.Role || 'N/A',
-                    technology: mainInterview.technology || 'N/A',
-                    skills: mainInterview.skills || []
-                };
-            }
-
-            // Build position/role info for mock interviews only
-            let positionInfo = null;
-            if (isMock && mainInterview) {
-                // Mock interviews have Role and technology fields
-                positionInfo = {
-                    title: mainInterview.Role || 'N/A',
-                    company: mainInterview.technology || 'N/A',
-                    location: 'N/A'
-                };
-            }
-
-            return {
-                // Core identifiers
-                _id: round._id,
-                interviewCode: interviewCode,
-                interviewId: mainInterview?._id || null,
-                sequence: round.sequence || 1,
-
-                // Round details
-                roundTitle: round.roundTitle || 'N/A',
-                interviewMode: round.interviewMode || 'N/A',
-                interviewType: round.interviewType || 'N/A',
-                interviewerType: round.interviewerType || 'N/A',
-                duration: round.duration || 'N/A',
-                instructions: round.instructions || '',
-                dateTime: round.dateTime || 'Not scheduled',
-
-                // Interviewer details
-                interviewerViewType: round.interviewerViewType || '',
-                interviewerGroupId: round.interviewerGroupId || '',
-                interviewers: round.interviewers || [],
-                interviewerNames: finalInterviewerNames,
-
-                // Status and actions
-                status: round.status || 'Draft',
-                currentAction: round.currentAction || null,
-                previousAction: round.previousAction || null,
-                currentActionReason: round.currentActionReason || '',
-                previousActionReason: round.previousActionReason || '',
-
-                // Support and history
-                supportTickets: round.supportTickets || [],
-                history: round.history || [],
-
-                // Meeting details
-                meetingId: round.meetingId || '',
-                meetPlatform: round.meetPlatform || '',
-
-                // Assessment references
-                assessmentId: round.assessmentId || null,
-                scheduleAssessmentId: round.scheduleAssessmentId || null,
-
-                // Additional info
-                rejectionReason: round.rejectionReason || '',
-                holdTransactionId: round.holdTransactionId || null,
-                holdTransactionData: holdTransactionData || null, // Include full transaction object
-                settlementStatus: round.settlementStatus || 'pending',
-                settlementDate: round.settlementDate || null,
-                settlementTransactionId: round.settlementTransactionId || null,
-
-                // Organization info
-                organizationType: organizationType,
-                organization: organizationName,
-
-                // Timestamps
-                createdOn: round.createdAt || new Date(),
-                updatedAt: round.updatedAt || null,
-
-                // Related data from populated fields
-                candidate: !isMock ? mainInterview.candidateId?._id : candidateInfo,
-                position: !isMock ? mainInterview.positionId?._id : positionInfo,
-
-                interviewStatus: mainInterview?.status || 'N/A',
-
-                // Type indicator for frontend
-                dataType: isMock ? 'mock' : 'interview'
-            };
-        }));
-
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
-            data: formattedRounds,
-            total: formattedRounds.length,
-            //typeDistribution: typeCounts // Include in response for debugging
+            data,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalItems / limit) || 0,
+                totalItems,
+                hasNext: (page + 1) * limit < totalItems,
+                hasPrev: page > 0,
+                itemsPerPage: limit,
+            }
         });
     } catch (error) {
         console.error('Error fetching interview rounds:', error);
