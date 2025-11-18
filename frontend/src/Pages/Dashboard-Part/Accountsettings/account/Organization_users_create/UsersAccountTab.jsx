@@ -250,7 +250,7 @@ const handleApplyFilters = () => {
   //     return matchesSearchQuery && matchesRole;
   //   });
   // };
-  console.log("usersRes dataSource", usersRes);
+  // console.log("usersRes dataSource", usersRes);
 
   const rowsPerPage = 10;
   // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
@@ -304,10 +304,27 @@ const handleApplyFilters = () => {
     navigate(`edit/${user._id}`, { state: { userData: user } });
   };
 
-  const capitalizeFirstLetter = (str) => {
-    if (!str) return "";
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
+  
+
+  // ------------------------ Dynamic Empty State Messages using Utility -------------------------------
+  const isSearchActive = searchQuery.length > 0 || isFilterActive;
+  // Use the total count from the API response (or local if superAdmin)
+  const initialDataCount =
+    userType === "superAdmin"
+      ? superAdminUsers?.length || 0
+      : usersRes?.totalCount || 0;
+  const currentFilteredCount = currentFilteredRows?.length || 0;
+ 
+  let entityName = userType === "superAdmin" ? "super admins" : "users";
+ 
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    entityName
+  );
+  // ------------------------ Dynamic Empty State Messages using Utility ---------------------------
+ 
 
   // Table Columns Configuration
   const tableColumns = [
