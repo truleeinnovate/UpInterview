@@ -39,58 +39,78 @@ const Interviewers = () => {
   const [interviews, setInterviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true); // Loading state
   const [listType, setListType] = useState("interviews"); // interviews | mock
-
-  // v1.0.0 --------------------------------------------->
+  const ITEMS_PER_PAGE = 10;
+  const [pagination, setPagination] = useState({
+    currentPage: 0,
+    totalPages: 1,
+    totalItems: 0,
+    hasNext: false,
+    hasPrev: false,
+    itemsPerPage: ITEMS_PER_PAGE,
+  });
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
-    const getInterviews = async () => {
-      try {
-        setIsLoading(true); // Start loading
-        
-        // Reset selectedType to "all" when switching to mock interviews
-        if (listType === "mock") {
-          setSelectedType("all");
-        }
-        
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/interview/interview-rounds`,
-          { params: { type: listType === "mock" ? "mock" : "interview" } }
-        );
-        if (response.data.success) {
-          setInterviews(response.data.data);
-          console.log("INTERVIEW ROUNDS DATA ==============> : ", response.data.data);
-
-          // Debug: Check organization types in the data
-          const orgTypes = response.data.data.reduce((acc, round) => {
-            const type = round.organizationType || 'undefined';
-            acc[type] = (acc[type] || 0) + 1;
-            return acc;
-          }, {});
-          console.log("Organization Types Distribution (frontend):", orgTypes);
-          console.log("Organization Types Distribution (backend):", response.data.typeDistribution);
-
-          // Debug: Sample first 3 rounds
-          console.log("Sample rounds:", response.data.data.slice(0, 3).map(r => ({
-            id: r._id,
-            orgType: r.organizationType,
-            orgName: r.organization
-          })));
-        } else {
-          console.error("Failed to fetch interview rounds");
-        }
-      } catch (err) {
-        console.error("Error fetching interview rounds:", err);
-      } finally {
-        setIsLoading(false); // Stop loading
-      }
-    };
-
-    getInterviews();
-  }, [listType]);
-  // v1.0.0 --------------------------------------------->
+    const t = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   // v1.0.0 <---------------------------------------------
   const [selectedType, setSelectedType] = useState("all"); // Show all by default
   // v1.0.0 --------------------------------------------->
+
+  useEffect(() => {
+    const getInterviews = async () => {
+      try {
+        setIsLoading(true);
+        if (listType === "mock") {
+          setSelectedType("all");
+        }
+
+        const params = {
+          type: listType === "mock" ? "mock" : "interview",
+          page: currentPage,
+          limit: ITEMS_PER_PAGE,
+          search: debouncedSearch,
+          status: (selectedFilters.status || []).join(','),
+          organizationType: selectedType === 'all' ? '' : selectedType,
+        };
+
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/interview/interview-rounds`,
+          { params }
+        );
+
+        if (response.data?.success) {
+          const data = response.data?.data || [];
+          const pag = response.data?.pagination || {
+            currentPage,
+            totalPages: Math.ceil((data.length || 0) / ITEMS_PER_PAGE) || 1,
+            totalItems: data.length || 0,
+            hasNext: false,
+            hasPrev: currentPage > 0,
+            itemsPerPage: ITEMS_PER_PAGE,
+          };
+          setInterviews(data);
+          setPagination(pag);
+        } else {
+          setInterviews([]);
+          setPagination((p) => ({ ...p, totalItems: 0, totalPages: 1 }));
+        }
+      } catch (err) {
+        console.error("Error fetching interview rounds:", err);
+        setInterviews([]);
+        setPagination((p) => ({ ...p, totalItems: 0, totalPages: 1 }));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getInterviews();
+  }, [listType, currentPage, debouncedSearch, selectedFilters, selectedType]);
+  // v1.0.0 --------------------------------------------->
+
+  
 
   useEffect(() => {
     const handleResize = () => {
@@ -168,64 +188,10 @@ const Interviewers = () => {
     }
   };
 
-  const FilteredData = () => {
-    if (!Array.isArray(dataToUse)) return [];
-
-    const filtered = dataToUse.filter((round) => {
-      // Filter by organization/individual using organizationType field (only for regular interviews)
-      const matchesType = listType === "mock" 
-        ? true  // Don't filter mock interviews by organization type
-        : selectedType === "all"
-        ? true  // Show all types
-        : selectedType === "organization"
-        ? round?.organizationType === "organization"  // Only show organization type
-        : round?.organizationType === "individual"; // Show individual type
-
-      const fieldsToSearch = [
-        round?.status,
-        round?.interviewCode,
-        round?.interviewerNames,
-        round?.organization,
-        round?.roundTitle,
-        round?.interviewMode,
-        round?.interviewType,
-      ].filter((field) => field !== null && field !== undefined);
-
-      const matchesStatus =
-        selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(round?.status);
-
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      return matchesType && matchesSearchQuery && matchesStatus;
-    });
-
-    // Debug logging
-    console.log(`FilteredData: selectedType=${selectedType}, total=${dataToUse.length}, filtered=${filtered.length}`);
-
-    return filtered;
-  };
-
-  // Pagination
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
-  const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prevPage) => prevPage - 1);
-    }
-  };
-
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  // Server-side filtering/pagination handled by API; `interviews` already current page.
+  const totalPages = pagination?.totalPages || 1;
+  const nextPage = () => setCurrentPage((p) => Math.min(totalPages - 1, p + 1));
+  const prevPage = () => setCurrentPage((p) => Math.max(0, p - 1));
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -504,7 +470,7 @@ const Interviewers = () => {
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
-            dataLength={dataToUse?.length}
+            dataLength={pagination?.totalItems ?? dataToUse?.length}
             searchPlaceholder="Search interviews..."
             filterIconRef={filterIconRef} // Pass ref to Toolbar
             startContent={
@@ -530,7 +496,7 @@ const Interviewers = () => {
               {view === "table" ? (
                 <div className="w-full mb-8 bg-red">
                   <TableView
-                    data={currentFilteredRows}
+                    data={interviews}
                     columns={tableColumns}
                     loading={isLoading}
                     actions={tableActions}
@@ -540,7 +506,7 @@ const Interviewers = () => {
               ) : (
                 <div className="w-full">
                   <KanbanView
-                    data={currentFilteredRows.map((round) => ({
+                    data={interviews.map((round) => ({
                       ...round,
                       id: round._id,
                       title: round.interviewCode || "N/A",
