@@ -64,7 +64,7 @@ function InterviewList() {
     interviewData,
     total,
     // currentPage: currentPage + 1,
-    totalPages: serverTotalPages,
+    // totalPages: serverTotalPages,
     isLoading, deleteInterviewMutation } = useInterviews(
       {
       searchQuery: searchQuery, // FIX: Changed from 'search' to 'searchQuery'
@@ -82,27 +82,10 @@ function InterviewList() {
       interviewDateFrom: selectedFilters.interviewDate.from,
       interviewDateTo: selectedFilters.interviewDate.to,
     },
-    currentPage + 1,
+     currentPage ,
     rowsPerPage
 
-      //     {
-      //   search: searchQuery,
-      //   status: selectedFilters.status,
-      //   tech: selectedFilters.tech,
-      //   experienceMin: selectedFilters.experience.min,
-      //   experienceMax: selectedFilters.experience.max,
-      //   interviewType: selectedFilters.interviewType,
-      //   interviewMode: selectedFilters.interviewMode,
-      //   position: selectedFilters.position,
-      //   company: selectedFilters.company,
-      //   roundStatus: selectedFilters.roundStatus,
-      //   interviewer: selectedFilters.interviewer,
-      //   createdDate: selectedFilters.createdDate,
-      //   interviewDateFrom: selectedFilters.interviewDate.from,
-      //   interviewDateTo: selectedFilters.interviewDate.to,
-      // },
-      // currentPage + 1, // server pages start at 1
-      // rowsPerPage
+     
     );
 
 
@@ -221,21 +204,21 @@ function InterviewList() {
   const handleFilterChange = useCallback((filters) => {
     setSelectedFilters(filters);
     setIsFilterActive(
-      filters.status.length > 0 ||
-      filters.tech.length > 0 ||
-      filters.experience.min ||
-      filters.experience.max ||
+      filters.status.length > 0 ||   
+        filters.tech.length > 0 ||
+     filters.experience.min ||
+   filters.experience.max ||
       filters.interviewType.length > 0 ||
       filters.interviewMode.length > 0 ||
-      filters.position.length > 0 ||
-      filters.company.length > 0 ||
-      filters.roundStatus.length > 0 ||
-      filters.interviewer.length > 0 ||
-      filters.createdDate ||
-      filters.interviewDate.from ||
+     filters.position.length > 0 ||
+     filters.company.length > 0 ||
+     filters.roundStatus.length > 0 ||
+     filters.interviewer.length > 0 ||
+     filters.createdDate ||
+     filters.interviewDate.from ||
       filters.interviewDate.to
-    );
-    setCurrentPage(0);
+   );
+   setCurrentPage(0);   // reset to first page
   }, []);
 
   const handleStatusToggle = (status) => {
@@ -296,12 +279,18 @@ function InterviewList() {
     );
   };
 
-  const handleInterviewerToggle = (interviewer) => {
+  // const handleInterviewerToggle = (interviewer) => {
+  //   setSelectedInterviewers((prev) =>
+  //     prev.includes(interviewer)
+  //       ? prev.filter((i) => i !== interviewer)
+  //       : [...prev, interviewer]
+  //   );
+  // };
+
+  const handleInterviewerToggle = (id) => {
     setSelectedInterviewers((prev) =>
-      prev.includes(interviewer)
-        ? prev.filter((i) => i !== interviewer)
-        : [...prev, interviewer]
-    );
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+   );
   };
 
   const handleInterviewDateChange = (e, type) => {
@@ -314,34 +303,33 @@ function InterviewList() {
   const handleClearAll = () => {
     const clearedFilters = {
       status: [],
-      tech: [],
-      experience: { min: "", max: "" },
-      interviewType: [],
+     tech: [],
+     experience: { min: "", max: "" },
+     interviewType: [],
       interviewMode: [],
       position: [],
-      company: [],
+     company: [],
       roundStatus: [],
       interviewer: [],
       createdDate: "",
       interviewDate: { from: "", to: "" },
     };
     setSelectedStatus([]);
-    setSelectedTech([]);
+   setSelectedTech([]);
     setExperience(clearedFilters.experience);
     setSelectedInterviewTypes([]);
     setSelectedInterviewModes([]);
-    setSelectedPositions([]);
+   setSelectedPositions([]);
     setSelectedCompanies([]);
     setSelectedRoundStatuses([]);
     setSelectedInterviewers([]);
     setCreatedDatePreset("");
     setInterviewDateRange({ from: "", to: "" });
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
+    setCurrentPage(0);   // reset to first page
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
-
   const handleApplyFilters = () => {
     const filters = {
       status: selectedStatus,
@@ -362,14 +350,9 @@ function InterviewList() {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0);
+    setCurrentPage(0);   // reset to first page
   };
-  console.log("interviewData",interviewData);
-  console.log("total",total);
-  console.log("currentPage",currentPage);
-  // console.log("totalPages",totalPages);
-  console.log("isLoading",isLoading);
-  
+
 
   const handleFilterIconClick = () => {
     if (interviewData?.length !== 0) {
@@ -574,12 +557,15 @@ function InterviewList() {
     }
   };
 
+ 
+
+
   const startIndex = currentPage * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, interviewData.length);
   // const currentFilteredRows = interviewData.slice(startIndex, endIndex);
 const currentFilteredRows = interviewData;
 
-console.log("currentFilteredRows",currentFilteredRows);
+// console.log("currentFilteredRows",currentFilteredRows);
 
   // v1.0.3 <------------------------------------------------------
   const capitalizeFirstLetter = (str) =>

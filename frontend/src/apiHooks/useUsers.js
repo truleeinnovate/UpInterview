@@ -110,8 +110,33 @@ export const useUpdateContactDetail = () => {
 };
 
 // ------------------------------ These are moved from ContextFetch -------------------------------
-export const useUsers = () => {
+export const useUsers = (filters = {}) => {
   const queryClient = useQueryClient();
+
+
+  // ✅ Build query string properly
+  const buildQueryString = (params) => {
+    const searchParams = new URLSearchParams();
+    
+    // Add all filter parameters
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        if (Array.isArray(value)) {
+          // Handle array parameters (like roles)
+          value.forEach(item => searchParams.append(key, item));
+        } else {
+          searchParams.append(key, value.toString());
+        }
+      }
+    });
+    
+    return searchParams.toString();
+  };
+  
+
+  let queryParams = filters
+  console.log("queryParams queryParams", queryParams);
+  console.log("tenantId tenantId", tenantId);
 
   // ✅ Fetch Users
   const {
@@ -119,28 +144,31 @@ export const useUsers = () => {
     isLoading: usersLoading,
     refetch: refetchUsers,
   } = useQuery({
-    queryKey: ["users", tenantId],
+    queryKey: ["users", tenantId, filters],
     queryFn: async () => {
       if (!tenantId) return []; // Skip fetch if tenantId missing
-
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/users/${tenantId}`
-      );
+      const queryString = buildQueryString(filters);
+      const url = `${config.REACT_APP_API_URL}/users/${tenantId}${queryString ? `?${queryString}` : ''}`;
+      
+      console.log("API URL:", url);
+      
+      const response = await axios.get(url);
+      return response.data;
 
       // Process image URLs
-      const processedUsers = response.data
-        .map((contact) => {
-          if (contact.imageData?.filename) {
-            const imageUrl = `${
-              config.REACT_APP_API_URL
-            }/${contact.imageData.path.replace(/\\/g, "/")}`;
-            return { ...contact, imageUrl };
-          }
-          return contact;
-        })
-        .reverse();
+      // const processedUsers = response.data
+      //   .map((contact) => {
+      //     if (contact.imageData?.filename) {
+      //       const imageUrl = `${
+      //         config.REACT_APP_API_URL
+      //       }/${contact.imageData.path.replace(/\\/g, "/")}`;
+      //       return { ...contact, imageUrl };
+      //     }
+      //     return contact;
+      //   })
+      //   .reverse();
 
-      return processedUsers;
+      // return response.data;
     },
     staleTime: 1000 * 60 * 30, // data fresh for 30 minutes
     cacheTime: 1000 * 60 * 60, // keep cache for 60 minutes

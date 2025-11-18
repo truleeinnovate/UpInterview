@@ -418,17 +418,7 @@ const PositionTab = () => {
     setCurrentPage(0);
   };
 
-  // const totalPages = Math.ceil(positionData.length / rowsPerPage);
-  // const nextPage = () => {
-  //   if ((currentPage + 1) * rowsPerPage < positionData.length) {
-  //     setCurrentPage((prevPage) => prevPage + 1);
-  //   }
-  // };
-  // const prevPage = () => {
-  //   if (currentPage > 0) {
-  //     setCurrentPage((prevPage) => prevPage - 1);
-  //   }
-  // };
+ 
 
   const totalPages = Math.ceil(total / rowsPerPage);
 
