@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>External HRMS Test Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .skills-container {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .skill-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .skill-item input {
+            flex: 1;
+        }
+        .btn-remove {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .config-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 External HRMS Test Application</h1>
+        
+        <div class="config-section">
+            <h3>⚙️ Configuration</h3>
+            <div class="form-group">
+                <label for="baseUrl">API Base URL:</label>
+                <input type="text" id="baseUrl" value="http://localhost:5000/candidate">
+            </div>
+            <div class="form-group">
+                <label for="apiKey">API Key:</label>
+                <input type="text" id="apiKey" value="up_a587c1b9d91241c1ab73d240e6f7797196c78ef7792c207398205afeb2212214">
+            </div>
+        </div>
+
+        <form id="candidateForm">
+            <h3>👤 Candidate Information</h3>
+            <div class="two-column">
+                <div class="form-group">
+                    <label for="firstName">First Name *</label>
+                    <input type="text" id="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name *</label>
+                    <input type="text" id="lastName" required>
+                </div>
+            </div>
+            
+            <div class="two-column">
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone (10 digits) *</label>
+                    <input type="text" id="phone" pattern="[0-9]{10}" required>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div class="form-group">
+                    <label for="countryCode">Country Code *</label>
+                    <input type="text" id="countryCode" value="+91" required>
+                </div>
+                <div class="form-group">
+                    <label for="technology">Primary Technology *</label>
+                    <input type="text" id="technology" value="JavaScript" required>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div class="form-group">
+                    <label for="currentRole">Current Role *</label>
+                    <input type="text" id="currentRole" required>
+                </div>
+                <div class="form-group">
+                    <label for="higherQualification">Higher Qualification *</label>
+                    <input type="text" id="higherQualification" required>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div class="form-group">
+                    <label for="currentExperience">Current Experience (years) *</label>
+                    <input type="number" id="currentExperience" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="relevantExperience">Relevant Experience (years) *</label>
+                    <input type="number" id="relevantExperience" min="0" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="university">University/College</label>
+                <input type="text" id="university">
+            </div>
+
+            <div class="form-group">
+                <label>Skills *</label>
+                <div class="skills-container">
+                    <div id="skillsList">
+                        <div class="skill-item">
+                            <input type="text" placeholder="Skill name" class="skill-name" value="JavaScript">
+                            <input type="text" placeholder="Experience" class="skill-experience" value="2 years">
+                            <input type="text" placeholder="Expertise level" class="skill-expertise" value="Intermediate">
+                            <button type="button" class="btn-remove" onclick="removeSkill(this)">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn" onclick="addSkill()">+ Add Skill</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success">🚀 Create Candidate</button>
+            <button type="button" class="btn" onclick="testGetCandidates()">📋 Get All Candidates</button>
+            <button type="button" class="btn" onclick="clearForm()">🔄 Clear Form</button>
+        </form>
+
+        <div id="response"></div>
+    </div>
+
+    <script>
+        function addSkill() {
+            const skillsList = document.getElementById('skillsList');
+            const skillItem = document.createElement('div');
+            skillItem.className = 'skill-item';
+            skillItem.innerHTML = `
+                <input type="text" placeholder="Skill name" class="skill-name" required>
+                <input type="text" placeholder="Experience" class="skill-experience" required>
+                <input type="text" placeholder="Expertise level" class="skill-expertise" required>
+                <button type="button" class="btn-remove" onclick="removeSkill(this)">Remove</button>
+            `;
+            skillsList.appendChild(skillItem);
+        }
+
+        function removeSkill(button) {
+            const skillsList = document.getElementById('skillsList');
+            if (skillsList.children.length > 1) {
+                button.parentElement.remove();
+            } else {
+                alert('At least one skill is required!');
+            }
+        }
+
+        function getSkills() {
+            const skills = [];
+            const skillItems = document.querySelectorAll('.skill-item');
+            skillItems.forEach(item => {
+                const name = item.querySelector('.skill-name').value;
+                const experience = item.querySelector('.skill-experience').value;
+                const expertise = item.querySelector('.skill-expertise').value;
+                if (name && experience && expertise) {
+                    skills.push({ skill: name, experience, expertise });
+                }
+            });
+            return skills;
+        }
+
+        function showResponse(data, isSuccess = true) {
+            const responseDiv = document.getElementById('response');
+            responseDiv.className = `response ${isSuccess ? 'success' : 'error'}`;
+            responseDiv.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function createCandidate(candidateData) {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+
+            try {
+                const response = await fetch(`${baseUrl}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(candidateData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResponse(data, true);
+                    console.log('✅ Candidate created successfully:', data);
+                } else {
+                    showResponse(data, false);
+                    console.error('❌ Error creating candidate:', data);
+                }
+            } catch (error) {
+                showResponse({ error: error.message }, false);
+                console.error('❌ Network error:', error);
+            }
+        }
+
+        async function testGetCandidates() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+
+            console.log('baseUrl', baseUrl);
+            console.log('apiKey', apiKey);
+
+            try {
+                const response = await fetch(`${baseUrl}/`, {
+                    method: 'GET',
+                    headers: {
+                        'X-API-Key': apiKey
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResponse(data, true);
+                    console.log('✅ Candidates retrieved:', data);
+                } else {
+                    showResponse(data, false);
+                    console.error('❌ Error fetching candidates:', data);
+                }
+            } catch (error) {
+                showResponse({ error: error.message }, false);
+                console.error('❌ Network error:', error);
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('candidateForm').reset();
+            document.getElementById('firstName').value = '';
+            document.getElementById('lastName').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('currentRole').value = '';
+            document.getElementById('higherQualification').value = '';
+            document.getElementById('currentExperience').value = '';
+            document.getElementById('relevantExperience').value = '';
+            document.getElementById('university').value = '';
+            document.getElementById('response').textContent = '';
+        }
+
+        document.getElementById('candidateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const candidateData = {
+                FirstName: document.getElementById('firstName').value,
+                LastName: document.getElementById('lastName').value,
+                Email: document.getElementById('email').value,
+                Phone: document.getElementById('phone').value,
+                CountryCode: document.getElementById('countryCode').value,
+                CurrentRole: document.getElementById('currentRole').value,
+                HigherQualification: document.getElementById('higherQualification').value,
+                CurrentExperience: parseInt(document.getElementById('currentExperience').value),
+                RelevantExperience: parseInt(document.getElementById('relevantExperience').value),
+                UniversityCollege: document.getElementById('university').value || undefined,
+                skills: getSkills()
+            };
+
+            await createCandidate(candidateData);
+        });
+
+        // Set default values for testing
+        window.addEventListener('load', () => {
+            document.getElementById('firstName').value = 'Test';
+            document.getElementById('lastName').value = 'Candidate';
+            document.getElementById('email').value = 'test.candidate@example.com';
+            document.getElementById('phone').value = '6303040683';
+            document.getElementById('currentRole').value = 'Software Developer';
+            document.getElementById('higherQualification').value = 'Bachelor of Science';
+            document.getElementById('currentExperience').value = '3';
+            document.getElementById('relevantExperience').value = '2';
+            document.getElementById('university').value = 'Test University';
+        });
+    </script>
+</body>
+</html>

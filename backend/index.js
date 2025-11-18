@@ -51,6 +51,8 @@ const allowedOrigins = [
     "https://app.upinterview.io",
     "https://upinterview-dpdgchhbafekdhca.canadacentral-01.azurewebsites.net",
     "https://upinterview.io",
+    "file://", // Allow file:// protocol for local HTML testing
+    "null"    // Allow null origin for local HTML testing
 ];
 
 // const allowedOrigins = [
@@ -79,7 +81,7 @@ app.use((req, res, next) => {
         res.setHeader("Access-Control-Allow-Origin", origin);
         res.setHeader("Access-Control-Allow-Credentials", "true");
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-permissions, x-tenant-id");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-permissions, x-tenant-id, X-API-Key");
         res.setHeader("Access-Control-Expose-Headers", "x-user-id, x-tenant-id, x-impersonation-userid, x-permissions, x-new-token");
     }
 

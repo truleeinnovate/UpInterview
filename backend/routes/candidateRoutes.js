@@ -1,6 +1,7 @@
 const express = require('express');
 const { getCandidates,addCandidatePostCall,updateCandidatePatchCall,getCandidateById, deleteCandidate, searchCandidates, getCandidatesData, bulkAddCandidates } = require('../controllers/candidateController.js');
 const router = express.Router();
+const { apiKeyAuth, requirePermission } = require('../middleware/apiKeyAuth.js');
 
 // const candidateController = require('../controllers/candidateController');
 const loggingService = require('../middleware/loggingService.js');
@@ -15,7 +16,7 @@ const candidateCreateMiddleware = (req, res, next) => {
   return addCandidatePostCall(req, res);
 };
 
-router.post('/',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, candidateCreateMiddleware);
+router.post('/', apiKeyAuth('candidates:write'), loggingService.internalLoggingMiddleware, loggingService.FeedsMiddleware, candidateCreateMiddleware);
 
 // Explicit bulk route (optional, for clarity)
 //router.post('/bulk',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, bulkAddCandidates);
@@ -26,7 +27,7 @@ router.get('/details/:id',getCandidateById);
 router.delete('/delete-candidate/:id', deleteCandidate);
 
 
-router.get('/', getCandidatesData);
+router.get('/', apiKeyAuth('candidates:read'), getCandidatesData);
 router.post('/search',searchCandidates);
 
 
