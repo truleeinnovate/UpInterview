@@ -194,28 +194,66 @@ exports.getTicket = async (req, res) => {
       impersonatedUser_roleName,
     } = req.query;
 
+
+       /* ============================================================
+       EXACT ROLE FILTER LOGIC (1:1 with your previous conditions)
+    ============================================================ */
     const query = {};
 
-    /* --------------------------------------------------------------------- */
-    /*  🧠 Role-based filtering                                               */
-    /* --------------------------------------------------------------------- */
+    // Super Admin & Support Team → full access (no restrictions)
     if (impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team") {
-      // unrestricted
-    } else if (!userRole) {
+      // unrestricted → no filters applied
+    }
+
+    // No user role → return empty
+    else if (!userRole) {
       query._id = null;
-    } else if (!organization) {
+    }
+
+    // No organization
+    else if (!organization) {
       if (userRole === "Admin" && userId) {
         query.ownerId = userId;
       }
-    } else {
+    }
+
+    // Organization exists
+    else {
       if (userRole === "Admin" && tenantId) {
         query.tenantId = tenantId;
       }
     }
 
+    // Individual user → always restrict to own tickets (overrides all above)
     if (userRole === "Individual" && userId) {
       query.ownerId = userId;
     }
+
+    // console.log("query---", query)
+
+
+    // const query = {};
+
+    // /* --------------------------------------------------------------------- */
+    // /*  🧠 Role-based filtering                                               */
+    // /* --------------------------------------------------------------------- */
+    // if (impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team") {
+    //   // unrestricted
+    // } else if (!userRole) {
+    //   query._id = null;
+    // } else if (!organization) {
+    //   if (userRole === "Admin" && userId) {
+    //     query.ownerId = userId;
+    //   }
+    // } else {
+    //   if (userRole === "Admin" && tenantId) {
+    //     query.tenantId = tenantId;
+    //   }
+    // }
+
+    // if (userRole === "Individual" && userId) {
+    //   query.ownerId = userId;
+    // }
 
     /* --------------------------------------------------------------------- */
     /*  🔍 Search filter (combined, additive)                                 */
@@ -273,14 +311,13 @@ exports.getTicket = async (req, res) => {
       finalQuery = { $and: [query, ...searchConditions] };
     }
 
-    // console.log("🚀 Final Ticket Query =>", JSON.stringify(finalQuery, null, 2));
-
+   
     /* --------------------------------------------------------------------- */
     /*  🔢 Pagination + Fetch                                                */
     /* --------------------------------------------------------------------- */
     const skip = parseInt(page) * parseInt(limit);
     const tickets = await SupportUser.find(finalQuery)
-      .sort({ _id: -1 })
+      .sort({ _id : -1 })
       .skip(skip)
       .limit(parseInt(limit))
       .lean();

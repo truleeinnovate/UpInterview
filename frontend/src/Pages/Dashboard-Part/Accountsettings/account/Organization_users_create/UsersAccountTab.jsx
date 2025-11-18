@@ -49,7 +49,6 @@ const UsersAccountTab = () => {
   const { effectivePermissions, superAdminPermissions } = usePermissions();
   // const { usersRes, usersLoading, toggleUserStatus } = useCustomContext();
   // ---------------------------------from Hooks---------------------------------------------
-  const { usersRes, usersLoading, toggleUserStatus } = useUsers();
   // ---------------------------------from Hooks---------------------------------------------
   // currentPlan removed - use useSubscription hook if needed
   const navigate = useNavigate();
@@ -59,6 +58,7 @@ const UsersAccountTab = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
+  // const [selectedFilters, setSelectedFilters] = useState({ roles: [] });
   const [selectedFilters, setSelectedFilters] = useState({ roles: [] });
   const [isRolesOpen, setIsRolesOpen] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState([]);
@@ -70,10 +70,32 @@ const UsersAccountTab = () => {
   const [superAdminLoading, setSuperAdminLoading] = useState(false);
   const filterIconRef = useRef(null);
 
-  // Select data and loading state based on type
-  const dataSource = userType === "superAdmin" ? superAdminUsers : usersRes;
-  const loading = userType === "superAdmin" ? superAdminLoading : usersLoading;
+  // const { usersRes, usersLoading, toggleUserStatus } = useUsers({
+  //   search: searchQuery.trim(),
+  //   role: selectedRoles.join(","),    // MUST BE STRING
+  //   page: currentPage + 1,            // API page starts at 1
+  //   limit: 10,
+  // });
 
+  console.log("selectedFilters selectedFilters", selectedFilters);
+  const { usersRes, usersLoading, toggleUserStatus } = useUsers({
+    search: searchQuery.trim(),
+    // role: selectedFilters?.roles.length > 0 ? selectedFilters?.roles.join(",") : "", // Use selectedFilters, not selectedRoles
+      role: selectedFilters.roles && selectedFilters.roles.length > 0 ? selectedFilters.roles.join(",") : "",
+    page: currentPage , // API expects 1-based, we use 0-based internally
+    limit: 10,
+  });
+
+
+
+  const users = usersRes?.users || [];
+  const pagination = usersRes?.pagination || {};
+
+
+  // Select data and loading state based on type
+  const dataSource = userType === "superAdmin" ? superAdminUsers : users;
+  const loading = userType === "superAdmin" ? superAdminLoading : usersLoading;
+ 
   // Fetch super admin users when type is superAdmin
   useEffect(() => {
     if (userType === "superAdmin") {
@@ -81,7 +103,7 @@ const UsersAccountTab = () => {
         setSuperAdminLoading(true);
         try {
           const url = `${config.REACT_APP_API_URL}/users/super-admins`;
-          console.log("Fetching super admin users from:", url);
+          // console.log("Fetching super admin users from:", url);
           const response = await axios.get(url, {
             headers: {
               "Content-Type": "application/json",
@@ -103,6 +125,14 @@ const UsersAccountTab = () => {
       fetchSuperAdminUsers();
     }
   }, [userType]);
+
+  // Sync current page with API response
+  useEffect(() => {
+    if (pagination.currentPage !== undefined) {
+      // Convert 1-based backend to 0-based frontend
+      setCurrentPage(pagination?.currentPage - 1);
+    }
+  }, [pagination.currentPage]);
 
   // Set view based on screen size
   useEffect(() => {
@@ -126,6 +156,8 @@ const UsersAccountTab = () => {
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
+
+
   // Filter handling
   const handleRoleToggle = (role) => {
     setSelectedRoles((prev) =>
@@ -133,22 +165,29 @@ const UsersAccountTab = () => {
     );
   };
 
+  // const handleClearAll = () => {
+  //   const clearedFilters = { roles: [] };
+  //   setSelectedRoles([]);
+  //   setSelectedFilters(clearedFilters);
+  //   setCurrentPage(0);
+  //   setIsFilterActive(false);
+  //   setFilterPopupOpen(false);
+  // };
   const handleClearAll = () => {
-    const clearedFilters = { roles: [] };
-    setSelectedRoles([]);
-    setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
-    setIsFilterActive(false);
-    setFilterPopupOpen(false);
-  };
+  setSelectedRoles([]);
+  setSelectedFilters({ roles: [] }); // Directly set the object
+  setCurrentPage(0);
+  setIsFilterActive(false);
+  setFilterPopupOpen(false);
+};
 
-  const handleApplyFilters = () => {
-    const filters = { roles: selectedRoles };
-    setSelectedFilters(filters);
-    setCurrentPage(0);
-    setIsFilterActive(filters.roles.length > 0);
-    setFilterPopupOpen(false);
-  };
+const handleApplyFilters = () => {
+  const filters = { roles: selectedRoles }; // Use 'roles' key to match initial state
+  setSelectedFilters(filters);
+  setCurrentPage(0);
+  setIsFilterActive(selectedRoles.length > 0);
+  setFilterPopupOpen(false);
+};
 
   const handleFilterIconClick = () => {
     if (dataSource?.length !== 0) {
@@ -160,7 +199,7 @@ const UsersAccountTab = () => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
   };
-
+// console.log("dataSource dataSource", dataSource);
   // Unique roles for filter options
   const uniqueRoles = [
     ...new Set(dataSource?.map((user) => user.label).filter(Boolean)),
@@ -172,62 +211,67 @@ const UsersAccountTab = () => {
   // v1.0.0 ----------------------------------------------------------->
 
   // Filtered data
-  const FilteredData = () => {
-    if (!Array.isArray(dataSource)) return [];
-    return dataSource.filter((user) => {
-      const fieldsToSearch = [
-        user.firstName,
-        user.lastName,
-        user.email,
-        user.phone,
-        user.label,
-      ].filter((field) => field !== null && field !== undefined);
+  // const FilteredData = () => {
+  //   if (!Array.isArray(dataSource)) return [];
+  //   return dataSource.filter((user) => {
+  //     const fieldsToSearch = [
+  //       user.firstName,
+  //       user.lastName,
+  //       user.email,
+  //       user.phone,
+  //       user.label,
+  //     ].filter((field) => field !== null && field !== undefined);
 
-      const matchesRole =
-        selectedFilters.roles.length === 0 ||
-        selectedFilters.roles.includes(user.label);
-      // v1.0.0 <---------------------------------------------------------------------------------
-      // const matchesSearchQuery = fieldsToSearch.some((field) =>
-      //   field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      // );
+  //     const matchesRole =
+  //       selectedFilters.roles.length === 0 ||
+  //       selectedFilters.roles.includes(user.label);
+  //     // v1.0.0 <---------------------------------------------------------------------------------
+  //     // const matchesSearchQuery = fieldsToSearch.some((field) =>
+  //     //   field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+  //     // );
 
-      const normalizedQuery = normalizeSpaces(searchQuery);
-      // Full name in both orders
-      const fullNameNormal = normalizeSpaces(
-        `${user.firstName || ""} ${user.lastName || ""}`
-      );
-      const fullNameReverse = normalizeSpaces(
-        `${user.lastName || ""} ${user.firstName || ""}`
-      );
+  //     const normalizedQuery = normalizeSpaces(searchQuery);
+  //     // Full name in both orders
+  //     const fullNameNormal = normalizeSpaces(
+  //       `${user.firstName || ""} ${user.lastName || ""}`
+  //     );
+  //     const fullNameReverse = normalizeSpaces(
+  //       `${user.lastName || ""} ${user.firstName || ""}`
+  //     );
 
-      const matchesSearchQuery =
-        fieldsToSearch.some((field) =>
-          normalizeSpaces(field).includes(normalizedQuery)
-        ) ||
-        fullNameNormal.includes(normalizedQuery) ||
-        fullNameReverse.includes(normalizedQuery);
-      // v1.0.0 --------------------------------------------------------------------------------->
+  //     const matchesSearchQuery =
+  //       fieldsToSearch.some((field) =>
+  //         normalizeSpaces(field).includes(normalizedQuery)
+  //       ) ||
+  //       fullNameNormal.includes(normalizedQuery) ||
+  //       fullNameReverse.includes(normalizedQuery);
+  //     // v1.0.0 --------------------------------------------------------------------------------->
 
-      return matchesSearchQuery && matchesRole;
-    });
-  };
+  //     return matchesSearchQuery && matchesRole;
+  //   });
+  // };
+  console.log("usersRes dataSource", usersRes);
 
   const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
-  const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData().length) {
-      setCurrentPage((prevPage) => prevPage + 1);
+  // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
+
+  // Navigation handlers - FIXED: Use pagination from API
+  const handleNextPage = () => {
+    if (pagination.hasNext) {
+      setCurrentPage(prev => prev + 1);
     }
   };
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prevPage) => prevPage - 1);
+
+  const handlePrevPage = () => {
+    if (pagination.hasPrev) {
+      setCurrentPage(prev => prev - 1);
     }
   };
 
   const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + rowsPerPage, users.length);
+  // const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  const currentFilteredRows = users;
 
   // Action logic
   const handleStatusToggleAction = (user) => {
@@ -260,21 +304,10 @@ const UsersAccountTab = () => {
     navigate(`edit/${user._id}`, { state: { userData: user } });
   };
 
-  // --- START: Dynamic Empty State Messages using Utility ---
-  const isSearchActive = searchQuery.length > 0 || isFilterActive;
-  // Use the length of the raw data (before filtering/pagination) as the initial count
-  const initialDataCount = dataSource?.length || 0;
-  const currentFilteredCount = currentFilteredRows?.length || 0;
-
-  let entityName = userType === "superAdmin" ? "super admins" : "users";
-
-  const emptyStateMessage = getEmptyStateMessage(
-    isSearchActive,
-    currentFilteredCount,
-    initialDataCount,
-    entityName
-  );
-  // --- END: Dynamic Empty State Messages using Utility ---
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
 
   // Table Columns Configuration
   const tableColumns = [
@@ -294,11 +327,11 @@ const UsersAccountTab = () => {
                   e.target.src =
                     row.gender === "Male"
                       ? // ? maleImage
-                        "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
+                      "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
                       : row.gender === "Female"
-                      ? // ? femaleImage
+                        ? // ? femaleImage
                         "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099369/woman_mffxrj.png"
-                      : // : genderlessImage;
+                        : // : genderlessImage;
                         "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png";
                   // v1.0.3 ----------------------------------------------------------------------------------------------------->
                 }}
@@ -314,9 +347,15 @@ const UsersAccountTab = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {`${row.firstName ? capitalizeFirstLetter(row.firstName) : ""} ${
-                row.lastName ? capitalizeFirstLetter(row.lastName) : ""
-              }`.trim() || "Unknown"}
+              {`${row.firstName
+                ? row.firstName.charAt(0).toUpperCase().trim() +
+                row.firstName.slice(1).trim()
+                : ""
+                } ${row.lastName
+                  ? row.lastName.charAt(0).toUpperCase().trim() +
+                  row.lastName.slice(1)
+                  : ""
+                }`.trim() || "Unknown"}
             </div>
           </div>
         </div>
@@ -342,7 +381,9 @@ const UsersAccountTab = () => {
       header: "Status",
       render: (value) => {
         return value ? (
+
           <StatusBadge status={capitalizeFirstLetter(value)} />
+
         ) : (
           <span className="text-gray-400 text-sm">N/A</span>
         );
@@ -482,10 +523,15 @@ const UsersAccountTab = () => {
               setView={setView}
               searchQuery={searchQuery}
               onSearch={handleSearch}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPrevPage={prevPage}
-              onNextPage={nextPage}
+              // Pass correct total pages
+              // currentPage={usersRes?.pagination?.currentPage}
+              // totalPages={usersRes?.pagination?.totalPages}
+              // onPrevPage={prevPage}
+              // onNextPage={nextPage}
+              totalPages={pagination.totalPages || 1}
+              currentPage={currentPage} // Convert back to 1-based for display
+              onPrevPage={handlePrevPage}
+              onNextPage={handleNextPage}
               onFilterClick={handleFilterIconClick}
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
@@ -517,7 +563,7 @@ const UsersAccountTab = () => {
                     <KanbanView
                       currentFilteredRows={currentFilteredRows}
                       loading={loading}
-                      setActionViewMore={() => {}}
+                      setActionViewMore={() => { }}
                       userData={dataSource}
                       toggleSidebar={() => navigate("new")}
                     />
@@ -555,7 +601,7 @@ const UsersAccountTab = () => {
                                   type="checkbox"
                                   checked={selectedRoles.includes(role)}
                                   onChange={() => handleRoleToggle(role)}
-                                  className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                                  className="h-4 w-4 rounded accent-custom-blue" //focus:ring-custom-blue text-custom-blue
                                 />
                                 <span className="text-sm">{role}</span>
                               </label>
@@ -658,17 +704,15 @@ const UsersAccountTab = () => {
       <div>
         <ConfirmationModal
           show={showConfirmation}
-          userName={`${
-            selectedUser?.firstName
-              ? selectedUser?.firstName.charAt(0).toUpperCase() +
-                selectedUser?.firstName.slice(1)
-              : ""
-          } ${
-            selectedUser?.lastName
+          userName={`${selectedUser?.firstName
+            ? selectedUser?.firstName.charAt(0).toUpperCase() +
+            selectedUser?.firstName.slice(1)
+            : ""
+            } ${selectedUser?.lastName
               ? selectedUser?.lastName.charAt(0).toUpperCase() +
-                selectedUser?.lastName.slice(1)
+              selectedUser?.lastName.slice(1)
               : ""
-          }`}
+            }`}
           newStatus={newStatus}
           onCancel={cancelStatusChange}
           onConfirm={confirmStatusChange}

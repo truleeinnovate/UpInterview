@@ -296,83 +296,114 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         break;
 
       case 'interview':
+        const toArray = (p) => p ? (Array.isArray(p) ? p : p.split(',').map(s => s.trim())) : [];
 
         const interviewQueryParams = {
           searchQuery: req.query.searchQuery,
-          status: req.query.status, // FIX: Changed from interviewStatus to status
-          tech: req.query.tech,
+          status: toArray(req.query.status),
+          tech: toArray(req.query.tech),
           experienceMin: req.query.experienceMin,
           experienceMax: req.query.experienceMax,
-          interviewType: req.query.interviewType,
-          interviewMode: req.query.interviewMode,
-          position: req.query.position,
-          company: req.query.company,
-          roundStatus: req.query.roundStatus,
-          interviewer: req.query.interviewer,
+          interviewType: toArray(req.query.interviewType),
+          interviewMode: toArray(req.query.interviewMode),
+          position: toArray(req.query.position),
+          company: toArray(req.query.company),
+          roundStatus: toArray(req.query.roundStatus),
+          interviewer: toArray(req.query.interviewer), // names
           createdDate: req.query.createdDate,
           interviewDateFrom: req.query.interviewDateFrom,
           interviewDateTo: req.query.interviewDateTo,
           page: parseInt(req.query.page) || 1,
-          limit: parseInt(req.query.limit) || 10
+          limit: parseInt(req.query.limit) || 10,
         };
-
 
         data = await handleInterviewFiltering({
           query,
           DataModel,
           ...interviewQueryParams
         });
-        console.log("data", data);
-
-
-
-
-        // const interviews = await DataModel.find(query)
-        //   .populate({ path: 'candidateId', model: 'Candidate' })
-        //   .populate({ path: 'positionId', model: 'Position' })
-        //   .populate({ path: 'templateId', model: 'InterviewTemplate' })
-        //   .lean();
-
-        // // console.log('[27] Found', interviews.length, 'interviews');
-        // const interviewIds = interviews.map((interview) => interview._id);
-        // // console.log('[28] Interview IDs for related data:', interviewIds);
-        // // <------------------------------- v1.0.1 
-        // const roundsData = await InterviewRounds.find({
-        //   interviewId: { $in: interviewIds },
-        //   // ------------------------------ v1.0.1 >
-        // })
-        //   .populate({
-        //     path: 'interviewers',
-        //     model: 'Contacts',
-        //     select: 'firstName lastName email',
-        //   })
-        //   .lean();
-
-        // // console.log('[29] Found', roundsData.length, 'interview rounds');
-
-        // const interviewQuestions = await InterviewQuestions.find({
-        //   interviewId: { $in: interviewIds },
-        //   // <------------------------------- v1.0.1 
-        // })
-        //   .select('roundId snapshot')
-        //   .lean();
-
-        // // console.log('[30] Found', interviewQuestions.length, 'interview questions');
-        // // <------------------------------- v1.0.2 
-        // const roundsWithQuestions = roundsData.map((round) => ({
-        //   ...round,
-        //   questions: interviewQuestions.filter((q) => q.roundId.toString() === round._id.toString()),
-        // }));
-
-        // data = interviews.map((interview) => ({
-        //   // <------------------------------- v1.0.2 
-        //   ...interview,
-        //   rounds: roundsWithQuestions.filter((round) => round.interviewId.toString() === interview._id.toString()),
-        // }));
-        // ------------------------------ v1.0.2 >
-        // console.log('[31] Final interview data with rounds and questions prepared');
         break;
 
+
+      // case 'interview':
+
+      //   // Normalise every array param (query string can be single value or comma list)
+      //   const toArray = (p) => (p ? (Array.isArray(p) ? p : p.split(",").map((s) => s.trim())) : []);
+
+      //   const interviewQueryParams = {
+      //     searchQuery: req.query.searchQuery,
+      //     status: toArray(req.query.status),
+      //     tech: toArray(req.query.tech),
+      //     experienceMin: req.query.experienceMin,
+      //     experienceMax: req.query.experienceMax,
+      //     interviewType: toArray(req.query.interviewType),
+      //     interviewMode: toArray(req.query.interviewMode),
+      //     position: toArray(req.query.position),
+      //     company: toArray(req.query.company),
+      //     roundStatus: toArray(req.query.roundStatus),
+      //     interviewer: toArray(req.query.interviewer), // array of **names**
+      //     createdDate: req.query.createdDate,
+      //     interviewDateFrom: req.query.interviewDateFrom,
+      //     interviewDateTo: req.query.interviewDateTo,
+      //     page: parseInt(req.query.page) || 1,
+      //     limit: parseInt(req.query.limit) || 10,
+      //   };
+
+      //   data = await handleInterviewFiltering({
+      //     query,
+      //     DataModel,
+      //     ...interviewQueryParams
+      //   });
+      // console.log("data", data);
+
+
+
+
+      // const interviews = await DataModel.find(query)
+      //   .populate({ path: 'candidateId', model: 'Candidate' })
+      //   .populate({ path: 'positionId', model: 'Position' })
+      //   .populate({ path: 'templateId', model: 'InterviewTemplate' })
+      //   .lean();
+
+      // // console.log('[27] Found', interviews.length, 'interviews');
+      // const interviewIds = interviews.map((interview) => interview._id);
+      // // console.log('[28] Interview IDs for related data:', interviewIds);
+      // // <------------------------------- v1.0.1
+      // const roundsData = await InterviewRounds.find({
+      //   interviewId: { $in: interviewIds },
+      //   // ------------------------------ v1.0.1 >
+      // })
+      //   .populate({
+      //     path: 'interviewers',
+      //     model: 'Contacts',
+      //     select: 'firstName lastName email',
+      //   })
+      //   .lean();
+
+      // // console.log('[29] Found', roundsData.length, 'interview rounds');
+
+      // const interviewQuestions = await InterviewQuestions.find({
+      //   interviewId: { $in: interviewIds },
+      //   // <------------------------------- v1.0.1
+      // })
+      //   .select('roundId snapshot')
+      //   .lean();
+
+      // // console.log('[30] Found', interviewQuestions.length, 'interview questions');
+      // // <------------------------------- v1.0.2
+      // const roundsWithQuestions = roundsData.map((round) => ({
+      //   ...round,
+      //   questions: interviewQuestions.filter((q) => q.roundId.toString() === round._id.toString()),
+      // }));
+
+      // data = interviews.map((interview) => ({
+      //   // <------------------------------- v1.0.2
+      //   ...interview,
+      //   rounds: roundsWithQuestions.filter((round) => round.interviewId.toString() === interview._id.toString()),
+      // }));
+      // ------------------------------ v1.0.2 >
+      // console.log('[31] Final interview data with rounds and questions prepared');
+      // break;
 
 
       // ------------------------------ v1.0.9 - Backend filtering for Interview Templates
@@ -1461,12 +1492,10 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
 
 
-/**
- * Main handler for interview filtering with proper pagination
- */
+
 async function handleInterviewFiltering(options) {
   const {
-    query, // Base query with tenantId/ownerId
+    query = {},
     DataModel,
     searchQuery,
     status,
@@ -1486,390 +1515,264 @@ async function handleInterviewFiltering(options) {
     limit = 10
   } = options;
 
-  console.log('🔍 Interview Filtering Started:', {
-    searchQuery,
-    status,
-    page,
-    limit,
-    filters: { tech, position, company, roundStatus, interviewer }
-  });
+  // === Normalize inputs ===
+  const toLower = v => String(v || '').toLowerCase().trim();
+  const pageNum = Math.max(1, Number(page) || 1);
+  const limitNum = Math.max(1, Number(limit) || 10);
 
   try {
-    // ============================================
-    // STEP 1: Build Base MongoDB Match Query
-    // ============================================
-    const matchQuery = { ...query }; // Start with tenantId/ownerId
+    console.log('Interview Filter Started:', {
+      searchQuery, status, tech, experienceMin, experienceMax,
+      interviewType, interviewMode, position, company, roundStatus, interviewer,
+      createdDate, interviewDateFrom, interviewDateTo, page: pageNum, limit: limitNum
+    });
 
-    // --------------------------------------------
-    // Search Query (candidate name, email, position, company, interview code)
-    // --------------------------------------------
-    if (searchQuery && searchQuery.trim()) {
-      const searchTrimmed = searchQuery.trim();
-      const searchRegex = new RegExp(
-        searchTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-        'i'
-      );
+    // ==========================================================
+    // STEP 1: Fetch interviews with full population
+    // ==========================================================
+    let baseQuery = { ...query };
 
-      // For potential full name search
-      const searchWords = searchTrimmed.toLowerCase().split(/\s+/).filter(Boolean);
-
-      const fullNameConditions = searchWords.length > 1 ? [
-        {
-          $and: [
-            { 'candidateId.FirstName': new RegExp(searchWords[0], 'i') },
-            { 'candidateId.LastName': new RegExp(searchWords[1], 'i') }
-          ]
-        },
-        {
-          $and: [
-            { 'candidateId.FirstName': new RegExp(searchWords[1], 'i') },
-            { 'candidateId.LastName': new RegExp(searchWords[0], 'i') }
-          ]
-        }
-      ] : [];
-
-      matchQuery.$or = [
-        { 'candidateId.FirstName': searchRegex },
-        { 'candidateId.LastName': searchRegex },
-        { 'candidateId.Email': searchRegex },
-        { 'positionId.title': searchRegex },
-        { 'positionId.companyname': searchRegex },
-        { interviewCode: searchRegex },
-        ...fullNameConditions
-      ];
-    }
-
-    // --------------------------------------------
-    // Status Filter
-    // --------------------------------------------
-    if (status && status.length > 0) {
-      matchQuery.status = { $in: status };
-    }
-
-    // --------------------------------------------
-    // Position Filter (Direct MongoDB filter)
-    // --------------------------------------------
-    if (position && position.length > 0) {
-      matchQuery.positionId = {
-        $in: position.map(p => mongoose.Types.ObjectId(p))
-      };
-    }
-
-    // --------------------------------------------
-    // Created Date Filter
-    // --------------------------------------------
     if (createdDate) {
       const date = new Date();
       switch (createdDate) {
-        case 'last7':
-          date.setDate(date.getDate() - 7);
-          matchQuery.createdAt = { $gte: date };
-          break;
-        case 'last30':
-          date.setDate(date.getDate() - 30);
-          matchQuery.createdAt = { $gte: date };
-          break;
-        case 'last90':
-          date.setDate(date.getDate() - 90);
-          matchQuery.createdAt = { $gte: date };
-          break;
+        case 'last7': date.setDate(date.getDate() - 7); break;
+        case 'last30': date.setDate(date.getDate() - 30); break;
+        case 'last90': date.setDate(date.getDate() - 90); break;
         default:
-          if (createdDate.includes('-')) {
-            matchQuery.createdAt = { $gte: new Date(createdDate) };
-          }
+          if (/^\d{4}-\d{2}-\d{2}/.test(String(createdDate))) {
+            date = new Date(createdDate);
+          } else date = null;
       }
+      if (date) baseQuery.createdAt = { $gte: date };
     }
 
-    console.log('📋 Base Match Query:', JSON.stringify(matchQuery, null, 2));
-
-    // ============================================
-    // STEP 2: Handle Round-Based Filters
-    // ============================================
-    let roundFilteredInterviewIds = null;
-
-    const hasRoundFilters =
-      (interviewType && interviewType.length > 0) ||
-      (interviewMode && interviewMode.length > 0) ||
-      (roundStatus && roundStatus.length > 0) ||
-      (interviewer && interviewer.length > 0) ||
-      interviewDateFrom ||
-      interviewDateTo;
-
-    if (hasRoundFilters) {
-      const roundsQuery = {};
-
-      if (interviewType && interviewType.length > 0) {
-        roundsQuery.interviewType = { $in: interviewType };
-      }
-
-      if (interviewMode && interviewMode.length > 0) {
-        roundsQuery.interviewMode = { $in: interviewMode };
-      }
-
-      if (roundStatus && roundStatus.length > 0) {
-        roundsQuery.status = { $in: roundStatus };
-      }
-
-      if (interviewer && interviewer.length > 0) {
-        const interviewerIds = interviewer.map(id => mongoose.Types.ObjectId(id));
-        roundsQuery.interviewers = { $in: interviewerIds };
-      }
-
-      if (interviewDateFrom || interviewDateTo) {
-        roundsQuery.dateTime = {};
-        if (interviewDateFrom) {
-          roundsQuery.dateTime.$gte = new Date(interviewDateFrom);
-        }
-        if (interviewDateTo) {
-          roundsQuery.dateTime.$lte = new Date(interviewDateTo);
-        }
-      }
-
-      console.log('🔄 Round Filters:', roundsQuery);
-
-      const matchingRounds = await InterviewRounds.find(roundsQuery)
-        .select('interviewId')
-        .lean();
-
-      roundFilteredInterviewIds = [...new Set(
-        matchingRounds.map(r => r.interviewId.toString())
-      )];
-
-      console.log(`🔍 Found ${roundFilteredInterviewIds.length} unique interviews from rounds`);
-
-      // If no rounds match, return empty
-      if (roundFilteredInterviewIds.length === 0) {
-        return {
-          data: [],
-          total: 0,
-          page: parseInt(page),
-          totalPages: 0
-        };
-      }
-
-      // Add to match query
-      matchQuery._id = { $in: roundFilteredInterviewIds.map(id => mongoose.Types.ObjectId(id)) };
-    }
-
-    // ============================================
-    // STEP 3: Fetch Interviews with Populated Data
-    // ============================================
-    let interviews = await DataModel.find(matchQuery)
+    let interviews = await DataModel.find(baseQuery)
       .populate({
-        path: 'candidateId',
-        model: 'Candidate',
-        select: 'FirstName LastName Email Phone skills CurrentExperience ImageData'
+        path: "candidateId",
+        select: "FirstName LastName Email skills CurrentExperience ImageData",
+        model: "Candidate"
       })
       .populate({
-        path: 'positionId',
-        model: 'Position',
-        select: 'title companyname Location jobDescription'
+        path: "positionId",
+        select: "title companyname Location",
+        model: "Position"
       })
-      .populate({
-        path: 'templateId',
-        model: 'InterviewTemplate'
-      })
-      .sort({ _id: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
+      .populate({ path: "templateId", model: "InterviewTemplate" })
       .lean();
 
-    console.log(`✅ Found ${interviews.length} interviews after MongoDB query`);
+    console.log(`Fetched ${interviews.length} interviews`);
 
-    // ============================================
-    // STEP 4: Apply Post-MongoDB Filters
-    // ============================================
+    // ==========================================================
+    // STEP 2: Global Search
+    // ==========================================================
+    if (searchQuery && searchQuery.trim()) {
+      const q = toLower(searchQuery.trim());
+      interviews = interviews.filter(i => {
+        const c = i.candidateId || {};
+        const p = i.positionId || {};
+        const fullName1 = `${toLower(c.FirstName)} ${toLower(c.LastName)}`.trim();
+        const fullName2 = `${toLower(c.LastName)} ${toLower(c.FirstName)}`.trim();
 
-    // Filter by candidate tech skills
-    if (tech && tech.length > 0) {
-      interviews = interviews.filter(interview => {
-        if (!interview.candidateId?.skills) return false;
-        const candidateSkills = Array.isArray(interview.candidateId.skills)
-          ? interview.candidateId.skills.map(s => s.toLowerCase())
-          : [];
-        return tech.some(t => candidateSkills.includes(t.toLowerCase()));
+        return [
+          c.FirstName, c.LastName, c.Email,
+          p.title, p.companyname,
+          i.interviewCode, i.interviewTitle, i.interviewType, i.status
+        ].some(field => field && toLower(field).includes(q)) ||
+          fullName1.includes(q) || fullName2.includes(q);
       });
-      console.log(`🔧 After tech filter: ${interviews.length} interviews`);
     }
 
-    // Filter by experience range
+    // ==========================================================
+    // STEP 3: Basic Filters (on populated data)
+    // ==========================================================
+
+    // Status
+    if (Array.isArray(status) && status.length) {
+      const set = new Set(status.map(toLower));
+      interviews = interviews.filter(i => set.has(toLower(i.status)));
+    }
+
+    // Position (by title)
+    if (Array.isArray(position) && position.length) {
+      const set = new Set(position.map(toLower));
+      interviews = interviews.filter(i => {
+        const title = toLower(i.positionId?.title);
+        return title && set.has(title);
+      });
+    }
+
+    // Company
+    if (Array.isArray(company) && company.length) {
+      const set = new Set(company.map(toLower));
+      interviews = interviews.filter(i => {
+        const comp = toLower(i.positionId?.companyname);
+        return comp && set.has(comp);
+      });
+    }
+
+    // Tech Skills
+    if (Array.isArray(tech) && tech.length) {
+      const techSet = new Set(tech.map(toLower));
+      interviews = interviews.filter(i => {
+        const skills = Array.isArray(i.candidateId?.skills) ? i.candidateId.skills : [];
+        return skills.some(s => techSet.has(toLower(s.skill || s.SkillName)));
+      });
+    }
+
+    // Experience
     if (experienceMin || experienceMax) {
-      interviews = interviews.filter(interview => {
-        const exp = interview.candidateId?.CurrentExperience;
-        if (!exp) return false;
-
-        const expNum = parseFloat(exp);
-        if (isNaN(expNum)) return false;
-
-        if (experienceMin && expNum < parseFloat(experienceMin)) return false;
-        if (experienceMax && expNum > parseFloat(experienceMax)) return false;
+      const min = experienceMin ? Number(experienceMin) : null;
+      const max = experienceMax ? Number(experienceMax) : null;
+      interviews = interviews.filter(i => {
+        const exp = Number(i.candidateId?.CurrentExperience);
+        if (isNaN(exp)) return false;
+        if (min !== null && exp < min) return false;
+        if (max !== null && exp > max) return false;
         return true;
       });
-      console.log(`📊 After experience filter: ${interviews.length} interviews`);
     }
 
-    // Filter by company (if not already filtered in MongoDB)
-    if (company && company.length > 0) {
-      interviews = interviews.filter(interview => {
-        if (!interview.positionId?.companyname) return false;
-        const companyName = interview.positionId.companyname.toLowerCase();
-        return company.some(c => companyName.includes(c.toLowerCase()));
-      });
-      console.log(`🏢 After company filter: ${interviews.length} interviews`);
+    console.log(`After basic filters: ${interviews.length}`);
+
+    // ==========================================================
+    // STEP 4: Round-based Filters (interviewType, mode, status, interviewer, date)
+    // ==========================================================
+    const hasRoundFilters = interviewType?.length || interviewMode?.length ||
+      roundStatus?.length || interviewer?.length || interviewDateFrom || interviewDateTo;
+
+    if (hasRoundFilters) {
+      const roundQuery = {};
+      if (interviewType?.length) roundQuery.interviewType = { $in: interviewType };
+      if (interviewMode?.length) roundQuery.interviewMode = { $in: interviewMode };
+      if (roundStatus?.length) roundQuery.status = { $in: roundStatus };
+
+      // Resolve interviewer names → _id
+      if (Array.isArray(interviewer) && interviewer.length) {
+        const orConditions = interviewer.map(name => ({
+          $expr: {
+            $eq: [
+              { $trim: { input: { $concat: ["$firstName", " ", "$lastName"] } } },
+              name.trim()
+            ]
+          }
+        }));
+        const contacts = await Contacts.find({ $or: orConditions }).select('_id').lean();
+        const ids = contacts.map(c => c._id);
+        if (ids.length === 0) {
+          return { data: [], total: 0, page: 1, totalPages: 0, hasMore: false, from: 0, to: 0 };
+        }
+        roundQuery.interviewers = { $in: ids };
+      }
+
+      // Limit to current interview IDs
+      roundQuery.interviewId = { $in: interviews.map(i => i._id) };
+
+      let rounds = await InterviewRounds.find(roundQuery)
+        .select('interviewId dateTime')
+        .lean();
+
+      // Date range
+      if (interviewDateFrom || interviewDateTo) {
+        const from = interviewDateFrom ? String(interviewDateFrom) : null;
+        const to = interviewDateTo ? String(interviewDateTo) : null;
+        rounds = rounds.filter(r => {
+          const dateStr = String(r.dateTime || '').split(' - ')[0];
+          if (!dateStr) return false;
+          if (from && dateStr < from) return false;
+          if (to && dateStr > to) return false;
+          return true;
+        });
+      }
+
+      const validIds = new Set(rounds.map(r => String(r.interviewId)));
+      interviews = interviews.filter(i => validIds.has(String(i._id)));
     }
 
-    // ============================================
-    // STEP 5: Calculate Total and Apply Pagination
-    // ============================================
+    console.log(`After round filters: ${interviews.length}`);
+
+    // ==========================================================
+    // STEP 5: Pagination
+    // ==========================================================
     const total = interviews.length;
-    const totalPages = Math.ceil(total / limit);
-    const currentPage = Math.min(parseInt(page), totalPages || 1);
+    const totalPages = total > 0 ? Math.ceil(total / limitNum) : 0;
+    const currentPage = Math.min(pageNum, totalPages || 1);
 
-    const startIndex = (currentPage - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedInterviews = interviews.slice(startIndex, endIndex);
+    const startIndex = (currentPage - 1) * limitNum;
+    const endIndex = Math.min(startIndex + limitNum, total);
+    const paginated = interviews.slice(startIndex, endIndex);
 
-    console.log(`📄 Pagination: Total=${total}, Page=${currentPage}/${totalPages}, Showing=${paginatedInterviews.length}`);
+    console.log(`Pagination: total=${total}, page=${currentPage}/${totalPages}, returned=${paginated.length}`);
 
-    // If no interviews after filtering
-    if (paginatedInterviews.length === 0) {
+    if (paginated.length === 0) {
       return {
         data: [],
-        total: total,
+        total,
         page: currentPage,
-        totalPages: totalPages,
+        totalPages,
         hasMore: false,
         from: 0,
-        to: 0
+        to: 0,
       };
     }
 
-    // ============================================
-    // STEP 6: Fetch Rounds and Questions for Paginated Results
-    // ============================================
-    const paginatedInterviewIds = paginatedInterviews.map(i => i._id);
+    // ==========================================================
+    // STEP 6: Fetch rounds + questions for paginated interviews only
+    // ==========================================================
+    const interviewIds = paginated.map(i => i._id);
 
-    const roundsData = await InterviewRounds.find({
-      interviewId: { $in: paginatedInterviewIds }
-    })
+    const rounds = await InterviewRounds.find({ interviewId: { $in: interviewIds } })
       .populate({
-        path: 'interviewers',
-        model: 'Contacts',
-        select: 'firstName lastName email'
+        path: "interviewers",
+        select: "firstName lastName email",
+        model: "Contacts"
       })
       .lean();
 
-    console.log(`🔄 Found ${roundsData.length} rounds for paginated interviews`);
-
-    const roundIds = roundsData.map(r => r._id);
-    const questions = roundIds.length > 0
+    const roundIds = rounds.map(r => r._id);
+    const questions = roundIds.length
       ? await InterviewQuestions.find({ roundId: { $in: roundIds } })
         .select('roundId snapshot')
         .lean()
       : [];
 
-    console.log(`❓ Found ${questions.length} questions`);
+    const questionsMap = questions.reduce((acc, q) => {
+      const key = String(q.roundId);
+      acc[key] = acc[key] || [];
+      acc[key].push(q);
+      return acc;
+    }, {});
 
-    // ============================================
-    // STEP 7: Combine Data
-    // ============================================
-    const roundsWithQuestions = roundsData.map(round => ({
-      ...round,
-      questions: questions.filter(q =>
-        q.roundId && q.roundId.toString() === round._id.toString()
-      )
+    const roundsWithQuestions = rounds.map(r => ({
+      ...r,
+      questions: questionsMap[String(r._id)] || []
     }));
 
-    const finalData = paginatedInterviews.map(interview => ({
-      ...interview,
-      rounds: roundsWithQuestions.filter(round =>
-        round.interviewId && round.interviewId.toString() === interview._id.toString()
-      )
+    // ==========================================================
+    // STEP 7: Final Response
+    // ==========================================================
+    const finalData = paginated.map(i => ({
+      ...i,
+      rounds: roundsWithQuestions.filter(r => String(r.interviewId) === String(i._id))
     }));
-
-    const from = startIndex + 1;
-    const to = Math.min(startIndex + paginatedInterviews.length, total);
-
-    console.log(`🎉 Success: Returning ${finalData.length} interviews (${from}-${to} of ${total})`);
 
     return {
       data: finalData,
-      total: total,
+      total,
       page: currentPage,
-      totalPages: totalPages,
+      totalPages,
       hasMore: currentPage < totalPages,
-      from: from,
-      to: to
+      from: startIndex + 1,
+      to: startIndex + finalData.length,
     };
 
-  } catch (error) {
-    console.error('❌ Error in interview filtering:', error);
-    throw error;
+  } catch (err) {
+    console.error("Interview Filtering Failed:", err);
+    throw err;
   }
 }
 
-// ============================================
-// ROUTE HANDLER
-// ============================================
-async function getInterviewsWithFilters(req, res) {
-  try {
-    // Parse and normalize parameters
-    const interviewQueryParams = {
-      searchQuery: req.query.searchQuery?.trim() || '',
-      status: Array.isArray(req.query.status) ? req.query.status :
-        req.query.status ? [req.query.status] : [],
-      tech: Array.isArray(req.query.tech) ? req.query.tech :
-        req.query.tech ? [req.query.tech] : [],
-      experienceMin: req.query.experienceMin || '',
-      experienceMax: req.query.experienceMax || '',
-      interviewType: Array.isArray(req.query.interviewType) ? req.query.interviewType :
-        req.query.interviewType ? [req.query.interviewType] : [],
-      interviewMode: Array.isArray(req.query.interviewMode) ? req.query.interviewMode :
-        req.query.interviewMode ? [req.query.interviewMode] : [],
-      position: Array.isArray(req.query.position) ? req.query.position :
-        req.query.position ? [req.query.position] : [],
-      company: Array.isArray(req.query.company) ? req.query.company :
-        req.query.company ? [req.query.company] : [],
-      roundStatus: Array.isArray(req.query.roundStatus) ? req.query.roundStatus :
-        req.query.roundStatus ? [req.query.roundStatus] : [],
-      interviewer: Array.isArray(req.query.interviewer) ? req.query.interviewer :
-        req.query.interviewer ? [req.query.interviewer] : [],
-      createdDate: req.query.createdDate || '',
-      interviewDateFrom: req.query.interviewDateFrom || '',
-      interviewDateTo: req.query.interviewDateTo || '',
-      page: parseInt(req.query.page) || 1,
-      limit: parseInt(req.query.limit) || 10
-    };
 
-    console.log('📨 Request params:', interviewQueryParams);
 
-    // Base query with tenant/organization filter
-    const baseQuery = {
-      tenantId: req.user.tenantId, // Adjust based on your auth setup
-      // ownerId: req.user.id // If needed
-    };
-
-    const result = await handleInterviewFiltering({
-      query: baseQuery,
-      DataModel: Interview,
-      ...interviewQueryParams
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: `Showing ${result.from}-${result.to} of ${result.total} interviews`,
-      ...result
-    });
-
-  } catch (error) {
-    console.error('❌ Route Error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch interviews',
-      error: error.message
-    });
-  }
-}
 
 
 module.exports = router;

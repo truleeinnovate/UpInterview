@@ -519,34 +519,23 @@ const UpdateUser = async (req, res) => {
 
 const getSuperAdminUsers = async (req, res) => {
     try {
-        console.log('--- getSuperAdminUsers START ---');
-
-        // Step 1: Fetch roles with roleType: 'internal'
-        console.log('Fetching roles with roleType: internal...');
+        
         const internalRoles = await RolesPermissionObject.find({ roleType: 'internal' })
             .lean()
             .select('_id label roleName roleType');
 
-        console.log(`Total internal roles found: ${internalRoles.length}`, {
-            roles: internalRoles.map(role => ({
-                _id: role._id.toString(),
-                label: role.label,
-                roleName: role.roleName,
-            })),
-        });
+    
 
         // Extract role IDs as both ObjectId and string for flexibility
         const roleIds = internalRoles.map(role => role._id);
         const roleIdStrings = roleIds.map(id => id.toString());
         if (roleIds.length === 0) {
-            console.log('No internal roles found, returning empty user list');
-            console.log('--- getSuperAdminUsers END ---');
+          
             return res.status(200).json([]);
         }
 
         // Step 2: Fetch users with roleId in the list (try both ObjectId and string)
-        console.log(`Fetching users with roleId in: [${roleIdStrings}]`);
-        const superAdminUsers = await Users.find({
+      const superAdminUsers = await Users.find({
             $or: [
                 { roleId: { $in: roleIds } }, // Match ObjectId
                 { roleId: { $in: roleIdStrings } }, // Match string
@@ -555,14 +544,6 @@ const getSuperAdminUsers = async (req, res) => {
             .lean()
             .select('firstName lastName email phone status roleId imageData gender');
 
-        console.log(`Total users fetched from DB: ${superAdminUsers.length}`, {
-            users: superAdminUsers.map(user => ({
-                _id: user._id.toString(),
-                email: user.email,
-                roleId: user.roleId ? user.roleId.toString() : null,
-                roleIdType: typeof user.roleId,
-            })),
-        });
 
         // Step 3: Map users to include role label and roleName
         const filteredUsers = superAdminUsers
@@ -597,6 +578,109 @@ const getSuperAdminUsers = async (req, res) => {
 };
 
 
+// const getUsersByTenant = async (req, res) => {
+//     try {
+//         const { tenantId } = req.params;
+
+//         // Validate tenantId
+//         if (!mongoose.Types.ObjectId.isValid(tenantId)) {
+//             return res.status(400).json({ message: 'Invalid tenantId format' });
+//         }
+
+
+//         // const users = await Users.find({ tenantId })
+//         // .populate({ path: 'roleId', select: '_id label roleName status' })
+//         // .lean();
+
+//         const users = await Users.find({ tenantId })
+//             .populate({
+//                 path: 'roleId',
+//                 select: '_id label roleName status' // Only fetch needed fields
+//             })
+//             .lean();
+
+
+//         if (!users || users.length === 0) {
+//             return res.status(200).json([]);
+//         }
+
+//         const [contacts, roles] = await Promise.all([
+//             Contacts.find({ tenantId }).lean(),
+//             Role.find({ tenantId }).lean(), // ✅ Fix: using correct field
+//         ]);
+
+//         const roleMap = roles.reduce((acc, role) => {
+//             acc[role._id.toString()] = role;
+//             return acc;
+//         }, {});
+
+//         const contactMap = contacts.reduce((acc, contact) => {
+//             if (contact.ownerId) {
+//                 acc[contact.ownerId.toString()] = contact;
+//             }
+//             return acc;
+//         }, {});
+
+//         const combinedUsers = users.map((user) => {
+//             const contact = contactMap[user._id.toString()] || {};
+//             // const role = user.roleId ? roleMap[user.roleId] : {};
+//             const role = user.roleId || {};
+//             // console.log("user",role);
+
+
+//             return {
+//                 _id: user._id,
+//                 contactId: contact._id || '',
+//                 isEmailVerified: user.isEmailVerified || false,
+//                 firstName: contact.firstName || '',
+//                 lastName: contact.lastName || '',
+//                 email: user.email || '',
+//                 newEmail: user.newEmail || '',
+//                 countryCode: contact.countryCode || '',
+//                 gender: contact.gender || '',
+//                 phone: contact.phone || '',
+//                 status: user.status || '',
+//                 // <<<<<<< Ranjith
+//                 yearsOfExperience: contact?.yearsOfExperience || '',
+//                 roleId: role?._id || '',
+//                 roleName: role?.roleName || '',
+//                 label: role?.label || '',
+//                 imageData: contact.imageData || null,
+//                 createdAt: user.createdAt || contact.createdAt,
+//                 status: user.status || "",
+//                 updatedAt: user.updatedAt || contact.updatedAt,
+//                 profileId: contact.profileId || "",
+//                 linkedinUrl: contact.linkedinUrl || "",
+//                 portfolioUrl: contact.portfolioUrl || "",
+//                 currentRole: contact.currentRole || "",
+//                 industry: contact.industry || "",
+//                 experienceYears: contact.experienceYears || "",
+//                 location: contact.location || "",
+//                 resumePdf: contact.resumePdf || "",
+//                 coverLetter: contact.coverLetter || "",
+//                 professionalTitle: contact.professionalTitle || "",
+//                 bio: contact.bio || "",
+//                 interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
+//                 previousExperienceConductingInterviews:
+//                     contact.PreviousExperienceConductingInterviews || "",
+//                 previousExperienceConductingInterviewsYears:
+//                     contact.PreviousExperienceConductingInterviewsYears || "",
+//                 technologies: contact.technologies || [],
+//                 skills: contact.skills || [],
+//                 timeZone: contact.timeZone || "",
+//                 preferredDuration: contact.preferredDuration || "",
+//                 availability: contact.availability || [],
+//                 dateOfBirth: contact.dateOfBirth || "",
+//             };
+//         });
+
+//         res.status(200).json(combinedUsers);
+//     } catch (error) {
+//         console.error("Error fetching users:", error);
+//         res.status(500).json({ message: "Internal server error" });
+//     }
+// };
+
 const getUsersByTenant = async (req, res) => {
     try {
         const { tenantId } = req.params;
@@ -606,28 +690,55 @@ const getUsersByTenant = async (req, res) => {
             return res.status(400).json({ message: 'Invalid tenantId format' });
         }
 
+        const {
+            page = 1,
+            limit = 10,
+            search = "",
+            role = "",
+            status = "",
+            sortBy = "createdAt",
+            sortOrder = "desc"
+        } = req.query;
 
-        // const users = await Users.find({ tenantId })
-        // .populate({ path: 'roleId', select: '_id label roleName status' })
-        // .lean();
+        const pageNum = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+        const skip = (pageNum - 1) * limitNum;
 
-        const users = await Users.find({ tenantId })
+        // Build base query
+        let baseQuery = { tenantId: new mongoose.Types.ObjectId(tenantId) };
+
+        // Get users with population
+        let usersQuery = Users.find(baseQuery)
             .populate({
                 path: 'roleId',
-                select: '_id label roleName status' // Only fetch needed fields
+                select: '_id label roleName status'
             })
             .lean();
 
+        // Execute base query to get all users for this tenant
+        const allUsers = await usersQuery;
 
-        if (!users || users.length === 0) {
-            return res.status(200).json([]);
+        if (!allUsers || allUsers.length === 0) {
+            return res.status(200).json({
+                users: [],
+                pagination: {
+                    currentPage: pageNum,
+                    totalPages: 0,
+                    totalUsers: 0,
+                    hasNext: false,
+                    hasPrev: false,
+                    limit: limitNum
+                }
+            });
         }
 
+        // Get contacts and roles
         const [contacts, roles] = await Promise.all([
             Contacts.find({ tenantId }).lean(),
-            Role.find({ tenantId }).lean(), // ✅ Fix: using correct field
+            Role.find({ tenantId }).lean(),
         ]);
 
+        // Create maps
         const roleMap = roles.reduce((acc, role) => {
             acc[role._id.toString()] = role;
             return acc;
@@ -640,12 +751,10 @@ const getUsersByTenant = async (req, res) => {
             return acc;
         }, {});
 
-        const combinedUsers = users.map((user) => {
+        // Combine users with contacts and roles (like your previous API)
+        let combinedUsers = allUsers.map((user) => {
             const contact = contactMap[user._id.toString()] || {};
-            // const role = user.roleId ? roleMap[user.roleId] : {};
             const role = user.roleId || {};
-            // console.log("user",role);
-
 
             return {
                 _id: user._id,
@@ -659,14 +768,12 @@ const getUsersByTenant = async (req, res) => {
                 gender: contact.gender || '',
                 phone: contact.phone || '',
                 status: user.status || '',
-                // <<<<<<< Ranjith
                 yearsOfExperience: contact?.yearsOfExperience || '',
                 roleId: role?._id || '',
                 roleName: role?.roleName || '',
                 label: role?.label || '',
                 imageData: contact.imageData || null,
                 createdAt: user.createdAt || contact.createdAt,
-                status: user.status || "",
                 updatedAt: user.updatedAt || contact.updatedAt,
                 profileId: contact.profileId || "",
                 linkedinUrl: contact.linkedinUrl || "",
@@ -680,10 +787,8 @@ const getUsersByTenant = async (req, res) => {
                 professionalTitle: contact.professionalTitle || "",
                 bio: contact.bio || "",
                 interviewFormatWeOffer: contact.InterviewFormatWeOffer || [],
-                previousExperienceConductingInterviews:
-                    contact.PreviousExperienceConductingInterviews || "",
-                previousExperienceConductingInterviewsYears:
-                    contact.PreviousExperienceConductingInterviewsYears || "",
+                previousExperienceConductingInterviews: contact.PreviousExperienceConductingInterviews || "",
+                previousExperienceConductingInterviewsYears: contact.PreviousExperienceConductingInterviewsYears || "",
                 technologies: contact.technologies || [],
                 skills: contact.skills || [],
                 timeZone: contact.timeZone || "",
@@ -693,13 +798,78 @@ const getUsersByTenant = async (req, res) => {
             };
         });
 
-        res.status(200).json(combinedUsers);
+        // Apply search filter
+        if (search.trim()) {
+            const searchLower = search.trim().toLowerCase();
+            combinedUsers = combinedUsers.filter(user => {
+                const searchFields = [
+                    user.firstName,
+                    user.lastName,
+                    user.email,
+                    user.phone,
+                    user.label,
+                    user.roleName
+                ].filter(field => field !== null && field !== undefined);
+
+                return searchFields.some(field =>
+                    field.toString().toLowerCase().includes(searchLower)
+                );
+            });
+        }
+
+        // Apply role filter
+        if (role) {
+            const rolesFilter = role.split(",").map(r => r.trim()).filter(Boolean);
+            if (rolesFilter.length > 0) {
+                combinedUsers = combinedUsers.filter(user =>
+                    rolesFilter.includes(user.label)
+                );
+            }
+        }
+
+        // Apply status filter
+        if (status) {
+            combinedUsers = combinedUsers.filter(user => user.status === status);
+        }
+
+        // Apply sorting
+        combinedUsers.sort((a, b) => {
+            const aValue = a[sortBy] || '';
+            const bValue = b[sortBy] || '';
+
+            if (sortOrder === 'desc') {
+                return bValue.toString().localeCompare(aValue.toString());
+            } else {
+                return aValue.toString().localeCompare(bValue.toString());
+            }
+        });
+
+        // Get total count after filtering
+        const totalCount = combinedUsers.length;
+
+        // Apply pagination
+        const paginatedUsers = combinedUsers.slice(skip, skip + limitNum);
+
+        res.status(200).json({
+            users: paginatedUsers,
+            pagination: {
+                currentPage: pageNum,
+                totalPages: Math.ceil(totalCount / limitNum),
+                totalUsers: totalCount,
+                hasNext: pageNum < Math.ceil(totalCount / limitNum),
+                hasPrev: pageNum > 1,
+                limit: limitNum
+            }
+        });
+
     } catch (error) {
         console.error("Error fetching users:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({
+            message: "Internal server error",
+            error: error.message
+        });
     }
 };
-
 const getUniqueUserByOwnerId = async (req, res) => {
     try {
         const { ownerId } = req.params;
