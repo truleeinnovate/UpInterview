@@ -35,11 +35,13 @@ function IntegrationsPage() {
   // const [selectedCandidate, setSelectedCandidate] = useState(null);
   // const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   // const [editModeOn, setEditModeOn] = useState(false);
   // const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     currentStatus: "",
@@ -57,7 +59,12 @@ function IntegrationsPage() {
   const [selectedLogId, setSelectedLogId] = useState(null);
   // const [integrations, setIntegrations] = useState([]);
 
-  const { integrations, isLoading } = useIntegrationLogs(); // from apiHooks
+  const { integrations, pagination, stats, isLoading } = useIntegrationLogs({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: debouncedSearch,
+    status: selectedFilters.status,
+  });
   const { selectedLog } = useIntegrationLogById(selectedLogId); // from apiHooks
   // v1.0.0 <-----------------------------------------------------------------------------------
   console.log("2. INTEGRATIONS LOGS AFTER RESPONSE: ", integrations);
@@ -178,47 +185,29 @@ function IntegrationsPage() {
     }
   };
 
-  const FilteredData = () => {
-    if (!Array.isArray(dataToUse)) return [];
-    return dataToUse.filter((integration) => {
-      const fieldsToSearch = [
-        integration.logId ? integration.logId : integration._id,
-      ].filter((field) => field !== null && field !== undefined);
-
-      const matchesStatus =
-        selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(integration.status);
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      return matchesSearchQuery && matchesStatus;
-    });
-  };
-
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
+    // Guard using metadata
+    if (pagination?.hasNext) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
 
   const prevPage = () => {
-    if (currentPage > 0) {
+    if (pagination?.hasPrev) {
       setCurrentPage((prevPage) => prevPage - 1);
     }
   };
-
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(0); // Reset to first page on search
   };
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 500);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   const formatDate = (dateString) => {
     const options = {
@@ -410,7 +399,7 @@ function IntegrationsPage() {
   // Render Filter Content
   const renderFilterContent = () => {
     // filters options
-    const statusOptions = ["success", "pending", "captured", "charged"];
+    const statusOptions = ["success", "warning", "error"];
 
     return (
       <div className="space-y-3">
@@ -688,25 +677,25 @@ function IntegrationsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Logs</div>
-            <div className="text-xl font-semibold">{integrations?.length}</div>
+            <div className="text-xl font-semibold">{pagination?.totalItems ?? 0}</div>
           </div>
           {/* v1.0.0 <------------------------------------------------------------------------------------------ */}
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Success</div>
             <div className="text-xl font-semibold text-success-600">
-              {integrations?.filter((log) => log.status === "success").length}
+              {stats?.byStatus?.success ?? 0}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Warnings</div>
             <div className="text-xl font-semibold text-warning-600">
-              {integrations?.filter((log) => log.status === "warning").length}
+              {stats?.byStatus?.warning ?? 0}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Errors</div>
             <div className="text-xl font-semibold text-error-600">
-              {integrations?.filter((log) => log.status === "error").length}
+              {stats?.byStatus?.error ?? 0}
             </div>
           </div>
           {/* v1.0.0 ------------------------------------------------------------------------------> */}
@@ -719,14 +708,14 @@ function IntegrationsPage() {
             setView={setView}
             searchQuery={searchQuery}
             onSearch={handleSearch}
-            currentPage={currentPage}
-            totalPages={totalPages}
+            currentPage={pagination?.currentPage ?? 0}
+            totalPages={pagination?.totalPages ?? 1}
             onPrevPage={prevPage}
             onNextPage={nextPage}
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
-            dataLength={dataToUse?.length}
+            dataLength={pagination?.totalItems ?? 0}
             searchPlaceholder="Search integrations..."
             filterIconRef={filterIconRef}
           />
@@ -740,7 +729,7 @@ function IntegrationsPage() {
                 {view === "table" ? (
                   <div className="w-full">
                     <TableView
-                      data={currentFilteredRows}
+                      data={Array.isArray(dataToUse) ? dataToUse : []}
                       columns={tableColumns}
                       loading={isLoading}
                       actions={tableActions}
@@ -751,7 +740,7 @@ function IntegrationsPage() {
                 ) : (
                   <div className="w-full">
                     <KanbanView
-                      data={currentFilteredRows.map((integrationLog) => ({
+                      data={(Array.isArray(dataToUse) ? dataToUse : []).map((integrationLog) => ({
                         ...integrationLog,
                         id: integrationLog._id,
                         title: integrationLog.logId || "N/A",

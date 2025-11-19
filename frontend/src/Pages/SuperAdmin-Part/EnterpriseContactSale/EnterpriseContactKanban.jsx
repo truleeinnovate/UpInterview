@@ -29,9 +29,9 @@ const EnterpriseContactKanban = ({
     getStatusIcon,
     permissions = {}
 }) => {
-    // Get paginated contacts
-    const startIndex = currentPage * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
+    // Get paginated contacts (disable local pagination when itemsPerPage <= 0)
+    const startIndex = itemsPerPage > 0 ? currentPage * itemsPerPage : 0;
+    const endIndex = itemsPerPage > 0 ? startIndex + itemsPerPage : contacts.length;
     const paginatedContacts = contacts.slice(startIndex, endIndex);
 
     const formatDate = (date) => {
@@ -71,7 +71,7 @@ const EnterpriseContactKanban = ({
     return (
         <div className="space-y-4">
             {/* Page indicator */}
-            {contacts.length > itemsPerPage && (
+            {itemsPerPage > 0 && contacts.length > itemsPerPage && (
                 <div className="text-sm text-gray-600 text-center">
                     Page {currentPage + 1} - Showing {startIndex + 1} to {Math.min(endIndex, contacts.length)} of {contacts.length}
                 </div>

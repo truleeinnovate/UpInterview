@@ -10,8 +10,8 @@ exports.getApiKeys = asyncHandler(async (req, res) => {
   const startTime = Date.now();
 
   try {
-    const apiKeys = await ApiKey.find({ createdBy: req.user.id })
-      .sort({ _id: -1 })
+    const apiKeys = await ApiKey.find({}) // Remove createdBy filter - get all API keys
+      .sort({ createdAt: -1 })
       .select('-__v');
 
     const duration = Date.now() - startTime;
@@ -43,9 +43,35 @@ exports.getApiKeys = asyncHandler(async (req, res) => {
 exports.createApiKey = asyncHandler(async (req, res) => {
   const requestId = uuidv4();
   const startTime = Date.now();
-  const { organization, permissions } = req.body;
+  const { 
+    organization, 
+    permissions, 
+    description,
+    expiresAt,
+    rateLimit,
+    ipAddress,
+    userAgent
+  } = req.body;
+
+  // Extract user context from auth middleware
+  const auth = res.locals.auth;
+  const ownerId = auth?.actingAsUserId;
+  const tenantId = auth?.actingAsTenantId;
+
+  console.log('🔍 [Backend] createApiKey called');
+  console.log('🔍 [Backend] Request body:', { organization, permissions, description, expiresAt, rateLimit });
+  console.log('🔍 [Backend] User context:', { ownerId, tenantId });
 
   try {
+    // Validate authentication - require user context for new API keys
+    if (!ownerId || !tenantId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required to create API keys',
+        requestId
+      });
+    }
+
     // Validate input
     if (!organization || !permissions || !Array.isArray(permissions) || permissions.length === 0) {
       return res.status(400).json({
@@ -55,19 +81,60 @@ exports.createApiKey = asyncHandler(async (req, res) => {
       });
     }
 
-    // Validate permissions
-    const validPermissions = ['read', 'write', 'delete'];
+    // Validate permissions with new fine-grained system
+    const validPermissions = [
+      'users:read', 'users:write', 'users:delete',
+      'candidates:read', 'candidates:write', 'candidates:delete',
+      'interviews:read', 'interviews:write', 'interviews:delete',
+      'analytics:read',
+      'system:read', 'system:write'
+    ];
     const invalidPermissions = permissions.filter(p => !validPermissions.includes(p));
     
     if (invalidPermissions.length > 0) {
       return res.status(400).json({
         success: false,
-        message: `Invalid permissions: ${invalidPermissions.join(', ')}`,
+        message: `Invalid permissions: ${invalidPermissions.join(', ')}. Valid permissions: ${validPermissions.join(', ')}`,
         requestId
       });
     }
 
-    // Generate unique API key
+    // Validate expiration date if provided
+    if (expiresAt && new Date(expiresAt) <= new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Expiration date must be in the future',
+        requestId
+      });
+    }
+
+    // Validate rate limits if provided
+    if (rateLimit) {
+      const { requestsPerMinute, requestsPerHour, requestsPerDay } = rateLimit;
+      if (requestsPerMinute && (requestsPerMinute < 1 || requestsPerMinute > 1000)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Requests per minute must be between 1 and 1000',
+          requestId
+        });
+      }
+      if (requestsPerHour && (requestsPerHour < 1 || requestsPerHour > 10000)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Requests per hour must be between 1 and 10000',
+          requestId
+        });
+      }
+      if (requestsPerDay && (requestsPerDay < 1 || requestsPerDay > 100000)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Requests per day must be between 1 and 100000',
+          requestId
+        });
+      }
+    }
+
+    // Generate API key
     let key;
     let keyExists = true;
     let attempts = 0;
@@ -88,13 +155,25 @@ exports.createApiKey = asyncHandler(async (req, res) => {
       });
     }
 
-    // Create API key
+    // Create API key with all new fields
+    console.log('🔍 [Backend] Creating API key with enhanced features');
     const apiKey = await ApiKey.create({
       key,
       organization: organization.trim(),
       permissions,
-      createdBy: req.user.id
+      description: description?.trim() || null,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
+      ownerId,
+      tenantId,
+      rateLimit: {
+        requestsPerMinute: rateLimit?.requestsPerMinute || 60,
+        requestsPerHour: rateLimit?.requestsPerHour || 1000,
+        requestsPerDay: rateLimit?.requestsPerDay || 10000
+      },
+      ipAddress: ipAddress || [],
+      userAgent: userAgent || null
     });
+    console.log('🔍 [Backend] API key created successfully:', apiKey._id);
 
     const duration = Date.now() - startTime;
 
@@ -127,8 +206,8 @@ exports.deleteApiKey = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Find the API key
-    const apiKey = await ApiKey.findOne({ _id: id, createdBy: req.user.id });
+    // Find the API key (no user filtering)
+    const apiKey = await ApiKey.findOne({ _id: id });
 
     if (!apiKey) {
       return res.status(404).json({
@@ -174,9 +253,9 @@ exports.updateApiKey = asyncHandler(async (req, res) => {
   const { enabled } = req.body;
 
   try {
-    // Find and update the API key
+    // Find and update the API key (no user filtering)
     const apiKey = await ApiKey.findOneAndUpdate(
-      { _id: id, createdBy: req.user.id },
+      { _id: id },
       { enabled },
       { new: true, runValidators: true }
     );
@@ -221,7 +300,7 @@ exports.getApiKeyStats = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   try {
-    const apiKey = await ApiKey.findOne({ _id: id, createdBy: req.user.id })
+    const apiKey = await ApiKey.findOne({ _id: id }) // No user filtering
       .select('key organization permissions enabled lastUsed usageCount createdAt');
 
     if (!apiKey) {
@@ -250,6 +329,175 @@ exports.getApiKeyStats = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching API key stats',
+      error: error.message,
+      requestId,
+      duration
+    });
+  }
+});
+
+// @desc    Validate API key
+// @route   POST /api/api-keys/validate
+// @access  Public (for testing)
+exports.validateApiKey = asyncHandler(async (req, res) => {
+  const requestId = uuidv4();
+  const startTime = Date.now();
+  const { key, permission } = req.body;
+
+  try {
+    if (!key) {
+      return res.status(400).json({
+        success: false,
+        message: 'API key is required',
+        requestId
+      });
+    }
+
+    const apiKey = await ApiKey.findOne({ key });
+
+    if (!apiKey) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid API key',
+        requestId,
+        error: 'INVALID_API_KEY'
+      });
+    }
+
+    // Check if key is valid
+    if (!apiKey.isValid) {
+      const reason = !apiKey.enabled ? 'disabled' : 'expired';
+      return res.status(401).json({
+        success: false,
+        message: `API key is ${reason}`,
+        requestId,
+        error: reason.toUpperCase()
+      });
+    }
+
+    // Check permission if specified
+    let hasPermission = true;
+    if (permission) {
+      hasPermission = apiKey.hasPermission(permission);
+    }
+
+    // Check rate limits
+    const rateLimitCheck = apiKey.checkRateLimit();
+
+    const duration = Date.now() - startTime;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        valid: true,
+        organization: apiKey.organization,
+        permissions: apiKey.permissions,
+        hasPermission,
+        rateLimit: {
+          allowed: rateLimitCheck.allowed,
+          limit: rateLimitCheck.limit,
+          resetTime: rateLimitCheck.resetTime
+        },
+        expiresAt: apiKey.expiresAt,
+        maskedKey: apiKey.maskKey()
+      },
+      requestId,
+      duration
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`[${requestId}] Error validating API key:`, error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Error validating API key',
+      error: error.message,
+      requestId,
+      duration
+    });
+  }
+});
+
+// @desc    Get usage analytics for all API keys
+// @route   GET /api/api-keys/analytics
+// @access  Private
+exports.getUsageAnalytics = asyncHandler(async (req, res) => {
+  const requestId = uuidv4();
+  const startTime = Date.now();
+
+  try {
+    const analytics = await ApiKey.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalKeys: { $sum: 1 },
+          activeKeys: { $sum: { $cond: [{ $eq: ['$enabled', true] }, 1, 0] } },
+          expiredKeys: { $sum: { $cond: [{ $lt: ['$expiresAt', new Date()] }, 1, 0] } },
+          totalRequests: { $sum: '$usageAnalytics.totalRequests' },
+          totalErrors: { $sum: '$usageAnalytics.errorCount' },
+          avgRequestsPerKey: { $avg: '$usageAnalytics.totalRequests' }
+        }
+      }
+    ]);
+
+    const topEndpoints = await ApiKey.aggregate([
+      { $unwind: '$usageAnalytics.endpointsUsed' },
+      {
+        $group: {
+          _id: '$usageAnalytics.endpointsUsed.endpoint',
+          totalCalls: { $sum: '$usageAnalytics.endpointsUsed.count' },
+          uniqueKeys: { $addToSet: '$_id' }
+        }
+      },
+      {
+        $project: {
+          endpoint: '$_id',
+          totalCalls: 1,
+          uniqueKeys: { $size: '$uniqueKeys' }
+        }
+      },
+      { $sort: { totalCalls: -1 } },
+      { $limit: 10 }
+    ]);
+
+    const organizationStats = await ApiKey.aggregate([
+      {
+        $group: {
+          _id: '$organization',
+          keyCount: { $sum: 1 },
+          totalRequests: { $sum: '$usageAnalytics.totalRequests' },
+          avgRequests: { $avg: '$usageAnalytics.totalRequests' }
+        }
+      },
+      { $sort: { totalRequests: -1 } }
+    ]);
+
+    const duration = Date.now() - startTime;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: analytics[0] || {
+          totalKeys: 0,
+          activeKeys: 0,
+          expiredKeys: 0,
+          totalRequests: 0,
+          totalErrors: 0,
+          avgRequestsPerKey: 0
+        },
+        topEndpoints,
+        organizationStats
+      },
+      requestId,
+      duration
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`[${requestId}] Error fetching usage analytics:`, error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching usage analytics',
       error: error.message,
       requestId,
       duration

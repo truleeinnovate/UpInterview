@@ -25,7 +25,8 @@ const ContactUsPage = () => {
     const { superAdminPermissions } = usePermissions();
     const [view, setView] = useState("table");
     const [searchQuery, setSearchQuery] = useState("");
-    const [isFilterActive, setIsFilterActive] = useState(false);
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    
     const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [selectedFilters, setSelectedFilters] = useState({
@@ -34,13 +35,21 @@ const ContactUsPage = () => {
     const filterIconRef = useRef(null);
     const ITEMS_PER_PAGE = 10;
 
-    const [isDateOpen, setIsDateOpen] = useState(false);
     const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
-    // Get real data from backend
-    const { contactMessages = [], isLoading, refetch } = useContactUs();
-
-    console.log('contactMessages_', contactMessages)
+    // Get data from backend with server-side pagination/search/filters
+    const {
+        contactMessages = [],
+        total = 0,
+        isLoading,
+        refetch,
+    } = useContactUs({
+        page: currentPage + 1,
+        limit: ITEMS_PER_PAGE,
+        search: debouncedSearch,
+        startDate: selectedFilters?.dateRange?.start,
+        endDate: selectedFilters?.dateRange?.end,
+    });
 
     useEffect(() => {
         const handleResize = () => {
@@ -52,24 +61,21 @@ const ContactUsPage = () => {
     }, []);
 
 
-    // Reset filters when popup opens
+    // Reset staged filters when popup opens
     useEffect(() => {
         if (isFilterPopupOpen) {
             setDateRange(selectedFilters.dateRange || { start: "", end: "" });
-            setIsDateOpen(false);
         }
     }, [isFilterPopupOpen, selectedFilters]);
 
     const handleClearAll = () => {
         setDateRange({ start: "", end: "" });
-        setIsDateOpen(false);
         setSelectedFilters({
             dateRange: { start: "", end: "" }
         });
-        setIsFilterActive(false);
     };
 
-    const filterMenuItems = [];
+    
 
     const getStatusIcon = (status) => {
         switch (status?.toLowerCase()) {
@@ -128,22 +134,22 @@ const ContactUsPage = () => {
     };
 
     const handleApplyFilters = () => {
-        const filters = {
-            dateRange: dateRange
-        };
-
+        const filters = { dateRange };
         setSelectedFilters(filters);
-        setIsFilterActive(
-            (dateRange.start && dateRange.end)
-        );
         setFilterPopupOpen(false);
         setCurrentPage(0);
     };
 
-    const handleSearch = (value) => {
-        setSearchQuery(value);
+    const handleSearch = (e) => {
+        setSearchQuery(e.target.value);
         setCurrentPage(0);
     };
+
+    // Debounce search input
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch((searchQuery || '').trim()), 500);
+        return () => clearTimeout(t);
+    }, [searchQuery]);
 
     const handleView = (id) => {
         notify.success(`Viewing contact message: ${id}`);
@@ -231,35 +237,16 @@ const ContactUsPage = () => {
     ];
 
 
-    // Filter data based on search and filters
-    const filteredData = contactMessages.filter((item) => {
-        // Search filter
-        const searchLower = searchQuery.toLowerCase();
-        const matchesSearch = !searchQuery ||
-            item.name?.toLowerCase().includes(searchLower) ||
-            item.email?.toLowerCase().includes(searchLower) ||
-            item.message?.toLowerCase().includes(searchLower);
+    // Calculate total pages from server total
+    const totalPages = Math.max(1, Math.ceil((total || 0) / ITEMS_PER_PAGE));
 
-        // Date range filter
-        let matchesDate = true;
-        if (selectedFilters.dateRange?.start && selectedFilters.dateRange?.end) {
-            const itemDate = new Date(item.createdAt);
-            const startDate = new Date(selectedFilters.dateRange.start);
-            const endDate = new Date(selectedFilters.dateRange.end + 'T23:59:59');
-            matchesDate = itemDate >= startDate && itemDate <= endDate;
-        }
-
-        return matchesSearch && matchesDate;
-    });
-
-    console.log('filtered data ', filteredData);
-
-    // Calculate total pages for pagination
-    const getTotalPages = () => {
-        return Math.ceil(filteredData.length / ITEMS_PER_PAGE) || 1;
+    const nextPage = () => {
+        if (currentPage + 1 < totalPages) setCurrentPage((p) => p + 1);
     };
 
-    const totalPages = getTotalPages();
+    const prevPage = () => {
+        if (currentPage > 0) setCurrentPage((p) => p - 1);
+    };
 
     // Auto-reset current page when filters reduce available pages
     useEffect(() => {
@@ -284,9 +271,15 @@ const ContactUsPage = () => {
                 <Toolbar
                     view={view}
                     setView={setView}
+                    searchQuery={searchQuery}
                     onSearch={handleSearch}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPrevPage={prevPage}
+                    onNextPage={nextPage}
                     onFilterClick={() => setFilterPopupOpen(!isFilterPopupOpen)}
-                    dataLength={filteredData.length}
+                    filterIconRef={filterIconRef}
+                    dataLength={Math.max(1, total)}
                     isFilterPopupOpen={isFilterPopupOpen}
                     searchPlaceholder="Search by name, email, message..."
                     showAddButton={false}
@@ -296,7 +289,7 @@ const ContactUsPage = () => {
             {/* Table/Kanban View */}
             {view === "table" ? (
                 <TableView
-                    data={filteredData}
+                    data={contactMessages}
                     columns={columns}
                     loading={isLoading}
                     currentPage={currentPage}
@@ -306,9 +299,10 @@ const ContactUsPage = () => {
                 />
             ) : (
                 <ContactUsKanban
-                    contactMessages={filteredData}
+                    contactMessages={contactMessages}
                     currentPage={currentPage}
-                    itemsPerPage={ITEMS_PER_PAGE}
+                    itemsPerPage={0}
+                    totalItems={total}
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
@@ -318,18 +312,33 @@ const ContactUsPage = () => {
 
 
 
-            {/* Filter Popup */}
-            {isFilterPopupOpen && (
-                <div ref={filterIconRef}>
-                    <FilterPopup
-                        filterMenuItems={filterMenuItems}
-                        onApplyFilters={handleApplyFilters}
-                        onClearAll={handleClearAll}
-                        onClose={() => setFilterPopupOpen(false)}
-                        isFilterActive={isFilterActive}
-                    />
+            {/* Filter Popup (date range only) */}
+            <FilterPopup
+                isOpen={isFilterPopupOpen}
+                onClose={() => setFilterPopupOpen(false)}
+                onApply={handleApplyFilters}
+                onClearAll={handleClearAll}
+                filterIconRef={filterIconRef}
+            >
+                <div className="space-y-3 p-1">
+                    <div className="font-medium text-gray-700">Date Range</div>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="date"
+                            value={dateRange.start || ""}
+                            onChange={(e) => setDateRange((p) => ({ ...p, start: e.target.value }))}
+                            className="border rounded px-2 py-1 text-sm"
+                        />
+                        <span className="text-gray-500">to</span>
+                        <input
+                            type="date"
+                            value={dateRange.end || ""}
+                            onChange={(e) => setDateRange((p) => ({ ...p, end: e.target.value }))}
+                            className="border rounded px-2 py-1 text-sm"
+                        />
+                    </div>
                 </div>
-            )}
+            </FilterPopup>
 
             <Outlet />
         </>

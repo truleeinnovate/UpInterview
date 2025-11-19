@@ -102,6 +102,12 @@ const authContextMiddleware = (req, res, next) => {
     };
 
     // console.log("res.locals.auth", res.locals.auth);
+    console.log('🔍 [AuthMiddleware] Setting res.locals.auth:', {
+      actingAsUserId,
+      actingAsTenantId,
+      hasAuthToken: !!authToken,
+      hasImpersonationToken: !!impersonationToken
+    });
 
     // -----------------------------------------------------------------
     // 8. CONTINUE
@@ -120,6 +126,7 @@ const authContextMiddleware = (req, res, next) => {
       authToken: '',
       impersonationToken: '',
     };
+    console.log('🔍 [AuthMiddleware] Error - setting empty auth object');
     next();
   }
 };

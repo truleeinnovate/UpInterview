@@ -41,16 +41,18 @@ const config = require("./config.js");
 
 // CORS configuration
 const allowedOrigins = [
-  //   `https://${config.REACT_APP_API_URL_FRONTEND}`,
-  "http://localhost:3000",
-  "http://localhost:5000",
-  /^https:\/\/[a-z0-9-]+\.dev\.upinterview\.io$/,
-  // "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
-  // "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
-  "https://dev.upinterview.io",
-  "https://app.upinterview.io",
-  "https://upinterview-dpdgchhbafekdhca.canadacentral-01.azurewebsites.net",
-  "https://upinterview.io",
+    //   `https://${config.REACT_APP_API_URL_FRONTEND}`,
+    "http://localhost:3000",
+    "http://localhost:5000",
+    /^https:\/\/[a-z0-9-]+\.dev\.upinterview\.io$/,
+    // "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
+    // "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
+    "https://dev.upinterview.io",
+    "https://app.upinterview.io",
+    "https://upinterview-dpdgchhbafekdhca.canadacentral-01.azurewebsites.net",
+    "https://upinterview.io",
+    "file://", // Allow file:// protocol for local HTML testing
+    "null"    // Allow null origin for local HTML testing
 ];
 
 // const allowedOrigins = [
@@ -92,10 +94,18 @@ app.use((req, res, next) => {
     );
   }
 
-  if (req.method === "OPTIONS") {
-    // console.log("Responding to OPTIONS request with headers:", res.getHeaders());
-    return res.status(200).end();
-  }
+    if (isAllowed) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-permissions, x-tenant-id, X-API-Key");
+        res.setHeader("Access-Control-Expose-Headers", "x-user-id, x-tenant-id, x-impersonation-userid, x-permissions, x-new-token");
+    }
+
+    if (req.method === "OPTIONS") {
+        // console.log("Responding to OPTIONS request with headers:", res.getHeaders());
+        return res.status(200).end();
+    }
 
   next();
 });
