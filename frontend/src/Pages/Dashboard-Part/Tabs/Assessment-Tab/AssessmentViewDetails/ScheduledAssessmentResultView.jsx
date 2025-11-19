@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashok   -  changed manImage (man.png) url from local to cloud storage url
 // v1.0.2  -  Ashok   -  Improved responsiveness
 // v1.0.3  -  Ashok   -  Fixed responsiveness issues
+// v1.0.4  -  Ashok   -  fixed style issue
 
 import { format } from "date-fns";
 // import manImage from "../../../Images/man.png";
@@ -127,7 +128,7 @@ function AssessmentResultView({
                 />
                 {/* v1.0.1 ----------------------------------------------------------------------------> */}
               </div>
-              <h3 className="text-lg font-semibold text-gray-800">
+              <h3 className="text-lg font-semibold text-gray-800 truncate max-w-[300px]">
                 {candidate.name}
               </h3>
               <p className="text-sm text-gray-600 text-center">

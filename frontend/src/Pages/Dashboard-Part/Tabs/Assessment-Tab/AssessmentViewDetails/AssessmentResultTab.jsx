@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  displaying more fileds in result
 // v1.0.2  -  Ashok   -  Improved responsiveness
 // v1.0.3  -  Ashok   -  Added type and scheduleAssessmentId to get specific schedule assessment
+// v1.0.4  -  Ashok   -  fixed style issue
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
@@ -250,7 +251,7 @@ function AssessmentResultsTab({
                           schedule.candidates.map((candidate) => (
                             <tr key={candidate.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
+                                <div className="text-sm font-medium text-gray-900 truncate max-w-[220px]">
                                   {candidate.name}
                                 </div>
                                 <div className="text-sm text-gray-500">

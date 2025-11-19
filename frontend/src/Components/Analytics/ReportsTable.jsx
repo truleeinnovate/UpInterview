@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - commented Columns, Export CSV, No Groupings
+
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Download, Search, Play, Settings, Group, ChevronDown, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -143,7 +144,7 @@ const ReportsTable = ({ data, columns, title, type, onColumnsChange }) => {
     return (
       <div className="space-y-4">
         {Object.entries(paginatedData).map(([groupKey, groupItems]) => (
-          <div key={groupKey} className="border border-gray-200 rounded-lg overflow-hidden">
+          <div key={groupKey} className="border border-gray-200 rounded-lg overflow-hidden bg-red-500">
             {/* Group Header */}
             <div 
               className="bg-gray-50 px-6 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
@@ -230,7 +231,7 @@ const ReportsTable = ({ data, columns, title, type, onColumnsChange }) => {
 
   const renderRegularTable = () => {
     return (
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto bg-red-500">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -289,8 +290,8 @@ const ReportsTable = ({ data, columns, title, type, onColumnsChange }) => {
     <>
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-custom-blue">{title}</h3>
             <div className="flex items-center space-x-2">
               {/* v1.0.0 <------------------------------------------------------------- */}
@@ -311,7 +312,7 @@ const ReportsTable = ({ data, columns, title, type, onColumnsChange }) => {
           
           {/* Search and Group By */}
           <div className="flex items-center space-x-4">
-            <div className="relative flex-1">
+            {/* <div className="relative flex-1">
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
@@ -320,7 +321,7 @@ const ReportsTable = ({ data, columns, title, type, onColumnsChange }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
-            </div>
+            </div> */}
             
             {/* Group By Dropdown */}
             {/* v1.0.0 <-------------------------------------------------------------------- */}
@@ -386,7 +387,7 @@ const ReportsTable = ({ data, columns, title, type, onColumnsChange }) => {
         {groupByColumn ? renderGroupedTable() : renderRegularTable()}
 
         {/* Pagination */}
-        <div className="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+        {/* <div className="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
           <div className="text-sm text-gray-700">
             {groupByColumn ? (
               <>Showing {Object.keys(paginatedData).length} groups of {Object.keys(groupedData || {}).length} total groups</>
@@ -413,7 +414,7 @@ const ReportsTable = ({ data, columns, title, type, onColumnsChange }) => {
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Column Manager Modal */}
