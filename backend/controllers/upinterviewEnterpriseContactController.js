@@ -70,34 +70,127 @@ const createEnterpriseContact = async (req, res) => {
   }
 };
 
-// GET: Fetch all enterprise contact form submissions
+// GET: Fetch all enterprise contact form submissions (with optional pagination/search/filters)
 const getAllEnterpriseContacts = async (req, res) => {
-  console.log("📋 [GET /] Fetching all enterprise contact submissions");
+  console.log("📋 [GET /] Fetching enterprise contact submissions");
 
   try {
-    // Fetch all enterprise contacts, sorted by newest first
-    const contacts = await EnterpriseContact.find().sort({ _id: -1 });
-    console.log(`✅ Found ${contacts.length} enterprise contact submissions`);
+    const hasParams = (
+      'page' in req.query ||
+      'limit' in req.query ||
+      'search' in req.query ||
+      'companyName' in req.query ||
+      'contactPerson' in req.query ||
+      'email' in req.query ||
+      'status' in req.query ||
+      'dateRange.start' in req.query ||
+      'dateRange.end' in req.query
+    );
 
-    // Transform data for frontend
-    const formattedContacts = contacts.map(contact => ({
-      _id: contact._id,
-      firstName: contact.firstName,
-      lastName: contact.lastName,
-      workEmail: contact.workEmail,
-      jobTitle: contact.jobTitle,
-      companyName: contact.companyName,
-      companySize: contact.companySize,
-      additionalDetails: contact.additionalDetails,
-      createdAt: contact.createdAt
-    }));
+    // Legacy behavior: return full list when no pagination/search/filter params
+    if (!hasParams) {
+      const contacts = await EnterpriseContact.find().sort({ _id: -1 });
+      const formattedContacts = contacts.map(contact => ({
+        _id: contact._id,
+        firstName: contact.firstName,
+        lastName: contact.lastName,
+        workEmail: contact.workEmail,
+        jobTitle: contact.jobTitle,
+        companyName: contact.companyName,
+        companySize: contact.companySize,
+        additionalDetails: contact.additionalDetails,
+        createdAt: contact.createdAt
+      }));
 
-    res.status(200).json({
-      success: true,
-      contacts: formattedContacts,
-      total: contacts.length
+      return res.status(200).json({
+        success: true,
+        contacts: formattedContacts,
+        total: contacts.length
+      });
+    }
+
+    // Parsed params (page is 1-based from UI)
+    const pageRaw = parseInt(req.query.page, 10);
+    const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+    const limitRaw = parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
+    const search = (req.query.search || '').trim();
+    const companyName = (req.query.companyName || '').trim();
+    const contactPerson = (req.query.contactPerson || '').trim();
+    const email = (req.query.email || '').trim();
+    const status = (req.query.status || '').trim();
+    const start = req.query['dateRange.start'] ? new Date(req.query['dateRange.start']) : null;
+    const end = req.query['dateRange.end'] ? new Date(req.query['dateRange.end'] + 'T23:59:59.999Z') : null;
+
+    // Build aggregation pipeline
+    const pipeline = [];
+
+    // Compute helper fields
+    pipeline.push({
+      $addFields: {
+        contactPersonComputed: {
+          $trim: {
+            input: { $concat: [ { $ifNull: ['$firstName', ''] }, ' ', { $ifNull: ['$lastName', ''] } ] }
+          }
+        },
+        statusComputed: { $ifNull: ['$status', 'new'] }
+      }
     });
-    console.log("📤 Response sent: Enterprise contact data retrieved successfully");
+
+    const match = {};
+    // Exact or regex filters
+    if (companyName) match.companyName = { $regex: new RegExp(companyName, 'i') };
+    if (email) match.workEmail = { $regex: new RegExp(email, 'i') };
+    if (status) match.statusComputed = { $regex: new RegExp(`^${status}$`, 'i') };
+    if (start || end) {
+      match.createdAt = {};
+      if (start) match.createdAt.$gte = start;
+      if (end) match.createdAt.$lte = end;
+    }
+    if (Object.keys(match).length) pipeline.push({ $match: match });
+
+    if (contactPerson) {
+      pipeline.push({ $match: { contactPersonComputed: { $regex: new RegExp(contactPerson, 'i') } } });
+    }
+
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      pipeline.push({
+        $match: {
+          $or: [
+            { companyName: { $regex: regex } },
+            { firstName: { $regex: regex } },
+            { lastName: { $regex: regex } },
+            { workEmail: { $regex: regex } },
+            { jobTitle: { $regex: regex } },
+            { companySize: { $regex: regex } },
+            { contactPersonComputed: { $regex: regex } }
+          ]
+        }
+      });
+    }
+
+    // Sort newest first
+    pipeline.push({ $sort: { _id: -1 } });
+
+    // Facet for pagination
+    pipeline.push({
+      $facet: {
+        data: [ { $skip: (page - 1) * limit }, { $limit: limit } ],
+        totalCount: [ { $count: 'count' } ]
+      }
+    });
+
+    const result = await EnterpriseContact.aggregate(pipeline);
+    const facet = result?.[0] || { data: [], totalCount: [] };
+    const data = facet.data || [];
+    const totalItems = facet.totalCount?.[0]?.count || 0;
+
+    return res.status(200).json({
+      success: true,
+      contacts: data,
+      total: totalItems
+    });
   } catch (err) {
     console.error("❌ Error fetching enterprise contacts:", err.message);
     console.error("🧩 Stack Trace:", err.stack);

@@ -23,89 +23,92 @@ import classNames from "classnames";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { formatDateTime } from "../../../../utils/dateFormatter";
+import { useNotifications } from "../../../../apiHooks/notifications/useNotifications";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 
-const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("all");
-  const [selectedTimeRange, setSelectedTimeRange] = useState("all");
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState(null);
-  const [activeTab, setActiveTab] = useState("all"); // 'all' or 'email'
+const AllNotificationsModal = ({ isOpen, onClose, notifications, searchQuery, setSearchQuery, setSelectedFilter, setSelectedTimeRange, setShowFilters, setSelectedNotification, selectedNotification, activeTab, setActiveTab, page, limit }) => {
 
-  const hasEmailProperty = notifications && Array.isArray(notifications.email);
-  // const hasWhatsappProperty = notifications && Array.isArray(notifications.whatsapp);
+
+
+
+
+  const hasEmailProperty = notifications && Array.isArray(notifications?.email);
+
 
   // ✅ Combine only email notifications for now
   const allNotifications = [
-    ...(hasEmailProperty ? notifications.email : []),
+    ...(hasEmailProperty ? notifications?.email : []),
     // ...(hasWhatsappProperty ? notifications.whatsapp : []),
   ];
 
-  const filterNotifications = () => {
-    let filtered = [...allNotifications];
+  // const pagination = notifications?.pagination;
 
-    // ✅ Only 'email' and 'all' supported for now
-    if (activeTab === "email") {
-      filtered = filtered.filter(
-        (notification) => notification.type === "email"
-      );
-    }
-    // else if (activeTab === "whatsapp") {
-    //   filtered = filtered.filter(
-    //     (notification) => notification.type === "whatsapp"
-    //   );
-    // }
+  // const filterNotifications = () => {
+  //   let filtered = [...allNotifications];
 
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (notification) =>
-          notification.subject
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          false ||
-          notification.message.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+  //   // ✅ Only 'email' and 'all' supported for now
+  //   if (activeTab === "email") {
+  //     filtered = filtered.filter(
+  //       (notification) => notification?.type === "email"
+  //     );
+  //   }
+  //   // else if (activeTab === "whatsapp") {
+  //   //   filtered = filtered.filter(
+  //   //     (notification) => notification.type === "whatsapp"
+  //   //   );
+  //   // }
 
-    if (selectedFilter !== "all") {
-      filtered = filtered.filter(
-        (notification) =>
-          notification.status.toLowerCase() === selectedFilter.toLowerCase()
-      );
-    }
+  //   if (searchQuery) {
+  //     filtered = filtered.filter(
+  //       (notification) =>
+  //         notification.subject
+  //           ?.toLowerCase()
+  //           .includes(searchQuery.toLowerCase()) ||
+  //         false ||
+  //         notification.message.toLowerCase().includes(searchQuery.toLowerCase())
+  //     );
+  //   }
 
-    if (selectedTimeRange !== "all") {
-      const now = new Date();
-      const notificationDate = (timestamp) => new Date(timestamp);
+  //   if (selectedFilter !== "all") {
+  //     filtered = filtered.filter(
+  //       (notification) =>
+  //         notification.status.toLowerCase() === selectedFilter.toLowerCase()
+  //     );
+  //   }
 
-      switch (selectedTimeRange) {
-        case "today":
-          filtered = filtered.filter(
-            (notification) =>
-              notificationDate(notification.timestamp).toDateString() ===
-              now.toDateString()
-          );
-          break;
-        case "week":
-          const weekAgo = new Date(now.setDate(now.getDate() - 7));
-          filtered = filtered.filter(
-            (notification) => notificationDate(notification.timestamp) > weekAgo
-          );
-          break;
-        case "month":
-          const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
-          filtered = filtered.filter(
-            (notification) =>
-              notificationDate(notification.timestamp) > monthAgo
-          );
-          break;
-        default:
-          break;
-      }
-    }
+  //   if (selectedTimeRange !== "all") {
+  //     const now = new Date();
+  //     const notificationDate = (timestamp) => new Date(timestamp);
 
-    return filtered;
-  };
+  //     switch (selectedTimeRange) {
+  //       case "today":
+  //         filtered = filtered.filter(
+  //           (notification) =>
+  //             notificationDate(notification.timestamp).toDateString() ===
+  //             now.toDateString()
+  //         );
+  //         break;
+  //       case "week":
+  //         const weekAgo = new Date(now.setDate(now.getDate() - 7));
+  //         filtered = filtered.filter(
+  //           (notification) => notificationDate(notification.timestamp) > weekAgo
+  //         );
+  //         break;
+  //       case "month":
+  //         const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+  //         filtered = filtered.filter(
+  //           (notification) =>
+  //             notificationDate(notification.timestamp) > monthAgo
+  //         );
+  //         break;
+  //       default:
+  //         break;
+  //     }
+  //   }
+
+  //   return filtered;
+  // };
 
   const formatDate = (timestamp) => {
     try {
@@ -123,9 +126,9 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
     if (!hasEmailProperty) return { email: 0, whatsapp: 0, total: 0 };
 
     return {
-      email: notifications.email.length,
+      email: notifications?.email?.length,
       // whatsapp: hasWhatsappProperty ? notifications.whatsapp.length : 0,
-      total: notifications.email.length, // + (hasWhatsappProperty ? notifications.whatsapp.length : 0),
+      total: notifications?.email?.length, // + (hasWhatsappProperty ? notifications.whatsapp.length : 0),
     };
   };
 
@@ -147,11 +150,10 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
           <div className="flex items-center sm:space-x-0 space-x-2 mb-4">
             <button
               onClick={() => setActiveTab("all")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
-                activeTab === "all"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${activeTab === "all"
                   ? "bg-indigo-50 text-custom-blue"
                   : "text-gray-600 hover:bg-gray-50"
-              }`}
+                }`}
             >
               <Bell size={18} />
               <span className="text-sm">All</span>
@@ -164,11 +166,10 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
 
             <button
               onClick={() => setActiveTab("email")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
-                activeTab === "email"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${activeTab === "email"
                   ? "bg-indigo-50 text-custom-blue"
                   : "text-gray-600 hover:bg-gray-50"
-              }`}
+                }`}
             >
               <Mail size={18} />
               <span className="text-sm">Email</span>
@@ -251,8 +252,8 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
           style={{ height: "calc(100vh - 230px)" }}
         >
           <div className="sm:px-0 p-6 space-y-4">
-            {filterNotifications().length > 0 ? (
-              filterNotifications().map((notification) => (
+            {allNotifications?.length > 0 ? (
+              allNotifications?.map((notification) => (
                 <motion.div
                   key={notification._id}
                   initial={{ opacity: 0, y: 20 }}
@@ -305,11 +306,10 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                     <div className="flex items-center justify-between w-full mt-4">
                       <div className="flex items-center gap-3">
                         <span
-                          className={`px-2 py-1 rounded-xl text-xs font-medium ${
-                            notification.priority === "high"
+                          className={`px-2 py-1 rounded-xl text-xs font-medium ${notification.priority === "high"
                               ? "bg-red-100 text-red-600"
                               : "bg-yellow-100 text-yellow-600"
-                          }`}
+                            }`}
                         >
                           {capitalizeFirstLetter(notification?.priority) ||
                             "Normal"}
@@ -318,13 +318,12 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                           </span>
                         </span>
                         <span
-                          className={`px-2 py-1 rounded-xl text-xs font-medium ${
-                            notification.status === "Success"
+                          className={`px-2 py-1 rounded-xl text-xs font-medium ${notification.status === "Success"
                               ? "bg-green-100 text-green-600"
                               : notification.status === "Failed"
-                              ? "bg-red-100 text-red-600"
-                              : "bg-blue-100 text-blue-600"
-                          }`}
+                                ? "bg-red-100 text-red-600"
+                                : "bg-blue-100 text-blue-600"
+                            }`}
                         >
                           {capitalizeFirstLetter(notification?.status) ||
                             "Unknown"}

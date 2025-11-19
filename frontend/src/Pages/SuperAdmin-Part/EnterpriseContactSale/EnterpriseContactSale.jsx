@@ -28,6 +28,8 @@ const EnterpriseContactSale = () => {
     // State management
     const [view, setView] = useState("table");
     const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+
     const [isFilterActive, setIsFilterActive] = useState(false);
     const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
@@ -35,9 +37,6 @@ const EnterpriseContactSale = () => {
         dateRange: { start: "", end: "" },
         status: ""
     });
-    const ITEMS_PER_PAGE = 10;
-
-    // Filter states
     const [filters, setFilters] = useState({
         companyName: "",
         contactPerson: "",
@@ -46,19 +45,20 @@ const EnterpriseContactSale = () => {
         status: "",
         dateRange: { start: "", end: "" }
     });
+    const [pendingStatus, setPendingStatus] = useState("");
+
+    const [dateRange, setDateRange] = useState({ start: "", end: "" });
+    const [statusFilter, setStatusFilter] = useState("");
 
     const filterIconRef = useRef(null);
 
     // Query parameters for the API
     const queryParams = {
         page: currentPage + 1,
-        limit: ITEMS_PER_PAGE,
-        search: searchQuery,
+        limit: 10,
+        search: debouncedSearch,
         ...filters
     };
-
-    const [dateRange, setDateRange] = useState({ start: "", end: "" });
-    const [statusFilter, setStatusFilter] = useState("");
 
     // Use the REAL hook for fetching data
     const {
@@ -69,8 +69,7 @@ const EnterpriseContactSale = () => {
         refetch
     } = useEnterpriseContacts(queryParams);
 
-    console.log('enterpriseContacts:', enterpriseContacts)
-
+    //console.log('enterpriseContacts:', enterpriseContacts)
 
     useEffect(() => {
         const handleResize = () => {
@@ -81,13 +80,14 @@ const EnterpriseContactSale = () => {
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    // Reset filters when popup opens
+    // Reset filters when popup opens (prefill staged status from applied filters)
     useEffect(() => {
         if (isFilterPopupOpen) {
             setDateRange(selectedFilters.dateRange || { start: "", end: "" });
             setStatusFilter(selectedFilters.status || "");
+            setPendingStatus(filters.status || "");
         }
-    }, [isFilterPopupOpen, selectedFilters]);
+    }, [isFilterPopupOpen, selectedFilters, filters.status]);
 
     // const handleClearAll = () => {
     //     setDateRange({ start: "", end: "" });
@@ -154,21 +154,26 @@ const EnterpriseContactSale = () => {
     const handleApplyFilters = () => {
         const filters = {
             dateRange: dateRange,
-            status: statusFilter
+            status: pendingStatus
         };
 
         setSelectedFilters(filters);
         setIsFilterActive(
-            (dateRange.start && dateRange.end) || statusFilter
+            (dateRange.start && dateRange.end) || pendingStatus
         );
         setFilterPopupOpen(false);
         setCurrentPage(0);
     };
 
-    // const handleSearch = (value) => {
-    //     setSearchQuery(value);
-    //     setCurrentPage(0);
-    // };
+    const handleSearch = (e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(0); // Reset to first page on new search
+    };
+
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch((searchQuery || '').trim()), 500);
+        return () => clearTimeout(t);
+    }, [searchQuery]);
 
     const handleView = (id) => {
         notify.info(`Viewing enterprise contact: ${id}`);
@@ -271,68 +276,35 @@ const EnterpriseContactSale = () => {
         // Actions column has been removed as per requirements,
     ];
 
-    // Filter data based on search and filters
-    const filteredData = enterpriseContacts.filter((item) => {
-        // Search filter - handle case where searchQuery might be null/undefined
-        const searchLower = searchQuery ? searchQuery.toString().toLowerCase() : '';
-        const matchesSearch = !searchQuery ||
-            (item.companyName && item.companyName.toString().toLowerCase().includes(searchLower)) ||
-            (item.contactPerson && item.contactPerson.toString().toLowerCase().includes(searchLower)) ||
-            (item.email && item.email.toString().toLowerCase().includes(searchLower)) ||
-            (item.phone && item.phone.toString().toLowerCase().includes(searchLower));
+    // Calculate total pages using server totalCount
+    const totalPages = Math.max(1, Math.ceil((totalCount || 0) / 10));
 
-        // Status filter
-        const matchesStatus = !statusFilter ||
-            item.status?.toLowerCase() === statusFilter.toLowerCase();
-
-        // Date range filter
-        let matchesDate = true;
-        if (selectedFilters.dateRange?.start && selectedFilters.dateRange?.end) {
-            const itemDate = new Date(item.createdAt);
-            const startDate = new Date(selectedFilters.dateRange.start);
-            const endDate = new Date(selectedFilters.dateRange.end + 'T23:59:59');
-            matchesDate = itemDate >= startDate && itemDate <= endDate;
+    const nextPage = () => {
+        if (currentPage + 1 < totalPages) {
+            setCurrentPage((p) => p + 1);
         }
+    };
 
-        return matchesSearch && matchesStatus && matchesDate;
-    });
+    const prevPage = () => {
+        if (currentPage > 0) {
+            setCurrentPage((p) => p - 1);
+        }
+    };
 
-    // Calculate total pages for pagination
-    const totalItems = Array.isArray(filteredData) ? filteredData.length : 0;
-    const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
-
-    // Auto-reset current page when filters reduce available pages
     useEffect(() => {
         if (totalPages > 0 && (isNaN(currentPage) || currentPage >= totalPages)) {
             setCurrentPage(0);
         }
     }, [currentPage, totalPages]);
 
-    // Handle filter changes
-    const handleFilterChange = (name, value) => {
-        setFilters(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        setCurrentPage(0); // Reset to first page when filters change
-    };
-
-    // Handle date range change
     const handleDateRangeChange = (range) => {
-        setFilters(prev => ({
+        setFilters((prev) => ({
             ...prev,
-            dateRange: range
+            dateRange: range,
         }));
         setCurrentPage(0);
     };
 
-    // Handle search
-    const handleSearch = (value) => {
-        setSearchQuery(value);
-        setCurrentPage(0); // Reset to first page on new search
-    };
-
-    // Clear all filters
     const handleClearAll = () => {
         setFilters({
             companyName: "",
@@ -340,83 +312,36 @@ const EnterpriseContactSale = () => {
             email: "",
             phone: "",
             status: "",
-            dateRange: { start: "", end: "" }
+            dateRange: { start: "", end: "" },
         });
         setSearchQuery("");
         setCurrentPage(0);
         setIsFilterActive(false);
     };
 
-    // Filter menu items for the filter popup
-    const filterMenuItems = [
-        {
-            label: "Company",
-            type: "text",
-            value: filters.companyName,
-            onChange: (value) => handleFilterChange('companyName', value)
-        },
-        {
-            label: "Contact Person",
-            type: "text",
-            value: filters.contactPerson,
-            onChange: (value) => handleFilterChange('contactPerson', value)
-        },
-        {
-            label: "Email",
-            type: "email",
-            value: filters.email,
-            onChange: (value) => handleFilterChange('email', value)
-        },
-        {
-            label: "Phone",
-            type: "tel",
-            value: filters.phone,
-            onChange: (value) => handleFilterChange('phone', value)
-        },
-        {
-            label: "Status",
-            type: "select",
-            options: [
-                { value: "", label: "All Statuses" },
-                { value: "new", label: "New" },
-                { value: "contacted", label: "Contacted" },
-                { value: "qualified", label: "Qualified" },
-                { value: "closed", label: "Closed" }
-            ],
-            value: filters.status,
-            onChange: (value) => handleFilterChange('status', value)
-        },
-        {
-            label: "Date Range",
-            type: "date-range",
-            value: filters.dateRange,
-            onChange: handleDateRangeChange
-        }
-    ];
-
     return (
         <>
             <div className="px-2">
-                {/* Header */}
-                <Header
-                    title="Enterprise Contact Sales"
-                    canCreate={false}
-                />
+                <Header title="Enterprise Contact Sales" canCreate={false} />
 
-                {/* Toolbar */}
                 <Toolbar
                     view={view}
                     setView={setView}
+                    searchQuery={searchQuery}
                     onSearch={handleSearch}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPrevPage={prevPage}
+                    onNextPage={nextPage}
                     onFilterClick={() => setFilterPopupOpen(!isFilterPopupOpen)}
-                    dataLength={enterpriseContacts.length}
+                    filterIconRef={filterIconRef}
+                    dataLength={Math.max(1, totalCount)}
                     isFilterPopupOpen={isFilterPopupOpen}
                     searchPlaceholder="Search by company, contact, email or phone..."
                     showAddButton={false}
                 />
             </div>
 
-            {/* Table/Kanban View */}
             {view === "table" ? (
                 <TableView
                     data={enterpriseContacts}
@@ -425,14 +350,14 @@ const EnterpriseContactSale = () => {
                     currentPage={currentPage}
                     totalPages={totalPages}
                     setCurrentPage={setCurrentPage}
-                    itemsPerPage={ITEMS_PER_PAGE}
+                    itemsPerPage={10}
                     totalItems={totalCount}
                 />
             ) : (
                 <EnterpriseContactKanban
                     contacts={enterpriseContacts}
                     currentPage={currentPage}
-                    itemsPerPage={ITEMS_PER_PAGE}
+                    itemsPerPage={0}
                     totalItems={totalCount}
                     onPageChange={setCurrentPage}
                     onView={handleView}
@@ -445,28 +370,48 @@ const EnterpriseContactSale = () => {
                 />
             )}
 
-            {/* Filter Popup */}
-            {isFilterPopupOpen && (
-                <div ref={filterIconRef}>
-                    <FilterPopup
-                        filterMenuItems={filterMenuItems}
-                        onApplyFilters={() => {
-                            setIsFilterActive(
-                                Object.values(filters).some(
-                                    (value) =>
-                                        (typeof value === 'string' && value) ||
-                                        (typeof value === 'object' && value &&
-                                            ((value.start && value.end) || Object.values(value).some(v => v)))
-                                )
-                            );
-                            setFilterPopupOpen(false);
-                        }}
-                        onClearAll={handleClearAll}
-                        onClose={() => setFilterPopupOpen(false)}
-                        isFilterActive={isFilterActive}
-                    />
+            <FilterPopup
+                isOpen={isFilterPopupOpen}
+                onClose={() => setFilterPopupOpen(false)}
+                onApply={() => {
+                    setFilters((prev) => ({ ...prev, status: pendingStatus }));
+                    setIsFilterActive(!!pendingStatus);
+                    setFilterPopupOpen(false);
+                    setCurrentPage(0);
+                }}
+                onClearAll={() => {
+                    setPendingStatus("");
+                    setFilters((prev) => ({ ...prev, status: "" }));
+                    setIsFilterActive(false);
+                    setCurrentPage(0);
+                }}
+                filterIconRef={filterIconRef}
+            >
+                <div className="space-y-3 p-1">
+                    <div className="font-medium text-gray-700">Status</div>
+                    <div className="space-y-2">
+                        {[
+                            { value: "", label: "All" },
+                            { value: "new", label: "New" },
+                            { value: "contacted", label: "Contacted" },
+                            { value: "qualified", label: "Qualified" },
+                            { value: "closed", label: "Closed" },
+                        ].map((opt) => (
+                            <label key={opt.value} className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="radio"
+                                    name="statusFilter"
+                                    value={opt.value}
+                                    checked={(pendingStatus || "") === opt.value}
+                                    onChange={(e) => setPendingStatus(e.target.value)}
+                                    className="accent-custom-blue"
+                                />
+                                <span className="capitalize">{opt.label}</span>
+                            </label>
+                        ))}
+                    </div>
                 </div>
-            )}
+            </FilterPopup>
 
             <Outlet />
         </>
