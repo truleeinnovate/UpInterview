@@ -56,23 +56,14 @@ export default function Plans() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Data hook
-  const {
-    plans,
-    isLoading,
-    isError,
-    error,
-    createPlan,
-    updatePlan,
-    deletePlan,
-    isMutating,
-  } = useSubscriptionPlansAdmin();
+  
 
   // UI state
   const [view, setView] = useState("table"); // 'table' | 'kanban'
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState(defaultFilters);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [tempFilters, setTempFilters] = useState(defaultFilters);
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const filterIconRef = useRef(null);
@@ -90,10 +81,36 @@ export default function Plans() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState(null);
 
-  // Reset page when data/filter/search changes
+  // Data hook
+  const {
+    plans = [],
+    total = 0,
+    isLoading,
+    isError,
+    error,
+    createPlan,
+    updatePlan,
+    deletePlan,
+    isMutating,
+  } = useSubscriptionPlansAdmin({
+    page: currentPage + 1,
+    limit: ITEMS_PER_PAGE,
+    search: (searchQuery || '').trim(), // debounced below
+    subscriptionTypes: (selectedFilters.subscriptionTypes || []).join(','),
+    activeStates: (selectedFilters.activeStates || []).join(','),
+    createdDate: selectedFilters.createdDate || '',
+  });
+
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch((searchQuery || '').trim()), 500);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  // Reset page when search/filter changes
   useEffect(() => {
     setCurrentPage(0);
-  }, [searchQuery, selectedFilters, plans?.length]);
+  }, [debouncedSearch, selectedFilters]);
 
   // Route-driven modal control
   useEffect(() => {
@@ -143,10 +160,7 @@ export default function Plans() {
     }
   }, [location.pathname, plans]);
 
-  // Search
-  const normalizedQuery = searchQuery.trim().toLowerCase();
-
-  // Filtering
+  // Filtering active state indicator (for UI only)
   const isFilterActive = useMemo(() => {
     return (
       (selectedFilters.subscriptionTypes?.length ?? 0) > 0 ||
@@ -155,77 +169,14 @@ export default function Plans() {
     );
   }, [selectedFilters]);
 
-  const filteredPlans = useMemo(() => {
-    const now = Date.now();
-
-    const createdThreshold = (() => {
-      switch (selectedFilters.createdDate) {
-        case "last7":
-          return now - 7 * 24 * 60 * 60 * 1000;
-        case "last30":
-          return now - 30 * 24 * 60 * 60 * 1000;
-        default:
-          return null;
-      }
-    })();
-
-    const matchesFilter = (plan) => {
-      // Type
-      if (
-        selectedFilters.subscriptionTypes?.length &&
-        !selectedFilters.subscriptionTypes.includes(plan.subscriptionType)
-      ) {
-        return false;
-      }
-
-      // Active
-      if (selectedFilters.activeStates?.length) {
-        const activeLabel = plan.active ? "Active" : "Inactive";
-        if (!selectedFilters.activeStates.includes(activeLabel)) return false;
-      }
-
-      // Created date
-      if (createdThreshold) {
-        const createdMs = new Date(plan.createdAt).getTime();
-        if (isNaN(createdMs) || createdMs < createdThreshold) return false;
-      }
-
-      return true;
-    };
-
-    const matchesSearch = (plan) => {
-      if (!normalizedQuery) return true;
-
-      const haystack = [
-        plan.planId,
-        plan.name,
-        plan.description,
-        plan.subscriptionType,
-        ...(plan.features || []).flatMap((f) => [f?.name, f?.description]),
-        ...(plan.pricing || []).flatMap((p) => [p?.currency, p?.billingCycle]),
-      ]
-        .filter(Boolean)
-        .map((v) => String(v).toLowerCase());
-
-      return haystack.some((v) => v.includes(normalizedQuery));
-    };
-
-    const list = Array.isArray(plans) ? plans : [];
-    const out = list.filter((p) => matchesFilter(p) && matchesSearch(p));
-    // Sort by updatedAt desc
-    out.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-    return out;
-  }, [plans, normalizedQuery, selectedFilters]);
-
-  // Pagination
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredPlans.length / ITEMS_PER_PAGE)
-  );
-  const currentPlans = useMemo(() => {
-    const start = currentPage * ITEMS_PER_PAGE;
-    return filteredPlans.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredPlans, currentPage]);
+  // Server pagination metadata
+  const totalPages = Math.max(1, Math.ceil((total || 0) / ITEMS_PER_PAGE));
+  const nextPage = () => {
+    if (currentPage + 1 < totalPages) setCurrentPage((p) => p + 1);
+  };
+  const prevPage = () => {
+    if (currentPage > 0) setCurrentPage((p) => p - 1);
+  };
 
   // Actions
   const handleCreateClick = () => {
@@ -281,10 +232,12 @@ export default function Plans() {
   const clearAllFilters = () => {
     setTempFilters(defaultFilters);
     setSelectedFilters(defaultFilters);
+    setCurrentPage(0);
   };
   const applyFilters = () => {
     setSelectedFilters(tempFilters);
     setIsFilterPopupOpen(false);
+    setCurrentPage(0);
   };
 
   const columns = [
@@ -370,14 +323,12 @@ export default function Plans() {
           onSearch={(e) => setSearchQuery(e.target.value)}
           currentPage={currentPage}
           totalPages={totalPages}
-          onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
-          onNextPage={() =>
-            setCurrentPage((p) => (p + 1 >= totalPages ? p : p + 1))
-          }
+          onPrevPage={prevPage}
+          onNextPage={nextPage}
           onFilterClick={isFilterPopupOpen ? closeFilterPopup : openFilterPopup}
           isFilterActive={isFilterActive}
           isFilterPopupOpen={isFilterPopupOpen}
-          dataLength={filteredPlans.length}
+          dataLength={Math.max(1, total)}
           filterIconRef={filterIconRef}
         />
 
@@ -525,7 +476,7 @@ export default function Plans() {
       <div className="fixed sm:top-64 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
         {view === "table" ? (
           <TableView
-            data={currentPlans}
+            data={plans}
             columns={columns}
             loading={isLoading || isMutating}
             actions={actions}
@@ -538,8 +489,8 @@ export default function Plans() {
           />
         ) : (
           <PlanKanbanView
-            currentPlans={currentPlans}
-            plans={filteredPlans}
+            currentPlans={plans}
+            plans={plans}
             loading={isLoading || isMutating}
             onView={handleView}
             onEdit={handleEdit}
