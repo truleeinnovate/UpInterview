@@ -736,6 +736,7 @@ const InterviewDetails = ({
                         required={true}
                         onMenuOpen={loadTechnologies}
                         loading={isTechnologiesFetching}
+                        placeholder='Select Your Comfortable Technology'
                     />
                 </div>
 
@@ -814,7 +815,7 @@ const InterviewDetails = ({
                             onMenuOpen={loadSkills}
                             loading={isSkillsFetching}
                             isMulti={false}
-                            placeholder="Type to search or press Enter to add new skill"
+                            placeholder="Type To Search Or Press Enter To Add New Skill"
                             creatable={true}
                         />
                     </div>
@@ -873,7 +874,7 @@ const InterviewDetails = ({
                             </div>
                         ) : (
                             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                                <p className="text-sm text-gray-500">No skills selected yet. Start typing to search and add skills.</p>
+                                <p className="text-sm text-gray-500">No Skills Selected Yet. Start Typing To Search And Add Skills.</p>
                             </div>
                         )}
                     </div>
@@ -930,6 +931,7 @@ const InterviewDetails = ({
                                 required={true}
                                 error={errors.previousInterviewExperienceYears}
                                 className={errors.previousInterviewExperienceYears ? 'border-red-500' : 'border-gray-400'}
+                                placeholder="Enter Years of Interview Experience"
                             />
                         </div>
                     </div>
@@ -1462,7 +1464,7 @@ const InterviewDetails = ({
                                             { value: '30', label: '30% discount' },
                                             { value: 'custom', label: 'Add custom percentage...' }
                                         ]}
-                                        placeholder="Select discount percentage"
+                                        placeholder="Select Discount Percentage"
                                         className="w-full"
                                         classNamePrefix="select"
                                         isClearable={true}
@@ -1521,7 +1523,7 @@ const InterviewDetails = ({
                         required
                         minLength={50}
                         maxLength={100}
-                        placeholder="Senior Software Engineer with 5+ years of experience in full-stack development"
+                        placeholder="Senior Software Engineer With 5+ Years Of Experience In FullStack Development"
                     />
                     <div className="flex justify-between mt-1">
                         <p className="text-xs text-gray-500">

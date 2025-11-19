@@ -64,6 +64,16 @@ const allowedOrigins = [
 // CORS middleware
 app.use((req, res, next) => {
     const origin = req.headers.origin;
+    console.log('🔍 [CORS] Request details:', {
+        method: req.method,
+        path: req.path,
+        origin: origin,
+        referer: req.headers.referer,
+        userAgent: req.headers['user-agent'],
+        hasCookies: Object.keys(req.cookies).length > 0,
+        cookieHeader: req.headers.cookie
+    });
+    
     //   console.log(
     //     "Request Method:",
     //     req.method,

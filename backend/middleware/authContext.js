@@ -36,6 +36,15 @@ const authContextMiddleware = (req, res, next) => {
     let authToken = req.cookies.authToken || '';
     let impersonationToken = req.cookies.impersonationToken || '';
 
+    // Debug logging
+    console.log('🔍 [AuthMiddleware] Raw cookies:', {
+      hasAuthCookie: !!req.cookies.authToken,
+      hasImpersonationCookie: !!req.cookies.impersonationToken,
+      allCookieKeys: Object.keys(req.cookies),
+      authTokenLength: authToken.length,
+      impersonationTokenLength: impersonationToken.length
+    });
+
     // -----------------------------------------------------------------
     // 2. FALLBACK: Authorization header (Bearer token)
     // -----------------------------------------------------------------
@@ -62,6 +71,20 @@ const authContextMiddleware = (req, res, next) => {
     // -----------------------------------------------------------------
     const authPayload = authToken ? jwt.decode(authToken) || {} : {};
     const impPayload = impersonationToken ? jwt.decode(impersonationToken) || {} : {};
+
+    // Debug JWT payloads
+    console.log('🔍 [AuthMiddleware] JWT payloads:', {
+      hasAuthToken: !!authToken,
+      authPayloadKeys: Object.keys(authPayload),
+      authPayload: {
+        userId: authPayload.userId,
+        tenantId: authPayload.tenantId,
+        id: authPayload.id,
+        organization: authPayload.organization
+      },
+      hasImpersonationToken: !!impersonationToken,
+      impPayloadKeys: Object.keys(impPayload)
+    });
 
     // -----------------------------------------------------------------
     // 4. FLAGS
