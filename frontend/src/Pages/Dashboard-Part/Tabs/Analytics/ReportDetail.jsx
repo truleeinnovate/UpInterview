@@ -31,6 +31,10 @@ import {
   getChartData,
 } from "../../../../Components/Analytics/data/mockData";
 
+import Tooltip from "@mui/material/Tooltip";
+import { ReactComponent as TbLayoutGridRemove } from "../../../../icons/TbLayoutGridRemove.svg";
+import { ReactComponent as FaList } from "../../../../icons/FaList.svg";
+
 const ReportDetail = () => {
   const { reportId } = useParams();
   const navigate = useNavigate();
@@ -335,7 +339,7 @@ const ReportDetail = () => {
   const chartData = getChartData();
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -393,8 +397,9 @@ const ReportDetail = () => {
       </div>
 
       {/* View Toggle */}
-      <div className="flex bg-teal-50 rounded-lg p-1 w-fit">
-        <button
+      {/* <div className="flex bg-teal-50 rounded-lg p-1 w-fit"> */}
+      <div className="flex items-center">
+        {/* <button
           onClick={() => setActiveView("dashboard")}
           className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeView === "dashboard"
@@ -415,8 +420,31 @@ const ReportDetail = () => {
         >
           <Table className="w-4 h-4" />
           <span>Table View</span>
-        </button>
-        {/* v1.0.0 --------------------------------------------------------------------> */}
+        </button> */}
+        <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
+          <span
+            onClick={() => setActiveView("dashboard")}
+            className="cursor-pointer"
+          >
+            <FaList
+              className={`text-xl mr-4 ${
+                activeView === "table" ? "text-custom-blue" : ""
+              }`}
+            />
+          </span>
+        </Tooltip>
+        <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
+          <span
+            onClick={() => setActiveView("kanban")}
+            className="cursor-pointer"
+          >
+            <TbLayoutGridRemove
+              className={`text-xl ${
+                activeView === "kanban" ? "text-custom-blue" : ""
+              }`}
+            />
+          </span>
+        </Tooltip>
       </div>
 
       {/* Filters */}
@@ -464,7 +492,7 @@ const ReportDetail = () => {
           {/* Charts */}
           {/* v1.0.0 <---------------------------------------------------------------------- */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
-          {/* v1.0.0 ----------------------------------------------------------------------> */}
+            {/* v1.0.0 ----------------------------------------------------------------------> */}
             <InterviewsOverTimeChart
               data={chartData.interviewsOverTime || []}
             />
