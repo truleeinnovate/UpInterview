@@ -430,21 +430,37 @@ const SuggestedQuestionsComponent = ({
   const totalItems = suggestedQuestions.length;
   const totalPages = pagination?.totalPages || 1;
 
+  // Respect plan limit: compute effective total pages based on accessibleQuestions
+  const planAccessibleTotal = typeof accessibleQuestions === "number" ? accessibleQuestions : undefined;
+  const accessibleTotalPages = planAccessibleTotal ? Math.max(1, Math.ceil(planAccessibleTotal / itemsPerPage)) : totalPages;
+  const effectiveTotalPages = Math.min(totalPages, accessibleTotalPages);
+
+
 
 
   const paginatedData = suggestedQuestions || [];
 
+  // Determine locked items and prepare unlocked list for rendering
+  const hasLockedOnPage = (paginatedData || []).some((q) => q?.isLocked);
+  const unlockedPaginatedData = (paginatedData || []).filter((q) => !q?.isLocked);
+  const lockedCount = typeof lockedQuestionsCount === "number"
+    ? lockedQuestionsCount
+    : (paginatedData || []).filter((q) => q?.isLocked).length;
 
-  // Range label using backend data
-  const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-  const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+
+  // Range label using accessible total (plan limit) when available
+  const totalAvailable = planAccessibleTotal ?? pagination?.totalQuestions ?? totalItems;
+  const startIndex = totalAvailable === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalAvailable);
+  const beyondAccessible = typeof planAccessibleTotal === "number" && currentPage > accessibleTotalPages;
   const rangeLabel =
-    totalItems === 0
+    totalAvailable === 0
       ? "0/0"
-      : startIndex === endIndex
-        ? `${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`
-        : `${startIndex}-${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"
-        }`;
+      : beyondAccessible
+        ? `${planAccessibleTotal}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`
+        : startIndex === endIndex
+          ? `${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`
+          : `${startIndex}-${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`;
 
 
 
@@ -1020,8 +1036,6 @@ const SuggestedQuestionsComponent = ({
               </div>
             </div>
           </div>
-        </div>
-      </div> */}
 
       {/* It's Implemented to avoid responsive issues  */}
       <HeaderBar
@@ -1039,34 +1053,6 @@ const SuggestedQuestionsComponent = ({
         onClickRightPagination={onClickRightPagination}
         type={type}
       />
-      { 
-        !suggestedQuestions || suggestedQuestions.length === 0 && !isLoading && (
-        <div className="h-full flex flex-col gap-4 justify-center items-center text-center p-8 mt-24">
-        <div className="text-gray-400">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-12 w-12"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </div>
-        <h2 className="text-gray-700 font-semibold text-lg">
-          No Questions Available
-        </h2>
-        <p className="text-gray-500">
-          Please try again later or check your data source.
-        </p>
-      </div>
-        )
-      }
 
 
       {/* v1.0.5 -----------------------------------------------------------------> */}
@@ -1139,32 +1125,32 @@ const SuggestedQuestionsComponent = ({
               )}
             {/* v1.0.7 <----------------------------------------------------------------------- */}
             <ul className="flex flex-col gap-4 pr-2 h-[calc(100vh-210px)] overflow-y-auto">
-              {/* v1.0.7 <----------------------------------------------------------------------- */}
-              {paginatedData.length > 0 ? (
-                paginatedData.map((item, index) => {
-                  // For locked cards, show simplified centered content
-                  if (item.isLocked) {
-                    return (
-                      <div
-                        key={index}
-                        className="border rounded-lg shadow-sm transition-shadow text-sm border-gray-300 bg-gray-50"
+              {/* Show a single lock banner if any items are locked on this page */}
+              {hasLockedOnPage && (
+                <div
+                  key="locked-banner"
+                  className="border rounded-lg shadow-sm transition-shadow text-sm border-gray-300 bg-gray-50"
+                >
+                  <div className="relative min-h-[200px] flex items-center justify-center p-8">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <Lock className="w-12 h-12 text-gray-400 mb-3" />
+                      <p className="text-gray-700 font-medium text-lg mb-1">Plan limit reached</p>
+                      <p className="text-gray-500 text-sm mb-4">
+                        {(planAccessibleTotal ?? accessibleQuestions ?? 0)}/{totalQuestionsFromAPI ?? 0} Questions available
+                      </p>
+                      <button
+                        onClick={() => navigate('/account-settings/subscription')}
+                        className="px-6 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
                       >
-                        <div className="relative min-h-[200px] flex items-center justify-center p-8">
-                          <div className="flex flex-col items-center justify-center">
-                            <Lock className="w-12 h-12 text-gray-400 mb-3" />
-                            <p className="text-gray-700 font-medium text-lg mb-4">This question is locked</p>
-                            <button
-                              onClick={() => navigate('/account-settings/subscription')}
-                              className="px-6 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
-                            >
-                              Upgrade to unlock
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  }
-
+                        Upgrade to unlock
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* Render only unlocked cards */}
+              {unlockedPaginatedData.length > 0 ? (
+                unlockedPaginatedData.map((item, index) => {
                   // Regular unlocked card
                   return (
                     <div
@@ -1386,7 +1372,7 @@ const SuggestedQuestionsComponent = ({
                     </div>
                   );
                 })
-              ) : (
+              ) : (!hasLockedOnPage && (
                 <div className="h-full flex flex-col gap-4 justify-center items-center text-center mt-24">
                   <div className="text-gray-400">
                     <svg
@@ -1411,7 +1397,7 @@ const SuggestedQuestionsComponent = ({
                     Try again with different filter options
                   </p>
                 </div>
-              )}
+              ))}
             </ul>
           </div>
           {/* v1.0.5 -----------------------------------------------------------------> */}
