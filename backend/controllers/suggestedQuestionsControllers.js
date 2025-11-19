@@ -473,10 +473,13 @@ const getQuestions = async (req, res) => {
       });
     }
 
-    // Apply access limits and locking
-    const processedQuestions = allQuestions.map((doc, index) => {
-      const isLocked = accessibleCount !== Infinity && index >= accessibleCount;
-      return toUnified(doc, index, isLocked);
+    // Apply access limits and locking using GLOBAL index across pages
+    // Use `skip` (derived from page and limit) to compute absolute index
+    const baseIndex = skip; // position of the first item in this page within the full result set
+    const processedQuestions = allQuestions.map((doc, indexOnPage) => {
+      const globalIndex = baseIndex + indexOnPage;
+      const isLocked = accessibleCount !== Infinity && globalIndex >= accessibleCount;
+      return toUnified(doc, globalIndex, isLocked);
     });
 
     const totalPages = Math.ceil(totalCount / limitNum);

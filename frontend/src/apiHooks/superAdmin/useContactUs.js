@@ -8,29 +8,57 @@ import { notify } from "../../services/toastService";
 axios.defaults.withCredentials = true;
 
 // Hook to get all contact us messages (superadmin)
-export const useContactUs = () => {
+export const useContactUs = (options = {}) => {
   const { superAdminPermissions, isInitialized } = usePermissions();
   const hasViewPermission = superAdminPermissions?.ContactUs?.View !== false;
 
+  const { page, limit, search, startDate, endDate } = options || {};
+
   const query = useQuery({
-    queryKey: ["contactUs"],
+    queryKey: [
+      "contactUs",
+      {
+        page: page || 1,
+        limit: limit || 10,
+        search: search || "",
+        startDate: startDate || "",
+        endDate: endDate || "",
+      },
+    ],
     queryFn: async () => {
+      const params = {};
+      if (page) params.page = page;
+      if (limit) params.limit = limit;
+      if (typeof search === "string" && search.trim()) params.search = search.trim();
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/upinterviewcontactuspage`
+        `${config.REACT_APP_API_URL}/upinterviewcontactuspage`,
+        { params }
       );
       return response.data;
     },
     enabled: isInitialized && hasViewPermission,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+    keepPreviousData: true,
   });
 
+  const data = query.data || {};
+
+  const total = data?.total ?? 0;
+  const currentPage = data?.page ?? (page || 1);
+  const itemsPerPage = data?.itemsPerPage ?? (limit || (Array.isArray(data?.contacts) ? data.contacts.length : 10));
+
   return {
-    contactMessages: query.data?.contacts || [],
+    contactMessages: data?.contacts || [],
+    total,
+    currentPage,
+    itemsPerPage,
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
-    total: query.data?.total || 0,
   };
 };
 

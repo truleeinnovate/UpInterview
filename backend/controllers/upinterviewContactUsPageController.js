@@ -42,32 +42,97 @@ const getAllContactUsSubmissions = async (req, res) => {
   console.log("📋 [GET /] Fetching all contact us submissions");
 
   try {
-    // Fetch all contacts, sorted by newest first
-    const contacts = await Contact.find().sort({ _id: -1 });
-    console.log(`✅ Found ${contacts.length} contact submissions`);
+    const { page, limit, search, startDate, endDate } = req.query;
+    const hasParams = Boolean(page || limit || search || startDate || endDate);
 
-    // Transform data for frontend
-    const formattedContacts = contacts.map(contact => ({
+    // Legacy behavior: return full list when no params provided
+    if (!hasParams) {
+      const contacts = await Contact.find().sort({ _id: -1 });
+      //console.log(`✅ Found ${contacts.length} contact submissions (legacy full list)`);
+
+      const formattedContacts = contacts.map((contact) => ({
+        _id: contact._id,
+        name: contact.name,
+        email: contact.email,
+        message: contact.message,
+        createdAt: contact.createdAt,
+      }));
+
+      return res.status(200).json({
+        success: true,
+        contacts: formattedContacts,
+        total: contacts.length,
+      });
+    }
+
+    // Server-side pagination + filters
+    const currentPage = Math.max(parseInt(page) || 1, 1);
+    const perPage = Math.max(parseInt(limit) || 10, 1);
+    const skip = (currentPage - 1) * perPage;
+
+    const match = {};
+
+    if (search && String(search).trim()) {
+      const s = String(search).trim();
+      match.$or = [
+        { name: { $regex: s, $options: "i" } },
+        { email: { $regex: s, $options: "i" } },
+        { message: { $regex: s, $options: "i" } },
+      ];
+    }
+
+    if (startDate || endDate) {
+      const range = {};
+      if (startDate) range.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        range.$lte = end;
+      }
+      match.createdAt = range;
+    }
+
+    const pipeline = [
+      { $match: match },
+      { $sort: { _id: -1 } },
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: perPage },
+          ],
+          meta: [ { $count: "total" } ],
+        },
+      },
+    ];
+
+    const result = await Contact.aggregate(pipeline);
+    const data = result?.[0]?.data || [];
+    const total = result?.[0]?.meta?.[0]?.total || 0;
+
+    const formattedContacts = data.map((contact) => ({
       _id: contact._id,
       name: contact.name,
       email: contact.email,
       message: contact.message,
-      createdAt: contact.createdAt
+      createdAt: contact.createdAt,
     }));
 
     res.status(200).json({
       success: true,
       contacts: formattedContacts,
-      total: contacts.length
+      total,
+      page: currentPage,
+      itemsPerPage: perPage,
     });
-    console.log("📤 Response sent: Contact data retrieved successfully");
+    //console.log(`📤 Response sent: ${formattedContacts.length} contacts (page ${currentPage}) of ${total}`);
   } catch (err) {
     console.error("❌ Error fetching contacts:", err.message);
     console.error("🧩 Stack Trace:", err.stack);
 
     res.status(500).json({
       success: false,
-      error: "Failed to fetch contact submissions"
+      error: "Failed to fetch contact submissions",
     });
   } finally {
     console.log("🔚 [GET /] Fetch contacts process completed.\n");
