@@ -35,7 +35,7 @@ exports.getLogs = async (req, res) => {
 
     const [logs, total] = await Promise.all([
       InternalLog.find(query)
-       .sort({ logId: -1, _id : -1 })
+       .sort({ _id : -1 })
         // .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
@@ -121,7 +121,8 @@ exports.getLogsSummary = async (req, res) => {
 
     // Search across multiple fields
     if (search) {
-      const searchRegex = new RegExp(search, 'i');
+      const safeSearch = String(search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = new RegExp(safeSearch, 'i');
       query.$or = [
         { logId: searchRegex },
         { processName: searchRegex },
@@ -164,36 +165,36 @@ exports.getLogsSummary = async (req, res) => {
 
     // Fetch paginated logs
     const logs = await InternalLog.find(query)
-      .sort({ logId: -1, _id: -1 })
+      .sort({ _id: -1 })
       .skip(skip)
       .limit(limitNum)
       .lean();
 
-    // Calculate summary stats for ALL logs (not just paginated)
-    const summaryStats = await InternalLog.aggregate([
-      { $match: query },
-      {
-        $group: {
-          _id: null,
-          totalLogs: { $sum: 1 },
-          errorLogs: {
-            $sum: { $cond: [{ $eq: ['$status', 'error'] }, 1, 0] }
-          },
-          warningLogs: {
-            $sum: { $cond: [{ $eq: ['$status', 'warning'] }, 1, 0] }
-          },
-          successLogs: {
-            $sum: { $cond: [{ $eq: ['$status', 'success'] }, 1, 0] }
-          }
-        }
-      }
+    // Calculate summary stats using lightweight counts (avoids heavy aggregation)
+    const { status: statusFilter, ...queryWithoutStatus } = query;
+    const selectedStatuses = Array.isArray(statusFilter?.$in)
+      ? statusFilter.$in
+      : (typeof statusFilter === 'string' ? [statusFilter] : null);
+
+    const shouldCount = (s) => !selectedStatuses || selectedStatuses.includes(s);
+
+    const [errorCount, warningCount, successCount] = await Promise.all([
+      shouldCount('error')
+        ? InternalLog.countDocuments({ ...queryWithoutStatus, status: 'error' })
+        : Promise.resolve(0),
+      shouldCount('warning')
+        ? InternalLog.countDocuments({ ...queryWithoutStatus, status: 'warning' })
+        : Promise.resolve(0),
+      shouldCount('success')
+        ? InternalLog.countDocuments({ ...queryWithoutStatus, status: 'success' })
+        : Promise.resolve(0),
     ]);
 
-    const stats = summaryStats[0] || {
-      totalLogs: 0,
-      errorLogs: 0,
-      warningLogs: 0,
-      successLogs: 0
+    const stats = {
+      totalLogs: total,
+      errorLogs: errorCount,
+      warningLogs: warningCount,
+      successLogs: successCount,
     };
 
     res.status(200).json({
