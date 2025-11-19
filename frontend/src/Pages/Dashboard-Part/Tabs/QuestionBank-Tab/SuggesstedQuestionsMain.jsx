@@ -1134,15 +1134,15 @@ const SuggestedQuestionsComponent = ({
                   <div className="relative min-h-[200px] flex items-center justify-center p-8">
                     <div className="flex flex-col items-center justify-center text-center">
                       <Lock className="w-12 h-12 text-gray-400 mb-3" />
-                      <p className="text-gray-700 font-medium text-lg mb-1">Plan limit reached</p>
+                      <p className="text-gray-700 font-medium text-lg mb-1">You’ve reached your plan limit</p>
                       <p className="text-gray-500 text-sm mb-4">
-                        {(planAccessibleTotal ?? accessibleQuestions ?? 0)}/{totalQuestionsFromAPI ?? 0} Questions available
+                        {(planAccessibleTotal ?? accessibleQuestions ?? 0)} accessible • {(totalQuestionsFromAPI - accessibleQuestions)  ?? 0} Questions available
                       </p>
                       <button
                         onClick={() => navigate('/account-settings/subscription')}
                         className="px-6 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
                       >
-                        Upgrade to unlock
+                        Upgrade to unlock remaining
                       </button>
                     </div>
                   </div>
