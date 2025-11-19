@@ -438,6 +438,8 @@ const TaskForm = ({
     }
   }, [taskId, fetchedTask, initialData]);
 
+
+
   return (
     // v1.0.3 <-------------------------------------------------------------------------
     <SidebarPopup
@@ -573,7 +575,7 @@ const TaskForm = ({
                         required
                         name="assignedToId"
                         value={formData.assignedToId || ""}
-                        options={(usersRes || []).map((user) => ({
+                        options={(usersRes?.users || [])?.map((user) => ({
                           value: user._id,
                           label:
                             `${user.firstName || ""} ${
@@ -582,7 +584,7 @@ const TaskForm = ({
                         }))}
                         onChange={(e) => {
                           const selectedUserId = e.target.value;
-                          const selectedUser = (usersRes || []).find(
+                          const selectedUser = (usersRes?.users || []).find(
                             (u) => u._id === selectedUserId
                           );
                           setFormData((prev) => ({
