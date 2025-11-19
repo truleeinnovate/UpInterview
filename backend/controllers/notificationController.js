@@ -52,39 +52,129 @@ const getNotifications = async (req, res) => {
   }
 };
 
-
 const getAllNotification = async (req, res) => {
   try {
-    const { organizationId, tenantId, ownerId } = req.query;
+    const {
+      organizationId,
+      tenantId,
+      ownerId,
+      search,
+      status,
+      type,
+      timeRange,
+      page = 1,
+      limit = 20,
+    } = req.query;
+    console.log("Query params:", req.query);
 
-    if (typeof organizationId === 'undefined') {
-      return res.status(400).json({ message: 'organizationId is required' });
+    if (!organizationId) {
+      return res.status(400).json({ message: "organizationId is required" });
     }
 
-    const isOrganization = organizationId === 'true';
-
+    const isOrganization = organizationId === "true";
     let filter = {};
+
     if (isOrganization) {
-      if (!tenantId) {
-        return res.status(400).json({ message: 'tenantId is required for organization notifications' });
-      }
+      if (!tenantId) return res.status(400).json({ message: "tenantId required" });
       filter.tenantId = tenantId;
     } else {
-      if (!ownerId) {
-        return res.status(400).json({ message: 'ownerId is required for individual notifications' });
-      }
+      if (!ownerId) return res.status(400).json({ message: "ownerId required" });
       filter.ownerId = ownerId;
     }
-    // console.log("Filter:", filter);
 
-    const notifications = await Notifications.find(filter).sort({ _id: -1 });
-    // console.log("Fetched notifications:", notifications);
-    res.json(notifications);
+    // Text search on title/body
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { body: { $regex: search, $options: "i" } },
+      ];
+    }
 
+    if (status && status !== "all") {
+      filter.status = status;
+    }
+
+    if (type && type !== "all") {
+      filter.notificationType = { $regex: new RegExp(`^${type}$`, "i") };
+    }
+
+    if (timeRange && timeRange !== "all") {
+      const now = new Date();
+      let dateFilter = {};
+
+      switch (timeRange) {
+        case "today":
+          dateFilter.createdAt = {
+            $gte: new Date(now.setHours(0, 0, 0, 0)),
+          };
+          break;
+        case "week":
+          dateFilter.createdAt = {
+            $gte: new Date(now.setDate(now.getDate() - 7)),
+          };
+          break;
+        case "month":
+          dateFilter.createdAt = {
+            $gte: new Date(now.setMonth(now.getMonth() - 1)),
+          };
+          break;
+      }
+      filter = { ...filter, ...dateFilter };
+    }
+
+    const total = await Notifications.countDocuments(filter);
+    const notifications = await Notifications.find(filter)
+      .sort({ _id: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    res.json({
+      data: notifications,
+      pagination: {
+        total,
+        page: parseInt(page),
+        pages: Math.ceil(total / limit),
+        limit: parseInt(limit),
+      },
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
+
+// const getAllNotification = async (req, res) => {
+//   try {
+//     const { organizationId, tenantId, ownerId } = req.query;
+
+//     if (typeof organizationId === 'undefined') {
+//       return res.status(400).json({ message: 'organizationId is required' });
+//     }
+
+//     const isOrganization = organizationId === 'true';
+
+//     let filter = {};
+//     if (isOrganization) {
+//       if (!tenantId) {
+//         return res.status(400).json({ message: 'tenantId is required for organization notifications' });
+//       }
+//       filter.tenantId = tenantId;
+//     } else {
+//       if (!ownerId) {
+//         return res.status(400).json({ message: 'ownerId is required for individual notifications' });
+//       }
+//       filter.ownerId = ownerId;
+//     }
+//     // console.log("Filter:", filter);
+
+//     const notifications = await Notifications.find(filter).sort({ _id: -1 });
+//     // console.log("Fetched notifications:", notifications);
+//     res.json(notifications);
+
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 
 // ✅ Properly exporting functions
 module.exports = {
