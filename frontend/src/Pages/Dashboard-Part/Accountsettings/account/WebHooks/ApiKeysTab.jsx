@@ -7,6 +7,9 @@ const ApiKeysTab = () => {
   const [apiKeys, setApiKeys] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [visibleKeys, setVisibleKeys] = useState({});
+  const [copiedKeyId, setCopiedKeyId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
   const [formData, setFormData] = useState({
     organization: "",
     permissions: ["users:read"],
@@ -33,6 +36,7 @@ const ApiKeysTab = () => {
   const fetchApiKeys = useCallback(async () => {
     try {
       const response = await fetch(`${config.REACT_APP_API_URL}/apikeys`, {
+        credentials: 'include',
         headers: getAuthHeaders(),
       });
 
@@ -64,6 +68,7 @@ const ApiKeysTab = () => {
       
       const response = await fetch(`${config.REACT_APP_API_URL}/apikeys`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           ...headers,
@@ -114,14 +119,49 @@ const ApiKeysTab = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-   
+  const handleDelete = (id) => {
+    const key = apiKeys.find((k) => (k.id || k._id) === id);
+    if (key) {
+      setDeleteTarget(key);
+    }
   };
 
-  // Rest of the component unchanged...
-  const copyToClipboard = (text) => {
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    const id = deleteTarget.id || deleteTarget._id;
+
+    try {
+      const headers = getAuthHeaders();
+      const response = await fetch(`${config.REACT_APP_API_URL}/apikeys/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers,
+      });
+
+      if (response.ok) {
+        setApiKeys((prev) => prev.filter((key) => (key.id || key._id) !== id));
+      } else {
+        console.error('Error deleting API key:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Network error while deleting API key:', error);
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteTarget(null);
+  };
+
+  const copyToClipboard = (id, text) => {
     navigator.clipboard.writeText(text);
-    // You could add a toast notification here
+    setCopiedKeyId(id);
+    // Auto-hide the copied tooltip after a short delay
+    setTimeout(() => {
+      setCopiedKeyId((current) => (current === id ? null : current));
+    }, 1500);
   };
 
   const toggleKeyVisibility = (keyId) => {
@@ -168,22 +208,22 @@ const ApiKeysTab = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Organization
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   API Key
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Permissions
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -191,14 +231,17 @@ const ApiKeysTab = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {apiKeys.map((apiKey) => ( // UPDATED: Removed redundant Array.isArray check (already handled in fetch)
                 <tr key={apiKey.id || apiKey._id}> {/* UPDATED: Use _id if id not present (Mongoose uses _id) */}
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {apiKey.organization}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3">
                     <div className="flex items-center space-x-2">
-                      <code className="text-sm bg-gray-100 px-2 py-1 rounded font-mono">
+                      <code
+                        className="text-sm bg-gray-100 px-2 py-1 rounded font-mono truncate max-w-72"
+                        title={visibleKeys[apiKey.id || apiKey._id] ? apiKey.key : ""}
+                      >
                         {maskKey(apiKey.key, visibleKeys[apiKey.id || apiKey._id])}
                       </code>
                       <button
@@ -212,33 +255,58 @@ const ApiKeysTab = () => {
                           <Eye className="w-4 h-4" />
                         )}
                       </button>
-                      <button
-                        onClick={() => copyToClipboard(apiKey.key)}
-                        className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                        title="Copy to clipboard"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-wrap gap-1">
-                      {(apiKey.permissions || []).map((permission) => ( // UPDATED: Safer null-check
-                        <span
-                          key={permission}
-                          className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                      <div className="relative">
+                        <button
+                          onClick={() => copyToClipboard(apiKey.id || apiKey._id, apiKey.key)}
+                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                          title="Copy to clipboard"
                         >
-                          {permission}
-                        </span>
-                      ))}
+                          <Copy className="w-4 h-4" />
+                        </button>
+                        {copiedKeyId === (apiKey.id || apiKey._id) && (
+                          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-sm whitespace-nowrap">
+                            Copied
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 whitespace-nowrap">
+                    <div className="flex flex-wrap gap-1">
+                      {(() => {
+                        const permissions = apiKey.permissions || [];
+                        const visiblePermissions = permissions.slice(0, 2);
+                        const remainingPermissions = permissions.slice(2);
+
+                        return (
+                          <>
+                            {visiblePermissions.map((permission) => (
+                              <span
+                                key={permission}
+                                className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                              >
+                                {permission}
+                              </span>
+                            ))}
+                            {remainingPermissions.length > 0 && (
+                              <span
+                                className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full cursor-default"
+                                title={remainingPermissions.join(", ")}
+                              >
+                                +{remainingPermissions.length}
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 whitespace-nowrap">
                     <div className="text-sm text-gray-500">
                       {new Date(apiKey.createdAt).toLocaleDateString()}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${
                         apiKey.enabled
@@ -249,7 +317,7 @@ const ApiKeysTab = () => {
                       {apiKey.enabled ? "Active" : "Disabled"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 whitespace-nowrap">
                     <button
                       onClick={() => handleDelete(apiKey.id || apiKey._id)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -277,7 +345,7 @@ const ApiKeysTab = () => {
         )}
       </div>
 
-      {/* Modal unchanged */}
+      {/* Create API Key Modal */}
       {showModal &&
         createPortal(
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -542,6 +610,42 @@ const ApiKeysTab = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget &&
+        createPortal(
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-sm w-full p-6 shadow-lg">
+              <h3 className="text-lg font-semibold mb-3">Delete API Key</h3>
+              <p className="text-sm text-gray-700 mb-4">
+                Are you sure you want to delete this API key for
+                {' '}
+                <span className="font-semibold">{deleteTarget.organization}</span>?
+                This action cannot be undone.
+              </p>
+              <div className="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-mono break-all mb-4">
+                {deleteTarget.key}
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={cancelDelete}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>,
           document.body
