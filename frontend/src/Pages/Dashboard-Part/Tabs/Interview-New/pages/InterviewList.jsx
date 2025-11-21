@@ -206,21 +206,21 @@ function InterviewList() {
   const handleFilterChange = useCallback((filters) => {
     setSelectedFilters(filters);
     setIsFilterActive(
-    filters.status.length > 0 ||   
-    filters.tech.length > 0 ||
-    filters.experience.min ||
-    filters.experience.max ||
-    filters.interviewType.length > 0 ||
-    filters.interviewMode.length > 0 ||
-    filters.position.length > 0 ||
-    filters.company.length > 0 ||
-    filters.roundStatus.length > 0 ||
-    filters.interviewer.length > 0 ||
-    filters.createdDate ||
-    filters.interviewDate.from ||
-    filters.interviewDate.to
-   );
-   setCurrentPage(0);   // reset to first page
+      filters.status.length > 0 ||
+        filters.tech.length > 0 ||
+        filters.experience.min ||
+        filters.experience.max ||
+        filters.interviewType.length > 0 ||
+        filters.interviewMode.length > 0 ||
+        filters.position.length > 0 ||
+        filters.company.length > 0 ||
+        filters.roundStatus.length > 0 ||
+        filters.interviewer.length > 0 ||
+        filters.createdDate ||
+        filters.interviewDate.from ||
+        filters.interviewDate.to
+    );
+    setCurrentPage(0); // reset to first page
   }, []);
 
   const handleStatusToggle = (status) => {
@@ -292,7 +292,7 @@ function InterviewList() {
   const handleInterviewerToggle = (id) => {
     setSelectedInterviewers((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-   );
+    );
   };
 
   const handleInterviewDateChange = (e, type) => {
@@ -305,30 +305,30 @@ function InterviewList() {
   const handleClearAll = () => {
     const clearedFilters = {
       status: [],
-     tech: [],
-     experience: { min: "", max: "" },
-     interviewType: [],
+      tech: [],
+      experience: { min: "", max: "" },
+      interviewType: [],
       interviewMode: [],
       position: [],
-     company: [],
+      company: [],
       roundStatus: [],
       interviewer: [],
       createdDate: "",
       interviewDate: { from: "", to: "" },
     };
     setSelectedStatus([]);
-   setSelectedTech([]);
+    setSelectedTech([]);
     setExperience(clearedFilters.experience);
     setSelectedInterviewTypes([]);
     setSelectedInterviewModes([]);
-   setSelectedPositions([]);
+    setSelectedPositions([]);
     setSelectedCompanies([]);
     setSelectedRoundStatuses([]);
     setSelectedInterviewers([]);
     setCreatedDatePreset("");
     setInterviewDateRange({ from: "", to: "" });
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);   // reset to first page
+    setCurrentPage(0); // reset to first page
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -352,7 +352,7 @@ function InterviewList() {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0);   // reset to first page
+    setCurrentPage(0); // reset to first page
   };
 
   // Debounce search input to reduce requests
@@ -568,9 +568,6 @@ function InterviewList() {
       setCurrentPage((prev) => prev - 1);
     }
   };
-
- 
-
 
   const startIndex = currentPage * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, interviewData.length);

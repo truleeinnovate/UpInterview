@@ -23,6 +23,7 @@ import { uploadFile } from "../../../../../apiHooks/imageApis";
 import { validateFile } from "../../../../../utils/FileValidation/FileValidation";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { useUpdateOrganization } from "../../../../../apiHooks/useOrganization";
 
 Modal.setAppElement("#root");
 

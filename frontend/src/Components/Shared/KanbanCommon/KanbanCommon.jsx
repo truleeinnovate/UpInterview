@@ -1,5 +1,6 @@
 // // Created by Ashok
 // v1.0.0 - Ashok - Added ability to click on title to navigate
+// v1.0.1 - Ashok - Improved subtile handling
 
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -144,9 +145,11 @@ const KanbanCommon = ({
                           {capitalizeFirstLetter(item?.title) || "N/A"}
                         </span>
                       </h4>
-                      <p className="text-sm text-gray-500 truncate">
-                        {capitalizeFirstLetter(item?.subTitle) || "N/A"}
-                      </p>
+                      {item?.subTitle && (
+                        <p className="text-sm text-gray-500 truncate">
+                          {capitalizeFirstLetter(item.subTitle)}
+                        </p>
+                      )}
                     </div>
                   </div>
 
