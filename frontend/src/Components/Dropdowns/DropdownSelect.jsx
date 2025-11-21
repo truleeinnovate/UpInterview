@@ -16,10 +16,18 @@ export const selectBaseStyles = (hasError) => ({
       borderColor: hasError ? "#ef4444" : "#9ca3af", // gray-400
     },
     borderRadius: 6,
-    fontSize: "0.875rem", // text-sm
+    fontSize: "inherit", // inherit from wrapper for responsive match with InputField
+    lineHeight: "inherit",
+    fontFamily: "inherit",
   }),
-  valueContainer: (base) => ({ ...base, padding: "0 8px" }),
-  indicatorsContainer: (base) => ({ ...base, paddingRight: 8 }),
+  valueContainer: (base) => ({
+    ...base,
+    padding: "0 12px",
+    fontSize: "inherit",
+    lineHeight: "inherit",
+    fontFamily: "inherit",
+  }),
+  indicatorsContainer: (base) => ({ ...base, paddingRight: 12 }),
   menu: (base) => ({ ...base, zIndex: 50 }),
   // When using menuPortalTarget, react-select renders into a portal container;
   // ensure it's above scrollable content like question lists
@@ -34,6 +42,8 @@ export const selectBaseStyles = (hasError) => ({
     ...base,
     color: "black",
     fontWeight: 500,
+    lineHeight: "inherit",
+    fontFamily: "inherit",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
@@ -42,14 +52,24 @@ export const selectBaseStyles = (hasError) => ({
   placeholder: (base) => ({
     ...base,
     color: "#9ca3af",
+    fontSize: "inherit", // inherit to match InputField across breakpoints
+    fontWeight: 400, // normal weight like native input placeholder
+    lineHeight: "inherit",
+    fontFamily: "inherit",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
     maxWidth: "100%",
   }),
+  input: (base) => ({
+    ...base,
+    fontSize: "inherit",
+    lineHeight: "inherit",
+    fontFamily: "inherit",
+  }),
   option: (base, state) => ({
     ...base,
-    fontSize: "0.875rem",
+    fontSize: "inherit",
     backgroundColor: state.isSelected
       ? "#217989" // custom-blue for selected
       : state.isFocused
@@ -144,7 +164,7 @@ export const preserveStickyOptionFilter = (stickyValue = "__other__") =>
 const DropdownSelect = React.forwardRef(({ hasError = false, classNamePrefix = "rs", styles, ...rest }, ref) => {
   const mergedStyles = styles || selectBaseStyles(hasError);
   return (
-    <div ref={ref} tabIndex={-1}>
+    <div ref={ref} tabIndex={-1} className="text-base sm:text-sm leading-5">
       <Select styles={mergedStyles} classNamePrefix={classNamePrefix} {...rest} />
     </div>
   );

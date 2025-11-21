@@ -43,6 +43,7 @@ function InterviewList() {
   const [selectPositionView, setSelectPositionView] = useState(false);
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
@@ -69,7 +70,7 @@ function InterviewList() {
     // totalPages: serverTotalPages,
     isLoading, deleteInterviewMutation } = useInterviews(
       {
-      searchQuery: searchQuery, // FIX: Changed from 'search' to 'searchQuery'
+      searchQuery: debouncedSearch, // Debounced search for fewer requests
       status: selectedFilters.status,
       tech: selectedFilters.tech,
       experienceMin: selectedFilters.experience.min,
@@ -84,12 +85,11 @@ function InterviewList() {
       interviewDateFrom: selectedFilters.interviewDate.from,
       interviewDateTo: selectedFilters.interviewDate.to,
     },
-     currentPage ,
+    currentPage + 1,
     rowsPerPage
+  );
 
-     
-    );
-
+  
 
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedTech, setSelectedTech] = useState([]);
@@ -355,12 +355,23 @@ function InterviewList() {
     setCurrentPage(0);   // reset to first page
   };
 
+  // Debounce search input to reduce requests
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch((searchQuery || '').trim()), 500);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   const handleFilterIconClick = () => {
-    if (interviewData?.length !== 0) {
-      setFilterPopupOpen((prev) => !prev);
-    }
+    setFilterPopupOpen((prev) => !prev);
   };
+
+  // Auto-reset page if it exceeds available pages
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil((total || 0) / rowsPerPage));
+    if (currentPage >= totalPages) {
+      setCurrentPage(Math.max(0, totalPages - 1));
+    }
+  }, [total, rowsPerPage, currentPage]);
 
   const toggleRowExpansion = (interviewId) => {
     setExpandedRows((prev) => ({
@@ -946,7 +957,7 @@ function InterviewList() {
               onFilterClick={handleFilterIconClick}
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
-              dataLength={total}
+              dataLength={Math.max(1, total)}
               searchPlaceholder="Search Interviews..."
               filterIconRef={filterIconRef}
             />
@@ -1287,6 +1298,7 @@ function InterviewList() {
                       <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
                         {[
                           "Draft",
+                          "InProgress",
                           "Active",
                           "Completed",
                           "Cancelled",

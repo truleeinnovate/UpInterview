@@ -1,6 +1,6 @@
 import React from "react";
 
-const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, label = "IncreaseAndDecreaseField", required = false, min = 1, max = 15, disabled = false }) => {
+const IncreaseAndDecreaseField = ({ value, onChange, name, placeholder, inputRef, error, label = "IncreaseAndDecreaseField", required = false, min = 1, max = 15, disabled = false }) => {
   
   const handleInputChange = (e) => {
     const inputValue = e.target.value;
@@ -74,7 +74,7 @@ const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, labe
           }
           focus:outline-gray-300
         `}
-          placeholder={`Enter ${label}`}
+          placeholder={placeholder ? placeholder : `Enter ${label}`}
         />
       </div>
       {error && <p className="text-red-500 text-xs pt-1">{error}</p>}

@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - commented user related apis
+
 import {
   createContext,
   useContext,
@@ -39,7 +41,6 @@ const CustomProvider = ({ children }) => {
   // const [popupVisibility, setPopupVisibility] = useState(false);
   // const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
   // const [createdLists, setCreatedLists] = useState([]);
-
 
   // const [feedbackTabErrors, setFeedbackTabError] = useState({
   //   interviewQuestion: true,
@@ -195,7 +196,6 @@ const CustomProvider = ({ children }) => {
   //   }
   // }, [tenantId]);
 
-
   // useEffect(() => {
   //   fetchGroupsData();
   // }, [fetchGroupsData]);
@@ -349,8 +349,9 @@ const CustomProvider = ({ children }) => {
       return response.data
         .map((contact) => {
           if (contact.imageData?.filename) {
-            const imageUrl = `${config.REACT_APP_API_URL
-              }/${contact.imageData.path.replace(/\\/g, "/")}`;
+            const imageUrl = `${
+              config.REACT_APP_API_URL
+            }/${contact.imageData.path.replace(/\\/g, "/")}`;
             return { ...contact, imageUrl };
           }
           return contact;
@@ -423,7 +424,7 @@ const CustomProvider = ({ children }) => {
 
   const addOrUpdateUser = useMutation({
     mutationFn: async ({ userData, file, isFileRemoved, editMode }) => {
-      console.log('addOrUpdateUser mutation payload:', { userData, editMode });
+      console.log("addOrUpdateUser mutation payload:", { userData, editMode });
       const payload = {
         UserData: {
           firstName: userData.firstName,
@@ -450,7 +451,10 @@ const CustomProvider = ({ children }) => {
         },
       };
 
-      console.log('Sending payload to /Organization/new-user-Creation:', payload);
+      console.log(
+        "Sending payload to /Organization/new-user-Creation:",
+        payload
+      );
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/Organization/new-user-Creation`,
         payload
@@ -458,10 +462,10 @@ const CustomProvider = ({ children }) => {
 
       // UPLOADING FILES LIKE IMAGES AND RESUMES
       if (isFileRemoved && !file) {
-        console.log('Removing file for contactId:', response.data.contactId);
+        console.log("Removing file for contactId:", response.data.contactId);
         await uploadFile(null, "image", "contact", response.data.contactId);
       } else if (file instanceof File) {
-        console.log('Uploading file for contactId:', response.data.contactId);
+        console.log("Uploading file for contactId:", response.data.contactId);
         await uploadFile(file, "image", "contact", response.data.contactId);
       }
 
@@ -477,14 +481,13 @@ const CustomProvider = ({ children }) => {
       return response.data;
     },
     onSuccess: () => {
-      console.log('User operation successful, invalidating users query');
+      console.log("User operation successful, invalidating users query");
       queryClient.invalidateQueries(["users"]);
     },
     onError: (error) => {
       console.error("User operation error:", error);
     },
   });
-
 
   // Mutation for toggling user status
   const toggleUserStatus = useMutation({
@@ -672,13 +675,13 @@ const CustomProvider = ({ children }) => {
 
         // loading,
 
-        // users
-        usersRes,
-        usersLoading,
-        refetchUsers,
-        addOrUpdateUser,
-        toggleUserStatus,
-        deleteUser,
+        // users // <---------- commented by Ashok
+        // usersRes,
+        // usersLoading,
+        // refetchUsers,
+        // addOrUpdateUser,
+        // toggleUserStatus,
+        // deleteUser, // --------commented by Ashok ------------------>
 
         // wallet Balance - COMMENTED: Use useWallet hook instead
         // walletBalance,
@@ -739,8 +742,6 @@ const CustomProvider = ({ children }) => {
 
         // interviewRounds,
         // fetchInterviewRounds,
-
-
 
         // superAdminProfile,
       }}

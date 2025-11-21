@@ -69,7 +69,7 @@ const candidateValidationSchema = Joi.object({
 //     "string.empty": "Position is required",
 //     "any.required": "Position is required",
 //   }),
-  ownerId: Joi.string().required().messages({
+  ownerId: Joi.string().optional().messages({
     "any.required": "OwnerId is required",
   }),
   tenantId: Joi.string().optional(),

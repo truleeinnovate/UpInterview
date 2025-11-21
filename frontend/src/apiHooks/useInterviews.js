@@ -43,7 +43,7 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
   } = useQuery({
     queryKey: ['interviews', params],
     queryFn: async () => {
-      const response = await fetchFilterData('interview', params);
+      const response = await fetchFilterData('interview', {}, params);
       console.log("interviews response", response);
       // Enhanced with candidate data
 
@@ -69,6 +69,7 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
     refetchOnMount: false, // Don't refetch when component mounts if data exists
     refetchOnReconnect: false, // Don't refetch on network reconnect
+    keepPreviousData: true,
   });
 
   // console.log("responseData", responseData);

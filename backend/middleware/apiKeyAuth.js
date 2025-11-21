@@ -112,7 +112,7 @@ const apiKeyAuth = (requiredPermission = null) => {
       if (keyDoc.tenantId) {
         req.tenantId = keyDoc.tenantId;
       }
-
+ 
       // Log successful authentication
       const duration = Date.now() - startTime;
       console.log(`🔑 [ApiKeyAuth] Success - Org: ${keyDoc.organization}, Endpoint: ${endpoint}, Duration: ${duration}ms, Request ID: ${requestId}`);
