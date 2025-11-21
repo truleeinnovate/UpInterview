@@ -19,11 +19,12 @@ function InterviewerRatesPage() {
   useEffect(() => {
     document.title = "Interviewer Rates | Admin Portal";
   }, []);
-
+  const pageType = "adminPortal";
   // v1.0.1 <----------------------------------------------
   const { technologies, loadTechnologies, isTechnologiesFetching } =
-    useMasterData();
+    useMasterData({}, pageType);
   // v1.0.1 ---------------------------------------------->
+  // console.log("Technologies Master Data:", technologies);
 
   const [activeView, setActiveView] = useState("table");
   const [showRateCardModal, setShowRateCardModal] = useState(false);

@@ -26,6 +26,7 @@ const AdditionalDetails = ({
   requiresResume,
   // v1.0.3 ---------------------------->
 }) => {
+  const pageType = "adminPortal";
   const {
     locations,
     loadLocations,
@@ -36,7 +37,7 @@ const AdditionalDetails = ({
     currentRoles,
     loadCurrentRoles,
     isCurrentRolesFetching,
-  } = useMasterData();
+  } = useMasterData({}, pageType);
   const resumeInputRef = useRef(null);
   const coverLetterInputRef = useRef(null);
   const [coverLetterName, setCoverLetterName] = useState(
@@ -416,7 +417,7 @@ const AdditionalDetails = ({
 
             {/* Cover Letter Section */}
             <div className="sm:col-span-2 col-span-2">
-              <div className='mb-3'>
+              <div className="mb-3">
                 <label
                   htmlFor="coverLetter"
                   className="text-sm font-medium text-gray-700 mb-1"

@@ -33,7 +33,7 @@ const companySizes = ["0-10", "10-20", "50-100", "100-500", "500-1000"];
 
 const CompanyEditProfile = () => {
   const { addOrUpdateOrganization } = useCustomContext();
-
+  const pageType = "adminPortal";
   const {
     locations,
     industries,
@@ -41,7 +41,7 @@ const CompanyEditProfile = () => {
     loadIndustries,
     isLocationsFetching,
     isIndustriesFetching,
-  } = useMasterData();
+  } = useMasterData({}, pageType);
 
   const { id } = useParams();
   const navigate = useNavigate();

@@ -58,10 +58,10 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
     defaultCurrency: "INR",
     isActive: true,
   });
-
+  const pageType = "adminPortal";
   // v1.0.1 <------------------------------------------------------
   const [currentMode, setCurrentMode] = useState(mode); // local mode state
-  const { technologies } = useMasterData();
+  const { technologies } = useMasterData({}, pageType);
   // v1.0.1 ------------------------------------------------------>
 
   // const categories = [
@@ -71,6 +71,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   //   "QA & Testing",
   //   "Specialized Skills",
   // ];
+  console.log("Technologies Master Data:", technologies);
 
   const experienceLevels = ["Junior", "Mid-Level", "Senior"];
   // v1.0.3 <-------------------------------------------------------

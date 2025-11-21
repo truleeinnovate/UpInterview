@@ -46,6 +46,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
   const { templatesData, isQueryLoading: isTemplatesFetching } =
     useInterviewTemplates();
+  const pageType = "adminPortal";
+
   const {
     companies,
     locations,
@@ -55,7 +57,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     loadSkills,
     isCompaniesFetching,
     isLocationsFetching,
-  } = useMasterData();
+  } = useMasterData({}, pageType);
 
   const { id } = useParams();
   const location = useLocation();
@@ -139,15 +141,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     };
   }, []);
 
-  
-
-  
-
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
     setSearchTerm("");
   };
-  
 
   const filteredCompanies = companies?.filter((company) =>
     company.CompanyName?.toString()
@@ -155,14 +152,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       .includes(companySearchTerm.toLowerCase())
   );
 
-
   useEffect(() => {
     if (currentStage !== "basic") {
       setHasMovedToRounds(true);
     }
   }, [currentStage]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (id) {
       const selectedPosition = positionData.find((pos) => pos._id === id);
       setIsEdit(true);
@@ -227,13 +223,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       setAllSelectedSkills(
         selectedPosition?.skills?.map((skill) => skill.skill) || []
       );
-
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positionData, id, companies, templatesData]);
-
-
 
   const isNextEnabled = () => {
     if (currentStep === 0) {
@@ -262,8 +255,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }
     return false;
   };
-
-
 
   // Mapped options for shared DropdownWithSearchField
   const companyOptionsRS = (companies || [])
@@ -454,8 +445,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     // setEditingIndex(null);
     // setAllSelectedSkills(entries.map(e => e.skill));
   };
-
-
 
   const handleSubmit = async (
     e,

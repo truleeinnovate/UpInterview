@@ -51,7 +51,7 @@ const EditAdvacedDetails = ({
   onSuccess,
   basePath,
 }) => {
-
+  const pageType = "adminPortal";
   const {
     // skills,
     locations,
@@ -63,7 +63,7 @@ const EditAdvacedDetails = ({
     currentRoles,
     loadCurrentRoles,
     isCurrentRolesFetching,
-  } = useMasterData();
+  } = useMasterData({}, pageType);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const { id } = useParams();
@@ -77,7 +77,8 @@ const EditAdvacedDetails = ({
     isLoading: isUserLoading,
     //  isError,
     //  error
-  } = useUserProfile(resolvedId
+  } = useUserProfile(
+    resolvedId
     // from === "my-profile" ? resolvedId : null
   );
 
@@ -192,7 +193,6 @@ const EditAdvacedDetails = ({
       if (from === "outsource-interviewer") {
         // For outsource interviewers, profileData is the Contact object
         if (!profileData || !profileData?.contactId) {
-
           notify.error(
             "Profile data is not loaded. Please wait and try again."
           );
@@ -245,7 +245,6 @@ const EditAdvacedDetails = ({
         console.error("Error saving changes:", error);
         setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
       }
-
     } finally {
       setLoading(false);
     }
@@ -276,9 +275,9 @@ const EditAdvacedDetails = ({
     () =>
       Array.isArray(industries)
         ? industries.map((i) => ({
-          value: i.IndustryName,
-          label: i.IndustryName,
-        }))
+            value: i.IndustryName,
+            label: i.IndustryName,
+          }))
         : [],
     [industries]
   );
@@ -287,9 +286,9 @@ const EditAdvacedDetails = ({
     () =>
       Array.isArray(locations)
         ? locations.map((l) => ({
-          value: l.LocationName,
-          label: l.LocationName,
-        }))
+            value: l.LocationName,
+            label: l.LocationName,
+          }))
         : [],
     [locations]
   );
@@ -346,7 +345,7 @@ const EditAdvacedDetails = ({
       )} */}
       {/* v1.0.3 ---------------------------------------------------------------------------------------------------> */}
       <div className="flex flex-col justify-between h-full sm:p-0 p-6">
-        <div className="h-full space-y-6" >
+        <div className="h-full space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6">
             <div className="flex flex-col">
               <DropdownWithSearchField
@@ -426,8 +425,6 @@ const EditAdvacedDetails = ({
             >
               Save Changes
             </LoadingButton>
-
-
           </div>
         </div>
       </div>
