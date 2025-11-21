@@ -41,18 +41,18 @@ const config = require("./config.js");
 
 // CORS configuration
 const allowedOrigins = [
-    //   `https://${config.REACT_APP_API_URL_FRONTEND}`,
-    "http://localhost:3000",
-    "http://localhost:5000",
-    /^https:\/\/[a-z0-9-]+\.dev\.upinterview\.io$/,
-    // "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
-    // "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
-    "https://dev.upinterview.io",
-    "https://app.upinterview.io",
-    "https://upinterview-dpdgchhbafekdhca.canadacentral-01.azurewebsites.net",
-    "https://upinterview.io",
-    "file://", // Allow file:// protocol for local HTML testing
-    "null"    // Allow null origin for local HTML testing
+  //   `https://${config.REACT_APP_API_URL_FRONTEND}`,
+  "http://localhost:3000",
+  "http://localhost:5000",
+  /^https:\/\/[a-z0-9-]+\.dev\.upinterview\.io$/,
+  // "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
+  // "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
+  "https://dev.upinterview.io",
+  "https://app.upinterview.io",
+  "https://upinterview-dpdgchhbafekdhca.canadacentral-01.azurewebsites.net",
+  "https://upinterview.io",
+  "file://", // Allow file:// protocol for local HTML testing
+  "null", // Allow null origin for local HTML testing
 ];
 
 // const allowedOrigins = [
@@ -94,18 +94,27 @@ app.use((req, res, next) => {
     );
   }
 
-    if (isAllowed) {
-        res.setHeader("Access-Control-Allow-Origin", origin);
-        res.setHeader("Access-Control-Allow-Credentials", "true");
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-permissions, x-tenant-id, X-API-Key");
-        res.setHeader("Access-Control-Expose-Headers", "x-user-id, x-tenant-id, x-impersonation-userid, x-permissions, x-new-token");
-    }
+  if (isAllowed) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-permissions, x-tenant-id, X-API-Key"
+    );
+    res.setHeader(
+      "Access-Control-Expose-Headers",
+      "x-user-id, x-tenant-id, x-impersonation-userid, x-permissions, x-new-token"
+    );
+  }
 
-    if (req.method === "OPTIONS") {
-        // console.log("Responding to OPTIONS request with headers:", res.getHeaders());
-        return res.status(200).end();
-    }
+  if (req.method === "OPTIONS") {
+    // console.log("Responding to OPTIONS request with headers:", res.getHeaders());
+    return res.status(200).end();
+  }
 
   next();
 });
@@ -588,115 +597,130 @@ process.on("SIGINT", shutdown);
 // Master Data Endpoints
 // v1.0.9 <------------------------------------------------------------------------
 // app.get("/skills", async (req, res) => {
-//     try {
-//         const skills = await Skills.find({})
-//             .populate("ownerId", "firstName lastName email -password")
-//             .populate("createdBy", "firstName lastName email -password")
-//             .populate("updatedBy", "firstName lastName email -password").lean();
-//         res.json(skills);
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
+//   try {
+//     const skills = await Skills.find({})
+//       .populate("ownerId", "firstName lastName email -password")
+//       .populate("createdBy", "firstName lastName email -password")
+//       .populate("updatedBy", "firstName lastName email -password")
+//       .lean();
+//     res.json(skills);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
 // });
 
 // app.get("/locations", async (req, res) => {
-//     try {
-//         const LocationNames = await LocationMaster.find({})
-//             .populate("ownerId", "firstName lastName email -password")
-//             .populate("createdBy", "firstName lastName email -password")
-//             .populate("updatedBy", "firstName lastName email -password").lean();
-//         res.json(LocationNames);
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
+//   try {
+//     const LocationNames = await LocationMaster.find({})
+//       .populate("ownerId", "firstName lastName email -password")
+//       .populate("createdBy", "firstName lastName email -password")
+//       .populate("updatedBy", "firstName lastName email -password")
+//       .lean();
+//     res.json(LocationNames);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
 // });
 
 // app.get("/industries", async (req, res) => {
-//     try {
-//         const IndustryNames = await Industry.find({})
-//             .populate("ownerId", "firstName lastName email -password")
-//             .populate("createdBy", "firstName lastName email -password")
-//             .populate("updatedBy", "firstName lastName email -password").lean();
-//         res.json(IndustryNames);
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
+//   try {
+//     const IndustryNames = await Industry.find({})
+//       .populate("ownerId", "firstName lastName email -password")
+//       .populate("createdBy", "firstName lastName email -password")
+//       .populate("updatedBy", "firstName lastName email -password")
+//       .lean();
+//     res.json(IndustryNames);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
 // });
 
 // app.get("/roles", async (req, res) => {
-//     try {
-//         const roles = await RoleMaster.find({})
-//             .populate("ownerId", "firstName lastName email -password")
-//             .populate("createdBy", "firstName lastName email -password")
-//             .populate("updatedBy", "firstName lastName email -password").lean();
-//         res.json(roles);
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
+//   try {
+//     const roles = await RoleMaster.find({})
+//       .populate("ownerId", "firstName lastName email -password")
+//       .populate("createdBy", "firstName lastName email -password")
+//       .populate("updatedBy", "firstName lastName email -password")
+//       .lean();
+//     res.json(roles);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
 // });
-// // v1.0.9 ------------------------------------------------------------------------>
+// // // v1.0.9 ------------------------------------------------------------------------>
 
-// // v1.0.7 <----------------------------------------------------------------------------------
+// // // v1.0.7 <----------------------------------------------------------------------------------
 // app.get("/technology", async (req, res) => {
-//     try {
-//         const technology = await TechnologyMaster.find({})
-//             .populate("ownerId", "firstName lastName email -password")
-//             .populate("createdBy", "firstName lastName email -password")
-//             .populate("updatedBy", "firstName lastName email -password").lean();
-//         res.json(technology);
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
+//   console.log("technology master called");
+//   try {
+//     const technology = await TechnologyMaster.find({})
+//       .populate("ownerId", "firstName lastName email -password")
+//       .populate("createdBy", "firstName lastName email -password")
+//       .populate("updatedBy", "firstName lastName email -password")
+//       .lean();
+//     // console.log("technology master ", technology);
+//     res.json(technology);
+//   } catch (error) {
+//     console.log("technology master error", error);
+//     res.status(500).json({ message: error.message });
+//   }
 // });
-// // v1.0.7 ---------------------------------------------------------------------------------->
+// // // v1.0.7 ---------------------------------------------------------------------------------->
 
-// // v1.0.9 <-----------------------------------------------------------------------------
+// // // v1.0.9 <-----------------------------------------------------------------------------
 // app.get("/qualification", async (req, res) => {
-//     try {
-//         const higherqualifications = await HigherQualification.find({})
-//             .populate("ownerId", "firstName lastName email -password")
-//             .populate("createdBy", "firstName lastName email -password")
-//             .populate("updatedBy", "firstName lastName email -password").lean();
-//         res.json(higherqualifications);
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
+//   try {
+//     const higherqualifications = await HigherQualification.find({})
+//       .populate("ownerId", "firstName lastName email -password")
+//       .populate("createdBy", "firstName lastName email -password")
+//       .populate("updatedBy", "firstName lastName email -password")
+//       .lean();
+//     res.json(higherqualifications);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
 // });
 
 // app.get("/universitycollege", async (req, res) => {
-//     try {
-//         const universityCollegeNames = await University_CollegeName.find({})
-//             .populate("ownerId", "firstName lastName email -password")
-//             .populate("createdBy", "firstName lastName email -password")
-//             .populate("updatedBy", "firstName lastName email -password").lean();
-//         res.json(universityCollegeNames);
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
+//   try {
+//     const universityCollegeNames = await University_CollegeName.find({})
+//       .populate("ownerId", "firstName lastName email -password")
+//       .populate("createdBy", "firstName lastName email -password")
+//       .populate("updatedBy", "firstName lastName email -password")
+//       .lean();
+//     res.json(universityCollegeNames);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
 // });
 
 // app.get("/company", async (req, res) => {
-//     try {
-//         const CompanyNames = await Company.find({})
-//             .populate("ownerId", "firstName lastName email -password")
-//             .populate("createdBy", "firstName lastName email -password")
-//             .populate("updatedBy", "firstName lastName email -password").lean();
-//         res.json(CompanyNames);
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
+//   console.log("CompanyNames sas");
+//   try {
+//     const CompanyNames = await Company.find({})
+//       .populate("ownerId", "firstName lastName email -password")
+//       .populate("createdBy", "firstName lastName email -password")
+//       .populate("updatedBy", "firstName lastName email -password")
+//       .lean();
+//     console.log("CompanyNames", CompanyNames);
+//     res.json(CompanyNames);
+//   } catch (err) {
+//     console.log("CompanyNames err", err);
+//     res.status(500).json({ message: err.message });
+//   }
 // });
 
 // app.get("/category", async (req, res) => {
-//     try {
-//         const CategoryNames = await CategoryQuestionsMaster.find({})
-//             .populate("ownerId", "firstName lastName email -password")
-//             .populate("createdBy", "firstName lastName email -password")
-//             .populate("updatedBy", "firstName lastName email -password").lean();
-//         res.json(CategoryNames);
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
+//   try {
+//     const CategoryNames = await CategoryQuestionsMaster.find({})
+//       .populate("ownerId", "firstName lastName email -password")
+//       .populate("createdBy", "firstName lastName email -password")
+//       .populate("updatedBy", "firstName lastName email -password")
+//       .lean();
+//     res.json(CategoryNames);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
 // });
 // v1.0.9 ----------------------------------------------------------------------------->
 
@@ -1359,6 +1383,9 @@ app.get("/check-profileId", async (req, res) => {
   }
 });
 
+const MasterRoutes = require("./routes/MasterRoutes/masterRoutes.js");
+app.use("/master-data", MasterRoutes);
+
 // app.get('/check-profileId', async (req, res) => {
 //   const { profileId } = req.query;
 
@@ -1514,8 +1541,7 @@ app.use("/rate-cards", RateCardRoutes);
 // v1.0.5 --------------------------------------------------------------------------->
 
 // v1.0.6 <---------------------------------------------------------------------------
-const MasterRoutes = require("./routes/MasterRoutes/masterRoutes.js");
-app.use("/master-data", MasterRoutes);
+
 // v1.0.6 --------------------------------------------------------------------------->
 // v1.0.7 <---------------------------------------------------------------------------
 const QuestionBankManager = require("./routes/QuestionBankManagerRoutes/QuestionBankManagerRoutes.js");

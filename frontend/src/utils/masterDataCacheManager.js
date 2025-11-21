@@ -1,17 +1,17 @@
 // Utility for managing master data cache across the application
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from "@tanstack/react-query";
 
 // Map frontend types to API endpoints
 const TYPE_TO_QUERY_KEY_MAP = {
-  'industries': 'industries',
-  'technologies': 'technology', 
-  'skills': 'skills',
-  'locations': 'locations',
-  'roles': 'roles',
-  'qualifications': 'qualification',
-  'colleges': 'universitycollege',
-  'companies': 'company',
-  'category': 'category'
+  industries: "industries",
+  technologies: "technology",
+  skills: "skills",
+  locations: "locations",
+  roles: "roles",
+  qualifications: "qualification",
+  colleges: "universitycollege",
+  companies: "company",
+  category: "category",
 };
 
 /**
@@ -20,12 +20,12 @@ const TYPE_TO_QUERY_KEY_MAP = {
  */
 export const invalidateMasterDataCache = async (queryClient, type) => {
   const queryKey = TYPE_TO_QUERY_KEY_MAP[type] || type;
-  
+
   // Invalidate the specific cache
-  await queryClient.invalidateQueries({ 
-    queryKey: ['masterData', queryKey] 
+  await queryClient.invalidateQueries({
+    queryKey: ["masterData", queryKey],
   });
-  
+
   console.log(`Cache invalidated for master data type: ${type}`);
 };
 
@@ -34,11 +34,11 @@ export const invalidateMasterDataCache = async (queryClient, type) => {
  * Use when major updates occur
  */
 export const invalidateAllMasterDataCache = async (queryClient) => {
-  await queryClient.invalidateQueries({ 
-    queryKey: ['masterData'] 
+  await queryClient.invalidateQueries({
+    queryKey: ["masterData"],
   });
-  
-  console.log('All master data caches invalidated');
+
+  console.log("All master data caches invalidated");
 };
 
 /**
@@ -47,11 +47,11 @@ export const invalidateAllMasterDataCache = async (queryClient) => {
  */
 export const refreshMasterData = async (queryClient, type) => {
   const queryKey = TYPE_TO_QUERY_KEY_MAP[type] || type;
-  
+
   // Invalidate and refetch
-  await queryClient.invalidateQueries({ 
-    queryKey: ['masterData', queryKey],
-    refetchType: 'all'
+  await queryClient.invalidateQueries({
+    queryKey: ["masterData", queryKey],
+    refetchType: "all",
   });
 };
 
@@ -61,15 +61,15 @@ export const refreshMasterData = async (queryClient, type) => {
  */
 export const isMasterDataStale = (queryClient, type) => {
   const queryKey = TYPE_TO_QUERY_KEY_MAP[type] || type;
-  const query = queryClient.getQueryState(['masterData', queryKey]);
-  
+  const query = queryClient.getQueryState(["masterData", queryKey]);
+
   if (!query) return true;
-  
+
   const now = Date.now();
   const dataUpdatedAt = query.dataUpdatedAt;
   const staleTime = 7 * 24 * 60 * 60 * 1000; // 7 days
-  
-  return (now - dataUpdatedAt) > staleTime;
+
+  return now - dataUpdatedAt > staleTime;
 };
 
 /**
@@ -77,17 +77,17 @@ export const isMasterDataStale = (queryClient, type) => {
  */
 export const getMasterDataCacheStats = (queryClient) => {
   const queries = queryClient.getQueryCache().getAll();
-  const masterDataQueries = queries.filter(q => 
-    q.queryKey[0] === 'masterData'
+  const masterDataQueries = queries.filter(
+    (q) => q.queryKey[0] === "masterData"
   );
-  
-  return masterDataQueries.map(q => ({
+
+  return masterDataQueries.map((q) => ({
     type: q.queryKey[1],
     status: q.state.status,
     dataUpdatedAt: new Date(q.state.dataUpdatedAt),
     dataAge: Date.now() - q.state.dataUpdatedAt,
     isStale: q.isStale(),
-    dataSize: JSON.stringify(q.state.data || {}).length
+    dataSize: JSON.stringify(q.state.data || {}).length,
   }));
 };
 
@@ -97,15 +97,15 @@ export const getMasterDataCacheStats = (queryClient) => {
  */
 export const clearAllMasterData = async (queryClient) => {
   // Remove from React Query cache
-  queryClient.removeQueries({ queryKey: ['masterData'] });
-  
+  queryClient.removeQueries({ queryKey: ["masterData"] });
+
   // Clear from IndexedDB/localforage
-  if (typeof window !== 'undefined' && window.localforage) {
+  if (typeof window !== "undefined" && window.localforage) {
     try {
       await window.localforage.clear();
-      console.log('Master data cleared from storage');
+      console.log("Master data cleared from storage");
     } catch (error) {
-      console.error('Error clearing storage:', error);
+      console.error("Error clearing storage:", error);
     }
   }
 };
@@ -115,14 +115,14 @@ export const clearAllMasterData = async (queryClient) => {
  */
 export const useMasterDataCacheManager = () => {
   const queryClient = useQueryClient();
-  
+
   return {
     invalidateCache: (type) => invalidateMasterDataCache(queryClient, type),
     invalidateAll: () => invalidateAllMasterDataCache(queryClient),
     refresh: (type) => refreshMasterData(queryClient, type),
     isStale: (type) => isMasterDataStale(queryClient, type),
     getStats: () => getMasterDataCacheStats(queryClient),
-    clearAll: () => clearAllMasterData(queryClient)
+    clearAll: () => clearAllMasterData(queryClient),
   };
 };
 
@@ -133,7 +133,7 @@ const masterDataCacheManager = {
   isMasterDataStale,
   getMasterDataCacheStats,
   clearAllMasterData,
-  useMasterDataCacheManager
+  useMasterDataCacheManager,
 };
 
 export default masterDataCacheManager;

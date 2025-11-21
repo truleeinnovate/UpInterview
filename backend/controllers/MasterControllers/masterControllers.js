@@ -230,6 +230,7 @@ const getMasterById = async (req, res) => {
 const getAllMasters = async (req, res) => {
   try {
     const { type } = req.params;
+
     const {
       page = 1,
       limit = 10,
@@ -237,71 +238,85 @@ const getAllMasters = async (req, res) => {
       status, // for category (isActive) or others with status field
       sortBy = "createdAt",
       sortOrder = "desc",
+      pageType,
     } = req.query;
 
-    const Model = getModel(type);
-    if (!Model) {
-      return res.status(400).json({ error: "Invalid master type" });
-    }
+    console.log("pageType", pageType);
+    console.log("type ", type);
 
-    // Build dynamic search across relevant fields
-    const searchQuery = search
-      ? {
-          $or: [
-            { name: { $regex: search, $options: "i" } },
-            { IndustryName: { $regex: search, $options: "i" } },
-            { TechnologyMasterName: { $regex: search, $options: "i" } },
-            { SkillName: { $regex: search, $options: "i" } },
-            { LocationName: { $regex: search, $options: "i" } },
-            { RoleName: { $regex: search, $options: "i" } },
-            { QualificationName: { $regex: search, $options: "i" } },
-            { University_CollegeName: { $regex: search, $options: "i" } },
-            { CompanyName: { $regex: search, $options: "i" } },
-            { CategoryName: { $regex: search, $options: "i" } },
-            { Category: { $regex: search, $options: "i" } }, // for technology
-          ].filter(Boolean),
-        }
-      : {};
-
-    // Handle status filter (especially for category → isActive)
-    const filterQuery = {};
-    if (status) {
-      const statuses = status.split(",").map((s) => s.trim().toLowerCase());
-      if (type === "category") {
-        filterQuery.isActive = {
-          $in: statuses.map((s) => s === "active" || s === "true"),
-        };
-      } else if (Model.schema.path("status")) {
-        filterQuery.status = { $in: statuses };
+    if (pageType !== "adminPortal") {
+      const Model = getModel(type);
+      if (!Model) {
+        return res.status(400).json({ error: "Invalid master type" });
       }
+
+      // Build dynamic search across relevant fields
+      const searchQuery = search
+        ? {
+            $or: [
+              { name: { $regex: search, $options: "i" } },
+              { IndustryName: { $regex: search, $options: "i" } },
+              { TechnologyMasterName: { $regex: search, $options: "i" } },
+              { SkillName: { $regex: search, $options: "i" } },
+              { LocationName: { $regex: search, $options: "i" } },
+              { RoleName: { $regex: search, $options: "i" } },
+              { QualificationName: { $regex: search, $options: "i" } },
+              { University_CollegeName: { $regex: search, $options: "i" } },
+              { CompanyName: { $regex: search, $options: "i" } },
+              { CategoryName: { $regex: search, $options: "i" } },
+              { Category: { $regex: search, $options: "i" } }, // for technology
+            ].filter(Boolean),
+          }
+        : {};
+
+      // Handle status filter (especially for category → isActive)
+      const filterQuery = {};
+      if (status) {
+        const statuses = status.split(",").map((s) => s.trim().toLowerCase());
+        if (path === "category") {
+          filterQuery.isActive = {
+            $in: statuses.map((s) => s === "active" || s === "true"),
+          };
+        } else if (Model.schema.path("status")) {
+          filterQuery.status = { $in: statuses };
+        }
+      }
+
+      const finalQuery = { ...searchQuery, ...filterQuery };
+
+      // Count total matching documents
+      const total = await Model.countDocuments(finalQuery);
+
+      // Fetch with population + pagination + sorting
+      const data = await Model.find(finalQuery)
+        .populate("ownerId", "firstName lastName email -password")
+        .populate("createdBy", "firstName lastName email -password")
+        .populate("updatedBy", "firstName lastName email -password")
+        .sort({ [sortBy]: sortOrder === "desc" ? -1 : 1 })
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit))
+        .lean();
+
+      res.json({
+        data,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit) || 1,
+          totalItems: total,
+          hasNext: page < Math.ceil(total / limit),
+          hasPrev: page > 1,
+          limit: parseInt(limit),
+        },
+      });
+    } else {
+      const Model = await getModel(type)
+        .find({})
+        .populate("ownerId", "firstName lastName email -password")
+        .populate("createdBy", "firstName lastName email -password")
+        .populate("updatedBy", "firstName lastName email -password")
+        .lean();
+      res.json(Model);
     }
-
-    const finalQuery = { ...searchQuery, ...filterQuery };
-
-    // Count total matching documents
-    const total = await Model.countDocuments(finalQuery);
-
-    // Fetch with population + pagination + sorting
-    const data = await Model.find(finalQuery)
-      .populate("ownerId", "firstName lastName email -password")
-      .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password")
-      .sort({ [sortBy]: sortOrder === "desc" ? -1 : 1 })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
-      .lean();
-
-    res.json({
-      data,
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(total / limit) || 1,
-        totalItems: total,
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1,
-        limit: parseInt(limit),
-      },
-    });
   } catch (error) {
     console.error(`Error fetching ${req.params.type}:`, error);
     res.status(500).json({ error: "Internal server error" });

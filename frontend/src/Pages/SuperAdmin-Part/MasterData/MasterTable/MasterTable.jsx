@@ -24,6 +24,7 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { notify } from "../../../../services/toastService";
+import { useMasterData } from "../../../../apiHooks/useMasterData";
 // v1.0.0 ------------------------------------------------------------------------>
 
 // Helper function to map master data types to query keys
@@ -42,6 +43,21 @@ const getMasterDataKey = (type) => {
   return typeMap[type] || type;
 };
 
+const getMasterDataKeys = (type) => {
+  const typeMap = {
+    industries: "industries",
+    technology: "technologies",
+    skills: "skills",
+    locations: "locations",
+    roles: "currentRoles",
+    qualification: "qualifications",
+    universitycollege: "colleges",
+    company: "companies",
+    category: "category",
+  };
+  return typeMap[type] || type;
+};
+
 const MasterTable = ({ permissions = {} }) => {
   const queryClient = useQueryClient();
   const { type } = useParams();
@@ -55,7 +71,7 @@ const MasterTable = ({ permissions = {} }) => {
   const filterIconRef = useRef(null);
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
 
-  const [masterData, setMasterData] = useState([]);
+  // const [masterData, setMasterData] = useState([]);
   const [selectedMaster, setSelectedMaster] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -63,8 +79,8 @@ const MasterTable = ({ permissions = {} }) => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const rowsPerPage = 10;
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalItems, setTotalItems] = useState(0);
+  // const [totalPages, setTotalPages] = useState(0);
+  // const [totalItems, setTotalItems] = useState(0);
   // const authToken = Cookies.get("authToken"); // Kept for future authentication needs
   const impersonationToken = Cookies.get("impersonationToken");
 
@@ -79,44 +95,65 @@ const MasterTable = ({ permissions = {} }) => {
   // Used to disable outer scrollbar
   useScrollLock(isPopupOpen || isDeletePopupOpen);
 
+  // Build paramsData dynamically based on UI state
+  const paramsData = {
+    page: currentPage + 1,
+    limit: rowsPerPage,
+    search: searchQuery,
+    sortBy: "createdAt",
+    sortOrder: "desc",
+    ...(filters.status.length > 0 && {
+      status: filters.status.map((s) => s.toLowerCase()).join(","),
+    }),
+  };
+  // const path = type;
+  // 🚀 Call master data TanQuery Hook
+  const {
+    masterData,
+    isMasterDataLoading,
+    isMasterDataError,
+    loadQualifications,
+    loadLocations,
+  } = useMasterData(paramsData, "Super Admin", type);
+
   // Fetch Data
-  useEffect(() => {
-    if (!type) return;
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const params = new URLSearchParams({
-          page: currentPage + 1,
-          limit: rowsPerPage,
-          search: searchQuery,
-          sortBy: "createdAt",
-          sortOrder: "desc",
-          ...(filters.status.length > 0 && {
-            status: filters.status.map((s) => s.toLowerCase()).join(","),
-          }),
-        });
+  // useEffect(() => {
+  //   if (!type) return;
+  //   const fetchData = async () => {
+  //     setIsLoading(true);
+  //     try {
+  //       const params = new URLSearchParams({
+  //         page: currentPage + 1,
+  //         limit: rowsPerPage,
+  //         search: searchQuery,
+  //         sortBy: "createdAt",
+  //         sortOrder: "desc",
+  //         ...(filters.status.length > 0 && {
+  //           status: filters.status.map((s) => s.toLowerCase()).join(","),
+  //         }),
+  //       });
 
-        const res = await axios.get(
-          `${config.REACT_APP_API_URL}/master-data/${type}`,
-          {
-            params,
-          }
-        );
+  //       const res = await axios.get(
+  //         `${config.REACT_APP_API_URL}/master-data/${type}`,
+  //         {
+  //           params,
+  //         }
+  //       );
 
-        console.log("MASTER DATA FETCH RESPONSE ==========> ", res);
-        // setMasterData(res.data || []);
-        setMasterData(res?.data?.data || []);
-        setTotalPages(res?.data?.pagination.totalPages);
-        setTotalItems(res?.data?.pagination.totalItems);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setMasterData([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [type, currentPage, searchQuery, filters, rowsPerPage]);
+  //       console.log("MASTER DATA FETCH RESPONSE ==========> ", res);
+  //       // setMasterData(res.data || []);
+  //       setMasterData(res?.data?.data || []);
+  //       setTotalPages(res?.data?.pagination.totalPages);
+  //       setTotalItems(res?.data?.pagination.totalItems);
+  //     } catch (err) {
+  //       console.error("Error fetching data:", err);
+  //       setMasterData([]);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   fetchData();
+  // }, [type, currentPage, searchQuery, filters, rowsPerPage]);
 
   // Create and update
   // v1.0.1 <-----------------------------------------------------------------
@@ -194,8 +231,9 @@ const MasterTable = ({ permissions = {} }) => {
       const fetchRes = await axios.get(
         `${config.REACT_APP_API_URL}/master-data/${type}`
       );
-      console.log("Refetched master data:", fetchRes);
-      setMasterData(fetchRes.data?.data);
+      console.log("fetchRes", fetchRes);
+      // console.log("Refetched master data:", fetchRes);
+      // setMasterData(fetchRes.data?.data);
 
       // Reset selected master
       setSelectedMaster(null);
@@ -220,7 +258,7 @@ const MasterTable = ({ permissions = {} }) => {
       );
 
       if (res.status === 200) {
-        setMasterData((prev) => prev.filter((m) => m._id !== deleteTarget._id));
+        // setMasterData((prev) => prev.filter((m) => m._id !== deleteTarget._id));
         setIsDeletePopupOpen(false);
         setDeleteTarget(null);
         notify.success(`Master deleted successfully!`);
@@ -270,7 +308,20 @@ const MasterTable = ({ permissions = {} }) => {
 
   // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
   // const startIndex = currentPage * rowsPerPage;
-  const currentFilteredRows = masterData;
+  // const currentFilteredRows = masterData || [];
+  // const currentFilteredRows = Array.isArray(masterData[type])
+  //   ? masterData[type]
+  //   : [];
+
+  // console.log("masterData?.[type]", masterData?.[type]);
+
+  console.log("getMasterDataKeys(type)", getMasterDataKeys(type));
+  const currentFilteredRows = masterData?.[getMasterDataKeys(type)]?.data || [];
+  const pagination = masterData?.[getMasterDataKeys(type)]?.pagination || {};
+  const totalPages = pagination.totalPages || 1;
+  const totalItems = pagination.totalItems || currentFilteredRows.length;
+  console.log("currentFilteredRows:", currentFilteredRows);
+
   //  FilteredData().slice(
   //   startIndex,
   //   startIndex + rowsPerPage
@@ -595,7 +646,7 @@ const MasterTable = ({ permissions = {} }) => {
           //   setCurrentPage((p) => (p + 1 < totalPages ? p + 1 : p))
           // }
           onFilterClick={() =>
-            masterData.length && setFilterPopupOpen((p) => !p)
+            masterData?.length && setFilterPopupOpen((p) => !p)
           }
           isFilterPopupOpen={isFilterPopupOpen}
           isFilterActive={isFilterActive}
@@ -617,7 +668,7 @@ const MasterTable = ({ permissions = {} }) => {
         ) : (
           <div className="">
             <MasterKanban
-              data={currentFilteredRows.map((row) => ({
+              data={currentFilteredRows?.map((row) => ({
                 ...row,
                 id: row._id,
                 title:

@@ -26,15 +26,15 @@
  * ==============================================================
  */
 
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 const authContextMiddleware = (req, res, next) => {
   try {
     // -----------------------------------------------------------------
     // 1. READ COOKIES
     // -----------------------------------------------------------------
-    let authToken = req.cookies.authToken || '';
-    let impersonationToken = req.cookies.impersonationToken || '';
+    let authToken = req.cookies.authToken || "";
+    let impersonationToken = req.cookies.impersonationToken || "";
 
     // Debug logging
     console.log('🔍 [AuthMiddleware] Raw cookies:', {
@@ -50,7 +50,7 @@ const authContextMiddleware = (req, res, next) => {
     // -----------------------------------------------------------------
     if (!authToken && !impersonationToken) {
       const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith('Bearer ')) {
+      if (authHeader && authHeader.startsWith("Bearer ")) {
         const token = authHeader.substring(7).trim();
         try {
           const decoded = jwt.decode(token) || {};
@@ -61,7 +61,10 @@ const authContextMiddleware = (req, res, next) => {
           }
           // if we can't decide – just leave both empty
         } catch (e) {
-          console.warn('[authContext] Invalid JWT in Authorization header', e.message);
+          console.warn(
+            "[authContext] Invalid JWT in Authorization header",
+            e.message
+          );
         }
       }
     }
@@ -70,7 +73,9 @@ const authContextMiddleware = (req, res, next) => {
     // 3. SAFELY DECODE PAYLOADS
     // -----------------------------------------------------------------
     const authPayload = authToken ? jwt.decode(authToken) || {} : {};
-    const impPayload = impersonationToken ? jwt.decode(impersonationToken) || {} : {};
+    const impPayload = impersonationToken
+      ? jwt.decode(impersonationToken) || {}
+      : {};
 
     // Debug JWT payloads
     console.log('🔍 [AuthMiddleware] JWT payloads:', {
@@ -100,7 +105,8 @@ const authContextMiddleware = (req, res, next) => {
     if (authToken) {
       actingAsUserId = authPayload.userId || authPayload.id || null;
     } else if (impersonationToken) {
-      actingAsUserId = impPayload.impersonatedUserId || impPayload.userId || null;
+      actingAsUserId =
+        impPayload.impersonatedUserId || impPayload.userId || null;
     }
 
     const actingAsTenantId = authPayload.tenantId || null;
@@ -108,7 +114,7 @@ const authContextMiddleware = (req, res, next) => {
     // -----------------------------------------------------------------
     // 6. REAL SUPER-ADMIN ID (for audit)
     // -----------------------------------------------------------------
-    const onBehalfOfUserId = isImpersonating ? (impPayload.userId || null) : null;
+    const onBehalfOfUserId = isImpersonating ? impPayload.userId || null : null;
 
     // -----------------------------------------------------------------
     // 7. ATTACH TO res.locals
@@ -125,19 +131,19 @@ const authContextMiddleware = (req, res, next) => {
     };
 
     // console.log("res.locals.auth", res.locals.auth);
-    console.log('🔍 [AuthMiddleware] Setting res.locals.auth:', {
-      actingAsUserId,
-      actingAsTenantId,
-      hasAuthToken: !!authToken,
-      hasImpersonationToken: !!impersonationToken
-    });
+    // console.log('🔍 [AuthMiddleware] Setting res.locals.auth:', {
+    //   actingAsUserId,
+    //   actingAsTenantId,
+    //   hasAuthToken: !!authToken,
+    //   hasImpersonationToken: !!impersonationToken
+    // });
 
     // -----------------------------------------------------------------
     // 8. CONTINUE
     // -----------------------------------------------------------------
     next();
   } catch (err) {
-    console.error('[authContext] Unexpected error:', err);
+    console.error("[authContext] Unexpected error:", err);
     // Even on error we provide a safe empty object – never crash the request
     res.locals.auth = {
       actingAsUserId: null,
@@ -146,10 +152,10 @@ const authContextMiddleware = (req, res, next) => {
       isImpersonating: false,
       isSuperAdminOnly: false,
       isEffectiveOnly: false,
-      authToken: '',
-      impersonationToken: '',
+      authToken: "",
+      impersonationToken: "",
     };
-    console.log('🔍 [AuthMiddleware] Error - setting empty auth object');
+    console.log("🔍 [AuthMiddleware] Error - setting empty auth object");
     next();
   }
 };
