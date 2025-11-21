@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Improved responsiveness
 // v1.0.1 - Ashok - Fixed style issues and improved loading view
+// v1.0.2 - Ashok - Improved loading view
 
 import { useState, useEffect } from "react";
 import {
@@ -268,7 +269,10 @@ const DomainManagement = () => {
         {/* Add Subdomain (when no active domain) */}
         {!activeDomain && (
           <div className="bg-white sm:p-4 md:p-4 p-6 rounded-lg shadow space-y-4">
-            <div className="h-5 w-48 rounded shimmer"></div>
+            {/* <div className="h-5 w-48 rounded shimmer"></div> */}
+            <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium mb-4">
+              Add Your Subdomain
+            </h3>
 
             <div className="space-y-3">
               <div className="h-4 w-32 rounded shimmer"></div>
@@ -328,7 +332,10 @@ const DomainManagement = () => {
 
         {/* DNS Configuration Guide (always shown last) */}
         <div className="bg-white sm:p-4 md:p-4 p-6 rounded-lg shadow space-y-4">
-          <div className="h-5 w-56 rounded shimmer"></div>
+          {/* <div className="h-5 w-56 rounded shimmer"></div> */}
+          <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium mb-4">
+            DNS Configuration Guide
+          </h3>
           <div className="space-y-2">
             <div className="h-4 w-full rounded shimmer"></div>
             <div className="h-4 w-5/6 rounded shimmer"></div>
@@ -340,9 +347,15 @@ const DomainManagement = () => {
             <div className="h-4 w-40 rounded shimmer"></div>
           </div>
 
-          <div className="bg-blue-50 border-l-4 border-custom-blue p-4 space-y-2">
+          {/* <div className="bg-blue-50 border-l-4 border-custom-blue p-4 space-y-2">
             <div className="h-4 w-4/5 bg-blue-100 rounded shimmer"></div>
             <div className="h-4 w-2/3 bg-blue-100 rounded shimmer"></div>
+          </div> */}
+          <div className="mt-4 bg-blue-50 border-l-4 border-custom-blue p-4">
+            <p className="text-sm text-custom-blue">
+              <strong>Note:</strong> All subdomains are automatically secured
+              with SSL certificates and will be accessible via HTTPS.
+            </p>
           </div>
         </div>
       </div>

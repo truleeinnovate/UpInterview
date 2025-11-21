@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - commented user related apis
+// v1.0.1 - Ashok - commented organization related apis
 
 import {
   createContext,
@@ -720,9 +721,9 @@ const CustomProvider = ({ children }) => {
         // fetchUsersData,
 
         // organization
-        organizationData,
-        organizationsLoading,
-        addOrUpdateOrganization,
+        // organizationData, // <---------- commented by Ashok
+        // organizationsLoading,
+        // addOrUpdateOrganization, // --------commented by Ashok ------------------>
 
         // contacts
         // fetchContactsData,
