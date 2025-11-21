@@ -4,6 +4,7 @@
 // v1.0.4 - Ashok - Improved scroll to first error functionality
 // v1.0.5 - Ashok - Removed border left and set outline as none
 // v1.0.6 - Ashok - Improved responsiveness and added common code to popup
+// v1.0.7 - Ashok - Integrated useUpdateOrganization mutation and added loading button when saving
 
 // import { companyProfile, companySizes, industries } from '../mockData/companyData'
 import { useEffect, useRef, useState } from "react";
@@ -24,6 +25,7 @@ import { validateFile } from "../../../../../utils/FileValidation/FileValidation
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { useUpdateOrganization } from "../../../../../apiHooks/useOrganization";
+import LoadingButton from "../../../../../Components/LoadingButton";
 
 Modal.setAppElement("#root");
 
@@ -33,7 +35,9 @@ const companySizes = ["0-10", "10-20", "50-100", "100-500", "500-1000"];
 // export const industries = ['Technology', 'Finance', 'Healthcare', 'Education', 'Manufacturing'];
 
 const CompanyEditProfile = () => {
-  const { addOrUpdateOrganization } = useCustomContext();
+  // const { addOrUpdateOrganization } = useCustomContext();
+  const { addOrUpdateOrganization, isLoading } = useUpdateOrganization();
+
   const pageType = "adminPortal";
   const {
     locations,
@@ -312,7 +316,7 @@ const CompanyEditProfile = () => {
       //     { headers: { 'Content-Type': 'application/json' } }
       // );
 
-      const response = await addOrUpdateOrganization.mutateAsync({
+      const response = await addOrUpdateOrganization({
         id: id, // Pass `undefined` or null for new
         data: updatedData, // JSON data for org details
       });
@@ -738,13 +742,21 @@ const CompanyEditProfile = () => {
             >
               Cancel
             </button>
-            <button
+            {/* <button
               type="button"
               onClick={handleSave}
               className="px-4 py-2 bg-custom-blue text-white rounded-lg  transition-colors"
             >
               Save
-            </button>
+            </button> */}
+            <LoadingButton
+              type="button"
+              onClick={handleSave}
+              isLoading={isLoading}
+              loadingText="updating..."
+            >
+              Save
+            </LoadingButton>
           </div>
         </form>
       </div>
