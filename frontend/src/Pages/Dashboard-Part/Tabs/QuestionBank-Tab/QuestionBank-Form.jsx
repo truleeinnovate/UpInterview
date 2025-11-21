@@ -114,7 +114,8 @@ const QuestionBankForm = ({
   const [selectedLabels, setSelectedLabels] = useState(false);
   // console.log('selected---541651',selectedLabels)
   // Master data (categories) for common dropdowns
-  const { category, loadCategory, isCategoryFetching } = useMasterData();
+  const pageType = "adminPortal";
+  const { category, loadCategory, isCategoryFetching } = useMasterData({}, pageType);
 
   const [selectedListId, setSelectedListId] = useState([]);
   console.log("selectedLabelId =================+", [
