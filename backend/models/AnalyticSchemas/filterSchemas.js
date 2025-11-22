@@ -11,7 +11,7 @@ const filterPresetSchema = new Schema(
       required: true,
       index: true,
     },
-    userId: {
+    ownerId: {
       type: String,
       required: true,
       index: true,
@@ -157,7 +157,7 @@ const filterPresetSchema = new Schema(
 );
 
 // Indexes
-filterPresetSchema.index({ tenantId: 1, userId: 1 });
+filterPresetSchema.index({ tenantId: 1, ownerId: 1 });
 filterPresetSchema.index({ tenantId: 1, presetId: 1 }, { unique: true });
 filterPresetSchema.index({ tenantId: 1, "context.page": 1 });
 filterPresetSchema.index({ tenantId: 1, isPublic: 1 });
@@ -172,7 +172,7 @@ const filterAnalyticsSchema = new Schema(
       required: true,
       index: true,
     },
-    userId: String,
+    ownerId: String,
     sessionId: String,
 
     // Filter Application Event
@@ -234,7 +234,7 @@ const filterAnalyticsSchema = new Schema(
 
 // Indexes for analytics
 filterAnalyticsSchema.index({ tenantId: 1, "event.timestamp": -1 });
-filterAnalyticsSchema.index({ tenantId: 1, userId: 1, "event.timestamp": -1 });
+filterAnalyticsSchema.index({ tenantId: 1, ownerId: 1, "event.timestamp": -1 });
 filterAnalyticsSchema.index({ tenantId: 1, "context.page": 1 });
 
 // =============================================================================

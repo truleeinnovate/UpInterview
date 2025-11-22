@@ -11,6 +11,7 @@ const reportTemplateSchema = new Schema(
       required: true,
       index: true,
     },
+
     templateId: {
       type: String,
       required: true,
@@ -39,7 +40,14 @@ const reportTemplateSchema = new Schema(
       ],
       required: true,
     },
-    category: String,
+    // category: String,
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: "ReportCategory",
+      required: false,   // false = template can be "uncategorized"
+      index: true,
+      default: null,
+    },
 
     // Template Configuration
     configuration: {
@@ -214,7 +222,7 @@ const reportTemplateSchema = new Schema(
       },
       sharedWith: [
         {
-          userId: String,
+          ownerId: String,
           permission: {
             type: String,
             enum: ["view", "edit", "admin"],
@@ -274,7 +282,7 @@ const dashboardConfigSchema = new Schema(
       required: true,
       index: true,
     },
-    userId: {
+    ownerId: {
       type: String,
       required: true,
       index: true,
@@ -479,7 +487,7 @@ const dashboardConfigSchema = new Schema(
 );
 
 // Indexes for Dashboard Configuration
-dashboardConfigSchema.index({ tenantId: 1, userId: 1 }, { unique: true });
+dashboardConfigSchema.index({ tenantId: 1, ownerId: 1 }, { unique: true });
 dashboardConfigSchema.index({ tenantId: 1, configId: 1 }, { unique: true });
 
 // =============================================================================
@@ -492,7 +500,7 @@ const trendsConfigSchema = new Schema(
       required: true,
       index: true,
     },
-    userId: {
+    ownerId: {
       type: String,
       required: true,
       index: true,
@@ -655,7 +663,7 @@ const trendsConfigSchema = new Schema(
 );
 
 // Indexes for Trends Configuration
-trendsConfigSchema.index({ tenantId: 1, userId: 1 }, { unique: true });
+trendsConfigSchema.index({ tenantId: 1, ownerId: 1 }, { unique: true });
 trendsConfigSchema.index({ tenantId: 1, configId: 1 }, { unique: true });
 
 // =============================================================================
@@ -668,7 +676,7 @@ const savedQuerySchema = new Schema(
       required: true,
       index: true,
     },
-    userId: {
+    ownerId: {
       type: String,
       required: true,
       index: true,
