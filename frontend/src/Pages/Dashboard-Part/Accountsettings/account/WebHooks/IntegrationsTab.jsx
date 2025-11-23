@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Power, PowerOff } from "lucide-react";
 import Portal from "./Portal";
 import InputField from "../../../../../Components/FormFields/InputField";
+import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField";
 import { config } from "../../../../../config";
 import { getAuthToken } from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 import { notify } from "../../../../../services/toastService";
@@ -30,56 +31,38 @@ const IntegrationsTab = () => {
   });
 
   const availableEvents = [
-    { id: "candidate.created", label: "Candidate Created" },
-    { id: "candidate.status_updated", label: "Candidate Status Updated" },
-    { id: "candidates.bulk_created", label: "Candidates Bulk Created" },
-    { id: "positions.bulk_created", label: "Positions Bulk Created" },
-    { id: "application.submitted", label: "Application Submitted" },
-    { id: "application.status_updated", label: "Application Status Updated" },
-    { id: "interview.scheduled", label: "Interview Scheduled" },
-    { id: "interview.cancelled", label: "Interview Cancelled" },
-    { id: "interview.rescheduled", label: "Interview Rescheduled" },
-    {
-      id: "interview.feedback_submitted",
-      label: "Interview Feedback Submitted",
-    },
-    { id: "offer.created", label: "Offer Created" },
-    { id: "offer.accepted", label: "Offer Accepted" },
-    { id: "offer.rejected", label: "Offer Rejected" },
-    { id: "offer.withdrawn", label: "Offer Withdrawn" },
-    { id: "offer.status_updated", label: "Offer Status Updated" },
-    { id: "position.created", label: "Position Created" },
-    { id: "position.updated", label: "Position Updated" },
-    { id: "position.closed", label: "Position Closed" },
+    { id: "interview.round.status.updated", label: "interview.round.status.updated" },
+    { id: "assessment.status.updated", label: "assessment.status.updated" },
+    { id: "feedback.status.updated", label: "feedback.status.updated" },
   ];
 
   useEffect(() => {
     fetchIntegrations();
   }, []);
 
-const fetchIntegrations = async () => {
-  try {
-    const authToken = getAuthToken();
-    const response = await fetch(`${config.REACT_APP_API_URL}/integrations`, {
-      headers: {
-        'Authorization': `Bearer ${authToken}`,
-        'Content-Type': 'application/json'
+  const fetchIntegrations = async () => {
+    try {
+      const authToken = getAuthToken();
+      const response = await fetch(`${config.REACT_APP_API_URL}/integrations`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error('Failed to fetch integrations');
       }
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
-      throw new Error('Failed to fetch integrations');
+
+      const data = await response.json();
+      setIntegrations(data.data || []);
+    } catch (error) {
+      console.error('Error fetching integrations:', error);
+      // Consider adding user feedback here (e.g., toast notification)
     }
-    
-    const data = await response.json();
-    setIntegrations(data.data || []);
-  } catch (error) {
-    console.error('Error fetching integrations:', error);
-    // Consider adding user feedback here (e.g., toast notification)
-  }
-};
+  };
 
   // Function to validate form data
   const validateForm = (data) => {
@@ -98,7 +81,7 @@ const fetchIntegrations = async () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const { isValid, errors } = validateForm(formData);
     if (!isValid) {
       // Show first error
@@ -106,16 +89,21 @@ const fetchIntegrations = async () => {
       notify.error(firstError);
       return;
     }
-    
-    console.log('Form submission started', { isEditing: !!editingIntegration, formData });
-    
+
+    const isEditing = !!editingIntegration;
+    console.log('Form submission started', { isEditing, formData });
+
     try {
-      const integrationId = editingIntegration._id || editingIntegration.id;
-      const url = editingIntegration
+      const integrationId = isEditing
+        ? (editingIntegration._id || editingIntegration.id)
+        : null;
+
+      const url = isEditing && integrationId
         ? `${config.REACT_APP_API_URL}/integrations/${integrationId}`
         : `${config.REACT_APP_API_URL}/integrations`;
-      const method = editingIntegration ? "PUT" : "POST";
-      
+
+      const method = isEditing ? "PUT" : "POST";
+
       console.log('Making API request:', { url, method, data: formData });
 
       const authToken = getAuthToken();
@@ -125,7 +113,7 @@ const fetchIntegrations = async () => {
       };
 
       console.log('Sending request with headers:', headers);
-      
+
       const response = await fetch(url, {
         method,
         headers,
@@ -144,7 +132,7 @@ const fetchIntegrations = async () => {
         await fetchIntegrations();
         setShowModal(false);
         setEditingIntegration(null);
-        
+
         const resetFormData = {
           name: "",
           organization: "",
@@ -160,7 +148,7 @@ const fetchIntegrations = async () => {
             oauth2: { clientId: "", clientSecret: "", tokenUrl: "", scope: "" },
           },
         };
-        
+
         console.log('Form reset and modal closed');
         setFormData(resetFormData);
       } else {
@@ -188,7 +176,7 @@ const fetchIntegrations = async () => {
 
   const handleConfirmDelete = async () => {
     if (!integrationToDelete) return;
-    
+
     try {
       const authToken = getAuthToken();
       const response = await fetch(`${config.REACT_APP_API_URL}/integrations/${integrationToDelete._id || integrationToDelete.id}`, {
@@ -198,16 +186,16 @@ const fetchIntegrations = async () => {
           'Content-Type': 'application/json'
         }
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Failed to delete integration');
       }
-      
+
       // Refresh the integrations list
       await fetchIntegrations();
-      
+
       // Show success message
       notify.success('Integration deleted successfully');
     } catch (error) {
@@ -266,7 +254,7 @@ const fetchIntegrations = async () => {
   const handleEdit = (integration) => {
     setEditingIntegration(integration);
     const authData = integration.authentication || { type: "hmac_signature" };
-    
+
     // Set form data with proper defaults for all authentication types
     const formData = {
       name: integration.name || "",
@@ -295,7 +283,7 @@ const fetchIntegrations = async () => {
         }
       }
     };
-    
+
     setFormData(formData);
     setShowModal(true);
   };
@@ -341,10 +329,9 @@ const fetchIntegrations = async () => {
         },
       },
       events: [
-        "candidate.created",
-        "candidate.status_updated",
-        "interview.scheduled",
-        "offer.created",
+        "interview.round.status.updated",
+        "assessment.status.updated",
+        "feedback.status.updated",
       ],
     },
     workday: {
@@ -357,11 +344,9 @@ const fetchIntegrations = async () => {
         },
       },
       events: [
-        "candidate.created",
-        "candidate.status_updated",
-        "interview.scheduled",
-        "offer.created",
-        "offer.accepted",
+        "interview.round.status.updated",
+        "assessment.status.updated",
+        "feedback.status.updated",
       ],
     },
     greenhouse: {
@@ -374,10 +359,9 @@ const fetchIntegrations = async () => {
         },
       },
       events: [
-        "candidate.created",
-        "application.submitted",
-        "interview.scheduled",
-        "interview.feedback_submitted",
+        "interview.round.status.updated",
+        "assessment.status.updated",
+        "feedback.status.updated",
       ],
     },
     zoho_recruit: {
@@ -390,9 +374,9 @@ const fetchIntegrations = async () => {
         },
       },
       events: [
-        "candidate.created",
-        "candidate.status_updated",
-        "interview.scheduled",
+        "interview.round.status.updated",
+        "assessment.status.updated",
+        "feedback.status.updated",
       ],
     },
     bamboohr: {
@@ -404,7 +388,11 @@ const fetchIntegrations = async () => {
           keyValue: "Basic {api_key}",
         },
       },
-      events: ["candidate.created", "offer.created", "offer.accepted"],
+      events: [
+        "interview.round.status.updated",
+        "assessment.status.updated",
+        "feedback.status.updated",
+      ],
     },
     lever: {
       name: "Lever Integration",
@@ -416,10 +404,9 @@ const fetchIntegrations = async () => {
         },
       },
       events: [
-        "candidate.created",
-        "application.submitted",
-        "interview.scheduled",
-        "offer.created",
+        "interview.round.status.updated",
+        "assessment.status.updated",
+        "feedback.status.updated",
       ],
     },
     smartrecruiters: {
@@ -432,9 +419,9 @@ const fetchIntegrations = async () => {
         },
       },
       events: [
-        "candidate.created",
-        "application.submitted",
-        "interview.scheduled",
+        "interview.round.status.updated",
+        "assessment.status.updated",
+        "feedback.status.updated",
       ],
     },
     adp: {
@@ -443,9 +430,9 @@ const fetchIntegrations = async () => {
         type: "jwt_token",
       },
       events: [
-        "candidate.created",
-        "candidate.status_updated",
-        "offer.created",
+        "interview.round.status.updated",
+        "assessment.status.updated",
+        "feedback.status.updated",
       ],
     },
     icims: {
@@ -458,9 +445,9 @@ const fetchIntegrations = async () => {
         },
       },
       events: [
-        "candidate.created",
-        "application.submitted",
-        "interview.scheduled",
+        "interview.round.status.updated",
+        "assessment.status.updated",
+        "feedback.status.updated",
       ],
     },
     ultipro: {
@@ -472,7 +459,11 @@ const fetchIntegrations = async () => {
           value: "{api_key}",
         },
       },
-      events: ["candidate.created", "offer.created"],
+      events: [
+        "interview.round.status.updated",
+        "assessment.status.updated",
+        "feedback.status.updated",
+      ],
     },
   };
 
@@ -543,11 +534,10 @@ const fetchIntegrations = async () => {
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => handleToggleEnabled(integration)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      integration.enabled
-                        ? "text-green-600 hover:bg-green-50"
-                        : "text-gray-400 hover:bg-gray-50"
-                    }`}
+                    className={`p-2 rounded-lg transition-colors ${integration.enabled
+                      ? "text-green-600 hover:bg-green-50"
+                      : "text-gray-400 hover:bg-gray-50"
+                      }`}
                     title={integration.enabled ? "Disable" : "Enable"}
                   >
                     {integration.enabled ? (
@@ -575,7 +565,9 @@ const fetchIntegrations = async () => {
 
               <div className="flex flex-wrap gap-2 mb-4">
                 {(integration.events && Array.isArray(integration.events)
-                  ? integration.events
+                  ? integration.events.filter((eventId) =>
+                      availableEvents.some((e) => e.id === eventId)
+                    )
                   : []
                 ).map((event) => (
                   <span
@@ -598,11 +590,10 @@ const fetchIntegrations = async () => {
                     Auth: {integration.authentication?.type || "hmac_signature"}
                   </span>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      integration.enabled
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
+                    className={`px-2 py-1 rounded-full text-xs ${integration.enabled
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                      }`}
                   >
                     {integration.enabled ? "Active" : "Disabled"}
                   </span>
@@ -640,32 +631,36 @@ const fetchIntegrations = async () => {
                 </h3>
                 <form onSubmit={handleSubmit}>
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Platform Template (Optional)
-                    </label>
-                    <select
+                    <DropdownWithSearchField
+                      label="Platform Template (Optional)"
+                      name="platformTemplate"
                       value={formData.platformTemplate || ""}
+                      options={[
+                        { value: "", label: "Select a platform template..." },
+                        {
+                          label: "Enterprise Platforms",
+                          options: [
+                            { value: "sap_successfactors", label: "SAP SuccessFactors" },
+                            { value: "workday", label: "Workday" },
+                            { value: "adp", label: "ADP Workforce Now" },
+                            { value: "ultipro", label: "UltiPro" },
+                          ],
+                        },
+                        {
+                          label: "Modern ATS Platforms",
+                          options: [
+                            { value: "greenhouse", label: "Greenhouse" },
+                            { value: "lever", label: "Lever" },
+                            { value: "smartrecruiters", label: "SmartRecruiters" },
+                            { value: "zoho_recruit", label: "Zoho Recruit" },
+                            { value: "bamboohr", label: "BambooHR" },
+                            { value: "icims", label: "iCIMS" },
+                          ],
+                        },
+                      ]}
+                      placeholder="Select a platform template..."
                       onChange={(e) => handlePlatformTemplateChange(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                    >
-                      <option value="">Select a platform template...</option>
-                      <optgroup label="Enterprise Platforms">
-                        <option value="sap_successfactors">
-                          SAP SuccessFactors
-                        </option>
-                        <option value="workday">Workday</option>
-                        <option value="adp">ADP Workforce Now</option>
-                        <option value="ultipro">UltiPro</option>
-                      </optgroup>
-                      <optgroup label="Modern ATS Platforms">
-                        <option value="greenhouse">Greenhouse</option>
-                        <option value="lever">Lever</option>
-                        <option value="smartrecruiters">SmartRecruiters</option>
-                        <option value="zoho_recruit">Zoho Recruit</option>
-                        <option value="bamboohr">BambooHR</option>
-                        <option value="icims">iCIMS</option>
-                      </optgroup>
-                    </select>
+                    />
                     <p className="text-xs text-gray-500 mt-1">
                       Select a platform to automatically configure
                       authentication and recommended events
@@ -683,7 +678,7 @@ const fetchIntegrations = async () => {
                           name: e.target.value,
                         }))
                       }
-                      placeholder="e.g., Acme HRMS Integration"
+                      placeholder="Webhook integration name"
                       required
                     />
                   </div>
@@ -699,14 +694,14 @@ const fetchIntegrations = async () => {
                           organization: e.target.value,
                         }))
                       }
-                      placeholder="e.g., Acme Corp"
+                      placeholder="Organization name"
                       required
                     />
                   </div>
 
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Webhook URL
+                      Webhook URL <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="url"
@@ -717,6 +712,7 @@ const fetchIntegrations = async () => {
                           webhookUrl: e.target.value,
                         }))
                       }
+                      autoComplete="off"
                       className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                       placeholder="https://customer.com/webhooks/hrms"
                       required
@@ -734,11 +730,24 @@ const fetchIntegrations = async () => {
                     </p>
 
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Authentication Method
-                      </label>
-                      <select
-                        value={formData.authentication.type}
+                      <DropdownWithSearchField
+                        label="Authentication Method"
+                        name="authentication.type"
+                        value={formData.authentication.type || "hmac_signature"}
+                        options={[
+                          {
+                            value: "hmac_signature",
+                            label: "HMAC Signature (Recommended)",
+                          },
+                          { value: "bearer_token", label: "Bearer Token" },
+                          { value: "api_key", label: "API Key" },
+                          { value: "basic_auth", label: "Basic Authentication" },
+                          { value: "oauth2", label: "OAuth 2.0" },
+                          { value: "none", label: "None" },
+                        ]}
+                        placeholder="Select authentication method"
+                        required
+                        isSearchable={false}
                         onChange={(e) =>
                           setFormData((prev) => ({
                             ...prev,
@@ -748,17 +757,7 @@ const fetchIntegrations = async () => {
                             },
                           }))
                         }
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                      >
-                        <option value="hmac_signature">
-                          HMAC Signature (Recommended)
-                        </option>
-                        <option value="bearer_token">Bearer Token</option>
-                        <option value="api_key">API Key</option>
-                        <option value="basic_auth">Basic Authentication</option>
-                        <option value="oauth2">OAuth 2.0</option>
-                        <option value="none">None</option>
-                      </select>
+                      />
                     </div>
 
                     {/* HMAC Signature */}
@@ -1050,7 +1049,7 @@ const fetchIntegrations = async () => {
 
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Events to Subscribe
+                      Events to Subscribe <span className="text-red-500">*</span>
                     </label>
                     <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
                       {availableEvents.map((event) => {
@@ -1087,11 +1086,10 @@ const fetchIntegrations = async () => {
                     <button
                       type="submit"
                       disabled={!formData.name?.trim() || !formData.webhookUrl?.trim()}
-                      className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                        !formData.name?.trim() || !formData.webhookUrl?.trim()
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-custom-blue hover:bg-blue-700"
-                      }`}
+                      className={`px-4 py-2 text-white rounded-lg transition-colors ${!formData.name?.trim() || !formData.webhookUrl?.trim()
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-custom-blue hover:bg-custom-blue/80"
+                        }`}
                       title={!formData.name?.trim() ? "Name is required" : !formData.webhookUrl?.trim() ? "Webhook URL is required" : ""}
                     >
                       {editingIntegration ? "Update Integration" : "Create Integration"}
@@ -1108,30 +1106,30 @@ const fetchIntegrations = async () => {
       {showDeleteModal && (
         <Portal>
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={(e) => e.stopPropagation()}>
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Integration</h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete the integration "{integrationToDelete?.name}"? This action cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setIntegrationToDelete(null);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-              >
-                Delete
-              </button>
+            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Integration</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete the integration "{integrationToDelete?.name}"? This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setIntegrationToDelete(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
-        </div>
         </Portal>
       )}
     </div>

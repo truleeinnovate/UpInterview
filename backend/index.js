@@ -1,7 +1,6 @@
 // v1.0.0  -  Ashraf  -  removed consoles
 // v1.0.1  -  Ashraf  -  fixed feeds api issues.removed /api
 // v1.0.2  -  Ashraf  -  fixed name assessment to assessment template
-// this is new
 // v1.0.3  -  Ashraf  -  added health check endpoints for monitoring
 // v1.0.4  -  Ashok   -  added analytics
 // v1.0.5  -  Ashok   -  Added Rate Cards
@@ -64,15 +63,15 @@ const allowedOrigins = [
 // CORS middleware
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    console.log('🔍 [CORS] Request details:', {
-        method: req.method,
-        path: req.path,
-        origin: origin,
-        referer: req.headers.referer,
-        userAgent: req.headers['user-agent'],
-        hasCookies: Object.keys(req.cookies).length > 0,
-        cookieHeader: req.headers.cookie
-    });
+    // console.log('🔍 [CORS] Request details:', {
+    //     method: req.method,
+    //     path: req.path,
+    //     origin: origin,
+    //     referer: req.headers.referer,
+    //     userAgent: req.headers['user-agent'],
+    //     hasCookies: Object.keys(req.cookies).length > 0,
+    //     cookieHeader: req.headers.cookie
+    // });
     
     //   console.log(
     //     "Request Method:",
@@ -533,7 +532,7 @@ const serverPromise = startServer();
 
 // Handle server shutdown
 const shutdown = async () => {
-    console.log('SIGTERM received. Shutting down gracefully');
+    // console.log('SIGTERM received. Shutting down gracefully');
     try {
         const server = await serverPromise;
         server.close(() => {
@@ -1745,7 +1744,7 @@ app.post('/api/create-meeting', async (req, res) => {
             }
         };
 
-        console.log("Creating Zoom meeting with:", body);
+        // console.log("Creating Zoom meeting with:", body);
 
         const create = await axios.post(
             `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
@@ -1783,6 +1782,10 @@ app.use("/upinterviewcontactuspage", upinterviewContactUsPageRoutes);
 // upinterview enterprise contact routes
 const upinterviewEnterpriseContactRoutes = require("./routes/upinterviewEnterpriseContactRoutes");
 app.use("/upinterviewEnterpriseContact", upinterviewEnterpriseContactRoutes);
+
+// for external api routes
+const externalRoutes = require('./routes/external.routes');
+app.use('/external', externalRoutes);
 
 
 

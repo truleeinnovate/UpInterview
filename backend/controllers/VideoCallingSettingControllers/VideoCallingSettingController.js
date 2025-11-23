@@ -7,7 +7,7 @@ const getVideoCallingSettings = async (req, res) => {
   try {
     let { tenantId, ownerId } = req.query;
 
-    console.log('📥 Received request with:', { tenantId, ownerId });
+    // console.log('📥 Received request with:', { tenantId, ownerId });
 
     // ✅ Validation
     if (!tenantId && !ownerId) {
@@ -40,12 +40,12 @@ const getVideoCallingSettings = async (req, res) => {
       query.ownerId = new mongoose.Types.ObjectId(ownerId);
     }
 
-    console.log('🔍 Query built:', query);
+    // console.log('🔍 Query built:', query);
 
     // ✅ Find settings
     const settings = await VideoCallingDetails.findOne(query);
 
-    console.log('📊 Settings found:', settings ? 'Yes' : 'No');
+    // console.log('📊 Settings found:', settings ? 'Yes' : 'No');
 
     if (!settings) {
       // ✅ Return default structure when no settings found

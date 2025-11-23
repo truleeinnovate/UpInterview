@@ -21,6 +21,7 @@ const { encrypt } = require("../utils/generateOtp");
 const sendEmail = require("../utils/sendEmail");
 const emailTemplateModel = require("../models/EmailTemplatemodel");
 const notificationMiddleware = require("../middleware/notificationMiddleware");
+const { EVENT_TYPES, triggerWebhook } = require("../services/webhookService");
 
 // Import push notification functions
 const {
@@ -302,6 +303,33 @@ exports.newAssessment = async (req, res) => {
     try {
       // Pass ownerId as the createdBy parameter
       await createAssessmentCreatedNotification(assessment, assessment.ownerId);
+      
+      // Trigger assessment created webhook
+      try {
+        console.log('[ASSESSMENT WEBHOOK] Triggering assessment.created event');
+        await triggerWebhook(
+          'assessment.status.updated',
+          {
+            event: 'assessment.created',
+            assessmentId: assessment._id,
+            assessmentCode: assessment.AssessmentCode,
+            title: assessment.AssessmentTitle,
+            status: 'created',
+            createdAt: assessment.createdAt,
+            createdBy: assessment.CreatedBy,
+            tenantId: assessment.tenantId,
+            position: assessment.Position,
+            difficultyLevel: assessment.DifficultyLevel,
+            totalQuestions: assessment.NumberOfQuestions,
+            totalScore: assessment.totalScore,
+            passScore: assessment.passScore,
+            expiryDate: assessment.ExpiryDate
+          },
+          assessment.tenantId
+        );
+      } catch (webhookError) {
+        console.error('[ASSESSMENT WEBHOOK] Error triggering assessment created webhook:', webhookError);
+      }
     } catch (notificationError) {
       console.error(
         "[ASSESSMENT] Error creating notification:",
@@ -363,6 +391,10 @@ exports.updateAssessment = async (req, res) => {
     }
 
     // Update with runValidators to ensure Mongoose schema validation
+    // Get the current assessment to compare status changes
+    const currentAssessment = await Assessment.findById(id);
+    const oldStatus = currentAssessment.status;
+    
     const updatedAssessment = await Assessment.findByIdAndUpdate(
       id,
       updateData,
@@ -373,8 +405,31 @@ exports.updateAssessment = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Assessment not found",
-        errors: { assessment: "Assessment not found" },
       });
+    }
+
+    // Trigger assessment updated webhook if status changed
+    if (updateData.status && updateData.status !== oldStatus) {
+      try {
+        console.log('[ASSESSMENT WEBHOOK] Triggering assessment status updated event');
+        await triggerWebhook(
+          'assessment.status.updated',
+          {
+            event: 'assessment.status.updated',
+            assessmentId: updatedAssessment._id,
+            assessmentCode: updatedAssessment.AssessmentCode,
+            title: updatedAssessment.AssessmentTitle,
+            previousStatus: oldStatus,
+            newStatus: updateData.status,
+            updatedAt: updatedAssessment.updatedAt,
+            updatedBy: req.user?.id || 'system',
+            tenantId: updatedAssessment.tenantId
+          },
+          updatedAssessment.tenantId
+        );
+      } catch (webhookError) {
+        console.error('[ASSESSMENT WEBHOOK] Error triggering assessment status updated webhook:', webhookError);
+      }
     }
 
     res.status(200).json({

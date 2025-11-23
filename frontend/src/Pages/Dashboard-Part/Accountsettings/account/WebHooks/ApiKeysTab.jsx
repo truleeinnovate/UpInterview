@@ -140,9 +140,12 @@ const ApiKeysTab = () => {
       });
 
       if (response.ok) {
+        // Optimistically update list and then refetch from backend to stay in sync
         setApiKeys((prev) => prev.filter((key) => (key.id || key._id) !== id));
+        await fetchApiKeys();
       } else {
-        console.error('Error deleting API key:', response.statusText);
+        const data = await response.json().catch(() => null);
+        console.error('Error deleting API key:', response.status, data || response.statusText);
       }
     } catch (error) {
       console.error('Network error while deleting API key:', error);
@@ -622,11 +625,11 @@ const ApiKeysTab = () => {
             <div className="bg-white rounded-lg max-w-sm w-full p-6 shadow-lg">
               <h3 className="text-lg font-semibold mb-3">Delete API Key</h3>
               <p className="text-sm text-gray-700 mb-4">
-                Are you sure you want to delete this API key for
-                {' '}
+                Are you sure you want to permanently delete this API key for{' '}
                 <span className="font-semibold">{deleteTarget.organization}</span>?
-                This action cannot be undone.
+                {' '}This action cannot be undone.
               </p>
+
               <div className="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-mono break-all mb-4">
                 {deleteTarget.key}
               </div>

@@ -10,6 +10,7 @@
 const mongoose = require("mongoose");
 const { Interview } = require("../models/Interview/Interview.js");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
+const { triggerWebhook, EVENT_TYPES } = require("../services/webhookService");
 const InterviewTemplate = require("../models/InterviewTemplate.js");
 const { Contacts } = require("../models/Contacts");
 // v1.0.2 <-----------------------------------------
@@ -34,6 +35,81 @@ const {
 } = require("./PushNotificationControllers/pushNotificationInterviewController");
 const { MockInterviewRound } = require("../models/MockInterview/mockinterviewRound.js");
 
+
+// Helper: map InterviewRounds.status (DB) to webhook status values
+const mapRoundStatusForWebhook = (status) => {
+    if (!status) return null;
+    switch (status) {
+        case 'Scheduled':
+            return 'scheduled';
+        case 'Rescheduled':
+            return 'rescheduled';
+        case 'Rejected':
+            return 'rejected';
+        case 'Selected':
+            return 'selected';
+        case 'Cancelled':
+            return 'cancelled';
+        case 'NoShow':
+            return 'no_show';
+        default:
+            return null;
+    }
+};
+
+// Helper: trigger interview.round.status.updated webhook for a round
+const triggerInterviewRoundStatusUpdated = async (roundDoc, oldStatus, interview) => {
+    try {
+        console.log('[INTERVIEW WEBHOOK] Checking round status change for webhook:', {
+            roundId: roundDoc && roundDoc._id,
+            interviewId: roundDoc && roundDoc.interviewId,
+            oldStatus,
+            newStatus: roundDoc && roundDoc.status,
+        });
+
+        const mappedStatus = mapRoundStatusForWebhook(roundDoc.status);
+        if (!mappedStatus) {
+            console.log('[INTERVIEW WEBHOOK] Status not in allowed list, skipping webhook:', roundDoc && roundDoc.status);
+            return; // Only fire for allowed statuses
+        }
+
+        // If interview not passed in, fetch it
+        let interviewDoc = interview;
+        if (!interviewDoc) {
+            interviewDoc = await Interview.findById(roundDoc.interviewId).lean();
+        }
+        if (!interviewDoc) {
+            console.log('[INTERVIEW WEBHOOK] Interview not found for interviewId:', roundDoc && roundDoc.interviewId);
+            return;
+        }
+
+        const payload = {
+            roundId: roundDoc._id,
+            interviewId: roundDoc.interviewId,
+            candidateId: interviewDoc.candidateId,
+            positionId: interviewDoc.positionId,
+            roundName: roundDoc.roundTitle,
+            status: mappedStatus,
+            dbStatus: roundDoc.status,
+            previousStatus: oldStatus,
+            dateTime: roundDoc.dateTime,
+            interviewerType: roundDoc.interviewerType,
+            sequence: roundDoc.sequence,
+        };
+
+        console.log('[INTERVIEW WEBHOOK] Triggering webhook interview.round.status.updated with payload:', payload);
+
+        await triggerWebhook(
+            EVENT_TYPES.INTERVIEW_ROUND_STATUS_UPDATED,
+            payload,
+            interviewDoc.tenantId
+        );
+
+        console.log('[INTERVIEW WEBHOOK] Webhook trigger completed for roundId:', String(roundDoc._id));
+    } catch (error) {
+        console.error('[INTERVIEW] Error triggering interview.round.status.updated:', error);
+    }
+};
 
 //  post call for interview page 
 // const createInterview = async (req, res) => {
@@ -734,7 +810,15 @@ const saveInterviewRound = async (req, res) => {
             newInterviewRound.meetPlatform = meetPlatform;
         }
 
+        // For new rounds there is no previous status; if caller sets a status
+        // like "Scheduled" we still want to emit the webhook once it is saved.
+        const oldStatusForWebhook = undefined;
         savedRound = await newInterviewRound.save();
+
+        console.log('[INTERVIEW WEBHOOK] saveInterviewRound saved round with status:', savedRound.status);
+
+        // Trigger interview.round.status.updated if status is one of the allowed values
+        await triggerInterviewRoundStatusUpdated(savedRound, oldStatusForWebhook);
         await reorderInterviewRounds(interviewId);
 
         // Create notification for round scheduling
@@ -852,7 +936,8 @@ const updateInterviewRound = async (req, res) => {
             }
         }
 
-        // Store original status for tracking
+        // Store original status for tracking and webhook comparison
+        const oldStatusForWebhook = existingRound.status;
         existingRound._original_status = existingRound.status;
 
         // Handle meetLink field separately to prevent conversion issues
@@ -869,6 +954,20 @@ const updateInterviewRound = async (req, res) => {
 
         // Save updated round
         const savedRound = await existingRound.save();
+
+        console.log('[INTERVIEW WEBHOOK] updateInterviewRound saved round with status:', {
+            roundId: savedRound._id,
+            oldStatus: oldStatusForWebhook,
+            newStatus: savedRound.status,
+        });
+
+        // Trigger interview.round.status.updated if status actually changed and is allowed
+        if (savedRound.status !== oldStatusForWebhook) {
+            const interview = await Interview.findById(interviewId).lean();
+            await triggerInterviewRoundStatusUpdated(savedRound, oldStatusForWebhook, interview);
+        } else {
+            console.log('[INTERVIEW WEBHOOK] Status did not change, skipping webhook');
+        }
 
 
         // Reorder rounds just in case sequence was changed

@@ -176,12 +176,6 @@ const Availability = ({
           const startMins = convertToMinutes(startTime);
           const endMins = convertToMinutes(endTime);
           
-          // Check for minimum 60-minute gap
-          if (endMins - startMins < 60) {
-            notify.error('Time slot must be at least 60 minutes');
-            return;
-          }
-          
           // Check for overlap with other time slots
           const hasOverlapWithOtherSlots = hasOverlap(
             newTimes[shortDay],
@@ -203,13 +197,7 @@ const Availability = ({
       notify.error(`This ${field === 'startTime' ? 'start' : 'end'} time is already used in another slot`);
       return;
     }
-    
-    // Check if the same time is being selected for both start and end in the same slot
-    if (field === 'endTime' && value === newTimes[shortDay][index].startTime) {
-      notify.error('Start and end times cannot be the same. Please select a time at least 15 minutes later.');
-      return;
-    }
-    
+
     // Store the new value temporarily for validation
     newTimes[shortDay][index][field] = value;
     
@@ -239,10 +227,9 @@ const Availability = ({
       const startInMinutes = startHour * 60 + startMinute;
       const endInMinutes = endHour * 60 + endMinute;
       
-      // Check if end time is less than start time + 15 minutes (not equal to)
-      if (endInMinutes < startInMinutes + 15) {
-        // If the new end time would make the slot invalid, show message and revert it
-        notify.error('End time must be at least 15 minutes after start time');
+      // Enforce minimum 60-minute difference between start and end
+      if (endInMinutes < startInMinutes + 60) {
+        // If the new end time would make the slot invalid, silently revert it
         newTimes[shortDay][index][field] = previousValue;
         return;
       }
@@ -346,15 +333,21 @@ const Availability = ({
                                   left: `${openDropdown.position.left}px`,
                                 }}
                               >
-                                {generateTimeOptions.map((option) => (
-                                  <div
-                                    key={`start-${option.value}`}
-                                    className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                    onClick={() => updateTimeSlot(day, index, 'startTime', option.value)}
-                                  >
-                                    {option.label}
-                                  </div>
-                                ))}
+                                {generateTimeOptions
+                                  .filter((option) => {
+                                    // Hide start times already used in other slots for this day
+                                    const daySlots = times[shortDay] || [];
+                                    return !daySlots.some((slot, idx) => idx !== index && slot.startTime === option.value);
+                                  })
+                                  .map((option) => (
+                                    <div
+                                      key={`start-${option.value}`}
+                                      className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                      onClick={() => updateTimeSlot(day, index, 'startTime', option.value)}
+                                    >
+                                      {option.label}
+                                    </div>
+                                  ))}
                               </div>
                             )}
                           </div>
@@ -396,15 +389,26 @@ const Availability = ({
                                   left: `${openDropdown.position.left}px`,
                                 }}
                               >
-                                {generateTimeOptions.map((option) => (
-                                  <div
-                                    key={`end-${option.value}`}
-                                    className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                    onClick={() => updateTimeSlot(day, index, 'endTime', option.value)}
-                                  >
-                                    {option.label}
-                                  </div>
-                                ))}
+                                {generateTimeOptions
+                                  .filter((option) => {
+                                    // If no start time yet, show all options
+                                    if (!timeSlot.startTime) return true;
+                                    const startMins = convertToMinutes(timeSlot.startTime);
+                                    const optionMins = convertToMinutes(option.value);
+                                    // Hide times that are the same as or earlier than start time,
+                                    // and enforce at least a 60-minute difference between
+                                    // start and end times
+                                    return optionMins >= startMins + 60;
+                                  })
+                                  .map((option) => (
+                                    <div
+                                      key={`end-${option.value}`}
+                                      className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                      onClick={() => updateTimeSlot(day, index, 'endTime', option.value)}
+                                    >
+                                      {option.label}
+                                    </div>
+                                  ))}
                               </div>
                             )}
                           </div>
