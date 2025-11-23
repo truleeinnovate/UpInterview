@@ -6,13 +6,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useParams, useNavigate } from "react-router-dom";
-import {
-  Eye,
-  Pencil,
-  Trash2,
-  ArrowLeft,
-  AlertTriangle,
-} from "lucide-react";
+import { Eye, Pencil, Trash2, ArrowLeft, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
@@ -27,7 +21,7 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.0 <------------------------------------------------------------------------
 import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { notify } from "../../../../services/toastService";
 // v1.0.0 ------------------------------------------------------------------------>
@@ -35,15 +29,15 @@ import { notify } from "../../../../services/toastService";
 // Helper function to map master data types to query keys
 const getMasterDataKey = (type) => {
   const typeMap = {
-    'industries': 'industries',
-    'technologies': 'technology',
-    'skills': 'skills',
-    'locations': 'locations',
-    'roles': 'roles',
-    'qualifications': 'qualification',
-    'colleges': 'universitycollege',
-    'companies': 'company',
-    'category': 'category'
+    industries: "industries",
+    technologies: "technology",
+    skills: "skills",
+    locations: "locations",
+    roles: "roles",
+    qualifications: "qualification",
+    colleges: "universitycollege",
+    companies: "company",
+    category: "category",
   };
   return typeMap[type] || type;
 };
@@ -68,7 +62,9 @@ const MasterTable = ({ permissions = {} }) => {
   const [popupMode, setPopupMode] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
-
+  const rowsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
   // const authToken = Cookies.get("authToken"); // Kept for future authentication needs
   const impersonationToken = Cookies.get("impersonationToken");
 
@@ -89,8 +85,29 @@ const MasterTable = ({ permissions = {} }) => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const res = await axios.get(`${config.REACT_APP_API_URL}/${type}`);
-        setMasterData(res.data || []);
+        const params = new URLSearchParams({
+          page: currentPage + 1,
+          limit: rowsPerPage,
+          search: searchQuery,
+          sortBy: "createdAt",
+          sortOrder: "desc",
+          ...(filters.status.length > 0 && {
+            status: filters.status.map((s) => s.toLowerCase()).join(","),
+          }),
+        });
+
+        const res = await axios.get(
+          `${config.REACT_APP_API_URL}/master-data/${type}`,
+          {
+            params,
+          }
+        );
+
+        console.log("MASTER DATA FETCH RESPONSE ==========> ", res);
+        // setMasterData(res.data || []);
+        setMasterData(res?.data?.data || []);
+        setTotalPages(res?.data?.pagination.totalPages);
+        setTotalItems(res?.data?.pagination.totalItems);
       } catch (err) {
         console.error("Error fetching data:", err);
         setMasterData([]);
@@ -99,7 +116,7 @@ const MasterTable = ({ permissions = {} }) => {
       }
     };
     fetchData();
-  }, [type]);
+  }, [type, currentPage, searchQuery, filters, rowsPerPage]);
 
   // Create and update
   // v1.0.1 <-----------------------------------------------------------------
@@ -155,7 +172,7 @@ const MasterTable = ({ permissions = {} }) => {
           `${config.REACT_APP_API_URL}/master-data/${type}/${selectedMaster._id}`,
           payload
         );
-        console.log("Updated master:", res.data);
+        console.log("Updated master:", res);
         notify.success(`Master updated successfully!`);
       } else {
         // Create new master
@@ -163,21 +180,22 @@ const MasterTable = ({ permissions = {} }) => {
           `${config.REACT_APP_API_URL}/master-data/${type}`,
           payload
         );
-        console.log("Created master:", res.data);
+        console.log("Created master:", res);
         notify.success(`Master created successfully!`);
       }
 
       // Invalidate the specific master data cache
       // This will force refetch for all users
-      await queryClient.invalidateQueries({ 
-        queryKey: ['masterData', getMasterDataKey(type)] 
+      await queryClient.invalidateQueries({
+        queryKey: ["masterData", getMasterDataKey(type)],
       });
-      
+
       // Also refetch the local data
       const fetchRes = await axios.get(
         `${config.REACT_APP_API_URL}/master-data/${type}`
       );
-      setMasterData(fetchRes.data);
+      console.log("Refetched master data:", fetchRes);
+      setMasterData(fetchRes.data?.data);
 
       // Reset selected master
       setSelectedMaster(null);
@@ -206,10 +224,10 @@ const MasterTable = ({ permissions = {} }) => {
         setIsDeletePopupOpen(false);
         setDeleteTarget(null);
         notify.success(`Master deleted successfully!`);
-        
+
         // Invalidate the specific master data cache
-        await queryClient.invalidateQueries({ 
-          queryKey: ['masterData', getMasterDataKey(type)] 
+        await queryClient.invalidateQueries({
+          queryKey: ["masterData", getMasterDataKey(type)],
         });
       }
     } catch (err) {
@@ -236,26 +254,27 @@ const MasterTable = ({ permissions = {} }) => {
   }, [type]);
 
   // Search & Filter
-  const FilteredData = () => {
-    if (!Array.isArray(masterData)) return [];
-    return masterData.filter((item) => {
-      const searchableFields = Object.values(item).filter(Boolean);
-      const matchesQuery = searchableFields.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      const matchesFilters =
-        filters.status.length === 0 || filters.status.includes(item?.status);
-      return matchesQuery && matchesFilters;
-    });
-  };
+  // const FilteredData = () => {
+  //   if (!Array.isArray(masterData)) return [];
+  //   return masterData.filter((item) => {
+  //     const searchableFields = Object.values(item).filter(Boolean);
+  //     const matchesQuery = searchableFields.some((field) =>
+  //       field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+  //     );
+  //     const matchesFilters =
+  //       filters.status.length === 0 || filters.status.includes(item?.status);
+  //     return matchesQuery && matchesFilters;
+  //   });
+  // };
   // Pagination
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
-  const startIndex = currentPage * rowsPerPage;
-  const currentFilteredRows = FilteredData().slice(
-    startIndex,
-    startIndex + rowsPerPage
-  );
+
+  // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
+  // const startIndex = currentPage * rowsPerPage;
+  const currentFilteredRows = masterData;
+  //  FilteredData().slice(
+  //   startIndex,
+  //   startIndex + rowsPerPage
+  // );
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -569,14 +588,18 @@ const MasterTable = ({ permissions = {} }) => {
           totalPages={totalPages}
           onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
           onNextPage={() =>
-            setCurrentPage((p) => (p + 1 < totalPages ? p + 1 : p))
+            setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
           }
+          // onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
+          // onNextPage={() =>
+          //   setCurrentPage((p) => (p + 1 < totalPages ? p + 1 : p))
+          // }
           onFilterClick={() =>
             masterData.length && setFilterPopupOpen((p) => !p)
           }
           isFilterPopupOpen={isFilterPopupOpen}
           isFilterActive={isFilterActive}
-          dataLength={masterData?.length}
+          dataLength={totalItems}
           searchPlaceholder={`Search ${type}...`}
           filterIconRef={filterIconRef}
         />

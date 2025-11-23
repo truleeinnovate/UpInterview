@@ -22,9 +22,281 @@ import AssessmentPieChart from "../../../../Components/Analytics/charts/Assessme
 import RatingDistributionChart from "../../../../Components/Analytics/charts/RatingDistributionChart";
 import NoShowTrendsChart from "../../../../Components/Analytics/charts/NoShowTrendsChart";
 import CycleTimeChart from "../../../../Components/Analytics/charts/CycleTimeChart";
-import { getKPIData, getChartData } from "../../../../Components/Analytics/data/mockData";
+import {
+  getKPIData,
+  getChartData,
+} from "../../../../Components/Analytics/data/mockData";
+import { useInterviews } from "../../../../apiHooks/useInterviews";
+import { useOutsourceInterviewers } from "../../../../apiHooks/superAdmin/useOutsourceInterviewers";
+import { useScheduleAssessments } from "../../../../apiHooks/useScheduleAssessments";
+
+const calculateTotalInterviewsCounts = (interviews) => {
+  const now = new Date();
+
+  // Current month start
+  const currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // Last month start & end
+  const lastStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+  let totalRounds = 0;
+  let currentMonthCount = 0;
+  let lastMonthCount = 0;
+
+  interviews.forEach((interview) => {
+    (interview.rounds || []).forEach((round) => {
+      totalRounds++;
+
+      const roundDate = new Date(round.createdAt || interview.createdAt);
+
+      if (roundDate >= currentStart) {
+        currentMonthCount++;
+      } else if (roundDate >= lastStart && roundDate <= lastEnd) {
+        lastMonthCount++;
+      }
+    });
+  });
+
+  // Trend
+  const trend =
+    lastMonthCount === 0
+      ? "up"
+      : currentMonthCount >= lastMonthCount
+      ? "up"
+      : "down";
+
+  const trendValue =
+    lastMonthCount === 0
+      ? "+100% vs last month"
+      : `${(
+          ((currentMonthCount - lastMonthCount) / lastMonthCount) *
+          100
+        ).toFixed(1)}% vs last month`;
+
+  return {
+    totalRounds,
+    currentMonthCount,
+    lastMonthCount,
+    trend,
+    trendValue,
+  };
+};
+
+const calculateUpcomingInterviewCounts = (interviews) => {
+  const now = new Date();
+
+  // Next 7 days
+  const next7DaysEnd = new Date();
+  next7DaysEnd.setDate(now.getDate() + 7);
+
+  // Last 7 days
+  const last7DaysStart = new Date();
+  last7DaysStart.setDate(now.getDate() - 7);
+
+  // Current week (Mon–Sun)
+  const currentWeekStart = new Date(now);
+  currentWeekStart.setDate(now.getDate() - now.getDay() + 1); // Monday
+
+  const currentWeekEnd = new Date(currentWeekStart);
+  currentWeekEnd.setDate(currentWeekStart.getDate() + 6); // Sunday
+
+  let upcoming7Days = 0;
+  let currentWeekCount = 0;
+  let lastWeekCount = 0;
+
+  interviews.forEach((interview) => {
+    (interview.rounds || []).forEach((round) => {
+      const dt = new Date(
+        round.dateTime || round.createdAt || interview.createdAt
+      );
+
+      // Upcoming 7 days
+      if (dt >= now && dt <= next7DaysEnd) {
+        upcoming7Days++;
+      }
+
+      // Current week
+      if (dt >= currentWeekStart && dt <= currentWeekEnd) {
+        currentWeekCount++;
+      }
+
+      // Last 7 days
+      if (dt >= last7DaysStart && dt < now) {
+        lastWeekCount++;
+      }
+    });
+  });
+
+  // Trend (current week vs last 7 days)
+  const trend =
+    lastWeekCount === 0
+      ? "up"
+      : currentWeekCount >= lastWeekCount
+      ? "up"
+      : "down";
+
+  const trendValue =
+    lastWeekCount === 0
+      ? "+100% vs last week"
+      : `${(((currentWeekCount - lastWeekCount) / lastWeekCount) * 100).toFixed(
+          1
+        )}% vs last week`;
+
+  return {
+    upcoming7Days,
+    currentWeekCount,
+    lastWeekCount,
+    trend,
+    trendValue,
+  };
+};
+
+const calculateOutsourceInterviewerCounts = (interviews) => {
+  const now = new Date();
+
+  // Current month start
+  const currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // Last month start & end
+  const lastStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+  let currentMonthCount = 0;
+  let lastMonthCount = 0;
+
+  interviews.forEach((interview) => {
+    (interview.rounds || []).forEach((round) => {
+      if (round.interviewerType !== "external") return;
+
+      const roundDate = new Date(round.createdAt || interview.createdAt);
+
+      if (roundDate >= currentStart) {
+        currentMonthCount++;
+      } else if (roundDate >= lastStart && roundDate <= lastEnd) {
+        lastMonthCount++;
+      }
+    });
+  });
+
+  // Calculate trend
+  const trend =
+    lastMonthCount === 0
+      ? "up"
+      : currentMonthCount >= lastMonthCount
+      ? "up"
+      : "down";
+
+  const trendValue =
+    lastMonthCount === 0
+      ? "+100% vs last month"
+      : `${(
+          ((currentMonthCount - lastMonthCount) / lastMonthCount) *
+          100
+        ).toFixed(1)}% vs last month`;
+
+  return {
+    currentMonthCount,
+    lastMonthCount,
+    trend,
+    trendValue,
+  };
+};
+
+const calculateCompletedAssessments = (assessments) => {
+  const now = new Date();
+
+  // Current month start
+  const currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // Last month start & end
+  const lastStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+  let totalCompleted = 0;
+  let currentMonthCount = 0;
+  let lastMonthCount = 0;
+
+  assessments.forEach((assessment) => {
+    // We only count completed assessments
+    if (assessment.status !== "completed") return;
+
+    const createdDate = new Date(assessment.createdAt);
+
+    totalCompleted++;
+
+    if (createdDate >= currentStart) {
+      currentMonthCount++;
+    } else if (createdDate >= lastStart && createdDate <= lastEnd) {
+      lastMonthCount++;
+    }
+  });
+
+  // Trend logic
+  const trend =
+    lastMonthCount === 0
+      ? "up"
+      : currentMonthCount >= lastMonthCount
+      ? "up"
+      : "down";
+
+  const trendValue =
+    lastMonthCount === 0
+      ? "+100% vs last month"
+      : `${(
+          ((currentMonthCount - lastMonthCount) / lastMonthCount) *
+          100
+        ).toFixed(1)}% vs last month`;
+
+  return {
+    totalCompleted,
+    currentMonthCount,
+    lastMonthCount,
+    trend,
+    trendValue,
+  };
+};
 
 const Dashboard = () => {
+  // --------------------------------------------------------------------------------------------
+  // Interviews
+  const { total, interviewData } = useInterviews();
+  console.log("INTERVIEW DATA ===========================> ", interviewData);
+  const { currentMonthCount, lastMonthCount, trend, trendValue } =
+    calculateTotalInterviewsCounts(interviewData);
+
+  // upcoming interviews
+  const {
+    upcoming7Days,
+    currentWeekCount,
+    lastWeekCount,
+    trend: upcomingTrend,
+    trendValue: upcomingTrendValue,
+  } = calculateUpcomingInterviewCounts(interviewData);
+
+  // Outsource Interviews
+  const { outsourceInterviewers } = useOutsourceInterviewers();
+  const {
+    currentMonthCount: outsourcedCurrent,
+    lastMonthCount: outsourcedLast,
+    trend: outsourcedTrend,
+    trendValue: outsourcedTrendValue,
+  } = calculateOutsourceInterviewerCounts(outsourceInterviewers);
+
+  // Assessments
+  const { scheduleData } = useScheduleAssessments();
+  console.log(
+    "SCHEDULE ASSESSMENT DATA ===========================> ",
+    scheduleData
+  );
+  const {
+    currentMonthCount: assessmentCurrent,
+    lastMonthCount: assessmentLast,
+    trend: assessmentTrend,
+    trendValue: assessmentTrendValue,
+  } = calculateCompletedAssessments(scheduleData);
+
+  // ----------------------------------------------------------------------------------------------
   const [filters, setFilters] = useState({
     startDate: "2024-01-01",
     endDate: "2024-01-31",
@@ -103,39 +375,57 @@ const Dashboard = () => {
 
   const getVisibleKPIs = () => {
     const allKPIs = [
+      // {
+      //   key: "totalInterviews",
+      //   title: "Total Interviews",
+      //   value: kpiData?.totalInterviews || 0,
+      //   subtitle: "All time",
+      //   icon: Users,
+      //   trend: "up",
+      //   trendValue: "+12% vs last month",
+      // },
       {
         key: "totalInterviews",
         title: "Total Interviews",
-        value: kpiData?.totalInterviews || 0,
-        subtitle: "All time",
+        value: currentMonthCount, //This month's interviews
+        subtitle: `Last month: ${lastMonthCount}`,
         icon: Users,
-        trend: "up",
-        trendValue: "+12% vs last month",
+        trend,
+        trendValue,
       },
+      // {
+      //   key: "outsourcedInterviews",
+      //   title: "Outsourced Interviews",
+      //   value: kpiData?.outsourcedInterviews || 0,
+      //   subtitle: `${
+      //     kpiData?.totalInterviews
+      //       ? (
+      //           (kpiData.outsourcedInterviews / kpiData.totalInterviews) *
+      //           100
+      //         ).toFixed(0)
+      //       : 0
+      //   }% of total`,
+      //   icon: Clock,
+      //   trend: "up",
+      //   trendValue: "+8% vs last month",
+      // },
       {
         key: "outsourcedInterviews",
         title: "Outsourced Interviews",
-        value: kpiData?.outsourcedInterviews || 0,
-        subtitle: `${
-          kpiData?.totalInterviews
-            ? (
-                (kpiData.outsourcedInterviews / kpiData.totalInterviews) *
-                100
-              ).toFixed(0)
-            : 0
-        }% of total`,
+        value: outsourcedCurrent,
+        subtitle: `Last month: ${outsourcedLast}`,
         icon: Clock,
-        trend: "up",
-        trendValue: "+8% vs last month",
+        trend: outsourcedTrend,
+        trendValue: outsourcedTrendValue,
       },
       {
         key: "upcomingInterviews",
         title: "Upcoming Interviews",
-        value: kpiData?.upcomingInterviews || 0,
-        subtitle: "Next 7 days",
+        value: currentWeekCount,
+        subtitle: `Last week: ${lastWeekCount}`,
         icon: Calendar,
-        trend: "down",
-        trendValue: "-5% vs last week",
+        trend: upcomingTrend,
+        trendValue: upcomingTrendValue,
       },
       {
         key: "noShows",
@@ -150,14 +440,23 @@ const Dashboard = () => {
         trend: "down",
         trendValue: "-15% vs last month",
       },
+      // {
+      //   key: "assessmentsCompleted",
+      //   title: "Assessments Completed",
+      //   value: kpiData?.assessmentsCompleted || 0,
+      //   subtitle: "Ready for review",
+      //   icon: CheckCircle,
+      //   trend: "up",
+      //   trendValue: "+22% vs last month",
+      // },
       {
         key: "assessmentsCompleted",
         title: "Assessments Completed",
-        value: kpiData?.assessmentsCompleted || 0,
-        subtitle: "Ready for review",
+        value: assessmentCurrent || 0,
+        subtitle: `Last month: ${assessmentLast}`,
         icon: CheckCircle,
-        trend: "up",
-        trendValue: "+22% vs last month",
+        trend: assessmentTrend,
+        trendValue: assessmentTrendValue,
       },
       {
         key: "averageScore",
@@ -279,7 +578,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in p-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -341,7 +640,7 @@ const Dashboard = () => {
           onApplyCustomization={handleCustomization}
           type="dashboard"
           currentSettings={customSettings}
-      />
+        />
       </div>
 
       {/* Dashboard Column Manager */}
@@ -354,7 +653,7 @@ const Dashboard = () => {
           onKpiCardsChange={handleKpiCardsChange}
           onChartsChange={handleChartsChange}
           customSettings={customSettings}
-        /> 
+        />
       </div>
 
       {/* Scheduled Reports Modal */}
@@ -364,7 +663,7 @@ const Dashboard = () => {
           onClose={() => setShowScheduledReports(false)}
         />
       </div>
-        {/* v1.0.0 -----------------------------------------------------------------------------------> */}
+      {/* v1.0.0 -----------------------------------------------------------------------------------> */}
     </div>
   );
 };

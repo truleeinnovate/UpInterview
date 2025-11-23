@@ -115,7 +115,7 @@ const Trends = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in p-6">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-semibold text-custom-blue">Trends & Analytics</h1>

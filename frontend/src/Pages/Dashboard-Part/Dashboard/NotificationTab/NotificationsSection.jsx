@@ -86,16 +86,43 @@ const NotificationsSection = () => {
   //   fetchNotifications();
   // }, [organization, tenantId, ownerId]);
 
-  const { data, isLoading, isError } = useNotifications({
+  // const { data, isLoading, isError } = useNotifications({
+  //   organization,
+  //   tenantId,
+  //   ownerId,
+  //   limit:10
+  // });
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [selectedTimeRange, setSelectedTimeRange] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
+  // const [selectedNotification, setSelectedNotification] = useState(null);
+  const [AllNotificationsModalactiveTab, AllNotificationsModalsetActiveTab] = useState("all"); // 'all' or 'email'
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  // const hasWhatsappProperty = notifications && Array.isArray(notifications.whatsapp);
+
+
+  const { data: notificationsData, isError, isLoading } = useNotifications({
     organization,
     tenantId,
     ownerId,
+    search: searchQuery,
+    status: selectedFilter,
+    type: activeTab === "all" ? "" : activeTab,
+    timeRange: selectedTimeRange,
+    page,
+    limit,
   });
 
   if (isLoading) return <div>Loading notifications...</div>;
   if (isError) return <div>Error loading notifications</div>;
+  console.log("notificationsData", notificationsData);
 
-  const currentNotifications = data?.[activeTab] || [];
+  const currentNotifications = notificationsData?.[activeTab] || [];
+
+  console.log("AllNotificationsModalactiveTab", AllNotificationsModalactiveTab);
 
   return (
     <>
@@ -120,11 +147,10 @@ const NotificationsSection = () => {
               <button
                 title="Mail"
                 onClick={() => setActiveTab("email")}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
-                  activeTab === "email"
-                    ? "bg-indigo-50 text-custom-blue"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${activeTab === "email"
+                  ? "bg-indigo-50 text-custom-blue"
+                  : "text-gray-600 hover:bg-gray-50"
+                  }`}
               >
                 <Mail size={20} />
                 <span className="sm:hidden inline text-sm">Email</span>
@@ -242,11 +268,10 @@ const NotificationsSection = () => {
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-3">
                       <span
-                        className={`px-2 py-1 rounded-xl text-xs font-medium ${
-                          notification.priority === "high"
-                            ? "bg-rose-100 text-rose-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
+                        className={`px-2 py-1 rounded-xl text-xs font-medium ${notification.priority === "high"
+                          ? "bg-rose-100 text-rose-700"
+                          : "bg-yellow-100 text-yellow-700"
+                          }`}
                       >
                         {
                           <StatusBadge
@@ -318,7 +343,19 @@ const NotificationsSection = () => {
       <AllNotificationsModal
         isOpen={showAllNotifications}
         onClose={() => setShowAllNotifications(false)}
-        notifications={data}
+        notifications={notificationsData}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        setSelectedFilter={setSelectedFilter}
+        setSelectedTimeRange={setSelectedTimeRange}
+        setShowFilters={setShowFilters}
+        setSelectedNotification={setSelectedNotification}
+        selectedNotification={selectedNotification}
+        activeTab={AllNotificationsModalactiveTab}
+        setActiveTab={AllNotificationsModalsetActiveTab}
+
+        page={page}
+        limit={limit}
       />
 
       <div>
@@ -326,6 +363,17 @@ const NotificationsSection = () => {
           isOpen={!!selectedNotification}
           onClose={() => setSelectedNotification(null)}
           notification={selectedNotification}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          setSelectedFilter={setSelectedFilter}
+          setSelectedTimeRange={setSelectedTimeRange}
+          setShowFilters={setShowFilters}
+          setSelectedNotification={setSelectedNotification}
+          selectedNotification={selectedNotification}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          page={page}
+          limit={limit}
         />
       </div>
     </>

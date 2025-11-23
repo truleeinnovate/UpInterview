@@ -19,15 +19,18 @@ const ContactUsKanban = ({
   contactMessages = [],
   currentPage = 0,
   itemsPerPage = 10,
+  totalItems = 0,
   onView,
   onEdit,
   onDelete,
   permissions = {},
 }) => {
-  // Get paginated messages
-  const startIndex = currentPage * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedMessages = contactMessages.slice(startIndex, endIndex);
+  const isServerPaged = itemsPerPage <= 0;
+  const startIndex = isServerPaged ? 0 : currentPage * itemsPerPage;
+  const endIndex = isServerPaged ? contactMessages.length : startIndex + itemsPerPage;
+  const paginatedMessages = isServerPaged
+    ? contactMessages
+    : contactMessages.slice(startIndex, endIndex);
 
 
   const formatDate = (date) => {
@@ -55,9 +58,14 @@ const ContactUsKanban = ({
   return (
     <div className="space-y-4">
       {/* Page indicator */}
-      {contactMessages.length > itemsPerPage && (
+      {(
+        (isServerPaged && totalItems > paginatedMessages.length) ||
+        (!isServerPaged && contactMessages.length > itemsPerPage)
+      ) && (
         <div className="text-sm text-gray-600 text-center">
-          Page {currentPage + 1} - Showing {startIndex + 1} to {Math.min(endIndex, contactMessages.length)} of {contactMessages.length}
+          {isServerPaged
+            ? `Page ${currentPage + 1} - Showing ${paginatedMessages.length} of ${totalItems}`
+            : `Page ${currentPage + 1} - Showing ${startIndex + 1} to ${Math.min(endIndex, contactMessages.length)} of ${contactMessages.length}`}
         </div>
       )}
 

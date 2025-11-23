@@ -38,17 +38,96 @@ const createSubscriptionPlan = async (req, res) => {
     }
 };
 
-// Fetch a subscription plan by ID
+// Fetch subscription plans (list)
 const getSubscriptionPlan = async (req, res) => {
   try {
     res.set('Cache-Control', 'no-store'); // Prevent caching
 
-    const plan = await SubscriptionPlan.find();
-    if (!plan.length) {
-      return res.status(404).send({ message: 'Subscription Plan not found' });
+    const { page, limit, search, subscriptionTypes, activeStates, createdDate } = req.query;
+    const hasParams = Boolean(page || limit || search || subscriptionTypes || activeStates || createdDate);
+
+    // Legacy: return full list when no params provided
+    if (!hasParams) {
+      const plan = await SubscriptionPlan.find();
+      if (!plan.length) {
+        return res.status(404).send({ message: 'Subscription Plan not found' });
+      }
+      return res.status(200).send(plan);
     }
 
-    res.status(200).send(plan);
+    // Server-side pagination + filters
+    const currentPage = Math.max(parseInt(page) || 1, 1);
+    const perPage = Math.max(parseInt(limit) || 10, 1);
+    const skip = (currentPage - 1) * perPage;
+
+    const match = {};
+
+    // Search across several fields
+    if (typeof search === 'string' && search.trim()) {
+      const s = search.trim();
+      match.$or = [
+        { planId: { $regex: s, $options: 'i' } },
+        { name: { $regex: s, $options: 'i' } },
+        { description: { $regex: s, $options: 'i' } },
+        { 'features.name': { $regex: s, $options: 'i' } },
+        { 'features.description': { $regex: s, $options: 'i' } },
+        { 'pricing.currency': { $regex: s, $options: 'i' } },
+        { 'pricing.billingCycle': { $regex: s, $options: 'i' } },
+      ];
+    }
+
+    // Filter: subscriptionTypes (comma-separated)
+    if (subscriptionTypes) {
+      const arr = String(subscriptionTypes)
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean);
+      if (arr.length) match.subscriptionType = { $in: arr };
+    }
+
+    // Filter: activeStates (Active/Inactive -> boolean)
+    if (activeStates) {
+      const vals = String(activeStates)
+        .split(',')
+        .map((v) => v.trim().toLowerCase())
+        .filter((v) => v === 'active' || v === 'inactive');
+      const bools = Array.from(new Set(vals.map((v) => (v === 'active'))));
+      if (bools.length === 1) match.active = bools[0];
+      // if both provided, no filter needed
+    }
+
+    // Filter: createdDate presets: last7, last30
+    if (createdDate === 'last7' || createdDate === 'last30') {
+      const now = Date.now();
+      const ms = createdDate === 'last7' ? 7 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
+      const threshold = new Date(now - ms);
+      match.createdAt = { $gte: threshold };
+    }
+
+    const pipeline = [
+      { $match: match },
+      { $sort: { _id: -1 } },
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: perPage },
+          ],
+          meta: [{ $count: 'total' }],
+        },
+      },
+    ];
+
+    const result = await SubscriptionPlan.aggregate(pipeline);
+    const data = result?.[0]?.data || [];
+    const total = result?.[0]?.meta?.[0]?.total || 0;
+
+    return res.status(200).json({
+      plans: data,
+      total,
+      page: currentPage,
+      itemsPerPage: perPage,
+    });
   } catch (err) {
     res.status(500).send({ message: 'Internal Server Error', error: err.message });
   }

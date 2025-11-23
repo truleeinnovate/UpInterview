@@ -27,6 +27,119 @@ const getTasks = async (req, res) => {
   }
 };
 
+// GET /api/tasks - with search, filters, pagination
+// const getTasks = async (req, res) => {
+//   try {
+//     const {
+//       page = 1,
+//       limit = 10,
+//       search,
+//       status,
+//       priority,
+//       dueDate, // "overdue" | "today" | "thisWeek"
+//       assignedToId,
+//       createdDate, // "last7" | "last30"
+//       sortBy = "createdAt",
+//       sortOrder = "desc",
+//       ownerId
+//     } = req.query;
+//     let {  userId } = res.locals;
+//     const ownerId = userId;
+
+//     const pageNum = parseInt(page);
+//     const limitNum = parseInt(limit);
+//     const skip = (pageNum - 1) * limitNum;
+
+//     // Build filter object
+//     const filter =  ownerId ; // from JWT middleware
+// console.log("filter filter",filter )
+//     // Text search on title, description, taskCode
+//     if (search) {
+//       filter.$or = [
+//         { title: { $regex: search, $options: "i" } },
+//         { taskCode: { $regex: search, $options: "i" } },
+//         { description: { $regex: search, $options: "i" } },
+//         { assignedTo: { $regex: search, $options: "i" } }
+//       ];
+//     }
+
+//     // Status filter (array or single)
+//     if (status) {
+//       const statusArr = Array.isArray(status) ? status : [status];
+//       filter.status = { $in: statusArr };
+//     }
+
+//     // Priority filter
+//     if (priority) {
+//       const priorityArr = Array.isArray(priority) ? priority : [priority];
+//       filter.priority = { $in: priorityArr };
+//     }
+
+//     // Assigned To
+//     if (assignedToId && assignedToId !== "null" && assignedToId !== "undefined") {
+//       filter.assignedToId = assignedToId;
+//     }
+
+//     // Due Date Filters
+//     if (dueDate) {
+//       const now = new Date();
+//       const todayStart = new Date(now.setHours(0, 0, 0, 0));
+//       const todayEnd = new Date(now.setHours(23, 59, 59, 999));
+
+//       if (dueDate === "overdue") {
+//         filter.dueDate = { $lt: new Date() };
+//       } else if (dueDate === "today") {
+//         filter.dueDate = { $gte: todayStart, $lte: todayEnd };
+//       } else if (dueDate === "thisWeek") {
+//         const startOfWeek = new Date(todayStart);
+//         startOfWeek.setDate(todayStart.getDate() - todayStart.getDay() + 1); // Monday
+//         const endOfWeek = new Date(startOfWeek);
+//         endOfWeek.setDate(startOfWeek.getDate() + 6);
+//         filter.dueDate = { $gte: startOfWeek, $lte: endOfWeek };
+//       }
+//     }
+
+//     // Created Date Filters
+//     if (createdDate) {
+//       const now = new Date();
+//       if (createdDate === "last7") {
+//         const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
+//         filter.createdAt = { $gte: sevenDaysAgo };
+//       } else if (createdDate === "last30") {
+//         const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
+//         filter.createdAt = { $gte: thirtyDaysAgo };
+//       }
+//     }
+
+//     // Execute queries in parallel
+//     const [tasks, total] = await Promise.all([
+//       Task.find(filter)
+//         .sort({ [sortBy]: sortOrder === "desc" ? -1 : 1 })
+//         .skip(skip)
+//         .limit(limitNum)
+//         .lean(),
+
+//       Task.countDocuments(filter)
+//     ]);
+
+//     res.json({
+//       success: true,
+//       data: tasks,
+//       pagination: {
+//         current: pageNum,
+//         pages: Math.ceil(total / limitNum),
+//         total,
+//         hasNext: pageNum < Math.ceil(total / limitNum),
+//         hasPrev: pageNum > 1
+//       }
+//     });
+
+//   } catch (err) {
+//     console.error("Error fetching tasks:", err);
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// };
+
 
 // Create a new task
 const createTask = async (req, res) => {
