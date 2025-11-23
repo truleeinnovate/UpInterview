@@ -39,6 +39,8 @@ import { notify } from "../../../../services/toastService.js";
 // v1.0.5 <------------------------------------------------------------------
 function HeaderBar({
   rangeLabel,
+  questionsPerPage,
+  onChangeQuestionsPerPage,
   searchInput,
   setSearchInput,
   dropdownValue,
@@ -60,6 +62,34 @@ function HeaderBar({
         {/* Range Label */}
         <div className="flex items-center">
           <p>{rangeLabel}</p>
+        </div>
+
+        {/* Questions per page selector */}
+        <div className="flex items-center gap-2">
+          <div className="w-28 flex-shrink-0">
+            {(() => {
+              const pageSizeOptions = [10, 20, 30, 50, 100, 150, 200].map((size) => ({
+                value: size,
+                label: String(size),
+              }));
+              const selectedOption =
+                pageSizeOptions.find((opt) => opt.value === questionsPerPage) ||
+                pageSizeOptions[0];
+              return (
+                <DropdownSelect
+                  isSearchable={false}
+                  value={selectedOption}
+                  onChange={(opt) =>
+                    onChangeQuestionsPerPage(opt?.value ? Number(opt.value) : 10)
+                  }
+                  options={pageSizeOptions}
+                  placeholder="Per page"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                />
+              );
+            })()}
+          </div>
         </div>
 
         {/* Search */}
@@ -174,7 +204,7 @@ const SuggestedQuestionsComponent = ({
   const [currentPage, setCurrentPage] = useState(1);
   const filterIconRef = useRef(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [dropdownValue, setDropdownValue] = useState(
     type === "assessment" ? "Assessment Questions" : "Interview Questions"
@@ -191,6 +221,11 @@ const SuggestedQuestionsComponent = ({
   useEffect(() => {
     setCurrentPage(1);
   }, [dropdownValue]);
+
+  // Reset to first page when page size changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage]);
 
 
   const [questionTypeFilterItems, setQuestionTypeFilterItems] = useState([]);
@@ -294,7 +329,7 @@ const SuggestedQuestionsComponent = ({
   const uniqueTechnologies = useMemo(() => {
     if (!suggestedQuestions || suggestedQuestions.length === 0) return [];
     const set = new Set();
-    console.log("suggestedQuestions", suggestedQuestions);
+    //console.log("suggestedQuestions", suggestedQuestions);
     suggestedQuestions.forEach((q) => {
       const techArr = Array.isArray(q?.technology) ? q.technology : [];
       techArr.forEach((t) => {
@@ -457,10 +492,10 @@ const SuggestedQuestionsComponent = ({
     totalAvailable === 0
       ? "0/0"
       : beyondAccessible
-        ? `${planAccessibleTotal}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`
+        ? `${planAccessibleTotal}/${totalAvailable} ${totalAvailable > 1 ? "Questions/Page" : "Question/Page"}`
         : startIndex === endIndex
-          ? `${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`
-          : `${startIndex}-${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`;
+          ? `${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions/Page" : "Question/Page"}`
+          : `${startIndex}-${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions/Page" : "Question/Page"}`;
 
 
 
@@ -1040,6 +1075,8 @@ const SuggestedQuestionsComponent = ({
       {/* It's Implemented to avoid responsive issues  */}
       <HeaderBar
         rangeLabel={rangeLabel}
+        questionsPerPage={itemsPerPage}
+        onChangeQuestionsPerPage={(newSize) => setItemsPerPage(newSize)}
         searchInput={searchInput}
         setSearchInput={setSearchInput}
         dropdownValue={dropdownValue}
@@ -1125,30 +1162,7 @@ const SuggestedQuestionsComponent = ({
               )}
             {/* v1.0.7 <----------------------------------------------------------------------- */}
             <ul className="flex flex-col gap-4 pr-2 h-[calc(100vh-210px)] overflow-y-auto">
-              {/* Show a single lock banner if any items are locked on this page */}
-              {hasLockedOnPage && (
-                <div
-                  key="locked-banner"
-                  className="border rounded-lg shadow-sm transition-shadow text-sm border-gray-300 bg-gray-50"
-                >
-                  <div className="relative min-h-[200px] flex items-center justify-center p-8">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <Lock className="w-12 h-12 text-gray-400 mb-3" />
-                      <p className="text-gray-700 font-medium text-lg mb-1">You’ve reached your plan limit</p>
-                      <p className="text-gray-500 text-sm mb-4">
-                        {(planAccessibleTotal ?? accessibleQuestions ?? 0)} accessible • {(totalQuestionsFromAPI - accessibleQuestions)  ?? 0} Questions available
-                      </p>
-                      <button
-                        onClick={() => navigate('/account-settings/subscription')}
-                        className="px-6 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
-                      >
-                        Upgrade to unlock remaining
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {/* Render only unlocked cards */}
+              {/* Render only unlocked cards first */}
               {unlockedPaginatedData.length > 0 ? (
                 unlockedPaginatedData.map((item, index) => {
                   // Regular unlocked card
@@ -1398,6 +1412,30 @@ const SuggestedQuestionsComponent = ({
                   </p>
                 </div>
               ))}
+
+              {/* Show a single lock banner at the end if any items are locked on this page */}
+              {hasLockedOnPage && (
+                <div
+                  key="locked-banner"
+                  className="border rounded-lg shadow-sm transition-shadow text-sm border-gray-300 bg-gray-50"
+                >
+                  <div className="relative min-h-[200px] flex items-center justify-center p-8">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <Lock className="w-12 h-12 text-gray-400 mb-3" />
+                      <p className="text-gray-700 font-medium text-lg mb-1">You’ve reached your plan limit</p>
+                      <p className="text-gray-500 text-sm mb-4">
+                        {(planAccessibleTotal ?? accessibleQuestions ?? 0)} accessible • {(totalQuestionsFromAPI - accessibleQuestions)  ?? 0} Questions available
+                      </p>
+                      <button
+                        onClick={() => navigate('/account-settings/subscription')}
+                        className="px-6 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
+                      >
+                        Upgrade to unlock
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </ul>
           </div>
           {/* v1.0.5 -----------------------------------------------------------------> */}

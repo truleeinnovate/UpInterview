@@ -1,4 +1,6 @@
 // v1.0.0 - Ashok - Issue fixed added note about that
+// v1.0.1 - Ashok - Improved filter popup positioning logic and added custom height prop
+
 /*
  * Popup Positioning Note:
  *
@@ -35,6 +37,7 @@ export const FilterPopup = ({
   onClearAll,
   filterIconRef,
   children,
+  customHeight = "65vh",
 }) => {
   const popupRef = useRef(null);
   // v1.0.0 <------------------------------------------------------------------
@@ -87,51 +90,100 @@ export const FilterPopup = ({
   //   };
   // }, [isOpen, filterIconRef]);
 
+  // useEffect(() => {
+  //   if (!isOpen || !filterIconRef?.current || !popupRef.current) return;
+
+  //   const updatePopupPosition = () => {
+  //     const rect = filterIconRef.current.getBoundingClientRect();
+  //     const popup = popupRef.current;
+  //     const popupWidth = 320; // 20rem = 320px
+
+  //     // Ensure popup fits in viewport horizontally
+  //     let leftPosition = rect.left;
+  //     if (leftPosition + popupWidth > window.innerWidth) {
+  //       leftPosition = window.innerWidth - popupWidth - 16;
+  //     }
+  //     leftPosition = Math.max(16, leftPosition);
+
+  //     const popupHeight = popup.offsetHeight;
+  //     const viewportHeight = window.innerHeight;
+  //     const bottomSpace = viewportHeight - rect.bottom - 16;
+
+  //     let topPosition;
+  //     if (bottomSpace < popupHeight && rect.top > popupHeight) {
+  //       // Not enough space below, open above
+  //       topPosition = rect.top - popupHeight - 8;
+  //     } else {
+  //       // Default: open below
+  //       topPosition = rect.bottom + 8;
+  //     }
+
+  //     popup.style.position = "fixed";
+  //     popup.style.top = `${topPosition}px`;
+  //     popup.style.left = `${leftPosition}px`;
+  //     popup.style.width = `${popupWidth}px`;
+  //     popup.style.zIndex = "1000";
+  //   };
+
+  //   // Initial position
+  //   updatePopupPosition();
+
+  //   // Update on window resize
+  //   window.addEventListener("resize", updatePopupPosition);
+
+  //   return () => {
+  //     window.removeEventListener("resize", updatePopupPosition);
+  //   };
+  // }, [isOpen, filterIconRef]);
+
   useEffect(() => {
     if (!isOpen || !filterIconRef?.current || !popupRef.current) return;
 
+    const icon = filterIconRef.current;
+    const popup = popupRef.current;
+
+    const popupWidth = 320;
+
     const updatePopupPosition = () => {
-      const rect = filterIconRef.current.getBoundingClientRect();
-      const popup = popupRef.current;
-      const popupWidth = 320; // 20rem = 320px
-
-      // Ensure popup fits in viewport horizontally
-      let leftPosition = rect.left;
-      if (leftPosition + popupWidth > window.innerWidth) {
-        leftPosition = window.innerWidth - popupWidth - 16;
-      }
-      leftPosition = Math.max(16, leftPosition);
-
+      const rect = icon.getBoundingClientRect();
       const popupHeight = popup.offsetHeight;
       const viewportHeight = window.innerHeight;
-      const bottomSpace = viewportHeight - rect.bottom - 16;
 
-      let topPosition;
+      // Horizontal clamp
+      let left = rect.left;
+      if (left + popupWidth > window.innerWidth) {
+        left = window.innerWidth - popupWidth - 16;
+      }
+      left = Math.max(16, left);
+
+      // Vertical (above / below)
+      const bottomSpace = viewportHeight - rect.bottom - 16;
+      let top;
       if (bottomSpace < popupHeight && rect.top > popupHeight) {
-        // Not enough space below, open above
-        topPosition = rect.top - popupHeight - 8;
+        top = rect.top - popupHeight - 8;
       } else {
-        // Default: open below
-        topPosition = rect.bottom + 8;
+        top = rect.bottom + 8;
       }
 
       popup.style.position = "fixed";
-      popup.style.top = `${topPosition}px`;
-      popup.style.left = `${leftPosition}px`;
+      popup.style.left = `${left}px`;
+      popup.style.top = `${top}px`;
       popup.style.width = `${popupWidth}px`;
       popup.style.zIndex = "1000";
     };
 
-    // Initial position
     updatePopupPosition();
 
-    // Update on window resize
+    // Track window resize + scroll
     window.addEventListener("resize", updatePopupPosition);
+    window.addEventListener("scroll", updatePopupPosition, true); // ← IMPORTANT
 
     return () => {
       window.removeEventListener("resize", updatePopupPosition);
+      window.removeEventListener("scroll", updatePopupPosition, true);
     };
   }, [isOpen, filterIconRef]);
+
   // v1.0.0 ------------------------------------------------------------------>
 
   const handleClearAllClick = () => {
@@ -145,8 +197,9 @@ export const FilterPopup = ({
   return (
     <div
       ref={popupRef}
-      className="bg-white rounded-lg shadow-xl z-50 flex flex-col border border-gray-200"
-      style={{ height: "65vh" }} // Fixed height
+      // className="bg-white rounded-lg shadow-xl z-50 flex flex-col border border-gray-200"
+      className={`bg-white rounded-lg shadow-xl z-50 flex flex-col border border-gray-200 ${customHeight}`}
+      // style={{ height: "65vh" }} // Fixed height
     >
       {/* Header */}
       <div className="border-b p-3 flex justify-between items-center">

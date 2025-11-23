@@ -13,6 +13,7 @@ import Loading from "../../Components/Loading.js";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "./Tenant/KanbanView.jsx";
+import DropdownSelect from "../../Components/Dropdowns/DropdownSelect.jsx";
 import {
   Eye,
   Mail,
@@ -55,6 +56,7 @@ function TenantsPage() {
   const filterIconRef = useRef(null);
   const ITEMS_PER_PAGE = 10;
   const [selectedType, setSelectedType] = useState("all");
+  const [selectedValueFilter, setSelectedValueFilter] = useState("");
 
   // Debounce search for better performance
   useEffect(() => {
@@ -181,8 +183,46 @@ function TenantsPage() {
     }
   };
 
-  // Use server-side paginated data directly
   const currentFilteredRows = tenants || [];
+  const normalize = (s) => (typeof s === "string" ? s.trim().toLowerCase() : "");
+  const roleValues = Array.from(
+    new Set(
+      (currentFilteredRows || [])
+        .filter((r) => r?.type !== "organization")
+        .map((r) => r?.contact?.currentRole)
+        .filter((v) => typeof v === "string" && v.trim() !== "")
+    )
+  ).sort();
+  const techValues = Array.from(
+    new Set(
+      (currentFilteredRows || [])
+        .flatMap((r) => Array.isArray(r?.contact?.technologies) ? r.contact.technologies : [])
+        .filter((v) => typeof v === "string" && v.trim() !== "")
+    )
+  ).sort();
+  const filterValueOptions = [
+    ...roleValues.map((v) => ({ value: `role:${v}`, label: v })),
+    ...techValues.map((v) => ({ value: `tech:${v}`, label: v })),
+  ];
+  const filteredRows = selectedValueFilter
+    ? (() => {
+        const [prefix, ...rest] = selectedValueFilter.split(":");
+        const val = rest.join(":");
+        const target = normalize(val);
+        if (prefix === "role") {
+          return currentFilteredRows.filter(
+            (row) => row?.type !== "organization" && normalize(row?.contact?.currentRole) === target
+          );
+        }
+        if (prefix === "tech") {
+          return currentFilteredRows.filter((row) => {
+            const techs = Array.isArray(row?.contact?.technologies) ? row.contact.technologies : [];
+            return techs.some((t) => normalize(t) === target);
+          });
+        }
+        return currentFilteredRows;
+      })()
+    : currentFilteredRows;
   const totalPages = pagination?.totalPages || 0;
   
   const nextPage = () => {
@@ -290,6 +330,14 @@ function TenantsPage() {
     },
 
     {
+      key: "currentRole",
+      header: "Current Role",
+      render: (value, row) => (
+        <span>{row?.type === "organization" ? "N/A" : (row?.contact?.currentRole || "N/A")}</span>
+      ),
+    },
+
+    {
       key: "plan",
       header: "Plan",
       render: (value, row) => (
@@ -298,6 +346,7 @@ function TenantsPage() {
         </span>
       ),
     },
+    
     {
       key: "organizations",
       header: "Users",
@@ -741,6 +790,21 @@ function TenantsPage() {
               dataLength={tenants?.length || 0}
               searchPlaceholder="Search tenants..."
               filterIconRef={filterIconRef} // Pass ref to Toolbar
+              startContent={
+                <div className="min-w-[240px]">
+                  <DropdownSelect
+                    value={filterValueOptions.find((opt) => opt.value === selectedValueFilter) || null}
+                    onChange={(selectedOption) => {
+                      setSelectedValueFilter(selectedOption ? selectedOption.value : "");
+                      setCurrentPage(0);
+                    }}
+                    options={filterValueOptions}
+                    placeholder="Filter by Role/Technology"
+                    isClearable={true}
+                    menuPortalTarget={document.body}
+                  />
+                </div>
+              }
             />
           </div>
         </main>
@@ -751,7 +815,7 @@ function TenantsPage() {
               {view === "table" ? (
                 <div className="w-full mb-8">
                   <TableView
-                    data={currentFilteredRows}
+                    data={filteredRows}
                     columns={tableColumns}
                     loading={isLoading}
                     actions={tableActions}
@@ -762,7 +826,7 @@ function TenantsPage() {
               ) : (
                 <div className="w-full">
                   <KanbanView
-                    data={currentFilteredRows.map((tenant) => ({
+                    data={filteredRows.map((tenant) => ({
                       ...tenant,
                       id: tenant._id,
                       title: tenant.firstName || "N/A",

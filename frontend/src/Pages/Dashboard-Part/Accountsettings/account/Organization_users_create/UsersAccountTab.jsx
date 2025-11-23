@@ -7,6 +7,7 @@
 // v1.0.4 - Ashok - Improved responsiveness
 // v1.0.5 - Ashok - Moved users api to hooks
 // v1.0.6 - Ashok - fixed style issues
+// v1.0.7 - Ashok - Fixed filter popup height issue
 
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -81,21 +82,21 @@ const UsersAccountTab = () => {
   const { usersRes, usersLoading, toggleUserStatus } = useUsers({
     search: searchQuery.trim(),
     // role: selectedFilters?.roles.length > 0 ? selectedFilters?.roles.join(",") : "", // Use selectedFilters, not selectedRoles
-      role: selectedFilters.roles && selectedFilters.roles.length > 0 ? selectedFilters.roles.join(",") : "",
-    page: currentPage , // API expects 1-based, we use 0-based internally
+    role:
+      selectedFilters.roles && selectedFilters.roles.length > 0
+        ? selectedFilters.roles.join(",")
+        : "",
+    page: currentPage, // API expects 1-based, we use 0-based internally
     limit: 10,
   });
-
-
 
   const users = usersRes?.users || [];
   const pagination = usersRes?.pagination || {};
 
-
   // Select data and loading state based on type
   const dataSource = userType === "superAdmin" ? superAdminUsers : users;
   const loading = userType === "superAdmin" ? superAdminLoading : usersLoading;
- 
+
   // Fetch super admin users when type is superAdmin
   useEffect(() => {
     if (userType === "superAdmin") {
@@ -156,8 +157,6 @@ const UsersAccountTab = () => {
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
-
-
   // Filter handling
   const handleRoleToggle = (role) => {
     setSelectedRoles((prev) =>
@@ -174,20 +173,20 @@ const UsersAccountTab = () => {
   //   setFilterPopupOpen(false);
   // };
   const handleClearAll = () => {
-  setSelectedRoles([]);
-  setSelectedFilters({ roles: [] }); // Directly set the object
-  setCurrentPage(0);
-  setIsFilterActive(false);
-  setFilterPopupOpen(false);
-};
+    setSelectedRoles([]);
+    setSelectedFilters({ roles: [] }); // Directly set the object
+    setCurrentPage(0);
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
+  };
 
-const handleApplyFilters = () => {
-  const filters = { roles: selectedRoles }; // Use 'roles' key to match initial state
-  setSelectedFilters(filters);
-  setCurrentPage(0);
-  setIsFilterActive(selectedRoles.length > 0);
-  setFilterPopupOpen(false);
-};
+  const handleApplyFilters = () => {
+    const filters = { roles: selectedRoles }; // Use 'roles' key to match initial state
+    setSelectedFilters(filters);
+    setCurrentPage(0);
+    setIsFilterActive(selectedRoles.length > 0);
+    setFilterPopupOpen(false);
+  };
 
   const handleFilterIconClick = () => {
     if (dataSource?.length !== 0) {
@@ -199,7 +198,7 @@ const handleApplyFilters = () => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
   };
-// console.log("dataSource dataSource", dataSource);
+  // console.log("dataSource dataSource", dataSource);
   // Unique roles for filter options
   const uniqueRoles = [
     ...new Set(dataSource?.map((user) => user.label).filter(Boolean)),
@@ -258,13 +257,13 @@ const handleApplyFilters = () => {
   // Navigation handlers - FIXED: Use pagination from API
   const handleNextPage = () => {
     if (pagination.hasNext) {
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
   const handlePrevPage = () => {
     if (pagination.hasPrev) {
-      setCurrentPage(prev => prev - 1);
+      setCurrentPage((prev) => prev - 1);
     }
   };
 
@@ -304,8 +303,6 @@ const handleApplyFilters = () => {
     navigate(`edit/${user._id}`, { state: { userData: user } });
   };
 
-  
-
   // ------------------------ Dynamic Empty State Messages using Utility -------------------------------
   const isSearchActive = searchQuery.length > 0 || isFilterActive;
   // Use the total count from the API response (or local if superAdmin)
@@ -314,9 +311,9 @@ const handleApplyFilters = () => {
       ? superAdminUsers?.length || 0
       : usersRes?.totalCount || 0;
   const currentFilteredCount = currentFilteredRows?.length || 0;
- 
+
   let entityName = userType === "superAdmin" ? "super admins" : "users";
- 
+
   const emptyStateMessage = getEmptyStateMessage(
     isSearchActive,
     currentFilteredCount,
@@ -324,7 +321,6 @@ const handleApplyFilters = () => {
     entityName
   );
   // ------------------------ Dynamic Empty State Messages using Utility ---------------------------
- 
 
   // Table Columns Configuration
   const tableColumns = [
@@ -344,11 +340,11 @@ const handleApplyFilters = () => {
                   e.target.src =
                     row.gender === "Male"
                       ? // ? maleImage
-                      "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
+                        "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
                       : row.gender === "Female"
-                        ? // ? femaleImage
+                      ? // ? femaleImage
                         "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099369/woman_mffxrj.png"
-                        : // : genderlessImage;
+                      : // : genderlessImage;
                         "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png";
                   // v1.0.3 ----------------------------------------------------------------------------------------------------->
                 }}
@@ -364,15 +360,17 @@ const handleApplyFilters = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {`${row.firstName
-                ? row.firstName.charAt(0).toUpperCase().trim() +
-                row.firstName.slice(1).trim()
-                : ""
-                } ${row.lastName
-                  ? row.lastName.charAt(0).toUpperCase().trim() +
-                  row.lastName.slice(1)
+              {`${
+                row.firstName
+                  ? row.firstName.charAt(0).toUpperCase().trim() +
+                    row.firstName.slice(1).trim()
                   : ""
-                }`.trim() || "Unknown"}
+              } ${
+                row.lastName
+                  ? row.lastName.charAt(0).toUpperCase().trim() +
+                    row.lastName.slice(1)
+                  : ""
+              }`.trim() || "Unknown"}
             </div>
           </div>
         </div>
@@ -398,9 +396,7 @@ const handleApplyFilters = () => {
       header: "Status",
       render: (value) => {
         return value ? (
-
           <StatusBadge status={capitalizeFirstLetter(value)} />
-
         ) : (
           <span className="text-gray-400 text-sm">N/A</span>
         );
@@ -580,7 +576,7 @@ const handleApplyFilters = () => {
                     <KanbanView
                       currentFilteredRows={currentFilteredRows}
                       loading={loading}
-                      setActionViewMore={() => { }}
+                      setActionViewMore={() => {}}
                       userData={dataSource}
                       toggleSidebar={() => navigate("new")}
                     />
@@ -592,6 +588,7 @@ const handleApplyFilters = () => {
                   onApply={handleApplyFilters}
                   onClearAll={handleClearAll}
                   filterIconRef={filterIconRef}
+                  customHeight="h-[calc(100vh-24rem)]"
                 >
                   <div className="space-y-3">
                     <div>
@@ -721,15 +718,17 @@ const handleApplyFilters = () => {
       <div>
         <ConfirmationModal
           show={showConfirmation}
-          userName={`${selectedUser?.firstName
-            ? selectedUser?.firstName.charAt(0).toUpperCase() +
-            selectedUser?.firstName.slice(1)
-            : ""
-            } ${selectedUser?.lastName
-              ? selectedUser?.lastName.charAt(0).toUpperCase() +
-              selectedUser?.lastName.slice(1)
+          userName={`${
+            selectedUser?.firstName
+              ? selectedUser?.firstName.charAt(0).toUpperCase() +
+                selectedUser?.firstName.slice(1)
               : ""
-            }`}
+          } ${
+            selectedUser?.lastName
+              ? selectedUser?.lastName.charAt(0).toUpperCase() +
+                selectedUser?.lastName.slice(1)
+              : ""
+          }`}
           newStatus={newStatus}
           onCancel={cancelStatusChange}
           onConfirm={confirmStatusChange}

@@ -11,6 +11,7 @@
 // v1.0.9  -  Ashok   -  Added Master Data tab in more
 // v2.0.0  -  Ashok   -  fixed icons vertically expanding issue
 // v2.0.1  -  Ashok   -  kept Interviews, QuestionBank, Internal Logs out side
+// v2.0.2  -  Ashok   -  fixed interviews path in mobile navbar
 
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -1655,7 +1656,7 @@ const CombinedNavbar = React.memo(() => {
                               ...(enhancedCheckPermission("Interviews")
                                 ? [
                                     {
-                                      to: "/interview",
+                                      to: "/interviews",
                                       label: "Interviews",
                                     },
                                   ]

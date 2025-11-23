@@ -61,6 +61,7 @@ const AddCandidateForm = ({
   isModal = false,
   hideAddButton = false,
 }) => {
+  const pageType = "adminPortal";
   const {
     skills,
     colleges,
@@ -76,7 +77,7 @@ const AddCandidateForm = ({
     technologies,
     loadTechnologies,
     isTechnologiesFetching,
-  } = useMasterData();
+  } = useMasterData({}, pageType);
 
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -754,6 +755,8 @@ const AddCandidateForm = ({
   //     value: q?.QualificationName,
   //     label: q?.QualificationName,
   //   })) || [];
+
+  console.log("qualifications", qualifications);
 
   const qualificationOptionsRS = useMemo(
     () =>

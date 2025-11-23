@@ -208,7 +208,11 @@ function Candidate({
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [selectedUniversities, setSelectedUniversities] = useState([]);
   const [createdDatePreset, setCreatedDatePreset] = useState("");
-  const { skills, qualifications, currentRoles, colleges } = useMasterData();
+  const pageType = "adminPortal";
+  const { skills, qualifications, currentRoles, colleges } = useMasterData(
+    {},
+    pageType
+  );
 
   // NEW: Compute queryFilters for server-side
   const queryFilters = {
@@ -494,8 +498,8 @@ function Candidate({
       //-----v1.0.4-------->
     };
     setSelectedFilters(filters);
-    console.log("setSelectedFilters ",filters);
-    
+    console.log("setSelectedFilters ", filters);
+
     setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 ||

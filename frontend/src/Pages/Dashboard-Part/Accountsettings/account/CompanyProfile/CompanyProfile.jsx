@@ -9,6 +9,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
 import Loading from "../../../../../Components/Loading";
+import { useOrganization } from "../../../../../apiHooks/useOrganization";
 
 // Loading Skeleton for Basic Info Section
 const BasicInfoSkeleton = () => {
@@ -225,8 +226,9 @@ const OfficeLocationsSection = ({ companyProfile, isLoading }) => {
 };
 
 const CompanyProfile = () => {
-  const { organizationsLoading, organizationData } = useCustomContext();
-
+  // const { organizationsLoading, organizationData } = useCustomContext();
+  const { organizationsLoading, organizationData } = useOrganization();
+  
   const [brandingSettings, setBrandingSettings] = useState({});
   const [companyProfile, setCompanyProfile] = useState({});
   const navigate = useNavigate();

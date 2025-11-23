@@ -7,6 +7,7 @@
 // v1.0.6  - Ashok   - added common code for kanban
 // v1.0.7  - Ashok   - added clickable title to navigate to details page at kanban
 // v1.0.8  - Ashok   - fixed style issues
+// v1.0.9 -  Ashok   - fixed filter popup height issue
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
@@ -621,6 +622,7 @@ const InvoiceTab = () => {
           onApply={handleApplyFilters}
           onClearAll={handleClearAll}
           filterIconRef={filterIconRef}
+          customHeight="h-[calc(100vh-12rem)]"
         >
           <div className="space-y-3 p-4">
             <div>

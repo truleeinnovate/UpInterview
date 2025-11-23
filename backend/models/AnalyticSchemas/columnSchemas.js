@@ -11,7 +11,7 @@ const columnConfigurationSchema = new Schema(
       required: true,
       index: true,
     },
-    userId: {
+    ownerId: {
       type: String,
       required: true,
       index: true,
@@ -212,7 +212,7 @@ const columnConfigurationSchema = new Schema(
 
 // Indexes
 columnConfigurationSchema.index(
-  { tenantId: 1, userId: 1, reportType: 1 },
+  { tenantId: 1, ownerId: 1, reportType: 1 },
   { unique: true }
 );
 columnConfigurationSchema.index({ tenantId: 1, configId: 1 }, { unique: true });
@@ -227,7 +227,7 @@ const dashboardLayoutSchema = new Schema(
       required: true,
       index: true,
     },
-    userId: {
+    ownerId: {
       type: String,
       required: true,
       index: true,
@@ -386,7 +386,7 @@ const dashboardLayoutSchema = new Schema(
 );
 
 // Indexes
-dashboardLayoutSchema.index({ tenantId: 1, userId: 1 });
+dashboardLayoutSchema.index({ tenantId: 1, ownerId: 1 });
 dashboardLayoutSchema.index({ tenantId: 1, layoutId: 1 }, { unique: true });
 
 module.exports = {

@@ -181,7 +181,7 @@ const TableView = ({
                   </td>
                 </tr>
               ) : (
-                data.map((row) => (
+                data?.map((row) => (
                   <tr key={row._id} className="hover:bg-gray-50">
                     {columns.map((column) => (
                       <td

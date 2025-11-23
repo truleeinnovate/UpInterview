@@ -188,8 +188,8 @@ const EditInterviewDetails = ({
   const showJuniorLevel = expYears > 0;
   const showMidLevel = expYears >= 4;
   const showSeniorLevel = expYears >= 7;
-
-  const { skills, loadSkills, isSkillsFetching } = useMasterData();
+  const pageType = "adminPortal";
+  const { skills, loadSkills, isSkillsFetching } = useMasterData({}, pageType);
 
   // State for form errors and loading
   const [errors, setErrors] = useState({});
@@ -265,8 +265,8 @@ const EditInterviewDetails = ({
       const token = localStorage.getItem("token");
       const baseUrl = process.env.REACT_APP_API_URL || "";
       const slug = techName
-        .replace(/\s+/g, '')  // Remove spaces
-        .replace(/[^a-zA-Z0-9]/g, '');  // Remove special chars if any (optional, adjust as needed)
+        .replace(/\s+/g, "") // Remove spaces
+        .replace(/[^a-zA-Z0-9]/g, ""); // Remove special chars if any (optional, adjust as needed)
 
       const encodedTech = encodeURIComponent(slug);
       const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
@@ -279,7 +279,6 @@ const EditInterviewDetails = ({
         },
       });
 
-
       if (response.data) {
         const rateCardsData = Array.isArray(response.data)
           ? response.data
@@ -287,7 +286,6 @@ const EditInterviewDetails = ({
         setRateCards(rateCardsData);
       }
     } catch (error) {
-
       setRateCards([]);
     }
   }, []);
@@ -314,10 +312,10 @@ const EditInterviewDetails = ({
     // Show Senior if years >= 6 (6+ years)
     const shouldShowSenior = years >= 6;
 
-
     // Create the form data with proper rate visibility
     const newFormData = {
-      PreviousExperienceConductingInterviews: profileData?.previousExperienceConductingInterviews || "",
+      PreviousExperienceConductingInterviews:
+        profileData?.previousExperienceConductingInterviews || "",
       // If experience is "no", keep years empty; otherwise use the parsed value
       PreviousExperienceConductingInterviewsYears:
         profileData?.previousExperienceConductingInterviews === "no"
@@ -330,8 +328,12 @@ const EditInterviewDetails = ({
       skills: Array.isArray(profileData?.skills) ? profileData.skills : [],
       professionalTitle: profileData?.professionalTitle || "",
       bio: profileData?.bio || "",
-      interviewFormatWeOffer: Array.isArray(profileData?.interviewFormatWeOffer || profileData?.InterviewFormatWeOffer)
-        ? profileData.interviewFormatWeOffer || profileData?.InterviewFormatWeOffer
+      interviewFormatWeOffer: Array.isArray(
+        profileData?.interviewFormatWeOffer ||
+          profileData?.InterviewFormatWeOffer
+      )
+        ? profileData.interviewFormatWeOffer ||
+          profileData?.InterviewFormatWeOffer
         : [],
       yearsOfExperience: profileData?.yearsOfExperience || 0,
       id: profileData?._id,
@@ -353,7 +355,6 @@ const EditInterviewDetails = ({
         },
       },
     };
-
 
     // Set initial form data for comparison
     setInitialFormData(newFormData);
@@ -383,8 +384,6 @@ const EditInterviewDetails = ({
     );
     setIsReady(profileData?.IsReadyForMockInterviews === "yes");
     setErrors({});
-
-
   }, [resolvedId, profileData, expYears, fetchRateCards]);
 
   const handleBioChange = (e) => {
@@ -420,7 +419,6 @@ const EditInterviewDetails = ({
   };
 
   const handleRadioChange = (value) => {
-
     setFormData((prev) => {
       // When changing to "yes", ensure years has a valid value (minimum 1)
       let yearsValue = prev.PreviousExperienceConductingInterviewsYears;
@@ -558,8 +556,6 @@ const EditInterviewDetails = ({
     }
   };
 
-
-
   // API call to save all changes
   const handleSave = async (e) => {
     e.preventDefault();
@@ -568,9 +564,6 @@ const EditInterviewDetails = ({
       notify.info("No changes to save");
       return;
     }
-
-
-
 
     const validationErrors = validateInterviewForm(formData, isReady);
     // console.log("validationErrors:", validationErrors);
@@ -584,15 +577,11 @@ const EditInterviewDetails = ({
 
     setLoading(true);
     try {
-
-
       if (!profileData || !profileData.contactId) {
         console.error("Profile data not loaded or missing contactId:", {
           profileData,
         });
-        notify.error(
-          "Profile data is not loaded. Please wait and try again."
-        );
+        notify.error("Profile data is not loaded. Please wait and try again.");
         return;
       }
 
@@ -602,17 +591,19 @@ const EditInterviewDetails = ({
         PreviousExperienceConductingInterviews: String(
           formData.PreviousExperienceConductingInterviews?.trim() || ""
         ).trim(),
-        ...(formData.PreviousExperienceConductingInterviews === 'yes' && {
+        ...(formData.PreviousExperienceConductingInterviews === "yes" && {
           PreviousExperienceConductingInterviewsYears: String(
             formData.PreviousExperienceConductingInterviewsYears || "1"
-          ).trim()
+          ).trim(),
         }),
         technologies: Array.isArray(formData.Technology)
           ? formData.Technology
           : [],
         skills: Array.isArray(formData.skills) ? formData.skills : [],
         InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
-        mock_interview_discount: formData.interviewFormatWeOffer.includes("mock")
+        mock_interview_discount: formData.interviewFormatWeOffer.includes(
+          "mock"
+        )
           ? formData.mock_interview_discount
           : "",
         professionalTitle: String(formData.professionalTitle || "").trim(),
@@ -622,18 +613,18 @@ const EditInterviewDetails = ({
         rates: formData.rates,
         tenantId: profileData?.tenantId,
         ownerId: profileData?._id,
-
       };
 
-
       try {
-
         if (!profileData || !profileData?.contactId) {
-          console.error("Profile data not loaded or missing contactId:", { profileData });
-          notify.error("Profile data is not loaded. Please wait and try again.");
+          console.error("Profile data not loaded or missing contactId:", {
+            profileData,
+          });
+          notify.error(
+            "Profile data is not loaded. Please wait and try again."
+          );
           return;
         }
-
 
         const response = await updateContactDetail.mutateAsync({
           resolvedId: profileData?.contactId,
@@ -641,8 +632,6 @@ const EditInterviewDetails = ({
         });
         // Invalidate the query to refetch the updated data
         await queryClient.invalidateQueries(["userProfile", resolvedId]);
-
-
 
         if (response.status === 200) {
           notify.success("Updated Interview Details Successfully");
@@ -666,7 +655,9 @@ const EditInterviewDetails = ({
             setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
           }
         } else {
-          notify.error("Network error. Please check your connection and try again.");
+          notify.error(
+            "Network error. Please check your connection and try again."
+          );
           setErrors((prev) => ({ ...prev, form: "Network error" }));
         }
       }
@@ -697,11 +688,9 @@ const EditInterviewDetails = ({
   };
 
   const addSkill = (skillName) => {
-
     const trimmedSkill = skillName.trim();
 
     if (!trimmedSkill) {
-
       return;
     }
 
@@ -712,16 +701,13 @@ const EditInterviewDetails = ({
         trimmedSkill.toLowerCase()
     );
 
-
     if (!skillExists) {
       const newSkill = {
         _id: Math.random().toString(36).substr(2, 9),
         SkillName: trimmedSkill,
       };
 
-
       const updatedSkills = [...selectedSkills, newSkill];
-
 
       setSelectedSkills(updatedSkills);
       setFormData((prev) => ({
@@ -729,7 +715,6 @@ const EditInterviewDetails = ({
         skills: updatedSkills.map((s) => s?.SkillName || s).filter(Boolean),
       }));
       setErrors((prev) => ({ ...prev, skills: "" }));
-
     } else {
       notify.error("Skill already exists");
     }
@@ -771,12 +756,9 @@ const EditInterviewDetails = ({
   const handleYearsOfExperienceChange = (e) => {
     const years = parseInt(e.target.value) || 0;
 
-
     const shouldShowJunior = years <= 6;
     const shouldShowMid = years >= 3 && years <= 9;
     const shouldShowSenior = years >= 6;
-
-
 
     setFormData((prev) => ({
       ...prev,
@@ -807,27 +789,27 @@ const EditInterviewDetails = ({
   const handleRateChange = (level, currency) => (e) => {
     const value = e.target.value;
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       rates: {
         ...prev.rates,
         [level]: {
           ...prev.rates?.[level],
-          [currency]: value
-        }
-      }
+          [currency]: value,
+        },
+      },
     }));
 
     // Clear errors when user starts typing (optional)
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
       rates: {
         ...prev.rates,
         [level]: {
           ...prev.rates?.[level],
-          [currency]: ''
-        }
-      }
+          [currency]: "",
+        },
+      },
     }));
   };
 
@@ -835,15 +817,15 @@ const EditInterviewDetails = ({
   const handleRateBlur = (level, currency) => (e) => {
     const value = e.target.value;
     const range = getRateRanges(level.rangeKey);
-    let error = '';
+    let error = "";
 
     if (value) {
       const numValue = parseFloat(value);
 
       if (isNaN(numValue)) {
-        error = 'Please enter a valid number';
+        error = "Please enter a valid number";
       } else if (numValue < 0) {
-        error = 'Rate cannot be negative';
+        error = "Rate cannot be negative";
       } else if (range && range[currency]) {
         const min = range[currency].min;
         const max = range[currency].max;
@@ -859,41 +841,41 @@ const EditInterviewDetails = ({
       error = `${currency.toUpperCase()} rate is required`;
     }
 
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
       rates: {
         ...prev.rates,
         [level.key]: {
           ...prev.rates?.[level.key],
-          [currency]: error
-        }
-      }
+          [currency]: error,
+        },
+      },
     }));
   };
 
   // Define levels configuration
   const levelsConfig = [
     {
-      key: 'junior',
-      label: 'Junior Level (0-3 years)',
+      key: "junior",
+      label: "Junior Level (0-3 years)",
       showCondition: showJuniorLevel,
-      rangeKey: 'Junior',
-      yearsText: '0-3 years'
+      rangeKey: "Junior",
+      yearsText: "0-3 years",
     },
     {
-      key: 'mid',
-      label: 'Mid-Level (3-6 years)',
+      key: "mid",
+      label: "Mid-Level (3-6 years)",
       showCondition: showMidLevel,
-      rangeKey: 'Mid-Level',
-      yearsText: '3-6 years'
+      rangeKey: "Mid-Level",
+      yearsText: "3-6 years",
     },
     {
-      key: 'senior',
-      label: 'Senior Level (6+ years)',
+      key: "senior",
+      label: "Senior Level (6+ years)",
       showCondition: showSeniorLevel,
-      rangeKey: 'Senior',
-      yearsText: '6+ years'
-    }
+      rangeKey: "Senior",
+      yearsText: "6+ years",
+    },
   ];
 
   const handleChangeforExp = (e) => {
@@ -911,8 +893,6 @@ const EditInterviewDetails = ({
   };
 
   const handleTechnologyChange = (selectedValue) => {
-
-
     if (selectedValue) {
       // Find the technology from services or create a temporary one
       const technology = services.find(
@@ -941,18 +921,18 @@ const EditInterviewDetails = ({
           Technology: [selectedValue],
           rates: {
             junior: {
-              usd: '',
-              inr: '',
+              usd: "",
+              inr: "",
               isVisible: shouldShowJunior,
             },
             mid: {
-              usd: '',
-              inr: '',
+              usd: "",
+              inr: "",
               isVisible: shouldShowMid,
             },
             senior: {
-              usd: '',
-              inr: '',
+              usd: "",
+              inr: "",
               isVisible: shouldShowSenior,
             },
           },
@@ -981,15 +961,14 @@ const EditInterviewDetails = ({
           console.error("Error fetching rate cards:", error);
         });
     } else {
-
       setSelectedCandidates([]);
       setFormData((prev) => ({
         ...prev,
         Technology: [],
         rates: {
-          junior: { usd: '', inr: '', isVisible: false },
-          mid: { usd: '', inr: '', isVisible: false },
-          senior: { usd: '', inr: '', isVisible: false },
+          junior: { usd: "", inr: "", isVisible: false },
+          mid: { usd: "", inr: "", isVisible: false },
+          senior: { usd: "", inr: "", isVisible: false },
         },
       }));
       setErrors((prev) => ({
@@ -998,8 +977,6 @@ const EditInterviewDetails = ({
       }));
     }
   };
-
-
 
   // Clamp rates when rateCards change - only if rates have values
   useEffect(() => {
@@ -1018,7 +995,7 @@ const EditInterviewDetails = ({
             if (ranges) {
               const clamp = (val, min, max) => {
                 // Only clamp if value exists and is not empty string
-                if (val === '' || val === null || val === undefined) return val;
+                if (val === "" || val === null || val === undefined) return val;
                 return Math.max(min, Math.min(max, val));
               };
               newRates[level].usd = clamp(
@@ -1056,7 +1033,6 @@ const EditInterviewDetails = ({
             {/* Technology Selection */}
             <div className="space-y-4">
               <DropdownWithSearchField
-
                 disabled={from !== "outsource-interviewer"}
                 value={selectedCandidates[0]?.TechnologyMasterName || ""}
                 options={services.map((tech) => ({
@@ -1079,7 +1055,6 @@ const EditInterviewDetails = ({
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="relative" ref={skillsPopupRef}>
-
                   <DropdownWithSearchField
                     ref={skillsInputRef}
                     value={null}
@@ -1110,18 +1085,14 @@ const EditInterviewDetails = ({
                       }
                     }}
                     onKeyDown={(e) => {
-
-
                       // Handle the create action from the dropdown
                       if (e.key === "Enter" && e.target?.action === "create") {
                         const newSkill = e.target.value?.trim();
                         if (newSkill) {
-
                           addSkill(newSkill);
 
                           // Clear the input field and close the dropdown
                           setTimeout(() => {
-
                             // Blur any active element to close dropdowns
                             if (document.activeElement) {
                               document.activeElement.blur();
@@ -1132,7 +1103,6 @@ const EditInterviewDetails = ({
                               // Clear react-select value
                               if (skillsInputRef.current.select) {
                                 skillsInputRef.current.select.clearValue();
-
                               }
 
                               // Find and clear the input
@@ -1218,7 +1188,6 @@ const EditInterviewDetails = ({
                         "yes"
                       }
                       onChange={(e) => {
-
                         handleRadioChange(e.target.value);
                       }}
                       className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
@@ -1234,7 +1203,6 @@ const EditInterviewDetails = ({
                         formData.PreviousExperienceConductingInterviews === "no"
                       }
                       onChange={(e) => {
-
                         handleRadioChange(e.target.value);
                       }}
                       className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
@@ -1549,95 +1517,117 @@ const EditInterviewDetails = ({
               {/* </div> */}
 
               <div>
-                <div className='flex items-center justify-between'>
+                <div className="flex items-center justify-between">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Hourly Rates by Experience Level <span className="text-red-500">*</span>
+                    Hourly Rates by Experience Level{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   {/* Exchange Rate Info - Simplified */}
                   <div className="text-xs text-gray-600 mb-4">
                     {isRateLoading ? (
                       <span>Loading exchange rate...</span>
                     ) : (
-                      <span>Approximately 1 USD = {Number(exchangeRate).toFixed(2)} INR</span>
+                      <span>
+                        Approximately 1 USD = {Number(exchangeRate).toFixed(2)}{" "}
+                        INR
+                      </span>
                     )}
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {levelsConfig.map((level) => (
-                    level.showCondition && (
-                      <div key={level.key} className="bg-gray-50 p-4 rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                          <label htmlFor={`${level.key}_rate`} className="text-sm font-medium text-gray-700">
-                            {level.label}
-                          </label>
-                          <span className="text-xs text-gray-500">
-                            {getRateRanges(level.rangeKey)?.usd && getRateRanges(level.rangeKey)?.inr && (
-                              <span>
-                                Range: ${getRateRanges(level.rangeKey).usd.min}-${getRateRanges(level.rangeKey).usd.max}
-                                {" "}({`₹${getRateRanges(level.rangeKey).inr.min}–${getRateRanges(level.rangeKey).inr.max}`})
-                              </span>
-                            )}
-                          </span>
-                        </div>
-
-                        <div className="flex sm:flex-col w-full">
-                          {/* USD Input */}
-                          <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
-                            <label className="block text-xs font-medium text-gray-500 mb-1">USD</label>
-                            <div className="relative">
-                              <input
-                                type="number"
-                                name={`${level.key}_usd`}
-                                id={`${level.key}_usd`}
-                                value={formData.rates?.[level.key]?.usd || ''}
-                                onChange={handleRateChange(level.key, 'usd')}
-                                onBlur={handleRateBlur(level, 'usd')}
-                                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                placeholder="Enter USD rate"
-                              />
-                            </div>
-                            {errors.rates?.[level.key]?.usd && (
-                              <p className="mt-1 text-xs text-red-600">{errors.rates[level.key].usd}</p>
-                            )}
+                  {levelsConfig.map(
+                    (level) =>
+                      level.showCondition && (
+                        <div
+                          key={level.key}
+                          className="bg-gray-50 p-4 rounded-lg"
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <label
+                              htmlFor={`${level.key}_rate`}
+                              className="text-sm font-medium text-gray-700"
+                            >
+                              {level.label}
+                            </label>
+                            <span className="text-xs text-gray-500">
+                              {getRateRanges(level.rangeKey)?.usd &&
+                                getRateRanges(level.rangeKey)?.inr && (
+                                  <span>
+                                    Range: $
+                                    {getRateRanges(level.rangeKey).usd.min}-$
+                                    {getRateRanges(level.rangeKey).usd.max} (
+                                    {`₹${
+                                      getRateRanges(level.rangeKey).inr.min
+                                    }–${getRateRanges(level.rangeKey).inr.max}`}
+                                    )
+                                  </span>
+                                )}
+                            </span>
                           </div>
 
-                          {/* INR Input */}
-                          <div className="w-1/2 sm:w-full pl-2 sm:pl-0">
-                            <label className="block text-xs font-medium text-gray-500 mb-1">INR</label>
-                            <div className="relative">
-                              <input
-                                type="number"
-                                name={`${level.key}_inr`}
-                                id={`${level.key}_inr`}
-                                value={formData.rates?.[level.key]?.inr || ''}
-                                onChange={handleRateChange(level.key, 'inr')}
-                                onBlur={handleRateBlur(level, 'inr')}
-                                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                placeholder="Enter INR rate"
-                              />
+                          <div className="flex sm:flex-col w-full">
+                            {/* USD Input */}
+                            <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
+                              <label className="block text-xs font-medium text-gray-500 mb-1">
+                                USD
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  name={`${level.key}_usd`}
+                                  id={`${level.key}_usd`}
+                                  value={formData.rates?.[level.key]?.usd || ""}
+                                  onChange={handleRateChange(level.key, "usd")}
+                                  onBlur={handleRateBlur(level, "usd")}
+                                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                  placeholder="Enter USD rate"
+                                />
+                              </div>
+                              {errors.rates?.[level.key]?.usd && (
+                                <p className="mt-1 text-xs text-red-600">
+                                  {errors.rates[level.key].usd}
+                                </p>
+                              )}
                             </div>
-                            {errors.rates?.[level.key]?.inr && (
-                              <p className="mt-1 text-xs text-red-600">{errors.rates[level.key].inr}</p>
-                            )}
-                          </div>
 
+                            {/* INR Input */}
+                            <div className="w-1/2 sm:w-full pl-2 sm:pl-0">
+                              <label className="block text-xs font-medium text-gray-500 mb-1">
+                                INR
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  name={`${level.key}_inr`}
+                                  id={`${level.key}_inr`}
+                                  value={formData.rates?.[level.key]?.inr || ""}
+                                  onChange={handleRateChange(level.key, "inr")}
+                                  onBlur={handleRateBlur(level, "inr")}
+                                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                  placeholder="Enter INR rate"
+                                />
+                              </div>
+                              {errors.rates?.[level.key]?.inr && (
+                                <p className="mt-1 text-xs text-red-600">
+                                  {errors.rates[level.key].inr}
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    )
-                  ))}
+                      )
+                  )}
                 </div>
 
                 <p className="mt-2 text-xs text-gray-500">
-                  {expYears < 3 && (
-                    `You can set rates for junior-level candidates based on your experience.`
-                  )}
-                  {expYears >= 3 && expYears <= 6 && (
-                    'You can set rates for both junior and mid-level candidates based on your experience.'
-                  )}
-                  {expYears >= 7 && (
-                    'You can set rates for junior, mid and senior-level candidates based on your experience.'
-                  )}
+                  {expYears < 3 &&
+                    `You can set rates for junior-level candidates based on your experience.`}
+                  {expYears >= 3 &&
+                    expYears <= 6 &&
+                    "You can set rates for both junior and mid-level candidates based on your experience."}
+                  {expYears >= 7 &&
+                    "You can set rates for junior, mid and senior-level candidates based on your experience."}
                 </p>
               </div>
 
@@ -1787,12 +1777,11 @@ const EditInterviewDetails = ({
                             value={
                               formData.mock_interview_discount
                                 ? {
-                                  value: formData.mock_interview_discount,
-                                  label: `${formData.mock_interview_discount}% discount`,
-                                }
+                                    value: formData.mock_interview_discount,
+                                    label: `${formData.mock_interview_discount}% discount`,
+                                  }
                                 : null
                             }
-
                             onChange={(selected) => {
                               if (selected?.value === "custom") {
                                 setShowCustomDiscount(true);
@@ -1860,26 +1849,40 @@ const EditInterviewDetails = ({
                   onChange={(e) => {
                     const newValue = e.target.value;
                     if (newValue.length <= 100) {
-                      setFormData(prevData => ({
+                      setFormData((prevData) => ({
                         ...prevData,
-                        professionalTitle: newValue
+                        professionalTitle: newValue,
                       }));
                       // Clear error when user types enough characters
                       if (newValue.length >= 50) {
-                        setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          professionalTitle: "",
+                        }));
                       }
                     }
                   }}
                   onBlur={(e) => {
                     const value = e.target.value.trim();
                     if (!value) {
-                      setErrors(prev => ({ ...prev, professionalTitle: 'Professional title is required' }));
+                      setErrors((prev) => ({
+                        ...prev,
+                        professionalTitle: "Professional title is required",
+                      }));
                     } else if (value.length < 50) {
-                      setErrors(prev => ({ ...prev, professionalTitle: 'Professional title must be at least 50 characters' }));
+                      setErrors((prev) => ({
+                        ...prev,
+                        professionalTitle:
+                          "Professional title must be at least 50 characters",
+                      }));
                     } else if (value.length > 100) {
-                      setErrors(prev => ({ ...prev, professionalTitle: 'Professional title cannot exceed 100 characters' }));
+                      setErrors((prev) => ({
+                        ...prev,
+                        professionalTitle:
+                          "Professional title cannot exceed 100 characters",
+                      }));
                     } else {
-                      setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                      setErrors((prev) => ({ ...prev, professionalTitle: "" }));
                     }
                   }}
                   error={errors.professionalTitle}
@@ -1891,11 +1894,12 @@ const EditInterviewDetails = ({
 
                   {formData.professionalTitle?.length > 0 && (
                     <p
-                      className={`text-xs ${formData.professionalTitle.length < 50 ||
+                      className={`text-xs ${
+                        formData.professionalTitle.length < 50 ||
                         errors.professionalTitle
-                        ? "text-red-500"
-                        : "text-gray-500"
-                        }`}
+                          ? "text-red-500"
+                          : "text-gray-500"
+                      }`}
                     >
                       {formData.professionalTitle.length}/100
                     </p>
@@ -1916,9 +1920,7 @@ const EditInterviewDetails = ({
                   // onChange={handleBioChange}
                   onChange={(e) => {
                     handleBioChange(e);
-
                   }}
-
                   required
                   placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
                   minLength={150}
@@ -1927,7 +1929,6 @@ const EditInterviewDetails = ({
                 />
               </div>
             </div>
-
           </div>
         </form>
 
@@ -1946,10 +1947,8 @@ const EditInterviewDetails = ({
             isLoading={loading}
             loadingText="updating..."
           >
-              Save Changes
+            Save Changes
           </LoadingButton>
-
-      
         </div>
       </div>
     </SidebarPopup>

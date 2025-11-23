@@ -163,8 +163,9 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
 const PositionTab = () => {
   // <---------------------- v1.0.0
   // All hooks at the top
+  const pageType = "adminPortal";
   const { effectivePermissions, isInitialized } = usePermissions();
-  const { locations, skills, companies } = useMasterData(); //<-----v1.03-----
+  const { locations, skills, companies } = useMasterData({}, pageType); //<-----v1.03-----
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -439,8 +440,6 @@ const PositionTab = () => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
   };
-
- 
 
   const totalPages = Math.ceil(total / rowsPerPage);
 

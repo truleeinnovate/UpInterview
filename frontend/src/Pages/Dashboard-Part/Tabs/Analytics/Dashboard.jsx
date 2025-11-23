@@ -260,7 +260,13 @@ const calculateCompletedAssessments = (assessments) => {
 const Dashboard = () => {
   // --------------------------------------------------------------------------------------------
   // Interviews
-  const { total, interviewData } = useInterviews();
+  const type = "analytics";
+  const { interviewData } = useInterviews(
+    undefined,
+    undefined,
+    undefined,
+    type
+  );
   console.log("INTERVIEW DATA ===========================> ", interviewData);
   const { currentMonthCount, lastMonthCount, trend, trendValue } =
     calculateTotalInterviewsCounts(interviewData);
