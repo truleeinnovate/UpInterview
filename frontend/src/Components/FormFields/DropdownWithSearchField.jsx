@@ -30,6 +30,7 @@ const DropdownWithSearchField = forwardRef(
       placeholder,
       creatable = false,
       allowCreateOnEnter = false, // New prop to control create on enter behavior
+      autoComplete,
     },
     ref
   ) => {
@@ -58,6 +59,15 @@ const DropdownWithSearchField = forwardRef(
               !inputElement.hasAttribute("data-keyboard-attached")
             ) {
               console.log("Attaching keyboard events to react-select input");
+
+              // Strongly discourage browser autofill on this internal input
+              inputElement.setAttribute("autocomplete", "new-password");
+              // Clear any prefilled value (e.g., email autofill) so default
+              // selected option text is shown instead of the autofilled text
+              if (inputElement.value) {
+                inputElement.value = "";
+              }
+
               inputElement.addEventListener("keydown", (e) => {
                 console.log(
                   "React-select input keydown:",
@@ -186,6 +196,22 @@ const DropdownWithSearchField = forwardRef(
       if (onKeyDown) onKeyDown(e);
     };
 
+    // Helper to flatten options to support both flat and grouped options
+    const flattenOptions = (opts) => {
+      if (!Array.isArray(opts)) return [];
+      const flat = [];
+      opts.forEach((item) => {
+        if (item && Array.isArray(item.options)) {
+          item.options.forEach((child) => flat.push(child));
+        } else if (item) {
+          flat.push(item);
+        }
+      });
+      return flat;
+    };
+
+    const flatOptions = flattenOptions(options);
+
     return (
       <div>
         {label && (
@@ -201,12 +227,13 @@ const DropdownWithSearchField = forwardRef(
               components={componentsMap}
               filterOption={preserveStickyOptionFilter()}
               isMulti={isMulti}
+              autoComplete={autoComplete}
               value={
                 isMulti
                   ? Array.isArray(value)
-                    ? options.filter((o) => value.includes(o.value))
+                    ? flatOptions.filter((o) => value.includes(o.value))
                     : []
-                  : options.find((o) => o.value === value) || null
+                  : flatOptions.find((o) => o.value === value) || null
               }
               onChange={(opt) => {
                 // Ensure onChange is a function before calling

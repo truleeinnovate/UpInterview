@@ -730,8 +730,8 @@ router.get("/:model", permissionMiddleware, async (req, res) => {
           type, // Don't set default here, check if it exists
         } = req.query;
 
-        console.log("Received query params:", req.query);
-        console.log("Type parameter:", type);
+        // console.log('Received query params:', req.query);
+        // console.log('Type parameter:', type);
 
         const pageNum = Math.max(1, parseInt(reqPage) || 1);
         const limitNum = Math.max(1, Math.min(100, parseInt(reqLimit) || 10));
@@ -742,21 +742,18 @@ router.get("/:model", permissionMiddleware, async (req, res) => {
 
         if (type === "standard") {
           // Standard templates: Only filter by type, NO tenant filtering
-          baseQuery = { type: "standard" };
-          console.log("Building STANDARD template query (no tenant filter)");
+          baseQuery = { type: 'standard' };
+          // console.log('Building STANDARD template query (no tenant filter)');
         } else {
           // Custom templates (default): Filter by type AND tenantId
           baseQuery = {
             type: "custom",
             tenantId: query.tenantId, // Only for custom templates
           };
-          console.log(
-            "Building CUSTOM template query with tenantId:",
-            query.tenantId
-          );
+          // console.log('Building CUSTOM template query with tenantId:', query.tenantId);
         }
 
-        console.log("Base query:", baseQuery);
+        // console.log('Base query:', baseQuery);
 
         let finalQuery = { ...baseQuery };
 
@@ -838,15 +835,13 @@ router.get("/:model", permissionMiddleware, async (req, res) => {
         const sortObj = {};
         sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
 
-        console.log("Final query:", JSON.stringify(finalQuery, null, 2));
+        // console.log('Final query:', JSON.stringify(finalQuery, null, 2));
 
         try {
           // Get total count for the filtered query
           const total = await DataModel.countDocuments(finalQuery);
 
-          console.log(
-            `Total ${type || "custom"} templates matching filters: ${total}`
-          );
+          // console.log(`Total ${type || 'custom'} templates matching filters: ${total}`);
 
           // Fetch templates with pagination
           const templates = await DataModel.find(finalQuery)
@@ -865,11 +860,7 @@ router.get("/:model", permissionMiddleware, async (req, res) => {
             .limit(limitNum)
             .lean();
 
-          console.log(
-            `Fetched ${templates.length} ${
-              type || "custom"
-            } templates for page ${pageNum}`
-          );
+          // console.log(`Fetched ${templates.length} ${type || 'custom'} templates for page ${pageNum}`);
 
           data = {
             data: templates,
@@ -1014,7 +1005,7 @@ router.get("/:model", permissionMiddleware, async (req, res) => {
         });
 
         data = schedulesWithCandidates;
-        console.log("scheduleassessment", data);
+        // console.log("scheduleassessment", data);
         break;
       }
       // ------------------------------ v1.0.4 >
@@ -1582,24 +1573,11 @@ async function handleInterviewFiltering(options) {
   const limitNum = Math.max(1, Number(limit) || 10);
 
   try {
-    console.log("Interview Filter Started:", {
-      searchQuery,
-      status,
-      tech,
-      experienceMin,
-      experienceMax,
-      interviewType,
-      interviewMode,
-      position,
-      company,
-      roundStatus,
-      interviewer,
-      createdDate,
-      interviewDateFrom,
-      interviewDateTo,
-      page: pageNum,
-      limit: limitNum,
-    });
+    // console.log('Interview Filter Started:', {
+    //   searchQuery, status, tech, experienceMin, experienceMax,
+    //   interviewType, interviewMode, position, company, roundStatus, interviewer,
+    //   createdDate, interviewDateFrom, interviewDateTo, page: pageNum, limit: limitNum
+    // });
 
     // ==========================================================
     // STEP 1: Fetch interviews with full population
@@ -1640,7 +1618,7 @@ async function handleInterviewFiltering(options) {
       .populate({ path: "templateId", model: "InterviewTemplate" })
       .lean();
 
-    console.log(`Fetched ${interviews.length} interviews`);
+    // console.log(`Fetched ${interviews.length} interviews`);
 
     // ==========================================================
     // STEP 2: Global Search
@@ -1727,7 +1705,7 @@ async function handleInterviewFiltering(options) {
       });
     }
 
-    console.log(`After basic filters: ${interviews.length}`);
+    // console.log(`After basic filters: ${interviews.length}`);
 
     // ==========================================================
     // STEP 4: Round-based Filters (interviewType, mode, status, interviewer, date)
@@ -1802,7 +1780,7 @@ async function handleInterviewFiltering(options) {
       interviews = interviews.filter((i) => validIds.has(String(i._id)));
     }
 
-    console.log(`After round filters: ${interviews.length}`);
+    // console.log(`After round filters: ${interviews.length}`);
 
     // ==========================================================
     // STEP 5: Pagination
@@ -1815,9 +1793,7 @@ async function handleInterviewFiltering(options) {
     const endIndex = Math.min(startIndex + limitNum, total);
     const paginated = interviews.slice(startIndex, endIndex);
 
-    console.log(
-      `Pagination: total=${total}, page=${currentPage}/${totalPages}, returned=${paginated.length}`
-    );
+    // console.log(`Pagination: total=${total}, page=${currentPage}/${totalPages}, returned=${paginated.length}`);
 
     if (paginated.length === 0) {
       return {

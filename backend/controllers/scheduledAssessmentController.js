@@ -3,6 +3,7 @@ const { CandidateAssessment } = require("../models/Assessment/candidateAssessmen
 const Otp = require("../models/Otp");
 // <-------------------------------v1.0.0
 const scheduledAssessmentsSchema = require("../models/Assessment/assessmentsSchema");
+const { triggerWebhook, EVENT_TYPES } = require("../services/webhookService");
 // ------------------------------v1.0.0 >
 const mongoose = require("mongoose");
 
@@ -19,7 +20,7 @@ exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
         path: 'assessmentId',
         populate: {
           path: 'Position',
-          model: 'Position' // Assuming your position model is named 'Position'
+          model: 'Position'
         }
       });
 
@@ -133,6 +134,27 @@ exports.createScheduledAssessment = async (req, res) => {
 
     // Save to DB
     const savedAssessment = await scheduledAssessment.save();
+
+    // Trigger webhook for assessment status update (initially "scheduled")
+    try {
+      await triggerWebhook(
+        EVENT_TYPES.ASSESSMENT_STATUS_UPDATED,
+        {
+          id: savedAssessment._id,
+          assessmentId: savedAssessment.assessmentId,
+          tenantId: savedAssessment.tenantId,
+          ownerId: savedAssessment.ownerId,
+          status: savedAssessment.status,
+          expiryAt: savedAssessment.expiryAt,
+          scheduledAssessmentCode: savedAssessment.scheduledAssessmentCode,
+          createdAt: savedAssessment.createdAt,
+          updatedAt: savedAssessment.updatedAt,
+        },
+        savedAssessment.tenantId
+      );
+    } catch (webhookError) {
+      console.error("[ASSESSMENT] Error triggering status webhook:", webhookError);
+    }
 
     // Create push notification for scheduled assessment
     try {

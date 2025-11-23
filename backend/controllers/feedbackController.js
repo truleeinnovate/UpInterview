@@ -2,6 +2,7 @@
 
 
 const FeedbackModel = require('../models/feedback.js')
+const { triggerWebhook, EVENT_TYPES } = require('../services/webhookService');
 const mongoose = require('mongoose'); // Import mongoose to use ObjectId
 
 const InterviewQuestions = require('../models/Interview/selectedInterviewQuestion.js');
@@ -160,6 +161,33 @@ const createFeedback = async (req, res) => {
     }
 
     await feedbackInstance.save();
+
+    // ===========================================
+    // ✅ Trigger webhook ONLY when feedback is submitted
+    // ===========================================
+    if (feedbackInstance.status === 'submitted') {
+      try {
+        await triggerWebhook(
+          EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
+          {
+            id: feedbackInstance._id,
+            tenantId: feedbackInstance.tenantId,
+            ownerId: feedbackInstance.ownerId,
+            interviewRoundId: feedbackInstance.interviewRoundId,
+            candidateId: feedbackInstance.candidateId,
+            positionId: feedbackInstance.positionId,
+            interviewerId: feedbackInstance.interviewerId,
+            status: feedbackInstance.status,
+            feedbackCode: feedbackInstance.feedbackCode,
+            createdAt: feedbackInstance.createdAt,
+            updatedAt: feedbackInstance.updatedAt,
+          },
+          feedbackInstance.tenantId
+        );
+      } catch (webhookError) {
+        console.error('[FEEDBACK] Error triggering webhook:', webhookError);
+      }
+    }
 
     // ===========================================
     // ✅ Resolve interviewId from round

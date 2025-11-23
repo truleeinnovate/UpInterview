@@ -227,7 +227,6 @@ interviewRoundSchema.pre('save', async function (next) {
 
             // Only track for Internal interviews
             if (this.interviewerType === 'Internal') {
-                // Get the interview details for tenantId and ownerId
                 const Interview = require('../Interview/Interview').Interview;
                 const interview = await Interview.findById(this.interviewId);
 
