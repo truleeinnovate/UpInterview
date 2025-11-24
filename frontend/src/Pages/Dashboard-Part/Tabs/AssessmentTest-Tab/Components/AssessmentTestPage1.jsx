@@ -29,10 +29,6 @@ const AssessmentTestPage1 = ({
   calculatedScores,
   candidateAssessmentId,
 }) => {
-  useEffect(() => {
-    console.log("assessment", assessment);
-  }, [assessment]);
-
   // const [showOtpInput, setShowOtpInput] = useState(false);
   // const [otp, setOtp] = useState(["", "", "", "", ""]);
   // const [isResending, setIsResending] = useState(false);

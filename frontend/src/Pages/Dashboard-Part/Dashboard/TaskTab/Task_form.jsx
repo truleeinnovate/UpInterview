@@ -52,7 +52,6 @@ const TaskForm = ({
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
-  console.log("organization",organization);
   const { candidateData } = useCandidates();
   const { positionData } = usePositions();
   const { assessmentData } = useAssessments();
@@ -313,7 +312,6 @@ const TaskForm = ({
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       scrollToFirstError(newErrors, fieldRefs); //<---v1.0.1------>
-      console.log("Form validation failed:", newErrors);
       return;
     }
 
@@ -335,7 +333,6 @@ const TaskForm = ({
 
       let res;
 
-      console.log("Submitting task with data:", taskData); // Debug log
       if (taskId) {
         res = await updateTaskMutation.mutateAsync({
           id: taskId,
@@ -344,7 +341,6 @@ const TaskForm = ({
       } else {
         res = await createTaskMutation.mutateAsync(taskData);
       }
-      console.log("Task saved successfully:", res);
 
       if (
         res.status === "Created successfully" ||
@@ -389,17 +385,16 @@ const TaskForm = ({
         setCategoriesLoading(true);
         const data = await fetchMasterData("sharing-rules-objects");
         setCategoriesRelatedTo(data.map((obj) => obj.objects).flat());
-        console.log(data);
       } catch (error) {
         console.error("Error fetching objects data:", error);
         // Set default categories if fetch fails
-        setCategoriesRelatedTo([
-          "Candidates",
-          "Positions",
-          "Interviews",
-          "MockInterviews",
-          "Assessments",
-        ]);
+        // setCategoriesRelatedTo([
+        //   "Candidates",
+        //   "Positions",
+        //   "Interviews",
+        //   "MockInterviews",
+        //   "Assessments",
+        // ]);
       } finally {
         setCategoriesLoading(false);
       }

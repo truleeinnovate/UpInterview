@@ -14,8 +14,6 @@ function EmailSettings() {
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload.tenantId;
   const ownerId = tokenPayload.userId;
-  console.log("tenantId EmailSettings", tenantId);
-  console.log("ownerId EmailSettings", ownerId);
   if (!tenantId || !ownerId) {
     throw new Error('Tenant ID and Owner ID are required');
   }

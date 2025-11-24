@@ -74,10 +74,6 @@ const EditAvailabilityDetails = ({
   
     return userProfile;
   }, [from, resolvedId, userProfile]);
-  console.log("profileData resolvedId", resolvedId);
-
- console.log("profileData EditAvailabilityDetails", profileData);
- console.log("availabilityDataFromProps EditAvailabilityDetails", userProfile);
 
   // const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
@@ -133,12 +129,6 @@ const EditAvailabilityDetails = ({
         //  const contact = usersRes.find(user => user.contactId === resolvedId);
         if (!userProfile || !userProfile._id) return;
 
-        console.log("EditAvailabilityDetails - userProfile:", userProfile);
-        console.log(
-          "EditAvailabilityDetails - availabilityDataFromProps:",
-          availabilityDataFromProps
-        );
-
         // Use availability data from props/navigation state if available
         let updatedTimes = { ...times };
         let userProfileData = userProfile;
@@ -147,14 +137,9 @@ const EditAvailabilityDetails = ({
 
         // If we have availability data from props/navigation, use it
         if (availabilityDataFromProps) {
-          console.log(
-            "Using availability data from props/navigation:",
-            availabilityDataFromProps
-          );
 
           if (availabilityDataFromProps.times) {
             updatedTimes = { ...availabilityDataFromProps.times };
-            console.log("Updated times from props:", updatedTimes);
           }
 
           if (availabilityDataFromProps.userProfile) {
@@ -176,7 +161,6 @@ const EditAvailabilityDetails = ({
             durationData = availabilityDataFromProps.selectedOption ;
           }
         } else {
-          console.log("Using original logic",userProfileData);
           // Fallback to original logic
           const days = userProfileData?.availability?.[0]?.availability || [];
           if (Array.isArray(days)) {
@@ -188,10 +172,6 @@ const EditAvailabilityDetails = ({
             });
           }
         }
-
-        console.log("Final updatedTimes:", updatedTimes);
-        console.log("Final timezoneData:", timezoneData);
-        console.log("Final durationData:", durationData);
 
         setTimes(updatedTimes);
 
@@ -278,10 +258,7 @@ const EditAvailabilityDetails = ({
       contactId: userProfile?.contactId || "Not Found",
     };
 
-    console.log("cleanFormData", cleanFormData);
-    // v1.0.3 <--------------------------------------------
     setLoading(true);
-    // v1.0.3 -------------------------------------------->
     try {
       // const response = await axios.patch(
       //   `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
@@ -322,8 +299,6 @@ const EditAvailabilityDetails = ({
         data: cleanFormData,
       });
       await queryClient.invalidateQueries(["userProfile", resolvedId]);
-
-      console.log("response cleanFormData", response);
 
       if (response.status === 200) {
         if (usersId) {
@@ -430,16 +405,9 @@ const EditAvailabilityDetails = ({
                   from="myProfileEditPage"
                   availabilityData={availabilityDataFromProps}
                   setAvailabilityDetailsData={(data) => {
-                    console.log("Availability data updated:", data);
                     // You can handle availability data updates here if needed
                   }}
                 />
-                {console.log(
-                  "Passing to Availability component - times:",
-                  times,
-                  "availabilityData:",
-                  availabilityDataFromProps
-                )}
               </div>
             </div>
           </div>

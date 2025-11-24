@@ -69,7 +69,6 @@ const CustomizationPanel = ({
   };
 
   const handleApply = () => {
-    console.log("Applying customization settings:", settings);
     onApplyCustomization(settings);
     onClose();
   };

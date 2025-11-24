@@ -71,8 +71,12 @@ const getPaymentsSummary = async (req, res) => {
     // Stats over filtered set
     const allAgg = await Payments.find(query).select("status").lean();
     const totalPayments = total;
-    const successfulPayments = allAgg.filter((p) => p.status === "captured").length;
-    const pendingPayments = allAgg.filter((p) => p.status === "pending" || p.status === "authorized").length;
+    const successfulPayments = allAgg.filter(
+      (p) => p.status === "captured"
+    ).length;
+    const pendingPayments = allAgg.filter(
+      (p) => p.status === "pending" || p.status === "authorized"
+    ).length;
     const failedPayments = allAgg.filter((p) => p.status === "failed").length;
 
     return res.status(200).json({
@@ -96,7 +100,9 @@ const getPaymentsSummary = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching payments summary:", error);
-    return res.status(500).json({ message: "Server error", details: error.message, status: false });
+    return res
+      .status(500)
+      .json({ message: "Server error", details: error.message, status: false });
   }
 };
 
@@ -128,12 +134,10 @@ const getPaymentsById = async (req, res) => {
 const getSinglePaymentById = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("SINGLE PAYMENT ID", id);
 
     const payment = await Payments.findById(id);
     res.status(200).json(payment);
   } catch (error) {
-    console.log("Internal server error:", error.message);
     res.status(500).json({
       message: "Internal server error",
     });

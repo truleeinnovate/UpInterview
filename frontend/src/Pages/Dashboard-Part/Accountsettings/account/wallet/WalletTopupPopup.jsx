@@ -31,7 +31,6 @@ export function WalletTopupPopup({ onClose, onTopup }) {
   const tokenPayload = decodeJwt(authToken);
 
   const tenantId = tokenPayload?.tenantId;
-  console.log("tenantId", tenantId);
   const ownerId = tokenPayload?.userId;
   //<----v1.0.0-----
   const verifyWalletPayment = useVerifyWalletPayment();
@@ -66,7 +65,6 @@ export function WalletTopupPopup({ onClose, onTopup }) {
             email: userProfile.email,
             phone: userProfile.phone,
           });
-          console.log("User profile fetched:", userProfile);
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -117,11 +115,6 @@ export function WalletTopupPopup({ onClose, onTopup }) {
         order_id: orderId,
         handler: async function (response) {
           try {
-            console.log("Razorpay success callback received:", {
-              orderId: response.razorpay_order_id,
-              paymentId: response.razorpay_payment_id,
-              signature: response.razorpay_signature?.substring(0, 10) + "...",
-            });
 
             // Verify payment with backend via TanStack Query mutation
             const verification = await verifyWalletPayment.mutateAsync({
@@ -133,8 +126,6 @@ export function WalletTopupPopup({ onClose, onTopup }) {
               amount: parseFloat(amount),
               description: "Wallet Top-up via Razorpay",
             });
-
-            console.log("Payment verification response:", verification);
 
             if (verification?.success) {
               // Update UI with new wallet data

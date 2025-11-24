@@ -20,12 +20,10 @@ const Sharing = () => {
   }
 
   const handleUpdateSettings = (newSettings) => {
-    console.log('Update settings:', newSettings)
     setIsEditingSettings(false)
   }
 
   const handleShare = (shareData) => {
-    console.log('Share content:', shareData)
     setIsSharing(false)
   }
 

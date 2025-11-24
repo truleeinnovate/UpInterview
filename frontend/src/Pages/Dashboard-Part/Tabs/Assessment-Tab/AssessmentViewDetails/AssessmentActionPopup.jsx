@@ -257,10 +257,6 @@ const AssessmentActionPopup = ({
           }
         }
 
-        console.log('Debug - Schedule object:', schedule);
-        console.log('Debug - AssessmentId being sent:', assessmentId);
-        console.log('Debug - Selected candidates:', selectedCandidates);
-
         if (!assessmentId) {
           throw new Error('Unable to determine assessment ID for resend operation');
         }

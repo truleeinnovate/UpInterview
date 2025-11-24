@@ -70,10 +70,8 @@ const Wallet = () => {
   const walletTransactions = walletBalance?.transactions || [];
 
   const handleTopup = async (topupData) => {
-    console.log("Processing top-up:", topupData);
 
     try {
-      console.log("Refreshing wallet data after topup");
       await refetch();
     } catch (error) {
       console.error("Error refreshing wallet data after topup:", error);

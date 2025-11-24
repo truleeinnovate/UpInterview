@@ -25,8 +25,6 @@ export const invalidateMasterDataCache = async (queryClient, type) => {
   await queryClient.invalidateQueries({
     queryKey: ["masterData", queryKey],
   });
-
-  console.log(`Cache invalidated for master data type: ${type}`);
 };
 
 /**
@@ -37,8 +35,6 @@ export const invalidateAllMasterDataCache = async (queryClient) => {
   await queryClient.invalidateQueries({
     queryKey: ["masterData"],
   });
-
-  console.log("All master data caches invalidated");
 };
 
 /**
@@ -103,7 +99,6 @@ export const clearAllMasterData = async (queryClient) => {
   if (typeof window !== "undefined" && window.localforage) {
     try {
       await window.localforage.clear();
-      console.log("Master data cleared from storage");
     } catch (error) {
       console.error("Error clearing storage:", error);
     }

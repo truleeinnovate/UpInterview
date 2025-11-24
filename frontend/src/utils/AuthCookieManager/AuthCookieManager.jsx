@@ -450,9 +450,6 @@ class AuthCookieManager {
         localStorage.removeItem('app_permissions_cache');
         localStorage.removeItem('permissions_effective');
         localStorage.removeItem('app_permissions_timestamp');
-        console.log('Logging out with role:', effectivePermissions_RoleName);
-        console.log('Current config.REACT_APP_API_URL_FRONTEND:', config.REACT_APP_API_URL_FRONTEND);
-        
         // Ensure the URL is properly formatted
         let baseUrl = config.REACT_APP_API_URL_FRONTEND;
         // Remove trailing slash if present
@@ -467,7 +464,6 @@ class AuthCookieManager {
           : '/organization-login';
           
         const redirectUrl = `${baseUrl}${loginPath}`;
-        console.log('Redirecting to:', redirectUrl);
         window.location.href = redirectUrl;
       } else if (authToken && impersonationToken) {
         AuthCookieManager.clearCookie(AUTH_TOKEN_KEY);

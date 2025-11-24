@@ -519,7 +519,6 @@ const Feedback = () => {
   };
 
   const handleSummarize = (feedback) => {
-    console.log("Summarize clicked", feedback); // Debug log to check the feedback object structure
     setSummaryData({
       candidate_name: feedback.candidateId
         ? `${feedback.candidateId.FirstName || ""} ${

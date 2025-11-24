@@ -34,7 +34,6 @@ export const useAssessments = (filters = {}) => {
   const tenantId = tokenPayload.tenantId;
   const ownerId = tokenPayload.userId;
 
-
   const {
     data: assessmentData = [],
     isLoading: isQueryLoading,
@@ -348,12 +347,6 @@ export const useAssessments = (filters = {}) => {
       initialLoad.current = false;
       return;
     }
-    console.log("useAssessments state update:", {
-      assessmentDataCount: assessmentData.length,
-      isLoading,
-      isQueryLoading,
-      isMutationLoading,
-    });
   }, [assessmentData.length, isLoading, isQueryLoading, isMutationLoading]);
 
   // Delete assessment mutation
@@ -407,7 +400,6 @@ export const useAssessments = (filters = {}) => {
       queryKey: ["AssessmentList", filters],
       queryFn: async () => {
         const data = await fetchFilterData("assessmentlist"); // API endpoint
-        console.log("useAssessmentList:", data);
 
         return data
           .map((assessment) => ({

@@ -213,7 +213,6 @@ const getMasterById = async (req, res) => {
   try {
     const { type, id } = req.params;
 
-    console.log("type,id", type, id);
     const Model = getModel(type);
 
     const doc = await Model.findById(id);
@@ -240,9 +239,6 @@ const getAllMasters = async (req, res) => {
       sortOrder = "desc",
       pageType,
     } = req.query;
-
-    console.log("pageType", pageType);
-    console.log("type ", type);
 
     if (pageType !== "adminPortal") {
       const Model = getModel(type);

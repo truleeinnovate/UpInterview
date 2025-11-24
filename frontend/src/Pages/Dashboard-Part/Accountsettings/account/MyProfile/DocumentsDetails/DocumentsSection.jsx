@@ -27,7 +27,6 @@ export function DocumentsSection({ documents, onUpdate, externalData = null }) {
   
   // Use external data if provided, otherwise use userProfile
   const profileData = externalData || userProfile;
-  console.log("usersRes---", profileData);
 
   const [resumeError, setResumeError] = useState("");
   const [coverLetterError, setCoverLetterError] = useState("");
@@ -278,7 +277,6 @@ export function DocumentsSection({ documents, onUpdate, externalData = null }) {
       };
       onUpdate(updatedDocuments);
 
-      console.log(`${type} uploaded successfully!`);
     } catch (error) {
       console.error("Upload failed:", error);
       const errorText = "Upload failed. Please try again.";
@@ -737,7 +735,6 @@ export function DocumentsSection({ documents, onUpdate, externalData = null }) {
                       delete updatedDocuments[confirmDelete.type];
                       onUpdate(updatedDocuments);
 
-                      console.log(`${confirmDelete.type} deleted successfully`);
                     } catch (error) {
                       console.error(
                         `Failed to delete ${confirmDelete.type}:`,

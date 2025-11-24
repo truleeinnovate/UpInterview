@@ -19,7 +19,6 @@ import { Star } from "lucide-react";
 
 const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
   const [filteredData, setFilteredData] = useState([]);
-  console.log("ksdhsdshdb", filteredData);
   useEffect(() => {
     if (feedbacks) {
       setFilteredData(feedbacks);

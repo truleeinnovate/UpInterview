@@ -25,8 +25,6 @@ export const useUserProfile = (usersId) => {
         `${config.REACT_APP_API_URL}/users/owner/${currentUser}`
       );
 
-      // console.log("response.data",response.data);
-
       return response.data || null;
     },
     staleTime: 1000 * 60 * 30, // 30 minutes - data stays fresh for 30 minutes
@@ -113,30 +111,26 @@ export const useUsers = (filters = {}) => {
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload?.tenantId;
 
-
   // ✅ Build query string properly
   const buildQueryString = (params) => {
     const searchParams = new URLSearchParams();
-    
+
     // Add all filter parameters
     Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
+      if (value !== undefined && value !== null && value !== "") {
         if (Array.isArray(value)) {
           // Handle array parameters (like roles)
-          value.forEach(item => searchParams.append(key, item));
+          value.forEach((item) => searchParams.append(key, item));
         } else {
           searchParams.append(key, value.toString());
         }
       }
     });
-    
+
     return searchParams.toString();
   };
-  
 
-  let queryParams = filters
-  console.log("queryParams queryParams", queryParams);
-  console.log("tenantId tenantId", tenantId);
+  let queryParams = filters;
 
   // ✅ Fetch Users
   const {
@@ -148,10 +142,10 @@ export const useUsers = (filters = {}) => {
     queryFn: async () => {
       if (!tenantId) return []; // Skip fetch if tenantId missing
       const queryString = buildQueryString(filters);
-      const url = `${config.REACT_APP_API_URL}/users/${tenantId}${queryString ? `?${queryString}` : ''}`;
-      
-      console.log("API URL:", url);
-      
+      const url = `${config.REACT_APP_API_URL}/users/${tenantId}${
+        queryString ? `?${queryString}` : ""
+      }`;
+
       const response = await axios.get(url);
       return response.data;
 
@@ -181,8 +175,6 @@ export const useUsers = (filters = {}) => {
   // ✅ Add or Update User
   const addOrUpdateUser = useMutation({
     mutationFn: async ({ userData, file, isFileRemoved, editMode }) => {
-      console.log("addOrUpdateUser mutation payload:", { userData, editMode });
-
       const payload = {
         UserData: {
           firstName: userData.firstName,
@@ -209,11 +201,6 @@ export const useUsers = (filters = {}) => {
         },
       };
 
-      console.log(
-        "Sending payload to /Organization/new-user-Creation:",
-        payload
-      );
-
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/Organization/new-user-Creation`,
         payload
@@ -221,16 +208,13 @@ export const useUsers = (filters = {}) => {
 
       // UPLOADING FILES LIKE IMAGES AND RESUMES
       if (isFileRemoved && !file) {
-        console.log("Removing file for contactId:", response.data.contactId);
         await uploadFile(null, "image", "contact", response.data.contactId);
       } else if (file instanceof File) {
-        console.log("Uploading file for contactId:", response.data.contactId);
         await uploadFile(file, "image", "contact", response.data.contactId);
       }
 
       // Send welcome email only for new user creation
       if (!editMode) {
-        console.log(`Sending welcome email to: ${userData.email}`);
         await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
           email: userData.email,
           type: "usercreatepass",
@@ -240,7 +224,6 @@ export const useUsers = (filters = {}) => {
       return response.data;
     },
     onSuccess: () => {
-      console.log("User operation successful, invalidating users query");
       queryClient.invalidateQueries(["users"]);
     },
     onError: (error) => {

@@ -1,20 +1,20 @@
 // Logger utility for development vs production with production control
-const isDevelopment = process.env.REACT_NODE_ENV === 'production';
+const isDevelopment = process.env.REACT_NODE_ENV === "production";
 
 // Global logging control
 let isProductionLoggingEnabled = false;
-let logLevel = isDevelopment ? 'debug' : 'error'; // 'debug', 'info', 'warn', 'error', 'none'
+let logLevel = isDevelopment ? "debug" : "error"; // 'debug', 'info', 'warn', 'error', 'none'
 
 // Check if user wants to see logs (via localStorage or URL param)
 const checkUserLoggingPreference = () => {
   // Check URL parameter for debugging
   const urlParams = new URLSearchParams(window.location.search);
-  const debugParam = urlParams.get('debug');
-  
+  const debugParam = urlParams.get("debug");
+
   // Check localStorage for user preference
-  const userPreference = localStorage.getItem('enableProductionLogs');
-  
-  return debugParam === 'true' || userPreference === 'true';
+  const userPreference = localStorage.getItem("enableProductionLogs");
+
+  return debugParam === "true" || userPreference === "true";
 };
 
 // Initialize logging preference
@@ -23,78 +23,73 @@ if (!isDevelopment) {
 }
 
 export const logger = {
-  // Set log level 
+  // Set log level
   setLogLevel: (level) => {
     logLevel = level;
   },
-  
+
   // Enable/disable production logging
   enableProductionLogs: (enabled = true) => {
     isProductionLoggingEnabled = enabled;
-    localStorage.setItem('enableProductionLogs', enabled.toString());
+    localStorage.setItem("enableProductionLogs", enabled.toString());
   },
-  
+
   // Check if logging should happen
   shouldLog: (level) => {
     if (isDevelopment) return true;
     if (!isProductionLoggingEnabled) return false;
-    
+
     const levels = { debug: 0, info: 1, warn: 2, error: 3, none: 4 };
     return levels[level] >= levels[logLevel];
   },
-  
+
   // Only log in development or when explicitly enabled in production
   log: (...args) => {
-    if (logger.shouldLog('debug')) {
-      console.log(...args);
+    if (logger.shouldLog("debug")) {
     }
   },
-  
+
   // Always log errors (but can be controlled)
   error: (...args) => {
-    if (logger.shouldLog('error')) {
+    if (logger.shouldLog("error")) {
       console.error(...args);
     }
   },
-  
+
   // Only log warnings in development or when enabled
   warn: (...args) => {
-    if (logger.shouldLog('warn')) {
+    if (logger.shouldLog("warn")) {
       console.warn(...args);
     }
   },
-  
+
   // Only log info in development or when enabled
   info: (...args) => {
-    if (logger.shouldLog('info')) {
+    if (logger.shouldLog("info")) {
       console.info(...args);
     }
   },
-  
+
   // Performance logging (always enabled for monitoring)
-  performance: (...args) => {
-    console.log('[PERFORMANCE]', ...args);
-  },
-  
+  performance: (...args) => {},
+
   // Debug logging (only in development or when explicitly enabled)
   debug: (...args) => {
-    if (logger.shouldLog('debug')) {
+    if (logger.shouldLog("debug")) {
       console.debug(...args);
     }
   },
-  
+
   // Force log (always shows, even in production)
-  force: (...args) => {
-    console.log('[FORCE LOG]', ...args);
-  },
-  
+  force: (...args) => {},
+
   // Get current logging status
   getStatus: () => ({
     isDevelopment,
     isProductionLoggingEnabled,
     logLevel,
-    canLog: logger.shouldLog('debug')
-  })
+    canLog: logger.shouldLog("debug"),
+  }),
 };
 
 /**
@@ -118,18 +113,11 @@ export const replaceConsoleLogs = () => {
 };
 
 // Add global access for debugging
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.enableLogs = logger.enableProductionLogs;
   window.setLogLevel = logger.setLogLevel;
   window.getLogStatus = logger.getStatus;
 }
-
-
-
-
-
-
-
 
 // // Logger utility for development vs production with production control
 // const isDevelopment = process.env.NODE_ENV === 'development';
@@ -143,10 +131,10 @@ if (typeof window !== 'undefined') {
 //   // Check URL parameter for debugging
 //   const urlParams = new URLSearchParams(window.location.search);
 //   const debugParam = urlParams.get('debug');
-  
+
 //   // Check localStorage for user preference
 //   const userPreference = localStorage.getItem('enableProductionLogs');
-  
+
 //   return debugParam === 'true' || userPreference === 'true';
 // };
 
@@ -156,71 +144,71 @@ if (typeof window !== 'undefined') {
 // }
 
 // export const logger = {
-//   // Set log level 
+//   // Set log level
 //   setLogLevel: (level) => {
 //     logLevel = level;
 //   },
-  
+
 //   // Enable/disable production logging
 //   enableProductionLogs: (enabled = true) => {
 //     isProductionLoggingEnabled = enabled;
 //     localStorage.setItem('enableProductionLogs', enabled.toString());
 //   },
-  
+
 //   // Check if logging should happen
 //   shouldLog: (level) => {
 //     if (isDevelopment) return true;
 //     if (!isProductionLoggingEnabled) return false;
-    
+
 //     const levels = { debug: 0, info: 1, warn: 2, error: 3, none: 4 };
 //     return levels[level] >= levels[logLevel];
 //   },
-  
+
 //   // Only log in development or when explicitly enabled in production
 //   log: (...args) => {
 //     if (logger.shouldLog('debug')) {
 //       console.log(...args);
 //     }
 //   },
-  
+
 //   // Always log errors (but can be controlled)
 //   error: (...args) => {
 //     if (logger.shouldLog('error')) {
 //       console.error(...args);
 //     }
 //   },
-  
+
 //   // Only log warnings in development or when enabled
 //   warn: (...args) => {
 //     if (logger.shouldLog('warn')) {
 //       console.warn(...args);
 //     }
 //   },
-  
+
 //   // Only log info in development or when enabled
 //   info: (...args) => {
 //     if (logger.shouldLog('info')) {
 //       console.info(...args);
 //     }
 //   },
-  
+
 //   // Performance logging (always enabled for monitoring)
 //   performance: (...args) => {
 //     console.log('[PERFORMANCE]', ...args);
 //   },
-  
+
 //   // Debug logging (only in development or when explicitly enabled)
 //   debug: (...args) => {
 //     if (logger.shouldLog('debug')) {
 //       console.debug(...args);
 //     }
 //   },
-  
+
 //   // Force log (always shows, even in production)
 //   force: (...args) => {
 //     console.log('[FORCE LOG]', ...args);
 //   },
-  
+
 //   // Get current logging status
 //   getStatus: () => ({
 //     isDevelopment,
@@ -246,4 +234,4 @@ if (typeof window !== 'undefined') {
 //   window.enableLogs = logger.enableProductionLogs;
 //   window.setLogLevel = logger.setLogLevel;
 //   window.getLogStatus = logger.getStatus;
-// } 
+// }

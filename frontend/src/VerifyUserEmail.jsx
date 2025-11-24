@@ -25,7 +25,6 @@ const VerifyUserEmail = () => {
           `${config.REACT_APP_API_URL}/Organization/verify-user-email?token=${token}`
         );
 
-        console.log("response.data",response.data);
         
 
         if (response.data.success) {

@@ -87,10 +87,6 @@ function AssessmentTest({
     setShowConfirmSubmit(true);
   };
 
-  console.log("answers", answers);
-  console.log("skippedQuestions", skippedQuestions);
-  console.log("questions", questions);
-
 
 // Enhanced verifyAnswer function with comprehensive trimming and type handling
 const verifyAnswer = (question, selectedAnswer) => {
@@ -146,21 +142,18 @@ const verifyAnswer = (question, selectedAnswer) => {
       // For MCQ, clean both answers before comparison
       const cleanedSelected = cleanMCQAnswer(selectedAnswer);
       const cleanedCorrect = cleanMCQAnswer(correctAnswer);
-      console.log(`MCQ Comparison - Selected: "${cleanedSelected}", Correct: "${cleanedCorrect}"`);
       return cleanedSelected === cleanedCorrect;
     
     case 'Short Answer':
       // For short answers, trim and compare case-insensitively
       const shortSelected = normalizeAnswer(selectedAnswer);
       const shortCorrect = normalizeAnswer(correctAnswer);
-      console.log(`Short Answer Comparison - Selected: "${shortSelected}", Correct: "${shortCorrect}"`);
       return shortSelected.toLowerCase() === shortCorrect.toLowerCase();
     
     case 'Long Answer':
       // For long answers, trim and compare case-insensitively
       const longSelected = normalizeAnswer(selectedAnswer);
       const longCorrect = normalizeAnswer(correctAnswer);
-      console.log(`Long Answer Comparison - Selected: "${longSelected}", Correct: "${longCorrect}"`);
       return longSelected.toLowerCase() === longCorrect.toLowerCase();
     
     case 'Number':
@@ -168,14 +161,12 @@ const verifyAnswer = (question, selectedAnswer) => {
       // For numbers, compare numerically after trimming
       const numSelected = normalizeAnswer(selectedAnswer);
       const numCorrect = normalizeAnswer(correctAnswer);
-      console.log(`Number Comparison - Selected: "${numSelected}", Correct: "${numCorrect}"`);
       return parseFloat(numSelected) === parseFloat(numCorrect);
     
     case 'Boolean':
       // For boolean, normalize both values and compare
       const boolSelected = normalizeBoolean(selectedAnswer);
       const boolCorrect = normalizeBoolean(correctAnswer);
-      console.log(`Boolean Comparison - Selected: "${boolSelected}", Correct: "${boolCorrect}"`);
       return boolSelected === boolCorrect;
     
     case 'Programming':
@@ -183,14 +174,12 @@ const verifyAnswer = (question, selectedAnswer) => {
       // For programming questions, preserve formatting but trim outer whitespace
       const codeSelected = normalizeAnswer(selectedAnswer, true); // Preserve internal formatting
       const codeCorrect = normalizeAnswer(correctAnswer, true);
-      console.log(`Code Comparison - Selected: "${codeSelected}", Correct: "${codeCorrect}"`);
       return codeSelected === codeCorrect;
     
     default:
       // Default comparison with trimming
       const defaultSelected = normalizeAnswer(selectedAnswer);
       const defaultCorrect = normalizeAnswer(correctAnswer);
-      console.log(`Default Comparison - Selected: "${defaultSelected}", Correct: "${defaultCorrect}"`);
       return defaultSelected === defaultCorrect;
   }
 };
@@ -207,7 +196,6 @@ const verifyAnswer = (question, selectedAnswer) => {
           Answers: section.questions.map((question) => {
             // Remove console logs to prevent loops
             // console.log("Question ID:", question._id);
-            console.log("Question:", question);
             const correctAnswer =
               question.snapshot?.correctAnswer || question.correctAnswer;
           const selectedAnswer = answers[question._id];
@@ -274,7 +262,6 @@ const verifyAnswer = (question, selectedAnswer) => {
           : "fail",
         submittedAt: new Date(),
       };
-      console.log("candidateAssessmentData", candidateAssessmentData);
 
       const response = await fetch(
         `${config.REACT_APP_API_URL}/candidate-assessment/submit`,
@@ -286,7 +273,6 @@ const verifyAnswer = (question, selectedAnswer) => {
           body: JSON.stringify(candidateAssessmentData),
         }
       );
-      console.log("response", response);
 
       const responseData = await response.json();
       if (!response.ok) {

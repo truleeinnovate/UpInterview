@@ -27,8 +27,6 @@ const CandidateMiniTab = ({ selectedData, isAddMode, decodedData }) => {
     : feedback.positionId || {};
   const interviewRoundData = feedback.interviewRoundId || {};
 
-  console.log("positionData", candidateData);
-
   const [expandedSections, setExpandedSections] = useState({
     skills: true,
     certificates: false,

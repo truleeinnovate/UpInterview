@@ -87,7 +87,7 @@ const loadRazorpayScript = () => {
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     script.onload = () => {
-      console.log("Razorpay script loaded successfully");
+      // console.log("Razorpay script loaded successfully");
       resolve(true);
     };
     script.onerror = () => {
@@ -99,7 +99,7 @@ const loadRazorpayScript = () => {
 };
 
 const SubscriptionCardDetails = () => {
-  console.log("card details");
+  // console.log("card details");
 
   const {
     subscriptionData,
@@ -136,7 +136,7 @@ const SubscriptionCardDetails = () => {
     () => location.state?.plan || {},
     [location.state]
   );
-  console.log("planDetails", planDetails);
+  // console.log("planDetails", planDetails);
   const [pricePerMember, setPricePerMember] = useState({
     monthly: 0,
     annually: 0,
@@ -155,7 +155,7 @@ const SubscriptionCardDetails = () => {
             email: userProfile.email,
             phone: userProfile.phone,
           });
-          console.log("User profile fetched:", userProfile);
+          // console.log("User profile fetched:", userProfile);
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -174,7 +174,7 @@ const SubscriptionCardDetails = () => {
       const monthly = parseFloat(monthlyPrice) || 0;
       const annual = parseFloat(annualPrice) || 0;
 
-      console.log("Setting up plan details:", { monthly, annual, planDetails });
+      // console.log("Setting up plan details:", { monthly, annual, planDetails });
 
       // Set monthly and annual prices dynamically
       setPricePerMember({
@@ -198,11 +198,11 @@ const SubscriptionCardDetails = () => {
       // Calculate the initial total - NO discount applied (fixed at 0)
       const price = defaultMembershipType === "annual" ? annual : monthly;
       const initialTotal = Math.max(0, price);
-      console.log("Initial total calculation (no discount):", {
-        price,
-        discount: 0, // Fixed at 0 for now
-        initialTotal,
-      });
+      // console.log("Initial total calculation (no discount):", {
+      //   price,
+      //   discount: 0, // Fixed at 0 for now
+      //   initialTotal,
+      // });
 
       setTotalPaid(initialTotal.toFixed(2));
     }
@@ -254,8 +254,8 @@ const SubscriptionCardDetails = () => {
 
       // Ensure totalAmount is a valid number and properly formatted
       const amountToCharge = parseFloat(totalPaid) || 0;
-      console.log("Creating order with amount:", amountToCharge, "INR");
-      console.log("Discount values - Fixed at 0 for both monthly and annual");
+      // console.log("Creating order with amount:", amountToCharge, "INR");
+      // console.log("Discount values - Fixed at 0 for both monthly and annual");
 
       // Create order data object
       const orderData = {
@@ -294,22 +294,22 @@ const SubscriptionCardDetails = () => {
         },
       };
 
-      console.log("Sending order to backend:", {
-        amount: amountToCharge,
-        currency: "INR",
-        membershipType: cardDetails.membershipType,
-        planId: orderData.planId,
-        autoRenew: true,
-      });
+      // console.log("Sending order to backend:", {
+      //   amount: amountToCharge,
+      //   currency: "INR",
+      //   membershipType: cardDetails.membershipType,
+      //   planId: orderData.planId,
+      //   autoRenew: true,
+      // });
 
       // Create Razorpay subscription/order via hook mutation
       const orderResponse = await createSubscription(orderData);
 
-      console.log("Order response:", orderResponse);
+      // console.log("Order response:", orderResponse);
 
       // Check if this is a subscription or one-time payment
       if (orderResponse.isSubscription) {
-        console.log("Processing subscription response:", orderResponse);
+        // console.log("Processing subscription response:", orderResponse);
 
         // Save subscription info for confirmation later
         localStorage.setItem(
@@ -334,7 +334,7 @@ const SubscriptionCardDetails = () => {
 
             // Prepare options for Razorpay checkout
             // Make sure amount is exactly the same as in the order (no modifications)
-            console.log("Order amount from backend:", orderResponse.amount);
+            // console.log("Order amount from backend:", orderResponse.amount);
             const options = {
               key: orderResponse.razorpayKeyId,
               subscription_id: orderResponse.subscriptionId,
@@ -367,7 +367,7 @@ const SubscriptionCardDetails = () => {
               handler: async function (response) {
                 try {
                   // Handle successful payment
-                  console.log("Payment successful:", response);
+                  // console.log("Payment successful:", response);
                   setProcessing(true);
 
                   // Prepare verification data
@@ -386,19 +386,19 @@ const SubscriptionCardDetails = () => {
                   };
 
                   // Log to verify invoiceId is included
-                  console.log(
-                    "Including invoiceId in verification data:",
-                    planDetails.invoiceId
-                  );
+                  // console.log(
+                  //   "Including invoiceId in verification data:",
+                  //   planDetails.invoiceId
+                  // );
 
-                  console.log("Sending verification data:", verificationData);
+                  // console.log("Sending verification data:", verificationData);
 
                   // Verify payment with backend via hook mutation
                   const verifyResponse = await verifySubscriptionPayment(
                     verificationData
                   );
 
-                  console.log("Payment verification response:", verifyResponse);
+                  // console.log("Payment verification response:", verifyResponse);
 
                   if (
                     verifyResponse.status === "paid" ||
@@ -413,7 +413,7 @@ const SubscriptionCardDetails = () => {
                     try {
                       // Use forceRefreshSubscription to completely bypass cache
                       const result = await forceRefreshSubscription();
-                      console.log('Initial force refresh result:', result);
+                      // console.log('Initial force refresh result:', result);
                     } catch (e) {
                       console.warn('Initial force refresh failed:', e?.message);
                     }
@@ -428,22 +428,22 @@ const SubscriptionCardDetails = () => {
                       
                       while (Date.now() - start < timeoutMs) {
                         attempts++;
-                        console.log(`Polling attempt ${attempts}...`);
+                        // console.log(`Polling attempt ${attempts}...`);
                         
                         // Force complete cache refresh each time
                         const result = await forceRefreshSubscription();
                         const fresh = result?.data || result;
                         
-                        console.log('Subscription status:', fresh?.status);
-                        console.log('Has receipt/invoice:', !!(fresh?.receiptId || fresh?.invoiceId));
-                        console.log('Full subscription data:', fresh);
+                        // console.log('Subscription status:', fresh?.status);
+                        // console.log('Has receipt/invoice:', !!(fresh?.receiptId || fresh?.invoiceId));
+                        // console.log('Full subscription data:', fresh);
                         
                         const isActive = (fresh?.status || '').toLowerCase() === 'active';
                         const hasDocs = !!(fresh?.receiptId || fresh?.invoiceId);
                         
                         if (isActive && hasDocs) {
                           isReady = true;
-                          console.log('Subscription is ready with active status and documents!');
+                          // console.log('Subscription is ready with active status and documents!');
                           break;
                         }
                         
@@ -462,7 +462,7 @@ const SubscriptionCardDetails = () => {
                     // 4) Final force refresh before navigation to ensure latest data
                     try {
                       await forceRefreshSubscription();
-                      console.log('Final force refresh completed before navigation');
+                      // console.log('Final force refresh completed before navigation');
                     } catch (e) {
                       console.warn('Final force refresh failed:', e?.message);
                     }
@@ -519,14 +519,14 @@ const SubscriptionCardDetails = () => {
               },
               modal: {
                 ondismiss: function () {
-                  console.log("Payment cancelled by user");
+                  // console.log("Payment cancelled by user");
                   toast.info("Payment cancelled");
                   setProcessing(false);
                 },
               },
             };
 
-            console.log("Opening Razorpay checkout with options:", options);
+            // console.log("Opening Razorpay checkout with options:", options);
 
             // Create and open Razorpay checkout in one step
             const rzp1 = new window.Razorpay(options);

@@ -1,5 +1,5 @@
-const ApiKey = require('../models/ApiKey');
-const { v4: uuidv4 } = require('uuid');
+const ApiKey = require("../models/ApiKey");
+const { v4: uuidv4 } = require("uuid");
 
 /**
  * API Key Authentication Middleware
@@ -9,84 +9,78 @@ const apiKeyAuth = (requiredPermission = null) => {
   return async (req, res, next) => {
     const requestId = uuidv4();
     const startTime = Date.now();
-    
+
     // Add requestId to request for tracking
     req.requestId = requestId;
-    
+
     try {
       // Extract API key from various sources
       const apiKey = extractApiKey(req);
-      
+
       if (!apiKey) {
-        console.log(`🔑 [ApiKeyAuth] No API key provided - Request ID: ${requestId}`);
         return res.status(401).json({
           success: false,
-          message: 'API key required',
+          message: "API key required",
           requestId,
-          error: 'MISSING_API_KEY'
+          error: "MISSING_API_KEY",
         });
       }
 
       // Find the API key in database
       const keyDoc = await ApiKey.findOne({ key: apiKey });
-      
+
       if (!keyDoc) {
-        console.log(`🔑 [ApiKeyAuth] Invalid API key - Request ID: ${requestId}`);
         return res.status(401).json({
           success: false,
-          message: 'Invalid API key',
+          message: "Invalid API key",
           requestId,
-          error: 'INVALID_API_KEY'
+          error: "INVALID_API_KEY",
         });
       }
 
       // Check if key is enabled and not expired
       if (!keyDoc.isValid) {
-        const reason = !keyDoc.enabled ? 'disabled' : 'expired';
-        console.log(`🔑 [ApiKeyAuth] API key ${reason} - Request ID: ${requestId}`);
+        const reason = !keyDoc.enabled ? "disabled" : "expired";
         return res.status(401).json({
           success: false,
           message: `API key is ${reason}`,
           requestId,
-          error: reason.toUpperCase()
+          error: reason.toUpperCase(),
         });
       }
 
       // Check IP restrictions
       const clientIP = getClientIP(req);
       if (!keyDoc.isIPAllowed(clientIP)) {
-        console.log(`🔑 [ApiKeyAuth] IP not allowed: ${clientIP} - Request ID: ${requestId}`);
         return res.status(403).json({
           success: false,
-          message: 'IP address not allowed',
+          message: "IP address not allowed",
           requestId,
-          error: 'IP_NOT_ALLOWED'
+          error: "IP_NOT_ALLOWED",
         });
       }
 
       // Check rate limits
       const rateLimitCheck = keyDoc.checkRateLimit();
       if (!rateLimitCheck.allowed) {
-        console.log(`🔑 [ApiKeyAuth] Rate limit exceeded (${rateLimitCheck.limit}) - Request ID: ${requestId}`);
         return res.status(429).json({
           success: false,
           message: `Rate limit exceeded (${rateLimitCheck.limit})`,
           requestId,
-          error: 'RATE_LIMIT_EXCEEDED',
+          error: "RATE_LIMIT_EXCEEDED",
           resetTime: rateLimitCheck.resetTime,
-          limit: rateLimitCheck.limit
+          limit: rateLimitCheck.limit,
         });
       }
 
       // Check permissions if required
       if (requiredPermission && !keyDoc.hasPermission(requiredPermission)) {
-        console.log(`🔑 [ApiKeyAuth] Insufficient permissions - Required: ${requiredPermission}, Request ID: ${requestId}`);
         return res.status(403).json({
           success: false,
-          message: 'Insufficient permissions',
+          message: "Insufficient permissions",
           requestId,
-          error: 'INSUFFICIENT_PERMISSIONS',
-          required: requiredPermission
+          error: "INSUFFICIENT_PERMISSIONS",
+          required: requiredPermission,
         });
       }
 
@@ -99,28 +93,27 @@ const apiKeyAuth = (requiredPermission = null) => {
         id: keyDoc._id,
         organization: keyDoc.organization,
         permissions: keyDoc.permissions,
-        keyId: keyDoc.key.substring(0, 8) + '...'
+        keyId: keyDoc.key.substring(0, 8) + "...",
       };
 
       // Automatically set user context from API key (if available)
       if (keyDoc.ownerId) {
         req.user = {
           _id: keyDoc.ownerId,
-          userId: keyDoc.ownerId
+          userId: keyDoc.ownerId,
         };
       }
       if (keyDoc.tenantId) {
         req.tenantId = keyDoc.tenantId;
       }
- 
+
       // Log successful authentication
       const duration = Date.now() - startTime;
-      console.log(`🔑 [ApiKeyAuth] Success - Org: ${keyDoc.organization}, Endpoint: ${endpoint}, Duration: ${duration}ms, Request ID: ${requestId}`);
 
       next();
     } catch (error) {
       console.error(`🔑 [ApiKeyAuth] Error - Request ID: ${requestId}:`, error);
-      
+
       // Try to update error count if we have the key
       try {
         const apiKey = extractApiKey(req);
@@ -136,9 +129,9 @@ const apiKeyAuth = (requiredPermission = null) => {
 
       return res.status(500).json({
         success: false,
-        message: 'Authentication error',
+        message: "Authentication error",
         requestId,
-        error: 'AUTH_ERROR'
+        error: "AUTH_ERROR",
       });
     }
   };
@@ -153,12 +146,12 @@ const apiKeyAuth = (requiredPermission = null) => {
 const extractApiKey = (req) => {
   // Check Authorization header first
   const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+  if (authHeader && authHeader.startsWith("Bearer ")) {
     return authHeader.substring(7);
   }
 
   // Check X-API-Key header
-  const xApiKey = req.headers['x-api-key'];
+  const xApiKey = req.headers["x-api-key"];
   if (xApiKey) {
     return xApiKey;
   }
@@ -176,11 +169,13 @@ const extractApiKey = (req) => {
  * Get client IP address from request
  */
 const getClientIP = (req) => {
-  return req.ip || 
-         req.connection.remoteAddress || 
-         req.socket.remoteAddress ||
-         (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
-         '127.0.0.1';
+  return (
+    req.ip ||
+    req.connection.remoteAddress ||
+    req.socket.remoteAddress ||
+    (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
+    "127.0.0.1"
+  );
 };
 
 /**
@@ -196,15 +191,15 @@ const requirePermission = (permission) => {
 const requireAnyPermission = (permissions) => {
   return async (req, res, next) => {
     const requestId = uuidv4();
-    
+
     try {
       const apiKey = extractApiKey(req);
       if (!apiKey) {
         return res.status(401).json({
           success: false,
-          message: 'API key required',
+          message: "API key required",
           requestId,
-          error: 'MISSING_API_KEY'
+          error: "MISSING_API_KEY",
         });
       }
 
@@ -212,22 +207,24 @@ const requireAnyPermission = (permissions) => {
       if (!keyDoc || !keyDoc.isValid) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid or inactive API key',
+          message: "Invalid or inactive API key",
           requestId,
-          error: 'INVALID_API_KEY'
+          error: "INVALID_API_KEY",
         });
       }
 
       // Check if key has any of the required permissions
-      const hasAnyPermission = permissions.some(permission => keyDoc.hasPermission(permission));
-      
+      const hasAnyPermission = permissions.some((permission) =>
+        keyDoc.hasPermission(permission)
+      );
+
       if (!hasAnyPermission) {
         return res.status(403).json({
           success: false,
-          message: 'Insufficient permissions',
+          message: "Insufficient permissions",
           requestId,
-          error: 'INSUFFICIENT_PERMISSIONS',
-          required: permissions
+          error: "INSUFFICIENT_PERMISSIONS",
+          required: permissions,
         });
       }
 
@@ -236,14 +233,14 @@ const requireAnyPermission = (permissions) => {
         id: keyDoc._id,
         organization: keyDoc.organization,
         permissions: keyDoc.permissions,
-        keyId: keyDoc.key.substring(0, 8) + '...'
+        keyId: keyDoc.key.substring(0, 8) + "...",
       };
 
       // Automatically set user context from API key (if available)
       if (keyDoc.ownerId) {
         req.user = {
           _id: keyDoc.ownerId,
-          userId: keyDoc.ownerId
+          userId: keyDoc.ownerId,
         };
       }
       if (keyDoc.tenantId) {
@@ -252,12 +249,15 @@ const requireAnyPermission = (permissions) => {
 
       next();
     } catch (error) {
-      console.error(`🔑 [RequireAnyPermission] Error - Request ID: ${requestId}:`, error);
+      console.error(
+        `🔑 [RequireAnyPermission] Error - Request ID: ${requestId}:`,
+        error
+      );
       return res.status(500).json({
         success: false,
-        message: 'Permission check error',
+        message: "Permission check error",
         requestId,
-        error: 'PERMISSION_ERROR'
+        error: "PERMISSION_ERROR",
       });
     }
   };
@@ -268,5 +268,5 @@ module.exports = {
   requirePermission,
   requireAnyPermission,
   extractApiKey,
-  getClientIP
+  getClientIP,
 };

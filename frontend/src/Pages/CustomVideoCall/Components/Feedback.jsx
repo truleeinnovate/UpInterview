@@ -37,7 +37,6 @@ const Feedback = ({ onClose }) => {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Here you would typically send the feedback to your backend
-            console.log('Feedback submitted:', feedback);
 
             alert('Thank you for your feedback!');
             onClose();

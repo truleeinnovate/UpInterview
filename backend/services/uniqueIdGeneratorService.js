@@ -1,23 +1,23 @@
 /**
  * Centralized Unique ID Generation Service
- * 
+ *
  * This service provides a unified approach to generating unique IDs across the application.
  * It handles race conditions, retries, and ensures uniqueness for all entity types.
- * 
+ *
  * Format: PREFIX-50001, PREFIX-50002, etc.
  * Starting number: 50001 for financial/billing, 00001 for organization-level entities
- * 
+ *
  * Usage:
  * // For global entities (no tenant isolation)
  * const { generateUniqueId } = require('./services/uniqueIdGeneratorService');
  * const invoiceCode = await generateUniqueId('INVC', InvoiceModel, 'invoiceCode');
- * 
+ *
  * // For organization-level entities (tenant-specific IDs)
  * const positionCode = await generateUniqueId('POS', PositionModel, 'positionCode', tenantId);
  * const interviewCode = await generateUniqueId('INT', InterviewModel, 'interviewCode', tenantId);
  */
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 // Sequence counter model for atomic ID generation
 // One document per sequence scope (prefix or prefix:tenantId)
@@ -29,15 +29,20 @@ const sequenceCounterSchema = new mongoose.Schema(
       prefix: { type: String },
       padLength: { type: Number },
       startNumber: { type: Number },
-      tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', default: null }
+      tenantId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tenant",
+        default: null,
+      },
     },
-    updatedAt: { type: Date, default: Date.now }
+    updatedAt: { type: Date, default: Date.now },
   },
-  { collection: 'sequence_counters' }
+  { collection: "sequence_counters" }
 );
 
 const SequenceCounter =
-  mongoose.models.SequenceCounter || mongoose.model('SequenceCounter', sequenceCounterSchema);
+  mongoose.models.SequenceCounter ||
+  mongoose.model("SequenceCounter", sequenceCounterSchema);
 
 /**
  * Configuration for different entity types
@@ -45,136 +50,136 @@ const SequenceCounter =
  */
 const ENTITY_CONFIG = {
   // Invoice
-  'INVC': { 
-    startNumber: 50001, 
+  INVC: {
+    startNumber: 50001,
     padLength: 5,
-    fieldName: 'invoiceCode',
-    maxRetries: 5
+    fieldName: "invoiceCode",
+    maxRetries: 5,
   },
   // Wallet
-  'WLT': { 
-    startNumber: 50001, 
+  WLT: {
+    startNumber: 50001,
     padLength: 5,
-    fieldName: 'walletCode',
-    maxRetries: 5
+    fieldName: "walletCode",
+    maxRetries: 5,
   },
   // Withdrawal
-  'WDL': { 
-    startNumber: 1, 
+  WDL: {
+    startNumber: 1,
     padLength: 5,
-    fieldName: 'withdrawalCode',
-    maxRetries: 5
+    fieldName: "withdrawalCode",
+    maxRetries: 5,
   },
   // Receipt
-  'RCP': { 
-    startNumber: 50001, 
+  RCP: {
+    startNumber: 50001,
     padLength: 5,
-    fieldName: 'receiptCode',
-    maxRetries: 10  // Increased retries due to frequent conflicts
+    fieldName: "receiptCode",
+    maxRetries: 10, // Increased retries due to frequent conflicts
   },
   // Payment (PMT) - alternate prefix used in some controllers
-  'PMT': { 
-    startNumber: 50001, 
+  PMT: {
+    startNumber: 50001,
     padLength: 5,
-    fieldName: 'paymentCode',
-    maxRetries: 5
+    fieldName: "paymentCode",
+    maxRetries: 5,
   },
   // Organization Request
-  'ORG': { 
-    startNumber: 1, 
+  ORG: {
+    startNumber: 1,
     padLength: 5,
-    fieldName: 'organizationRequestCode',
-    maxRetries: 5
+    fieldName: "organizationRequestCode",
+    maxRetries: 5,
   },
   // Outsource Interviewer Request
-  'OINT': { 
-    startNumber: 1, 
+  OINT: {
+    startNumber: 1,
     padLength: 5,
-    fieldName: 'outsourceRequestCode',
-    maxRetries: 5
+    fieldName: "outsourceRequestCode",
+    maxRetries: 5,
   },
   // Interview
-  'INT': { 
-    startNumber: 1, 
+  INT: {
+    startNumber: 1,
     padLength: 5,
-    fieldName: 'interviewCode',
-    maxRetries: 5
+    fieldName: "interviewCode",
+    maxRetries: 5,
   },
   // Interview Request
-  'INT-RQST': { 
-    startNumber: 1, 
+  "INT-RQST": {
+    startNumber: 1,
     padLength: 5,
-    fieldName: 'interviewRequestCode',
-    maxRetries: 5
+    fieldName: "interviewRequestCode",
+    maxRetries: 5,
   },
   // Mock Interview
-  'MINT': { 
-    startNumber: 50001,  // Starting from 50001 as per requirement
+  MINT: {
+    startNumber: 50001, // Starting from 50001 as per requirement
     padLength: 5,
-    fieldName: 'mockInterviewCode',
-    maxRetries: 5
+    fieldName: "mockInterviewCode",
+    maxRetries: 5,
   },
   // Support Desk Ticket
-  'SPT': { 
-    startNumber: 50001,  // Starting from 50001 as per requirement
+  SPT: {
+    startNumber: 50001, // Starting from 50001 as per requirement
     padLength: 5,
-    fieldName: 'ticketCode',
-    maxRetries: 5
+    fieldName: "ticketCode",
+    maxRetries: 5,
   },
   // Task
-  'TSK': { 
-    startNumber: 1, 
+  TSK: {
+    startNumber: 1,
     padLength: 5,
-    fieldName: 'taskCode',
-    maxRetries: 5
+    fieldName: "taskCode",
+    maxRetries: 5,
   },
   // Position
-  'POS': { 
-    startNumber: 1, 
+  POS: {
+    startNumber: 1,
     padLength: 5,
-    fieldName: 'positionCode',
-    maxRetries: 5
+    fieldName: "positionCode",
+    maxRetries: 5,
   },
   // Assessment Template
-  'ASMT-TPL': { 
-    startNumber: 1, 
+  "ASMT-TPL": {
+    startNumber: 1,
     padLength: 5,
-    fieldName: 'assessmentTemplateCode',
-    maxRetries: 5
+    fieldName: "assessmentTemplateCode",
+    maxRetries: 5,
   },
   // ScheduleAssessment
-  'ASMT': { 
-    startNumber: 1, 
+  ASMT: {
+    startNumber: 1,
     padLength: 5,
-    fieldName: 'scheduledAssessmentCode',
-    maxRetries: 5
+    fieldName: "scheduledAssessmentCode",
+    maxRetries: 5,
   },
   // Interview Template
-  'INT-TPL': { 
-    startNumber: 1, 
+  "INT-TPL": {
+    startNumber: 1,
     padLength: 5,
-    fieldName: 'interviewTemplateCode',
-    maxRetries: 5
+    fieldName: "interviewTemplateCode",
+    maxRetries: 5,
   },
   //loggingServices
-  'ILOG': { 
-    startNumber: 1, 
+  ILOG: {
+    startNumber: 1,
     padLength: 5,
-    fieldName: 'logId',
-    maxRetries: 5
+    fieldName: "logId",
+    maxRetries: 5,
   },
   // Default configuration for custom prefixes
-  'DEFAULT': { 
-    startNumber: 50001, 
+  DEFAULT: {
+    startNumber: 50001,
     padLength: 5,
-    fieldName: 'code',
-    maxRetries: 5
-  }
+    fieldName: "code",
+    maxRetries: 5,
+  },
 };
 
 /**
  * Generate a unique ID for any entity type
- * 
+ *
  * @param {string} prefix - The prefix for the ID (e.g., 'INVC', 'WLT', 'WD')
  * @param {Model} Model - The Mongoose model to query
  * @param {string} fieldName - The field name in the model that stores the unique ID
@@ -195,7 +200,7 @@ async function generateUniqueId(
   maxRetries = null
 ) {
   // Get configuration for this prefix
-  const config = ENTITY_CONFIG[prefix] || ENTITY_CONFIG['DEFAULT'];
+  const config = ENTITY_CONFIG[prefix] || ENTITY_CONFIG["DEFAULT"];
 
   // Use provided values or fall back to config
   const effectiveFieldName = fieldName || config.fieldName;
@@ -208,8 +213,16 @@ async function generateUniqueId(
   for (let attempts = 0; attempts < effectiveMaxRetries; attempts++) {
     try {
       // 1) Atomically get the next sequence number for this scope
-      const nextSeq = await getNextSequence(prefix, tenantId, effectiveStartNumber, effectivePadLength);
-      const uniqueId = `${prefix}-${String(nextSeq).padStart(effectivePadLength, '0')}`;
+      const nextSeq = await getNextSequence(
+        prefix,
+        tenantId,
+        effectiveStartNumber,
+        effectivePadLength
+      );
+      const uniqueId = `${prefix}-${String(nextSeq).padStart(
+        effectivePadLength,
+        "0"
+      )}`;
 
       // 2) Quick existence check (should almost never hit in normal flow)
       const existingQuery = { [effectiveFieldName]: uniqueId };
@@ -217,14 +230,11 @@ async function generateUniqueId(
       const exists = await Model.exists(existingQuery);
 
       if (!exists) {
-        console.log(
-          `[UniqueID] Generated ${uniqueId} for ${Model.modelName}${tenantId ? ` (tenant: ${tenantId})` : ''} (seq)`
-        );
         return uniqueId;
       }
 
       // 3) Rare case: legacy data ahead of counter. Bump counter to current max and retry.
-       const maxExisting = await getMaxExistingNumber(
+      const maxExisting = await getMaxExistingNumber(
         Model,
         effectiveFieldName,
         prefix,
@@ -239,7 +249,9 @@ async function generateUniqueId(
       );
 
       console.warn(
-        `[UniqueID] Detected existing ${uniqueId} in ${Model.modelName}. Advanced sequence to ${Math.max(
+        `[UniqueID] Detected existing ${uniqueId} in ${
+          Model.modelName
+        }. Advanced sequence to ${Math.max(
           maxExisting,
           nextSeq
         )} and retrying...`
@@ -247,7 +259,10 @@ async function generateUniqueId(
       // continue;
     } catch (error) {
       // For database connection errors, throw immediately
-      if (error?.name === 'MongoNetworkError' || error?.name === 'MongoServerError') {
+      if (
+        error?.name === "MongoNetworkError" ||
+        error?.name === "MongoServerError"
+      ) {
         throw error;
       }
 
@@ -265,72 +280,68 @@ async function generateUniqueId(
   );
 }
 
-
-
-
 /**
  * Validate if a unique ID follows the correct format
- * 
+ *
  * @param {string} id - The ID to validate
  * @param {string} prefix - The expected prefix
  * @returns {boolean} True if valid format
  */
 function validateUniqueId(id, prefix) {
-  if (!id || typeof id !== 'string') {
+  if (!id || typeof id !== "string") {
     return false;
   }
-  
-  const config = ENTITY_CONFIG[prefix] || ENTITY_CONFIG['DEFAULT'];
+
+  const config = ENTITY_CONFIG[prefix] || ENTITY_CONFIG["DEFAULT"];
   const regex = new RegExp(`^${prefix}-\\d{${config.padLength}}$`);
-  
+
   return regex.test(id);
 }
 
 /**
  * Extract the numeric part from a unique ID
- * 
+ *
  * @param {string} id - The ID to parse
  * @param {string} prefix - The prefix to remove
  * @returns {number|null} The numeric part or null if invalid
  */
 function extractNumberFromId(id, prefix) {
-  if (!id || typeof id !== 'string') {
+  if (!id || typeof id !== "string") {
     return null;
   }
-  
+
   const regex = new RegExp(`${prefix}-(\\d+)`);
   const match = id.match(regex);
-  
+
   if (match) {
     return parseInt(match[1], 10);
   }
-  
+
   return null;
 }
 
 /**
  * Get configuration for a specific prefix
- * 
+ *
  * @param {string} prefix - The prefix to get config for
  * @returns {Object} Configuration object
  */
 function getConfig(prefix) {
-  return ENTITY_CONFIG[prefix] || ENTITY_CONFIG['DEFAULT'];
+  return ENTITY_CONFIG[prefix] || ENTITY_CONFIG["DEFAULT"];
 }
 
 /**
  * Add or update configuration for a custom prefix
- * 
+ *
  * @param {string} prefix - The prefix to configure
  * @param {Object} config - Configuration object
  */
 function configurePrefix(prefix, config) {
   ENTITY_CONFIG[prefix] = {
-    ...ENTITY_CONFIG['DEFAULT'],
-    ...config
+    ...ENTITY_CONFIG["DEFAULT"],
+    ...config,
   };
 }
-
 
 /**
  * Helpers (internal)
@@ -350,31 +361,27 @@ async function getNextSequence(prefix, tenantId, startNumber, padLength) {
     {
       $set: {
         seq: {
-          $add: [
-            { $ifNull: [ '$seq', Math.max((startNumber ?? 1) - 1, 0) ] },
-            1
-          ]
+          $add: [{ $ifNull: ["$seq", Math.max((startNumber ?? 1) - 1, 0)] }, 1],
         },
         updatedAt: now,
         meta: {
           prefix,
           padLength,
           startNumber,
-          tenantId: tenantId || null
-        }
-      }
-    }
+          tenantId: tenantId || null,
+        },
+      },
+    },
   ];
 
   // Use native driver to avoid Mongoose modifier-path conflict checks
   const coll = SequenceCounter.collection;
   let res;
   try {
-    res = await coll.findOneAndUpdate(
-      { key },
-      pipeline,
-      { upsert: true, returnDocument: 'after' }
-    );
+    res = await coll.findOneAndUpdate({ key }, pipeline, {
+      upsert: true,
+      returnDocument: "after",
+    });
   } catch (e) {
     try {
       // Fallback for older drivers/servers without pipeline update support
@@ -384,9 +391,14 @@ async function getNextSequence(prefix, tenantId, startNumber, padLength) {
         {
           $setOnInsert: {
             seq: Math.max((startNumber ?? 1) - 1, 0),
-            meta: { prefix, padLength, startNumber, tenantId: tenantId || null }
+            meta: {
+              prefix,
+              padLength,
+              startNumber,
+              tenantId: tenantId || null,
+            },
           },
-          $set: { updatedAt: now }
+          $set: { updatedAt: now },
         },
         { upsert: true }
       );
@@ -395,7 +407,7 @@ async function getNextSequence(prefix, tenantId, startNumber, padLength) {
       res = await coll.findOneAndUpdate(
         { key },
         { $inc: { seq: 1 }, $set: { updatedAt: now } },
-        { returnDocument: 'after' }
+        { returnDocument: "after" }
       );
     } catch (e2) {
       // Last-chance fallback for very old drivers
@@ -411,17 +423,26 @@ async function getNextSequence(prefix, tenantId, startNumber, padLength) {
   return doc.seq;
 }
 
-async function getMaxExistingNumber(Model, fieldName, prefix, tenantId, startNumber) {
+async function getMaxExistingNumber(
+  Model,
+  fieldName,
+  prefix,
+  tenantId,
+  startNumber
+) {
   const query = {
     [fieldName]: {
       $exists: true,
-      $regex: new RegExp(`^${prefix}-\\d+$`)
-    }
+      $regex: new RegExp(`^${prefix}-\\d+$`),
+    },
   };
   if (tenantId) query.tenantId = tenantId;
 
   const sortQuery = { [fieldName]: -1 };
-  const lastDoc = await Model.findOne(query).sort(sortQuery).select(fieldName).lean();
+  const lastDoc = await Model.findOne(query)
+    .sort(sortQuery)
+    .select(fieldName)
+    .lean();
 
   if (lastDoc?.[fieldName]) {
     const regex = new RegExp(`${prefix}-(\\d+)`);
@@ -435,12 +456,11 @@ async function getMaxExistingNumber(Model, fieldName, prefix, tenantId, startNum
   return (startNumber ?? 1) - 1;
 }
 
-
 module.exports = {
   generateUniqueId,
   validateUniqueId,
   extractNumberFromId,
   getConfig,
   configurePrefix,
-  ENTITY_CONFIG
+  ENTITY_CONFIG,
 };

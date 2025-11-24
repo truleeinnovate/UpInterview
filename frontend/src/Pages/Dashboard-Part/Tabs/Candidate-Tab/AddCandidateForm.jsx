@@ -251,8 +251,6 @@ const AddCandidateForm = ({
     }
   }, [id, candidateData]);
 
-  console.log("candidate Form Details", formData);
-
   // Ensure form starts with 3 default skill rows when in Add mode
   useEffect(() => {
     if (!id && entries.length === 0) {
@@ -755,8 +753,6 @@ const AddCandidateForm = ({
   //     value: q?.QualificationName,
   //     label: q?.QualificationName,
   //   })) || [];
-
-  console.log("qualifications", qualifications);
 
   const qualificationOptionsRS = useMemo(
     () =>

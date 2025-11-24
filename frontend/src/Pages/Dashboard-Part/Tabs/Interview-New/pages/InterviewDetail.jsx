@@ -168,7 +168,6 @@ const InterviewDetail = () => {
     }, [interview]);
 
     const handleInitiateAction = async (round, action) => {
-        console.log("handleInitiateAction called:", { round, action });
         try {
             // Update round status and fees via API
             await updateInterviewStatus({
@@ -438,7 +437,6 @@ const InterviewDetail = () => {
         setIsModalOpen(false);
     };
 
-    console.log("interview?.status", interview?.status);
     const canAddRound = () => {
         return interview?.status === "Draft" || interview?.status === "InProgress";
     };
@@ -448,9 +446,6 @@ const InterviewDetail = () => {
     };
 
     const handleEditRound = (round, options = {}) => {
-        // Pass isReschedule to the form via navigation state or context
-        console.log("options", options);
-        console.log("round", round);
         navigate(`/interviews/${id}/rounds/${round._id}`, {
             state: { isReschedule: options.isReschedule },
         });
@@ -485,10 +480,10 @@ const InterviewDetail = () => {
     };
 
     // Handle opening entity in new modal
-    const handleOpenEntityInNew = (entity, type) => {
-        setEntityDetailsModal({ entity, type });
-        setEntityDetailsSidebar(null);
-    };
+    // const handleOpenEntityInNew = (entity, type) => {
+    //     setEntityDetailsModal({ entity, type });
+    //     setEntityDetailsSidebar(null);
+    // };
 
     // Create breadcrumb items with status
     const breadcrumbItems = [

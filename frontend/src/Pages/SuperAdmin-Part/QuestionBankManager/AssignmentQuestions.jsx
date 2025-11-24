@@ -85,11 +85,6 @@ const AssignmentQuestions = ({
               </button>
             </div>
 
-            {/* Question */}
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              {q?.questionOrderId}. {q?.questionText}
-            </h3>
-
             {/* Difficulty + Category */}
             <div className="flex flex-wrap gap-2 mb-3">
               <span className="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-600">
@@ -104,6 +99,13 @@ const AssignmentQuestions = ({
                 </span>
               )}
             </div>
+
+            {/* Question */}
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {q?.questionOrderId}. {q?.questionText}
+            </h3>
+
+            
 
             {/* Answer / Explanation */}
             {/* v1.0.1 <------------------------------------------------ */}

@@ -267,7 +267,6 @@ const Dashboard = () => {
     undefined,
     type
   );
-  console.log("INTERVIEW DATA ===========================> ", interviewData);
   const { currentMonthCount, lastMonthCount, trend, trendValue } =
     calculateTotalInterviewsCounts(interviewData);
 
@@ -291,10 +290,6 @@ const Dashboard = () => {
 
   // Assessments
   const { scheduleData } = useScheduleAssessments();
-  console.log(
-    "SCHEDULE ASSESSMENT DATA ===========================> ",
-    scheduleData
-  );
   const {
     currentMonthCount: assessmentCurrent,
     lastMonthCount: assessmentLast,
@@ -375,8 +370,6 @@ const Dashboard = () => {
   };
 
   const handleLayoutChange = (newLayout) => {
-    // Handle layout changes from drag & drop
-    console.log("Layout changed:", newLayout);
   };
 
   const getVisibleKPIs = () => {

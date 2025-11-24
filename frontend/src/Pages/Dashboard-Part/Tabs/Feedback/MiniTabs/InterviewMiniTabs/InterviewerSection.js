@@ -50,7 +50,6 @@ const InterviewerSectionComponent = ({
   const feedbackData = React.useMemo(() => {
     return rawFeedbackData || interviewData || {};
   }, [rawFeedbackData, interviewData]);
-  console.log("isEditMode", isEditMode);
 
   // console.log("feedbackData",interviewData?.questionFeedback);
 
@@ -98,7 +97,6 @@ const InterviewerSectionComponent = ({
   ////<---v1.0.2-----
   // Merge persisted feedback into interviewer questions without overwriting current UI state
   const questionsWithFeedback = React.useMemo(() => {
-  
     const existingQuestions = filteredInterviewerQuestions || [];
 
     // Get newly added questions from interviewerSectionData that are not in existing questions
@@ -110,17 +108,19 @@ const InterviewerSectionComponent = ({
     //   });
 
     // });
-      const newlyAddedQuestions = (interviewerSectionData || []).filter(
-    (newQ) => {
-      const newId = newQ.questionId || newQ._id || newQ.id;
-      const isNotDuplicate = !existingQuestions.some((existingQ) => {
-        const existingId = existingQ.questionId || existingQ._id || existingQ.id;
-        return existingId === newId;
-      });
-      const isAddedByInterviewer = (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
-      return isNotDuplicate && isAddedByInterviewer;
-    }
-  );
+    const newlyAddedQuestions = (interviewerSectionData || []).filter(
+      (newQ) => {
+        const newId = newQ.questionId || newQ._id || newQ.id;
+        const isNotDuplicate = !existingQuestions.some((existingQ) => {
+          const existingId =
+            existingQ.questionId || existingQ._id || existingQ.id;
+          return existingId === newId;
+        });
+        const isAddedByInterviewer =
+          (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
+        return isNotDuplicate && isAddedByInterviewer;
+      }
+    );
     // const newlyAddedQuestions = (interviewerSectionData || []).filter(
     //   (newQ) => {
     //     const newId = newQ.questionId || newQ._id || newQ.id;
@@ -136,7 +136,7 @@ const InterviewerSectionComponent = ({
     // );
 
     // Combine both arrays
-    
+
     const allCombinedQuestions = [...existingQuestions, ...newlyAddedQuestions];
 
     const shouldApplyFeedback =
@@ -144,7 +144,6 @@ const InterviewerSectionComponent = ({
       feedbackData &&
       Array.isArray(feedbackData.questionFeedback) &&
       feedbackData.questionFeedback.length > 0;
-    console.log("shouldApplyFeedback", shouldApplyFeedback, isAddMode);
 
     if (!shouldApplyFeedback) return allCombinedQuestions;
     const feedbackMap = feedbackData.questionFeedback.reduce((acc, f) => {
@@ -169,7 +168,6 @@ const InterviewerSectionComponent = ({
       return undefined;
     };
     return allCombinedQuestions.map((item) => {
-      console.log("item", item);
       const id = item.questionId || item._id;
       const f = id ? feedbackMap[id] : null;
       if (!f) return item;
@@ -208,8 +206,6 @@ const InterviewerSectionComponent = ({
   ]);
   ////---v1.0.2----->
 
-  console.log("questionsWithFeedback", questionsWithFeedback);
-
   // const [interviewerSection, setInterviewerSection] = useState(
   //   isAddMode ? [] : [
 
@@ -231,30 +227,34 @@ const InterviewerSectionComponent = ({
   // });
 
   // Fixed version of useState initialization
-// const [interviewerSection, setInterviewerSection] = useState(() => {
-//   if (isEditMode || isViewMode) {
-//     // In edit/view mode, use the questions with feedback data
-//     return questionsWithFeedback || [];
-//   } else if (isAddMode) {
-//     // In add mode, start with existing data or empty array
-//     return interviewerSectionData || [];
-//   } else {
-//     // Default case
-//     return [];
-//   }
-// });
+  // const [interviewerSection, setInterviewerSection] = useState(() => {
+  //   if (isEditMode || isViewMode) {
+  //     // In edit/view mode, use the questions with feedback data
+  //     return questionsWithFeedback || [];
+  //   } else if (isAddMode) {
+  //     // In add mode, start with existing data or empty array
+  //     return interviewerSectionData || [];
+  //   } else {
+  //     // Default case
+  //     return [];
+  //   }
+  // });
 
-// Enhanced state initialization
-const [interviewerSection, setInterviewerSection] = useState(() => {
-  // For initial load, use the data that's already passed in
-  if (interviewerSectionData && interviewerSectionData.length > 0) {
-    return interviewerSectionData;
-  }
-  if ((isEditMode || isViewMode) && questionsWithFeedback && questionsWithFeedback.length > 0) {
-    return questionsWithFeedback;
-  }
-  return [];
-});
+  // Enhanced state initialization
+  const [interviewerSection, setInterviewerSection] = useState(() => {
+    // For initial load, use the data that's already passed in
+    if (interviewerSectionData && interviewerSectionData.length > 0) {
+      return interviewerSectionData;
+    }
+    if (
+      (isEditMode || isViewMode) &&
+      questionsWithFeedback &&
+      questionsWithFeedback.length > 0
+    ) {
+      return questionsWithFeedback;
+    }
+    return [];
+  });
 
   // const [interviewerSection, setInterviewerSection] = useState(() => {
   //   return isAddMode || isEditMode ? questionsWithFeedback : [];
@@ -284,24 +284,29 @@ const [interviewerSection, setInterviewerSection] = useState(() => {
   //   }
   // }, [questionsWithFeedback, isEditMode, setInterviewerSectionData]);
 
+  // REPLACE with this stable version:
+  useEffect(() => {
+    // Only update if we're in edit/view mode and have questions with feedback
+    if (
+      (isEditMode || isViewMode) &&
+      questionsWithFeedback &&
+      questionsWithFeedback.length > 0
+    ) {
+      const currentIds = interviewerSection
+        .map((q) => q.questionId || q.id)
+        .sort()
+        .join(",");
+      const newIds = questionsWithFeedback
+        .map((q) => q.questionId || q.id)
+        .sort()
+        .join(",");
 
-// REPLACE with this stable version:
-useEffect(() => {
-  // Only update if we're in edit/view mode and have questions with feedback
-  if ((isEditMode || isViewMode) && questionsWithFeedback && questionsWithFeedback.length > 0) {
-    const currentIds = interviewerSection.map(q => q.questionId || q.id).sort().join(',');
-    const newIds = questionsWithFeedback.map(q => q.questionId || q.id).sort().join(',');
-    
-    // Only update if the data has actually changed
-    if (currentIds !== newIds) {
-      setInterviewerSection(questionsWithFeedback);
+      // Only update if the data has actually changed
+      if (currentIds !== newIds) {
+        setInterviewerSection(questionsWithFeedback);
+      }
     }
-  }
-}, [questionsWithFeedback, isEditMode, isViewMode]);
-
-
-
-
+  }, [questionsWithFeedback, isEditMode, isViewMode]);
 
   useEffect(() => {
     if (interviewerSection.length > 0 && selectedQuestion === null) {
@@ -357,9 +362,12 @@ useEffect(() => {
       if (questionExists) {
         return prev.map((q) =>
           (q.questionId || q.id) === questionId
-            ? { ...q, note: notes, notesBool: true,
-               ...(isEditMode && { isEdited: true }) // Mark as edited in edit mode
-             }
+            ? {
+                ...q,
+                note: notes,
+                notesBool: true,
+                ...(isEditMode && { isEdited: true }), // Mark as edited in edit mode
+              }
             : q
         );
       } else {
@@ -375,8 +383,8 @@ useEffect(() => {
               questionId: questionId,
               note: notes,
               notesBool: true,
-                addedBy: 'interviewer',
-            ...(isEditMode && { isEdited: true })
+              addedBy: "interviewer",
+              ...(isEditMode && { isEdited: true }),
             },
           ];
         }
@@ -508,46 +516,45 @@ useEffect(() => {
 
   // Function to handle delete note
 
- const updateQuestionsInAddedSectionFromQuestionBank = (questions) => {
-  console.log("Updating questions from question bank:", questions);
+  //  const updateQuestionsInAddedSectionFromQuestionBank = (questions) => {
 
-  if (questions && questions.length > 0) {
-    const newQuestions = questions.map((question, index) => ({
-      id: question._id || `qb-${Date.now()}-${index}`, // Use question ID if available
-      questionId: question._id, // Store the original question ID
-      question: question.question || question.title || "N/A",
-      expectedAnswer: question.expectedAnswer || question.answer || "N/A",
-      category: question.category || "N/A",
-      difficulty: question.difficulty || "N/A",
-      mandatory: question.mandatory || false,
-      isAnswered: "Not Answered",
-      notesBool: false,
-      note: "",
-      addedBy: 'interviewer',
-      // Edit mode specific fields
-      ...((isEditMode || isAddMode) && {
-        isEdited: true,
-        originalData: question,
-      }),
-    }));
+  //   if (questions && questions.length > 0) {
+  //     const newQuestions = questions.map((question, index) => ({
+  //       id: question._id || `qb-${Date.now()}-${index}`, // Use question ID if available
+  //       questionId: question._id, // Store the original question ID
+  //       question: question.question || question.title || "N/A",
+  //       expectedAnswer: question.expectedAnswer || question.answer || "N/A",
+  //       category: question.category || "N/A",
+  //       difficulty: question.difficulty || "N/A",
+  //       mandatory: question.mandatory || false,
+  //       isAnswered: "Not Answered",
+  //       notesBool: false,
+  //       note: "",
+  //       addedBy: 'interviewer',
+  //       // Edit mode specific fields
+  //       ...((isEditMode || isAddMode) && {
+  //         isEdited: true,
+  //         originalData: question,
+  //       }),
+  //     }));
 
-    // Update local state
-    setInterviewerSection((prev) => {
-      const existingIds = new Set(prev.map(q => q.questionId || q.id));
-      const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q.questionId || q.id));
-      return [...prev, ...uniqueNewQuestions];
-    });
+  //     // Update local state
+  //     setInterviewerSection((prev) => {
+  //       const existingIds = new Set(prev.map(q => q.questionId || q.id));
+  //       const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q.questionId || q.id));
+  //       return [...prev, ...uniqueNewQuestions];
+  //     });
 
-    // Update parent data - this should trigger the parent to re-render properly
-    setInterviewerSectionData((prev) => {
-      const existingIds = new Set(prev.map(q => q.questionId || q.id));
-      const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q.questionId || q.id));
-      return [...prev, ...uniqueNewQuestions];
-    });
-    
-    setIsQuestionBankOpen(false);
-  }
-};
+  //     // Update parent data - this should trigger the parent to re-render properly
+  //     setInterviewerSectionData((prev) => {
+  //       const existingIds = new Set(prev.map(q => q.questionId || q.id));
+  //       const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q.questionId || q.id));
+  //       return [...prev, ...uniqueNewQuestions];
+  //     });
+
+  //     setIsQuestionBankOpen(false);
+  //   }
+  // };
 
   // const onClickDeleteNote = (id) => {
   //   setInterviewerSectionData((prev) =>
@@ -575,9 +582,11 @@ useEffect(() => {
       if (questionExists) {
         return prev.map((q) =>
           (q.questionId || q.id) === questionId
-            ? { ...q, isAnswered: value,
-                    ...(isEditMode && { isEdited: true }) // Mark as edited
-             }
+            ? {
+                ...q,
+                isAnswered: value,
+                ...(isEditMode && { isEdited: true }), // Mark as edited
+              }
             : q
         );
       } else {
@@ -598,8 +607,8 @@ useEffect(() => {
                 originalQuestion.interviewerFeedback?.dislikeReason || "",
               note: originalQuestion.interviewerFeedback?.note || "",
               notesBool: !!originalQuestion.interviewerFeedback?.note,
-               addedBy: 'interviewer',
-            ...(isEditMode && { isEdited: true })
+              addedBy: "interviewer",
+              ...(isEditMode && { isEdited: true }),
             },
           ];
         }
@@ -862,7 +871,7 @@ useEffect(() => {
               The questions listed below are interviewer's choice.
             </p>
           </div>
-          {isViewMode  || decodedData?.schedule ? (
+          {isViewMode || decodedData?.schedule ? (
             <div></div>
           ) : (
             <div className="flex items-center gap-2">

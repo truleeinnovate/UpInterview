@@ -49,7 +49,6 @@ const DropdownWithSearchField = forwardRef(
       // Attach keyboard events to the react-select input
       const attachKeyboardEvents = () => {
         if (inputRef.current) {
-          console.log("Attempting to attach keyboard events");
           // Find the react-select input element
           const selectContainer = inputRef.current.closest(".rs__control");
           if (selectContainer) {
@@ -58,7 +57,6 @@ const DropdownWithSearchField = forwardRef(
               inputElement &&
               !inputElement.hasAttribute("data-keyboard-attached")
             ) {
-              console.log("Attaching keyboard events to react-select input");
 
               // Strongly discourage browser autofill on this internal input
               inputElement.setAttribute("autocomplete", "new-password");
@@ -69,28 +67,18 @@ const DropdownWithSearchField = forwardRef(
               }
 
               inputElement.addEventListener("keydown", (e) => {
-                console.log(
-                  "React-select input keydown:",
-                  e.key,
-                  e.target.value
-                );
                 if (onKeyDown) onKeyDown(e);
               });
               inputElement.setAttribute("data-keyboard-attached", "true");
-              console.log("Keyboard events attached successfully");
             } else if (
               inputElement &&
               inputElement.hasAttribute("data-keyboard-attached")
             ) {
-              console.log("Keyboard events already attached");
             } else {
-              console.log("Input element not found in select container");
             }
           } else {
-            console.log("Select container (.rs__control) not found");
           }
         } else {
-          // console.log('inputRef.current is null');
         }
       };
 
@@ -163,7 +151,6 @@ const DropdownWithSearchField = forwardRef(
     componentsMap.NoOptionsMessage = NoOptionsMessage;
 
     const handleKeyDown = (e) => {
-      console.log("Key pressed:", e.key, "Value:", e.target.value);
 
       // Only process Enter key for creatable fields or when allowCreateOnEnter is true
       if (e.key === "Enter" && (creatable || allowCreateOnEnter)) {
@@ -172,9 +159,6 @@ const DropdownWithSearchField = forwardRef(
         if (inputValue && inputValue.trim().length > 0) {
           e.stopPropagation();
           e.preventDefault();
-          console.log(
-            "Enter pressed with value, calling onKeyDown with create action"
-          );
           if (onKeyDown) {
             // Pass a custom event with create action
             const createEvent = {

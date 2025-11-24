@@ -24,7 +24,6 @@ import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.
 function AssessmentView() {
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
   const { id } = useParams();
-  console.log("ASSESSMENT ID ==========================================> ", id);
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   // <-------------------------------v1.0.4

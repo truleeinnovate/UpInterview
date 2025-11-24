@@ -1,20 +1,22 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { fetchFilterData } from '../api.js';
-import { usePermissions } from '../Context/PermissionsContext';
-import axios from 'axios';
-import toast from 'react-hot-toast';
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { fetchFilterData } from "../api.js";
+import { usePermissions } from "../Context/PermissionsContext";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 export const useFeedbacks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const hasViewPermission = effectivePermissions?.Feedback?.View;
   const params = filters;
 
-
-
   return useQuery({
-    queryKey: ['feedbacks', filters],
+    queryKey: ["feedbacks", filters],
     queryFn: async () => {
-      const data = await fetchFilterData('feedback', effectivePermissions,params);
+      const data = await fetchFilterData(
+        "feedback",
+        effectivePermissions,
+        params
+      );
       return data.reverse();
     },
     enabled: !!hasViewPermission && isInitialized,
@@ -30,7 +32,10 @@ export const useFeedbacks = (filters = {}) => {
 export const useCreateFeedback = () => {
   return useMutation({
     mutationFn: async (feedbackData) => {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/feedback/create`, feedbackData);
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/feedback/create`,
+        feedbackData
+      );
       return response.data;
     },
     onError: (error) => {
@@ -48,29 +53,26 @@ export const useCreateFeedback = () => {
 export const useUpdateFeedback = () => {
   return useMutation({
     mutationFn: async ({ feedbackId, feedbackData }) => {
-      const response = await axios.put(`${process.env.REACT_APP_API_URL}/feedback/${feedbackId}`, feedbackData);
+      const response = await axios.put(
+        `${process.env.REACT_APP_API_URL}/feedback/${feedbackId}`,
+        feedbackData
+      );
       return response.data;
     },
     onError: (error) => {
-      console.error('Error updating feedback:', error);
+      console.error("Error updating feedback:", error);
       throw error;
     },
   });
 };
 
-
-
 export const useFeedbackData = (roundId, interviewerId) => {
   return useQuery({
-    queryKey: ['feedbackData', roundId, interviewerId],
+    queryKey: ["feedbackData", roundId, interviewerId],
     queryFn: async () => {
       if (!roundId) {
-        console.log('No round ID provided, skipping feedback fetch');
         return null;
       }
-
-      console.log('🔍 Fetching feedback data for round ID:', roundId);
-      console.log('👤 Interviewer ID for filtering:', interviewerId);
 
       // Build URL with query parameters
       let url = `${process.env.REACT_APP_API_URL}/feedback/round/${roundId}`;
@@ -78,29 +80,19 @@ export const useFeedbackData = (roundId, interviewerId) => {
         url += `?interviewerId=${interviewerId}`;
       }
 
-      console.log('🌐 Making API call to:', url);
-
       const response = await axios.get(url, {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           // 'Authorization': `Bearer ${Cookies.get('authToken')}`
         },
       });
 
       if (response.data.success) {
-        console.log('✅ Feedback data fetched successfully:', response.data.data);
-        console.log('📊 Response summary:', {
-          hasInterviewRound: !!response.data.data.interviewRound,
-          hasCandidate: !!response.data.data.candidate,
-          hasPosition: !!response.data.data.position,
-          interviewersCount: response.data.data.interviewers?.length || 0,
-          feedbacksCount: response.data.data.feedbacks?.length || 0,
-          interviewQuestionsCount: response.data.data.interviewQuestions?.length || 0,
-          filteredByInterviewer: response.data.data.filteredByInterviewer || false
-        });
         return response.data.data;
       } else {
-        throw new Error(response.data.message || 'Failed to fetch feedback data');
+        throw new Error(
+          response.data.message || "Failed to fetch feedback data"
+        );
       }
     },
     enabled: !!roundId, // only run if roundId exists
@@ -109,6 +101,6 @@ export const useFeedbackData = (roundId, interviewerId) => {
     gcTime: 1000 * 60 * 30, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    refetchOnReconnect: false
+    refetchOnReconnect: false,
   });
 };

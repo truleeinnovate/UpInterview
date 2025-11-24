@@ -48,14 +48,6 @@ export const useMasterData = (paramsData, pageType, type) => {
   const queryClient = useQueryClient();
   const staleTime = ONE_WEEK; // 7 days - master data rarely changes
   const retry = 1;
-  console.log(
-    "useMasterData called with paramsData:",
-    paramsData,
-    "pageType:",
-    pageType,
-    "type:",
-    type
-  );
 
   // Individual queries for each master list (all disabled by default)
   const locationsQ = useOnDemandQuery(

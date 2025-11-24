@@ -48,107 +48,119 @@ export const useMockInterviews = () => {
   });
 
   // Add/Update mock interview mutation
-// In useMockInterviews.js - FIXED VERSION
-const addOrUpdateMockInterview = useMutation({
-  mutationFn: async (params) => {
-    const { formData, id, isEdit, userId, organizationId, resume, isResumeRemoved, round } = params;
+  // In useMockInterviews.js - FIXED VERSION
+  const addOrUpdateMockInterview = useMutation({
+    mutationFn: async (params) => {
+      const {
+        formData,
+        id,
+        isEdit,
+        userId,
+        organizationId,
+        resume,
+        isResumeRemoved,
+        round,
+      } = params;
 
-    // ✅ CASE 1: Updating just the round (meeting link update)
-    // if (round && id) {
-    //   // ✅ Normalize id to _id before sending
-    //   const normalizedRound = { ...round };
-    //   if (normalizedRound.id && !normalizedRound._id) {
-    //     normalizedRound._id = normalizedRound.id;
-    //     delete normalizedRound.id;
-    //   }
+      // ✅ CASE 1: Updating just the round (meeting link update)
+      // if (round && id) {
+      //   // ✅ Normalize id to _id before sending
+      //   const normalizedRound = { ...round };
+      //   if (normalizedRound.id && !normalizedRound._id) {
+      //     normalizedRound._id = normalizedRound.id;
+      //     delete normalizedRound.id;
+      //   }
 
-    //   const payload = { rounds: [normalizedRound] };
-    //   const response = await axios.patch(
-    //     `${config.REACT_APP_API_URL}/updateMockInterview/${id}`,
-    //     payload
-    //   );
-    //   return response.data;
-    // }
+      //   const payload = { rounds: [normalizedRound] };
+      //   const response = await axios.patch(
+      //     `${config.REACT_APP_API_URL}/updateMockInterview/${id}`,
+      //     payload
+      //   );
+      //   return response.data;
+      // }
 
+      // ✅ CASE 2: Normal full create/update
+      if (!formData) throw new Error("formData is required for create/update");
 
-    // ✅ CASE 2: Normal full create/update
-    if (!formData) throw new Error("formData is required for create/update");
-
-    // Safely build rounds - FIXED: Handle both array and object formats
-    let rounds = [];
-    if (formData.rounds) {
-      if (Array.isArray(formData.rounds)) {
-        rounds = formData.rounds;
-      } else if (typeof formData.rounds === 'object') {
-        rounds = [formData.rounds];
+      // Safely build rounds - FIXED: Handle both array and object formats
+      let rounds = [];
+      if (formData.rounds) {
+        if (Array.isArray(formData.rounds)) {
+          rounds = formData.rounds;
+        } else if (typeof formData.rounds === "object") {
+          rounds = [formData.rounds];
+        }
       }
-    }
 
-    // Set proper status based on interviewers
-    // const status = rounds.length > 0 && rounds[0]?.interviewers?.length > 0 ? "RequestSent" : "Draft";
+      // Set proper status based on interviewers
+      // const status = rounds.length > 0 && rounds[0]?.interviewers?.length > 0 ? "RequestSent" : "Draft";
 
-    // Format skills properly
-    const skills = formData.entries
-      ? formData.entries
-          .filter(e => e.skill || e.experience || e.expertise)
-          .map(e => ({ skill: e.skill, experience: e.experience, expertise: e.expertise }))
-      : formData.skills || [];
+      // Format skills properly
+      const skills = formData.entries
+        ? formData.entries
+            .filter((e) => e.skill || e.experience || e.expertise)
+            .map((e) => ({
+              skill: e.skill,
+              experience: e.experience,
+              expertise: e.expertise,
+            }))
+        : formData.skills || [];
 
-    // Build payload - FIXED: Include rounds only if they exist
-    const payload = {
-      skills,
-      Role: formData.Role || "",
-      candidateName: formData.candidateName || "",
-      higherQualification: formData.higherQualification || "",
-      currentExperience: formData.currentExperience || "",
-      technology: formData.technology || "",
-      jobDescription: formData.jobDescription || "",
-      createdById: userId,
-      lastModifiedById: userId,
-      ownerId: userId,
-      tenantId: organizationId,
-    };
+      // Build payload - FIXED: Include rounds only if they exist
+      const payload = {
+        skills,
+        Role: formData.Role || "",
+        candidateName: formData.candidateName || "",
+        higherQualification: formData.higherQualification || "",
+        currentExperience: formData.currentExperience || "",
+        technology: formData.technology || "",
+        jobDescription: formData.jobDescription || "",
+        createdById: userId,
+        lastModifiedById: userId,
+        ownerId: userId,
+        tenantId: organizationId,
+      };
 
-    // Only include rounds if they exist (for Page 2)
-    if (rounds.length > 0) {
-      payload.rounds = rounds.map(r => ({
-        ...r,
-        dateTime: formData.combinedDateTime || r.dateTime,
-        // status,
-        interviewers: Array.isArray(r.interviewers) ? r.interviewers : []
-      }));
-    }
-
-    const url = isEdit
-      ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
-      : `${config.REACT_APP_API_URL}/mockinterview`;
-
-    const method = isEdit ? "patch" : "post";
-    console.log("API Call:", { url, method, payload,isEdit });
-
-    const response = await axios[method](url, payload);
-    console.log("API Response:", response.data);
-
-    // Handle resume upload
-    const mockInterviewId = response.data.data?.mockInterview?._id || response.data.data?._id || response.data._id;
-    if (mockInterviewId) {
-      if (isResumeRemoved && !resume) {
-        await uploadFile(null, "resume", "mockInterview", mockInterviewId);
-      } else if (resume instanceof File) {
-        await uploadFile(resume, "resume", "mockInterview", mockInterviewId);
+      // Only include rounds if they exist (for Page 2)
+      if (rounds.length > 0) {
+        payload.rounds = rounds.map((r) => ({
+          ...r,
+          dateTime: formData.combinedDateTime || r.dateTime,
+          // status,
+          interviewers: Array.isArray(r.interviewers) ? r.interviewers : [],
+        }));
       }
-    }
 
-    return response.data;
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries(["mockinterviews"]);
-  },
-  onError: (error) => {
-    console.error("Mock interview error:", error);
-  },
-});
+      const url = isEdit
+        ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
+        : `${config.REACT_APP_API_URL}/mockinterview`;
 
+      const method = isEdit ? "patch" : "post";
+
+      const response = await axios[method](url, payload);
+
+      // Handle resume upload
+      const mockInterviewId =
+        response.data.data?.mockInterview?._id ||
+        response.data.data?._id ||
+        response.data._id;
+      if (mockInterviewId) {
+        if (isResumeRemoved && !resume) {
+          await uploadFile(null, "resume", "mockInterview", mockInterviewId);
+        } else if (resume instanceof File) {
+          await uploadFile(resume, "resume", "mockInterview", mockInterviewId);
+        }
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["mockinterviews"]);
+    },
+    onError: (error) => {
+      console.error("Mock interview error:", error);
+    },
+  });
 
   // Calculate loading states
   const isMutationLoading = addOrUpdateMockInterview.isPending;
@@ -167,8 +179,6 @@ const addOrUpdateMockInterview = useMutation({
     refetchMockInterviews,
   };
 };
-
-
 
 // // v1.0.0  -  mansoor  -  changes to save the mock interview
 // import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";

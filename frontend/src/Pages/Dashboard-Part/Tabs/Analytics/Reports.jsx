@@ -115,7 +115,6 @@ const Reports = () => {
   const handleFilterClick = () => {
     // In a real app, this would open/close a modal or sidebar filter
     setIsFilterPopupOpen((prev) => !prev);
-    console.log("Filter icon clicked!"); // A simple toggle for the active state to show LuFilterX
     setIsFilterActive((prev) => !prev);
   }; // ... existing tabs array ... // Filter report templates based on active tab AND search query/pagination
   // ------------------------------------------
@@ -167,18 +166,17 @@ const Reports = () => {
   ];
 
   // Filter report templates based on active tab
-  const getFilteredReportTemplates = () => {
-    if (activeTab === "all") {
-      return reportTemplates;
-    }
-    return reportTemplates.filter((template) => template.type === activeTab);
-  };
+  // const getFilteredReportTemplates = () => {
+  //   if (activeTab === "all") {
+  //     return reportTemplates;
+  //   }
+  //   return reportTemplates.filter((template) => template.type === activeTab);
+  // };
 
-  const handleAdvancedFiltersChange = (filters) => {
-    setAdvancedFilters(filters);
-    // Apply filters to report templates
-    console.log("Advanced filters applied:", filters);
-  };
+  // const handleAdvancedFiltersChange = (filters) => {
+  //   setAdvancedFilters(filters);
+  //   // Apply filters to report templates
+  // };
 
   const handleCustomization = (newSettings) => {
     setCustomSettings(newSettings);

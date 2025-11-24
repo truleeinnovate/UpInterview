@@ -9,48 +9,58 @@ import { usePermissions } from "../../Context/PermissionsContext";
 export const useTenants = ({
   page = 0,
   limit = 10,
-  search = '',
-  status = '',
-  subscriptionStatus = '',
-  plan = '',
-  createdDate = '',
-  minUsers = '',
-  maxUsers = '',
-  type = ''
+  search = "",
+  status = "",
+  subscriptionStatus = "",
+  plan = "",
+  createdDate = "",
+  minUsers = "",
+  maxUsers = "",
+  type = "",
 } = {}) => {
   const queryClient = useQueryClient();
   const { superAdminPermissions, isInitialized } = usePermissions();
 
   const hasViewPermission = superAdminPermissions?.Tenants?.View;
-  const hasAnyPermissions = superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
+  const hasAnyPermissions =
+    superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
 
   // Simple enabled logic - enable if we have permissions or if initialized
   const isEnabled = Boolean(hasAnyPermissions || isInitialized);
 
   // Build query params
   const queryParams = new URLSearchParams();
-  queryParams.append('page', page.toString());
-  queryParams.append('limit', limit.toString());
-  if (search) queryParams.append('search', search);
-  if (status) queryParams.append('status', status);
-  if (subscriptionStatus) queryParams.append('subscriptionStatus', subscriptionStatus);
-  if (plan) queryParams.append('plan', plan);
-  if (createdDate) queryParams.append('createdDate', createdDate);
-  if (minUsers) queryParams.append('minUsers', minUsers);
-  if (maxUsers) queryParams.append('maxUsers', maxUsers);
-  if (type) queryParams.append('type', type);
+  queryParams.append("page", page.toString());
+  queryParams.append("limit", limit.toString());
+  if (search) queryParams.append("search", search);
+  if (status) queryParams.append("status", status);
+  if (subscriptionStatus)
+    queryParams.append("subscriptionStatus", subscriptionStatus);
+  if (plan) queryParams.append("plan", plan);
+  if (createdDate) queryParams.append("createdDate", createdDate);
+  if (minUsers) queryParams.append("minUsers", minUsers);
+  if (maxUsers) queryParams.append("maxUsers", maxUsers);
+  if (type) queryParams.append("type", type);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["tenants", page, limit, search, status, subscriptionStatus, plan, createdDate, minUsers, maxUsers, type],
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: [
+      "tenants",
+      page,
+      limit,
+      search,
+      status,
+      subscriptionStatus,
+      plan,
+      createdDate,
+      minUsers,
+      maxUsers,
+      type,
+    ],
     queryFn: async () => {
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/Organization/all-organizations?${queryParams.toString()}`
+        `${
+          config.REACT_APP_API_URL
+        }/Organization/all-organizations?${queryParams.toString()}`
       );
       return response.data;
     },
@@ -97,7 +107,7 @@ export const useTenants = ({
       totalItems: 0,
       hasNext: false,
       hasPrev: false,
-      itemsPerPage: limit
+      itemsPerPage: limit,
     },
     isLoading,
     isError,
@@ -111,24 +121,15 @@ export const useTenants = ({
 
 // Individual tenant details by ID
 export const useTenantById = (id) => {
-    const queryClient = useQueryClient();
-  
-  // v1.0.0 <-------------------------------------------------------------------
-  console.log('2. CURRENT TENANT ID AT USE TENANT HOOK: ', id);
-  // v1.0.0 ------------------------------------------------------------------->
+  const queryClient = useQueryClient();
+
   const { superAdminPermissions, isInitialized } = usePermissions();
   const hasViewPermission = superAdminPermissions?.Tenants?.View;
-  const hasAnyPermissions = superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
+  const hasAnyPermissions =
+    superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
 
   // Simple enabled logic - enable if we have permissions or if initialized, and have an ID
   const isEnabled = Boolean((hasAnyPermissions || isInitialized) && id);
-
-  // v1.0.0 <--------------------------------------------------------------------
-    console.log('HOOK1 PERMISSIONS: ', superAdminPermissions);
-    console.log('HOOK2 hasAnyPermissions: ', hasAnyPermissions);
-    console.log('HOOK3 isInitialized: ', isInitialized);
-    console.log('HOOK4 isEnabled: ', isEnabled);
-  // v1.0.0 -------------------------------------------------------------------->
 
   const {
     data: tenant,
@@ -142,9 +143,6 @@ export const useTenantById = (id) => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/Organization/${id}`
       );
-        // v1.0.0 <-------------------------------------------------------------------
-          console.log('3. CURRENT TENANT BY ITS ID AT USE TENANT HOOK: ', response.data?.organization);
-        // v1.0.0 ------------------------------------------------------------------->
       return response.data?.organization || null;
     },
     enabled: isEnabled,
@@ -155,23 +153,22 @@ export const useTenantById = (id) => {
     refetchOnMount: false,
     refetchOnReconnect: false,
   });
-    // Mutation for deleting a tenant and associated data (super admin only)
-    const deleteTenantData = useMutation({
-      mutationFn: async (tenantId) => {
-        const response = await axios.delete(
-          `${config.REACT_APP_API_URL}/Organization/${tenantId}`
-        );
-        return response.data;
-      },
-      onSuccess: () => {
-        console.log("Tenant deleted successfully, invalidating tenants query");
-        queryClient.invalidateQueries(["tenants"]);
-      },
-      onError: (error) => {
-        console.error("Error deleting tenant:", error);
-        throw error;
-      },
-    });
+  // Mutation for deleting a tenant and associated data (super admin only)
+  const deleteTenantData = useMutation({
+    mutationFn: async (tenantId) => {
+      const response = await axios.delete(
+        `${config.REACT_APP_API_URL}/Organization/${tenantId}`
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["tenants"]);
+    },
+    onError: (error) => {
+      console.error("Error deleting tenant:", error);
+      throw error;
+    },
+  });
   return {
     tenant,
     isLoading,

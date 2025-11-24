@@ -36,7 +36,6 @@ const VerticalRoundsView = ({
     // }, [rounds]);
 
     useEffect(() => {
-        console.log('Sorted Rounds:', sortedRounds);
         if (sortedRounds.length > 0) {
             setExpandedRounds(sortedRounds[0]._id);
         }

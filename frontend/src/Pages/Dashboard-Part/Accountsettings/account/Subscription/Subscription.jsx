@@ -132,7 +132,6 @@ const Subscription = () => {
     refetchSubscription,
     refetchPlans,
   } = useSubscription();
-  console.log("subscriptionData", subscriptionData);
   const [isAnnual, setIsAnnual] = useState(false);
   const [hoveredPlan, setHoveredPlan] = useState(null);
   const user = { userType, tenantId, ownerId };
@@ -510,9 +509,6 @@ const Subscription = () => {
 
   const handleContactSales = (e) => {
     e.preventDefault();
-    console.log("[Subscription] Opening Contact Sales sidebar", {
-      isContactSalesOpenBefore: isContactSalesOpen,
-    });
     setIsContactSalesOpen(true);
   };
 

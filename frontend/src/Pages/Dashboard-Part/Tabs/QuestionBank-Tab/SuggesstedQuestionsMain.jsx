@@ -66,29 +66,32 @@ function HeaderBar({
 
         {/* Questions per page selector */}
         <div className="flex items-center gap-2">
-          <div className="w-28 flex-shrink-0">
-            {(() => {
-              const pageSizeOptions = [10, 20, 30, 50, 100, 150, 200].map((size) => ({
-                value: size,
-                label: String(size),
-              }));
-              const selectedOption =
-                pageSizeOptions.find((opt) => opt.value === questionsPerPage) ||
-                pageSizeOptions[0];
-              return (
-                <DropdownSelect
-                  isSearchable={false}
-                  value={selectedOption}
-                  onChange={(opt) =>
-                    onChangeQuestionsPerPage(opt?.value ? Number(opt.value) : 10)
-                  }
-                  options={pageSizeOptions}
-                  placeholder="Per page"
-                  menuPortalTarget={document.body}
-                  menuPosition="fixed"
-                />
-              );
-            })()}
+          <span className="text-sm font-semibold text-gray-600">Show/Page:</span>
+          <div className="flex items-center gap-1">
+            <div className="w-28 flex-shrink-0">
+              {(() => {
+                const pageSizeOptions = [10, 20, 30, 50, 100, 150, 200].map((size) => ({
+                  value: size,
+                  label: size,
+                }));
+                const selectedOption =
+                  pageSizeOptions.find((opt) => opt.value === questionsPerPage) ||
+                  pageSizeOptions[0];
+                return (
+                  <DropdownSelect
+                    isSearchable={false}
+                    value={selectedOption}
+                    onChange={(opt) =>
+                      onChangeQuestionsPerPage(opt?.value ? Number(opt.value) : 10)
+                    }
+                    options={pageSizeOptions}
+                    placeholder="Per page"
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                  />
+                );
+              })()}
+            </div>
           </div>
         </div>
 
@@ -492,10 +495,10 @@ const SuggestedQuestionsComponent = ({
     totalAvailable === 0
       ? "0/0"
       : beyondAccessible
-        ? `${planAccessibleTotal}/${totalAvailable} ${totalAvailable > 1 ? "Questions/Page" : "Question/Page"}`
+        ? `${planAccessibleTotal}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`
         : startIndex === endIndex
-          ? `${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions/Page" : "Question/Page"}`
-          : `${startIndex}-${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions/Page" : "Question/Page"}`;
+          ? `${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`
+          : `${startIndex}-${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`;
 
 
 
