@@ -169,11 +169,12 @@ const InterviewTemplates = () => {
   }, [activeTab, navigate]);
 
   // Derived state
-  const normalizedTemplates = useMemo(() => {
-    if (!templatesData || !Array.isArray(templatesData)) return [];
-    return templatesData;
-    // .filter((template) => template.type === "custom");
-  }, [templatesData]);
+  const normalizedTemplates = templatesData;
+  // useMemo(() => {
+  //   if (!templatesData || !Array.isArray(templatesData)) return [];
+  //   return templatesData;
+  //   // .filter((template) => template.type === "custom");
+  // }, [templatesData]);
 
   // const standardCount = templatesData?.filter(t => t.type === 'standard').length || 0;
   // const customCount = templatesData?.filter(t => t.type === 'custom').length || 0;

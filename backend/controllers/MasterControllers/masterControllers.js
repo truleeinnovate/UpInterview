@@ -292,7 +292,8 @@ const getAllMasters = async (req, res) => {
         .populate("ownerId", "firstName lastName email -password")
         .populate("createdBy", "firstName lastName email -password")
         .populate("updatedBy", "firstName lastName email -password")
-        .sort({ [sortBy]: sortOrder === "desc" ? -1 : 1 })
+        .sort({ _id: -1 })
+        // .sort({ [sortBy]: sortOrder === "desc" ? -1 : 1 })
         .skip((page - 1) * limit)
         .limit(parseInt(limit))
         .lean();

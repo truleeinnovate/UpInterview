@@ -320,7 +320,6 @@ const MasterTable = ({ permissions = {} }) => {
   const pagination = masterData?.[getMasterDataKeys(type)]?.pagination || {};
   const totalPages = pagination.totalPages || 1;
   const totalItems = pagination.totalItems || currentFilteredRows.length;
-  console.log("currentFilteredRows:", currentFilteredRows);
 
   //  FilteredData().slice(
   //   startIndex,
@@ -330,6 +329,12 @@ const MasterTable = ({ permissions = {} }) => {
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
+  };
+
+  const handleFilterIconClick = () => {
+    if (currentFilteredRows?.length !== 0) {
+      setFilterPopupOpen((prev) => !prev);
+    }
   };
 
   // v1.0.1 <------------------------------------------------------------
@@ -645,9 +650,10 @@ const MasterTable = ({ permissions = {} }) => {
           // onNextPage={() =>
           //   setCurrentPage((p) => (p + 1 < totalPages ? p + 1 : p))
           // }
-          onFilterClick={() =>
-            masterData?.length && setFilterPopupOpen((p) => !p)
-          }
+          // onFilterClick={() =>
+          //   masterData?.length && setFilterPopupOpen((p) => !p)
+          // }
+          onFilterClick={handleFilterIconClick}
           isFilterPopupOpen={isFilterPopupOpen}
           isFilterActive={isFilterActive}
           dataLength={totalItems}
