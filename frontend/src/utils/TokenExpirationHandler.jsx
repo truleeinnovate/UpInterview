@@ -30,7 +30,6 @@ const TokenExpirationHandler = () => {
     // Only set up the timeout if we have a valid remaining time
     if (remainingTime > 0 && isProtectedRoute && !hasNavigated.current) {
       const timeoutId = setTimeout(() => {
-        console.log('Token expired, navigating to home...');
         hasNavigated.current = true;
 
         // Clear all auth data

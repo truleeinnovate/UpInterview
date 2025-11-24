@@ -131,7 +131,6 @@ function AssessmentResultsTab({
       />
     );
   }
-  console.log("results ", results);
   return (
     // v1.0.2 <----------------------------------
     <div className="sm:px-2 p-4">

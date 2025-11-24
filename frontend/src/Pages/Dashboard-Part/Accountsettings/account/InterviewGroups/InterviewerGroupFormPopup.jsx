@@ -62,10 +62,7 @@ const InterviewerGroupFormPopup = () => {
   useEffect(() => {
     const fetchData = () => {
       try {
-        console.log("InterviewerGroupFormPopup:", groups);
-        console.log("InterviewerGroupFormPopup for ID:", id);
         const group = groups.find((group) => group._id === id);
-        console.log("InterviewerGroupFormPopup group:", group);
 
         if (group) {
           // Map the API data to our form structure
@@ -112,7 +109,6 @@ const InterviewerGroupFormPopup = () => {
         ? interviewers.data
         : [];
 
-    console.log("interviewersArray", interviewersArray);
 
     if (interviewersArray) {
       const filteredInterviewers = interviewersArray
@@ -126,7 +122,6 @@ const InterviewerGroupFormPopup = () => {
           ...interviewer,
         }));
 
-      console.log("filteredInterviewers", filteredInterviewers);
       setUsers(filteredInterviewers || []);
     } else {
       setUsers([]);

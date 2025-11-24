@@ -70,7 +70,6 @@ export const setupConsoleFilter = () => {
         // Ignore if this fails
     }
 
-    console.log('Console filter activated - ZegoCloud verbose logs suppressed');
 
     // Try to override ZegoCloud's internal logger
     try {
@@ -128,12 +127,10 @@ export const setupConsoleFilter = () => {
         console.error = (...args) => aggressiveFilter('error', args);
 
     } catch (error) {
-        console.log('Could not set up aggressive console filter:', error);
     }
 };
 
 // Function to restore original console methods
 export const restoreConsole = () => {
     // This would restore original console methods if needed
-    console.log('Console filter deactivated');
 }; 

@@ -76,7 +76,6 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
     //<-----v1.0.0-----
     const validationErrors = validateBankAccount(newAccount);
     setErrors(validationErrors);
-    console.log("Validation Errors:", validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
       scrollToFirstError(validationErrors, fieldRefs);
@@ -100,9 +99,6 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
       swiftCode: newAccount.swiftCode,
       isDefault: newAccount.isDefault,
     };
-
-    // Debug log the data being sent
-    console.log("Submitting bank account data:", bankAccountData);
 
     // Add the new account to database
     addBankAccount(bankAccountData, {

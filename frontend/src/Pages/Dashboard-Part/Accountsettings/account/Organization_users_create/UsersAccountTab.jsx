@@ -78,7 +78,6 @@ const UsersAccountTab = () => {
   //   limit: 10,
   // });
 
-  console.log("selectedFilters selectedFilters", selectedFilters);
   const { usersRes, usersLoading, toggleUserStatus } = useUsers({
     search: searchQuery.trim(),
     // role: selectedFilters?.roles.length > 0 ? selectedFilters?.roles.join(",") : "", // Use selectedFilters, not selectedRoles

@@ -506,7 +506,6 @@
 
           if (response.ok) {
             showResponse(data, true);
-            console.log("✅ Candidate created successfully:", data);
           } else {
             showResponse(data, false);
             console.error("❌ Error creating candidate:", data);
@@ -521,9 +520,6 @@
         const baseUrl = document.getElementById("baseUrl").value;
         const apiKey = document.getElementById("apiKey").value;
 
-        console.log("baseUrl", baseUrl);
-        console.log("apiKey", apiKey);
-
         try {
           const response = await fetch(`${baseUrl}/candidates`, {
             method: "GET",
@@ -536,7 +532,6 @@
 
           if (response.ok) {
             showResponse(data, true);
-            console.log("✅ Candidates retrieved:", data);
           } else {
             showResponse(data, false);
             console.error("❌ Error fetching candidates:", data);

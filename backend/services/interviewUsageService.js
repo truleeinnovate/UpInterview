@@ -1,6 +1,6 @@
 // Service for tracking internal interview usage
-const mongoose = require('mongoose');
-const Usage = require('../models/Usage');
+const mongoose = require("mongoose");
+const Usage = require("../models/Usage");
 
 /**
  * Updates usage count for internal interviews
@@ -9,13 +9,16 @@ const Usage = require('../models/Usage');
  * @param {number} delta - Change in usage (+1 for schedule, -1 for cancel)
  * @param {string} operation - 'schedule' or 'cancel'
  */
-async function updateInternalInterviewUsage(tenantId, ownerId, delta, operation = 'unknown') {
+async function updateInternalInterviewUsage(
+  tenantId,
+  ownerId,
+  delta,
+  operation = "unknown"
+) {
   try {
-    console.log(`[USAGE] Updating internal interview usage: tenantId=${tenantId}, delta=${delta}, operation=${operation}`);
-    
     if (!tenantId) {
-      console.warn('[USAGE] No tenantId provided, skipping usage update');
-      return { success: false, message: 'No tenantId provided' };
+      console.warn("[USAGE] No tenantId provided, skipping usage update");
+      return { success: false, message: "No tenantId provided" };
     }
 
     // Get current date for finding active usage period
@@ -25,7 +28,7 @@ async function updateInternalInterviewUsage(tenantId, ownerId, delta, operation 
     let usage = await Usage.findOne({
       tenantId,
       fromDate: { $lte: now },
-      toDate: { $gte: now }
+      toDate: { $gte: now },
     });
 
     // If no current period, find the latest one
@@ -34,18 +37,23 @@ async function updateInternalInterviewUsage(tenantId, ownerId, delta, operation 
     }
 
     if (!usage) {
-      console.error('[USAGE] No usage document found for tenant:', tenantId);
-      return { success: false, message: 'No usage document found' };
+      console.error("[USAGE] No usage document found for tenant:", tenantId);
+      return { success: false, message: "No usage document found" };
     }
 
     // Find Internal Interviews attribute in usageAttributes
     const internalInterviewerIndex = usage.usageAttributes.findIndex(
-      attr => attr.type === 'Internal Interviews'
+      (attr) => attr.type === "Internal Interviews"
     );
 
     if (internalInterviewerIndex === -1) {
-      console.warn('[USAGE] No Internal Interviews attribute found in usage document');
-      return { success: false, message: 'No Internal Interviews usage attribute found' };
+      console.warn(
+        "[USAGE] No Internal Interviews attribute found in usage document"
+      );
+      return {
+        success: false,
+        message: "No Internal Interviews usage attribute found",
+      };
     }
 
     const currentAttr = usage.usageAttributes[internalInterviewerIndex];
@@ -59,24 +67,16 @@ async function updateInternalInterviewUsage(tenantId, ownerId, delta, operation 
     // Save the updated usage
     await usage.save();
 
-    console.log(`[USAGE] Successfully updated internal interview usage:`, {
-      operation,
-      previousUtilized: currentAttr.utilized,
-      newUtilized,
-      entitled: currentAttr.entitled,
-      remaining: newRemaining
-    });
-
     return {
       success: true,
       usage: {
         utilized: newUtilized,
         entitled: currentAttr.entitled,
-        remaining: newRemaining
-      }
+        remaining: newRemaining,
+      },
     };
   } catch (error) {
-    console.error('[USAGE] Error updating internal interview usage:', error);
+    console.error("[USAGE] Error updating internal interview usage:", error);
     return { success: false, error: error.message };
   }
 }
@@ -90,7 +90,11 @@ async function updateInternalInterviewUsage(tenantId, ownerId, delta, operation 
 async function checkInternalInterviewUsageLimit(tenantId, ownerId) {
   try {
     if (!tenantId) {
-      return { canSchedule: false, remaining: 0, message: 'No tenantId provided' };
+      return {
+        canSchedule: false,
+        remaining: 0,
+        message: "No tenantId provided",
+      };
     }
 
     const now = new Date();
@@ -99,7 +103,7 @@ async function checkInternalInterviewUsageLimit(tenantId, ownerId) {
     let usage = await Usage.findOne({
       tenantId,
       fromDate: { $lte: now },
-      toDate: { $gte: now }
+      toDate: { $gte: now },
     });
 
     // If no current period, find the latest one
@@ -108,18 +112,26 @@ async function checkInternalInterviewUsageLimit(tenantId, ownerId) {
     }
 
     if (!usage) {
-      console.warn('[USAGE] No usage document found for limit check');
-      return { canSchedule: false, remaining: 0, message: 'No usage document found' };
+      console.warn("[USAGE] No usage document found for limit check");
+      return {
+        canSchedule: false,
+        remaining: 0,
+        message: "No usage document found",
+      };
     }
 
     // Find Internal Interviews attribute
     const internalInterviewerAttr = usage.usageAttributes.find(
-      attr => attr.type === 'Internal Interviews'
+      (attr) => attr.type === "Internal Interviews"
     );
 
     if (!internalInterviewerAttr) {
-      console.warn('[USAGE] No Internal Interviews attribute found');
-      return { canSchedule: false, remaining: 0, message: 'No internal interview usage limits configured' };
+      console.warn("[USAGE] No Internal Interviews attribute found");
+      return {
+        canSchedule: false,
+        remaining: 0,
+        message: "No internal interview usage limits configured",
+      };
     }
 
     const remaining = internalInterviewerAttr.remaining || 0;
@@ -130,13 +142,20 @@ async function checkInternalInterviewUsageLimit(tenantId, ownerId) {
       remaining,
       utilized: internalInterviewerAttr.utilized || 0,
       entitled: internalInterviewerAttr.entitled || 0,
-      message: canSchedule 
+      message: canSchedule
         ? `You have ${remaining} internal interview(s) remaining`
-        : 'You have reached your internal interview limit'
+        : "You have reached your internal interview limit",
     };
   } catch (error) {
-    console.error('[USAGE] Error checking internal interview usage limit:', error);
-    return { canSchedule: false, remaining: 0, message: 'Error checking usage limits' };
+    console.error(
+      "[USAGE] Error checking internal interview usage limit:",
+      error
+    );
+    return {
+      canSchedule: false,
+      remaining: 0,
+      message: "Error checking usage limits",
+    };
   }
 }
 
@@ -147,23 +166,27 @@ async function checkInternalInterviewUsageLimit(tenantId, ownerId) {
  * @param {string} newStatus - New status
  * @param {Object} interviewData - Additional interview data (tenantId, ownerId, etc.)
  */
-async function handleInterviewStatusChange(roundId, oldStatus, newStatus, interviewData = {}) {
+async function handleInterviewStatusChange(
+  roundId,
+  oldStatus,
+  newStatus,
+  interviewData = {}
+) {
   try {
-    console.log(`[USAGE] Interview status change: ${oldStatus} -> ${newStatus}`, { roundId, ...interviewData });
-
     // Get the interview round to check if it's internal
-    const { InterviewRounds } = require('../models/Interview/InterviewRounds');
-    const round = await InterviewRounds.findById(roundId).populate('interviewId');
-    
+    const { InterviewRounds } = require("../models/Interview/InterviewRounds");
+    const round = await InterviewRounds.findById(roundId).populate(
+      "interviewId"
+    );
+
     if (!round) {
-      console.warn('[USAGE] Interview round not found:', roundId);
-      return { success: false, message: 'Round not found' };
+      console.warn("[USAGE] Interview round not found:", roundId);
+      return { success: false, message: "Round not found" };
     }
 
     // Only track external interviews
-    if (round.interviewerType !== 'External') {
-      console.log('[USAGE] Not an external interview, skipping usage tracking');
-      return { success: true, message: 'Not an external interview' };
+    if (round.interviewerType !== "External") {
+      return { success: true, message: "Not an external interview" };
     }
 
     // Get tenantId and ownerId from interview or provided data
@@ -174,37 +197,57 @@ async function handleInterviewStatusChange(roundId, oldStatus, newStatus, interv
     let usageResult = { success: true };
 
     // Status changed TO Scheduled (increase usage)
-    if (newStatus === 'Scheduled' && oldStatus !== 'Scheduled') {
+    if (newStatus === "Scheduled" && oldStatus !== "Scheduled") {
       // Check if we have enough usage first
-      const limitCheck = await checkInternalInterviewUsageLimit(tenantId, ownerId);
+      const limitCheck = await checkInternalInterviewUsageLimit(
+        tenantId,
+        ownerId
+      );
       if (!limitCheck.canSchedule) {
-        return { 
-          success: false, 
+        return {
+          success: false,
           message: limitCheck.message,
-          remaining: limitCheck.remaining 
+          remaining: limitCheck.remaining,
         };
       }
-      
-      usageResult = await updateInternalInterviewUsage(tenantId, ownerId, +1, 'schedule');
+
+      usageResult = await updateInternalInterviewUsage(
+        tenantId,
+        ownerId,
+        +1,
+        "schedule"
+      );
     }
-    
+
     // Status changed FROM Scheduled to Cancelled (decrease usage)
-    else if (oldStatus === 'Scheduled' && newStatus === 'Cancelled') {
-      usageResult = await updateInternalInterviewUsage(tenantId, ownerId, -1, 'cancel');
+    else if (oldStatus === "Scheduled" && newStatus === "Cancelled") {
+      usageResult = await updateInternalInterviewUsage(
+        tenantId,
+        ownerId,
+        -1,
+        "cancel"
+      );
     }
-    
+
     // Status changed FROM Scheduled to any other status (except Completed)
     // This handles rescheduling, rejection, etc.
-    else if (oldStatus === 'Scheduled' && 
-             newStatus !== 'Scheduled' && 
-             newStatus !== 'Completed' && 
-             newStatus !== 'InProgress') {
-      usageResult = await updateInternalInterviewUsage(tenantId, ownerId, -1, 'release');
+    else if (
+      oldStatus === "Scheduled" &&
+      newStatus !== "Scheduled" &&
+      newStatus !== "Completed" &&
+      newStatus !== "InProgress"
+    ) {
+      usageResult = await updateInternalInterviewUsage(
+        tenantId,
+        ownerId,
+        -1,
+        "release"
+      );
     }
 
     return usageResult;
   } catch (error) {
-    console.error('[USAGE] Error handling interview status change:', error);
+    console.error("[USAGE] Error handling interview status change:", error);
     return { success: false, error: error.message };
   }
 }
@@ -222,7 +265,7 @@ async function getInternalInterviewUsageStats(tenantId, ownerId) {
     let usage = await Usage.findOne({
       tenantId,
       fromDate: { $lte: now },
-      toDate: { $gte: now }
+      toDate: { $gte: now },
     });
 
     // If no current period, find the latest one
@@ -236,7 +279,7 @@ async function getInternalInterviewUsageStats(tenantId, ownerId) {
 
     // Find Internal Interviews attribute
     const internalInterviewerAttr = usage.usageAttributes.find(
-      attr => attr.type === 'Internal Interviews'
+      (attr) => attr.type === "Internal Interviews"
     );
 
     if (!internalInterviewerAttr) {
@@ -247,14 +290,22 @@ async function getInternalInterviewUsageStats(tenantId, ownerId) {
       utilized: internalInterviewerAttr.utilized || 0,
       entitled: internalInterviewerAttr.entitled || 0,
       remaining: internalInterviewerAttr.remaining || 0,
-      percentage: internalInterviewerAttr.entitled > 0 
-        ? Math.round((internalInterviewerAttr.utilized / internalInterviewerAttr.entitled) * 100)
-        : 0,
+      percentage:
+        internalInterviewerAttr.entitled > 0
+          ? Math.round(
+              (internalInterviewerAttr.utilized /
+                internalInterviewerAttr.entitled) *
+                100
+            )
+          : 0,
       fromDate: usage.fromDate,
-      toDate: usage.toDate
+      toDate: usage.toDate,
     };
   } catch (error) {
-    console.error('[USAGE] Error getting internal interview usage stats:', error);
+    console.error(
+      "[USAGE] Error getting internal interview usage stats:",
+      error
+    );
     return null;
   }
 }
@@ -266,49 +317,45 @@ async function getInternalInterviewUsageStats(tenantId, ownerId) {
  */
 async function recalculateInterviewUsage(tenantId) {
   try {
-    console.log(`[USAGE] Recalculating interview usage for tenant: ${tenantId}`);
-    
     if (!tenantId) {
-      return { success: false, message: 'No tenantId provided' };
+      return { success: false, message: "No tenantId provided" };
     }
 
     // Import models inside function to avoid circular dependency
-    const { Interview } = require('../models/Interview/Interview');
-    const { InterviewRounds } = require('../models/Interview/InterviewRounds');
-    
-    // Find all interviews for this tenant
-    const interviews = await Interview.find({ tenantId }).select('_id');
-    const interviewIds = interviews.map(i => i._id);
+    const { Interview } = require("../models/Interview/Interview");
+    const { InterviewRounds } = require("../models/Interview/InterviewRounds");
 
-    console.log(`[USAGE] Found ${interviewIds.length} interviews for tenant ${tenantId}`);
+    // Find all interviews for this tenant
+    const interviews = await Interview.find({ tenantId }).select("_id");
+    const interviewIds = interviews.map((i) => i._id);
 
     let scheduledCount = 0;
-    
+
     if (interviewIds.length > 0) {
       // Count all scheduled Internal interviews for this tenant's interviews
       scheduledCount = await InterviewRounds.countDocuments({
         interviewId: { $in: interviewIds },
-        status: 'Scheduled',
-        interviewerType: 'Internal'
+        status: "Scheduled",
+        interviewerType: "Internal",
       });
-      console.log(`[USAGE] Found ${scheduledCount} scheduled Internal interviews for tenant's interviews`);
     } else {
       // Alternative approach: Find rounds with External type and populate interview to check tenantId
-      console.log('[USAGE] No interviews found via Interview model, using alternative approach');
-      
+
       const rounds = await InterviewRounds.find({
-        status: 'Scheduled',
-        interviewerType: 'Internal'
-      }).populate('interviewId');
-      
+        status: "Scheduled",
+        interviewerType: "Internal",
+      }).populate("interviewId");
+
       // Filter rounds that belong to this tenant
-      const tenantRounds = rounds.filter(r => {
-        return r.interviewId && r.interviewId.tenantId && 
-               r.interviewId.tenantId.toString() === tenantId.toString();
+      const tenantRounds = rounds.filter((r) => {
+        return (
+          r.interviewId &&
+          r.interviewId.tenantId &&
+          r.interviewId.tenantId.toString() === tenantId.toString()
+        );
       });
-      
+
       scheduledCount = tenantRounds.length;
-      console.log(`[USAGE] Found ${scheduledCount} scheduled Internal interviews via alternative approach`);
     }
 
     // Get current date for finding active usage period
@@ -318,7 +365,7 @@ async function recalculateInterviewUsage(tenantId) {
     let usage = await Usage.findOne({
       tenantId,
       fromDate: { $lte: now },
-      toDate: { $gte: now }
+      toDate: { $gte: now },
     });
 
     // If no current period, find the latest one
@@ -327,18 +374,23 @@ async function recalculateInterviewUsage(tenantId) {
     }
 
     if (!usage) {
-      console.error('[USAGE] No usage document found for tenant:', tenantId);
-      return { success: false, message: 'No usage document found' };
+      console.error("[USAGE] No usage document found for tenant:", tenantId);
+      return { success: false, message: "No usage document found" };
     }
 
     // Find Internal Interviews attribute in usageAttributes
     const interviewIndex = usage.usageAttributes.findIndex(
-      attr => attr.type === 'Internal Interviews'
+      (attr) => attr.type === "Internal Interviews"
     );
 
     if (interviewIndex === -1) {
-      console.warn('[USAGE] No Internal Interviews attribute found in usage document');
-      return { success: false, message: 'No Internal Interviews usage attribute found' };
+      console.warn(
+        "[USAGE] No Internal Interviews attribute found in usage document"
+      );
+      return {
+        success: false,
+        message: "No Internal Interviews usage attribute found",
+      };
     }
 
     const currentAttr = usage.usageAttributes[interviewIndex];
@@ -352,23 +404,16 @@ async function recalculateInterviewUsage(tenantId) {
     // Save the updated usage
     await usage.save();
 
-    console.log(`[USAGE] Successfully recalculated interview usage:`, {
-      previousUtilized: currentAttr.utilized,
-      newUtilized,
-      entitled: currentAttr.entitled,
-      remaining: newRemaining
-    });
-
     return {
       success: true,
       usage: {
         utilized: newUtilized,
         entitled: currentAttr.entitled,
-        remaining: newRemaining
-      }
+        remaining: newRemaining,
+      },
     };
   } catch (error) {
-    console.error('[USAGE] Error recalculating interview usage:', error);
+    console.error("[USAGE] Error recalculating interview usage:", error);
     return { success: false, error: error.message };
   }
 }
@@ -378,5 +423,5 @@ module.exports = {
   checkInternalInterviewUsageLimit,
   handleInterviewStatusChange,
   getInternalInterviewUsageStats,
-  recalculateInterviewUsage
+  recalculateInterviewUsage,
 };

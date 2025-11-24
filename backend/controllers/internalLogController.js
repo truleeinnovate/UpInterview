@@ -2,9 +2,7 @@
 const InternalLog = require("../models/InternalLog");
 
 exports.createLog = async (logDetails) => {
-  //  console.log("logDetails", logDetails);
   try {
-  //  console.log("logDetails", logDetails);
     const log = new InternalLog(logDetails);
     await log.save();
     return log;
@@ -35,7 +33,7 @@ exports.getLogs = async (req, res) => {
 
     const [logs, total] = await Promise.all([
       InternalLog.find(query)
-       .sort({ _id : -1 })
+        .sort({ _id: -1 })
         // .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
@@ -105,12 +103,12 @@ exports.getLogsSummary = async (req, res) => {
     const {
       page = 0,
       limit = 10,
-      search = '',
-      status = '',
-      severity = '',
-      processName = '',
-      startDate = '',
-      endDate = ''
+      search = "",
+      status = "",
+      severity = "",
+      processName = "",
+      startDate = "",
+      endDate = "",
     } = req.query;
 
     const skip = parseInt(page) * parseInt(limit);
@@ -121,30 +119,30 @@ exports.getLogsSummary = async (req, res) => {
 
     // Search across multiple fields
     if (search) {
-      const safeSearch = String(search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const searchRegex = new RegExp(safeSearch, 'i');
+      const safeSearch = String(search).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const searchRegex = new RegExp(safeSearch, "i");
       query.$or = [
         { logId: searchRegex },
         { processName: searchRegex },
         { message: searchRegex },
         { serverName: searchRegex },
-        { requestEndPoint: searchRegex }
+        { requestEndPoint: searchRegex },
       ];
     }
 
     // Filter by status
     if (status) {
-      query.status = { $in: status.split(',') };
+      query.status = { $in: status.split(",") };
     }
 
     // Filter by severity
     if (severity) {
-      query.severity = { $in: severity.split(',') };
+      query.severity = { $in: severity.split(",") };
     }
 
     // Filter by process name
     if (processName) {
-      query.processName = new RegExp(processName, 'i');
+      query.processName = new RegExp(processName, "i");
     }
 
     // Date range filter
@@ -174,19 +172,28 @@ exports.getLogsSummary = async (req, res) => {
     const { status: statusFilter, ...queryWithoutStatus } = query;
     const selectedStatuses = Array.isArray(statusFilter?.$in)
       ? statusFilter.$in
-      : (typeof statusFilter === 'string' ? [statusFilter] : null);
+      : typeof statusFilter === "string"
+      ? [statusFilter]
+      : null;
 
-    const shouldCount = (s) => !selectedStatuses || selectedStatuses.includes(s);
+    const shouldCount = (s) =>
+      !selectedStatuses || selectedStatuses.includes(s);
 
     const [errorCount, warningCount, successCount] = await Promise.all([
-      shouldCount('error')
-        ? InternalLog.countDocuments({ ...queryWithoutStatus, status: 'error' })
+      shouldCount("error")
+        ? InternalLog.countDocuments({ ...queryWithoutStatus, status: "error" })
         : Promise.resolve(0),
-      shouldCount('warning')
-        ? InternalLog.countDocuments({ ...queryWithoutStatus, status: 'warning' })
+      shouldCount("warning")
+        ? InternalLog.countDocuments({
+            ...queryWithoutStatus,
+            status: "warning",
+          })
         : Promise.resolve(0),
-      shouldCount('success')
-        ? InternalLog.countDocuments({ ...queryWithoutStatus, status: 'success' })
+      shouldCount("success")
+        ? InternalLog.countDocuments({
+            ...queryWithoutStatus,
+            status: "success",
+          })
         : Promise.resolve(0),
     ]);
 
@@ -205,22 +212,22 @@ exports.getLogsSummary = async (req, res) => {
         totalItems: total,
         hasNext: skip + limitNum < total,
         hasPrev: parseInt(page) > 0,
-        itemsPerPage: limitNum
+        itemsPerPage: limitNum,
       },
       stats: {
         totalLogs: stats.totalLogs,
         errorLogs: stats.errorLogs,
         warningLogs: stats.warningLogs,
-        successLogs: stats.successLogs
+        successLogs: stats.successLogs,
       },
-      status: true
+      status: true,
     });
   } catch (error) {
     console.error("Error fetching log summary:", error);
     res.status(500).json({
       message: "Server error while fetching logs",
       details: error.message,
-      status: false
+      status: false,
     });
   }
 };

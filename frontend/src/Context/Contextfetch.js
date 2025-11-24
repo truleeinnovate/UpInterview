@@ -425,7 +425,6 @@ const CustomProvider = ({ children }) => {
 
   const addOrUpdateUser = useMutation({
     mutationFn: async ({ userData, file, isFileRemoved, editMode }) => {
-      console.log("addOrUpdateUser mutation payload:", { userData, editMode });
       const payload = {
         UserData: {
           firstName: userData.firstName,
@@ -452,10 +451,6 @@ const CustomProvider = ({ children }) => {
         },
       };
 
-      console.log(
-        "Sending payload to /Organization/new-user-Creation:",
-        payload
-      );
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/Organization/new-user-Creation`,
         payload
@@ -463,16 +458,13 @@ const CustomProvider = ({ children }) => {
 
       // UPLOADING FILES LIKE IMAGES AND RESUMES
       if (isFileRemoved && !file) {
-        console.log("Removing file for contactId:", response.data.contactId);
         await uploadFile(null, "image", "contact", response.data.contactId);
       } else if (file instanceof File) {
-        console.log("Uploading file for contactId:", response.data.contactId);
         await uploadFile(file, "image", "contact", response.data.contactId);
       }
 
       // Send welcome email only for new user creation
       if (!editMode) {
-        console.log(`Sending welcome email to: ${userData.email}`);
         await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
           email: userData.email,
           type: "usercreatepass",
@@ -482,7 +474,6 @@ const CustomProvider = ({ children }) => {
       return response.data;
     },
     onSuccess: () => {
-      console.log("User operation successful, invalidating users query");
       queryClient.invalidateQueries(["users"]);
     },
     onError: (error) => {
@@ -645,107 +636,93 @@ const CustomProvider = ({ children }) => {
 
   return (
     <CustomContext.Provider
-      value={{
-        // getInterviewerQuestions,
-
-        // fetchMyQuestionsData,
-        // myQuestionsList,
-        // setMyQuestionsList,
-        // createdLists,
-        // // setCreatedLists,
-        // fetchLists,
-        // suggestedQuestions,
-        // setSuggestedQuestions,
-        // suggestedQuestionsFilteredData,
-        // setSuggestedQuestionsFilteredData,
-        // feedbackCloseFlag,
-        // setFeedbackCloseFlag,
-        // popupVisibility,
-        // setPopupVisibility,
-        // feedbackTabErrors,
-        // setFeedbackTabError,
-        // page,
-        // setPage,
-        // isOpen,
-        // setIsopen,
-        // iter,
-        // searchText,
-        // setSearchText,
-        // setPagination,
-        // pagination,
-
-        // loading,
-
-        // users // <---------- commented by Ashok
-        // usersRes,
-        // usersLoading,
-        // refetchUsers,
-        // addOrUpdateUser,
-        // toggleUserStatus,
-        // deleteUser, // --------commented by Ashok ------------------>
-
-        // wallet Balance - COMMENTED: Use useWallet hook instead
-        // walletBalance,
-
-        // subscription current plan - COMMENTED: Use useSubscription hook instead
-        // currentPlan,
-
-        // teams
-        // teamsData,
-        // fetchTeamsData,
-
-        // outsource interviewers
-        // outsourceInterviewers,
-        // fetchOutsourceInterviewers,
-
-        // master data
-        // skills,
-        // qualification,
-        // college,
-        // companies,
-        // technologies,
-        // locations,
-        // industries,
-        // currentRole,
-        // notifications
-        // notificationsData,
-        // user
-        // userProfile,
-
-        // groups
-        // groups,
-        // fetchGroupsData,
-
-        // users
-        // usersData,
-        // fetchUsersData,
-
-        // organization
-        // organizationData, // <---------- commented by Ashok
-        // organizationsLoading,
-        // addOrUpdateOrganization, // --------commented by Ashok ------------------>
-
-        // contacts
-        // fetchContactsData,
-        // contacts,
-        // setContacts,
-        // singlecontact - now using useSingleContact hook from apiHooks
-        // fetchContacts,
-
-        // interviewers,
-        // loadingInterviewer,
-        // setLoadingInterviewer,
-        // fetchInterviewers,
-
-        // tickets - COMMENTED: Use useSupportTickets hook instead
-        // tickets,
-        // userRole,
-
-        // interviewRounds,
-        // fetchInterviewRounds,
-
-        // superAdminProfile,
-      }}
+      value={
+        {
+          // getInterviewerQuestions,
+          // fetchMyQuestionsData,
+          // myQuestionsList,
+          // setMyQuestionsList,
+          // createdLists,
+          // // setCreatedLists,
+          // fetchLists,
+          // suggestedQuestions,
+          // setSuggestedQuestions,
+          // suggestedQuestionsFilteredData,
+          // setSuggestedQuestionsFilteredData,
+          // feedbackCloseFlag,
+          // setFeedbackCloseFlag,
+          // popupVisibility,
+          // setPopupVisibility,
+          // feedbackTabErrors,
+          // setFeedbackTabError,
+          // page,
+          // setPage,
+          // isOpen,
+          // setIsopen,
+          // iter,
+          // searchText,
+          // setSearchText,
+          // setPagination,
+          // pagination,
+          // loading,
+          // users // <---------- commented by Ashok
+          // usersRes,
+          // usersLoading,
+          // refetchUsers,
+          // addOrUpdateUser,
+          // toggleUserStatus,
+          // deleteUser, // --------commented by Ashok ------------------>
+          // wallet Balance - COMMENTED: Use useWallet hook instead
+          // walletBalance,
+          // subscription current plan - COMMENTED: Use useSubscription hook instead
+          // currentPlan,
+          // teams
+          // teamsData,
+          // fetchTeamsData,
+          // outsource interviewers
+          // outsourceInterviewers,
+          // fetchOutsourceInterviewers,
+          // master data
+          // skills,
+          // qualification,
+          // college,
+          // companies,
+          // technologies,
+          // locations,
+          // industries,
+          // currentRole,
+          // notifications
+          // notificationsData,
+          // user
+          // userProfile,
+          // groups
+          // groups,
+          // fetchGroupsData,
+          // users
+          // usersData,
+          // fetchUsersData,
+          // organization
+          // organizationData, // <---------- commented by Ashok
+          // organizationsLoading,
+          // addOrUpdateOrganization, // --------commented by Ashok ------------------>
+          // contacts
+          // fetchContactsData,
+          // contacts,
+          // setContacts,
+          // singlecontact - now using useSingleContact hook from apiHooks
+          // fetchContacts,
+          // interviewers,
+          // loadingInterviewer,
+          // setLoadingInterviewer,
+          // fetchInterviewers,
+          // tickets - COMMENTED: Use useSupportTickets hook instead
+          // tickets,
+          // userRole,
+          // interviewRounds,
+          // fetchInterviewRounds,
+          // superAdminProfile,
+        }
+      }
     >
       {children}
     </CustomContext.Provider>

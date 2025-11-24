@@ -31,7 +31,6 @@ const InterviewGroupDetails = () => {
         // console.log('Groups:', groups);
         // console.log('Looking for ID:', id);
         const group = groups.find((group) => group._id === id);
-        console.log("Found group:", group);
         setSelectedGroup(group || {});
         // setIsLoading(false);
         // const group = groups.find(group => group._id === id);

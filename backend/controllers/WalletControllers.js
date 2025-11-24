@@ -15,11 +15,13 @@ const PushNotification = require("../models/PushNotifications");
 // Import payment push notification functions
 const {
   createWalletTopupNotification,
-  createInterviewSettlementNotification
-} = require('./PushNotificationControllers/pushNotificationPaymentController');
+  createInterviewSettlementNotification,
+} = require("./PushNotificationControllers/pushNotificationPaymentController");
 const crypto = require("crypto");
 const https = require("https");
-const { MockInterviewRound } = require("../models/MockInterview/mockinterviewRound");
+const {
+  MockInterviewRound,
+} = require("../models/MockInterview/mockinterviewRound");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds");
 const Invoicemodels = require("../models/Invoicemodels");
 
@@ -33,12 +35,12 @@ const razorpay = new Razorpay({
 /**
  * WEBHOOK SECRETS:
  * Different webhook endpoints have different secrets!
- * 
+ *
  * - RAZORPAY_WALLET_WEBHOOK_SECRET: For wallet top-up payments (payment.captured)
  * - RAZORPAY_PAYOUT_WEBHOOK_SECRET: For RazorpayX payouts (payout.processed, payout.failed)
  * - RAZORPAY_PAYMENT_WEBHOOK_SECRET: For regular payments (non-wallet)
  * - RAZORPAY_SUBSCRIPTION_WEBHOOK_SECRET: For subscription events
- * 
+ *
  * Get these from: Razorpay Dashboard > Settings > Webhooks > Your Webhook > Secret
  */
 
@@ -57,9 +59,8 @@ const getWalletByOwnerId = async (req, res) => {
 
     if (!wallet) {
       // Log when creating wallet without tenantId
-        console.warn(`[getWalletByOwnerId] wallet for ${ownerId} not found`);
-      }
-
+      console.warn(`[getWalletByOwnerId] wallet for ${ownerId} not found`);
+    }
 
     res.status(200).json({ walletDetials: [wallet] });
   } catch (error) {
@@ -70,16 +71,12 @@ const getWalletByOwnerId = async (req, res) => {
 
 // Create Razorpay order for wallet top-up
 const createTopupOrder = async (req, res) => {
-
   // Set up logging context
   res.locals.loggedByController = true;
   res.locals.processName = "Create Wallet Top-up Order";
 
   try {
     const { amount, currency = "INR", ownerId, tenantId } = req.body;
-
-    console.log("Creating wallet top-up order for ownerId:", ownerId);
-    console.log("Creating wallet top-up order for tenantId:", tenantId);
 
     // Validate inputs
     if (!amount || amount <= 0) {
@@ -101,12 +98,13 @@ const createTopupOrder = async (req, res) => {
     } else {
       // Generate unique wallet code using centralized service
       try {
-        walletCode = await generateUniqueId('WLT', WalletTopup, 'walletCode');
+        walletCode = await generateUniqueId("WLT", WalletTopup, "walletCode");
       } catch (error) {
-        console.error('Failed to generate wallet code:', error);
+        console.error("Failed to generate wallet code:", error);
         return res.status(500).json({
           success: false,
-          error: "Unable to generate unique wallet code. Please try again later.",
+          error:
+            "Unable to generate unique wallet code. Please try again later.",
         });
       }
     }
@@ -152,7 +150,6 @@ const createTopupOrder = async (req, res) => {
       },
     };
 
-
     res.status(200).json({
       orderId: order.id,
       amount: amount,
@@ -170,7 +167,7 @@ const createTopupOrder = async (req, res) => {
       status: "error",
       message: "Wallet top-up order created Failed",
       responseBody: {
-        error
+        error,
       },
     };
     res.status(500).json({ error: "Failed to create topup order" });
@@ -183,8 +180,6 @@ const walletVerifyPayment = async (req, res) => {
   res.locals.processName = "Wallet Payment Verification";
 
   try {
-    console.log("Payment verification request received:", req.body);
-
     const {
       razorpay_payment_id,
       razorpay_order_id,
@@ -211,8 +206,8 @@ const walletVerifyPayment = async (req, res) => {
         message: "Missing required Razorpay verification fields",
         requestBody: req.body,
         responseBody: {
-          error: "Missing required Razorpay verification fields"
-        }
+          error: "Missing required Razorpay verification fields",
+        },
       };
       return res
         .status(400)
@@ -229,8 +224,8 @@ const walletVerifyPayment = async (req, res) => {
         message: "Missing required Razorpay verification fields",
         requestBody: req.body,
         responseBody: {
-          error: "Owner ID is required"
-        }
+          error: "Owner ID is required",
+        },
       };
       return res.status(400).json({ error: "Owner ID is required" });
     }
@@ -259,13 +254,13 @@ const walletVerifyPayment = async (req, res) => {
         responseBody: {
           expectedSignature,
           receivedSignature,
-          error: "Invalid payment signature"
-        }
+          error: "Invalid payment signature",
+        },
       };
       return res.status(400).json({ error: "Invalid payment signature" });
     }
 
-    console.log("Signature validated successfully");
+    // console.log("Signature validated successfully");
 
     // Get payment details from Razorpay - Make this optional
     // If we can't get payment details, we'll trust the signature verification
@@ -273,30 +268,30 @@ const walletVerifyPayment = async (req, res) => {
     try {
       const payment = await razorpay.payments.fetch(razorpay_payment_id);
       if (payment && payment.status) {
-        console.log("Payment details fetched:", payment.status);
+        // console.log("Payment details fetched:", payment.status);
 
         if (payment.status === "captured" || payment.status === "authorized") {
           paymentVerified = true;
         } else {
-          console.log(
-            `Payment status is ${payment.status}, continuing with signature verification only`
-          );
+          // console.log(
+          //   `Payment status is ${payment.status}, continuing with signature verification only`
+          // );
         }
       } else {
-        console.log(
-          "Payment details incomplete, continuing with signature verification only"
-        );
+        // console.log(
+        //   "Payment details incomplete, continuing with signature verification only"
+        // );
       }
     } catch (razorpayError) {
       console.error("Error fetching payment from Razorpay:", razorpayError);
-      console.log("Continuing with signature verification only");
+      // console.log("Continuing with signature verification only");
       // Instead of returning an error, we'll continue with signature verification
       // This makes our process more robust in case Razorpay API has issues
     }
 
     // Since the signature is valid, we'll proceed with the payment processing
     // The signature verification is our primary method of validating payments
-    console.log("Proceeding based on valid signature verification");
+    // console.log("Proceeding based on valid signature verification");
 
     // Try to retrieve walletCode from the Razorpay order notes if available
     let walletCodeFromNotes = null;
@@ -304,10 +299,10 @@ const walletVerifyPayment = async (req, res) => {
       const orderDetails = await razorpay.orders.fetch(razorpay_order_id);
       walletCodeFromNotes = orderDetails?.notes?.walletCode || null;
       if (walletCodeFromNotes) {
-        console.log("walletCode from Razorpay order notes:", walletCodeFromNotes);
+        // console.log("walletCode from Razorpay order notes:", walletCodeFromNotes);
       }
     } catch (orderFetchErr) {
-      console.log("Could not fetch Razorpay order details; proceeding without notes");
+      // console.log("Could not fetch Razorpay order details; proceeding without notes");
     }
 
     // Find or create wallet and ensure it has a walletCode
@@ -318,15 +313,20 @@ const walletVerifyPayment = async (req, res) => {
     if (!wallet || !wallet.walletCode) {
       try {
         // Determine effective wallet code
-        let effectiveWalletCode = (wallet && wallet.walletCode) || walletCodeFromNotes;
+        let effectiveWalletCode =
+          (wallet && wallet.walletCode) || walletCodeFromNotes;
 
         // Generate a wallet code using centralized service (already handles retries internally)
         if (!effectiveWalletCode) {
-          effectiveWalletCode = await generateUniqueId('WLT', WalletTopup, 'walletCode');
+          effectiveWalletCode = await generateUniqueId(
+            "WLT",
+            WalletTopup,
+            "walletCode"
+          );
         }
 
         if (!wallet) {
-          console.log("Creating new wallet for owner:", ownerId);
+          // console.log("Creating new wallet for owner:", ownerId);
           wallet = await WalletTopup.create({
             ownerId,
             walletCode: effectiveWalletCode,
@@ -340,7 +340,7 @@ const walletVerifyPayment = async (req, res) => {
         }
       } catch (error) {
         console.error("Error creating/updating wallet:", error);
-        
+
         res.locals.logData = {
           tenantId: req?.body?.tenantId || "",
           ownerId: req?.body?.ownerId,
@@ -350,12 +350,12 @@ const walletVerifyPayment = async (req, res) => {
           error: error.message,
           requestBody: req.body,
           responseBody: {
-            error: error.message
-          }
+            error: error.message,
+          },
         };
 
         return res.status(500).json({
-          error: "Database error when accessing wallet"
+          error: "Database error when accessing wallet",
         });
       }
     }
@@ -387,7 +387,7 @@ const walletVerifyPayment = async (req, res) => {
     );
 
     if (existingTransaction) {
-      console.log("Payment already processed, returning success");
+      // console.log("Payment already processed, returning success");
       return res.status(200).json({
         success: true,
         wallet,
@@ -408,7 +408,7 @@ const walletVerifyPayment = async (req, res) => {
       wallet.balance += parsedAmount;
       wallet.transactions.push(transaction);
       await wallet.save();
-      console.log("Wallet updated successfully", { balance: wallet.balance });
+      // console.log("Wallet updated successfully", { balance: wallet.balance });
 
       /* ------------------------------------------------------------------
          Create simple Invoice, Receipt and Payment records for this top-up
@@ -416,7 +416,11 @@ const walletVerifyPayment = async (req, res) => {
 
       try {
         // Generate unique invoice code using centralized utility
-        const invoiceCode = await generateUniqueId('INVC', Invoicemodels, 'invoiceCode');
+        const invoiceCode = await generateUniqueId(
+          "INVC",
+          Invoicemodels,
+          "invoiceCode"
+        );
 
         // 1. Invoice
         invoice = await Invoice.create({
@@ -444,7 +448,11 @@ const walletVerifyPayment = async (req, res) => {
         });
 
         // Generate receipt code using centralized service
-        const receiptCode = await generateUniqueId('RCP', Receipt, 'receiptCode');
+        const receiptCode = await generateUniqueId(
+          "RCP",
+          Receipt,
+          "receiptCode"
+        );
 
         // 2. Receipt – reference the created invoice
         receipt = await Receipt.create({
@@ -459,7 +467,11 @@ const walletVerifyPayment = async (req, res) => {
         });
 
         // Generate payment code
-        const paymentCode = await generateUniqueId('PMT', Payment, 'paymentCode');
+        const paymentCode = await generateUniqueId(
+          "PMT",
+          Payment,
+          "paymentCode"
+        );
 
         // 3. Payment – reference both invoice & receipt
         payment = await Payment.create({
@@ -480,14 +492,18 @@ const walletVerifyPayment = async (req, res) => {
           receiptId: receipt._id,
         });
       } catch (recordErr) {
-        console.error("Error creating payment/invoice/receipt records:", recordErr);
+        console.error(
+          "Error creating payment/invoice/receipt records:",
+          recordErr
+        );
         // Store error details for response
         recordCreationError = {
-          message: "Wallet topped up successfully, but failed to create some records",
+          message:
+            "Wallet topped up successfully, but failed to create some records",
           error: recordErr.message,
           invoice: invoice ? "created" : "failed",
           receipt: receipt ? "created" : "failed",
-          payment: payment ? "created" : "failed"
+          payment: payment ? "created" : "failed",
         };
         // We will not fail the entire request if these records cannot be created;
         // wallet top-up has already been credited. Just continue.
@@ -505,11 +521,14 @@ const walletVerifyPayment = async (req, res) => {
         amount: parsedAmount,
         walletCode: wallet.walletCode,
         newBalance: wallet.balance,
-        invoiceCode: invoice?.code || 'N/A'
+        invoiceCode: invoice?.code || "N/A",
       });
-      console.log('[WALLET] Top-up notification created');
+      // console.log('[WALLET] Top-up notification created');
     } catch (notificationError) {
-      console.error('[WALLET] Error creating top-up notification:', notificationError);
+      console.error(
+        "[WALLET] Error creating top-up notification:",
+        notificationError
+      );
       // Don't fail the response if notification fails
     }
 
@@ -527,7 +546,7 @@ const walletVerifyPayment = async (req, res) => {
         invoice,
         receipt,
         payment,
-      }
+      },
     };
 
     res.status(200).json({
@@ -537,7 +556,7 @@ const walletVerifyPayment = async (req, res) => {
       invoice,
       receipt,
       payment,
-      ...(recordCreationError && { warning: recordCreationError })
+      ...(recordCreationError && { warning: recordCreationError }),
     });
   } catch (error) {
     console.error("Error verifying payment:", error);
@@ -553,7 +572,7 @@ const walletVerifyPayment = async (req, res) => {
         error: "Failed to verify payment",
         message: error.message || "Unknown error",
         stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-      }
+      },
     };
     res.status(500).json({
       error: "Failed to verify payment",
@@ -732,13 +751,13 @@ const addBankAccount = async (req, res) => {
       swiftCode,
       branchName,
       bankAddress,
-      isDefault
+      isDefault,
     } = req.body;
 
     // Validate required fields
     if (!ownerId || !accountHolderName || !bankName || !accountNumber) {
       return res.status(400).json({
-        error: "Missing required fields"
+        error: "Missing required fields",
       });
     }
 
@@ -746,12 +765,12 @@ const addBankAccount = async (req, res) => {
     const existingAccount = await BankAccount.findOne({
       ownerId,
       accountNumber,
-      isActive: true
+      isActive: true,
     });
 
     if (existingAccount) {
       return res.status(409).json({
-        error: "Bank account already exists"
+        error: "Bank account already exists",
       });
     }
 
@@ -760,11 +779,16 @@ const addBankAccount = async (req, res) => {
     try {
       // Get user details for email and phone if available from Contacts
       const { Contacts } = require("../models/Contacts");
-      const userContact = await Contacts.findOne({ ownerId: ownerId }).select("email phone countryCode").lean();
-      const email = userContact?.email || req.body.email || `${ownerId}@wallet.com`;
+      const userContact = await Contacts.findOne({ ownerId: ownerId })
+        .select("email phone countryCode")
+        .lean();
+      const email =
+        userContact?.email || req.body.email || `${ownerId}@wallet.com`;
       const countryCode = userContact?.countryCode || "+91";
       const phoneNumber = userContact?.phone || req.body.phone || "9999999999";
-      const phone = phoneNumber.startsWith("+") ? phoneNumber : `${countryCode}${phoneNumber.replace(/^0+/, '')}`;
+      const phone = phoneNumber.startsWith("+")
+        ? phoneNumber
+        : `${countryCode}${phoneNumber.replace(/^0+/, "")}`;
 
       const contact = await razorpay.contacts.create({
         name: accountHolderName,
@@ -774,13 +798,16 @@ const addBankAccount = async (req, res) => {
         reference_id: ownerId,
         notes: {
           ownerId,
-          tenantId
-        }
+          tenantId,
+        },
       });
       razorpayContactId = contact.id;
-      console.log("Contact created successfully:", razorpayContactId);
+      // console.log("Contact created successfully:", razorpayContactId);
     } catch (razorpayError) {
-      console.error("Error creating Razorpay contact:", razorpayError.response?.data || razorpayError.message || razorpayError);
+      console.error(
+        "Error creating Razorpay contact:",
+        razorpayError.response?.data || razorpayError.message || razorpayError
+      );
       // Continue without Razorpay contact for now - verification will be skipped
     }
 
@@ -795,12 +822,12 @@ const addBankAccount = async (req, res) => {
           bank_account: {
             name: accountHolderName,
             ifsc: ifscCode || "RAZR0000001", // Use dummy IFSC for testing
-            account_number: accountNumber
+            account_number: accountNumber,
           },
           notes: {
             ownerId,
-            bankName
-          }
+            bankName,
+          },
         });
         razorpayFundAccountId = fundAccount.id;
       } catch (razorpayError) {
@@ -826,19 +853,19 @@ const addBankAccount = async (req, res) => {
       isDefault: isDefault || false,
       isVerified: false, // Will be verified through penny drop
       verificationStatus: "pending",
-      createdBy: ownerId
+      createdBy: ownerId,
     });
 
     res.status(201).json({
       success: true,
       bankAccount,
-      message: "Bank account added successfully"
+      message: "Bank account added successfully",
     });
   } catch (error) {
     console.error("Error adding bank account:", error);
     res.status(500).json({
       error: "Failed to add bank account",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -851,7 +878,7 @@ const getBankAccounts = async (req, res) => {
     // Fetch without sorting (Azure Cosmos DB compatibility)
     const bankAccounts = await BankAccount.find({
       ownerId,
-      isActive: true
+      isActive: true,
     }).sort({ _id: -1 }); // Only sort by _id for Azure compatibility
 
     // Sort in JavaScript to ensure default accounts appear first
@@ -865,13 +892,13 @@ const getBankAccounts = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      bankAccounts
+      bankAccounts,
     });
   } catch (error) {
     console.error("Error fetching bank accounts:", error);
     res.status(500).json({
       error: "Failed to fetch bank accounts",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -885,7 +912,7 @@ const deleteBankAccount = async (req, res) => {
     // Validate bankAccountId
     if (!bankAccountId) {
       return res.status(400).json({
-        error: "Bank account ID is required"
+        error: "Bank account ID is required",
       });
     }
 
@@ -894,21 +921,21 @@ const deleteBankAccount = async (req, res) => {
 
     if (!bankAccount) {
       return res.status(404).json({
-        error: "Bank account not found"
+        error: "Bank account not found",
       });
     }
 
     // Verify ownership if ownerId is provided
     if (ownerId && bankAccount.ownerId !== ownerId) {
       return res.status(403).json({
-        error: "You don't have permission to delete this bank account"
+        error: "You don't have permission to delete this bank account",
       });
     }
 
     // Check if this account has been used for withdrawals
     const WithdrawalRequest = require("../models/WithdrawalRequest");
     const withdrawalCount = await WithdrawalRequest.countDocuments({
-      bankAccountId: bankAccountId
+      bankAccountId: bankAccountId,
     });
 
     if (withdrawalCount > 0) {
@@ -920,7 +947,7 @@ const deleteBankAccount = async (req, res) => {
       return res.status(200).json({
         success: true,
         message: "Bank account deactivated (has withdrawal history)",
-        bankAccount
+        bankAccount,
       });
     }
 
@@ -929,13 +956,13 @@ const deleteBankAccount = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Bank account removed successfully"
+      message: "Bank account removed successfully",
     });
   } catch (error) {
     console.error("Error deleting bank account:", error);
     res.status(500).json({
       error: "Failed to delete bank account",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -965,12 +992,12 @@ const verifyBankAccount = async (req, res) => {
       bankAccount.verificationDate = new Date();
       bankAccount.metadata = {
         ...(bankAccount.metadata || {}),
-        note: "Auto-verified due to missing Razorpay configuration"
+        note: "Auto-verified due to missing Razorpay configuration",
       };
       await bankAccount.save();
       return res.status(200).json({
         message: "Bank account verified (development mode)",
-        bankAccount
+        bankAccount,
       });
     }
 
@@ -986,9 +1013,16 @@ const verifyBankAccount = async (req, res) => {
     }
 
     // Basic validation for IFSC/Account number (Indian banks). Adjust as needed per region
-    if ((bankAccount.ifscCode ? !bankAccount.ifscCode : !bankAccount.routingNumber) || !bankAccount.accountNumber) {
+    if (
+      (bankAccount.ifscCode
+        ? !bankAccount.ifscCode
+        : !bankAccount.routingNumber) ||
+      !bankAccount.accountNumber
+    ) {
       return res.status(400).json({
-        error: `${bankAccount.routingNumber ? "Routing Number" : "IFSC code"} and account number are required for verification`,
+        error: `${
+          bankAccount.routingNumber ? "Routing Number" : "IFSC code"
+        } and account number are required for verification`,
       });
     }
 
@@ -996,8 +1030,13 @@ const verifyBankAccount = async (req, res) => {
     if (!bankAccount.razorpayContactId) {
       try {
         // Check if contacts API is available
-        if (!razorpay.contacts || typeof razorpay.contacts.create !== 'function') {
-          console.warn("Razorpay contacts API not available - proceeding without contact creation");
+        if (
+          !razorpay.contacts ||
+          typeof razorpay.contacts.create !== "function"
+        ) {
+          console.warn(
+            "Razorpay contacts API not available - proceeding without contact creation"
+          );
           // For basic verification, we can proceed without a contact ID
           // Just auto-verify for now since we can't do penny drop without RazorpayX
           bankAccount.isVerified = true;
@@ -1007,12 +1046,12 @@ const verifyBankAccount = async (req, res) => {
           bankAccount.verificationDate = new Date();
           bankAccount.metadata = {
             ...(bankAccount.metadata || {}),
-            note: "Auto-verified: Razorpay contacts API not available"
+            note: "Auto-verified: Razorpay contacts API not available",
           };
           await bankAccount.save();
           return res.status(200).json({
             message: "Bank account verified (contacts API not available)",
-            bankAccount
+            bankAccount,
           });
         }
 
@@ -1022,7 +1061,11 @@ const verifyBankAccount = async (req, res) => {
 
         // Try to get the actual user details from Contacts
         const { Contacts } = require("../models/Contacts");
-        const userContact = await Contacts.findOne({ ownerId: bankAccount.ownerId }).select("email phone countryCode").lean();
+        const userContact = await Contacts.findOne({
+          ownerId: bankAccount.ownerId,
+        })
+          .select("email phone countryCode")
+          .lean();
         if (userContact) {
           if (userContact.email) {
             email = userContact.email;
@@ -1030,17 +1073,19 @@ const verifyBankAccount = async (req, res) => {
           if (userContact.phone) {
             const countryCode = userContact.countryCode || "+91";
             const phoneNumber = userContact.phone;
-            phone = phoneNumber.startsWith("+") ? phoneNumber : `${countryCode}${phoneNumber.replace(/^0+/, '')}`;
+            phone = phoneNumber.startsWith("+")
+              ? phoneNumber
+              : `${countryCode}${phoneNumber.replace(/^0+/, "")}`;
           }
         }
 
-        console.log("Creating Razorpay contact with:", {
-          name: bankAccount.accountHolderName,
-          email: email,
-          phone: phone,
-          type: "customer",
-          reference_id: bankAccount.ownerId
-        });
+        // console.log("Creating Razorpay contact with:", {
+        //   name: bankAccount.accountHolderName,
+        //   email: email,
+        //   phone: phone,
+        //   type: "customer",
+        //   reference_id: bankAccount.ownerId
+        // });
 
         const contact = await razorpay.contacts.create({
           name: bankAccount.accountHolderName,
@@ -1048,15 +1093,20 @@ const verifyBankAccount = async (req, res) => {
           contact: phone, // Phone number from Contacts or default
           type: "customer",
           reference_id: bankAccount.ownerId,
-          notes: { ownerId: bankAccount.ownerId }
+          notes: { ownerId: bankAccount.ownerId },
         });
         bankAccount.razorpayContactId = contact.id;
-        console.log("Razorpay contact created successfully:", contact.id);
+        // console.log("Razorpay contact created successfully:", contact.id);
       } catch (e) {
-        console.error("Razorpay create contact failed:", e.response?.data || e.message || e);
+        console.error(
+          "Razorpay create contact failed:",
+          e.response?.data || e.message || e
+        );
 
         // If contact creation fails, we can still try basic verification
-        console.warn("Contact creation failed - proceeding with auto-verification");
+        console.warn(
+          "Contact creation failed - proceeding with auto-verification"
+        );
         bankAccount.isVerified = true;
         bankAccount.isActive = true; // Ensure account is active
         bankAccount.verificationStatus = "verified";
@@ -1065,12 +1115,12 @@ const verifyBankAccount = async (req, res) => {
         bankAccount.metadata = {
           ...(bankAccount.metadata || {}),
           note: "Auto-verified: Contact creation failed",
-          error: e.message
+          error: e.message,
         };
         await bankAccount.save();
         return res.status(200).json({
           message: "Bank account verified (contact creation failed)",
-          bankAccount
+          bankAccount,
         });
       }
     }
@@ -1078,15 +1128,15 @@ const verifyBankAccount = async (req, res) => {
     // Ensure Razorpay Fund Account
     if (!bankAccount.razorpayFundAccountId) {
       try {
-        console.log("Creating Razorpay fund account with:", {
-          contact_id: bankAccount.razorpayContactId,
-          account_type: "bank_account",
-          bank_account: {
-            name: bankAccount.accountHolderName,
-            ifsc: bankAccount.ifscCode,
-            account_number: bankAccount.accountNumber,
-          }
-        });
+        // console.log("Creating Razorpay fund account with:", {
+        //   contact_id: bankAccount.razorpayContactId,
+        //   account_type: "bank_account",
+        //   bank_account: {
+        //     name: bankAccount.accountHolderName,
+        //     ifsc: bankAccount.ifscCode,
+        //     account_number: bankAccount.accountNumber,
+        //   }
+        // });
 
         // @ts-ignore - Razorpay SDK returns a Promise despite TypeScript warning
         const fundAccount = await razorpay.fundAccount.create({
@@ -1103,12 +1153,15 @@ const verifyBankAccount = async (req, res) => {
           },
         });
         bankAccount.razorpayFundAccountId = fundAccount.id;
-        console.log("Razorpay fund account created successfully:", fundAccount.id);
+        // console.log("Razorpay fund account created successfully:", fundAccount.id);
       } catch (e) {
-        console.error("Razorpay create fund account failed:", e.response?.data || e.message || e);
+        console.error(
+          "Razorpay create fund account failed:",
+          e.response?.data || e.message || e
+        );
         return res.status(502).json({
           error: "Failed to create Razorpay fund account",
-          details: e.response?.data?.error || e.message
+          details: e.response?.data?.error || e.message,
         });
       }
     }
@@ -1169,7 +1222,11 @@ const verifyBankAccount = async (req, res) => {
 
       // Check if it's a RazorpayX not enabled error
       const errorMessage = err.body?.error?.description || err.message || "";
-      if (errorMessage.includes("not enabled") || errorMessage.includes("RazorpayX") || err.statusCode === 400) {
+      if (
+        errorMessage.includes("not enabled") ||
+        errorMessage.includes("RazorpayX") ||
+        err.statusCode === 400
+      ) {
         console.warn("RazorpayX not enabled - auto-verifying for testing");
         bankAccount.isVerified = true;
         bankAccount.isActive = true; // Ensure account is active
@@ -1178,12 +1235,12 @@ const verifyBankAccount = async (req, res) => {
         bankAccount.verificationDate = new Date();
         bankAccount.metadata = {
           ...(bankAccount.metadata || {}),
-          note: "Auto-verified: RazorpayX not enabled on account"
+          note: "Auto-verified: RazorpayX not enabled on account",
         };
         await bankAccount.save();
         return res.status(200).json({
           message: "Bank account verified (RazorpayX not available)",
-          bankAccount
+          bankAccount,
         });
       }
 
@@ -1197,13 +1254,15 @@ const verifyBankAccount = async (req, res) => {
       await bankAccount.save();
       return res.status(502).json({
         error: "Bank account validation failed",
-        details: errorMessage
+        details: errorMessage,
       });
     }
 
     // Interpret response
     const vStatus = (validationResponse.status || "").toLowerCase();
-    const resultStatus = (validationResponse.results?.account_status || "").toLowerCase();
+    const resultStatus = (
+      validationResponse.results?.account_status || ""
+    ).toLowerCase();
     const beneficiaryName = validationResponse.results?.name_at_bank;
 
     // Persist validation meta for future reference
@@ -1281,7 +1340,7 @@ const createWithdrawalRequest = async (req, res) => {
       bankAccountId,
       mode,
       notes,
-      walletSnapshot // Added for manual processing
+      walletSnapshot, // Added for manual processing
     } = req.body;
 
     // Validate inputs
@@ -1294,12 +1353,12 @@ const createWithdrawalRequest = async (req, res) => {
         message: "Missing required fields",
         requestBody: req.body,
         requestBody: {
-          error: "Missing required fields"
-        }
+          error: "Missing required fields",
+        },
       };
 
       return res.status(400).json({
-        error: "Missing required fields"
+        error: "Missing required fields",
       });
     }
 
@@ -1314,12 +1373,12 @@ const createWithdrawalRequest = async (req, res) => {
         message: "Minimum withdrawal amount is ${MIN_WITHDRAWAL}",
         requestBody: req.body,
         requestBody: {
-          error: `Minimum withdrawal amount is ${MIN_WITHDRAWAL}`
-        }
+          error: `Minimum withdrawal amount is ${MIN_WITHDRAWAL}`,
+        },
       };
 
       return res.status(400).json({
-        error: `Minimum withdrawal amount is ${MIN_WITHDRAWAL}`
+        error: `Minimum withdrawal amount is ${MIN_WITHDRAWAL}`,
       });
     }
 
@@ -1334,12 +1393,12 @@ const createWithdrawalRequest = async (req, res) => {
         message: "Wallet not found",
         requestBody: req.body,
         requestBody: {
-          error: "Wallet not found"
-        }
+          error: "Wallet not found",
+        },
       };
 
       return res.status(404).json({
-        error: "Wallet not found"
+        error: "Wallet not found",
       });
     }
 
@@ -1355,13 +1414,13 @@ const createWithdrawalRequest = async (req, res) => {
         requestBody: req.body,
         requestBody: {
           error: "Insufficient balance",
-          availableBalance
-        }
+          availableBalance,
+        },
       };
 
       return res.status(400).json({
         error: "Insufficient balance",
-        availableBalance
+        availableBalance,
       });
     }
 
@@ -1376,12 +1435,12 @@ const createWithdrawalRequest = async (req, res) => {
         message: "Bank account not found",
         requestBody: req.body,
         requestBody: {
-          error: "Bank account not found"
-        }
+          error: "Bank account not found",
+        },
       };
 
       return res.status(404).json({
-        error: "Bank account not found"
+        error: "Bank account not found",
       });
     }
 
@@ -1394,19 +1453,19 @@ const createWithdrawalRequest = async (req, res) => {
         message: "Bank account is not verified or active",
         requestBody: req.body,
         requestBody: {
-          error: "Bank account is not verified or active"
-        }
+          error: "Bank account is not verified or active",
+        },
       };
 
       return res.status(400).json({
-        error: "Bank account is not verified or active"
+        error: "Bank account is not verified or active",
       });
     }
 
     // Check for pending withdrawals
     const pendingWithdrawals = await WithdrawalRequest.find({
       ownerId,
-      status: { $in: ["pending", "processing", "queued", "initiated"] }
+      status: { $in: ["pending", "processing", "queued", "initiated"] },
     });
 
     if (pendingWithdrawals.length > 0) {
@@ -1415,22 +1474,29 @@ const createWithdrawalRequest = async (req, res) => {
         ownerId,
         processName: "Create Withdrawal Request",
         status: "error",
-        message: "You have pending withdrawal requests. Please wait for them to complete.",
+        message:
+          "You have pending withdrawal requests. Please wait for them to complete.",
         requestBody: req.body,
         requestBody: {
-          error: "You have pending withdrawal requests. Please wait for them to complete."
-        }
+          error:
+            "You have pending withdrawal requests. Please wait for them to complete.",
+        },
       };
 
       return res.status(400).json({
-        error: "You have pending withdrawal requests. Please wait for them to complete."
+        error:
+          "You have pending withdrawal requests. Please wait for them to complete.",
       });
     }
 
     // Generate unique withdrawal code using centralized service (handles retries internally)
     let withdrawalRequest;
     try {
-      const withdrawalCode = await generateUniqueId('WDL', WithdrawalRequest, 'withdrawalCode');
+      const withdrawalCode = await generateUniqueId(
+        "WDL",
+        WithdrawalRequest,
+        "withdrawalCode"
+      );
 
       // Calculate fees (example: 2% or flat ₹10)
       const processingFee = Math.max(amount * 0.02, 10);
@@ -1461,7 +1527,7 @@ const createWithdrawalRequest = async (req, res) => {
           walletSnapshot: walletSnapshot || {
             currentBalance: wallet.balance,
             currentHoldAmount: wallet.holdAmount || 0,
-            availableBalance: wallet.balance - (wallet.holdAmount || 0)
+            availableBalance: wallet.balance - (wallet.holdAmount || 0),
           },
           bankDetails: {
             accountHolderName: bankAccount.accountHolderName,
@@ -1469,15 +1535,15 @@ const createWithdrawalRequest = async (req, res) => {
             accountNumber: bankAccount.maskedAccountNumber,
             accountType: bankAccount.accountType,
             routingNumber: bankAccount.routingNumber,
-            swiftCode: bankAccount.swiftCode
+            swiftCode: bankAccount.swiftCode,
           },
           processingType: "manual",
-          requiresAdminApproval: true
-        }
+          requiresAdminApproval: true,
+        },
       });
     } catch (error) {
-      console.error('Failed to create withdrawal request:', error);
-      
+      console.error("Failed to create withdrawal request:", error);
+
       res.locals.logData = {
         tenantId,
         ownerId,
@@ -1487,19 +1553,18 @@ const createWithdrawalRequest = async (req, res) => {
         error: error.message,
         requestBody: req.body,
         responseBody: {
-          error: error.message
-        }
+          error: error.message,
+        },
       };
 
       return res.status(500).json({
         error: "Failed to create withdrawal request. Please try again.",
-        details: error.message
+        details: error.message,
       });
     }
 
     // Check if withdrawal was created
     if (!withdrawalRequest) {
-
       res.locals.logData = {
         tenantId,
         ownerId,
@@ -1508,14 +1573,12 @@ const createWithdrawalRequest = async (req, res) => {
         message: "Failed to create withdrawal request after multiple attempts.",
         requestBody: req.body,
         requestBody: {
-          error: "Failed to create withdrawal request after multiple attempts."
-        }
+          error: "Failed to create withdrawal request after multiple attempts.",
+        },
       };
 
-
-
       return res.status(500).json({
-        error: "Failed to create withdrawal request after multiple attempts."
+        error: "Failed to create withdrawal request after multiple attempts.",
       });
     }
 
@@ -1535,9 +1598,9 @@ const createWithdrawalRequest = async (req, res) => {
         bankAccountId,
         amount,
         processingType: "manual",
-        requestedAt: new Date()
+        requestedAt: new Date(),
       },
-      createdDate: new Date()
+      createdDate: new Date(),
     });
 
     await wallet.save();
@@ -1548,7 +1611,11 @@ const createWithdrawalRequest = async (req, res) => {
         ownerId,
         tenantId,
         title: "Withdrawal Request Created",
-        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode} for ₹${withdrawalRequest.netAmount.toFixed(2)} has been submitted successfully. It will be processed within 24-48 hours.`,
+        message: `Your withdrawal request ${
+          withdrawalRequest.withdrawalCode
+        } for ₹${withdrawalRequest.netAmount.toFixed(
+          2
+        )} has been submitted successfully. It will be processed within 24-48 hours.`,
         type: "wallet",
         category: "withdrawal_status",
         unread: true,
@@ -1560,11 +1627,14 @@ const createWithdrawalRequest = async (req, res) => {
           status: "pending",
           bankAccount: bankAccount.maskedAccountNumber,
           bankName: bankAccount.bankName,
-          createdAt: new Date()
-        }
+          createdAt: new Date(),
+        },
       });
     } catch (notificationError) {
-      console.error("Error creating withdrawal notification:", notificationError);
+      console.error(
+        "Error creating withdrawal notification:",
+        notificationError
+      );
       // Don't fail the withdrawal if notification fails
     }
 
@@ -1580,7 +1650,7 @@ const createWithdrawalRequest = async (req, res) => {
       status: "success",
       message: "Withdrawal request created successfully.",
       requestBody: req.body,
-       responseBody: {
+      responseBody: {
         withdrawalCode: withdrawalRequest.withdrawalCode,
         amount,
         netAmount: withdrawalRequest.netAmount,
@@ -1591,11 +1661,11 @@ const createWithdrawalRequest = async (req, res) => {
     res.status(201).json({
       success: true,
       withdrawalRequest,
-      message: `Withdrawal request ${withdrawalRequest.withdrawalCode} created successfully. It will be processed within 24-48 hours.`
+      message: `Withdrawal request ${withdrawalRequest.withdrawalCode} created successfully. It will be processed within 24-48 hours.`,
     });
   } catch (error) {
     console.error("Error creating withdrawal request:", error);
-    
+
     res.locals.logData = {
       tenantId,
       ownerId,
@@ -1605,13 +1675,13 @@ const createWithdrawalRequest = async (req, res) => {
       requestBody: req.body,
       requestBody: {
         error: "Failed to create withdrawal request",
-        details: error.message
-      }
+        details: error.message,
+      },
     };
 
     res.status(500).json({
       error: "Failed to create withdrawal request",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -1621,7 +1691,7 @@ const createWithdrawalRequest = async (req, res) => {
 //   try {
 //     const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId)
 //       .populate("bankAccountId");
-//     
+//
 //     if (!withdrawalRequest) {
 //       throw new Error("Withdrawal request not found");
 //     }
@@ -1657,7 +1727,7 @@ const createWithdrawalRequest = async (req, res) => {
 //       console.log("Payout initiated successfully:", payout.id);
 //     } catch (razorpayError) {
 //       console.error("Razorpay payout error:", razorpayError);
-//       
+//
 //       withdrawalRequest.status = "failed";
 //       withdrawalRequest.failedAt = new Date();
 //       withdrawalRequest.failureReason = razorpayError.error?.description || razorpayError.message;
@@ -1667,7 +1737,7 @@ const createWithdrawalRequest = async (req, res) => {
 //       if (wallet) {
 //         wallet.balance += withdrawalRequest.amount;
 //         wallet.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
-//         
+//
 //         wallet.transactions.push({
 //           type: "credit",
 //           amount: withdrawalRequest.amount,
@@ -1680,7 +1750,7 @@ const createWithdrawalRequest = async (req, res) => {
 //           },
 //           createdDate: new Date()
 //         });
-//         
+//
 //         await wallet.save();
 //       }
 //     }
@@ -1696,18 +1766,19 @@ const failManualWithdrawal = async (req, res) => {
     const { withdrawalRequestId } = req.params;
     const { failureReason, failedBy, adminNotes } = req.body;
 
-    const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId)
-      .populate("bankAccountId");
+    const withdrawalRequest = await WithdrawalRequest.findById(
+      withdrawalRequestId
+    ).populate("bankAccountId");
 
     if (!withdrawalRequest) {
       return res.status(404).json({
-        error: "Withdrawal request not found"
+        error: "Withdrawal request not found",
       });
     }
 
     if (!["pending", "processing"].includes(withdrawalRequest.status)) {
       return res.status(400).json({
-        error: `Cannot fail withdrawal in status: ${withdrawalRequest.status}`
+        error: `Cannot fail withdrawal in status: ${withdrawalRequest.status}`,
       });
     }
 
@@ -1726,17 +1797,22 @@ const failManualWithdrawal = async (req, res) => {
         failedBy,
         failedAt: new Date(),
         failureReason,
-        adminNotes
-      }
+        adminNotes,
+      },
     };
 
     await withdrawalRequest.save();
 
     // Refund amount back to wallet
-    const wallet = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
+    const wallet = await WalletTopup.findOne({
+      ownerId: withdrawalRequest.ownerId,
+    });
     if (wallet) {
       wallet.balance += withdrawalRequest.amount;
-      wallet.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
+      wallet.holdAmount = Math.max(
+        0,
+        (wallet.holdAmount || 0) - withdrawalRequest.amount
+      );
 
       wallet.transactions.push({
         type: "credit",
@@ -1746,22 +1822,26 @@ const failManualWithdrawal = async (req, res) => {
         metadata: {
           withdrawalRequestId: withdrawalRequest._id,
           withdrawalCode: withdrawalRequest.withdrawalCode,
-          failureReason: withdrawalRequest.failureReason
+          failureReason: withdrawalRequest.failureReason,
         },
-        createdDate: new Date()
+        createdDate: new Date(),
       });
 
       await wallet.save();
     }
 
     // Update wallet - remove from pending to failed
-    const walletUpdate = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
+    const walletUpdate = await WalletTopup.findOne({
+      ownerId: withdrawalRequest.ownerId,
+    });
     if (walletUpdate) {
       //walletUpdate.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
 
       // Update transaction status
       const transaction = walletUpdate.transactions.find(
-        t => t.metadata?.withdrawalRequestId?.toString() === withdrawalRequest._id.toString()
+        (t) =>
+          t.metadata?.withdrawalRequestId?.toString() ===
+          withdrawalRequest._id.toString()
       );
       if (transaction) {
         transaction.status = "failed";
@@ -1770,8 +1850,7 @@ const failManualWithdrawal = async (req, res) => {
           failedAt: new Date(),
           withdrawalRequestId: withdrawalRequest._id,
           withdrawalCode: withdrawalRequest.withdrawalCode,
-          failureReason: withdrawalRequest.failureReason
-
+          failureReason: withdrawalRequest.failureReason,
         };
       }
 
@@ -1784,7 +1863,13 @@ const failManualWithdrawal = async (req, res) => {
         ownerId: withdrawalRequest.ownerId,
         tenantId: withdrawalRequest.tenantId,
         title: "Withdrawal Failed",
-        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode} for ₹${withdrawalRequest.amount.toFixed(2)} could not be processed. The amount has been refunded to your wallet. Reason: ${failureReason || 'Processing error'}`,
+        message: `Your withdrawal request ${
+          withdrawalRequest.withdrawalCode
+        } for ₹${withdrawalRequest.amount.toFixed(
+          2
+        )} could not be processed. The amount has been refunded to your wallet. Reason: ${
+          failureReason || "Processing error"
+        }`,
         type: "wallet",
         category: "withdrawal_status",
         unread: true,
@@ -1794,24 +1879,27 @@ const failManualWithdrawal = async (req, res) => {
           amount: withdrawalRequest.amount,
           status: "failed",
           failureReason: failureReason || "Processing error",
-          failedAt: new Date()
-        }
+          failedAt: new Date(),
+        },
       });
     } catch (notificationError) {
-      console.error("Error creating withdrawal failure notification:", notificationError);
+      console.error(
+        "Error creating withdrawal failure notification:",
+        notificationError
+      );
       // Don't fail the process if notification fails
     }
 
     res.status(200).json({
       success: true,
       withdrawalRequest,
-      message: "Withdrawal marked as failed and amount refunded"
+      message: "Withdrawal marked as failed and amount refunded",
     });
   } catch (error) {
     console.error("Error failing withdrawal:", error);
     res.status(500).json({
       error: "Failed to process withdrawal failure",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -1823,21 +1911,22 @@ const processManualWithdrawal = async (req, res) => {
       transactionReference,
       processedBy,
       adminNotes,
-      actualMode // IMPS, NEFT, UPI, etc.
+      actualMode, // IMPS, NEFT, UPI, etc.
     } = req.body;
 
-    const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId)
-      .populate("bankAccountId");
+    const withdrawalRequest = await WithdrawalRequest.findById(
+      withdrawalRequestId
+    ).populate("bankAccountId");
 
     if (!withdrawalRequest) {
       return res.status(404).json({
-        error: "Withdrawal request not found"
+        error: "Withdrawal request not found",
       });
     }
 
     if (!["pending", "processing"].includes(withdrawalRequest.status)) {
       return res.status(400).json({
-        error: `Cannot process withdrawal in status: ${withdrawalRequest.status}`
+        error: `Cannot process withdrawal in status: ${withdrawalRequest.status}`,
       });
     }
 
@@ -1858,20 +1947,27 @@ const processManualWithdrawal = async (req, res) => {
         processedAt: new Date(),
         transactionReference,
         actualMode: actualMode || withdrawalRequest.mode,
-        adminNotes
-      }
+        adminNotes,
+      },
     };
 
     await withdrawalRequest.save();
 
     // Update wallet - remove from hold
-    const wallet = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
+    const wallet = await WalletTopup.findOne({
+      ownerId: withdrawalRequest.ownerId,
+    });
     if (wallet) {
-      wallet.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
+      wallet.holdAmount = Math.max(
+        0,
+        (wallet.holdAmount || 0) - withdrawalRequest.amount
+      );
 
       // Update transaction status
       const transaction = wallet.transactions.find(
-        t => t.metadata?.withdrawalRequestId?.toString() === withdrawalRequest._id.toString()
+        (t) =>
+          t.metadata?.withdrawalRequestId?.toString() ===
+          withdrawalRequest._id.toString()
       );
       if (transaction) {
         transaction.status = "completed";
@@ -1879,7 +1975,7 @@ const processManualWithdrawal = async (req, res) => {
           ...transaction.metadata,
           completedAt: new Date(),
           transactionReference,
-          processedBy
+          processedBy,
         };
       }
 
@@ -1892,7 +1988,14 @@ const processManualWithdrawal = async (req, res) => {
         ownerId: withdrawalRequest.ownerId,
         tenantId: withdrawalRequest.tenantId,
         title: "Withdrawal Completed",
-        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode} for ₹${withdrawalRequest.netAmount.toFixed(2)} has been completed successfully. The amount has been transferred to your bank account ending with ${withdrawalRequest.bankAccountId?.maskedAccountNumber || 'your registered account'}.`,
+        message: `Your withdrawal request ${
+          withdrawalRequest.withdrawalCode
+        } for ₹${withdrawalRequest.netAmount.toFixed(
+          2
+        )} has been completed successfully. The amount has been transferred to your bank account ending with ${
+          withdrawalRequest.bankAccountId?.maskedAccountNumber ||
+          "your registered account"
+        }.`,
         type: "wallet",
         category: "withdrawal_status",
         unread: true,
@@ -1904,24 +2007,27 @@ const processManualWithdrawal = async (req, res) => {
           status: "completed",
           transactionReference,
           processedBy,
-          completedAt: new Date()
-        }
+          completedAt: new Date(),
+        },
       });
     } catch (notificationError) {
-      console.error("Error creating withdrawal completion notification:", notificationError);
+      console.error(
+        "Error creating withdrawal completion notification:",
+        notificationError
+      );
       // Don't fail the process if notification fails
     }
 
     res.status(200).json({
       success: true,
       withdrawalRequest,
-      message: "Withdrawal processed successfully"
+      message: "Withdrawal processed successfully",
     });
   } catch (error) {
     console.error("Error processing manual withdrawal:", error);
     res.status(500).json({
       error: "Failed to process withdrawal",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -1929,17 +2035,16 @@ const processManualWithdrawal = async (req, res) => {
 // Get all withdrawal requests for superadmin - supports optional pagination/search/filters
 const getAllWithdrawalRequests = async (req, res) => {
   try {
-    const hasPaginationParams = (
-      'page' in req.query ||
-      'limit' in req.query ||
-      'search' in req.query ||
-      'status' in req.query ||
-      'mode' in req.query ||
-      'minAmount' in req.query ||
-      'maxAmount' in req.query ||
-      'startDate' in req.query ||
-      'endDate' in req.query
-    );
+    const hasPaginationParams =
+      "page" in req.query ||
+      "limit" in req.query ||
+      "search" in req.query ||
+      "status" in req.query ||
+      "mode" in req.query ||
+      "minAmount" in req.query ||
+      "maxAmount" in req.query ||
+      "startDate" in req.query ||
+      "endDate" in req.query;
 
     if (!hasPaginationParams) {
       // Legacy behavior: return full list with populate
@@ -1947,45 +2052,68 @@ const getAllWithdrawalRequests = async (req, res) => {
         .populate("bankAccountId")
         .sort({ _id: -1 });
 
-      const totalWithdrawalRequests = await WithdrawalRequest.countDocuments({});
+      const totalWithdrawalRequests = await WithdrawalRequest.countDocuments(
+        {}
+      );
 
       return res.status(200).json({
         success: true,
         withdrawalRequests,
         total: totalWithdrawalRequests,
-        hasMore: false
+        hasMore: false,
       });
     }
 
     // Paginated mode
     const page = Math.max(parseInt(req.query.page, 10) || 0, 0);
     const limitRaw = parseInt(req.query.limit, 10);
-    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
-    const search = (req.query.search || '').trim();
-    const statusParam = (req.query.status || '').trim();
-    const modeParam = (req.query.mode || '').trim();
-    const minAmount = req.query.minAmount !== undefined && req.query.minAmount !== '' ? Number(req.query.minAmount) : undefined;
-    const maxAmount = req.query.maxAmount !== undefined && req.query.maxAmount !== '' ? Number(req.query.maxAmount) : undefined;
-    const startDate = req.query.startDate ? new Date(req.query.startDate) : undefined;
+    const limit =
+      Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
+    const search = (req.query.search || "").trim();
+    const statusParam = (req.query.status || "").trim();
+    const modeParam = (req.query.mode || "").trim();
+    const minAmount =
+      req.query.minAmount !== undefined && req.query.minAmount !== ""
+        ? Number(req.query.minAmount)
+        : undefined;
+    const maxAmount =
+      req.query.maxAmount !== undefined && req.query.maxAmount !== ""
+        ? Number(req.query.maxAmount)
+        : undefined;
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate)
+      : undefined;
     const endDate = req.query.endDate ? new Date(req.query.endDate) : undefined;
 
-    const statusValues = statusParam ? statusParam.split(',').map(s => s.trim()).filter(Boolean) : [];
-    const modeValues = modeParam ? modeParam.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const statusValues = statusParam
+      ? statusParam
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+    const modeValues = modeParam
+      ? modeParam
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
 
     const pipeline = [];
 
     // Lookup bank account for search fields
     pipeline.push({
       $lookup: {
-        from: 'bankaccounts',
-        localField: 'bankAccountId',
-        foreignField: '_id',
-        as: 'bankAccount'
-      }
+        from: "bankaccounts",
+        localField: "bankAccountId",
+        foreignField: "_id",
+        as: "bankAccount",
+      },
     });
-    pipeline.push({ $unwind: { path: '$bankAccount', preserveNullAndEmptyArrays: true } });
+    pipeline.push({
+      $unwind: { path: "$bankAccount", preserveNullAndEmptyArrays: true },
+    });
     // Keep legacy shape: expose populated doc as bankAccountId
-    pipeline.push({ $addFields: { bankAccountId: '$bankAccount' } });
+    pipeline.push({ $addFields: { bankAccountId: "$bankAccount" } });
 
     const match = {};
     if (statusValues.length > 0) {
@@ -2012,15 +2140,15 @@ const getAllWithdrawalRequests = async (req, res) => {
       }
     }
     if (search) {
-      const regex = new RegExp(search, 'i');
+      const regex = new RegExp(search, "i");
       match.$or = [
         { withdrawalCode: { $regex: regex } },
         { ownerId: { $regex: regex } },
         { razorpayPayoutId: { $regex: regex } },
         { razorpayReferenceId: { $regex: regex } },
-        { 'bankAccount.bankName': { $regex: regex } },
-        { 'bankAccount.accountHolderName': { $regex: regex } },
-        { 'bankAccount.maskedAccountNumber': { $regex: regex } },
+        { "bankAccount.bankName": { $regex: regex } },
+        { "bankAccount.accountHolderName": { $regex: regex } },
+        { "bankAccount.maskedAccountNumber": { $regex: regex } },
       ];
     }
 
@@ -2032,29 +2160,32 @@ const getAllWithdrawalRequests = async (req, res) => {
 
     pipeline.push({
       $facet: {
-        data: [
-          { $skip: page * limit },
-          { $limit: limit },
-        ],
-        totalCount: [ { $count: 'count' } ],
+        data: [{ $skip: page * limit }, { $limit: limit }],
+        totalCount: [{ $count: "count" }],
         statusCounts: [
           {
             $group: {
-              _id: '$status',
+              _id: "$status",
               count: { $sum: 1 },
-              totalAmount: { $sum: { $ifNull: ['$amount', 0] } },
-              totalNetAmount: { $sum: { $ifNull: ['$netAmount', 0] } },
-            }
-          }
+              totalAmount: { $sum: { $ifNull: ["$amount", 0] } },
+              totalNetAmount: { $sum: { $ifNull: ["$netAmount", 0] } },
+            },
+          },
         ],
-      }
+      },
     });
 
     const aggResult = await WithdrawalRequest.aggregate(pipeline);
-    const agg = aggResult?.[0] || { data: [], totalCount: [], statusCounts: [] };
+    const agg = aggResult?.[0] || {
+      data: [],
+      totalCount: [],
+      statusCounts: [],
+    };
     const data = agg.data || [];
     const totalItems = agg.totalCount?.[0]?.count || 0;
-    const statusCounts = Array.isArray(agg.statusCounts) ? agg.statusCounts : [];
+    const statusCounts = Array.isArray(agg.statusCounts)
+      ? agg.statusCounts
+      : [];
 
     // Build stats map
     const statsMap = statusCounts.reduce((acc, cur) => {
@@ -2073,8 +2204,14 @@ const getAllWithdrawalRequests = async (req, res) => {
       completed: statsMap.completed?.count || 0,
       failed: statsMap.failed?.count || 0,
       cancelled: statsMap.cancelled?.count || 0,
-      totalAmount: Object.values(statsMap).reduce((s, v) => s + (v.totalAmount || 0), 0),
-      totalNetAmount: Object.values(statsMap).reduce((s, v) => s + (v.totalNetAmount || 0), 0),
+      totalAmount: Object.values(statsMap).reduce(
+        (s, v) => s + (v.totalAmount || 0),
+        0
+      ),
+      totalNetAmount: Object.values(statsMap).reduce(
+        (s, v) => s + (v.totalNetAmount || 0),
+        0
+      ),
       pendingAmount: statsMap.pending?.totalAmount || 0,
       pendingNetAmount: statsMap.pending?.totalNetAmount || 0,
       processingAmount: statsMap.processing?.totalAmount || 0,
@@ -2104,7 +2241,7 @@ const getAllWithdrawalRequests = async (req, res) => {
     console.error("Error fetching all withdrawal requests:", error);
     res.status(500).json({
       error: "Failed to fetch withdrawal requests",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -2117,31 +2254,33 @@ const getWithdrawalRequestById = async (req, res) => {
     if (!withdrawalRequestId) {
       return res.status(400).json({
         success: false,
-        error: "Withdrawal request ID is required"
+        error: "Withdrawal request ID is required",
       });
     }
 
-    const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId)
+    const withdrawalRequest = await WithdrawalRequest.findById(
+      withdrawalRequestId
+    )
       .populate("bankAccountId")
       .populate("ownerId", "email firstName lastName"); // Populate owner details if needed
 
     if (!withdrawalRequest) {
       return res.status(404).json({
         success: false,
-        error: "Withdrawal request not found"
+        error: "Withdrawal request not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      withdrawalRequest: withdrawalRequest
+      withdrawalRequest: withdrawalRequest,
     });
   } catch (error) {
     console.error("Error fetching withdrawal request by ID:", error);
     res.status(500).json({
       success: false,
       error: "Failed to fetch withdrawal request",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -2165,7 +2304,10 @@ const getWithdrawalRequests = async (req, res) => {
     }
 
     const withdrawalRequests = await WithdrawalRequest.find(query)
-      .populate("bankAccountId", "bankName maskedAccountNumber accountHolderName")
+      .populate(
+        "bankAccountId",
+        "bankName maskedAccountNumber accountHolderName"
+      )
       .sort({ _id: -1 }) // Using _id for sorting (more reliable in all environments)
       .limit(parseInt(limit))
       .skip(parseInt(skip));
@@ -2178,13 +2320,13 @@ const getWithdrawalRequests = async (req, res) => {
       success: true,
       withdrawalRequests,
       total,
-      hasMore: total > skip + limit
+      hasMore: total > skip + limit,
     });
   } catch (error) {
     console.error("Error fetching withdrawal requests:", error);
     res.status(500).json({
       error: "Failed to fetch withdrawal requests",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -2195,30 +2337,38 @@ const cancelWithdrawalRequest = async (req, res) => {
     const { withdrawalRequestId } = req.params;
     const { reason } = req.body;
 
-    const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId);
+    const withdrawalRequest = await WithdrawalRequest.findById(
+      withdrawalRequestId
+    );
     if (!withdrawalRequest) {
       return res.status(404).json({
-        error: "Withdrawal request not found"
+        error: "Withdrawal request not found",
       });
     }
 
     if (!withdrawalRequest.canCancel()) {
       return res.status(400).json({
-        error: "Withdrawal request cannot be cancelled in current status"
+        error: "Withdrawal request cannot be cancelled in current status",
       });
     }
 
     // Update withdrawal request
     withdrawalRequest.status = "cancelled";
     withdrawalRequest.cancelledAt = new Date();
-    withdrawalRequest.cancellationReason = reason || "User requested cancellation";
+    withdrawalRequest.cancellationReason =
+      reason || "User requested cancellation";
     await withdrawalRequest.save();
 
     // Refund amount back to wallet
-    const wallet = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
+    const wallet = await WalletTopup.findOne({
+      ownerId: withdrawalRequest.ownerId,
+    });
     if (wallet) {
       wallet.balance += withdrawalRequest.amount;
-      wallet.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
+      wallet.holdAmount = Math.max(
+        0,
+        (wallet.holdAmount || 0) - withdrawalRequest.amount
+      );
 
       wallet.transactions.push({
         type: "credit",
@@ -2227,9 +2377,9 @@ const cancelWithdrawalRequest = async (req, res) => {
         status: "completed",
         metadata: {
           withdrawalRequestId: withdrawalRequest._id,
-          withdrawalCode: withdrawalRequest.withdrawalCode
+          withdrawalCode: withdrawalRequest.withdrawalCode,
         },
-        createdDate: new Date()
+        createdDate: new Date(),
       });
 
       await wallet.save();
@@ -2241,7 +2391,11 @@ const cancelWithdrawalRequest = async (req, res) => {
         ownerId: withdrawalRequest.ownerId,
         tenantId: withdrawalRequest.tenantId,
         title: "Withdrawal Canceled",
-        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode} for ₹${withdrawalRequest.amount.toFixed(2)} has been canceled. The amount has been refunded to your wallet.`,
+        message: `Your withdrawal request ${
+          withdrawalRequest.withdrawalCode
+        } for ₹${withdrawalRequest.amount.toFixed(
+          2
+        )} has been canceled. The amount has been refunded to your wallet.`,
         type: "wallet",
         category: "withdrawal_status",
         unread: true,
@@ -2251,24 +2405,27 @@ const cancelWithdrawalRequest = async (req, res) => {
           amount: withdrawalRequest.amount,
           status: "canceled",
           cancellationReason: reason || "User requested cancellation",
-          canceledAt: new Date()
-        }
+          canceledAt: new Date(),
+        },
       });
     } catch (notificationError) {
-      console.error("Error creating withdrawal cancellation notification:", notificationError);
+      console.error(
+        "Error creating withdrawal cancellation notification:",
+        notificationError
+      );
       // Don't fail the cancellation if notification fails
     }
 
     res.status(200).json({
       success: true,
       withdrawalRequest,
-      message: "Withdrawal request cancelled successfully"
+      message: "Withdrawal request cancelled successfully",
     });
   } catch (error) {
     console.error("Error cancelling withdrawal request:", error);
     res.status(500).json({
       error: "Failed to cancel withdrawal request",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -2276,7 +2433,9 @@ const cancelWithdrawalRequest = async (req, res) => {
 // Commented out Razorpay payout webhook - will be used in future when Razorpay automatic payouts are enabled
 const handlePayoutWebhook = async (req, res) => {
   // For now, just acknowledge the webhook since we're doing manual processing
-  return res.status(200).json({ received: true, message: "Manual processing mode active" });
+  return res
+    .status(200)
+    .json({ received: true, message: "Manual processing mode active" });
 };
 
 // Razorpay webhook handler - kept for future use
@@ -2292,7 +2451,7 @@ const handlePayoutWebhook = async (req, res) => {
 //         .createHmac('sha256', payoutWebhookSecret)
 //         .update(JSON.stringify(webhookBody))
 //         .digest('hex');
-//       
+//
 //       if (expectedSignature !== webhookSignature) {
 //         console.error('Invalid payout webhook signature');
 //         return res.status(401).json({ error: "Invalid signature" });
@@ -2321,12 +2480,12 @@ const handlePayoutWebhook = async (req, res) => {
 //         withdrawalRequest.completedAt = new Date();
 //         withdrawalRequest.actualCompletionDate = new Date();
 //         withdrawalRequest.razorpayUtr = payout.utr;
-//         
+//
 //         // Update wallet transaction status
 //         const wallet = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
 //         if (wallet) {
 //           wallet.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
-//           
+//
 //           const transaction = wallet.transactions.find(
 //             t => t.metadata?.withdrawalRequestId?.toString() === withdrawalRequest._id.toString()
 //           );
@@ -2341,13 +2500,13 @@ const handlePayoutWebhook = async (req, res) => {
 //         withdrawalRequest.status = "failed";
 //         withdrawalRequest.failedAt = new Date();
 //         withdrawalRequest.failureReason = payout.failure_reason || "Unknown error";
-//         
+//
 //         // Refund amount back to wallet
 //         const walletRefund = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
 //         if (walletRefund) {
 //           walletRefund.balance += withdrawalRequest.amount;
 //           walletRefund.holdAmount = Math.max(0, (walletRefund.holdAmount || 0) - withdrawalRequest.amount);
-//           
+//
 //           walletRefund.transactions.push({
 //             type: "credit",
 //             amount: withdrawalRequest.amount,
@@ -2360,7 +2519,7 @@ const handlePayoutWebhook = async (req, res) => {
 //             },
 //             createdDate: new Date()
 //           });
-//           
+//
 //           await walletRefund.save();
 //         }
 //         break;
@@ -2368,13 +2527,13 @@ const handlePayoutWebhook = async (req, res) => {
 //       case "payout.reversed":
 //         withdrawalRequest.status = "reversed";
 //         withdrawalRequest.failureReason = payout.status_details?.description || "Payout reversed";
-//         
+//
 //         // Handle reversal similar to failure
 //         const walletReverse = await WalletTopup.findOne({ ownerId: withdrawalRequest.ownerId });
 //         if (walletReverse) {
 //           walletReverse.balance += withdrawalRequest.amount;
 //           walletReverse.holdAmount = Math.max(0, (walletReverse.holdAmount || 0) - withdrawalRequest.amount);
-//           
+//
 //           walletReverse.transactions.push({
 //             type: "credit",
 //             amount: withdrawalRequest.amount,
@@ -2386,7 +2545,7 @@ const handlePayoutWebhook = async (req, res) => {
 //             },
 //             createdDate: new Date()
 //           });
-//           
+//
 //           await walletReverse.save();
 //         }
 //         break;
@@ -2411,18 +2570,26 @@ const handlePayoutWebhook = async (req, res) => {
 const fixVerifiedBankAccounts = async (req, res) => {
   try {
     // First, let's see what bank accounts exist
-    const allAccounts = await BankAccount.find({}).select('isVerified isActive verificationStatus ownerId accountHolderName');
+    const allAccounts = await BankAccount.find({}).select(
+      "isVerified isActive verificationStatus ownerId accountHolderName"
+    );
     //console.log("All bank accounts:", allAccounts);
 
     // Now update any verified accounts that aren't active
     const result = await BankAccount.updateMany(
-      { isVerified: true, $or: [{ isActive: false }, { isActive: { $exists: false } }] },
+      {
+        isVerified: true,
+        $or: [{ isActive: false }, { isActive: { $exists: false } }],
+      },
       { $set: { isActive: true } }
     );
 
     // Also check for accounts with verificationStatus = "verified" but isVerified not true
     const result2 = await BankAccount.updateMany(
-      { verificationStatus: "verified", $or: [{ isVerified: { $ne: true } }, { isActive: { $ne: true } }] },
+      {
+        verificationStatus: "verified",
+        $or: [{ isVerified: { $ne: true } }, { isActive: { $ne: true } }],
+      },
       { $set: { isVerified: true, isActive: true } }
     );
 
@@ -2435,14 +2602,14 @@ const fixVerifiedBankAccounts = async (req, res) => {
       modifiedCount: totalFixed,
       debug: {
         totalAccounts: allAccounts.length,
-        accounts: allAccounts
-      }
+        accounts: allAccounts,
+      },
     });
   } catch (error) {
     console.error("Error fixing verified bank accounts:", error);
     return res.status(500).json({
       error: "Failed to fix verified bank accounts",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -2453,72 +2620,86 @@ const settleInterviewPayment = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { roundId, transactionId, interviewerContactId, companyName, roundTitle, positionTitle, interviewerTenantId } = req.body;
+    const {
+      roundId,
+      transactionId,
+      interviewerContactId,
+      companyName,
+      roundTitle,
+      positionTitle,
+      interviewerTenantId,
+    } = req.body;
 
-    console.log("[settleInterviewPayment] Starting settlement:", { roundId, transactionId, interviewerContactId, companyName, roundTitle });
+    // console.log("[settleInterviewPayment] Starting settlement:", { roundId, transactionId, interviewerContactId, companyName, roundTitle });
 
     // Validate required fields
     if (!roundId || !transactionId || !interviewerContactId) {
       return res.status(400).json({
         success: false,
-        message: "roundId, transactionId, and interviewerContactId are required"
+        message:
+          "roundId, transactionId, and interviewerContactId are required",
       });
     }
 
     // 1. Find the organization's wallet with the hold transaction
     const orgWallet = await WalletTopup.findOne({
-      'transactions._id': transactionId
+      "transactions._id": transactionId,
     }).session(session);
 
     if (!orgWallet) {
       await session.abortTransaction();
       return res.status(404).json({
         success: false,
-        message: "Organization wallet with hold transaction not found"
+        message: "Organization wallet with hold transaction not found",
       });
     }
 
     // 2. Find the specific hold transaction
     const holdTransaction = orgWallet.transactions.find(
-      t => t._id && t._id.toString() === transactionId
+      (t) => t._id && t._id.toString() === transactionId
     );
 
     if (!holdTransaction) {
       await session.abortTransaction();
       return res.status(404).json({
         success: false,
-        message: "Hold transaction not found"
+        message: "Hold transaction not found",
       });
     }
 
-    if (holdTransaction.type !== 'hold' || holdTransaction.status === 'completed') {
+    if (
+      holdTransaction.type !== "hold" ||
+      holdTransaction.status === "completed"
+    ) {
       await session.abortTransaction();
       return res.status(400).json({
         success: false,
-        message: "Transaction is not a hold or already settled"
+        message: "Transaction is not a hold or already settled",
       });
     }
 
     const settlementAmount = holdTransaction.amount;
-    console.log(`[settleInterviewPayment] Settlement amount: ${settlementAmount}`);
+    // console.log(`[settleInterviewPayment] Settlement amount: ${settlementAmount}`);
 
     // 3. Update the hold transaction to debit/completed in organization wallet
     const updatedOrgWallet = await WalletTopup.findOneAndUpdate(
       {
         _id: orgWallet._id,
-        'transactions._id': transactionId
+        "transactions._id": transactionId,
       },
       {
         $set: {
-          'transactions.$.type': 'debit',
-          'transactions.$.status': 'completed',
-          'transactions.$.description': `Settled payment to interviewer for ${companyName || 'Company'} - ${roundTitle || 'Interview Round'}`,
-          'transactions.$.metadata.settledAt': new Date(),
-          'transactions.$.metadata.settlementStatus': 'completed'
+          "transactions.$.type": "debit",
+          "transactions.$.status": "completed",
+          "transactions.$.description": `Settled payment to interviewer for ${
+            companyName || "Company"
+          } - ${roundTitle || "Interview Round"}`,
+          "transactions.$.metadata.settledAt": new Date(),
+          "transactions.$.metadata.settlementStatus": "completed",
         },
         $inc: {
-          holdAmount: -settlementAmount  // Reduce hold amount
-        }
+          holdAmount: -settlementAmount, // Reduce hold amount
+        },
       },
       { new: true, session }
     );
@@ -2527,45 +2708,52 @@ const settleInterviewPayment = async (req, res) => {
       await session.abortTransaction();
       return res.status(500).json({
         success: false,
-        message: "Failed to update organization wallet"
+        message: "Failed to update organization wallet",
       });
     }
 
-    console.log(`[settleInterviewPayment] Updated org wallet - reduced hold by ${settlementAmount}`);
+    // console.log(`[settleInterviewPayment] Updated org wallet - reduced hold by ${settlementAmount}`);
 
     // 4. Find or create interviewer's wallet
-    let interviewerWallet = await WalletTopup.findOne({ ownerId: interviewerContactId }).session(session);
+    let interviewerWallet = await WalletTopup.findOne({
+      ownerId: interviewerContactId,
+    }).session(session);
 
     if (!interviewerWallet) {
       // Create wallet for interviewer if doesn't exist
       // Get tenantId from the organization wallet or request
-      const tenantId = orgWallet?.tenantId || req.body?.tenantId || req.query?.tenantId;
+      const tenantId =
+        orgWallet?.tenantId || req.body?.tenantId || req.query?.tenantId;
 
       if (!tenantId) {
-        console.warn(`[settleInterviewPayment] Creating interviewer wallet without tenantId for ${interviewerContactId}`);
+        console.warn(
+          `[settleInterviewPayment] Creating interviewer wallet without tenantId for ${interviewerContactId}`
+        );
       }
     }
 
     // 5. Create credit transaction for interviewer
     const creditTransaction = {
-      type: 'credit',
+      type: "credit",
       amount: settlementAmount,
-      description: `Payment from ${companyName || 'Company'} - ${roundTitle || 'Interview Round'} for ${positionTitle || 'Position'}`,
+      description: `Payment from ${companyName || "Company"} - ${
+        roundTitle || "Interview Round"
+      } for ${positionTitle || "Position"}`,
       relatedInvoiceId: holdTransaction.relatedInvoiceId,
-      status: 'completed',
+      status: "completed",
       metadata: {
         ...holdTransaction.metadata,
         settlementDate: new Date(),
         originalTransactionId: transactionId,
         organizationWalletId: orgWallet._id.toString(),
         roundId: roundId,
-        settlementType: 'interview_payment',
-        companyName: companyName || 'Company',
-        roundTitle: roundTitle || 'Interview Round',
-        positionTitle: positionTitle || 'Position'
+        settlementType: "interview_payment",
+        companyName: companyName || "Company",
+        roundTitle: roundTitle || "Interview Round",
+        positionTitle: positionTitle || "Position",
       },
       createdDate: new Date(),
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     // 6. Update interviewer's wallet - add balance and transaction
@@ -2573,11 +2761,11 @@ const settleInterviewPayment = async (req, res) => {
       interviewerWallet._id,
       {
         $inc: {
-          balance: settlementAmount  // Increase interviewer balance
+          balance: settlementAmount, // Increase interviewer balance
         },
         $push: {
-          transactions: creditTransaction
-        }
+          transactions: creditTransaction,
+        },
       },
       { new: true, session }
     );
@@ -2586,11 +2774,11 @@ const settleInterviewPayment = async (req, res) => {
       await session.abortTransaction();
       return res.status(500).json({
         success: false,
-        message: "Failed to update interviewer wallet"
+        message: "Failed to update interviewer wallet",
       });
     }
 
-    console.log(`[settleInterviewPayment] Added ${settlementAmount} to interviewer wallet. New balance: ${updatedInterviewerWallet.balance}`);
+    // console.log(`[settleInterviewPayment] Added ${settlementAmount} to interviewer wallet. New balance: ${updatedInterviewerWallet.balance}`);
 
     // 7. Send push notification to interviewer
     try {
@@ -2599,15 +2787,18 @@ const settleInterviewPayment = async (req, res) => {
         interviewerTenantId,
         {
           amount: settlementAmount,
-          companyName: companyName || 'Company',
-          roundTitle: roundTitle || 'Interview Round',
-          positionTitle: positionTitle || 'Position',
-          settlementCode: transactionId
+          companyName: companyName || "Company",
+          roundTitle: roundTitle || "Interview Round",
+          positionTitle: positionTitle || "Position",
+          settlementCode: transactionId,
         }
       );
-      console.log("[settleInterviewPayment] Push notification sent to interviewer");
+      // console.log("[settleInterviewPayment] Push notification sent to interviewer");
     } catch (notifErr) {
-      console.error("[settleInterviewPayment] Failed to send notification:", notifErr);
+      console.error(
+        "[settleInterviewPayment] Failed to send notification:",
+        notifErr
+      );
       // Don't fail the settlement if notification fails
     }
 
@@ -2618,10 +2809,10 @@ const settleInterviewPayment = async (req, res) => {
       roundId,
       {
         $set: {
-          settlementStatus: 'completed',
+          settlementStatus: "completed",
           settlementDate: new Date(),
-          settlementTransactionId: creditTransaction._id
-        }
+          settlementTransactionId: creditTransaction._id,
+        },
       },
       { new: true, session }
     );
@@ -2632,10 +2823,10 @@ const settleInterviewPayment = async (req, res) => {
         roundId,
         {
           $set: {
-            settlementStatus: 'completed',
+            settlementStatus: "completed",
             settlementDate: new Date(),
-            settlementTransactionId: creditTransaction._id
-          }
+            settlementTransactionId: creditTransaction._id,
+          },
         },
         { new: true, session }
       );
@@ -2644,7 +2835,7 @@ const settleInterviewPayment = async (req, res) => {
     // Commit transaction
     await session.commitTransaction();
 
-    console.log("[settleInterviewPayment] Settlement completed successfully");
+    // console.log("[settleInterviewPayment] Settlement completed successfully");
 
     return res.status(200).json({
       success: true,
@@ -2654,25 +2845,24 @@ const settleInterviewPayment = async (req, res) => {
         organizationWallet: {
           ownerId: updatedOrgWallet.ownerId,
           balance: updatedOrgWallet.balance,
-          holdAmount: updatedOrgWallet.holdAmount
+          holdAmount: updatedOrgWallet.holdAmount,
         },
         interviewerWallet: {
           ownerId: updatedInterviewerWallet.ownerId,
           balance: updatedInterviewerWallet.balance,
-          creditTransactionId: creditTransaction._id
+          creditTransactionId: creditTransaction._id,
         },
         roundId,
-        originalTransactionId: transactionId
-      }
+        originalTransactionId: transactionId,
+      },
     });
-
   } catch (error) {
     await session.abortTransaction();
     console.error("[settleInterviewPayment] Error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to settle interview payment",
-      error: error.message
+      error: error.message,
     });
   } finally {
     session.endSession();
@@ -2693,9 +2883,9 @@ module.exports = {
   cancelWithdrawalRequest,
   handlePayoutWebhook,
   fixVerifiedBankAccounts,
-  settleInterviewPayment,  // Added settlement function
+  settleInterviewPayment, // Added settlement function
   // Manual processing endpoints for superadmin
   processManualWithdrawal,
   failManualWithdrawal,
-  getAllWithdrawalRequests
+  getAllWithdrawalRequests,
 };

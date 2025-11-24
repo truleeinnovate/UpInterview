@@ -22,7 +22,6 @@ class MultiUserVideoCall {
     // Initialize the ZegoCloud engine
     async initialize(appID = null, server = null) {
         try {
-            console.log('Initializing ZegoCloud engine...');
 
             const finalAppID = appID || this.appID;
             const finalServer = server || this.server;
@@ -37,13 +36,11 @@ class MultiUserVideoCall {
                     logURL: ''
                 });
             } catch (error) {
-                console.log('Could not configure logging:', error);
             }
 
             // Set up event listeners
             this.setupEventListeners();
 
-            console.log('ZegoCloud engine initialized successfully');
             return { success: true };
         } catch (error) {
             console.error('Failed to initialize ZegoCloud engine:', error);
@@ -55,7 +52,6 @@ class MultiUserVideoCall {
     setupEventListeners() {
         // Room state updates
         this.engine.on('roomStateUpdate', (roomID, state, errorCode, extendedData) => {
-            console.log('Room state updated:', { roomID, state, errorCode });
 
             if (state === 'CONNECTED') {
                 this.isConnected = true;
@@ -70,7 +66,6 @@ class MultiUserVideoCall {
 
         // User updates (people joining/leaving)
         this.engine.on('roomUserUpdate', (roomID, updateType, userList) => {
-            console.log('Room user update:', { roomID, updateType, userList });
 
             if (updateType === 'ADD') {
                 // New users joined the room
@@ -112,17 +107,14 @@ class MultiUserVideoCall {
 
         // Stream updates (video/audio streams being published/stopped)
         this.engine.on('roomStreamUpdate', (roomID, updateType, streamList) => {
-            console.log('Room stream update:', { roomID, updateType, streamList });
 
             if (updateType === 'ADD') {
                 // New streams are being published
                 streamList.forEach(stream => {
                     // Only play streams that are not from the current user
                     if (stream.userID !== this.userID) {
-                        console.log(`Starting to play stream from user: ${stream.userID}, streamID: ${stream.streamID}`);
                         this.startPlayingStream(stream.streamID, stream.userID);
                     } else {
-                        console.log(`Ignoring own stream: ${stream.streamID}`);
                     }
                 });
 
@@ -134,7 +126,6 @@ class MultiUserVideoCall {
             } else if (updateType === 'DELETE') {
                 // Streams have stopped
                 streamList.forEach(stream => {
-                    console.log(`Stopping stream: ${stream.streamID}`);
                     this.stopPlayingStream(stream.streamID);
                 });
 
@@ -147,7 +138,6 @@ class MultiUserVideoCall {
 
         // Publisher state updates (local stream publishing status)
         this.engine.on('publisherStateUpdate', (streamID, state, errorCode, extendedData) => {
-            console.log('Publisher state update:', { streamID, state, errorCode });
 
             this.triggerEvent('publisherStateUpdate', {
                 streamID,
@@ -159,7 +149,6 @@ class MultiUserVideoCall {
 
         // Player state updates (remote stream playing status)
         this.engine.on('playerStateUpdate', (streamID, state, errorCode, extendedData) => {
-            console.log('Player state update:', { streamID, state, errorCode });
 
             this.triggerEvent('playerStateUpdate', {
                 streamID,
@@ -173,7 +162,6 @@ class MultiUserVideoCall {
     // Join a room with proper user update notifications
     async joinRoom(roomID, userID, userName, token = '') {
         try {
-            console.log('Joining room:', { roomID, userID, userName });
 
             this.roomID = roomID;
             this.userID = userID;
@@ -202,7 +190,6 @@ class MultiUserVideoCall {
                 }
             );
 
-            console.log('Login result:', loginResult);
 
             if (loginResult === true) {
                 // Start publishing local stream
@@ -228,7 +215,6 @@ class MultiUserVideoCall {
     // Start publishing local stream
     async startPublishingLocalStream() {
         try {
-            console.log('Creating local stream...');
 
             // Get user media permissions first
             const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -245,10 +231,8 @@ class MultiUserVideoCall {
 
             // Start publishing with a unique stream ID
             const streamID = `stream_${this.userID}_${Date.now()}`;
-            console.log('Starting to publish stream with ID:', streamID);
             await this.engine.startPublishingStream(streamID, stream);
 
-            console.log('Local stream published successfully with ID:', streamID);
 
             this.triggerEvent('localStreamPublished', {
                 streamID: streamID,
@@ -264,7 +248,6 @@ class MultiUserVideoCall {
     // Start playing a remote stream
     async startPlayingStream(streamID, userID) {
         try {
-            console.log('Starting to play remote stream:', streamID);
 
             // Create a container for the remote video
             const container = document.createElement('div');
@@ -323,7 +306,6 @@ class MultiUserVideoCall {
             streamData.isPlaying = true;
             this.remoteStreams.set(streamID, streamData);
 
-            console.log('Remote stream started playing:', streamID);
 
             this.triggerEvent('remoteStreamStarted', {
                 streamID,
@@ -342,7 +324,6 @@ class MultiUserVideoCall {
     // Stop playing a remote stream
     stopPlayingStream(streamID) {
         try {
-            console.log('Stopping remote stream:', streamID);
 
             this.engine.stopPlayingStream(streamID);
 
@@ -358,7 +339,6 @@ class MultiUserVideoCall {
 
             this.remoteStreams.delete(streamID);
 
-            console.log('Remote stream stopped:', streamID);
 
             this.triggerEvent('remoteStreamStopped', {
                 streamID
@@ -387,7 +367,6 @@ class MultiUserVideoCall {
                     this.participants.set(this.userID, currentUser);
                 }
 
-                console.log('Microphone toggled:', this.isMicOn ? 'ON' : 'OFF');
 
                 this.triggerEvent('micStatusChanged', {
                     userID: this.userID,
@@ -420,7 +399,6 @@ class MultiUserVideoCall {
                     this.participants.set(this.userID, currentUser);
                 }
 
-                console.log('Video toggled:', this.isVideoOn ? 'ON' : 'OFF');
 
                 this.triggerEvent('videoStatusChanged', {
                     userID: this.userID,
@@ -457,7 +435,6 @@ class MultiUserVideoCall {
                     throw new Error('Failed to create screen stream');
                 }
 
-                console.log('Screen stream created:', screenStream);
 
                 // Stop current local stream publishing
                 if (this.localStream) {
@@ -471,7 +448,6 @@ class MultiUserVideoCall {
                     this.localStream = screenStream;
                     this.isScreenSharing = true;
 
-                    console.log('Screen sharing started successfully');
 
                     this.triggerEvent('screenShareStarted', {
                         stream: screenStream,
@@ -508,7 +484,6 @@ class MultiUserVideoCall {
                         this.localStream = cameraStream;
                         this.isScreenSharing = false;
 
-                        console.log('Screen sharing stopped, camera restored');
 
                         this.triggerEvent('screenShareStopped', {
                             stream: cameraStream,
@@ -532,7 +507,6 @@ class MultiUserVideoCall {
     // Leave room
     async leaveRoom() {
         try {
-            console.log('Leaving room...');
 
             // Stop publishing local stream
             if (this.localStream) {
@@ -558,8 +532,6 @@ class MultiUserVideoCall {
             this.isMicOn = true;
             this.isVideoOn = true;
             this.isScreenSharing = false;
-
-            console.log('Left room successfully');
 
             this.triggerEvent('roomLeft');
 

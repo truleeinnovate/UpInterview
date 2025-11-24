@@ -355,33 +355,7 @@ const NewAssessment = () => {
   const [isSaving, setIsSaving] = useState(false);
   // Add activeButton state to track which button was clicked
   const [activeButton, setActiveButton] = useState(null); // 'save', 'next', or null
-  console.log("Tabs Submit Status:", tabsSubmitStatus);
-  console.log("🔍 Current State Debug:", {
-    isEditing,
-    id,
-    responseId: tabsSubmitStatus.responseId,
-    hasResponseId: !!tabsSubmitStatus.responseId,
-    responseIdType: typeof tabsSubmitStatus.responseId,
-    activeTab,
-    currentDateTime: new Date().toISOString(),
-  });
 
-  // Track state changes
-  useEffect(() => {
-    console.log("🔄 tabsSubmitStatus changed:", tabsSubmitStatus);
-  }, [tabsSubmitStatus]);
-
-  // Preserve state on component mount
-  useEffect(() => {
-    console.log("🏠 Component mounted/remounted. Current state:", {
-      isEditing,
-      id,
-      tabsSubmitStatus,
-      activeTab,
-    });
-  }, []);
-
-  // <---------------------- v1.0.0
   const handleIconClick = (e) => {
     if (e) {
       e.stopPropagation();
@@ -633,16 +607,12 @@ const NewAssessment = () => {
 
     // Prevent multiple simultaneous saves
     if (isSaving) {
-      console.log("⏳ Already saving, skipping...");
       return;
     }
 
     // Set which button was clicked
     setActiveButton(actionType === "close" ? "save" : "next");
     setIsSaving(true);
-    console.log(
-      `🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`
-    );
 
     // Await the async validation function
     const { errors, assessmentData } = await validateAndPrepareData(currentTab);
@@ -658,11 +628,6 @@ const NewAssessment = () => {
       return;
     }
 
-    console.log(
-      "✅ Validation passed. Prepared assessment data:",
-      assessmentData
-    );
-
     try {
       // Determine if we should be in editing mode
       const hasExistingAssessment =
@@ -677,13 +642,6 @@ const NewAssessment = () => {
         : hasExistingAssessment
         ? tabsSubmitStatus.responseId
         : null;
-
-      console.log("📋 Current assessment ID:", assessmentId);
-      console.log("📋 Is editing (URL):", isEditing);
-      console.log("📋 Has existing assessment:", hasExistingAssessment);
-      console.log("📋 Should edit:", shouldEdit);
-      console.log("📋 URL ID:", id);
-      console.log("📋 Tabs response ID:", tabsSubmitStatus.responseId);
 
       // Validate that we have a valid ID when editing from URL
       if (isEditing && !id) {
@@ -710,13 +668,8 @@ const NewAssessment = () => {
         tabsSubmitStatus,
       };
 
-      console.log("🚀 Calling mutation with params:", mutationParams);
 
       const response = await addOrUpdateAssessment(mutationParams);
-
-      console.log("📦 API Response:", response);
-      console.log("📦 Response data:", response?.data);
-      console.log("📦 Response data._id:", response?.data?._id);
 
       // Extract the correct ID from response
       const newAssessmentId = shouldEdit
@@ -724,8 +677,6 @@ const NewAssessment = () => {
           ? id
           : assessmentId
         : response?.data?._id;
-
-      console.log("🆔 New/Updated assessment ID:", newAssessmentId);
 
       // Update tabs submit status with the correct ID
       setTabsSubmitStatus((prev) => {
@@ -735,7 +686,6 @@ const NewAssessment = () => {
           responseId: newAssessmentId,
           responseData: response?.data || response,
         };
-        console.log("🔄 Updated tabs submit status:", updated);
         return updated;
       });
 
@@ -757,8 +707,6 @@ const NewAssessment = () => {
           questionsAssessmentId
         );
 
-        console.log("📦 Prepared questions data:", assessmentQuestionsData);
-
         if (!assessmentQuestionsData.sections?.length) {
           console.error("❌ Sections array is empty. Cannot proceed.");
           return;
@@ -768,12 +716,10 @@ const NewAssessment = () => {
           assessmentQuestionsData
         );
 
-        console.log("✅ Questions saved successfully:", questionsResponse);
       }
 
       // 🧠 Action after save
       if (actionType === "close") {
-        console.log("🛑 Closing form after save");
         navigate("/assessment-templates");
       } else if (actionType === "next") {
         const tabOrder = ["Basicdetails", "Details", "Questions", "Candidates"];
@@ -781,10 +727,8 @@ const NewAssessment = () => {
         const nextTab = tabOrder[currentIndex + 1];
 
         if (nextTab) {
-          console.log(`➡️ Navigating to next tab: ${nextTab}`);
           setActiveTab(nextTab);
         } else {
-          console.log("🚫 No next tab found");
         }
       }
     } catch (error) {
@@ -1460,8 +1404,6 @@ const NewAssessment = () => {
       counter++;
     }
 
-    console.log(finalSectionName);
-
     handleSectionAdded({
       SectionName: finalSectionName,
       Questions: [],
@@ -1498,11 +1440,6 @@ const NewAssessment = () => {
     question,
     questionIdToRemove = null
   ) => {
-    console.log("🔄 updateQuestionsInAddedSectionFromQuestionBank called:", {
-      sectionName,
-      question: question ? "has question" : "no question",
-      questionIdToRemove,
-    });
 
     setAddedSections((prevSections) => {
       const updatedSections = prevSections.map((section) => {
@@ -1524,10 +1461,6 @@ const NewAssessment = () => {
 
               return id !== questionIdToRemove;
             });
-
-            console.log(
-              `🗑️ Removed question ${questionIdToRemove}. ${initialLength} → ${updatedQuestions.length} questions`
-            );
           } else if (question) {
             // Add the question (with duplicate check)
             const existingQuestionId = question.questionId || question._id;
@@ -1539,7 +1472,6 @@ const NewAssessment = () => {
 
             if (!isDuplicate) {
               updatedQuestions.push(question);
-              console.log(`✅ Added question ${existingQuestionId}`);
             } else {
               console.warn(
                 `⚠️ Duplicate question ${existingQuestionId} not added`
@@ -1555,7 +1487,6 @@ const NewAssessment = () => {
         return section;
       });
 
-      console.log("📊 Final sections state:", updatedSections);
       return updatedSections;
     });
   };

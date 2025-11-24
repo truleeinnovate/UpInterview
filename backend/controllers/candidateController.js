@@ -1,19 +1,23 @@
 //<-----v1.0.1---Venkatesh------add permission
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 // const { Candidate } = require('../models/Candidate/candidate.js');
-const CandidatePosition = require('../models/CandidatePosition.js');
-const { validateCandidateData, candidateUpdateSchema } = require('../validations/candidateValidation.js');
+const CandidatePosition = require("../models/CandidatePosition.js");
+const {
+  validateCandidateData,
+  candidateUpdateSchema,
+} = require("../validations/candidateValidation.js");
 // const { hasPermission } = require("../middleware/permissionMiddleware");
-const { Candidate } = require('../models/candidate.js');
-const { Interview } = require('../models/Interview/Interview.js');
-const { CandidateAssessment } = require('../models/Assessment/candidateAssessment.js');
+const { Candidate } = require("../models/candidate.js");
+const { Interview } = require("../models/Interview/Interview.js");
+const {
+  CandidateAssessment,
+} = require("../models/Assessment/candidateAssessment.js");
 
 // Add a new Candidate
 const addCandidatePostCall = async (req, res) => {
-
   // Mark that logging will be handled by the controller
   res.locals.loggedByController = true;
-  res.locals.processName = 'Create Candidate';
+  res.locals.processName = "Create Candidate";
   let newCandidate = null;
 
   try {
@@ -26,7 +30,6 @@ const addCandidatePostCall = async (req, res) => {
         errors,
       });
     }
-
 
     const {
       FirstName,
@@ -50,21 +53,15 @@ const addCandidatePostCall = async (req, res) => {
     const ownerId = req.user?.userId || req.body.ownerId;
     const tenantId = req.tenantId || req.body.tenantId;
 
-    console.log('🔍 [Candidate] Context extraction:', {
-      fromApiKey: { userId: req.user?.userId, tenantId: req.tenantId },
-      fromBody: { ownerId: req.body.ownerId, tenantId: req.body.tenantId },
-      final: { ownerId, tenantId }
-    });
-
     if (!ownerId) {
-      return res.status(400).json({ 
-        error: "OwnerId field is required. Either provide it in the request body or use API key authentication.",
-        context: "Missing owner identification"
+      return res.status(400).json({
+        error:
+          "OwnerId field is required. Either provide it in the request body or use API key authentication.",
+        context: "Missing owner identification",
       });
     }
 
     //res.locals.loggedByController = true;
-    //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
     //   const canCreate =
@@ -85,7 +82,7 @@ const addCandidatePostCall = async (req, res) => {
       Gender,
       HigherQualification,
       UniversityCollege,
-      CurrentExperience, // CurrentExperience is related to total experience in Ui mentioned. 
+      CurrentExperience, // CurrentExperience is related to total experience in Ui mentioned.
       CurrentRole,
       RelevantExperience,
       Technology,
@@ -101,16 +98,16 @@ const addCandidatePostCall = async (req, res) => {
     // Generate feed
     res.locals.feedData = {
       tenantId,
-      feedType: 'info',
+      feedType: "info",
       action: {
-        name: 'candidate_created',
+        name: "candidate_created",
         description: `Candidate was created successfully`,
       },
       ownerId,
       parentId: newCandidate._id,
-      parentObject: 'Candidate',
+      parentObject: "Candidate",
       metadata: req.body,
-      severity: res.statusCode >= 500 ? 'high' : 'low',
+      severity: res.statusCode >= 500 ? "high" : "low",
       message: `Candidate was created successfully`,
     };
 
@@ -118,35 +115,34 @@ const addCandidatePostCall = async (req, res) => {
     res.locals.logData = {
       tenantId,
       ownerId,
-      processName: 'Create Candidate',
+      processName: "Create Candidate",
       requestBody: req.body,
-      message: 'Candidate created successfully',
-      status: 'success',
+      message: "Candidate created successfully",
+      status: "success",
       responseBody: newCandidate,
     };
 
     // Send response
     res.status(201).json({
-      status: 'success',
-      message: 'Candidate created successfully',
+      status: "success",
+      message: "Candidate created successfully",
       data: newCandidate,
     });
   } catch (error) {
-
     // Generate logs for the error
     res.locals.logData = {
       tenantId: req.body.tenantId,
       ownerId: req.body.ownerId,
-      processName: 'Create Candidate',
+      processName: "Create Candidate",
       requestBody: req.body,
       message: error.message,
-      status: 'error',
+      status: "error",
     };
 
     // Send error response
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to create candidate. Please try again later.',
+      status: "error",
+      message: "Failed to create candidate. Please try again later.",
       data: { error: error.message },
     });
   }
@@ -154,9 +150,8 @@ const addCandidatePostCall = async (req, res) => {
 
 // patch call Candidate
 const updateCandidatePatchCall = async (req, res) => {
-
   res.locals.loggedByController = true;
-  res.locals.processName = 'Update Candidate';
+  res.locals.processName = "Update Candidate";
 
   const candidateId = req.params.id;
   const { tenantId, ownerId, ...updateFields } = req.body;
@@ -180,12 +175,10 @@ const updateCandidatePatchCall = async (req, res) => {
       });
     }
 
-
     //  this is venkatesh code
     //res.locals.loggedByController = true;
     //----v1.0.1---->
 
-    //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
     // const canCreate =
@@ -202,12 +195,6 @@ const updateCandidatePatchCall = async (req, res) => {
     if (!currentCandidate) {
       return res.status(404).json({ message: "Candidate not found" });
     }
-
-
-
-
-
-
 
     // ✅ Utility function to detect empty values  // added by Ranjith
 
@@ -252,10 +239,15 @@ const updateCandidatePatchCall = async (req, res) => {
 
         // Handle dates
         if (
-          (oldValue instanceof Date || new Date(oldValue).toString() !== "Invalid Date") &&
-          (newValue instanceof Date || new Date(newValue).toString() !== "Invalid Date")
+          (oldValue instanceof Date ||
+            new Date(oldValue).toString() !== "Invalid Date") &&
+          (newValue instanceof Date ||
+            new Date(newValue).toString() !== "Invalid Date")
         ) {
-          return new Date(oldValue).toISOString() !== new Date(newValue).toISOString();
+          return (
+            new Date(oldValue).toISOString() !==
+            new Date(newValue).toISOString()
+          );
         }
 
         // Default comparison for strings, numbers, etc.
@@ -270,16 +262,16 @@ const updateCandidatePatchCall = async (req, res) => {
     // If no changes detected, return early
     if (changes.length === 0) {
       return res.status(200).json({
-        status: 'no_changes',
-        message: 'No changes detected',
-        data: null
+        status: "no_changes",
+        message: "No changes detected",
+        data: null,
       });
     }
 
     // Perform the update
     const updateData = {
       ...updateFields,
-      updatedBy: ownerId
+      updatedBy: ownerId,
     };
 
     const updatedCandidate = await Candidate.findByIdAndUpdate(
@@ -289,28 +281,30 @@ const updateCandidatePatchCall = async (req, res) => {
     );
 
     if (!updatedCandidate) {
-      return res.status(404).json({ message: "Candidate not found after update" });
+      return res
+        .status(404)
+        .json({ message: "Candidate not found after update" });
     }
 
     // Generate feed
     res.locals.feedData = {
       tenantId,
-      feedType: 'update',
+      feedType: "update",
       // action: 'candidate_updated',
       action: {
-        name: 'candidate_updated',
+        name: "candidate_updated",
         description: `Candidate was updated`,
       },
       ownerId,
       parentId: candidateId,
-      parentObject: 'Candidate',
+      parentObject: "Candidate",
       metadata: req.body,
-      severity: res.statusCode >= 500 ? 'high' : 'low',
+      severity: res.statusCode >= 500 ? "high" : "low",
       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
         fieldName,
-        message: isEmptyValue(oldValue) ? isEmptyValue(newValue)
-          : `${fieldName} updated from `
-        , // '${oldValue}' to '${newValue}'
+        message: isEmptyValue(oldValue)
+          ? isEmptyValue(newValue)
+          : `${fieldName} updated from `, // '${oldValue}' to '${newValue}'
       })),
       history: changes,
     };
@@ -318,17 +312,17 @@ const updateCandidatePatchCall = async (req, res) => {
     res.locals.logData = {
       tenantId,
       ownerId,
-      processName: 'Update Candidate',
+      processName: "Update Candidate",
       requestBody: req.body,
-      message: 'Candidate updated successfully',
-      status: 'success',
+      message: "Candidate updated successfully",
+      status: "success",
       responseBody: updatedCandidate,
     };
 
     // Send response
     res.status(203).json({
-      status: 'Updated successfully',
-      message: 'Candidate updated successfully',
+      status: "Updated successfully",
+      message: "Candidate updated successfully",
       data: updatedCandidate,
     });
   } catch (error) {
@@ -336,21 +330,20 @@ const updateCandidatePatchCall = async (req, res) => {
     res.locals.logData = {
       tenantId,
       ownerId,
-      processName: 'Update Candidate',
+      processName: "Update Candidate",
       requestBody: req.body,
       message: error.message,
-      status: 'error',
+      status: "error",
     };
 
     res.status(500).json({
-      status: 'error',
+      status: "error",
       message: error.message,
     });
   }
 };
 
-
-// serach and pagincation functionality  
+// serach and pagincation functionality
 
 // Optimized candidate query with pagination
 const getCandidatesData = async (req, res) => {
@@ -358,7 +351,7 @@ const getCandidatesData = async (req, res) => {
     const {
       page = 0,
       limit = 10,
-      search = '',
+      search = "",
       status,
       tech,
       minExperience,
@@ -367,7 +360,7 @@ const getCandidatesData = async (req, res) => {
       maxRelevantExperience,
       roles,
       universities,
-      createdDate
+      createdDate,
     } = req.query;
 
     const skip = parseInt(page) * parseInt(limit);
@@ -383,11 +376,11 @@ const getCandidatesData = async (req, res) => {
 
     // Filter optimizations
     if (status) {
-      query.HigherQualification = { $in: status.split(',') };
+      query.HigherQualification = { $in: status.split(",") };
     }
 
     if (tech) {
-      query['skills.skill'] = { $in: tech.split(',') };
+      query["skills.skill"] = { $in: tech.split(",") };
     }
 
     if (minExperience || maxExperience) {
@@ -403,7 +396,9 @@ const getCandidatesData = async (req, res) => {
 
     // Fetch paginated data with only needed fields
     const candidates = await Candidate.find(query)
-      .select('FirstName LastName Email Phone CurrentExperience skills HigherQualification ImageData createdAt CurrentRole')
+      .select(
+        "FirstName LastName Email Phone CurrentExperience skills HigherQualification ImageData createdAt CurrentRole"
+      )
       .sort({ _id: -1 })
       .skip(skip)
       .limit(limitNum)
@@ -416,8 +411,8 @@ const getCandidatesData = async (req, res) => {
         totalPages: Math.ceil(total / limitNum),
         totalItems: total,
         hasNext: skip + limitNum < total,
-        hasPrev: parseInt(page) > 0
-      }
+        hasPrev: parseInt(page) > 0,
+      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -433,24 +428,24 @@ const searchCandidates = async (req, res) => {
 
     if (search) {
       // Use regex for partial matching - consider text index for better performance
-      const searchRegex = new RegExp(search, 'i');
+      const searchRegex = new RegExp(search, "i");
       query.$or = [
         { FirstName: searchRegex },
         { LastName: searchRegex },
         { Email: searchRegex },
-        { Phone: searchRegex }
+        { Phone: searchRegex },
       ];
     }
 
     // Apply filters
-    Object.keys(filters).forEach(key => {
+    Object.keys(filters).forEach((key) => {
       if (filters[key]) {
         query[key] = filters[key];
       }
     });
 
     const results = await Candidate.find(query)
-      .select('FirstName LastName Email Phone CurrentExperience')
+      .select("FirstName LastName Email Phone CurrentExperience")
       .limit(parseInt(limit))
       .lean();
 
@@ -460,14 +455,11 @@ const searchCandidates = async (req, res) => {
   }
 };
 
-
-
 const getCandidates = async (req, res) => {
   try {
     const { tenantId, ownerId } = req.query;
 
     const query = tenantId ? { tenantId } : ownerId ? { ownerId } : {};
-
 
     res.locals.loggedByController = true;
 
@@ -485,19 +477,16 @@ const getCandidates = async (req, res) => {
 
     res.json(candidates);
   } catch (error) {
-    console.error('[getCandidates] Error:', error.message);
-    res.status(500).json({ message: 'Error fetching candidates', error });
+    console.error("[getCandidates] Error:", error.message);
+    res.status(500).json({ message: "Error fetching candidates", error });
   }
 };
-
-
 
 const getCandidateById = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!id) {
-
       return res.status(400).json({ message: "Candidate ID is required" });
     }
 
@@ -521,26 +510,25 @@ const getCandidateById = async (req, res) => {
 
     const candidatePositions = await CandidatePosition.aggregate([
       {
-        $match: { candidateId: new mongoose.Types.ObjectId(id) }
+        $match: { candidateId: new mongoose.Types.ObjectId(id) },
       },
       {
         $lookup: {
-          from: 'positions',
-          localField: 'positionId',
-          foreignField: '_id',
-          as: 'positionDetails'
-        }
+          from: "positions",
+          localField: "positionId",
+          foreignField: "_id",
+          as: "positionDetails",
+        },
       },
       {
         $unwind: {
-          path: '$positionDetails',
-          preserveNullAndEmptyArrays: true
-        }
-      }
+          path: "$positionDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ]);
 
-
-    const positionDetails = candidatePositions.map(pos => ({
+    const positionDetails = candidatePositions.map((pos) => ({
       positionId: pos.positionId,
       status: pos.status,
       interviewId: pos.interviewId,
@@ -549,37 +537,38 @@ const getCandidateById = async (req, res) => {
       offerDetails: pos.offerDetails,
       applicationDate: pos.applicationDate,
       updatedAt: pos.updatedAt,
-      positionInfo: pos.positionDetails ? {
-        title: pos.positionDetails.title || '',
-        companyname: pos.positionDetails.companyname || '',
-        jobdescription: pos.positionDetails.jobdescription || '',
-        minexperience: pos.positionDetails.minexperience || 0,
-        maxexperience: pos.positionDetails.maxexperience || 0,
-        skills: pos.positionDetails.skills || [],
-        additionalnotes: pos.positionDetails.additionalnotes || '',
-        rounds: pos.positionDetails.rounds || [],
-        createdBy: pos.positionDetails.CreatedBy || '',
-        lastModifiedById: pos.positionDetails.LastModifiedById || '',
-        ownerId: pos.positionDetails.ownerId || '',
-        tenantId: pos.positionDetails.tenantId || '',
-        createdDate: pos.positionDetails.createdDate || ''
-      } : null
+      positionInfo: pos.positionDetails
+        ? {
+            title: pos.positionDetails.title || "",
+            companyname: pos.positionDetails.companyname || "",
+            jobdescription: pos.positionDetails.jobdescription || "",
+            minexperience: pos.positionDetails.minexperience || 0,
+            maxexperience: pos.positionDetails.maxexperience || 0,
+            skills: pos.positionDetails.skills || [],
+            additionalnotes: pos.positionDetails.additionalnotes || "",
+            rounds: pos.positionDetails.rounds || [],
+            createdBy: pos.positionDetails.CreatedBy || "",
+            lastModifiedById: pos.positionDetails.LastModifiedById || "",
+            ownerId: pos.positionDetails.ownerId || "",
+            tenantId: pos.positionDetails.tenantId || "",
+            createdDate: pos.positionDetails.createdDate || "",
+          }
+        : null,
     }));
 
     const response = {
       ...candidate,
-      appliedPositions: positionDetails || []
+      appliedPositions: positionDetails || [],
     };
-
 
     res.status(200).json(response);
   } catch (error) {
     console.error("🔥 [getCandidateById] Error:", error);
-    res.status(500).json({ message: "Error fetching candidate", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching candidate", error: error.message });
   }
 };
-
-
 
 // Delete candidate by ID
 const deleteCandidate = async (req, res) => {
@@ -592,8 +581,8 @@ const deleteCandidate = async (req, res) => {
     // Validate ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
-        status: 'error',
-        message: 'Invalid candidate ID format'
+        status: "error",
+        message: "Invalid candidate ID format",
       });
     }
 
@@ -601,8 +590,8 @@ const deleteCandidate = async (req, res) => {
     const candidate = await Candidate.findById(id);
     if (!candidate) {
       return res.status(404).json({
-        status: 'error',
-        message: 'Candidate not found'
+        status: "error",
+        message: "Candidate not found",
       });
     }
 
@@ -610,15 +599,17 @@ const deleteCandidate = async (req, res) => {
     const existingInterview = await Interview.findOne({ candidateId: id });
 
     // Check if candidate exists in CandidateAssessment schema
-    const existingAssessment = await CandidateAssessment.findOne({ candidateId: id });
+    const existingAssessment = await CandidateAssessment.findOne({
+      candidateId: id,
+    });
 
     if (existingInterview || existingAssessment) {
       // Candidate linked elsewhere — do not delete
       return res.status(400).json({
-        status: 'error',
+        status: "error",
         message: existingInterview
-          ? 'Candidate cannot be deleted. Found in Interview records.'
-          : 'Candidate cannot be deleted. Found in Candidate Assessment records.'
+          ? "Candidate cannot be deleted. Found in Interview records."
+          : "Candidate cannot be deleted. Found in Candidate Assessment records.",
       });
     }
 
@@ -627,23 +618,22 @@ const deleteCandidate = async (req, res) => {
 
     if (!deletedCandidate) {
       return res.status(404).json({
-        status: 'error',
-        message: 'Candidate not found or already deleted'
+        status: "error",
+        message: "Candidate not found or already deleted",
       });
     }
 
     res.status(200).json({
-      status: 'success',
-      message: 'Candidate deleted successfully'
+      status: "success",
+      message: "Candidate deleted successfully",
     });
-
   } catch (error) {
-    console.error('Error deleting candidate:', error);
+    console.error("Error deleting candidate:", error);
 
     res.status(500).json({
-      status: 'error',
-      message: 'Internal server error while deleting candidate',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      status: "error",
+      message: "Internal server error while deleting candidate",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -652,7 +642,7 @@ const deleteCandidate = async (req, res) => {
 const bulkAddCandidates = async (req, res) => {
   // Mark that logging will be handled by the controller
   res.locals.loggedByController = true;
-  res.locals.processName = 'Bulk Create Candidates';
+  res.locals.processName = "Bulk Create Candidates";
 
   try {
     // Check if request body is an array
@@ -679,14 +669,20 @@ const bulkAddCandidates = async (req, res) => {
       if (!isValid) {
         validationErrors.push({
           index,
-          candidateData: candidateData.Email || candidateData.FirstName || `Candidate ${index + 1}`,
-          errors
+          candidateData:
+            candidateData.Email ||
+            candidateData.FirstName ||
+            `Candidate ${index + 1}`,
+          errors,
         });
       } else if (!candidateData.ownerId) {
         validationErrors.push({
           index,
-          candidateData: candidateData.Email || candidateData.FirstName || `Candidate ${index + 1}`,
-          errors: { ownerId: "OwnerId field is required" }
+          candidateData:
+            candidateData.Email ||
+            candidateData.FirstName ||
+            `Candidate ${index + 1}`,
+          errors: { ownerId: "OwnerId field is required" },
         });
       } else {
         validCandidates.push({
@@ -719,14 +715,14 @@ const bulkAddCandidates = async (req, res) => {
         message: "Validation failed for some candidates",
         errors: validationErrors,
         validCandidatesCount: validCandidates.length,
-        invalidCandidatesCount: validationErrors.length
+        invalidCandidatesCount: validationErrors.length,
       });
     }
 
     // Bulk insert valid candidates
     const insertedCandidates = await Candidate.insertMany(validCandidates, {
       ordered: false, // Continue inserting even if some fail
-      rawResult: false
+      rawResult: false,
     });
 
     // Generate feeds for successful insertions (only for first few to avoid overwhelming)
@@ -740,16 +736,16 @@ const bulkAddCandidates = async (req, res) => {
         }
         res.locals.feedData.push({
           tenantId: candidate.tenantId,
-          feedType: 'info',
+          feedType: "info",
           action: {
-            name: 'candidate_created',
+            name: "candidate_created",
             description: `Candidate ${candidate.FirstName} ${candidate.LastName} was created successfully`,
           },
           ownerId: candidate.ownerId,
           parentId: candidate._id,
-          parentObject: 'Candidate',
+          parentObject: "Candidate",
           metadata: candidate,
-          severity: 'low',
+          severity: "low",
           message: `Candidate was created successfully`,
         });
       }
@@ -759,41 +755,41 @@ const bulkAddCandidates = async (req, res) => {
     res.locals.logData = {
       tenantId: validCandidates[0]?.tenantId,
       ownerId: validCandidates[0]?.ownerId,
-      processName: 'Bulk Create Candidates',
+      processName: "Bulk Create Candidates",
       message: `Successfully created ${insertedCandidates.length} candidates`,
-      status: 'success',
+      status: "success",
       summary: {
         total: req.body.length,
         success: insertedCandidates.length,
-        failed: 0
-      }
+        failed: 0,
+      },
     };
 
     // Send response
     res.status(201).json({
-      status: 'success',
+      status: "success",
       message: `Successfully created ${insertedCandidates.length} candidates`,
       data: {
         created: insertedCandidates.length,
-        candidates: insertedCandidates
-      }
+        candidates: insertedCandidates,
+      },
     });
-
   } catch (error) {
-    console.error('Bulk insert error:', error);
+    console.error("Bulk insert error:", error);
 
     // Handle duplicate key errors
     if (error.code === 11000) {
-      const duplicateEmails = error.writeErrors?.map(e => {
-        const match = e.errmsg.match(/Email_1 dup key: { Email: "([^"]+)" }/);
-        return match ? match[1] : 'unknown';
-      }) || [];
+      const duplicateEmails =
+        error.writeErrors?.map((e) => {
+          const match = e.errmsg.match(/Email_1 dup key: { Email: "([^"]+)" }/);
+          return match ? match[1] : "unknown";
+        }) || [];
 
       return res.status(400).json({
-        status: 'error',
-        message: 'Some candidates have duplicate emails',
-        duplicateEmails: duplicateEmails.filter(e => e !== 'unknown'),
-        inserted: error.insertedDocs?.length || 0
+        status: "error",
+        message: "Some candidates have duplicate emails",
+        duplicateEmails: duplicateEmails.filter((e) => e !== "unknown"),
+        inserted: error.insertedDocs?.length || 0,
       });
     }
 
@@ -801,23 +797,27 @@ const bulkAddCandidates = async (req, res) => {
     res.locals.logData = {
       tenantId: req.body[0]?.tenantId,
       ownerId: req.body[0]?.ownerId,
-      processName: 'Bulk Create Candidates',
+      processName: "Bulk Create Candidates",
       message: error.message,
-      status: 'error',
+      status: "error",
     };
 
     // Send error response
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to create candidates. Please try again later.',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      status: "error",
+      message: "Failed to create candidates. Please try again later.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
 
-
-module.exports = { getCandidates, addCandidatePostCall, updateCandidatePatchCall, searchCandidates, getCandidatesData, getCandidateById, deleteCandidate, bulkAddCandidates }
-
-
-
-
+module.exports = {
+  getCandidates,
+  addCandidatePostCall,
+  updateCandidatePatchCall,
+  searchCandidates,
+  getCandidatesData,
+  getCandidateById,
+  deleteCandidate,
+  bulkAddCandidates,
+};

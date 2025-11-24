@@ -91,7 +91,6 @@ const IntegrationsTab = () => {
     }
 
     const isEditing = !!editingIntegration;
-    console.log('Form submission started', { isEditing, formData });
 
     try {
       const integrationId = isEditing
@@ -104,7 +103,6 @@ const IntegrationsTab = () => {
 
       const method = isEditing ? "PUT" : "POST";
 
-      console.log('Making API request:', { url, method, data: formData });
 
       const authToken = getAuthToken();
       const headers = {
@@ -112,7 +110,6 @@ const IntegrationsTab = () => {
         ...(authToken && { "Authorization": `Bearer ${authToken}` })
       };
 
-      console.log('Sending request with headers:', headers);
 
       const response = await fetch(url, {
         method,
@@ -120,15 +117,7 @@ const IntegrationsTab = () => {
         body: JSON.stringify(formData),
       });
 
-      console.log('API Response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-
       if (response.ok) {
-        console.log('Request successful, refreshing integrations...');
         await fetchIntegrations();
         setShowModal(false);
         setEditingIntegration(null);
@@ -149,7 +138,6 @@ const IntegrationsTab = () => {
           },
         };
 
-        console.log('Form reset and modal closed');
         setFormData(resetFormData);
       } else {
         const errorData = await response.json().catch(() => ({}));

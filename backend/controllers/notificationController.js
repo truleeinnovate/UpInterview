@@ -1,6 +1,7 @@
-const Notifications = require('../models/notification.js');
+const Notifications = require("../models/notification.js");
 
-const saveNotifications = async (req) => {  // Declare function first
+const saveNotifications = async (req) => {
+  // Declare function first
   try {
     const { notifications } = req.body;
 
@@ -10,13 +11,12 @@ const saveNotifications = async (req) => {  // Declare function first
     }
 
     await Notifications.insertMany(notifications);
-    console.log("Notifications saved successfully.");
   } catch (error) {
     console.error("Error saving notifications:", error);
   }
 };
 
-// Get notifications 
+// Get notifications
 const getNotifications = async (req, res) => {
   try {
     const { objectId, category, candidateId } = req.query; // Get objectId, category, and candidateId from query params
@@ -34,19 +34,17 @@ const getNotifications = async (req, res) => {
       filter = { "object.objectId": objectId };
     } else if (category === "candidate") {
       if (!candidateId) {
-        return res.status(400).json({ message: "Candidate ID is required for this category" });
+        return res
+          .status(400)
+          .json({ message: "Candidate ID is required for this category" });
       }
       filter = { recipientId: candidateId };
     } else {
       return res.status(400).json({ message: "Invalid category" });
     }
 
-    // console.log("Filter:", filter);
-
     const notifications = await Notifications.find(filter);
     res.json(notifications);
-    console.log("Fetched notifications:", notifications);
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -65,7 +63,6 @@ const getAllNotification = async (req, res) => {
       page = 1,
       limit = 20,
     } = req.query;
-    console.log("Query params:", req.query);
 
     if (!organizationId) {
       return res.status(400).json({ message: "organizationId is required" });
@@ -75,10 +72,12 @@ const getAllNotification = async (req, res) => {
     let filter = {};
 
     if (isOrganization) {
-      if (!tenantId) return res.status(400).json({ message: "tenantId required" });
+      if (!tenantId)
+        return res.status(400).json({ message: "tenantId required" });
       filter.tenantId = tenantId;
     } else {
-      if (!ownerId) return res.status(400).json({ message: "ownerId required" });
+      if (!ownerId)
+        return res.status(400).json({ message: "ownerId required" });
       filter.ownerId = ownerId;
     }
 
@@ -165,10 +164,8 @@ const getAllNotification = async (req, res) => {
 //       }
 //       filter.ownerId = ownerId;
 //     }
-//     // console.log("Filter:", filter);
 
 //     const notifications = await Notifications.find(filter).sort({ _id: -1 });
-//     // console.log("Fetched notifications:", notifications);
 //     res.json(notifications);
 
 //   } catch (err) {

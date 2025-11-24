@@ -21,7 +21,8 @@ export const useIntegrationLogs = (options = {}) => {
     queryFn: async () => {
       const page = Number.isFinite(options.page) ? options.page : undefined;
       const limit = Number.isFinite(options.limit) ? options.limit : undefined;
-      const search = typeof options.search === "string" ? options.search : undefined;
+      const search =
+        typeof options.search === "string" ? options.search : undefined;
       const statusParam = Array.isArray(options.status)
         ? options.status.join(",")
         : typeof options.status === "string"
@@ -41,7 +42,15 @@ export const useIntegrationLogs = (options = {}) => {
         (severityParam && severityParam.length > 0);
 
       const axiosConfig = hasParams
-        ? { params: { page, limit, search, status: statusParam, severity: severityParam } }
+        ? {
+            params: {
+              page,
+              limit,
+              search,
+              status: statusParam,
+              severity: severityParam,
+            },
+          }
         : undefined;
 
       const response = await axios.get(
@@ -60,9 +69,7 @@ export const useIntegrationLogs = (options = {}) => {
   });
 
   const payload = responseData;
-  const integrations = Array.isArray(payload)
-    ? payload
-    : payload?.data || [];
+  const integrations = Array.isArray(payload) ? payload : payload?.data || [];
 
   const fallbackTotal = Array.isArray(integrations) ? integrations.length : 0;
   const pagination = Array.isArray(payload)
@@ -113,9 +120,6 @@ export const useIntegrationLogById = (logId) => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/integration-logs/${logId}`
       );
-      // v1.0.0 <------------------------------------------------------
-      console.log("3. INTEGRATION LOGS AT RESPONSE HOOK: ", response.data);
-      // v1.0.0 ------------------------------------------------------>
       return response.data || null;
     },
     enabled: isInitialized && !!hasViewPermission && !!logId,

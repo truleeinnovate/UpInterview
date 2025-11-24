@@ -50,25 +50,6 @@ const InterviewsMiniTabComponent = ({
 }) => {
   useScrollLock(true);
   const [interviewMiniTab, setInterviewMiniTab] = useState(1);
-  // const { SchedulerSectionData, setSchedulerSectionData } = useCustomContext();
-  console.log("interviewData", interviewData);
-  console.log("interviewer Section Data", interviewerSectionData);
-  console.log("📊 InterviewData structure:", {
-    hasInterviewQuestions: !!interviewData?.interviewQuestions,
-    interviewQuestionsType: typeof interviewData?.interviewQuestions,
-    isObject:
-      interviewData?.interviewQuestions &&
-      typeof interviewData?.interviewQuestions === "object",
-    hasPreselectedQuestions:
-      !!interviewData?.interviewQuestions?.preselectedQuestions,
-    hasInterviewerAddedQuestions:
-      !!interviewData?.interviewQuestions?.interviewerAddedQuestions,
-    preselectedCount:
-      interviewData?.interviewQuestions?.preselectedQuestions?.length || 0,
-    interviewerAddedCount:
-      interviewData?.interviewQuestions?.interviewerAddedQuestions?.length || 0,
-    questionFeedback: interviewData?.questionFeedback,
-  });
 
   const handleTabChange = (tab) => {
     setInterviewMiniTab(tab);

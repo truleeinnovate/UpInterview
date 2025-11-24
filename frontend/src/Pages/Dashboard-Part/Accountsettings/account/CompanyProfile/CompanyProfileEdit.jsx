@@ -120,8 +120,6 @@ const CompanyEditProfile = () => {
 
         const organizationDetails = organization_Data.data;
 
-        console.log("organizationDetails", organizationDetails);
-
         // Update form data with API response
         setFormData({
           company: organizationDetails?.company || "",
@@ -272,7 +270,6 @@ const CompanyEditProfile = () => {
       // v1.0.4 <-----------------------------------------------------------
       return;
     }
-    console.log("validationErrors", validationErrors);
 
     try {
       // UPLOADING FILES
@@ -308,7 +305,6 @@ const CompanyEditProfile = () => {
         // branding: { logo: logoUrl }
       };
 
-      console.log("updatedData", updatedData);
 
       // const response = await axios.patch(
       //     `${config.REACT_APP_API_URL}/Organization/organization-details/${id}`,
@@ -321,7 +317,6 @@ const CompanyEditProfile = () => {
         data: updatedData, // JSON data for org details
       });
 
-      console.log("response response", response);
 
       if (response.status === "success") {
         navigate("/account-settings/profile");

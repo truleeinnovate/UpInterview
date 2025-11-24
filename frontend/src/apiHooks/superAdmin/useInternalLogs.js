@@ -8,47 +8,49 @@ import { usePermissions } from "../../Context/PermissionsContext";
 export const useInternalLogs = ({
   page = 0,
   limit = 10,
-  search = '',
-  status = '',
-  severity = '',
-  processName = '',
-  startDate = '',
-  endDate = ''
+  search = "",
+  status = "",
+  severity = "",
+  processName = "",
+  startDate = "",
+  endDate = "",
 } = {}) => {
   const { superAdminPermissions, isInitialized } = usePermissions();
   const hasViewPermission = superAdminPermissions?.InternalLogs?.View;
-  const hasAnyPermissions = superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
+  const hasAnyPermissions =
+    superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
 
   // Simple enabled logic - enable if we have permissions or if initialized
   const isEnabled = Boolean(hasAnyPermissions || isInitialized);
 
   // Build query params
   const queryParams = new URLSearchParams();
-  queryParams.append('page', page.toString());
-  queryParams.append('limit', limit.toString());
-  if (search) queryParams.append('search', search);
-  if (status) queryParams.append('status', status);
-  if (severity) queryParams.append('severity', severity);
-  if (processName) queryParams.append('processName', processName);
-  if (startDate) queryParams.append('startDate', startDate);
-  if (endDate) queryParams.append('endDate', endDate);
+  queryParams.append("page", page.toString());
+  queryParams.append("limit", limit.toString());
+  if (search) queryParams.append("search", search);
+  if (status) queryParams.append("status", status);
+  if (severity) queryParams.append("severity", severity);
+  if (processName) queryParams.append("processName", processName);
+  if (startDate) queryParams.append("startDate", startDate);
+  if (endDate) queryParams.append("endDate", endDate);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["internalLogs", page, limit, search, status, severity, processName, startDate, endDate],
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: [
+      "internalLogs",
+      page,
+      limit,
+      search,
+      status,
+      severity,
+      processName,
+      startDate,
+      endDate,
+    ],
     queryFn: async () => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/internal-logs?${queryParams.toString()}`
       );
-      // v1.0.0 <----------------------------------------------------------------
-      console.log("1. INTERNAL LOGS AT RESPONSE HOOK :", response.data);
       return response.data;
-      // v1.0.0 ---------------------------------------------------------------->
     },
     enabled: isEnabled,
     staleTime: 1000 * 60 * 10, // 10 minutes
@@ -68,13 +70,13 @@ export const useInternalLogs = ({
       totalItems: 0,
       hasNext: false,
       hasPrev: false,
-      itemsPerPage: limit
+      itemsPerPage: limit,
     },
     stats: data?.stats || {
       totalLogs: 0,
       errorLogs: 0,
       warningLogs: 0,
-      successLogs: 0
+      successLogs: 0,
     },
     isLoading,
     isError,
@@ -100,8 +102,6 @@ export const useInternalLogById = (logId) => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/internal-logs/${logId}`
       );
-      // v1.0.0 ---------------------------------------------------------------
-      console.log('3. SELECTED INTERNAL LOG RESPONSE AT HOOK: ', response.data);
       return response.data || null;
     },
     enabled: isInitialized && !!hasViewPermission && !!logId,

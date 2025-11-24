@@ -39,7 +39,6 @@ const SchedulerSectionComponent = ({
   const allQuestions = interviewdata?.interviewQuestions
     ? interviewdata?.interviewQuestions || interviewdata?.questionFeedback
     : feedbackData.preSelectedQuestions || [];
-  console.log("allQuestions", allQuestions);
 
   // Use preselected questions from API if available, otherwise fallback to old logic
   // const schedulerQuestions = preselectedQuestionsFromAPI.length > 0
@@ -73,21 +72,6 @@ const SchedulerSectionComponent = ({
 
   const questionsfeedback =
     feedbackData.questionFeedback || interviewdata?.questionFeedback || [];
-  console.log("All questions:", allQuestions.length);
-  console.log(
-    "Preselected questions from API:",
-    preselectedQuestionsFromAPI.length
-  );
-  console.log(
-    "Scheduler questions (not added by interviewer):",
-    schedulerQuestions.length
-  );
-  console.log("Scheduler questions data:", schedulerQuestions);
-  console.log(
-    "Preselected questions responses:",
-    preselectedQuestionsResponses
-  );
-  console.log("questionsfeedback", questionsfeedback);
 
   // Initialize state variables
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");
@@ -101,7 +85,6 @@ const SchedulerSectionComponent = ({
       const preselectedResponse = preselectedQuestionsResponses?.find(
         (r) => r.questionId === q.questionId
       );
-      console.log("qda", feedback);
 
       if (feedback) {
         return {

@@ -439,21 +439,6 @@ const CombinedNavbar = React.memo(() => {
     }
   };
 
-  // // Debug specific permission checks
-  // const candidatesPermission = checkPermission("Candidates");
-  // const positionsPermission = checkPermission("Positions");
-  // const interviewsPermission = checkPermission("Interviews");
-  // const mockInterviewsPermission = checkPermission("MockInterviews");
-  // const interviewTemplatesPermission = checkPermission("InterviewTemplates");
-
-  // console.log('🎯 Specific permission checks:', {
-  //   candidatesPermission,
-  //   positionsPermission,
-  //   interviewsPermission,
-  //   mockInterviewsPermission,
-  //   interviewTemplatesPermission
-  // });
-
   const outlineDropdownContent = (
     <div className="absolute top-12 w-60 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
       <div className="flex justify-between items-center px-4 py-2">
@@ -541,7 +526,7 @@ const CombinedNavbar = React.memo(() => {
             <div
               key={index}
               className="flex justify-between mr-4 mt-2 cursor-pointer"
-              onClick={() => window.open(link, "_blank")} // open in new tab
+              onClick={() => window.open(link, "_blank")}
             >
               <label className="inline-flex items-center ml-3">
                 <span className="ml-3 text-gray-500 hover:text-custom-blue hover:underline hover:decoration-custom-blue transition-colors duration-200">
@@ -584,7 +569,7 @@ const CombinedNavbar = React.memo(() => {
       </div>
       <div className="flex justify-between px-3 py-1 text-xs">
         <button
-          className="text-custom-blue hover:text-blue-500 ml-6"
+          className="text-custom-blue hover:text-custom-blue/80 ml-6"
           onClick={() => {
             closeAllDropdowns();
             handleSettingsClick();
@@ -593,7 +578,7 @@ const CombinedNavbar = React.memo(() => {
           Settings
         </button>
         <button
-          className="text-custom-blue hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-custom-blue hover:text-custom-blue/80 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => {
             closeAllDropdowns();
             handleLogout();

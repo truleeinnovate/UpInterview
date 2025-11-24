@@ -16,7 +16,6 @@ const EmailSetting = ({onClose}) => {
     const handleEdit = () => {
         if (showEdit) {
             emailData.OwnEmail = ownEmail;
-            console.log("Saved Email:", ownEmail); 
             setShowEdit(false);
             
         } else {

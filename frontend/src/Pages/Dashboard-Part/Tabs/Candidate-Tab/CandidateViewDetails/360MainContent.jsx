@@ -74,9 +74,6 @@ const MainContent = () => {
   // Find interview data for the current candidate
   const interview = interviewData.find((data) => data?.candidateId?._id === id);
 
-  console.log("candidate 360 Details", candidate);
-  console.log("positions 360 Details", positions);
-
   // if (!candidate) return <Loading />
 
   const handleViewInterview = (interviewId) => {

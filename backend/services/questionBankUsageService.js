@@ -1,11 +1,11 @@
 // Service for tracking question bank access usage
-// IMPORTANT: The Question Bank Access limit is COMBINED across both 
-// Interview and Assessment questions. For example, if a user has a 
-// limit of 1000 questions, they can access a total of 1000 questions 
+// IMPORTANT: The Question Bank Access limit is COMBINED across both
+// Interview and Assessment questions. For example, if a user has a
+// limit of 1000 questions, they can access a total of 1000 questions
 // from both types combined, not 1000 of each type.
 
-const mongoose = require('mongoose');
-const Usage = require('../models/Usage');
+const mongoose = require("mongoose");
+const Usage = require("../models/Usage");
 
 /**
  * Checks if there's enough usage remaining for question bank access
@@ -17,12 +17,12 @@ const Usage = require('../models/Usage');
 async function checkQuestionBankUsageLimit(tenantId, ownerId) {
   try {
     if (!tenantId) {
-      return { 
-        canAccess: false, 
-        remaining: 0, 
-        utilized: 0, 
-        entitled: 0, 
-        message: 'No tenantId provided' 
+      return {
+        canAccess: false,
+        remaining: 0,
+        utilized: 0,
+        entitled: 0,
+        message: "No tenantId provided",
       };
     }
 
@@ -32,7 +32,7 @@ async function checkQuestionBankUsageLimit(tenantId, ownerId) {
     let usage = await Usage.findOne({
       tenantId,
       fromDate: { $lte: now },
-      toDate: { $gte: now }
+      toDate: { $gte: now },
     });
 
     // If no current period, find the latest one
@@ -41,29 +41,33 @@ async function checkQuestionBankUsageLimit(tenantId, ownerId) {
     }
 
     if (!usage) {
-      console.warn('[QUESTION_BANK_USAGE] No usage document found for limit check');
-      return { 
-        canAccess: false, 
-        remaining: 0, 
-        utilized: 0, 
-        entitled: 0, 
-        message: 'No usage document found' 
+      console.warn(
+        "[QUESTION_BANK_USAGE] No usage document found for limit check"
+      );
+      return {
+        canAccess: false,
+        remaining: 0,
+        utilized: 0,
+        entitled: 0,
+        message: "No usage document found",
       };
     }
 
     // Find Question Bank Access attribute
     const questionBankAttr = usage.usageAttributes.find(
-      attr => attr.type === 'Question Bank Access'
+      (attr) => attr.type === "Question Bank Access"
     );
 
     if (!questionBankAttr) {
-      console.warn('[QUESTION_BANK_USAGE] No Question Bank Access attribute found');
-      return { 
+      console.warn(
+        "[QUESTION_BANK_USAGE] No Question Bank Access attribute found"
+      );
+      return {
         canAccess: true, // Allow unlimited access if not configured
-        remaining: Infinity, 
-        utilized: 0, 
-        entitled: Infinity, 
-        message: 'Unlimited question bank access' 
+        remaining: Infinity,
+        utilized: 0,
+        entitled: Infinity,
+        message: "Unlimited question bank access",
       };
     }
 
@@ -77,18 +81,23 @@ async function checkQuestionBankUsageLimit(tenantId, ownerId) {
       remaining: entitled === 0 ? Infinity : remaining,
       utilized,
       entitled: entitled === 0 ? Infinity : entitled,
-      message: canAccess 
-        ? `You can access ${remaining === Infinity ? 'unlimited' : remaining} more question(s)`
-        : 'You have reached your question bank access limit. Please upgrade your plan for more access.'
+      message: canAccess
+        ? `You can access ${
+            remaining === Infinity ? "unlimited" : remaining
+          } more question(s)`
+        : "You have reached your question bank access limit. Please upgrade your plan for more access.",
     };
   } catch (error) {
-    console.error('[QUESTION_BANK_USAGE] Error checking question bank usage limit:', error);
-    return { 
-      canAccess: false, 
-      remaining: 0, 
-      utilized: 0, 
-      entitled: 0, 
-      message: 'Error checking usage limits' 
+    console.error(
+      "[QUESTION_BANK_USAGE] Error checking question bank usage limit:",
+      error
+    );
+    return {
+      canAccess: false,
+      remaining: 0,
+      utilized: 0,
+      entitled: 0,
+      message: "Error checking usage limits",
     };
   }
 }
@@ -100,13 +109,18 @@ async function checkQuestionBankUsageLimit(tenantId, ownerId) {
  * @param {number} delta - Change in usage (number of questions accessed)
  * @param {string} operation - 'view' or other operation type
  */
-async function updateQuestionBankUsage(tenantId, ownerId, delta, operation = 'view') {
+async function updateQuestionBankUsage(
+  tenantId,
+  ownerId,
+  delta,
+  operation = "view"
+) {
   try {
-    console.log(`[QUESTION_BANK_USAGE] Updating question bank usage: tenantId=${tenantId}, delta=${delta}, operation=${operation}`);
-    
     if (!tenantId) {
-      console.warn('[QUESTION_BANK_USAGE] No tenantId provided, skipping usage update');
-      return { success: false, message: 'No tenantId provided' };
+      console.warn(
+        "[QUESTION_BANK_USAGE] No tenantId provided, skipping usage update"
+      );
+      return { success: false, message: "No tenantId provided" };
     }
 
     // Get current date for finding active usage period
@@ -116,7 +130,7 @@ async function updateQuestionBankUsage(tenantId, ownerId, delta, operation = 'vi
     let usage = await Usage.findOne({
       tenantId,
       fromDate: { $lte: now },
-      toDate: { $gte: now }
+      toDate: { $gte: now },
     });
 
     // If no current period, find the latest one
@@ -125,18 +139,26 @@ async function updateQuestionBankUsage(tenantId, ownerId, delta, operation = 'vi
     }
 
     if (!usage) {
-      console.error('[QUESTION_BANK_USAGE] No usage document found for tenant:', tenantId);
-      return { success: false, message: 'No usage document found' };
+      console.error(
+        "[QUESTION_BANK_USAGE] No usage document found for tenant:",
+        tenantId
+      );
+      return { success: false, message: "No usage document found" };
     }
 
     // Find Question Bank Access attribute in usageAttributes
     const questionBankIndex = usage.usageAttributes.findIndex(
-      attr => attr.type === 'Question Bank Access'
+      (attr) => attr.type === "Question Bank Access"
     );
 
     if (questionBankIndex === -1) {
-      console.warn('[QUESTION_BANK_USAGE] No Question Bank Access attribute found in usage document');
-      return { success: true, message: 'No Question Bank Access usage tracking configured' };
+      console.warn(
+        "[QUESTION_BANK_USAGE] No Question Bank Access attribute found in usage document"
+      );
+      return {
+        success: true,
+        message: "No Question Bank Access usage tracking configured",
+      };
     }
 
     const currentAttr = usage.usageAttributes[questionBankIndex];
@@ -150,24 +172,19 @@ async function updateQuestionBankUsage(tenantId, ownerId, delta, operation = 'vi
     // Save the updated usage
     await usage.save();
 
-    console.log(`[QUESTION_BANK_USAGE] Successfully updated question bank usage:`, {
-      operation,
-      previousUtilized: currentAttr.utilized,
-      newUtilized,
-      entitled: currentAttr.entitled,
-      remaining: newRemaining
-    });
-
     return {
       success: true,
       usage: {
         utilized: newUtilized,
         entitled: currentAttr.entitled,
-        remaining: newRemaining
-      }
+        remaining: newRemaining,
+      },
     };
   } catch (error) {
-    console.error('[QUESTION_BANK_USAGE] Error updating question bank usage:', error);
+    console.error(
+      "[QUESTION_BANK_USAGE] Error updating question bank usage:",
+      error
+    );
     return { success: false, error: error.message };
   }
 }
@@ -185,7 +202,7 @@ async function getQuestionBankUsageStats(tenantId, ownerId) {
     let usage = await Usage.findOne({
       tenantId,
       fromDate: { $lte: now },
-      toDate: { $gte: now }
+      toDate: { $gte: now },
     });
 
     // If no current period, find the latest one
@@ -199,7 +216,7 @@ async function getQuestionBankUsageStats(tenantId, ownerId) {
 
     // Find Question Bank Access attribute
     const questionBankAttr = usage.usageAttributes.find(
-      attr => attr.type === 'Question Bank Access'
+      (attr) => attr.type === "Question Bank Access"
     );
 
     if (!questionBankAttr) {
@@ -210,7 +227,7 @@ async function getQuestionBankUsageStats(tenantId, ownerId) {
         remaining: Infinity,
         percentage: 0,
         fromDate: usage.fromDate,
-        toDate: usage.toDate
+        toDate: usage.toDate,
       };
     }
 
@@ -218,14 +235,20 @@ async function getQuestionBankUsageStats(tenantId, ownerId) {
       utilized: questionBankAttr.utilized || 0,
       entitled: questionBankAttr.entitled || 0,
       remaining: questionBankAttr.remaining || 0,
-      percentage: questionBankAttr.entitled > 0 
-        ? Math.round((questionBankAttr.utilized / questionBankAttr.entitled) * 100)
-        : 0,
+      percentage:
+        questionBankAttr.entitled > 0
+          ? Math.round(
+              (questionBankAttr.utilized / questionBankAttr.entitled) * 100
+            )
+          : 0,
       fromDate: usage.fromDate,
-      toDate: usage.toDate
+      toDate: usage.toDate,
     };
   } catch (error) {
-    console.error('[QUESTION_BANK_USAGE] Error getting question bank usage stats:', error);
+    console.error(
+      "[QUESTION_BANK_USAGE] Error getting question bank usage stats:",
+      error
+    );
     return null;
   }
 }
@@ -233,5 +256,5 @@ async function getQuestionBankUsageStats(tenantId, ownerId) {
 module.exports = {
   checkQuestionBankUsageLimit,
   updateQuestionBankUsage,
-  getQuestionBankUsageStats
+  getQuestionBankUsageStats,
 };

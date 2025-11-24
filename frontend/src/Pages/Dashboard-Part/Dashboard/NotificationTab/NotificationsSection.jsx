@@ -118,11 +118,8 @@ const NotificationsSection = () => {
 
   if (isLoading) return <div>Loading notifications...</div>;
   if (isError) return <div>Error loading notifications</div>;
-  console.log("notificationsData", notificationsData);
 
   const currentNotifications = notificationsData?.[activeTab] || [];
-
-  console.log("AllNotificationsModalactiveTab", AllNotificationsModalactiveTab);
 
   return (
     <>

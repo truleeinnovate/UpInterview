@@ -11,7 +11,6 @@ const BACKEND_URL = 'http://localhost:5000';
 // Generate a proper ZegoCloud token using backend server
 export const generateZegoToken = async (userID, roomID) => {
     try {
-        console.log('Generating ZegoCloud token from backend server for:', { userID, roomID, APP_ID });
 
         // Call backend server to generate proper token
         const response = await fetch(`${BACKEND_URL}/generate-token`, {
@@ -25,7 +24,6 @@ export const generateZegoToken = async (userID, roomID) => {
             })
         });
 
-        console.log('response:-', response)
 
         if (!response.ok) {
             throw new Error(`Backend server error: ${response.status}`);
@@ -34,10 +32,6 @@ export const generateZegoToken = async (userID, roomID) => {
         const data = await response.json();
 
         if (data.token && typeof data.token === 'string') {
-            console.log('Generated proper ZegoCloud token from backend server');
-            console.log('Token V1:', data.token);
-            console.log('Token V2:', data.tokenV2);
-            console.log('Simple Token:', data.simpleToken);
             return {
                 token: data.token,
                 tokenV2: data.tokenV2,
@@ -51,7 +45,6 @@ export const generateZegoToken = async (userID, roomID) => {
     } catch (error) {
         console.error('Failed to generate ZegoCloud token from backend:', error);
         // Fallback to client-side token generation
-        console.log('Falling back to client-side token generation');
         return generateFallbackToken(userID, roomID);
     }
 };
@@ -62,7 +55,6 @@ const generateFallbackToken = (userID, roomID) => {
     const randomString = Math.random().toString(36).substring(2, 15);
     const tokenData = `${userID}_${roomID}_${timestamp}_${randomString}`;
     const token = btoa(tokenData);
-    console.log('Generated fallback token:', token);
     return token;
 };
 
@@ -131,7 +123,6 @@ export const generateJWTToken = (userID, roomID) => {
         // Return JWT format
         const token = `${encodedHeader}.${encodedPayload}.${signature}`;
 
-        console.log('Generated JWT-like token for ZegoCloud');
         return token;
 
     } catch (error) {
@@ -164,8 +155,6 @@ export const generateAppSpecificToken = (userID, roomID) => {
 
         // Encode as base64
         const token = btoa(JSON.stringify(tokenData));
-
-        console.log('Generated app-specific token for App ID:', APP_ID);
         return token || '';
 
     } catch (error) {
@@ -219,7 +208,6 @@ export const generateHMACToken = (userID, roomID) => {
         // Encode as base64
         const token = btoa(JSON.stringify(tokenData));
 
-        console.log('Generated HMAC token for ZegoCloud');
         return token || '';
 
     } catch (error) {
@@ -242,7 +230,6 @@ export const generateZegoCloudToken = async (userID, roomID) => {
     } catch (error) {
         console.error('Failed to generate ZegoCloud format token:', error);
         const fallbackToken = generateHMACToken(userID, roomID);
-        console.log('Using HMAC fallback token');
         return { token: fallbackToken };
     }
 }; 

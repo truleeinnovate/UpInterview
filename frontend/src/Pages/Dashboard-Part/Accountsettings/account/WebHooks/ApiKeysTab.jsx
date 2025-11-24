@@ -59,12 +59,9 @@ const ApiKeysTab = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('[Frontend] handleSubmit called');
-    console.log('[Frontend] Form data:', formData);
     
     try {
       const headers = getAuthHeaders();
-      console.log('[Frontend] Making POST request to:', `${config.REACT_APP_API_URL}/apikeys`);
       
       const response = await fetch(`${config.REACT_APP_API_URL}/apikeys`, {
         method: 'POST',
@@ -84,9 +81,7 @@ const ApiKeysTab = () => {
         }),
       });
 
-      console.log('[Frontend] Response status:', response.status);
       const data = await response.json();
-      console.log('[Frontend] Response data:', data);
 
       if (response.ok) {
         // Success: close modal, reset form, refresh API keys list
@@ -107,7 +102,6 @@ const ApiKeysTab = () => {
         fetchApiKeys(); // Refresh the list
         
         // Show success message (optional)
-        console.log('API Key created successfully:', data);
       } else {
         // Error: show error message
         console.error('Error creating API key:', data.message);

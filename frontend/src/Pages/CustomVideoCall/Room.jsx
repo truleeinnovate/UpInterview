@@ -33,7 +33,6 @@ const Room = () => {
                 lastUpdated: Date.now()
             };
             localStorage.setItem(`userState_${userName}_${roomID}`, JSON.stringify(currentState));
-            console.log('User state saved:', currentState);
         } catch (error) {
             console.error('Failed to save user state:', error);
         }
@@ -46,7 +45,6 @@ const Room = () => {
 
     // Initialize with saved state on component mount
     useEffect(() => {
-        console.log('Initializing with saved state:', { isMicOn, isVideoOn, isScreenSharing });
 
         // Update participants list with current user's saved state
         setParticipants(prev => {
@@ -105,7 +103,6 @@ const Room = () => {
                 };
             }
         } catch (error) {
-            console.log('No saved state found or error loading:', error);
         }
         return { isMicOn: true, isVideoOn: true, isScreenSharing: false };
     };
@@ -173,39 +170,33 @@ const Room = () => {
                 const setupMultiUserEventListeners = () => {
                     // Room connection events
                     multiUserVideoCall.on('roomConnected', (data) => {
-                        console.log('Room connected:', data);
                         setIsConnected(true);
                         setIsInitializing(false);
                     });
 
                     multiUserVideoCall.on('roomDisconnected', (data) => {
-                        console.log('Room disconnected:', data);
                         setIsConnected(false);
                     });
 
                     // Participant events
                     multiUserVideoCall.on('participantsUpdate', (data) => {
-                        console.log('Participants updated:', data);
                         setParticipants(data.allParticipants);
 
                         // Show notification for new participants
                         if (data.type === 'ADD') {
                             data.participants.forEach(participant => {
                                 if (participant.userID !== cleanUserID) {
-                                    console.log(`New participant joined: ${participant.userName} (${participant.userID})`);
                                     // The stream will be handled by the roomStreamUpdate event
                                 }
                             });
                         } else if (data.type === 'DELETE') {
                             data.participants.forEach(participant => {
-                                console.log(`Participant left: ${participant.userName} (${participant.userID})`);
                             });
                         }
                     });
 
                     // Stream events
                     multiUserVideoCall.on('remoteStreamStarted', (data) => {
-                        console.log('Remote stream started:', data);
                         setRemoteStreams(prev => ({
                             ...prev,
                             [data.streamID]: {
@@ -218,7 +209,6 @@ const Room = () => {
                     });
 
                     multiUserVideoCall.on('remoteStreamStopped', (data) => {
-                        console.log('Remote stream stopped:', data);
                         setRemoteStreams(prev => {
                             const newStreams = { ...prev };
                             delete newStreams[data.streamID];
@@ -228,25 +218,20 @@ const Room = () => {
 
                     // Streams update event (for when streams are added/removed)
                     multiUserVideoCall.on('streamsUpdate', (data) => {
-                        console.log('Streams update:', data);
                         if (data.type === 'ADD') {
                             data.streams.forEach(stream => {
                                 if (stream.userID !== cleanUserID) {
-                                    console.log(`New stream detected: ${stream.streamID} from user: ${stream.userID}`);
                                 } else {
-                                    console.log(`Own stream detected: ${stream.streamID}`);
                                 }
                             });
                         } else if (data.type === 'DELETE') {
                             data.streams.forEach(stream => {
-                                console.log(`Stream removed: ${stream.streamID}`);
                             });
                         }
                     });
 
                     // Local stream events
                     multiUserVideoCall.on('localStreamPublished', (data) => {
-                        console.log('Local stream published:', data);
                         setLocalStream(data.stream);
 
                         if (localVideoRef.current && data.stream) {
@@ -263,14 +248,12 @@ const Room = () => {
 
                     // Status change events
                     multiUserVideoCall.on('micStatusChanged', (data) => {
-                        console.log('Mic status changed:', data);
                         if (data.userID === cleanUserID) {
                             setIsMicOn(data.isMicOn);
                         }
                     });
 
                     multiUserVideoCall.on('videoStatusChanged', (data) => {
-                        console.log('Video status changed:', data);
                         if (data.userID === cleanUserID) {
                             setIsVideoOn(data.isVideoOn);
                         }
@@ -278,12 +261,10 @@ const Room = () => {
 
                     // Screen share events
                     multiUserVideoCall.on('screenShareStarted', (data) => {
-                        console.log('Screen sharing started:', data);
                         setIsScreenSharing(true);
                     });
 
                     multiUserVideoCall.on('screenShareStopped', () => {
-                        console.log('Screen sharing stopped');
                         setIsScreenSharing(false);
                     });
                 };
@@ -346,7 +327,6 @@ const Room = () => {
                 const errorMsg = error?.message || error?.toString() || '';
                 const errorCode = error?.code || 0;
 
-                console.log('Error details:', { errorCode, errorMsg, error });
 
                 // Handle specific ZegoCloud error codes
                 if (errorCode === 50119) {
@@ -370,7 +350,6 @@ const Room = () => {
                 // Check if we should retry
                 if (retryCount < maxRetries && (errorCode === 50119 || errorCode === 1102016 || errorCode === 1100001)) {
                     retryCount++;
-                    console.log(`Retrying connection (attempt ${retryCount}/${maxRetries})...`);
                     setTimeout(() => {
                         // Recursive call to retry initialization
                         const retryInit = async () => {
@@ -382,7 +361,6 @@ const Room = () => {
                                 const connectResult = await multiUserVideoCall.joinRoom(cleanRoomID, cleanUserName, cleanUserName);
 
                                 if (connectResult && connectResult.success) {
-                                    console.log('Retry successful:', connectResult);
                                     setIsConnected(true);
                                     setIsInitializing(false);
 
@@ -416,14 +394,11 @@ const Room = () => {
                         retryInit();
                     }, 3000); // Wait 3 seconds before retrying
                 } else {
-                    console.log(`Max retries reached (${maxRetries}). Stopping retry attempts.`);
 
                     // Try using mock video call as fallback
-                    console.log('Attempting to use mock video call system...');
                     try {
                         const mockResult = await mockVideoCall.connectToRoom(cleanRoomID, cleanUserName, cleanUserName);
                         if (mockResult.success) {
-                            console.log('Mock video call connected successfully!');
                             setIsConnected(true);
                             setIsInitializing(false);
                             setError(null);
@@ -443,7 +418,6 @@ const Room = () => {
                             return; // Success with mock system
                         }
                     } catch (mockError) {
-                        console.log('Mock video call also failed:', mockError);
                     }
 
                     setError('Video call service unavailable. Please try again later.');
@@ -474,7 +448,6 @@ const Room = () => {
                     screenShareRef.current.getTracks().forEach(track => track.stop());
                 }
 
-                console.log('Multi-user video call cleanup completed');
             } catch (error) {
                 console.error('Error during cleanup:', error);
             }
@@ -507,7 +480,6 @@ const Room = () => {
                             ? { ...p, isMicOn: result.isMicOn }
                             : p
                     ));
-                    console.log('Microphone toggled:', result.isMicOn);
                 }
             } else if (mockVideoCall.isConnected) {
                 // Use mock system as fallback
@@ -521,7 +493,6 @@ const Room = () => {
                         ? { ...p, isMicOn: result.isMicOn }
                         : p
                 ));
-                console.log('Mock microphone toggled:', result.isMicOn);
 
                 // Force UI update
                 setTimeout(() => {
@@ -531,7 +502,6 @@ const Room = () => {
                 // Fallback for when no system is connected
                 setIsMicOn(newMicStatus);
                 saveUserState({ isMicOn: newMicStatus });
-                console.log('Fallback microphone toggled:', newMicStatus);
             }
 
         } catch (error) {
@@ -561,7 +531,6 @@ const Room = () => {
                             ? { ...p, isVideoOn: result.isVideoOn }
                             : p
                     ));
-                    console.log('Video toggled:', result.isVideoOn);
                 }
             } else if (mockVideoCall.isConnected) {
                 // Use mock system as fallback
@@ -575,7 +544,6 @@ const Room = () => {
                         ? { ...p, isVideoOn: result.isVideoOn }
                         : p
                 ));
-                console.log('Mock video toggled:', result.isVideoOn);
 
                 // Force UI update
                 setTimeout(() => {
@@ -585,7 +553,6 @@ const Room = () => {
                 // Fallback for when no system is connected
                 setIsVideoOn(newVideoStatus);
                 saveUserState({ isVideoOn: newVideoStatus });
-                console.log('Fallback video toggled:', newVideoStatus);
             }
 
         } catch (error) {
@@ -604,7 +571,6 @@ const Room = () => {
                     setIsScreenSharing(result.isScreenSharing);
                     // Save state to localStorage
                     saveUserState({ isScreenSharing: result.isScreenSharing });
-                    console.log('Screen sharing toggled:', result.isScreenSharing);
                 }
             } else if (mockVideoCall.isConnected) {
                 // Use mock system as fallback
@@ -612,7 +578,6 @@ const Room = () => {
                 setIsScreenSharing(result.isScreenSharing);
                 // Save state to localStorage
                 saveUserState({ isScreenSharing: result.isScreenSharing });
-                console.log('Mock screen sharing toggled:', result.isScreenSharing);
             }
         } catch (error) {
             console.error('Failed to toggle screen sharing:', error);
@@ -708,7 +673,6 @@ const Room = () => {
 
             // Listen for mic status updates
             const handleMicStatusUpdate = (data) => {
-                console.log('Mic status updated:', data);
                 // Update the specific participant's mic status
                 setParticipants(prev => prev.map(p =>
                     p.userID === data.userID ? { ...p, isMicOn: data.isMicOn } : p
@@ -720,14 +684,12 @@ const Room = () => {
                     mockVideoCall.isConnected &&
                     mockVideoCall.isMicOn === data.isMicOn &&
                     !isManualChange) {
-                    console.log('Updating local mic state from system event:', data.isMicOn);
                     setIsMicOn(data.isMicOn);
                 }
             };
 
             // Listen for video status updates
             const handleVideoStatusUpdate = (data) => {
-                console.log('Video status updated:', data);
                 // Update the specific participant's video status
                 setParticipants(prev => prev.map(p =>
                     p.userID === data.userID ? { ...p, isVideoOn: data.isVideoOn } : p
@@ -739,21 +701,18 @@ const Room = () => {
                     mockVideoCall.isConnected &&
                     mockVideoCall.isVideoOn === data.isVideoOn &&
                     !isManualChange) {
-                    console.log('Updating local video state from system event:', data.isVideoOn);
                     setIsVideoOn(data.isVideoOn);
                 }
             };
 
             // Listen for new participants joining
             const handleParticipantJoined = (participant) => {
-                console.log('New participant joined:', participant);
                 setParticipants(prev => [...prev, participant]);
 
                 // Create a mock stream for the new participant
                 const mockStream = mockVideoCall.createMockStream(participant.userName);
                 setRemoteStreams(prev => ({ ...prev, [participant.userID]: mockStream }));
 
-                console.log('Remote streams updated:', { ...remoteStreams, [participant.userID]: mockStream });
 
                 // Show notification
                 alert(`${participant.userName} joined the call! Your video will move to the corner.`);
@@ -761,7 +720,6 @@ const Room = () => {
 
             // Listen for participants leaving
             const handleParticipantLeft = (data) => {
-                console.log('Participant left:', data);
                 setParticipants(prev => prev.filter(p => p.userID !== data.userID));
                 setRemoteStreams(prev => {
                     const newStreams = { ...prev };
@@ -828,24 +786,18 @@ const Room = () => {
             if (remoteParticipant && remoteParticipant.isVideoOn) {
                 const videoElement = document.getElementById(`remote-${remoteParticipant.userID}`);
                 if (videoElement && remoteStreams[remoteParticipant.userID]) {
-                    console.log('Setting video source for remote participant:', remoteParticipant.userName);
                     videoElement.srcObject = remoteStreams[remoteParticipant.userID];
 
                     // Add event listeners to track video loading
                     videoElement.onloadedmetadata = () => {
-                        console.log('Video metadata loaded for:', remoteParticipant.userName);
                     };
                     videoElement.onerror = (error) => {
                         console.error('Video error for:', remoteParticipant.userName, error);
                     };
                 } else {
-                    console.log('Video element or stream not found for:', remoteParticipant.userName);
-                    console.log('Video element:', videoElement);
-                    console.log('Stream:', remoteStreams[remoteParticipant.userID]);
 
                     // Try to create stream if missing
                     if (videoElement && !remoteStreams[remoteParticipant.userID]) {
-                        console.log('Creating missing stream for:', remoteParticipant.userName);
                         const newStream = mockVideoCall.createMockStream(remoteParticipant.userName);
                         setRemoteStreams(prev => ({
                             ...prev,
@@ -861,7 +813,6 @@ const Room = () => {
     useEffect(() => {
         // Don't sync if this is a manual change
         if (isManualChange) {
-            console.log('Skipping sync due to manual change');
             return;
         }
 
@@ -879,11 +830,9 @@ const Room = () => {
                 (mockVideoCall.isConnected ? mockVideoCall.isVideoOn === currentParticipant.isVideoOn : true);
 
             if (shouldSyncMic) {
-                console.log('Syncing mic state from system:', currentParticipant.isMicOn);
                 setIsMicOn(currentParticipant.isMicOn);
             }
             if (shouldSyncVideo) {
-                console.log('Syncing video state from system:', currentParticipant.isVideoOn);
                 setIsVideoOn(currentParticipant.isVideoOn);
             }
         }
@@ -892,7 +841,6 @@ const Room = () => {
     // Apply saved state to video call systems when they connect
     useEffect(() => {
         if (isConnected && (multiUserVideoCall.isConnected || mockVideoCall.isConnected)) {
-            console.log('Applying saved state to video call system:', { isMicOn, isVideoOn });
 
             // Apply saved state to the connected system
             if (mockVideoCall.isConnected) {
@@ -1056,12 +1004,10 @@ const Room = () => {
                             // If no remote participant found, try to get the second participant in the list
                             if (!remoteParticipant && participants.length > 1) {
                                 remoteParticipant = participants[1]; // Get second participant
-                                console.log('Using fallback - second participant:', remoteParticipant);
                             }
 
                             // If still no remote participant, show a placeholder
                             if (!remoteParticipant && participants.length > 1) {
-                                console.log('No remote participant found, showing placeholder');
                                 return (
                                     <div className="main-remote-video">
                                         <div className="video-off-placeholder">
@@ -1081,10 +1027,6 @@ const Room = () => {
                                 );
                             }
 
-                            console.log('Debug - Current userName:', userName);
-                            console.log('Debug - Current cleanUserID:', cleanUserID);
-                            console.log('Debug - All participants:', participants);
-                            console.log('Debug - Found remote participant:', remoteParticipant);
 
                             if (remoteParticipant) {
                                 return (
@@ -1323,13 +1265,9 @@ const Room = () => {
                             </button>
                             <button
                                 onClick={() => {
-                                    console.log('Participants:', participants);
-                                    console.log('Remote Streams:', remoteStreams);
-                                    console.log('Remote Stream Keys:', Object.keys(remoteStreams));
 
                                     // Check localStorage
                                     const roomData = localStorage.getItem(`mockRoom_${roomID}`);
-                                    console.log('localStorage room data:', roomData);
 
                                     alert(`Participants: ${participants.length}, Remote Streams: ${Object.keys(remoteStreams).length}\nlocalStorage: ${roomData ? 'Found' : 'Not found'}`);
                                 }}
@@ -1341,10 +1279,6 @@ const Room = () => {
                             <button
                                 onClick={() => {
                                     if (mockVideoCall.isConnected) {
-                                        console.log('Video track:', mockVideoCall.videoTrack);
-                                        console.log('Audio track:', mockVideoCall.audioTrack);
-                                        console.log('Video enabled:', mockVideoCall.videoTrack?.enabled);
-                                        console.log('Audio enabled:', mockVideoCall.audioTrack?.enabled);
                                         alert(`Video: ${mockVideoCall.videoTrack?.enabled ? 'ON' : 'OFF'}\nAudio: ${mockVideoCall.audioTrack?.enabled ? 'ON' : 'OFF'}`);
                                     }
                                 }}
@@ -1357,8 +1291,6 @@ const Room = () => {
                                 onClick={() => {
                                     // Test mock stream creation
                                     const testStream = mockVideoCall.createMockStream('Test User');
-                                    console.log('Test stream created:', testStream);
-                                    console.log('Stream tracks:', testStream.getTracks());
 
                                     // Test video element creation
                                     const testVideo = document.createElement('video');
@@ -1380,9 +1312,7 @@ const Room = () => {
                             <button
                                 onClick={async () => {
                                     try {
-                                        console.log('Testing screen sharing...');
                                         const result = await toggleScreenShare();
-                                        console.log('Screen share result:', result);
 
                                         if (result.success) {
                                             alert(`Screen sharing ${result.isScreenSharing ? 'STARTED' : 'STOPPED'} successfully!`);
@@ -1450,26 +1380,16 @@ const Room = () => {
                             </button>
                             <button
                                 onClick={() => {
-                                    console.log('=== VIDEO DEBUG INFO ===');
-                                    console.log('Participants:', participants);
-                                    console.log('Remote Streams:', remoteStreams);
-                                    console.log('Remote Stream Keys:', Object.keys(remoteStreams));
 
                                     if (participants.length > 1) {
                                         const remoteParticipant = participants.find(p => p.userID !== userName);
-                                        console.log('Remote Participant:', remoteParticipant);
 
                                         if (remoteParticipant) {
                                             const videoElement = document.getElementById(`remote-${remoteParticipant.userID}`);
-                                            console.log('Video Element:', videoElement);
-                                            console.log('Video Element srcObject:', videoElement?.srcObject);
-                                            console.log('Stream for this participant:', remoteStreams[remoteParticipant.userID]);
-
+                                
                                             if (videoElement && remoteStreams[remoteParticipant.userID]) {
                                                 videoElement.srcObject = remoteStreams[remoteParticipant.userID];
-                                                console.log('Video source set successfully!');
                                             } else {
-                                                console.log('Missing video element or stream!');
                                             }
                                         }
                                     }
@@ -1483,19 +1403,12 @@ const Room = () => {
                             </button>
                             <button
                                 onClick={() => {
-                                    console.log('=== STATUS DEBUG INFO ===');
-                                    console.log('Local State - isMicOn:', isMicOn, 'isVideoOn:', isVideoOn);
-                                    console.log('Manual Change Flag:', isManualChange);
-                                    console.log('Participants:', participants);
 
                                     const currentParticipant = participants.find(p =>
                                         p.userID === userName || p.userID === cleanUserID
                                     );
-                                    console.log('Current Participant:', currentParticipant);
 
                                     if (currentParticipant) {
-                                        console.log('Participant State - isMicOn:', currentParticipant.isMicOn, 'isVideoOn:', currentParticipant.isVideoOn);
-                                        console.log('State Sync - Mic:', currentParticipant.isMicOn === isMicOn, 'Video:', currentParticipant.isVideoOn === isVideoOn);
                                     }
 
                                     alert(`Status Debug Info:\nMic: ${isMicOn ? 'ON' : 'OFF'}\nVideo: ${isVideoOn ? 'ON' : 'OFF'}\nManual Change: ${isManualChange ? 'YES' : 'NO'}`);
@@ -1521,7 +1434,6 @@ const Room = () => {
                                             : p
                                     ));
 
-                                    console.log('Manual mic toggle:', newMicStatus);
                                     alert(`Mic manually toggled to: ${newMicStatus ? 'ON' : 'OFF'}`);
                                 }}
                                 className="test-btn"
@@ -1545,7 +1457,6 @@ const Room = () => {
                                             : p
                                     ));
 
-                                    console.log('Manual video toggle:', newVideoStatus);
                                     alert(`Video manually toggled to: ${newVideoStatus ? 'ON' : 'OFF'}`);
                                 }}
                                 className="test-btn"
@@ -1557,7 +1468,6 @@ const Room = () => {
                                 onClick={() => {
                                     // Show current saved state
                                     const savedState = localStorage.getItem(`userState_${userName}_${roomID}`);
-                                    console.log('Current saved state:', savedState);
 
                                     if (savedState) {
                                         const parsed = JSON.parse(savedState);
@@ -1575,7 +1485,6 @@ const Room = () => {
                                 onClick={() => {
                                     // Clear saved state
                                     localStorage.removeItem(`userState_${userName}_${roomID}`);
-                                    console.log('Saved state cleared');
                                     alert('Saved state cleared! Reload page to see default state.');
                                 }}
                                 className="test-btn"

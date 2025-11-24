@@ -150,7 +150,6 @@ const AddInvoiceForm = ({ mode }) => {
 
   const { addOrUpdateCandidate, candidateData } = useCandidates();
 
-  console.log("currentRole", currentRole);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -484,7 +483,6 @@ const AddInvoiceForm = ({ mode }) => {
 
   const handleAddCandidate = async (e) => {
     e.preventDefault();
-    console.log("Starting add candidate process...");
 
     // Get user token information
     const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -496,8 +494,6 @@ const AddInvoiceForm = ({ mode }) => {
     // const userName = Cookies.get('userName')
     // const orgId = Cookies.get('organizationId')
 
-    console.log("User info:", { userId, userName, orgId });
-
     // Validate form data
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
@@ -506,14 +502,12 @@ const AddInvoiceForm = ({ mode }) => {
     );
 
     if (!formIsValid) {
-      console.log("Form validation failed:", newErrors);
       setErrors(newErrors);
       return;
     }
 
     // Prepare candidate data
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-    console.log("Current date and time:", currentDateTime);
 
     const data = {
       FirstName: formData.FirstName,
@@ -540,16 +534,12 @@ const AddInvoiceForm = ({ mode }) => {
       tenantId: orgId,
     };
 
-    console.log("Submitting candidate data:", data);
 
     try {
       // getting the API from the apihooks for add or update candidate (post or patch)
       await addOrUpdateCandidate.mutateAsync({ id, data, file });
       // Reset form and close
       resetFormData();
-      console.log("Form reset completed");
-
-      console.log("Navigation to candidate list completed");
     } catch (error) {
       console.error("Failed to add candidate:", error);
       if (error.response) {
@@ -560,7 +550,6 @@ const AddInvoiceForm = ({ mode }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Starting submit process...");
 
     // Get user token information
     const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -576,14 +565,12 @@ const AddInvoiceForm = ({ mode }) => {
     );
 
     if (!formIsValid) {
-      console.log("Form validation failed:", newErrors);
       setErrors(newErrors);
       return;
     }
 
     // Prepare candidate data
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-    console.log("Current date and time:", currentDateTime);
 
     const data = {
       FirstName: formData.FirstName,
@@ -607,8 +594,6 @@ const AddInvoiceForm = ({ mode }) => {
       ownerId: userId,
       tenantId: orgId,
     };
-
-    console.log("Submitting candidate data:", data);
 
     try {
       let candidateId;

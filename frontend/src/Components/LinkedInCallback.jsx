@@ -22,20 +22,15 @@ const LinkedInCallback = () => {
 
     const fetchAndFilterContacts = async (linkedInEmail) => {
         try {
-            // console.log("LinkedIn Callback: Fetching contacts for email:", linkedInEmail);
             const response = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
             const allContacts = response.data;
-            // console.log("LinkedIn Callback: Total contacts fetched:", allContacts.length);
 
             const filteredContacts = allContacts.filter(contact => contact.email === linkedInEmail);
-            // console.log("LinkedIn Callback: Filtered contacts for email:", filteredContacts.length);
 
             if (filteredContacts.length > 0) {
                 setFilteredContact(filteredContacts[0]);
-                // console.log("LinkedIn Callback: Found contact:", filteredContacts[0]._id);
                 return filteredContacts[0];
             }
-            // console.log("LinkedIn Callback: No contact found for email:", linkedInEmail);
             return null;
         } catch (error) {
             console.error('Error fetching contacts:', error);
@@ -54,22 +49,14 @@ const LinkedInCallback = () => {
     };
 
     const determineNavigation = async (contact, token, email) => {
-        // console.log("LinkedIn Callback: determineNavigation called with:", {
-        //     contactId: contact ? contact._id : null,
-        //     token: !!token,
-        //     email
-        // });
-
         if (!contact) {
             // No contact found - new user
-            // console.log("LinkedIn Callback: No contact found, navigating to select-profession");
             return navigate('/select-profession', {
                 state: { token, linkedIn_email: email }
             });
         }
 
         const { completionStatus } = contact;
-        // console.log("LinkedIn Callback: Contact completion status:", completionStatus);
 
         if (!completionStatus) {
             // No completion status - treat as new user
@@ -168,7 +155,6 @@ const LinkedInCallback = () => {
     useEffect(() => {
         const handleCallback = async () => {
             try {
-                // console.log('🔍 Initial cookie state:', debugCookieState());
                 const urlParams = new URLSearchParams(window.location.search);
                 const code = urlParams.get('code');
                 // Extract returnUrl either directly from query or from OAuth state payload
@@ -197,7 +183,6 @@ const LinkedInCallback = () => {
                 if (!code) {
                     throw new Error('No authorization code received from LinkedIn');
                 }
-                // console.log('window.location.origin + /callback', window.location.origin + '/callback')
                 const response = await axios.post(
                     `${config.REACT_APP_API_URL}/linkedin/check-user`,
                     { code, redirectUri: window.location.origin + '/callback' },
@@ -211,17 +196,10 @@ const LinkedInCallback = () => {
                 );
 
                 const { existingUser, token, email } = response.data;
-                // console.log("LinkedIn Callback: Backend response received:", {
-                //     existingUser,
-                //     token: !!token,
-                //     email,
-                //     fullResponse: response.data
-                // });
+
 
                 // Clear all cookies and localStorage before setting new ones
-                // console.log('🧹 Clearing all auth data');
                 await clearAllAuth();
-                // console.log('✅ Cleared all cookies and localStorage, post-clear state:', debugCookieState());
 
                 // Set the authToken with retries
                 if (token) {
@@ -234,7 +212,6 @@ const LinkedInCallback = () => {
                         await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
 
                         const authToken = getAuthToken();
-                        // console.log(`🔍 Verification attempt ${retries + 1}, cookie state:`, debugCookieState());
 
                         verified = !!authToken;
                         if (!verified) {
@@ -272,7 +249,6 @@ const LinkedInCallback = () => {
                         );
 
                         if (isValidDomain) {
-                            // console.log('Redirecting to returnUrl:', returnUrl);
                             await new Promise(resolve => setTimeout(resolve, 2000));
                             window.location.href = returnUrl; // Use returnUrl as-is
                             return;
@@ -282,7 +258,6 @@ const LinkedInCallback = () => {
                     } else if (returnUrl.startsWith('/')) {
                         // Support relative internal paths (e.g., /candidate/view-details/123)
                         const target = `${window.location.origin}${returnUrl}`;
-                        // console.log('Redirecting to relative returnUrl:', target);
                         await new Promise(resolve => setTimeout(resolve, 2000));
                         window.location.href = target;
                         return;
@@ -292,18 +267,11 @@ const LinkedInCallback = () => {
                 }
 
                 // Existing navigation logic
-                // console.log("LinkedIn Callback: Determining navigation path", {
-                //     existingUser,
-                //     email
-                // });
 
                 if (existingUser) {
-                    // console.log("LinkedIn Callback: Processing existing user, fetching contacts...");
                     const contact = await fetchAndFilterContacts(email);
-                    // console.log("LinkedIn Callback: Contact found for existing user:", contact ? contact._id : null);
                     await determineNavigation(contact, token, email);
                 } else {
-                    // console.log("LinkedIn Callback: Processing new user, navigating to select-profession");
                     navigate('/select-profession', {
                         state: {
                             linkedIn_email: email,

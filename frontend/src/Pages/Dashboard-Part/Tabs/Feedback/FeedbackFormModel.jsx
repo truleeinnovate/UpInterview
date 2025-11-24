@@ -64,7 +64,6 @@ const FeedbackFormModal = () => {
   };
 
   const handleRemoveQuestion = (questionId) => {
-    console.log("Removing question:", questionId);
 
     // Remove question from interviewer section data
     setInterviewerSectionData((prev) =>
@@ -76,16 +75,12 @@ const FeedbackFormModal = () => {
   };
 
   const handleToggleMandatory = (questionId) => {
-    console.log("Toggling mandatory for question:", questionId);
 
     // Toggle mandatory status for the question
     setInterviewerSectionData((prev) => {
-      console.log("Previous state:", prev);
       const updated = prev.map((q) => {
         if ((q.questionId || q.id) === questionId) {
-          console.log("Found question to toggle:", q);
           const newMandatory = q.mandatory === "true" ? "false" : "true";
-          console.log("New mandatory value:", newMandatory);
           return {
             ...q,
             mandatory: newMandatory,
@@ -99,7 +94,6 @@ const FeedbackFormModal = () => {
         }
         return q;
       });
-      console.log("Updated state:", updated);
       return updated;
     });
   };

@@ -18,7 +18,6 @@ const HrmsAtsApi = () => {
   const [isCreating, setIsCreating] = useState(false)
 
   const handleSaveIntegration = (integrationData) => {
-    console.log('Save integration:', integrationData)
     setEditingIntegration(null)
     setIsCreating(false)
   }

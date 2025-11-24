@@ -1,11 +1,13 @@
 // v1.0.0  -  Ashraf  -  fixed name  scheduleassessment to assessment schema,added extend,cancel,schedule status api code based on policy
-const { CandidateAssessment } = require("../models/Assessment/candidateAssessment");
-const { generateOTP } = require('../utils/generateOtp')
+const {
+  CandidateAssessment,
+} = require("../models/Assessment/candidateAssessment");
+const { generateOTP } = require("../utils/generateOtp");
 const Otp = require("../models/Otp");
-const mongoose = require('mongoose');
-const cron = require('node-cron');
+const mongoose = require("mongoose");
+const cron = require("node-cron");
 // <-------------------------------v1.0.0
-const ScheduleAssessment = require("../models/Assessment/assessmentsSchema"); 
+const ScheduleAssessment = require("../models/Assessment/assessmentsSchema");
 // ------------------------------v1.0.0 >
 
 // Import push notification functions
@@ -15,7 +17,9 @@ const {
 } = require("./PushNotificationControllers/pushNotificationAssessmentController");
 
 // Import assessment usage service
-const { handleAssessmentStatusChange } = require("../services/assessmentUsageService");
+const {
+  handleAssessmentStatusChange,
+} = require("../services/assessmentUsageService");
 
 // exports.updateCandidateAssessment = async (req, res) => {
 //   try {
@@ -42,10 +46,6 @@ const { handleAssessmentStatusChange } = require("../services/assessmentUsageSer
 //       updatedAssessment: updateResult, // Send only the updated document
 //     });
 //   } catch (error) {
-//     console.log(
-//       "Error in updating candidate assessment status:",
-//       error.message
-//     );
 //     return res.status(500).send({
 //       success: false,
 //       message: "Failed to update candidate assessment status",
@@ -54,14 +54,11 @@ const { handleAssessmentStatusChange } = require("../services/assessmentUsageSer
 //   }
 // }
 
-
 // exports.updateAnswersToDb = async (req, res) => {
 //   try {
 //     const { candidateAssessmentId, sectionIndex, questionId } = req.params;
 //     const { SectionName, Answers, passScore, sectionResult, assessmentTotalScore, totalScore, sectionTotalScore } = req.body;
 //     const { answer, isCorrect, score, isAnswerLater } = Answers;
-
-//     console.log("Request Body:", req.body);
 
 //     // Check if the CandidateAssessment exists
 //     let candidateAssessment = await CandidateAssessment.findById(candidateAssessmentId);
@@ -74,7 +71,6 @@ const { handleAssessmentStatusChange } = require("../services/assessmentUsageSer
 //     const section = candidateAssessment.sections[sectionIndex];
 
 //     if (!section) {
-//       console.log("Section does not exist, creating a new one...");
 //       // Add a new section if it doesn't exist
 //       candidateAssessment.sections.push({
 //         SectionName,
@@ -93,7 +89,6 @@ const { handleAssessmentStatusChange } = require("../services/assessmentUsageSer
 //         sectionResult,
 //       });
 //     } else {
-//       console.log("Section exists, checking for the answer...");
 
 //       // Check if the answer already exists in the section
 //       const answerIndex = section.Answers.findIndex(
@@ -102,7 +97,6 @@ const { handleAssessmentStatusChange } = require("../services/assessmentUsageSer
 
 //       if (answerIndex === -1) {
 //         // If the answer doesn't exist, add a new one
-//         console.log("Answer does not exist, adding a new one...");
 //         section.Answers.push({
 //           questionId,
 //           answer,
@@ -113,7 +107,6 @@ const { handleAssessmentStatusChange } = require("../services/assessmentUsageSer
 //         });
 //       } else {
 //         // If the answer exists, update the existing one
-//         console.log("Answer exists, updating the existing one...");
 //         section.Answers[answerIndex].answer = answer;
 //         section.Answers[answerIndex].isCorrect = isCorrect;
 //         section.Answers[answerIndex].score = score;
@@ -164,34 +157,33 @@ const { handleAssessmentStatusChange } = require("../services/assessmentUsageSer
 //   }
 // }
 
-
-
-
-
-
-exports.getCandidateAssessmentBasedOnId = async(req,res)=>{
+exports.getCandidateAssessmentBasedOnId = async (req, res) => {
   try {
-    const {id}= req.params 
-    if (!id){
-      return res.status(400).send({message:"id is missing"})
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).send({ message: "id is missing" });
     }
-    const document = await CandidateAssessment.findById(id) 
-    if (!document){
-      return res.status(400).send({message:`no document found for given candidate assessment id:${id}`})
+    const document = await CandidateAssessment.findById(id);
+    if (!document) {
+      return res
+        .status(400)
+        .send({
+          message: `no document found for given candidate assessment id:${id}`,
+        });
     }
     return res.status(200).send({
-      message:"Retrieved candidate Assessment",
-      success:true,
-      candidateAssessment:document
-    })
+      message: "Retrieved candidate Assessment",
+      success: true,
+      candidateAssessment: document,
+    });
   } catch (error) {
     res.status(500).send({
-      success:false,
-      message:"Failed to get candidate assessment details",
-      error:error.message
-    })
+      success: false,
+      message: "Failed to get candidate assessment details",
+      error: error.message,
+    });
   }
-}
+};
 
 exports.verifyOtp = async (req, res) => {
   const { candidateAssessmentId, otp } = req.body;
@@ -199,7 +191,7 @@ exports.verifyOtp = async (req, res) => {
   if (!candidateAssessmentId || !otp) {
     return res.status(400).json({
       isValid: false,
-      message: 'Missing required fields.',
+      message: "Missing required fields.",
     });
   }
 
@@ -208,7 +200,7 @@ exports.verifyOtp = async (req, res) => {
     if (!storedOtp) {
       return res.status(404).json({
         isValid: false,
-        message: 'Invalid OTP. Please request a new one.',
+        message: "Invalid OTP. Please request a new one.",
       });
     }
 
@@ -216,7 +208,7 @@ exports.verifyOtp = async (req, res) => {
       await Otp.findByIdAndDelete(storedOtp._id);
       return res.status(410).json({
         isValid: false,
-        message: 'OTP has expired. Please request a new one.',
+        message: "OTP has expired. Please request a new one.",
       });
     }
 
@@ -225,19 +217,19 @@ exports.verifyOtp = async (req, res) => {
       await Otp.findByIdAndDelete(storedOtp._id);
       return res.status(200).json({
         isValid: true,
-        message: 'OTP is valid.',
+        message: "OTP is valid.",
       });
     } else {
       return res.status(400).json({
         isValid: false,
-        message: 'Invalid OTP.',
+        message: "Invalid OTP.",
       });
     }
   } catch (error) {
-    console.error('Error verifying OTP:', error);
+    console.error("Error verifying OTP:", error);
     return res.status(500).json({
       isValid: false,
-      message: 'Internal server error. Please try again.',
+      message: "Internal server error. Please try again.",
     });
   }
 };
@@ -281,7 +273,7 @@ exports.submitCandidateAssessment = async (req, res) => {
 
     // Process sections and calculate results
     let hasFailedSection = false;
-    const processedSections = sections.map(section => {
+    const processedSections = sections.map((section) => {
       // Calculate section score based on answers
       const sectionScore = section.Answers.reduce((total, answer) => {
         // For interview questions, we might not have a correct answer to check against
@@ -290,38 +282,46 @@ exports.submitCandidateAssessment = async (req, res) => {
       }, 0);
 
       // Determine section result
-      const sectionResult = sectionScore >= (section.passScore || 0) ? 'pass' : 'fail';
-      
+      const sectionResult =
+        sectionScore >= (section.passScore || 0) ? "pass" : "fail";
+
       // Update overall result if any section fails
-      if (sectionResult === 'fail') {
+      if (sectionResult === "fail") {
         hasFailedSection = true;
       }
 
       return {
         ...section,
         totalScore: sectionScore,
-        sectionResult
+        sectionResult,
       };
     });
 
     // Update the candidate assessment with processed data
     const oldStatus = candidateAssessment.status;
-    candidateAssessment.status = status || 'completed';
+    candidateAssessment.status = status || "completed";
     candidateAssessment.sections = processedSections;
     candidateAssessment.totalScore = totalScore;
     candidateAssessment.submittedAt = submittedAt;
     candidateAssessment.endedAt = new Date();
-    candidateAssessment.overallResult = hasFailedSection ? 'fail' : 'pass';
+    candidateAssessment.overallResult = hasFailedSection ? "fail" : "pass";
 
     // Save the updated assessment
     const updatedAssessment = await candidateAssessment.save();
-    
+
     // Create notification if status changed
     if (oldStatus !== candidateAssessment.status) {
       try {
-        await createAssessmentStatusUpdateNotification(updatedAssessment, oldStatus, candidateAssessment.status);
+        await createAssessmentStatusUpdateNotification(
+          updatedAssessment,
+          oldStatus,
+          candidateAssessment.status
+        );
       } catch (notificationError) {
-        console.error('[ASSESSMENT] Error creating status update notification:', notificationError);
+        console.error(
+          "[ASSESSMENT] Error creating status update notification:",
+          notificationError
+        );
         // Continue execution even if notification fails
       }
 
@@ -333,16 +333,22 @@ exports.submitCandidateAssessment = async (req, res) => {
           candidateAssessment.status
         );
       } catch (usageError) {
-        console.error('[ASSESSMENT] Error updating assessment usage:', usageError);
+        console.error(
+          "[ASSESSMENT] Error updating assessment usage:",
+          usageError
+        );
         // Continue execution even if usage update fails
       }
     }
-    
+
     // Create push notification for assessment submission
     try {
       await createAssessmentSubmissionNotification(updatedAssessment);
     } catch (notificationError) {
-      console.error('[ASSESSMENT] Error creating submission notification:', notificationError);
+      console.error(
+        "[ASSESSMENT] Error creating submission notification:",
+        notificationError
+      );
       // Continue execution even if notification fails
     }
 
@@ -367,7 +373,11 @@ exports.extendCandidateAssessment = async (req, res) => {
   try {
     const { candidateAssessmentIds, extensionDays } = req.body;
 
-    if (!candidateAssessmentIds || !Array.isArray(candidateAssessmentIds) || candidateAssessmentIds.length === 0) {
+    if (
+      !candidateAssessmentIds ||
+      !Array.isArray(candidateAssessmentIds) ||
+      candidateAssessmentIds.length === 0
+    ) {
       return res.status(400).json({
         success: false,
         message: "Please provide valid candidate assessment IDs",
@@ -386,17 +396,27 @@ exports.extendCandidateAssessment = async (req, res) => {
 
     for (const candidateAssessmentId of candidateAssessmentIds) {
       try {
-        const candidateAssessment = await CandidateAssessment.findById(candidateAssessmentId);
-        
+        const candidateAssessment = await CandidateAssessment.findById(
+          candidateAssessmentId
+        );
+
         if (!candidateAssessment) {
-          errors.push(`Candidate assessment not found: ${candidateAssessmentId}`);
+          errors.push(
+            `Candidate assessment not found: ${candidateAssessmentId}`
+          );
           continue;
         }
 
         // Check if assessment can be extended (not completed, cancelled, or already extended)
         // Allow only 1 extension per assessment
-        if (['completed', 'cancelled', 'extended'].includes(candidateAssessment.status)) {
-          errors.push(`Assessment ${candidateAssessmentId} cannot be extended (status: ${candidateAssessment.status})`);
+        if (
+          ["completed", "cancelled", "extended"].includes(
+            candidateAssessment.status
+          )
+        ) {
+          errors.push(
+            `Assessment ${candidateAssessmentId} cannot be extended (status: ${candidateAssessment.status})`
+          );
           continue;
         }
 
@@ -408,39 +428,56 @@ exports.extendCandidateAssessment = async (req, res) => {
 
         // Allow extension only if within 24-72 hours before expiry
         if (hoursUntilExpiry < 24 || hoursUntilExpiry > 72) {
-          errors.push(`Assessment ${candidateAssessmentId} can only be extended 24-72 hours before expiry. Current time until expiry: ${Math.round(hoursUntilExpiry)} hours`);
+          errors.push(
+            `Assessment ${candidateAssessmentId} can only be extended 24-72 hours before expiry. Current time until expiry: ${Math.round(
+              hoursUntilExpiry
+            )} hours`
+          );
           continue;
         }
 
         // Calculate new expiry date
         const currentExpiry = new Date(candidateAssessment.expiryAt);
-        const newExpiry = new Date(currentExpiry.getTime() + (extensionDays * 24 * 60 * 60 * 1000));
+        const newExpiry = new Date(
+          currentExpiry.getTime() + extensionDays * 24 * 60 * 60 * 1000
+        );
 
         // Update the candidate assessment
         const oldStatus = candidateAssessment.status;
         candidateAssessment.expiryAt = newExpiry;
-        candidateAssessment.status = 'extended';
-        
+        candidateAssessment.status = "extended";
+
         await candidateAssessment.save();
-        
+
         // Create notification for status update
-        if (oldStatus !== 'extended') {
+        if (oldStatus !== "extended") {
           try {
-            await createAssessmentStatusUpdateNotification(candidateAssessment, oldStatus, 'extended');
+            await createAssessmentStatusUpdateNotification(
+              candidateAssessment,
+              oldStatus,
+              "extended"
+            );
           } catch (notificationError) {
-            console.error('[ASSESSMENT] Error creating extension notification:', notificationError);
+            console.error(
+              "[ASSESSMENT] Error creating extension notification:",
+              notificationError
+            );
           }
         }
 
         results.push({
           candidateAssessmentId,
           newExpiryDate: newExpiry,
-          status: 'extended'
+          status: "extended",
         });
-
       } catch (error) {
-        console.error(`Error extending assessment ${candidateAssessmentId}:`, error);
-        errors.push(`Failed to extend assessment ${candidateAssessmentId}: ${error.message}`);
+        console.error(
+          `Error extending assessment ${candidateAssessmentId}:`,
+          error
+        );
+        errors.push(
+          `Failed to extend assessment ${candidateAssessmentId}: ${error.message}`
+        );
       }
     }
 
@@ -449,10 +486,9 @@ exports.extendCandidateAssessment = async (req, res) => {
       message: `Successfully extended ${results.length} assessment(s)`,
       data: {
         extended: results,
-        errors: errors
-      }
+        errors: errors,
+      },
     });
-
   } catch (error) {
     console.error("Error extending candidate assessments:", error);
     return res.status(500).json({
@@ -468,7 +504,11 @@ exports.cancelCandidateAssessments = async (req, res) => {
   try {
     const { candidateAssessmentIds } = req.body;
 
-    if (!candidateAssessmentIds || !Array.isArray(candidateAssessmentIds) || candidateAssessmentIds.length === 0) {
+    if (
+      !candidateAssessmentIds ||
+      !Array.isArray(candidateAssessmentIds) ||
+      candidateAssessmentIds.length === 0
+    ) {
       return res.status(400).json({
         success: false,
         message: "Please provide valid candidate assessment IDs",
@@ -480,33 +520,46 @@ exports.cancelCandidateAssessments = async (req, res) => {
 
     for (const candidateAssessmentId of candidateAssessmentIds) {
       try {
-        const candidateAssessment = await CandidateAssessment.findById(candidateAssessmentId);
-        
+        const candidateAssessment = await CandidateAssessment.findById(
+          candidateAssessmentId
+        );
+
         if (!candidateAssessment) {
-          errors.push(`Candidate assessment not found: ${candidateAssessmentId}`);
+          errors.push(
+            `Candidate assessment not found: ${candidateAssessmentId}`
+          );
           continue;
         }
 
         // Check if assessment can be cancelled (not already completed or cancelled)
         // Allow cancelling extended assessments (1 chance to cancel)
-        if (['completed', 'cancelled'].includes(candidateAssessment.status)) {
-          errors.push(`Assessment ${candidateAssessmentId} cannot be cancelled (status: ${candidateAssessment.status})`);
+        if (["completed", "cancelled"].includes(candidateAssessment.status)) {
+          errors.push(
+            `Assessment ${candidateAssessmentId} cannot be cancelled (status: ${candidateAssessment.status})`
+          );
           continue;
         }
 
         // Update the candidate assessment status
         const oldStatus = candidateAssessment.status;
-        candidateAssessment.status = 'cancelled';
+        candidateAssessment.status = "cancelled";
         candidateAssessment.isActive = false;
-        
+
         await candidateAssessment.save();
-        
+
         // Create notification for cancellation
-        if (oldStatus !== 'cancelled') {
+        if (oldStatus !== "cancelled") {
           try {
-            await createAssessmentStatusUpdateNotification(candidateAssessment, oldStatus, 'cancelled');
+            await createAssessmentStatusUpdateNotification(
+              candidateAssessment,
+              oldStatus,
+              "cancelled"
+            );
           } catch (notificationError) {
-            console.error('[ASSESSMENT] Error creating cancellation notification:', notificationError);
+            console.error(
+              "[ASSESSMENT] Error creating cancellation notification:",
+              notificationError
+            );
           }
 
           // Update assessment usage when status changes to cancelled
@@ -514,22 +567,29 @@ exports.cancelCandidateAssessments = async (req, res) => {
             await handleAssessmentStatusChange(
               candidateAssessmentId,
               oldStatus,
-              'cancelled'
+              "cancelled"
             );
           } catch (usageError) {
-            console.error('[ASSESSMENT] Error updating assessment usage:', usageError);
+            console.error(
+              "[ASSESSMENT] Error updating assessment usage:",
+              usageError
+            );
             // Continue execution even if usage update fails
           }
         }
 
         results.push({
           candidateAssessmentId,
-          status: 'cancelled'
+          status: "cancelled",
         });
-
       } catch (error) {
-        console.error(`Error cancelling assessment ${candidateAssessmentId}:`, error);
-        errors.push(`Failed to cancel assessment ${candidateAssessmentId}: ${error.message}`);
+        console.error(
+          `Error cancelling assessment ${candidateAssessmentId}:`,
+          error
+        );
+        errors.push(
+          `Failed to cancel assessment ${candidateAssessmentId}: ${error.message}`
+        );
       }
     }
 
@@ -538,10 +598,9 @@ exports.cancelCandidateAssessments = async (req, res) => {
       message: `Successfully cancelled ${results.length} assessment(s)`,
       data: {
         cancelled: results,
-        errors: errors
-      }
+        errors: errors,
+      },
     });
-
   } catch (error) {
     console.error("Error cancelling candidate assessments:", error);
     return res.status(500).json({
@@ -555,14 +614,16 @@ exports.cancelCandidateAssessments = async (req, res) => {
 // Function to update schedule assessment status based on candidate assessment statuses
 exports.updateScheduleAssessmentStatus = async (scheduleAssessmentId) => {
   try {
-    const scheduleAssessment = await ScheduleAssessment.findById(scheduleAssessmentId);
+    const scheduleAssessment = await ScheduleAssessment.findById(
+      scheduleAssessmentId
+    );
     if (!scheduleAssessment) {
       return null;
     }
 
     // Get all candidate assessments for this schedule
     const candidateAssessments = await CandidateAssessment.find({
-      scheduledAssessmentId: scheduleAssessmentId
+      scheduledAssessmentId: scheduleAssessmentId,
     });
 
     if (!candidateAssessments || candidateAssessments.length === 0) {
@@ -570,48 +631,58 @@ exports.updateScheduleAssessmentStatus = async (scheduleAssessmentId) => {
     }
 
     // Get all candidate statuses
-    const candidateStatuses = candidateAssessments.map(ca => ca.status);
+    const candidateStatuses = candidateAssessments.map((ca) => ca.status);
     const uniqueStatuses = [...new Set(candidateStatuses)];
-    
+
     let newScheduleStatus = scheduleAssessment.status;
 
     // Check if all candidates have final statuses (completed, cancelled, expired, failed, pass)
-    const finalStatuses = ['completed', 'cancelled', 'expired', 'failed', 'pass'];
-    const allHaveFinalStatus = candidateStatuses.every(status => finalStatuses.includes(status));
+    const finalStatuses = [
+      "completed",
+      "cancelled",
+      "expired",
+      "failed",
+      "pass",
+    ];
+    const allHaveFinalStatus = candidateStatuses.every((status) =>
+      finalStatuses.includes(status)
+    );
 
     if (allHaveFinalStatus) {
       // All candidates have final statuses, determine schedule status
       if (uniqueStatuses.length === 1) {
         // All candidates have the same status
         const singleStatus = uniqueStatuses[0];
-        if (['completed', 'pass'].includes(singleStatus)) {
-          newScheduleStatus = 'completed';
-        } else if (singleStatus === 'cancelled') {
-          newScheduleStatus = 'cancelled';
-        } else if (singleStatus === 'expired') {
-          newScheduleStatus = 'expired';
-        } else if (singleStatus === 'failed') {
-          newScheduleStatus = 'failed';
+        if (["completed", "pass"].includes(singleStatus)) {
+          newScheduleStatus = "completed";
+        } else if (singleStatus === "cancelled") {
+          newScheduleStatus = "cancelled";
+        } else if (singleStatus === "expired") {
+          newScheduleStatus = "expired";
+        } else if (singleStatus === "failed") {
+          newScheduleStatus = "failed";
         }
       } else {
         // Mixed final statuses - determine based on priority
-        if (candidateStatuses.some(s => ['completed', 'pass'].includes(s))) {
-          newScheduleStatus = 'completed';
-        } else if (candidateStatuses.every(s => ['cancelled', 'expired'].includes(s))) {
-          if (candidateStatuses.every(s => s === 'cancelled')) {
-            newScheduleStatus = 'cancelled';
-          } else if (candidateStatuses.every(s => s === 'expired')) {
-            newScheduleStatus = 'expired';
+        if (candidateStatuses.some((s) => ["completed", "pass"].includes(s))) {
+          newScheduleStatus = "completed";
+        } else if (
+          candidateStatuses.every((s) => ["cancelled", "expired"].includes(s))
+        ) {
+          if (candidateStatuses.every((s) => s === "cancelled")) {
+            newScheduleStatus = "cancelled";
+          } else if (candidateStatuses.every((s) => s === "expired")) {
+            newScheduleStatus = "expired";
           } else {
-            newScheduleStatus = 'cancelled';
+            newScheduleStatus = "cancelled";
           }
-        } else if (candidateStatuses.some(s => s === 'failed')) {
-          newScheduleStatus = 'failed';
+        } else if (candidateStatuses.some((s) => s === "failed")) {
+          newScheduleStatus = "failed";
         }
       }
     } else {
       // Some candidates still have pending statuses, keep as scheduled
-      newScheduleStatus = 'scheduled';
+      newScheduleStatus = "scheduled";
     }
 
     // Update schedule status if it changed
@@ -622,7 +693,10 @@ exports.updateScheduleAssessmentStatus = async (scheduleAssessmentId) => {
 
     return scheduleAssessment;
   } catch (error) {
-    console.error(`Error updating schedule assessment status for ${scheduleAssessmentId}:`, error);
+    console.error(
+      `Error updating schedule assessment status for ${scheduleAssessmentId}:`,
+      error
+    );
     throw error;
   }
 };
@@ -639,8 +713,10 @@ exports.updateScheduleStatus = async (req, res) => {
       });
     }
 
-    const updatedSchedule = await exports.updateScheduleAssessmentStatus(scheduleAssessmentId);
-    
+    const updatedSchedule = await exports.updateScheduleAssessmentStatus(
+      scheduleAssessmentId
+    );
+
     if (!updatedSchedule) {
       return res.status(404).json({
         success: false,
@@ -663,18 +739,25 @@ exports.updateScheduleStatus = async (req, res) => {
   }
 };
 
-
-
 // Function to automatically check and update expired candidate assessments
 exports.checkAndUpdateExpiredAssessments = async (req, res) => {
   try {
     const now = new Date();
-    
+
     // Find all candidate assessments that have expired but status is not updated
     const expiredAssessments = await CandidateAssessment.find({
       expiryAt: { $lt: now },
-      status: { $nin: ['completed', 'cancelled', 'expired', 'failed', 'pass', 'extended'] }
-    }).populate('candidateId');
+      status: {
+        $nin: [
+          "completed",
+          "cancelled",
+          "expired",
+          "failed",
+          "pass",
+          "extended",
+        ],
+      },
+    }).populate("candidateId");
 
     const updatedAssessments = [];
     const failedUpdates = [];
@@ -683,16 +766,23 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
       try {
         // Update status to expired
         const oldStatus = assessment.status;
-        assessment.status = 'expired';
+        assessment.status = "expired";
         assessment.isActive = false;
         await assessment.save();
-        
+
         // Create notification for expiry
-        if (oldStatus !== 'expired') {
+        if (oldStatus !== "expired") {
           try {
-            await createAssessmentStatusUpdateNotification(assessment, oldStatus, 'expired');
+            await createAssessmentStatusUpdateNotification(
+              assessment,
+              oldStatus,
+              "expired"
+            );
           } catch (notificationError) {
-            console.error('[ASSESSMENT] Error creating expiry notification:', notificationError);
+            console.error(
+              "[ASSESSMENT] Error creating expiry notification:",
+              notificationError
+            );
           }
 
           // Update assessment usage when status changes to expired
@@ -700,35 +790,42 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
             await handleAssessmentStatusChange(
               assessment._id,
               oldStatus,
-              'expired'
+              "expired"
             );
           } catch (usageError) {
-            console.error('[ASSESSMENT] Error updating assessment usage:', usageError);
+            console.error(
+              "[ASSESSMENT] Error updating assessment usage:",
+              usageError
+            );
             // Continue execution even if usage update fails
           }
         }
-        
+
         updatedAssessments.push({
           id: assessment._id,
-          candidateName: `${assessment.candidateId?.FirstName || ''} ${assessment.candidateId?.LastName || ''}`.trim(),
-          email: assessment.candidateId?.Email || 'N/A',
-          expiredAt: assessment.expiryAt
+          candidateName: `${assessment.candidateId?.FirstName || ""} ${
+            assessment.candidateId?.LastName || ""
+          }`.trim(),
+          email: assessment.candidateId?.Email || "N/A",
+          expiredAt: assessment.expiryAt,
         });
 
         // Update schedule assessment status after candidate assessment update
-        await exports.updateScheduleAssessmentStatus(assessment.scheduledAssessmentId);
+        await exports.updateScheduleAssessmentStatus(
+          assessment.scheduledAssessmentId
+        );
       } catch (error) {
         failedUpdates.push({
           id: assessment._id,
-          error: error.message
+          error: error.message,
         });
       }
     }
 
     // Update all schedule assessments to ensure consistency
     const scheduleAssessments = await ScheduleAssessment.find({}).populate({
-      path: 'candidates',
-      populate: { path: 'candidateId' }
+      path: "candidates",
+      populate: { path: "candidateId" },
     });
 
     const updatedSchedules = [];
@@ -736,49 +833,50 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
 
     for (const schedule of scheduleAssessments) {
       try {
-        const updatedSchedule = await exports.updateScheduleAssessmentStatus(schedule._id);
+        const updatedSchedule = await exports.updateScheduleAssessmentStatus(
+          schedule._id
+        );
         if (updatedSchedule && updatedSchedule.status !== schedule.status) {
           updatedSchedules.push({
             id: schedule._id,
             order: schedule.order,
             oldStatus: schedule.status,
             newStatus: updatedSchedule.status,
-            candidateCount: schedule.candidates?.length || 0
+            candidateCount: schedule.candidates?.length || 0,
           });
         }
       } catch (error) {
         failedScheduleUpdates.push({
           id: schedule._id,
-          error: error.message
+          error: error.message,
         });
       }
     }
 
     res.json({
       success: true,
-      message: 'Expiry check completed successfully',
+      message: "Expiry check completed successfully",
       data: {
         expiredAssessments: {
           updated: updatedAssessments.length,
           failed: failedUpdates.length,
           details: updatedAssessments,
-          failures: failedUpdates
+          failures: failedUpdates,
         },
         scheduleAssessments: {
           updated: updatedSchedules.length,
           failed: failedScheduleUpdates.length,
           details: updatedSchedules,
-          failures: failedScheduleUpdates
-        }
-      }
+          failures: failedScheduleUpdates,
+        },
+      },
     });
-
   } catch (error) {
-    console.error('Error checking expired assessments:', error);
+    console.error("Error checking expired assessments:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to check expired assessments',
-      error: error.message
+      message: "Failed to check expired assessments",
+      error: error.message,
     });
   }
 };
@@ -793,18 +891,20 @@ exports.updateAllScheduleStatuses = async (req, res) => {
 
     for (const schedule of scheduleAssessments) {
       try {
-        const updatedSchedule = await exports.updateScheduleAssessmentStatus(schedule._id);
+        const updatedSchedule = await exports.updateScheduleAssessmentStatus(
+          schedule._id
+        );
         if (updatedSchedule && updatedSchedule.status !== schedule.status) {
           results.push({
             scheduleAssessmentId: schedule._id,
             oldStatus: schedule.status,
-            newStatus: updatedSchedule.status
+            newStatus: updatedSchedule.status,
           });
         }
       } catch (error) {
         errors.push({
           scheduleAssessmentId: schedule._id,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -812,7 +912,7 @@ exports.updateAllScheduleStatuses = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: `Successfully updated ${results.length} schedule assessment(s)`,
-      data: { updated: results, errors }
+      data: { updated: results, errors },
     });
   } catch (error) {
     console.error("Error updating all schedule assessment statuses:", error);
@@ -824,52 +924,47 @@ exports.updateAllScheduleStatuses = async (req, res) => {
   }
 };
 
-
-
 // Function to run the schedule assessment status update job
 const runScheduleAssessmentStatusUpdateJob = async () => {
   try {
-    // console.log('Starting automated schedule assessment status update job...');
-    
     const scheduleAssessments = await ScheduleAssessment.find({});
     const results = [];
     const errors = [];
 
     for (const schedule of scheduleAssessments) {
       try {
-        const updatedSchedule = await exports.updateScheduleAssessmentStatus(schedule._id);
+        const updatedSchedule = await exports.updateScheduleAssessmentStatus(
+          schedule._id
+        );
         if (updatedSchedule && updatedSchedule.status !== schedule.status) {
           results.push({
             scheduleAssessmentId: schedule._id,
             oldStatus: schedule.status,
-            newStatus: updatedSchedule.status
+            newStatus: updatedSchedule.status,
           });
         }
       } catch (error) {
         errors.push({
           scheduleAssessmentId: schedule._id,
-          error: error.message
+          error: error.message,
         });
       }
     }
 
-    // console.log(`Automated schedule assessment status update completed. Updated: ${results.length}, Errors: ${errors.length}`);
-    
     if (results.length > 0) {
-      console.log('Updated schedule assessments:', results);
-    }
-    
-    if (errors.length > 0) {
-      console.error('Errors during update:', errors);
+      console.log("Updated schedule assessments:", results);
     }
 
+    if (errors.length > 0) {
+      console.error("Errors during update:", errors);
+    }
   } catch (error) {
     // console.error('Error in automated schedule assessment status update job:', error);
   }
 };
 
 // Cron job to automatically update schedule assessment statuses every 5 minutes
-cron.schedule('*/5 * * * *', async () => {
+cron.schedule("*/5 * * * *", async () => {
   runScheduleAssessmentStatusUpdateJob();
 });
 
@@ -880,7 +975,6 @@ cron.schedule('*/5 * * * *', async () => {
 // 0 0 * * * = once daily at midnight
 
 // Run immediately on file load for initial check
-// console.log('Running initial schedule assessment status update check at startup...');
 runScheduleAssessmentStatusUpdateJob();
 
 // ------------------------------v1.0.0 >

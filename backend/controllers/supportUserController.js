@@ -1,8 +1,8 @@
 // v1.0.0 - Ashraf - Added subject field
 //<----v1.0.1----Venkatesh----add validation
-const supportNotif = require('./PushNotificationControllers/pushNotificationSupportUserController');
+const supportNotif = require("./PushNotificationControllers/pushNotificationSupportUserController");
 const SupportUser = require("../models/SupportUser");
-const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
+const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
 //<----v1.0.1----
 const mongoose = require("mongoose");
 const {
@@ -14,12 +14,11 @@ const {
 
 const { hasPermission } = require("../middleware/permissionMiddleware");
 
-
 exports.createTicket = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Create Ticket";
   try {
-    console.log("Received ticket creation request body:", req.body);
+    // console.log("Received ticket creation request body:", req.body);
     const {
       issueType,
       description,
@@ -56,9 +55,8 @@ exports.createTicket = async (req, res) => {
     // }
     //-----v1.0.1--->
 
-
     // Generate ticket code using centralized service
-    const ticketCode = await generateUniqueId('SPT', SupportUser, 'ticketCode');
+    const ticketCode = await generateUniqueId("SPT", SupportUser, "ticketCode");
     const ticket = await SupportUser.create({
       issueType,
       description,
@@ -104,11 +102,9 @@ exports.createTicket = async (req, res) => {
       responseBody: ticket,
     };
 
-
-
     return res.status(201).send({
       message: "Ticket created successfully",
-      status: 'Ticket created successfully',
+      status: "Ticket created successfully",
       ticket,
     });
   } catch (error) {
@@ -123,7 +119,6 @@ exports.createTicket = async (req, res) => {
       status: "error",
     };
 
-
     return res.status(500).json({
       message: "Failed to create ticket",
       errors: { general: error.message },
@@ -133,8 +128,6 @@ exports.createTicket = async (req, res) => {
 
 // exports.getTicket = async (req, res) => {
 //   try {
-
-
 
 //     // res.locals.loggedByController = true;
 //     // //<-----v1.0.1---
@@ -162,7 +155,6 @@ exports.createTicket = async (req, res) => {
 //   }
 // };
 
-
 // Backend API should accept these query parameters:
 // - search: string (search in ticketCode, contact, subject)
 // - status: string[] (multiple status values)
@@ -174,8 +166,6 @@ exports.createTicket = async (req, res) => {
 // - tenantId: string
 // - userId: string
 // - organization: string
-
-
 
 exports.getTicket = async (req, res) => {
   try {
@@ -194,14 +184,16 @@ exports.getTicket = async (req, res) => {
       impersonatedUser_roleName,
     } = req.query;
 
-
-       /* ============================================================
+    /* ============================================================
        EXACT ROLE FILTER LOGIC (1:1 with your previous conditions)
     ============================================================ */
     const query = {};
 
     // Super Admin & Support Team → full access (no restrictions)
-    if (impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team") {
+    if (
+      impersonatedUser_roleName === "Super_Admin" ||
+      impersonatedUser_roleName === "Support_Team"
+    ) {
       // unrestricted → no filters applied
     }
 
@@ -230,7 +222,6 @@ exports.getTicket = async (req, res) => {
     }
 
     // console.log("query---", query)
-
 
     // const query = {};
 
@@ -295,7 +286,8 @@ exports.getTicket = async (req, res) => {
 
     // 📅 Date filter
     if (createdDate) {
-      const days = createdDate === "last7" ? 7 : createdDate === "last30" ? 30 : null;
+      const days =
+        createdDate === "last7" ? 7 : createdDate === "last30" ? 30 : null;
       if (days) {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - days);
@@ -311,13 +303,12 @@ exports.getTicket = async (req, res) => {
       finalQuery = { $and: [query, ...searchConditions] };
     }
 
-   
     /* --------------------------------------------------------------------- */
     /*  🔢 Pagination + Fetch                                                */
     /* --------------------------------------------------------------------- */
     const skip = parseInt(page) * parseInt(limit);
     const tickets = await SupportUser.find(finalQuery)
-      .sort({ _id : -1 })
+      .sort({ _id: -1 })
       .skip(skip)
       .limit(parseInt(limit))
       .lean();
@@ -341,8 +332,6 @@ exports.getTicket = async (req, res) => {
     });
   }
 };
-
-
 
 // exports.getTicket = async (req, res) => {
 //   try {
@@ -446,12 +435,18 @@ exports.getTicketBasedonId = async (req, res) => {
       //<----v1.0.1----
       return res
         .status(400)
-        .json({ message: "Validation failed", errors: { id: "Ticket id is required" } });
+        .json({
+          message: "Validation failed",
+          errors: { id: "Ticket id is required" },
+        });
     }
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
         .status(400)
-        .json({ message: "Validation failed", errors: { id: "Invalid ticket id" } });
+        .json({
+          message: "Validation failed",
+          errors: { id: "Invalid ticket id" },
+        });
     }
 
     // res.locals.loggedByController = true;
@@ -475,7 +470,7 @@ exports.getTicketBasedonId = async (req, res) => {
       ticket,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return res.status(500).json({
       message: "Failed to get ticket based on id",
       errors: { general: error.message },
@@ -579,7 +574,6 @@ exports.getTicketBasedonId = async (req, res) => {
 //        console.log("changes length",changes.length);
 //        console.log("changes length",currentTicket);
 
-
 //      // Check if there are no changes
 //      if (changes.length === 0) {
 //        return res.status(200).json({
@@ -632,7 +626,6 @@ exports.getTicketBasedonId = async (req, res) => {
 //        changes: changes, // Include changes in log data
 //      };
 
-
 //     return res.status(200).send({
 //       status: 'Ticket updated successfully',
 //       message: "Ticket updated successfully",
@@ -667,22 +660,29 @@ exports.updateTicketById = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { ownerId, tenantId, issueType, description, subject, assignedTo, assignedToId } = req.body;
+    const {
+      ownerId,
+      tenantId,
+      issueType,
+      description,
+      subject,
+      assignedTo,
+      assignedToId,
+    } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
         .status(400)
-        .json({ message: "Validation failed", errors: { id: "Invalid ticket id" } });
+        .json({
+          message: "Validation failed",
+          errors: { id: "Invalid ticket id" },
+        });
     }
 
     const { errors, isValid } = validateUpdateSupportTicket(req.body);
     if (!isValid) {
       return res.status(400).json({ message: "Validation failed", errors });
     }
-
-    // console.log("logData", logo);
-    console.log("ownerId", ownerId);
-    console.log("tenantId", tenantId);
 
     // const canCreate =
     //   await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Edit') ||
@@ -712,7 +712,12 @@ exports.updateTicketById = async (req, res) => {
           return JSON.stringify(oldValue) !== JSON.stringify(newValue);
         }
 
-        if (typeof oldValue === 'object' && typeof newValue === 'object' && oldValue !== null && newValue !== null) {
+        if (
+          typeof oldValue === "object" &&
+          typeof newValue === "object" &&
+          oldValue !== null &&
+          newValue !== null
+        ) {
           return JSON.stringify(oldValue) !== JSON.stringify(newValue);
         }
 
@@ -723,9 +728,6 @@ exports.updateTicketById = async (req, res) => {
         oldValue: currentTicket[key],
         newValue,
       }));
-    console.log("changes", changes);
-    console.log("changes length", changes.length);
-
 
     // FIX: Return the current ticket data when no changes are made
     if (changes.length === 0) {
@@ -733,18 +735,14 @@ exports.updateTicketById = async (req, res) => {
         status: "no_changes",
         message: "No changes detected, ticket details remain the same",
         data: currentTicket, // Include the ticket data
-        ticket: currentTicket // Add this line to ensure frontend has access to ticket object
+        ticket: currentTicket, // Add this line to ensure frontend has access to ticket object
       });
     }
-    console.log("changes", changes);
-    console.log("changes length", changes.length);
 
-
-    const ticket = await SupportUser.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const ticket = await SupportUser.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!ticket) {
       return res.status(404).json({ message: "Ticket not found" });
@@ -781,17 +779,13 @@ exports.updateTicketById = async (req, res) => {
       changes: changes,
     };
 
-
-
     return res.status(200).send({
-      status: 'Ticket updated successfully',
+      status: "Ticket updated successfully",
       message: "Ticket updated successfully",
       ticket, // Ensure this is always returned
       changes,
     });
   } catch (error) {
-    console.log(error);
-
     res.locals.logData = {
       tenantId: req.body.tenantId,
       ownerId: req.body.ownerId,
@@ -808,17 +802,20 @@ exports.updateTicketById = async (req, res) => {
   }
 };
 
-
 exports.updateSupportTicket = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, comment, userComment, user, updatedByUserId, notifyUser } = req.body;
+    const { status, comment, userComment, user, updatedByUserId, notifyUser } =
+      req.body;
 
     //<----v1.0.1----
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
         .status(400)
-        .json({ message: "Validation failed", errors: { id: "Invalid ticket id" } });
+        .json({
+          message: "Validation failed",
+          errors: { id: "Invalid ticket id" },
+        });
     }
     const { errors, isValid } = validateStatusUpdate(req.body);
     if (!isValid) {
@@ -891,7 +888,6 @@ exports.getAllTickets = async (req, res) => {
     //   return res.status(403).json({ message: 'Forbidden: missing SupportDesk.ViewTab permission' });
     // }
     //-----v1.0.1--->
-
 
     const now = new Date();
     const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);

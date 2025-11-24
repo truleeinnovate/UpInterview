@@ -16,7 +16,6 @@ const CustomQuestionPopup = ({
         trigger={
           <button
             onClick={() => {
-              console.log("custom popup clicked");
               closePlusPopup();
             }}
             contentStyle={{

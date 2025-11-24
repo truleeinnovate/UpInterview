@@ -73,15 +73,12 @@ const CreateContact = ({ onContactAdded, onContactUpdated }) => {
       return;
     }
 
-    console.log("Submitting form data:", formData);
-
     try {
       if (editMode) {
         const response = await axios.patch(
           `${process.env.REACT_APP_API_URL}/contact/${formData.id}`,
           formData
         );
-        console.log("Server response:", response.data);
         if (response.data) {
           onContactUpdated(response.data);
           navigate("/contacts");
@@ -91,7 +88,6 @@ const CreateContact = ({ onContactAdded, onContactUpdated }) => {
         `${process.env.REACT_APP_API_URL}/contacts`,
         formData
       );
-      console.log("Server response:", response.data);
       if (response.status === 201) {
         onContactAdded(response.data);
         navigate("/contacts");

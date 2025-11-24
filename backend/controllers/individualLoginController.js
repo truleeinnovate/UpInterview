@@ -2,17 +2,17 @@ const { Users } = require("../models/Users.js");
 const { Contacts } = require("../models/Contacts.js");
 const InterviewAvailability = require("../models/InterviewAvailability.js");
 const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js");
-const { generateToken } = require('../utils/jwt');
+const { generateToken } = require("../utils/jwt");
 const Tenant = require("../models/Tenant");
-const RolesPermissionObject = require('../models/RolesPermissionObject');
-const { getAuthCookieOptions } = require('../utils/cookieUtils');
-const { validateIndividualSignup } = require('../validations/IndivindualLoginValidation.js');
-const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
+const RolesPermissionObject = require("../models/RolesPermissionObject");
+const { getAuthCookieOptions } = require("../utils/cookieUtils");
+const {
+  validateIndividualSignup,
+} = require("../validations/IndivindualLoginValidation.js");
+const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
 
 exports.individualLogin = async (req, res) => {
   try {
-    // console.log('[individualLogin] Step 1: Started processing individual login request');
-
     const {
       userData,
       contactData,
@@ -24,7 +24,6 @@ exports.individualLogin = async (req, res) => {
     } = req.body;
 
     const currentStep = req.body.currentStep || 0;
-    // console.log('[individualLogin] Using explicit currentStep:', currentStep);
 
     // ---------------- STEP VALIDATION ----------------
     const { error } = validateIndividualSignup(currentStep, contactData);
@@ -38,12 +37,17 @@ exports.individualLogin = async (req, res) => {
 
     // ---------------- ROLE ASSIGNMENT ----------------
     let updatedUserData = { ...userData };
-    if (isProfileCompleteStateOrg === false || isProfileCompleteStateOrg === undefined) {
+    if (
+      isProfileCompleteStateOrg === false ||
+      isProfileCompleteStateOrg === undefined
+    ) {
       let role = await RolesPermissionObject.findOne({
-        roleName: userData.isFreelancer ? 'Individual_Freelancer' : 'Individual',
-        roleType: 'individual',
+        roleName: userData.isFreelancer
+          ? "Individual_Freelancer"
+          : "Individual",
+        roleType: "individual",
       }).lean();
-      if (!role) throw new Error('Role not found for the specified criteria');
+      if (!role) throw new Error("Role not found for the specified criteria");
       updatedUserData.roleId = role._id;
     }
 
@@ -55,54 +59,74 @@ exports.individualLogin = async (req, res) => {
 
     // ---------------- TENANT UPDATE ----------------
     let savedTenant;
-    if (isProfileCompleteStateOrg === undefined && tenantData?.isProfileCompletedForTenant) {
+    if (
+      isProfileCompleteStateOrg === undefined &&
+      tenantData?.isProfileCompletedForTenant
+    ) {
       savedTenant = await Tenant.findOneAndUpdate(
         { ownerId },
-        { status: 'submitted' },
+        { status: "submitted" },
         { new: true }
       ).lean();
     }
 
     // ---------------- AVAILABILITY UPDATE ----------------
     let savedAvailability = null;
-    if (availabilityData?.length > 0 && (userData.isFreelancer || isInternalInterviewer)) {
+    if (
+      availabilityData?.length > 0 &&
+      (userData.isFreelancer || isInternalInterviewer)
+    ) {
       try {
-        const existing = await InterviewAvailability.findOne({ contact: savedContact._id }).lean();
-        if (JSON.stringify(existing?.availability) !== JSON.stringify(availabilityData)) {
-          savedAvailability = await InterviewAvailability.updateOrCreate(savedContact._id, availabilityData);
+        const existing = await InterviewAvailability.findOne({
+          contact: savedContact._id,
+        }).lean();
+        if (
+          JSON.stringify(existing?.availability) !==
+          JSON.stringify(availabilityData)
+        ) {
+          savedAvailability = await InterviewAvailability.updateOrCreate(
+            savedContact._id,
+            availabilityData
+          );
         } else {
           savedAvailability = existing;
         }
       } catch (error) {
-        console.error('[individualLogin] Error saving availability:', error);
+        console.error("[individualLogin] Error saving availability:", error);
       }
     }
 
     // ---------------- OUTSOURCE INTERVIEWER ----------------
-    const outsourceRequestCode = await generateUniqueId('OINT', OutsourceInterviewer, 'outsourceRequestCode');
+    const outsourceRequestCode = await generateUniqueId(
+      "OINT",
+      OutsourceInterviewer,
+      "outsourceRequestCode"
+    );
     let newInterviewer = null;
     if (currentStep === 3 && userData.isFreelancer) {
       newInterviewer = new OutsourceInterviewer({
-        outsourceRequestCode:outsourceRequestCode,
+        outsourceRequestCode: outsourceRequestCode,
         ownerId,
         contactId: savedContact._id,
-        requestedRate: savedContact.rates || contactData.rates || {
-          junior: { usd: 0, inr: 0, isVisible: true },
-          mid: { usd: 0, inr: 0, isVisible: true },
-          senior: { usd: 0, inr: 0, isVisible: true },
-        },
-        feedback: [{
-          givenBy: ownerId,
-          rating: 4.5,
-          comments: "",
-          createdAt: new Date(),
-        }],
-        status: 'underReview',
+        requestedRate: savedContact.rates ||
+          contactData.rates || {
+            junior: { usd: 0, inr: 0, isVisible: true },
+            mid: { usd: 0, inr: 0, isVisible: true },
+            senior: { usd: 0, inr: 0, isVisible: true },
+          },
+        feedback: [
+          {
+            givenBy: ownerId,
+            rating: 4.5,
+            comments: "",
+            createdAt: new Date(),
+          },
+        ],
+        status: "underReview",
         createdBy: ownerId,
-        currency: 'INR',
+        currency: "INR",
       });
       await newInterviewer.save();
-      // console.log('[individualLogin] New OutsourceInterviewer created for freelancer on final step');
     }
 
     // ---------------- TOKEN GENERATION ----------------
@@ -133,20 +157,19 @@ exports.individualLogin = async (req, res) => {
     // ---------------- LOGGING ----------------
     if (
       (userData.isFreelancer && currentStep === 3) || // freelancers at step 3
-      (!userData.isFreelancer && currentStep === 1)   // non-freelancers at step 1
+      (!userData.isFreelancer && currentStep === 1) // non-freelancers at step 1
     ) {
       res.locals.loggedByController = true;
-      res.locals.processName = 'Create Individual';
+      res.locals.processName = "Create Individual";
       res.locals.logData = {
         tenantId: savedUser.tenantId || savedTenant?._id,
         ownerId: savedUser._id,
-        processName: 'Create Individual',
+        processName: "Create Individual",
         requestBody: req.body,
-        message: 'Individual created successfully',
-        status: 'success',
+        message: "Individual created successfully",
+        status: "success",
         responseBody: JSON.parse(JSON.stringify(apiResponse)), // ✅ safe clone
       };
-      // console.log(`[individualLogin] ✅ Log created for step ${currentStep}`);
     }
 
     // ---------------- RESPONSE ----------------
@@ -157,7 +180,7 @@ exports.individualLogin = async (req, res) => {
       contactId: savedContact._id,
       // ...(isProfileCompleteStateOrg && { tenantId: savedUser.tenantId }),
       tenantId: savedUser.tenantId,
-      token
+      token,
     });
   } catch (error) {
     console.error("Error in individual login:", error);
@@ -165,11 +188,14 @@ exports.individualLogin = async (req, res) => {
     res.locals.logData = {
       tenantId: req.body.tenantId,
       ownerId: req.body.ownerId,
-      processName: 'Create Individual',
+      processName: "Create Individual",
       requestBody: req.body,
       message: error.message,
-      status: 'error',
-      responseError: JSON.stringify({ message: error.message, stack: error.stack }), // ✅ fix cast error
+      status: "error",
+      responseError: JSON.stringify({
+        message: error.message,
+        stack: error.stack,
+      }), // ✅ fix cast error
     };
 
     return res.status(500).json({
@@ -179,4 +205,3 @@ exports.individualLogin = async (req, res) => {
     });
   }
 };
-

@@ -1,13 +1,13 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const fetch = require('node-fetch');
-const crypto = require('crypto');
+const fetch = require("node-fetch");
+const crypto = require("crypto");
 
 // Configuration - should be environment variables in production
-const PROJECT_ID = '109f21d910b05cbb564f';
-const BACKEND_ENDPOINT = 'https://managedservices-prod.rteappbuilder.com';
-const PLATFORM_ID = 'turnkey_web';
-const APP_ID = '0b37194e651b4615994c3c1e89f4d4ea';
+const PROJECT_ID = "109f21d910b05cbb564f";
+const BACKEND_ENDPOINT = "https://managedservices-prod.rteappbuilder.com";
+const PLATFORM_ID = "turnkey_web";
+const APP_ID = "0b37194e651b4615994c3c1e89f4d4ea";
 
 // Generate unique request ID
 function getUniqueID() {
@@ -18,76 +18,67 @@ function getUniqueID() {
 async function getAuthToken() {
   const requestId = getUniqueID();
   const url = `${BACKEND_ENDPOINT}/v1/login?project_id=${PROJECT_ID}&platform_id=${PLATFORM_ID}`;
-  
-  try {
-    console.log('Attempting unauthenticated login to:', url);
-    
-    const response = await fetch(url, {
-      method: 'GET', // Changed to GET for unauth flow
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Request-Id': requestId,
-        'X-Project-ID': PROJECT_ID,
-        'X-Platform-ID': PLATFORM_ID
-      }
-    });
 
-    console.log('Auth response status:', response.status);
+  try {
+    const response = await fetch(url, {
+      method: "GET", // Changed to GET for unauth flow
+      headers: {
+        "Content-Type": "application/json",
+        "X-Request-Id": requestId,
+        "X-Project-ID": PROJECT_ID,
+        "X-Platform-ID": PLATFORM_ID,
+      },
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Auth error response:', errorText);
-      throw new Error(`Authentication failed: ${response.status} - ${errorText}`);
+      console.error("Auth error response:", errorText);
+      throw new Error(
+        `Authentication failed: ${response.status} - ${errorText}`
+      );
     }
 
     const data = await response.json();
-    console.log('Auth response data:', data);
-    
+
     if (data.token) {
-      console.log('Successfully obtained token');
       return data.token;
     }
-    
-    throw new Error('No token received from authentication endpoint');
+
+    throw new Error("No token received from authentication endpoint");
   } catch (error) {
-    console.error('Token fetch error:', error);
+    console.error("Token fetch error:", error);
     throw error;
   }
 }
 
-router.post('/create-video-room', async (req, res) => {
+router.post("/create-video-room", async (req, res) => {
   try {
     const { title, enablePSTN = false } = req.body;
 
-    console.log('=== Video Room Creation Request ===');
-    console.log('Request body:', req.body);
-   
     // Validate required fields
-    if (!title || title.trim() === '') {
-      return res.status(400).json({ 
-        error: 'Room title is required',
-        details: 'Please provide a valid room title'
+    if (!title || title.trim() === "") {
+      return res.status(400).json({
+        error: "Room title is required",
+        details: "Please provide a valid room title",
       });
     }
 
     // Step 1: Get authentication token
-    console.log('Getting authentication token...');
     let token;
     try {
       token = await getAuthToken();
-      console.log('Authentication successful');
     } catch (err) {
-      console.error('Authentication failed:', err);
-      return res.status(401).json({ 
-        error: 'Failed to get authentication token',
+      console.error("Authentication failed:", err);
+      return res.status(401).json({
+        error: "Failed to get authentication token",
         details: err.message,
-        suggestion: 'Please check your project credentials and configuration',
+        suggestion: "Please check your project credentials and configuration",
         debugInfo: {
           projectId: PROJECT_ID,
           platformId: PLATFORM_ID,
           backendEndpoint: BACKEND_ENDPOINT,
-          authUrl: `${BACKEND_ENDPOINT}/v1/login?project_id=${PROJECT_ID}&platform_id=${PLATFORM_ID}`
-        }
+          authUrl: `${BACKEND_ENDPOINT}/v1/login?project_id=${PROJECT_ID}&platform_id=${PLATFORM_ID}`,
+        },
       });
     }
 
@@ -114,112 +105,114 @@ router.post('/create-video-room', async (req, res) => {
     `;
 
     const graphqlUrl = `${BACKEND_ENDPOINT}/v1/query`;
-    console.log('Making GraphQL request to:', graphqlUrl);
 
     const requestId = getUniqueID();
     const graphqlResponse = await fetch(graphqlUrl, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        'X-Project-ID': PROJECT_ID,
-        'X-Platform-ID': PLATFORM_ID,
-        'X-Request-Id': requestId,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "X-Project-ID": PROJECT_ID,
+        "X-Platform-ID": PLATFORM_ID,
+        "X-Request-Id": requestId,
       },
       body: JSON.stringify({
         query,
-        variables: { 
-          title: title.trim(), 
-          enablePSTN: Boolean(enablePSTN) 
-        }
-      })
+        variables: {
+          title: title.trim(),
+          enablePSTN: Boolean(enablePSTN),
+        },
+      }),
     });
-
-    console.log('GraphQL response status:', graphqlResponse.status);
 
     if (!graphqlResponse.ok) {
       const errorText = await graphqlResponse.text();
-      console.error('GraphQL error response:', errorText);
-      throw new Error(`Room creation failed: ${graphqlResponse.status} - ${errorText}`);
+      console.error("GraphQL error response:", errorText);
+      throw new Error(
+        `Room creation failed: ${graphqlResponse.status} - ${errorText}`
+      );
     }
 
     const data = await graphqlResponse.json();
-    console.log('GraphQL response data:', JSON.stringify(data, null, 2));
 
     // Handle GraphQL errors
     if (data.errors && data.errors.length > 0) {
-      console.error('GraphQL errors:', data.errors);
-      return res.status(500).json({ 
-        error: 'Room creation failed',
-        details: data.errors[0].message || 'GraphQL mutation error',
-        graphqlErrors: data.errors
+      console.error("GraphQL errors:", data.errors);
+      return res.status(500).json({
+        error: "Room creation failed",
+        details: data.errors[0].message || "GraphQL mutation error",
+        graphqlErrors: data.errors,
       });
     }
 
     // Validate response data
     if (!data.data || !data.data.createChannel) {
-      console.error('Invalid GraphQL response:', data);
-      return res.status(500).json({ 
-        error: 'Invalid response from room creation service',
-        details: 'No channel data received',
-        responseData: data
+      console.error("Invalid GraphQL response:", data);
+      return res.status(500).json({
+        error: "Invalid response from room creation service",
+        details: "No channel data received",
+        responseData: data,
       });
     }
 
     const channelData = data.data.createChannel;
-    console.log('Channel data received:', channelData);
 
     // Get base URL for generating full links
     // const baseUrl = 'https://109f21d910b05cbb564f-shikhars-projects-762a1929.vercel.app'; // Your frontend URL
-    const baseUrl = `${config.REACT_APP_API_URL_FRONTEND}` || /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/;
+    const baseUrl =
+      `${config.REACT_APP_API_URL_FRONTEND}` ||
+      /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/;
 
     // Prepare response with proper host and attendee links
     const response = {
       success: true,
       roomData: {
         // Full URLs for direct access
-        hostUrl: channelData.passphrase?.host ? `${baseUrl}/${channelData.passphrase.host}` : null,
-        attendeeUrl: channelData.passphrase?.view ? `${baseUrl}/${channelData.passphrase.view}` : null,
-        
+        hostUrl: channelData.passphrase?.host
+          ? `${baseUrl}/${channelData.passphrase.host}`
+          : null,
+        attendeeUrl: channelData.passphrase?.view
+          ? `${baseUrl}/${channelData.passphrase.view}`
+          : null,
+
         // Room IDs for programmatic access
         hostId: channelData.passphrase?.host || null,
         attendeeId: channelData.passphrase?.view || null,
-        
+
         // Additional room info
         channel: channelData.channel || null,
         title: channelData.title || title,
-        
+
         // PSTN information
         pstn: {
           enabled: enablePSTN,
-          ...(enablePSTN && channelData.pstn ? {
-            number: channelData.pstn.number || null,
-            pin: channelData.pstn.dtmf || null,
-            ...(channelData.pstn.error ? {
-              error: {
-                code: channelData.pstn.error.code,
-                message: channelData.pstn.error.message
+          ...(enablePSTN && channelData.pstn
+            ? {
+                number: channelData.pstn.number || null,
+                pin: channelData.pstn.dtmf || null,
+                ...(channelData.pstn.error
+                  ? {
+                      error: {
+                        code: channelData.pstn.error.code,
+                        message: channelData.pstn.error.message,
+                      },
+                    }
+                  : {}),
               }
-            } : {})
-          } : {})
-        }
-      }
+            : {}),
+        },
+      },
     };
 
-    console.log('=== Room Created Successfully ===');
-    console.log('Host URL:', response.roomData.hostUrl);
-    console.log('Attendee URL:', response.roomData.attendeeUrl);
-    
     res.json(response);
-
   } catch (error) {
-    console.error('=== Room Creation Error ===');
-    console.error('Error details:', error);
-    
-    res.status(500).json({ 
-      error: 'Internal server error',
+    console.error("=== Room Creation Error ===");
+    console.error("Error details:", error);
+
+    res.status(500).json({
+      error: "Internal server error",
       details: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -247,13 +240,13 @@ module.exports = router;
 // async function getAuthToken() {
 //   const requestId = getUniqueID();
 //   const url = `${BACKEND_ENDPOINT}/v1/login`;
-  
+
 //   try {
 //     console.log('Attempting authentication to:', url);
-    
+
 //     // Generate the auth string using APP_ID and APP_CERTIFICATE
 //     const authString = Buffer.from(`${APP_ID}:${APP_CERTIFICATE}`).toString('base64');
-    
+
 //     const response = await fetch(url, {
 //       method: 'POST',
 //       headers: {
@@ -279,12 +272,12 @@ module.exports = router;
 
 //     const data = await response.json();
 //     console.log('Auth response data:', data);
-    
+
 //     if (data.token) {
 //       console.log('Successfully obtained token');
 //       return data.token;
 //     }
-    
+
 //     throw new Error('No token received from authentication endpoint');
 //   } catch (error) {
 //     console.error('Token fetch error:', error);
@@ -298,10 +291,10 @@ module.exports = router;
 
 //     console.log('=== Video Room Creation Request ===');
 //     console.log('Request body:', req.body);
-   
+
 //     // Validate required fields
 //     if (!title || title.trim() === '') {
-//       return res.status(400).json({ 
+//       return res.status(400).json({
 //         error: 'Room title is required',
 //         details: 'Please provide a valid room title'
 //       });
@@ -315,7 +308,7 @@ module.exports = router;
 //       console.log('Authentication successful');
 //     } catch (err) {
 //       console.error('Authentication failed:', err);
-//       return res.status(401).json({ 
+//       return res.status(401).json({
 //         error: 'Failed to get authentication token',
 //         details: err.message,
 //         suggestion: 'Please check your project credentials and configuration',
@@ -332,19 +325,19 @@ module.exports = router;
 //     const query = `
 //       mutation CreateChannel($title: String!, $enablePSTN: Boolean) {
 //         createChannel(title: $title, enablePSTN: $enablePSTN) {
-//           passphrase { 
-//             host 
-//             view 
+//           passphrase {
+//             host
+//             view
 //           }
 //           channel
 //           title
-//           pstn { 
-//             number 
-//             dtmf 
-//             error { 
-//               code 
-//               message 
-//             } 
+//           pstn {
+//             number
+//             dtmf
+//             error {
+//               code
+//               message
+//             }
 //           }
 //         }
 //       }
@@ -365,9 +358,9 @@ module.exports = router;
 //       },
 //       body: JSON.stringify({
 //         query,
-//         variables: { 
-//           title: title.trim(), 
-//           enablePSTN: Boolean(enablePSTN) 
+//         variables: {
+//           title: title.trim(),
+//           enablePSTN: Boolean(enablePSTN)
 //         }
 //       })
 //     });
@@ -386,7 +379,7 @@ module.exports = router;
 //     // Handle GraphQL errors
 //     if (data.errors && data.errors.length > 0) {
 //       console.error('GraphQL errors:', data.errors);
-//       return res.status(500).json({ 
+//       return res.status(500).json({
 //         error: 'Room creation failed',
 //         details: data.errors[0].message || 'GraphQL mutation error',
 //         graphqlErrors: data.errors
@@ -396,7 +389,7 @@ module.exports = router;
 //     // Validate response data
 //     if (!data.data || !data.data.createChannel) {
 //       console.error('Invalid GraphQL response:', data);
-//       return res.status(500).json({ 
+//       return res.status(500).json({
 //         error: 'Invalid response from room creation service',
 //         details: 'No channel data received',
 //         responseData: data
@@ -436,8 +429,8 @@ module.exports = router;
 //   } catch (error) {
 //     console.error('=== Room Creation Error ===');
 //     console.error('Error details:', error);
-    
-//     res.status(500).json({ 
+
+//     res.status(500).json({
 //       error: 'Internal server error',
 //       details: error.message,
 //       timestamp: new Date().toISOString()
@@ -465,10 +458,10 @@ module.exports = router;
 // // async function getUnauthToken() {
 // //   const requestId = getUniqueID();
 // //   const url = `${BACKEND_ENDPOINT}/v1/login?project_id=${PROJECT_ID}&platform_id=${PLATFORM_ID}`;
-  
+
 // //   try {
 // //     console.log('Attempting unauthenticated login to:', url);
-    
+
 // //     const response = await fetch(url, {
 // //       method: 'POST',
 // //       headers: {
@@ -488,12 +481,12 @@ module.exports = router;
 
 // //     const data = await response.json();
 // //     console.log('Auth response data:', data);
-    
+
 // //     if (data.token) {
 // //       console.log('Successfully obtained token');
 // //       return data.token;
 // //     }
-    
+
 // //     throw new Error('No token received from authentication endpoint');
 // //   } catch (error) {
 // //     console.error('Unauthenticated token fetch error:', error);
@@ -504,7 +497,7 @@ module.exports = router;
 // async function getUnauthToken() {
 //   const requestId = getUniqueID();
 //   const url = `${BACKEND_ENDPOINT}/v1/login?project_id=${PROJECT_ID}&platform_id=${PLATFORM_ID}`;
-  
+
 //   try {
 //     console.log('Attempting unauthenticated login to:', url);
 //     console.log('Request details:', {
@@ -515,7 +508,7 @@ module.exports = router;
 //       },
 //       body: JSON.stringify({})
 //     });
-    
+
 //     const response = await fetch(url, {
 //       method: 'POST',
 //       headers: {
@@ -539,12 +532,12 @@ module.exports = router;
 
 //     const data = await response.json();
 //     console.log('Auth response data:', data);
-    
+
 //     if (data.token) {
 //       console.log('Successfully obtained token');
 //       return data.token;
 //     }
-    
+
 //     throw new Error('No token received from authentication endpoint');
 //   } catch (error) {
 //     console.error('Unauthenticated token fetch error:', {
@@ -562,10 +555,10 @@ module.exports = router;
 //     const { title, enablePSTN = false } = req.body;
 
 //     console.log('=== Video Room Creation Request ===');
-   
+
 //     // Validate required fields
 //     if (!title || title.trim() === '') {
-//       return res.status(400).json({ 
+//       return res.status(400).json({
 //         error: 'Room title is required',
 //         details: 'Please provide a valid room title'
 //       });
@@ -579,7 +572,7 @@ module.exports = router;
 //       console.log('Authentication successful');
 //     } catch (err) {
 //       console.error('Authentication failed:', err);
-//       return res.status(401).json({ 
+//       return res.status(401).json({
 //         error: 'Failed to get authentication token',
 //         details: err.message,
 //         suggestion: 'Please check your project configuration',
@@ -596,19 +589,19 @@ module.exports = router;
 //     const query = `
 //       mutation CreateChannel($title: String!, $enablePSTN: Boolean) {
 //         createChannel(title: $title, enablePSTN: $enablePSTN) {
-//           passphrase { 
-//             host 
-//             view 
+//           passphrase {
+//             host
+//             view
 //           }
 //           channel
 //           title
-//           pstn { 
-//             number 
-//             dtmf 
-//             error { 
-//               code 
-//               message 
-//             } 
+//           pstn {
+//             number
+//             dtmf
+//             error {
+//               code
+//               message
+//             }
 //           }
 //         }
 //       }
@@ -629,9 +622,9 @@ module.exports = router;
 //       },
 //       body: JSON.stringify({
 //         query,
-//         variables: { 
-//           title: title.trim(), 
-//           enablePSTN: Boolean(enablePSTN) 
+//         variables: {
+//           title: title.trim(),
+//           enablePSTN: Boolean(enablePSTN)
 //         }
 //       })
 //     });
@@ -650,7 +643,7 @@ module.exports = router;
 //     // Handle GraphQL errors
 //     if (data.errors && data.errors.length > 0) {
 //       console.error('GraphQL errors:', data.errors);
-//       return res.status(500).json({ 
+//       return res.status(500).json({
 //         error: 'Room creation failed',
 //         details: data.errors[0].message || 'GraphQL mutation error',
 //         graphqlErrors: data.errors
@@ -660,7 +653,7 @@ module.exports = router;
 //     // Validate response data
 //     if (!data.data || !data.data.createChannel) {
 //       console.error('Invalid GraphQL response:', data);
-//       return res.status(500).json({ 
+//       return res.status(500).json({
 //         error: 'Invalid response from room creation service',
 //         details: 'No channel data received',
 //         responseData: data
@@ -699,8 +692,8 @@ module.exports = router;
 //   } catch (error) {
 //     console.error('=== Room Creation Error ===');
 //     console.error('Error details:', error);
-    
-//     res.status(500).json({ 
+
+//     res.status(500).json({
 //       error: 'Internal server error',
 //       details: error.message,
 //       timestamp: new Date().toISOString()
@@ -709,9 +702,6 @@ module.exports = router;
 // });
 
 // module.exports = router;
-
-
-
 
 // //bolt latest code
 
@@ -732,10 +722,10 @@ module.exports = router;
 // async function getUnauthToken() {
 //   const requestId = getUniqueID();
 //   const url = `${BACKEND_ENDPOINT}/v1/login?project_id=${PROJECT_ID}&platform_id=${PLATFORM_ID}`;
-  
+
 //   try {
 //     console.log('Attempting unauthenticated login to:', url);
-    
+
 //     const response = await fetch(url, {
 //       method: 'POST',
 //       headers: {
@@ -757,12 +747,12 @@ module.exports = router;
 
 //     const data = await response.json();
 //     console.log('Auth response data:', data);
-    
+
 //     if (data.token) {
 //       console.log('Successfully obtained token');
 //       return data.token;
 //     }
-    
+
 //     throw new Error('No token received from authentication endpoint');
 //   } catch (error) {
 //     console.error('Unauthenticated token fetch error:', error);
@@ -775,10 +765,10 @@ module.exports = router;
 //     const { title, enablePSTN = false } = req.body;
 
 //     console.log('=== Video Room Creation Request ===');
-   
+
 //     // Validate required fields
 //     if (!title || title.trim() === '') {
-//       return res.status(400).json({ 
+//       return res.status(400).json({
 //         error: 'Room title is required',
 //         details: 'Please provide a valid room title'
 //       });
@@ -792,7 +782,7 @@ module.exports = router;
 //       console.log('Authentication successful');
 //     } catch (err) {
 //       console.error('Authentication failed:', err);
-//       return res.status(401).json({ 
+//       return res.status(401).json({
 //         error: 'Failed to get authentication token',
 //         details: err.message,
 //         suggestion: 'Please check your project configuration or try again later',
@@ -809,19 +799,19 @@ module.exports = router;
 //     const query = `
 //       mutation CreateChannel($title: String!, $enablePSTN: Boolean) {
 //         createChannel(title: $title, enablePSTN: $enablePSTN) {
-//           passphrase { 
-//             host 
-//             view 
+//           passphrase {
+//             host
+//             view
 //           }
 //           channel
 //           title
-//           pstn { 
-//             number 
-//             dtmf 
-//             error { 
-//               code 
-//               message 
-//             } 
+//           pstn {
+//             number
+//             dtmf
+//             error {
+//               code
+//               message
+//             }
 //           }
 //         }
 //       }
@@ -842,9 +832,9 @@ module.exports = router;
 //       },
 //       body: JSON.stringify({
 //         query,
-//         variables: { 
-//           title: title.trim(), 
-//           enablePSTN: Boolean(enablePSTN) 
+//         variables: {
+//           title: title.trim(),
+//           enablePSTN: Boolean(enablePSTN)
 //         }
 //       })
 //     });
@@ -863,7 +853,7 @@ module.exports = router;
 //     // Handle GraphQL errors
 //     if (data.errors && data.errors.length > 0) {
 //       console.error('GraphQL errors:', data.errors);
-//       return res.status(500).json({ 
+//       return res.status(500).json({
 //         error: 'Room creation failed',
 //         details: data.errors[0].message || 'GraphQL mutation error',
 //         graphqlErrors: data.errors
@@ -873,7 +863,7 @@ module.exports = router;
 //     // Validate response data
 //     if (!data.data || !data.data.createChannel) {
 //       console.error('Invalid GraphQL response:', data);
-//       return res.status(500).json({ 
+//       return res.status(500).json({
 //         error: 'Invalid response from room creation service',
 //         details: 'No channel data received',
 //         responseData: data
@@ -945,8 +935,8 @@ module.exports = router;
 //     console.error('=== Room Creation Error ===');
 //     console.error('Error details:', error);
 //     console.error('Stack trace:', error.stack);
-    
-//     res.status(500).json({ 
+
+//     res.status(500).json({
 //       error: 'Internal server error',
 //       details: error.message,
 //       timestamp: new Date().toISOString()
@@ -956,10 +946,7 @@ module.exports = router;
 
 // module.exports = router;
 
-
-
 // latest // claude ai
-
 
 // const express = require('express');
 // const router = express.Router();
@@ -975,7 +962,7 @@ module.exports = router;
 //   if (user_id) {
 //     url += `&user_id=${user_id}`;
 //   }
-  
+
 //   const response = await fetch(url, {
 //     method: 'POST', // Should be POST, not GET
 //     credentials: 'include',
@@ -985,12 +972,12 @@ module.exports = router;
 //       'X-Project-ID': PROJECT_ID
 //     }
 //   });
-  
+
 //   if (!response.ok) {
 //     const errorText = await response.text();
 //     throw new Error(`HTTP ${response.status}: ${errorText}`);
 //   }
-  
+
 //   const data = await response.json();
 //   if (data.token) return data.token;
 //   throw new Error(`No token in response: ${JSON.stringify(data)}`);
@@ -1001,7 +988,7 @@ module.exports = router;
 //   const url = `${BACKEND_ENDPOINT}/v1/idp/login`;
 //   const response = await fetch(url, {
 //     method: 'POST',
-//     headers: { 
+//     headers: {
 //       'Content-Type': 'application/json',
 //       'X-Platform-ID': PLATFORM_ID,
 //       'X-Project-ID': PROJECT_ID
@@ -1013,12 +1000,12 @@ module.exports = router;
 //       platform_id: PLATFORM_ID,
 //     })
 //   });
-  
+
 //   if (!response.ok) {
 //     const errorText = await response.text();
 //     throw new Error(`HTTP ${response.status}: ${errorText}`);
 //   }
-  
+
 //   const data = await response.json();
 //   if (data.token) return data.token;
 //   throw new Error(`IDP auth failed: ${JSON.stringify(data)}`);
@@ -1056,8 +1043,8 @@ module.exports = router;
 
 //   if (!token) {
 //     console.error('All authentication methods failed:', authErrors);
-//     return res.status(401).json({ 
-//       error: 'Failed to get auth token', 
+//     return res.status(401).json({
+//       error: 'Failed to get auth token',
 //       details: authErrors.length > 0 ? authErrors.join('; ') : 'No valid auth method',
 //       authErrors: authErrors,
 //       debug: {
@@ -1075,19 +1062,19 @@ module.exports = router;
 //   const query = `
 //     mutation CreateChannel($title: String!, $enablePSTN: Boolean) {
 //       createChannel(title: $title, enablePSTN: $enablePSTN) {
-//         passphrase { 
-//           host 
-//           view 
+//         passphrase {
+//           host
+//           view
 //         }
 //         channel
 //         title
-//         pstn { 
-//           number 
-//           dtmf 
-//           error { 
-//             code 
-//             message 
-//           } 
+//         pstn {
+//           number
+//           dtmf
+//           error {
+//             code
+//             message
+//           }
 //         }
 //       }
 //     }
@@ -1109,23 +1096,23 @@ module.exports = router;
 //     });
 
 //     const data = await response.json();
-    
+
 //     if (data.errors) {
-//       return res.status(500).json({ 
+//       return res.status(500).json({
 //         error: 'GraphQL mutation failed',
-//         details: data.errors 
+//         details: data.errors
 //       });
 //     }
 
 //     if (!data.data || !data.data.createChannel) {
-//       return res.status(500).json({ 
+//       return res.status(500).json({
 //         error: 'Invalid response from createChannel mutation',
 //         details: 'No channel data returned'
 //       });
 //     }
 
 //     const channelData = data.data.createChannel;
-    
+
 //     // Structure response to match frontend expectations
 //     const response_data = {
 //       success: true,
@@ -1163,28 +1150,14 @@ module.exports = router;
 
 //   } catch (err) {
 //     console.error('Room creation error:', err);
-//     res.status(500).json({ 
+//     res.status(500).json({
 //       error: 'Failed to create video room',
-//       details: err.message 
+//       details: err.message
 //     });
 //   }
 // });
 
 // module.exports = router;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // const express = require('express');
 // const router = express.Router();
@@ -1197,7 +1170,7 @@ module.exports = router;
 // // Get authentication token for unauthenticated flow
 // async function getUnauthToken() {
 //   const url = `${BACKEND_ENDPOINT}/v1/login?project_id=${PROJECT_ID}&platform_id=${PLATFORM_ID}`;
-  
+
 //   try {
 //     const response = await fetch(url, {
 //       method: 'POST',
@@ -1213,11 +1186,11 @@ module.exports = router;
 //     }
 
 //     const data = await response.json();
-    
+
 //     if (data.token) {
 //       return data.token;
 //     }
-    
+
 //     throw new Error('No token received from authentication endpoint');
 //   } catch (error) {
 //     console.error('Unauthenticated token fetch error:', error);
@@ -1228,11 +1201,11 @@ module.exports = router;
 // // Try IDP login (email/password) - for authenticated users
 // async function tryIDPAuth(email, password) {
 //   const url = `${BACKEND_ENDPOINT}/v1/idp/login`;
-  
+
 //   try {
 //     const response = await fetch(url, {
 //       method: 'POST',
-//       headers: { 
+//       headers: {
 //         'Content-Type': 'application/json',
 //         'X-Project-ID': PROJECT_ID,
 //         'X-Platform-ID': PLATFORM_ID,
@@ -1250,11 +1223,11 @@ module.exports = router;
 //     }
 
 //     const data = await response.json();
-    
+
 //     if (data.token) {
 //       return data.token;
 //     }
-    
+
 //     return null;
 //   } catch (error) {
 //     console.error('IDP Auth error:', error);
@@ -1268,7 +1241,7 @@ module.exports = router;
 
 //     // Validate required fields
 //     if (!title || title.trim() === '') {
-//       return res.status(400).json({ 
+//       return res.status(400).json({
 //         error: 'Room title is required',
 //         details: 'Please provide a valid room title'
 //       });
@@ -1296,7 +1269,7 @@ module.exports = router;
 //         authMethod = 'unauthenticated';
 //       } catch (err) {
 //         console.error('Unauthenticated token fetch failed:', err);
-//         return res.status(401).json({ 
+//         return res.status(401).json({
 //           error: 'Failed to get authentication token',
 //           details: err.message,
 //           suggestion: 'Please check your project configuration or try again later'
@@ -1305,7 +1278,7 @@ module.exports = router;
 //     }
 
 //     if (!token) {
-//       return res.status(401).json({ 
+//       return res.status(401).json({
 //         error: 'Authentication failed',
 //         details: 'Unable to obtain valid authentication token',
 //         authMethod: authMethod
@@ -1316,19 +1289,19 @@ module.exports = router;
 //     const query = `
 //       mutation CreateChannel($title: String!, $enablePSTN: Boolean) {
 //         createChannel(title: $title, enablePSTN: $enablePSTN) {
-//           passphrase { 
-//             host 
-//             view 
+//           passphrase {
+//             host
+//             view
 //           }
 //           channel
 //           title
-//           pstn { 
-//             number 
-//             dtmf 
-//             error { 
-//               code 
-//               message 
-//             } 
+//           pstn {
+//             number
+//             dtmf
+//             error {
+//               code
+//               message
+//             }
 //           }
 //         }
 //       }
@@ -1344,9 +1317,9 @@ module.exports = router;
 //       },
 //       body: JSON.stringify({
 //         query,
-//         variables: { 
-//           title: title.trim(), 
-//           enablePSTN: Boolean(enablePSTN) 
+//         variables: {
+//           title: title.trim(),
+//           enablePSTN: Boolean(enablePSTN)
 //         }
 //       })
 //     });
@@ -1360,7 +1333,7 @@ module.exports = router;
 //     // Handle GraphQL errors
 //     if (data.errors && data.errors.length > 0) {
 //       console.error('GraphQL errors:', data.errors);
-//       return res.status(500).json({ 
+//       return res.status(500).json({
 //         error: 'Room creation failed',
 //         details: data.errors[0].message || 'GraphQL mutation error',
 //         graphqlErrors: data.errors
@@ -1369,7 +1342,7 @@ module.exports = router;
 
 //     // Validate response data
 //     if (!data.data || !data.data.createChannel) {
-//       return res.status(500).json({ 
+//       return res.status(500).json({
 //         error: 'Invalid response from room creation service',
 //         details: 'No channel data received'
 //       });
@@ -1433,8 +1406,8 @@ module.exports = router;
 
 //   } catch (error) {
 //     console.error('Room creation error:', error);
-    
-//     res.status(500).json({ 
+
+//     res.status(500).json({
 //       error: 'Internal server error',
 //       details: error.message,
 //       timestamp: new Date().toISOString()
@@ -1457,16 +1430,6 @@ module.exports = router;
 // });
 
 // module.exports = router;
-
-
-
-
-
-
-
-
-
-
 
 // const express = require('express');
 // const router = express.Router();

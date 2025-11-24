@@ -88,8 +88,6 @@ export function VideoCallingSettings() {
     }
   }, [data]);
 
-  console.log("settings", settings);
-  console.log("isLoading", data?.data?.defaultProvider);
 
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -331,7 +329,6 @@ export function VideoCallingSettings() {
           ownerId: ownerId,
         }
       );
-      console.log(response.data);
       if (response.data.success) {
         setSettings((prev) => ({
           ...prev,

@@ -6,12 +6,11 @@ const { Contacts } = require("../models/Contacts.js");
 
 exports.getAllInterviewers = async (req, res) => {
   try {
-    const hasPaginationParams = (
-      'page' in req.query ||
-      'limit' in req.query ||
-      'search' in req.query ||
-      'status' in req.query
-    );
+    const hasPaginationParams =
+      "page" in req.query ||
+      "limit" in req.query ||
+      "search" in req.query ||
+      "status" in req.query;
 
     if (!hasPaginationParams) {
       const interviewers = await OutsourceInterviewer.find().populate({
@@ -26,24 +25,28 @@ exports.getAllInterviewers = async (req, res) => {
 
     const page = Math.max(parseInt(req.query.page, 10) || 0, 0);
     const limitRaw = parseInt(req.query.limit, 10);
-    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
-    const search = (req.query.search || '').trim();
-    const statusParam = (req.query.status || '').trim();
+    const limit =
+      Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
+    const search = (req.query.search || "").trim();
+    const statusParam = (req.query.status || "").trim();
 
     const statusValues = statusParam
-      ? statusParam.split(',').map((s) => s.trim()).filter(Boolean)
+      ? statusParam
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : [];
 
     const pipeline = [
       {
         $lookup: {
-          from: 'contacts',
-          localField: 'contactId',
-          foreignField: '_id',
-          as: 'contact',
+          from: "contacts",
+          localField: "contactId",
+          foreignField: "_id",
+          as: "contact",
         },
       },
-      { $unwind: { path: '$contact', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: "$contact", preserveNullAndEmptyArrays: true } },
     ];
 
     const match = {};
@@ -51,14 +54,14 @@ exports.getAllInterviewers = async (req, res) => {
       match.status = { $in: statusValues };
     }
     if (search) {
-      const regex = new RegExp(search, 'i');
+      const regex = new RegExp(search, "i");
       match.$or = [
         { outsourceRequestCode: { $regex: regex } },
-        { 'contact.firstName': { $regex: regex } },
-        { 'contact.lastName': { $regex: regex } },
-        { 'contact.email': { $regex: regex } },
-        { 'contact.phone': { $regex: regex } },
-        { 'contact.skills': { $regex: regex } },
+        { "contact.firstName": { $regex: regex } },
+        { "contact.lastName": { $regex: regex } },
+        { "contact.email": { $regex: regex } },
+        { "contact.phone": { $regex: regex } },
+        { "contact.skills": { $regex: regex } },
       ];
     }
     if (Object.keys(match).length > 0) {
@@ -72,13 +75,11 @@ exports.getAllInterviewers = async (req, res) => {
         data: [
           { $skip: page * limit },
           { $limit: limit },
-          { $addFields: { contactId: '$contact' } },
+          { $addFields: { contactId: "$contact" } },
           { $project: { contact: 0 } },
         ],
-        totalCount: [{ $count: 'count' }],
-        statusCounts: [
-          { $group: { _id: '$status', count: { $sum: 1 } } },
-        ],
+        totalCount: [{ $count: "count" }],
+        statusCounts: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
       },
     });
 
@@ -137,27 +138,31 @@ exports.updateInterviewerFeedback = async (req, res) => {
 
     // Validate status value if provided
     if (status) {
-      const validStatuses = ["new",
+      const validStatuses = [
+        "new",
         "underReview",
         "approved",
         "rejected",
-        "suspended",];
+        "suspended",
+      ];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({
           success: false,
-          message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+          message: `Invalid status. Must be one of: ${validStatuses.join(
+            ", "
+          )}`,
         });
       }
     }
 
     // v1.0.1 - Validate rating if provided (0 to 10 with decimal support)
     let validatedRating = null;
-    if (rating !== undefined && rating !== null && rating !== '') {
+    if (rating !== undefined && rating !== null && rating !== "") {
       const numRating = parseFloat(rating);
       if (isNaN(numRating) || numRating < 0 || numRating > 10) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid rating. Must be a number between 0 and 10'
+          message: "Invalid rating. Must be a number between 0 and 10",
         });
       }
       // Round to 1 decimal place
@@ -173,7 +178,7 @@ exports.updateInterviewerFeedback = async (req, res) => {
           updatedAt: new Date(),
           feedback: {
             givenBy: givenBy || null,
-            rating: validatedRating,  // v1.0.1 - Use validated rating
+            rating: validatedRating, // v1.0.1 - Use validated rating
             comments: comments || null,
             createdAt: new Date(),
           },
@@ -190,13 +195,13 @@ exports.updateInterviewerFeedback = async (req, res) => {
 
     // v1.0.1 - Update both status AND rating in Contact
     const contactUpdateFields = {
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
-    
+
     if (status) {
       contactUpdateFields.status = status;
     }
-    
+
     if (validatedRating !== null) {
       contactUpdateFields.rating = validatedRating;
     }
@@ -208,11 +213,6 @@ exports.updateInterviewerFeedback = async (req, res) => {
         { $set: contactUpdateFields },
         { new: true }
       );
-
-      console.log(`✅ Contact ${contactId} updated:`, {
-        status: status || 'unchanged',
-        rating: validatedRating !== null ? validatedRating : 'unchanged'
-      });
     }
 
     res.status(200).json({
@@ -273,7 +273,6 @@ exports.getAllOutsourceInterviewers = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log("Error in get outsource interviews:", error.message);
     return res.status(500).json({
       message: "Internal server error",
     });
@@ -286,7 +285,6 @@ exports.getAllOutsourceInterviewers = async (req, res) => {
 //     const interviewer = await OutsourceInterviewer.findById(id);
 //     return res.status(200).json(interviewer);
 //   } catch (error) {
-//     console.log("Error in get outsource interviews:", error.message);
 //     return res.status(500).json({
 //       message: "Internal server error",
 //     });
@@ -294,7 +292,6 @@ exports.getAllOutsourceInterviewers = async (req, res) => {
 // };
 
 // ----------------------------------------------------------------------->
-
 
 //in individual home to show status of outsource request
 
@@ -311,7 +308,7 @@ exports.getOutsourceStatus = async (req, res) => {
 
     // Find the document by ownerId
     const interviewer = await OutsourceInterviewer.findOne({ ownerId })
-      .select('status')
+      .select("status")
       .lean();
 
     if (!interviewer) {
@@ -322,11 +319,11 @@ exports.getOutsourceStatus = async (req, res) => {
 
     // Map DB enum → frontend expected value
     const statusMap = {
-      new: null,              // No active request
-      underreview: 'underReview',
-      approved: 'approved',
-      rejected: 'rejected',
-      suspended: 'suspended',
+      new: null, // No active request
+      underreview: "underReview",
+      approved: "approved",
+      rejected: "rejected",
+      suspended: "suspended",
     };
 
     const normalizedStatus = statusMap[dbStatus] ?? null;

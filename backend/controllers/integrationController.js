@@ -1,55 +1,70 @@
-const Integration = require('../models/Integration');
-const IntegrationLog = require('../models/IntegrationLogs');
-const asyncHandler = require('express-async-handler');
-const { v4: uuidv4 } = require('uuid');
-const axios = require('axios');
-const crypto = require('crypto');
+const Integration = require("../models/Integration");
+const IntegrationLog = require("../models/IntegrationLogs");
+const asyncHandler = require("express-async-handler");
+const { v4: uuidv4 } = require("uuid");
+const axios = require("axios");
+const crypto = require("crypto");
 
 // Helper function to create integration log
 const createLog = async (logData) => {
   try {
     const log = new IntegrationLog({
       logId: uuidv4(),
-      ownerId: logData.ownerId || 'system', // Default to 'system' if not provided
-      status: logData.status || 'success',
+      ownerId: logData.ownerId || "system", // Default to 'system' if not provided
+      status: logData.status || "success",
       errorCode: logData.errorCode || null,
-      message: logData.message || '',
-      serverName: process.env.SERVER_NAME || 'backend',
+      message: logData.message || "",
+      serverName: process.env.SERVER_NAME || "backend",
       // Map common severity levels to valid ones
       severity: (() => {
         const severityMap = {
-          'error': 'high',
-          'critical': 'high',
-          'warning': 'medium',
-          'info': 'low',
-          'debug': 'low'
+          error: "high",
+          critical: "high",
+          warning: "medium",
+          info: "low",
+          debug: "low",
         };
-        const inputSeverity = String(logData.severity || 'info').toLowerCase();
-        return severityMap[inputSeverity] || 'low';
+        const inputSeverity = String(logData.severity || "info").toLowerCase();
+        return severityMap[inputSeverity] || "low";
       })(),
-      processName: 'integration-service',
-      requestEndPoint: logData.requestEndPoint || '',
-      requestMethod: logData.requestMethod || '',
-      requestBody: logData.requestBody ? (typeof logData.requestBody === 'string' ? logData.requestBody : JSON.stringify(logData.requestBody)) : '',
+      processName: "integration-service",
+      requestEndPoint: logData.requestEndPoint || "",
+      requestMethod: logData.requestMethod || "",
+      requestBody: logData.requestBody
+        ? typeof logData.requestBody === "string"
+          ? logData.requestBody
+          : JSON.stringify(logData.requestBody)
+        : "",
       responseStatusCode: logData.responseStatusCode || 200,
-      responseError: logData.responseError ? (typeof logData.responseError === 'string' ? logData.responseError : JSON.stringify(logData.responseError)) : null,
-      responseMessage: logData.responseMessage || '',
-      integrationName: logData.integrationName || 'internal',
-      flowType: logData.flowType || 'api-request',
+      responseError: logData.responseError
+        ? typeof logData.responseError === "string"
+          ? logData.responseError
+          : JSON.stringify(logData.responseError)
+        : null,
+      responseMessage: logData.responseMessage || "",
+      integrationName: logData.integrationName || "internal",
+      flowType: logData.flowType || "api-request",
       dateTime: new Date(),
-      responseBody: logData.responseBody ? (typeof logData.responseBody === 'string' ? logData.responseBody : JSON.stringify(logData.responseBody)) : null,
+      responseBody: logData.responseBody
+        ? typeof logData.responseBody === "string"
+          ? logData.responseBody
+          : JSON.stringify(logData.responseBody)
+        : null,
     });
 
     await log.save();
     return log;
   } catch (error) {
-    console.error('Error creating integration log:', error.message);
+    console.error("Error creating integration log:", error.message);
     if (error.errors) {
-      console.error('Validation errors:', Object.keys(error.errors).map(key => ({
-        field: key,
-        message: error.errors[key].message,
-        value: error.errors[key].value
-      })));
+      console.error(
+        "Validation errors:",
+        Object.keys(error.errors).map((key) => ({
+          field: key,
+          message: error.errors[key].message,
+          value: error.errors[key].value,
+        }))
+      );
     }
     // Don't throw the error to prevent breaking the main flow
     return null;
@@ -61,9 +76,9 @@ const createLog = async (logData) => {
 // @access  Private
 exports.makeApiCall = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { method = 'GET', endpoint = '', data = {} } = req.body;
+  const { method = "GET", endpoint = "", data = {} } = req.body;
   const logId = uuidv4();
-  const ownerId = req.user?.id || 'system'; // Get user ID from auth or use 'system'
+  const ownerId = req.user?.id || "system"; // Get user ID from auth or use 'system'
 
   try {
     const integration = await Integration.findById(id);
@@ -71,64 +86,75 @@ exports.makeApiCall = asyncHandler(async (req, res) => {
       await createLog({
         ownerId,
         logId,
-        status: 'error',
-        errorCode: 'NOT_FOUND',
-        message: 'Integration not found',
+        status: "error",
+        errorCode: "NOT_FOUND",
+        message: "Integration not found",
         requestEndPoint: `/integrations/${id}/call`,
-        requestMethod: 'POST',
+        requestMethod: "POST",
         requestBody: req.body,
         responseStatusCode: 404,
-        severity: 'high'
+        severity: "high",
       });
-      return res.status(404).json({ success: false, message: 'Integration not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Integration not found" });
     }
 
     if (!integration.enabled) {
       await createLog({
         ownerId,
         logId,
-        status: 'error',
-        errorCode: 'INTEGRATION_DISABLED',
-        message: 'Integration is disabled',
+        status: "error",
+        errorCode: "INTEGRATION_DISABLED",
+        message: "Integration is disabled",
         requestEndPoint: `/integrations/${id}/call`,
-        requestMethod: 'POST',
+        requestMethod: "POST",
         requestBody: req.body,
         responseStatusCode: 400,
-        severity: 'medium'
+        severity: "medium",
       });
-      return res.status(400).json({ success: false, message: 'Integration is disabled' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Integration is disabled" });
     }
 
     const headers = {};
 
     // Add authentication header based on integration type
-    if (integration.authentication.type === 'api_key') {
-      headers[integration.authentication.apiKey.headerName] = integration.authentication.apiKey.keyValue;
-    } else if (integration.authentication.type === 'bearer_token') {
-      headers['Authorization'] = `Bearer ${integration.authentication.bearerToken}`;
-    } else if (integration.authentication.type === 'basic_auth') {
+    if (integration.authentication.type === "api_key") {
+      headers[integration.authentication.apiKey.headerName] =
+        integration.authentication.apiKey.keyValue;
+    } else if (integration.authentication.type === "bearer_token") {
+      headers[
+        "Authorization"
+      ] = `Bearer ${integration.authentication.bearerToken}`;
+    } else if (integration.authentication.type === "basic_auth") {
       const token = Buffer.from(
         `${integration.authentication.basicAuth.username}:${integration.authentication.basicAuth.password}`
-      ).toString('base64');
-      headers['Authorization'] = `Basic ${token}`;
+      ).toString("base64");
+      headers["Authorization"] = `Basic ${token}`;
     }
 
     // Add custom headers
-    if (integration.authentication.customHeader && integration.authentication.customHeader.name) {
-      headers[integration.authentication.customHeader.name] = integration.authentication.customHeader.value;
+    if (
+      integration.authentication.customHeader &&
+      integration.authentication.customHeader.name
+    ) {
+      headers[integration.authentication.customHeader.name] =
+        integration.authentication.customHeader.value;
     }
 
     // Use webhookUrl as the base URL for API calls
     if (!integration.webhookUrl) {
-      throw new Error('No webhook URL found for this integration');
+      throw new Error("No webhook URL found for this integration");
     }
 
     // For testing with JSONPlaceholder, we'll use a hardcoded base URL
     // const baseUrl = 'https://jsonplaceholder.typicode.com';
     const baseUrl = integration.baseUrl;
-    const fullUrl = `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
-
-    console.log(`Making ${method} request to:`, fullUrl); // Debug log
+    const fullUrl = `${baseUrl}${
+      endpoint.startsWith("/") ? "" : "/"
+    }${endpoint}`;
 
     let response;
     try {
@@ -136,47 +162,47 @@ exports.makeApiCall = asyncHandler(async (req, res) => {
         method: method.toLowerCase(),
         url: fullUrl,
         headers,
-        data: method !== 'GET' ? data : undefined,
-        params: method === 'GET' ? data : undefined,
+        data: method !== "GET" ? data : undefined,
+        params: method === "GET" ? data : undefined,
       });
     } catch (error) {
       const errorResponse = error.response || {};
       await createLog({
         ownerId,
         logId,
-        status: 'error',
-        errorCode: 'API_CALL_FAILED',
+        status: "error",
+        errorCode: "API_CALL_FAILED",
         message: `API call failed: ${error.message}`,
         requestEndPoint: fullUrl,
         requestMethod: method,
         requestBody: data,
         responseStatusCode: errorResponse.status || 500,
         responseError: errorResponse.data || error.message,
-        severity: 'high',
-        integrationName: integration.name
+        severity: "high",
+        integrationName: integration.name,
       });
 
       return res.status(errorResponse.status || 500).json({
         success: false,
-        message: errorResponse.statusText || 'API call failed',
+        message: errorResponse.statusText || "API call failed",
         status: errorResponse.status || 500,
-        data: errorResponse.data || {}
+        data: errorResponse.data || {},
       });
     }
 
     await createLog({
       ownerId,
       logId,
-      status: 'success',
+      status: "success",
       message: `API call successful to ${endpoint}`,
       requestEndPoint: `/integrations/${id}/call`,
-      requestMethod: 'POST',
+      requestMethod: "POST",
       requestBody: { method, endpoint, data },
       responseStatusCode: response.status,
       responseBody: response.data,
       integrationName: integration.name,
-      flowType: 'api-request',
-      severity: 'low'
+      flowType: "api-request",
+      severity: "low",
     });
 
     res.status(200).json({
@@ -189,15 +215,15 @@ exports.makeApiCall = asyncHandler(async (req, res) => {
 
     await createLog({
       logId,
-      status: 'error',
-      errorCode: 'API_CALL_FAILED',
+      status: "error",
+      errorCode: "API_CALL_FAILED",
       message: error.message,
       requestEndPoint: `/integrations/${id}/call`,
       requestMethod: method,
       requestBody: data,
       responseStatusCode: errorResponse.status || 500,
       responseBody: errorResponse.data,
-      severity: 'error',
+      severity: "error",
     });
 
     res.status(errorResponse.status || 500).json({
@@ -214,7 +240,8 @@ exports.makeApiCall = asyncHandler(async (req, res) => {
 // @access  Public (should be protected in production with webhook secret)
 exports.handleWebhook = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const signature = req.headers['x-hub-signature-256'] || req.headers['x-signature'];
+  const signature =
+    req.headers["x-hub-signature-256"] || req.headers["x-signature"];
   const logId = uuidv4();
 
   try {
@@ -222,62 +249,73 @@ exports.handleWebhook = asyncHandler(async (req, res) => {
     if (!integration) {
       await createLog({
         logId,
-        status: 'error',
-        errorCode: 'NOT_FOUND',
-        message: 'Integration not found',
+        status: "error",
+        errorCode: "NOT_FOUND",
+        message: "Integration not found",
         requestEndPoint: `/integrations/webhook/${id}`,
-        requestMethod: 'POST',
+        requestMethod: "POST",
         requestBody: req.body,
         responseStatusCode: 404,
       });
-      return res.status(404).json({ success: false, message: 'Integration not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Integration not found" });
     }
 
     if (!integration.enabled) {
       await createLog({
         logId,
-        status: 'error',
-        errorCode: 'INTEGRATION_DISABLED',
-        message: 'Integration is disabled',
+        status: "error",
+        errorCode: "INTEGRATION_DISABLED",
+        message: "Integration is disabled",
         requestEndPoint: `/integrations/webhook/${id}`,
-        requestMethod: 'POST',
+        requestMethod: "POST",
         requestBody: req.body,
         responseStatusCode: 400,
       });
-      return res.status(400).json({ success: false, message: 'Integration is disabled' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Integration is disabled" });
     }
 
     // Verify webhook signature if secret is configured
     if (integration.authentication.webhookSecret) {
-      const hmac = crypto.createHmac('sha256', integration.authentication.webhookSecret);
-      const digest = 'sha256=' + hmac.update(JSON.stringify(req.body)).digest('hex');
+      const hmac = crypto.createHmac(
+        "sha256",
+        integration.authentication.webhookSecret
+      );
+      const digest =
+        "sha256=" + hmac.update(JSON.stringify(req.body)).digest("hex");
 
       if (signature !== digest) {
         await createLog({
           logId,
-          status: 'error',
-          errorCode: 'INVALID_SIGNATURE',
-          message: 'Invalid webhook signature',
+          status: "error",
+          errorCode: "INVALID_SIGNATURE",
+          message: "Invalid webhook signature",
           requestEndPoint: `/integrations/webhook/${id}`,
-          requestMethod: 'POST',
+          requestMethod: "POST",
           requestBody: req.body,
           responseStatusCode: 401,
         });
-        return res.status(401).json({ success: false, message: 'Invalid signature' });
+        return res
+          .status(401)
+          .json({ success: false, message: "Invalid signature" });
       }
     }
 
     // Process the webhook data here
     // You can add your custom logic based on the integration type and event type
-    const eventType = req.headers['x-github-event'] || req.headers['x-event-type'] || 'unknown';
+    const eventType =
+      req.headers["x-github-event"] || req.headers["x-event-type"] || "unknown";
 
     // Log the webhook
     await createLog({
       logId,
-      status: 'success',
+      status: "success",
       message: `Webhook received: ${eventType}`,
       requestEndPoint: `/integrations/webhook/${id}`,
-      requestMethod: 'POST',
+      requestMethod: "POST",
       requestBody: req.body,
       responseStatusCode: 200,
       metadata: {
@@ -287,21 +325,23 @@ exports.handleWebhook = asyncHandler(async (req, res) => {
     });
 
     // Respond with 200 OK to acknowledge receipt
-    res.status(200).json({ success: true, message: 'Webhook received' });
+    res.status(200).json({ success: true, message: "Webhook received" });
   } catch (error) {
     await createLog({
       logId,
-      status: 'error',
-      errorCode: 'WEBHOOK_ERROR',
+      status: "error",
+      errorCode: "WEBHOOK_ERROR",
       message: error.message,
       requestEndPoint: `/integrations/webhook/${id}`,
-      requestMethod: 'POST',
+      requestMethod: "POST",
       requestBody: req.body,
       responseStatusCode: 500,
-      severity: 'error',
+      severity: "error",
     });
 
-    res.status(500).json({ success: false, message: 'Error processing webhook' });
+    res
+      .status(500)
+      .json({ success: false, message: "Error processing webhook" });
   }
 });
 
@@ -311,15 +351,15 @@ exports.handleWebhook = asyncHandler(async (req, res) => {
 exports.updateIntegration = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
-  
+
   try {
     // Find the integration by ID
     let integration = await Integration.findById(id);
-    
+
     if (!integration) {
       return res.status(404).json({
         success: false,
-        message: 'Integration not found'
+        message: "Integration not found",
       });
     }
 
@@ -332,44 +372,44 @@ exports.updateIntegration = asyncHandler(async (req, res) => {
 
     // Log the update
     await createLog({
-      ownerId: req.user?.id || 'system',
-      status: 'success',
-      message: 'Integration updated successfully',
+      ownerId: req.user?.id || "system",
+      status: "success",
+      message: "Integration updated successfully",
       requestEndPoint: `/integrations/${id}`,
-      requestMethod: 'PUT',
+      requestMethod: "PUT",
       requestBody: updateData,
       responseStatusCode: 200,
       integrationName: integration.name,
-      flowType: 'update-integration'
+      flowType: "update-integration",
     });
 
     res.status(200).json({
       success: true,
-      data: integration
+      data: integration,
     });
   } catch (error) {
-    console.error('Error updating integration:', error);
-    
+    console.error("Error updating integration:", error);
+
     // Log the error
     await createLog({
-      ownerId: req.user?.id || 'system',
-      status: 'error',
-      errorCode: 'UPDATE_ERROR',
-      message: 'Failed to update integration',
+      ownerId: req.user?.id || "system",
+      status: "error",
+      errorCode: "UPDATE_ERROR",
+      message: "Failed to update integration",
       requestEndPoint: `/integrations/${id}`,
-      requestMethod: 'PUT',
+      requestMethod: "PUT",
       requestBody: updateData,
       responseStatusCode: 500,
       responseError: error.message,
-      integrationName: updateData.name || 'unknown',
-      flowType: 'update-integration',
-      severity: 'high'
+      integrationName: updateData.name || "unknown",
+      flowType: "update-integration",
+      severity: "high",
     });
 
     res.status(500).json({
       success: false,
-      message: 'Failed to update integration',
-      error: error.message
+      message: "Failed to update integration",
+      error: error.message,
     });
   }
 });
@@ -384,21 +424,21 @@ exports.deleteIntegration = asyncHandler(async (req, res) => {
 
   try {
     const integration = await Integration.findById(id);
-    
+
     if (!integration) {
       await createLog({
         requestId,
-        status: 'error',
-        errorCode: 'NOT_FOUND',
-        message: 'Integration not found',
+        status: "error",
+        errorCode: "NOT_FOUND",
+        message: "Integration not found",
         requestEndPoint: `/integrations/${id}`,
-        requestMethod: 'DELETE',
+        requestMethod: "DELETE",
         responseStatusCode: 404,
         duration: Date.now() - startTime,
       });
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Integration not found',
+      return res.status(404).json({
+        success: false,
+        message: "Integration not found",
         requestId,
       });
     }
@@ -407,40 +447,40 @@ exports.deleteIntegration = asyncHandler(async (req, res) => {
 
     await createLog({
       requestId,
-      status: 'success',
-      message: 'Successfully deleted integration',
+      status: "success",
+      message: "Successfully deleted integration",
       requestEndPoint: `/integrations/${id}`,
-      requestMethod: 'DELETE',
+      requestMethod: "DELETE",
       responseStatusCode: 200,
       duration: Date.now() - startTime,
     });
 
     res.status(200).json({
       success: true,
-      message: 'Integration deleted successfully',
+      message: "Integration deleted successfully",
       data: { id },
       requestId,
     });
   } catch (error) {
     const duration = Date.now() - startTime;
-    
+
     await createLog({
       requestId,
-      status: 'error',
-      errorCode: 'INTEGRATION_DELETE_ERROR',
-      message: 'Error deleting integration',
+      status: "error",
+      errorCode: "INTEGRATION_DELETE_ERROR",
+      message: "Error deleting integration",
       requestEndPoint: `/integrations/${id}`,
-      requestMethod: 'DELETE',
+      requestMethod: "DELETE",
       responseError: error.message,
       responseStatusCode: 500,
       duration,
-      severity: 'high',
+      severity: "high",
     });
 
     console.error(`[${requestId}] Error deleting integration:`, error);
     res.status(500).json({
       success: false,
-      message: 'Error deleting integration',
+      message: "Error deleting integration",
       error: error.message,
       requestId,
     });
@@ -461,8 +501,8 @@ exports.getIntegrations = asyncHandler(async (req, res) => {
     // Log successful request
     await createLog({
       requestId,
-      status: 'success',
-      message: 'Successfully retrieved integrations',
+      status: "success",
+      message: "Successfully retrieved integrations",
       requestEndPoint: req.originalUrl,
       requestMethod: req.method,
       requestBody: req.body,
@@ -481,10 +521,10 @@ exports.getIntegrations = asyncHandler(async (req, res) => {
 
     await createLog({
       requestId,
-      status: 'error',
-      message: 'Error fetching integrations',
-      errorCode: 'INTEGRATION_FETCH_ERROR',
-      severity: 'error',
+      status: "error",
+      message: "Error fetching integrations",
+      errorCode: "INTEGRATION_FETCH_ERROR",
+      severity: "error",
       requestEndPoint: req.originalUrl,
       requestMethod: req.method,
       requestBody: req.body,
@@ -496,7 +536,7 @@ exports.getIntegrations = asyncHandler(async (req, res) => {
     console.error(`[${requestId}] Error fetching integrations:`, error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching integrations',
+      message: "Error fetching integrations",
       error: error.message,
       requestId,
     });
@@ -523,8 +563,8 @@ exports.createIntegration = asyncHandler(async (req, res) => {
     // Log successful creation
     await createLog({
       requestId,
-      status: 'success',
-      message: 'Successfully created integration',
+      status: "success",
+      message: "Successfully created integration",
       requestEndPoint: req.originalUrl,
       requestMethod: req.method,
       requestBody: req.body,
@@ -543,10 +583,10 @@ exports.createIntegration = asyncHandler(async (req, res) => {
 
     await createLog({
       requestId,
-      status: 'error',
-      message: 'Error creating integration',
-      errorCode: 'INTEGRATION_CREATE_ERROR',
-      severity: 'error',
+      status: "error",
+      message: "Error creating integration",
+      errorCode: "INTEGRATION_CREATE_ERROR",
+      severity: "error",
       requestEndPoint: req.originalUrl,
       requestMethod: req.method,
       requestBody: req.body,
@@ -558,7 +598,7 @@ exports.createIntegration = asyncHandler(async (req, res) => {
     console.error(`[${requestId}] Error creating integration:`, error);
     res.status(500).json({
       success: false,
-      message: 'Error creating integration',
+      message: "Error creating integration",
       error: error.message,
       requestId,
     });

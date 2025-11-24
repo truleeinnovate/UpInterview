@@ -70,9 +70,8 @@ const createInvoice = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-
     // Generate unique invoice code using centralized utility
-      const invoiceCode = await generateUniqueId('INVC', Invoice, 'invoiceCode');
+    const invoiceCode = await generateUniqueId("INVC", Invoice, "invoiceCode");
 
     // Calculate outstandingAmount if not given
     const calculatedOutstanding = totalAmount - amountPaid;
@@ -192,12 +191,26 @@ const getInvoices = async (req, res) => {
 
     // Aggregates calculated across the full filtered set, not only the page
     // For performance, re-run a lean aggregate on the same query
-    const allAgg = await Invoice.find(query).select("totalAmount amountPaid outstandingAmount").lean();
+    const allAgg = await Invoice.find(query)
+      .select("totalAmount amountPaid outstandingAmount")
+      .lean();
     const totalInvoices = total;
-    const totalAmount = allAgg.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
-    const totalPaid = allAgg.reduce((sum, inv) => sum + (inv.amountPaid || 0), 0);
-    const totalOutstanding = allAgg.reduce((sum, inv) => sum + (inv.outstandingAmount || 0), 0);
-    const collectionRate = totalAmount > 0 ? Number(((totalPaid / totalAmount) * 100).toFixed(2)) : 0;
+    const totalAmount = allAgg.reduce(
+      (sum, inv) => sum + (inv.totalAmount || 0),
+      0
+    );
+    const totalPaid = allAgg.reduce(
+      (sum, inv) => sum + (inv.amountPaid || 0),
+      0
+    );
+    const totalOutstanding = allAgg.reduce(
+      (sum, inv) => sum + (inv.outstandingAmount || 0),
+      0
+    );
+    const collectionRate =
+      totalAmount > 0
+        ? Number(((totalPaid / totalAmount) * 100).toFixed(2))
+        : 0;
 
     return res.status(200).json({
       data: invoices,
@@ -258,7 +271,6 @@ const getSingleInvoiceById = async (req, res) => {
     const invoice = await Invoice.findById(id);
     res.status(200).json(invoice);
   } catch (error) {
-    console.log("Internal server error", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -56,9 +56,6 @@ exports.createMockInterview = async (req, res) => {
     });
 
     const newMockInterview = await mockInterview.save();
-
-    // console.log("New mock interview created:", newMockInterview);
-    // console.log("rounds",rounds);
     
 
     // Create rounds if provided (for Page 2 submit)
@@ -154,8 +151,6 @@ exports.updateMockInterview = async (req, res) => {
   res.locals.processName = "Update mock interview";
 
   const mockId = req.params.id;
-  console.log("UPDATE - mockId:", mockId);
-  console.log("UPDATE - req.body:", req.body);
 
   try {
     // ✅ Validate incoming data
@@ -233,27 +228,22 @@ exports.updateMockInterview = async (req, res) => {
 
     // ✅ Handle rounds - FIXED LOGIC
     if (req.body.rounds !== undefined) {
-      console.log("Processing rounds update for mock interview:", mockId);
 
       let roundsArray = [];
       if (Array.isArray(req.body.rounds)) {
         roundsArray = req.body.rounds;
       } else if (req.body.rounds && typeof req.body.rounds === "object") {
-        console.log("Converting single round object to array");
         roundsArray = [req.body.rounds];
       }
-// console.log("roundsArray",roundsArray);
 
       if (roundsArray.length > 0) {
         for (const round of roundsArray) {
-          console.log("Processing round:", round);
           
           // 🔥 FIX: Check both _id and id fields properly
           const roundId = round?._id || round?.id;
 
           if (roundId) {
             // ✅ This is an EXISTING round - UPDATE it
-            console.log(`Updating existing round: ${roundId}`);
 
             try {
               const existingRound = await MockInterviewRound.findOne({
@@ -307,9 +297,7 @@ exports.updateMockInterview = async (req, res) => {
                 await existingRound.save();
                 changes.push(...roundChanges);
                 roundsUpdatedCount++;
-                console.log(`✅ Round ${roundId} updated successfully`);
               } else {
-                console.log(`No changes detected for round ${roundId}`);
               }
 
             } catch (err) {
@@ -319,7 +307,6 @@ exports.updateMockInterview = async (req, res) => {
 
           } else {
             // ✅ This is a NEW round - CREATE it
-            console.log(`Creating new round with sequence: ${round.sequence}`);
 
             try {
               const currentRoundCount = await MockInterviewRound.countDocuments({ 
@@ -359,7 +346,6 @@ exports.updateMockInterview = async (req, res) => {
               });
 
               roundsCreatedCount++;
-              console.log(`✅ New round created with ID: ${savedRound._id}`);
 
             } catch (err) {
               console.error(`❌ Error creating new round:`, err);
@@ -368,7 +354,6 @@ exports.updateMockInterview = async (req, res) => {
           }
         }
 
-        console.log(`Summary: ${roundsUpdatedCount} rounds updated, ${roundsCreatedCount} rounds created`);
       }
     }
 
