@@ -393,13 +393,13 @@ const TaskForm = ({
       } catch (error) {
         console.error("Error fetching objects data:", error);
         // Set default categories if fetch fails
-        setCategoriesRelatedTo([
-          "Candidates",
-          "Positions",
-          "Interviews",
-          "MockInterviews",
-          "Assessments",
-        ]);
+        // setCategoriesRelatedTo([
+        //   "Candidates",
+        //   "Positions",
+        //   "Interviews",
+        //   "MockInterviews",
+        //   "Assessments",
+        // ]);
       } finally {
         setCategoriesLoading(false);
       }
