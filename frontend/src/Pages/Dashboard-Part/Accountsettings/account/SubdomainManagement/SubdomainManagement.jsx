@@ -38,7 +38,6 @@ const DomainManagement = () => {
   const tokenPayload = decodeJwt(authToken);
 
   const organizationId = tokenPayload.tenantId;
-  console.log("organizationId in subdomainmanagement", organizationId);
   const validateSubdomain = (subdomain) => {
     const subdomainRegex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
     return subdomainRegex.test(subdomain);
@@ -150,18 +149,12 @@ const DomainManagement = () => {
           `Subdomain activated successfully! Redirecting to ${newDomain.fullDomain}...`
         );
 
-        // Wait for 2 seconds to ensure database is updated
-        console.log(
-          "Subdomain activated successfully, waiting 2 seconds before redirect..."
-        );
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Redirect to the subdomain URL with the same path
         const protocol = window.location.protocol;
         const currentPath = window.location.pathname;
         const targetUrl = `${protocol}//${newDomain.fullDomain}${currentPath}`;
-
-        console.log("Redirecting to subdomain with current path:", targetUrl);
 
         // Force redirect to subdomain with current path
         window.location.replace(targetUrl);

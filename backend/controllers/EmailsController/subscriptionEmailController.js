@@ -1,16 +1,14 @@
-
 const sendEmail = require("../../utils/sendEmail");
 const notificationMiddleware = require("../../middleware/notificationMiddleware");
 const { Users } = require("../../models/Users");
 const emailTemplateModel = require("../../models/EmailTemplatemodel.js");
 const config = require("../../config");
-const CustomerSubscription = require('../../models/CustomerSubscriptionmodels.js');
-const cron = require('node-cron');
-const moment = require('moment');
-const Tenant = require('../../models/Tenant.js');
+const CustomerSubscription = require("../../models/CustomerSubscriptionmodels.js");
+const cron = require("node-cron");
+const moment = require("moment");
+const Tenant = require("../../models/Tenant.js");
 
 // this controller use for sending mails in signup or reset password
-
 
 // exports.afterSubscribePlan = async (req, res) => {
 //   try {
@@ -106,7 +104,6 @@ const Tenant = require('../../models/Tenant.js');
 //   }
 // };
 
-
 exports.afterSubscribePlan = async (req, res) => {
   try {
     const { ownerId, tenantId } = req.body;
@@ -114,59 +111,65 @@ exports.afterSubscribePlan = async (req, res) => {
     // Step 1: Find User
     const user = await Users.findOne({ _id: ownerId });
     if (!user || !user.email) {
-      return res.status(401).json({ success: false, message: "User or email not found" });
+      return res
+        .status(401)
+        .json({ success: false, message: "User or email not found" });
     }
 
     // Step 2: Get Latest Subscription of the User
-    const subscription = await CustomerSubscription.findOne({ ownerId })
-      .populate('subscriptionPlanId', 'name'); // Populate just the name field
+    const subscription = await CustomerSubscription.findOne({
+      ownerId,
+    }).populate("subscriptionPlanId", "name"); // Populate just the name field
 
     if (!subscription) {
-      return res.status(404).json({ success: false, message: "Subscription not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Subscription not found" });
     }
 
     // Extract necessary data from subscription
-    const {
-      selectedBillingCycle,
-      price,
-      status,
-      startDate,
-      endDate
-    } = subscription;
+    const { selectedBillingCycle, price, status, startDate, endDate } =
+      subscription;
 
     // Format duration based on billing cycle
     const durationMap = {
       monthly: "1 Month",
       quarterly: "3 Months",
-      annual: "1 Year"
+      annual: "1 Year",
     };
     const duration = durationMap[selectedBillingCycle] || selectedBillingCycle;
 
-    const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
+    const planName =
+      (subscription.subscriptionPlanId?.name ||
+        subscription.selectedBillingCycle?.toUpperCase()) + " Plan";
 
     const planPrice = `₹${price}`;
 
     // Step 3: Get Email Template
     const emailTemplate = await emailTemplateModel.findOne({
-      category: 'subscription_confirmation',
+      category: "subscription_confirmation",
       isActive: true,
-      isSystemTemplate: true
+      isSystemTemplate: true,
     });
 
     if (!emailTemplate) {
-      return res.status(404).json({ success: false, message: "Email template not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Email template not found" });
     }
 
     // Step 4: Replace Template Placeholders
     const emailSubject = emailTemplate.subject
       // .replace('{{planName}}', planName)
-      .replace('{{companyName}}', process.env.COMPANY_NAME);
+      .replace("{{companyName}}", process.env.COMPANY_NAME);
 
-    const formattedStartDate = new Date(startDate).toLocaleDateString('en-IN');
-    const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString('en-IN') : 'N/A';
+    const formattedStartDate = new Date(startDate).toLocaleDateString("en-IN");
+    const formattedEndDate = endDate
+      ? new Date(endDate).toLocaleDateString("en-IN")
+      : "N/A";
 
     const emailBody = emailTemplate.body
-      .replace(/{{userName}}/g, user.Name || '')
+      .replace(/{{userName}}/g, user.Name || "")
       .replace(/{{planName}}/g, planName)
       .replace(/{{planPrice}}/g, planPrice)
       .replace(/{{duration}}/g, duration)
@@ -175,7 +178,6 @@ exports.afterSubscribePlan = async (req, res) => {
       // .replace(/{{status}}/g, status)
       .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
       .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
-
 
     // Step 5: Send Email
     const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
@@ -196,32 +198,40 @@ exports.afterSubscribePlan = async (req, res) => {
     //   updatedBy: ownerId,
     // }];
 
-    req.notificationData = [{
-      toAddress: user.email,
-      fromAddress: process.env.EMAIL_FROM,
-      title: emailSubject,
-      body: emailBody,
-      notificationType: "email",
-      object: { objectName: "subscription", objectId: ownerId },
-      status: emailResponse.success ? "Success" : "Failed",
-      tenantId,
-      ownerId,
-      recipientId: ownerId,
-      createdBy: ownerId,
-      updatedBy: ownerId,
-    }];
+    req.notificationData = [
+      {
+        toAddress: user.email,
+        fromAddress: process.env.EMAIL_FROM,
+        title: emailSubject,
+        body: emailBody,
+        notificationType: "email",
+        object: { objectName: "subscription", objectId: ownerId },
+        status: emailResponse.success ? "Success" : "Failed",
+        tenantId,
+        ownerId,
+        recipientId: ownerId,
+        createdBy: ownerId,
+        updatedBy: ownerId,
+      },
+    ];
 
+    await notificationMiddleware(req, res, () => {});
 
-    await notificationMiddleware(req, res, () => { });
-
-    return res.json({ success: true, message: "Subscription successful and email sent!" });
-
+    return res.json({
+      success: true,
+      message: "Subscription successful and email sent!",
+    });
   } catch (error) {
     console.error("Subscription Error:", error);
-    return res.status(500).json({ success: false, message: "Subscription failed", error: error.message });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Subscription failed",
+        error: error.message,
+      });
   }
 };
-
 
 exports.afterSubscribeFreePlan = async (req, res) => {
   try {
@@ -229,36 +239,49 @@ exports.afterSubscribeFreePlan = async (req, res) => {
     const user = await Users.findOne({ _id: ownerId });
 
     // Step 2: Get Latest Subscription of the User
-    const subscription = await CustomerSubscription.findOne({ ownerId })
-      .populate('subscriptionPlanId', 'name'); // Populate just the name field
+    const subscription = await CustomerSubscription.findOne({
+      ownerId,
+    }).populate("subscriptionPlanId", "name"); // Populate just the name field
 
     if (!subscription) {
-      return res.status(404).json({ success: false, message: "Subscription not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Subscription not found" });
     }
 
-    const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
-
-
+    const planName =
+      (subscription.subscriptionPlanId?.name ||
+        subscription.selectedBillingCycle?.toUpperCase()) + " Plan";
 
     // Get email template
-    const emailTemplate = await emailTemplateModel.findOne({ category: 'free_plan_subscription', isActive: true, isSystemTemplate: true });
+    const emailTemplate = await emailTemplateModel.findOne({
+      category: "free_plan_subscription",
+      isActive: true,
+      isSystemTemplate: true,
+    });
     if (!emailTemplate) {
       // console.error(`No email template found for category: ${EMAIL_CATEGORIES.FREE_PLAN_SUBSCRIPTION}`);
-      return res.status(404).json({ success: false, message: "Email template not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Email template not found" });
     }
-    const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName);
+    const userName =
+      (user.firstName ? user.firstName + " " : "") + user.lastName;
 
     // Replace placeholders
     const emailSubject = emailTemplate.subject
-      .replace('{{planName}}', planName)
-      .replace('{{companyName}}', process.env.COMPANY_NAME);
+      .replace("{{planName}}", planName)
+      .replace("{{companyName}}", process.env.COMPANY_NAME);
 
     const emailBody = emailTemplate.body
       .replace(/{{userName}}/g, userName)
       .replace(/{{planName}}/g, planName)
       .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
       .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
-      .replace(/{{upgradeLink}}/g, `${config.REACT_APP_API_URL_FRONTEND}/account-settings/subscription`);
+      .replace(
+        /{{upgradeLink}}/g,
+        `${config.REACT_APP_API_URL_FRONTEND}/account-settings/subscription`
+      );
 
     // Send email
     const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
@@ -279,63 +302,75 @@ exports.afterSubscribeFreePlan = async (req, res) => {
     //   updatedBy: ownerId,
     // }];
 
-    req.notificationData = [{
-      toAddress: user.email,
-      fromAddress: process.env.EMAIL_FROM,
-      title: emailSubject,
-      body: emailBody,
-      notificationType: "email",
-      object: { objectName: "subscription", objectId: ownerId },
-      status: emailResponse.success ? "Success" : "Failed",
-      tenantId,
-      ownerId,
-      recipientId: ownerId,
-      createdBy: ownerId,
-      updatedBy: ownerId,
-    }];
+    req.notificationData = [
+      {
+        toAddress: user.email,
+        fromAddress: process.env.EMAIL_FROM,
+        title: emailSubject,
+        body: emailBody,
+        notificationType: "email",
+        object: { objectName: "subscription", objectId: ownerId },
+        status: emailResponse.success ? "Success" : "Failed",
+        tenantId,
+        ownerId,
+        recipientId: ownerId,
+        createdBy: ownerId,
+        updatedBy: ownerId,
+      },
+    ];
 
-    await notificationMiddleware(req, res, () => { });
+    await notificationMiddleware(req, res, () => {});
 
-    return res.json({ success: true, message: "Free Plan subscription successful and email sent!" });
+    return res.json({
+      success: true,
+      message: "Free Plan subscription successful and email sent!",
+    });
   } catch (error) {
     console.error("Free Plan Subscription Error:", error);
-    return res.status(500).json({ success: false, message: "Free Plan subscription failed", error: error.message });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Free Plan subscription failed",
+        error: error.message,
+      });
   }
 };
 
 // Cron job to automate email sending for all subscriptions
-cron.schedule('0 0 * * *', async () => {
-  console.log('Running automated email reminder job at 1', new Date().toISOString());
-
+cron.schedule("0 0 * * *", async () => {
   try {
-    console.log('Running automated email reminder job at', new Date().toISOString());
-
     // 1. Incomplete Payment Reminders (10s, 24h, 48h, 1 week, 1 month)
-    const pendingOrganizations = await Tenant.find({ status: 'payment_pending' });
+    const pendingOrganizations = await Tenant.find({
+      status: "payment_pending",
+    });
     const emailTemplateIncomplete = await emailTemplateModel.findOne({
-      category: 'incomplete_payment_reminder',
+      category: "incomplete_payment_reminder",
       isActive: true,
       isSystemTemplate: true,
     });
 
     if (!emailTemplateIncomplete) {
-      console.error('No email template found for incomplete_payment_reminder');
+      console.error("No email template found for incomplete_payment_reminder");
       return;
     }
 
     for (const organization of pendingOrganizations) {
-      const subscription = await CustomerSubscription.findOne({ ownerId: organization.ownerId })
-        .populate('subscriptionPlanId', 'name');
+      const subscription = await CustomerSubscription.findOne({
+        ownerId: organization.ownerId,
+      }).populate("subscriptionPlanId", "name");
       if (!subscription) {
-        console.warn(`No subscription found for ownerId: ${organization.ownerId}`);
+        console.warn(
+          `No subscription found for ownerId: ${organization.ownerId}`
+        );
         continue;
       }
 
       const createdAt = moment(organization.createdAt);
       const now = moment();
       // const secondsSinceCreation = now.diff(createdAt, 'seconds');
-      const hoursSinceCreation = now.diff(createdAt, 'hours');
-      const daysSinceCreation = now.diff(createdAt, 'days');
+      const hoursSinceCreation = now.diff(createdAt, "hours");
+      const daysSinceCreation = now.diff(createdAt, "days");
 
       // Send reminders at 10 seconds (for testing), 24h, 48h, 7 days, 30 days
       const reminderTriggers = [
@@ -343,36 +378,49 @@ cron.schedule('0 0 * * *', async () => {
         hoursSinceCreation === 24,
         hoursSinceCreation === 48,
         daysSinceCreation === 7,
-        daysSinceCreation === 30
+        daysSinceCreation === 30,
       ];
 
-      if (reminderTriggers.some(trigger => trigger)) {
+      if (reminderTriggers.some((trigger) => trigger)) {
         const user = await Users.findOne({ _id: organization.ownerId });
         if (!user || !user.email) {
-          console.warn(`No user or email found for ownerId: ${organization.ownerId}`);
+          console.warn(
+            `No user or email found for ownerId: ${organization.ownerId}`
+          );
           continue;
         }
 
-        const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
-        const planName = subscription.subscriptionPlanId?.name
-          || `${subscription.selectedBillingCycle?.toUpperCase()} Plan`;
-        const planDetails = subscription.subscriptionPlanId ?
-          `Plan: ${planName}, Billing Cycle: ${subscription.selectedBillingCycle}` :
-          'Base Plan with standard features';
+        const userName =
+          (user.firstName ? user.firstName + " " : "") + (user.lastName || "");
+        const planName =
+          subscription.subscriptionPlanId?.name ||
+          `${subscription.selectedBillingCycle?.toUpperCase()} Plan`;
+        const planDetails = subscription.subscriptionPlanId
+          ? `Plan: ${planName}, Billing Cycle: ${subscription.selectedBillingCycle}`
+          : "Base Plan with standard features";
 
-        const emailSubject = emailTemplateIncomplete.subject
-          .replace('{{planName}}', planName)
-          // .replace('{{companyName}}', process.env.COMPANY_NAME);
+        const emailSubject = emailTemplateIncomplete.subject.replace(
+          "{{planName}}",
+          planName
+        );
+        // .replace('{{companyName}}', process.env.COMPANY_NAME);
 
         const emailBody = emailTemplateIncomplete.body
           .replace(/{{userName}}/g, userName)
           .replace(/{{planName}}/g, planName)
           .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
           .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
-          .replace(/{{paymentLink}}/g, `${config.REACT_APP_API_URL_FRONTEND}/subscription-plans`)
+          .replace(
+            /{{paymentLink}}/g,
+            `${config.REACT_APP_API_URL_FRONTEND}/subscription-plans`
+          )
           .replace(/{{planDetails}}/g, planDetails);
 
-        const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
+        const emailResponse = await sendEmail(
+          user.email,
+          emailSubject,
+          emailBody
+        );
 
         // Save notification
         // const notificationData = [{
@@ -390,49 +438,57 @@ cron.schedule('0 0 * * *', async () => {
         // }];
 
         // await notificationMiddleware({ notificationData }, { json: () => {} }, () => {});
-        console.log(`Incomplete payment reminder sent to ${user.email} for organization ${organization._id} at ${hoursSinceCreation} hours/${daysSinceCreation} days`);
       }
     }
 
     // 2. Payment Renewal Reminders
-    const activeSubscriptions = await CustomerSubscription.find({ status: 'active', autoRenew: true });
+    const activeSubscriptions = await CustomerSubscription.find({
+      status: "active",
+      autoRenew: true,
+    });
     const emailTemplateRenewal = await emailTemplateModel.findOne({
-      category: 'payment_renewal_reminder',
+      category: "payment_renewal_reminder",
       isActive: true,
       isSystemTemplate: true,
     });
 
     if (!emailTemplateRenewal) {
-      console.error('No email template found for payment_renewal_reminder');
+      console.error("No email template found for payment_renewal_reminder");
       return;
     }
 
     for (const subscription of activeSubscriptions) {
       const nextBillingDate = moment(subscription.nextBillingDate);
       const now = moment();
-      const daysUntilBilling = nextBillingDate.diff(now, 'days');
+      const daysUntilBilling = nextBillingDate.diff(now, "days");
 
-      const reminderDays = subscription.selectedBillingCycle === 'monthly'
-        ? [7, 2, 1] // 1 week, 2 days, 1 day before
-        : [30, 15, 2, 1]; // 1 month, 15 days, 2 days, 1 day before
+      const reminderDays =
+        subscription.selectedBillingCycle === "monthly"
+          ? [7, 2, 1] // 1 week, 2 days, 1 day before
+          : [30, 15, 2, 1]; // 1 month, 15 days, 2 days, 1 day before
 
       if (reminderDays.includes(daysUntilBilling)) {
         const user = await Users.findOne({ _id: subscription.ownerId });
         if (!user || !user.email) {
-          console.warn(`No user or email found for ownerId: ${subscription.ownerId}, subscription: ${subscription._id}`);
+          console.warn(
+            `No user or email found for ownerId: ${subscription.ownerId}, subscription: ${subscription._id}`
+          );
           continue;
         }
 
-        const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
-        const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
+        const userName =
+          (user.firstName ? user.firstName + " " : "") + (user.lastName || "");
+        const planName =
+          (subscription.subscriptionPlanId?.name ||
+            subscription.selectedBillingCycle?.toUpperCase()) + " Plan";
 
         const billingCycle = subscription.selectedBillingCycle;
-        const formattedBillingDate = nextBillingDate.format('MMMM Do, YYYY');
+        const formattedBillingDate = nextBillingDate.format("MMMM Do, YYYY");
 
         const emailSubject = emailTemplateRenewal.subject
-          .replace('{{planName}}', planName)
+          .replace("{{planName}}", planName)
           // .replace('{{companyName}}', process.env.COMPANY_NAME)
-          .replace('{{nextBillingDate}}', formattedBillingDate);
+          .replace("{{nextBillingDate}}", formattedBillingDate);
 
         const emailBody = emailTemplateRenewal.body
           .replace(/{{userName}}/g, userName)
@@ -442,7 +498,11 @@ cron.schedule('0 0 * * *', async () => {
           .replace(/{{nextBillingDate}}/g, formattedBillingDate)
           .replace(/{{billingCycle}}/g, billingCycle);
 
-        const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
+        const emailResponse = await sendEmail(
+          user.email,
+          emailSubject,
+          emailBody
+        );
 
         // Save notification
         // const notificationData = [{
@@ -460,28 +520,34 @@ cron.schedule('0 0 * * *', async () => {
         //   updatedBy: subscription.ownerId,
         // }];
 
-        const notificationData = [{
-          toAddress: user.email,
-          fromAddress: process.env.EMAIL_FROM,
-          title: emailSubject,
-          body: emailBody,
-          notificationType: 'email',
-          object: { objectName: 'subscription', objectId: subscription.ownerId },
-          status: emailResponse.success ? 'Success' : 'Failed',
-          tenantId: subscription.tenantId,
-          ownerId: subscription.ownerId,
-          recipientId: subscription.ownerId,
-          createdBy: subscription.ownerId,
-          updatedBy: subscription.ownerId,
-        }];
+        const notificationData = [
+          {
+            toAddress: user.email,
+            fromAddress: process.env.EMAIL_FROM,
+            title: emailSubject,
+            body: emailBody,
+            notificationType: "email",
+            object: {
+              objectName: "subscription",
+              objectId: subscription.ownerId,
+            },
+            status: emailResponse.success ? "Success" : "Failed",
+            tenantId: subscription.tenantId,
+            ownerId: subscription.ownerId,
+            recipientId: subscription.ownerId,
+            createdBy: subscription.ownerId,
+            updatedBy: subscription.ownerId,
+          },
+        ];
 
-        await notificationMiddleware({ notificationData }, { json: () => { } }, () => { });
-        console.log(`Payment renewal reminder sent to ${user.email} for subscription ${subscription._id} at ${daysUntilBilling} days remaining`);
+        await notificationMiddleware(
+          { notificationData },
+          { json: () => {} },
+          () => {}
+        );
       }
     }
-
-    console.log('Automated email reminder job completed successfully.');
   } catch (error) {
-    console.error('Automated Email Reminder Job Error:', error);
+    console.error("Automated Email Reminder Job Error:", error);
   }
 });

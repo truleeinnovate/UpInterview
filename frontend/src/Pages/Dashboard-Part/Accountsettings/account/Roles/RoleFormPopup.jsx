@@ -680,7 +680,6 @@ const RoleFormPopup = ({ onSave, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitting form data:", formData);
 
     setLoading(true);
 
@@ -720,7 +719,6 @@ const RoleFormPopup = ({ onSave, onClose }) => {
             { roleId: formData._id, roleData },
             {
               onSuccess: (data) => {
-                console.log("Server response (update):", data);
                 if (onSave) onSave(data);
                 navigate("/account-settings/roles");
                 notify.success("Role updated successfully");
@@ -734,7 +732,6 @@ const RoleFormPopup = ({ onSave, onClose }) => {
           // POST to the main roles collection
           createRole(roleData, {
             onSuccess: (data) => {
-              console.log("Server response (create):", data);
               if (onSave) onSave(data);
               navigate("/account-settings/roles");
               notify.success("Role created successfully");
@@ -808,7 +805,6 @@ const RoleFormPopup = ({ onSave, onClose }) => {
               `${config.REACT_APP_API_URL}/role-overrides/${existingOverride._id}`,
               overrideData
             );
-            console.log("Server response (update):", response.data);
             if (response.data && onSave) {
               onSave(response.data);
               notify.success("Role override updated successfully");
@@ -818,7 +814,6 @@ const RoleFormPopup = ({ onSave, onClose }) => {
               `${config.REACT_APP_API_URL}/role-overrides`,
               overrideData
             );
-            console.log("Server response (create):", response.data);
             if (response.data && onSave) {
               onSave(response.data);
               notify.success("Role override created successfully");
@@ -829,7 +824,6 @@ const RoleFormPopup = ({ onSave, onClose }) => {
             `${config.REACT_APP_API_URL}/role-overrides`,
             overrideData
           );
-          console.log("Server response (create):", response.data);
           if (response.data && onSave) {
             onSave(response.data);
             notify.success("Role override created successfully");

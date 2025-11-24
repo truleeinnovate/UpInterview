@@ -37,13 +37,10 @@ const InterviewAvailability = require("../models/InterviewAvailability.js");
 
 const organizationUserCreation = async (req, res) => {
   try {
-    console.log("--- organizationUserCreation START ---");
-    console.log("Request body:", req.body);
 
     const { UserData, contactData } = req.body;
 
     if (!UserData || !contactData) {
-      console.log("Missing UserData or contactData");
       return res
         .status(400)
         .json({ message: "User and Contact data are required" });
@@ -74,22 +71,18 @@ const organizationUserCreation = async (req, res) => {
 
     // Validate roleId
     if (!mongoose.Types.ObjectId.isValid(roleId)) {
-      console.log(`Invalid roleId: ${roleId}`);
       return res.status(400).json({ message: "Invalid roleId format" });
     }
 
     // Validate tenantId for non-super admins
     // if (!isSuperAdmin && !mongoose.Types.ObjectId.isValid(tenantId)) {
-    //   console.log(`Invalid tenantId: ${tenantId} for non-super admin user`);
     //   return res.status(400).json({ message: "Invalid tenantId format" });
     // }
 
     if (editMode && _id) {
       // Update existing user
-      console.log(`Updating user with _id: ${_id}`);
       const existingUser = await Users.findById(_id);
       if (!existingUser) {
-        console.log(`User not found: ${_id}`);
         return res.status(404).json({ message: "User not found" });
       }
 
@@ -109,14 +102,6 @@ const organizationUserCreation = async (req, res) => {
       existingUser.isEmailVerified = isEmailVerified || false;
 
       const savedUser = await existingUser.save();
-      console.log(`User updated: ${savedUser.email}`, {
-        _id: savedUser._id.toString(),
-        roleId: savedUser.roleId.toString(),
-        tenantId: savedUser.tenantId ? savedUser.tenantId.toString() : null,
-        // <-------------------------------v1.0.3
-        userType,
-        // ------------------------------v1.0.3 >
-      });
 
       // Update contact
       const existingContact = await Contacts.findOne({ ownerId: _id });
@@ -128,14 +113,9 @@ const organizationUserCreation = async (req, res) => {
         existingContact.tenantId = isSuperAdmin ? null : contactData.tenantId;
         existingContact.countryCode = contactData.countryCode;
         await existingContact.save();
-        console.log(`Contact updated for user: ${savedUser.email}`, {
-          contactId: existingContact._id.toString(),
-        });
       } else {
-        console.log(`No contact found for user: ${_id}`);
       }
 
-      console.log("--- organizationUserCreation END ---");
       return res.status(200).json({
         message: "User updated successfully",
         userId: savedUser._id,
@@ -143,10 +123,8 @@ const organizationUserCreation = async (req, res) => {
       });
     } else {
       // Create new user
-      console.log(`Checking if email exists: ${email}`);
       const existingUser = await Users.findOne({ email });
       if (existingUser) {
-        console.log(`Email already registered: ${email}`);
         return res.status(400).json({ message: "Email already registered" });
       }
 
@@ -170,13 +148,6 @@ const organizationUserCreation = async (req, res) => {
       const savedUser = await newUser.save();
       const savedUserId = savedUser._id;
 
-      console.log(`User created: ${savedUser.email}`, {
-        _id: savedUserId.toString(),
-        roleId: savedUser.roleId.toString(),
-        tenantId: savedUser.tenantId ? savedUser.tenantId.toString() : null,
-        userType,
-      });
-
       if (!savedUserId) {
         throw new Error("User creation failed, no ID returned.");
       }
@@ -188,16 +159,7 @@ const organizationUserCreation = async (req, res) => {
       });
 
       const savedContact = await newContact.save();
-      console.log(`Contact created for user: ${savedUser.email}`, {
-        contactId: savedContact._id.toString(),
-      });
 
-      console.log("--- organizationUserCreation END ---");
-      return res.status(201).json({
-        message: "User and Contact created successfully",
-        userId: savedUserId,
-        contactId: savedContact._id,
-      });
     }
   } catch (error) {
     console.error("Error in organizationUserCreation:", {
@@ -415,7 +377,6 @@ const resetPassword = async (req, res) => {
 const getBasedIdOrganizations = async (req, res) => {
   try {
     const { id } = req.params; // This is the _id of the organization
-    // console.log("Requested Organization ID:", id);
 
     if (!id) {
       return res.status(400).json({ message: "Organization ID is required." });
@@ -821,7 +782,6 @@ const verifyEmailChange = async (req, res) => {
         .json({ success: false, message: "Email change verification failed" });
     }
 
-    console.log("decoded.newEmail", decoded.newEmail);
 
     // Update email
     user.email = decoded.newEmail;
@@ -1194,7 +1154,6 @@ const deleteTenantAndAssociatedData = async (req, res) => {
 
 //     return res.status(200).json({ organization: tenant });
 //   } catch (error) {
-//     console.log("Error fetching organization:", error);
 //     return res.status(500).json({ message: "Internal server error" });
 //   }
 // };
@@ -1269,7 +1228,6 @@ const getOrganizationById = async (req, res) => {
     // v1.0.0 ---------------------------------------------------------------------------------------->
     return res.status(200).json({ organization: tenant });
   } catch (error) {
-    console.log("Error fetching organization:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -1307,8 +1265,6 @@ const superAdminLoginAsUser = async (req, res) => {
       timestamp: new Date().toISOString(),
     };
     const authToken = generateToken(payload, { expiresIn: "7h" });
-    console.log("Generated authToken:", authToken);
-    console.log("Generated payload:", payload);
 
     res.status(200).json({
       success: true,
@@ -1331,7 +1287,6 @@ const registerOrganization = async (req, res) => {
   res.locals.processName = "Create Organization";
   let savedTenant = null;
   try {
-    console.log("Starting organization registration process...");
     const {
       firstName,
       lastName,
@@ -1345,18 +1300,6 @@ const registerOrganization = async (req, res) => {
       country,
       password,
     } = req.body;
-    console.log("Request body received:", {
-      firstName,
-      lastName,
-      email,
-      phone,
-      countryCode,
-      profileId,
-      jobTitle,
-      company,
-      employees,
-      country,
-    });
 
     // Validate required fields
     if (
@@ -1390,12 +1333,9 @@ const registerOrganization = async (req, res) => {
     }
 
     // Hash password
-    console.log("Hashing password...");
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    console.log("Password hashed successfully");
 
     // Create new organization
-    console.log("Creating new organization...");
     const tenant = new Tenant({
       firstName,
       lastName,
@@ -1411,7 +1351,6 @@ const registerOrganization = async (req, res) => {
     });
 
     savedTenant = await tenant.save();
-    console.log("Organization saved successfully with ID:", savedTenant._id);
 
     // Fetch Admin role
     const adminRole = await RolesPermissionObject.findOne({
@@ -1423,7 +1362,6 @@ const registerOrganization = async (req, res) => {
     }
 
     // Create new user
-    console.log("Creating new user...");
     const newUser = new Users({
       lastName,
       firstName,
@@ -1437,14 +1375,11 @@ const registerOrganization = async (req, res) => {
       status: "inactive",
     });
     const savedUser = await newUser.save();
-    console.log("User saved successfully with ID:", savedUser._id);
 
     // Update organization with ownerId
     await Tenant.findByIdAndUpdate(savedTenant._id, { ownerId: savedUser._id });
-    console.log("Organization updated with ownerId:", savedUser._id);
 
     // Create new contact
-    console.log("Creating new contact...");
     const contact = new Contacts({
       lastName,
       firstName,
@@ -1459,7 +1394,6 @@ const registerOrganization = async (req, res) => {
       ownerId: savedUser._id,
     });
     const savedContact = await contact.save();
-    console.log("Contact saved successfully with ID:", savedContact._id);
 
     const emailResult = await sendVerificationEmail({
       type: "initial_email_verification",
@@ -1500,7 +1434,6 @@ const registerOrganization = async (req, res) => {
           setDefaultsOnInsert: true,
         }
       );
-      console.log("OrganizationRequest created/updated successfully");
     } catch (error) {
       console.error("Error creating/updating OrganizationRequest:", error);
     }
@@ -1537,7 +1470,6 @@ const registerOrganization = async (req, res) => {
       responseBody: JSON.parse(JSON.stringify(apiResponse)),
     };
 
-    console.log("Organization registration completed successfully");
     res.status(201).json({
       message: "Organization created successfully",
       tenantId: savedTenant._id,
@@ -1558,15 +1490,12 @@ const registerOrganization = async (req, res) => {
       status: "error",
     };
     if (error.code === 11000) {
-      console.log("Duplicate key error detected:", error.message);
       if (savedTenant) {
-        console.log("Cleaning up organization with ID:", savedTenant._id);
         await Tenant.deleteOne({ _id: savedTenant._id });
       }
       return res.status(400).json({ message: "Duplicate key error" });
     }
     if (savedTenant) {
-      console.log("Cleaning up organization with ID:", savedTenant._id);
       await Tenant.deleteOne({ _id: savedTenant._id });
     }
     res

@@ -6,25 +6,34 @@ import axios from "axios";
 import { config } from "../../config";
 import { formatDateTime } from "../../utils/dateFormatter";
 
-export const useNotifications = ({ organization, tenantId, ownerId, search,
+export const useNotifications = ({
+  organization,
+  tenantId,
+  ownerId,
+  search,
   status,
   type,
   timeRange,
   page,
-  limit,}) => {
+  limit,
+}) => {
   return useQuery({
-    queryKey: ["notifications", organization, tenantId, ownerId, search,
-  status,
-  type,
-  timeRange,
-  page,
-  limit],
+    queryKey: [
+      "notifications",
+      organization,
+      tenantId,
+      ownerId,
+      search,
+      status,
+      type,
+      timeRange,
+      page,
+      limit,
+    ],
     queryFn: async () => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/notifications/all?organizationId=${organization}&tenantId=${tenantId}&ownerId=${ownerId}&search=${search}&status=${status}&type=${type}&timeRange=${timeRange}&page=${page}&limit=${limit}`
       );
-
-      console.log("Response:", response?.data);
 
       // Sort by ObjectId (latest first)
       const sortedData = response.data?.data.sort((a, b) =>

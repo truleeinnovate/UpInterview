@@ -219,7 +219,6 @@ const createQuestions = async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    console.log("CSV file uploaded:", req.file.originalname);
     const fileContent = fs.readFileSync(req.file.path, "utf8");
 
     const parseCSV = (content) =>
@@ -235,7 +234,6 @@ const createQuestions = async (req, res) => {
     let rawData = [];
     try {
       rawData = await parseCSV(fileContent);
-      console.log("CSV parsed successfully, rows:", rawData.length);
     } catch (err) {
       console.error("CSV parsing failed:", err);
       return res.status(400).json({ error: "CSV parse error", details: err });
@@ -323,9 +321,7 @@ const createQuestions = async (req, res) => {
     let insertResult = [];
     if (validRows.length > 0) {
       insertResult = await Model.insertMany(validRows, { ordered: false });
-      console.log(`Inserted ${insertResult.length} records from CSV`);
     } else {
-      console.log("No valid records to insert from CSV");
     }
 
     fs.unlinkSync(req.file.path);
@@ -504,8 +500,6 @@ const getQuestionById = async (req, res) => {
 const getQuestionDeleteById = async (req, res) => {
   try {
     const { type } = req.params;
-    console.log("type", type);
-    console.log("req.body", req.body);
     const { questionIds } = req.body;
 
     if (

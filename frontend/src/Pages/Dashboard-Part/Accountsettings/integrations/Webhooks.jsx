@@ -17,7 +17,6 @@ const Webhooks = () => {
   const [isCreating, setIsCreating] = useState(false)
 
   const handleSaveWebhook = (webhookData) => {
-    console.log('Save webhook:', webhookData)
     setEditingWebhook(null)
     setIsCreating(false)
   }

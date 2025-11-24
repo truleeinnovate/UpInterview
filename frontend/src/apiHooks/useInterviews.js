@@ -1,13 +1,12 @@
 // v1.0.0 - Ashraf - added sending interview email link update in rounds api
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { config } from '../config';
-import Cookies from 'js-cookie';
-import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { config } from "../config";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
-
 
 export const useInterviews = (filters = {}, page = 1, limit = 10) => {
   const queryClient = useQueryClient();
@@ -18,33 +17,30 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
   // const params = filters
 
   // // const total = 0;
-  const params = useMemo(() => ({
-    ...filters,
-    page: page,
-    limit: limit,
-  }), [filters, page, limit]);
- 
-
-  console.log("params",params);
-  
+  const params = useMemo(
+    () => ({
+      ...filters,
+      page: page,
+      limit: limit,
+    }),
+    [filters, page, limit]
+  );
 
   // FIX: Use state to hold total
   // const [total, setTotal] = useState(0);
   // const [totalPages, setTotalPages] = useState(1);
 
-
   const {
     // data: interviewData = [],
-     data: responseData = {},
+    data: responseData = {},
     isLoading: isQueryLoading,
     isError,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['interviews', params],
+    queryKey: ["interviews", params],
     queryFn: async () => {
-      const response = await fetchFilterData('interview', {}, params);
-      console.log("interviews response", response);
+      const response = await fetchFilterData("interview", {}, params);
       // Enhanced with candidate data
 
       // FIX: Extract pagination info
@@ -54,9 +50,9 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
       // setTotal(total);
       // setTotalPages(totalPages);
 
-       // Return both data and total
+      // Return both data and total
       return {
-        data: response
+        data: response,
       };
 
       // return response?.data
@@ -79,14 +75,16 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
   const currentPage = responseData?.data?.page || 1;
   const totalPages = responseData?.data?.totalPages || 1;
 
-  console.log("interviewData", interviewData);
-  console.log("total", total);
-
-
-
   // Create new interview mutation
   const createInterview = useMutation({
-    mutationFn: async ({ candidateId, positionId, orgId, userId, templateId, id }) => {
+    mutationFn: async ({
+      candidateId,
+      positionId,
+      orgId,
+      userId,
+      templateId,
+      id,
+    }) => {
       const interviewData = {
         candidateId,
         positionId,
@@ -133,12 +131,12 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
       //   return [data, ...oldData];
       // });
 
-      queryClient.invalidateQueries(['interviews']);
+      queryClient.invalidateQueries(["interviews"]);
       navigate(`/interviews/${data._id}`);
     },
     onError: (error) => {
-      console.error('Interview creation error:', error);
-    }
+      console.error("Interview creation error:", error);
+    },
   });
 
   // Save interview round mutation
@@ -149,7 +147,7 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
         payload,
         {
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${Cookies.get("authToken")}`,
           },
         }
@@ -158,15 +156,14 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
     },
     // v1.0.2 <-----------------------------------------
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['interviews']);
+      queryClient.invalidateQueries(["interviews"]);
       // Toast notifications are now handled in the frontend after meeting links are generated
     },
     onError: (error) => {
-      console.error('Round save error:', error);
+      console.error("Round save error:", error);
       // Error toast will be handled in the frontend
-    }
+    },
   });
-
 
   // 🔹 New mutation: Update interview round (PATCH for edit)
   const updateInterviewRound = useMutation({
@@ -212,7 +209,7 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
 
   //     // Convert interviewers array to proper ObjectId format if it exists
   //     if (cleanedRoundData.interviewers && Array.isArray(cleanedRoundData.interviewers)) {
-  //       cleanedRoundData.interviewers = cleanedRoundData.interviewers.map(id => 
+  //       cleanedRoundData.interviewers = cleanedRoundData.interviewers.map(id =>
   //         typeof id === 'string' ? id : id.toString()
   //       );
   //     }
@@ -276,8 +273,6 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
 
   // Update interview status mutation
 
-
-
   const updateInterviewStatus = useMutation({
     mutationFn: async ({ interviewId, status, reason }) => {
       const interviewData = {
@@ -292,7 +287,7 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
         interviewData,
         {
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${Cookies.get("authToken")}`,
           },
         }
@@ -310,13 +305,12 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
       //   );
       // });
 
-      queryClient.invalidateQueries(['interviews']);
+      queryClient.invalidateQueries(["interviews"]);
     },
     onError: (error) => {
-      console.error('Interview status update error:', error);
-    }
+      console.error("Interview status update error:", error);
+    },
   });
-
 
   //  round deletion
   const deleteRoundMutation = useMutation({
@@ -327,10 +321,10 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['interviews']);
+      queryClient.invalidateQueries(["interviews"]);
     },
     onError: (error) => {
-      console.error('Error deleting round:', error);
+      console.error("Error deleting round:", error);
       //toast.error('Failed to delete round');
     },
   });
@@ -340,7 +334,7 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
   const deleteInterviewMutation = useMutation({
     mutationFn: async (interviewId) => {
       const response = await axios.delete(
-        `${config.REACT_APP_API_URL}/interview/delete-interview/${interviewId}`,
+        `${config.REACT_APP_API_URL}/interview/delete-interview/${interviewId}`
         // {
         //   headers: {
         //     'Content-Type': 'application/json',
@@ -352,27 +346,32 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
     },
     onSuccess: (data, deletedInterviewId) => {
       // Optimistically remove from cache
-      queryClient.setQueryData(['interviews', params], (oldData) => {
+      queryClient.setQueryData(["interviews", params], (oldData) => {
         if (!oldData) return oldData;
-        return oldData.filter(interview => interview._id !== deletedInterviewId);
+        return oldData.filter(
+          (interview) => interview._id !== deletedInterviewId
+        );
       });
 
       // Invalidate and refetch
-      queryClient.invalidateQueries(['interviews']);
-
+      queryClient.invalidateQueries(["interviews"]);
     },
     onError: (error) => {
-      console.error('Interview deletion error:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to delete interview';
+      console.error("Interview deletion error:", error);
+      const errorMessage =
+        error.response?.data?.message || "Failed to delete interview";
       // toast.error(errorMessage);
-    }
+    },
   });
 
-
   // Calculate loading states
-  const isMutationLoading = createInterview.isPending || saveInterviewRound.isPending || updateInterviewStatus.isPending || deleteRoundMutation.isPending;
-  const isLoading = isQueryLoading || isMutationLoading ||
-    deleteInterviewMutation.isPending;
+  const isMutationLoading =
+    createInterview.isPending ||
+    saveInterviewRound.isPending ||
+    updateInterviewStatus.isPending ||
+    deleteRoundMutation.isPending;
+  const isLoading =
+    isQueryLoading || isMutationLoading || deleteInterviewMutation.isPending;
 
   // Controlled logging
   useEffect(() => {
@@ -384,7 +383,7 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
 
   return {
     interviewData,
-        total,
+    total,
     currentPage,
     totalPages,
     isLoading,

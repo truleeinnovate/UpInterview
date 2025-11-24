@@ -11,12 +11,6 @@ const EVENT_TYPES = {
 
 // Core webhook trigger helper
 const triggerWebhook = async (eventType, data, tenantId) => {
-  console.log(
-    `[Webhook] Triggering ${eventType}${
-      tenantId ? ` for tenant ${tenantId}` : ""
-    }`
-  );
-
   try {
     // Build the query with tenantId only if it's provided
     const query = {
@@ -29,15 +23,6 @@ const triggerWebhook = async (eventType, data, tenantId) => {
     }
 
     const integrations = await Integration.find(query);
-
-    console.log(
-      `[Webhook] Found ${integrations.length} integrations for event ${eventType}`
-    );
-
-    if (integrations.length === 0) {
-      console.log("[Webhook] No active integrations found for this event type");
-      return;
-    }
 
     // Process each integration with timeout
     await Promise.all(
@@ -64,13 +49,6 @@ const triggerWebhook = async (eventType, data, tenantId) => {
             integration.webhookUrl,
             payload,
             config
-          );
-          console.log(
-            `Webhook ${eventType} sent to ${integration.webhookUrl}`,
-            {
-              status: response.status,
-              statusText: response.statusText,
-            }
           );
         } catch (error) {
           if (error.name === "AbortError") {

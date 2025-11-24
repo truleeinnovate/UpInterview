@@ -38,7 +38,6 @@ const RoleView = () => {
   // Move navigation to useEffect to avoid rendering-phase state updates
   useEffect(() => {
     if (!role) {
-      console.log("No role found, navigating to /account-settings/roles");
       navigate("/account-settings/roles", { replace: true });
     }
   }, [role, navigate]);

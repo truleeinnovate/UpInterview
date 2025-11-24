@@ -37,7 +37,6 @@ function Activity({ parentId, parentId2, mode }) {
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  console.log("parentId, parentId2, mode", parentId, parentId2, mode);
 
   // Close filters when clicking outside
   useEffect(() => {
@@ -93,13 +92,11 @@ function Activity({ parentId, parentId2, mode }) {
     const fetchFeeds = async () => {
       setLoading(true);
       try {
-        console.log("Fetching feeds for parentId:", parentId);
 
         // First try with parentId
         const response = await axios.get(`${config.REACT_APP_API_URL}/feeds`, {
           params: { parentId },
         });
-        console.log("response", response);
 
         // Check if response has data
         if (
@@ -109,14 +106,8 @@ function Activity({ parentId, parentId2, mode }) {
         ) {
           // If we got data with parentId, use it
           setFeeds(response.data.data);
-          console.log("Set feeds with parentId:", response.data.data);
           setError(null);
         } else {
-          // If no data with parentId, try with parentId2
-          console.log(
-            "No data with parentId, trying with parentId2:",
-            parentId2
-          );
           const response2 = await axios.get(
             `${config.REACT_APP_API_URL}/feeds`,
             {
@@ -130,7 +121,6 @@ function Activity({ parentId, parentId2, mode }) {
             : [];
 
           setFeeds(fetchedFeeds);
-          console.log("Set feeds with parentId2:", fetchedFeeds);
           setError(null);
         }
       } catch (err) {
@@ -505,7 +495,6 @@ function Activity({ parentId, parentId2, mode }) {
                           {getFieldIcon(fieldName)}
                           <span className="text-gray-600">{message}</span>
                         </div>
-                        {console.log("message", message.skills)}
                         {fieldName === "skills" ? (
                           // Special handling for skills with side-by-side comparison
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">

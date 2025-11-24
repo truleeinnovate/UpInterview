@@ -3,18 +3,20 @@
 // v1.0.2  -  Ashraf  -  fixed name schedule assessment to assessment schema and schedule assessment to assessment schema
 // v1.0.3  -  Ashraf  -  fixed assessment resend link for mutiple and single candidate assessment
 
-const { CandidateAssessment } = require("../../models/Assessment/candidateAssessment.js");
-const { encrypt } = require('../../utils/generateOtp')
-// <-------------------------------v1.0.2 
-const ScheduleAssessment = require('../../models/Assessment/assessmentsSchema.js');
+const {
+  CandidateAssessment,
+} = require("../../models/Assessment/candidateAssessment.js");
+const { encrypt } = require("../../utils/generateOtp");
+// <-------------------------------v1.0.2
+const ScheduleAssessment = require("../../models/Assessment/assessmentsSchema.js");
 // ------------------------------v1.0.2 >
 const { Candidate } = require("../../models/candidate.js");
 const CryptoJS = require("crypto-js");
 const crypto = require("crypto");
 const emailTemplateModel = require("../../models/EmailTemplatemodel");
-const sendEmail = require('../../utils/sendEmail');
+const sendEmail = require("../../utils/sendEmail");
 const notificationMiddleware = require("../../middleware/notificationMiddleware");
-const { generateOTP } = require('../../utils/generateOtp')
+const { generateOTP } = require("../../utils/generateOtp");
 const Otp = require("../../models/Otp");
 const mongoose = require("mongoose");
 const Notification = require("../../models/notification");
@@ -26,29 +28,45 @@ const config = require("../../config");
 // Import push notification functions
 const {
   createAssessmentScheduledNotification,
-} = require('../PushNotificationControllers/pushNotificationAssessmentController');
+} = require("../PushNotificationControllers/pushNotificationAssessmentController");
 const {
   validateScheduledAssessment,
-  //validateCandidateAssessment 
+  //validateCandidateAssessment
 } = require("../../validations/assessmentValidation.js");
 const Tenant = require("../../models/Tenant");
 
-
-
-
 exports.sendOtp = async (req, res) => {
   try {
-    const { scheduledAssessmentId, candidateId, candidateAssessmentId } = req.params;
+    const { scheduledAssessmentId, candidateId, candidateAssessmentId } =
+      req.params;
 
     // Validate input IDs
-    if (!scheduledAssessmentId || !mongoose.isValidObjectId(scheduledAssessmentId)) {
-      return res.status(400).json({ success: false, message: 'Invalid or missing scheduled assessment ID' });
+    if (
+      !scheduledAssessmentId ||
+      !mongoose.isValidObjectId(scheduledAssessmentId)
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Invalid or missing scheduled assessment ID",
+        });
     }
     if (!candidateId || !mongoose.isValidObjectId(candidateId)) {
-      return res.status(400).json({ success: false, message: 'Invalid or missing candidate ID' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid or missing candidate ID" });
     }
-    if (!candidateAssessmentId || !mongoose.isValidObjectId(candidateAssessmentId)) {
-      return res.status(400).json({ success: false, message: 'Invalid or missing candidate assessment ID' });
+    if (
+      !candidateAssessmentId ||
+      !mongoose.isValidObjectId(candidateAssessmentId)
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Invalid or missing candidate assessment ID",
+        });
     }
 
     // Fetch candidate with assessment
@@ -56,23 +74,30 @@ exports.sendOtp = async (req, res) => {
       _id: candidateAssessmentId,
       scheduledAssessmentId,
       candidateId,
-    }).populate('candidateId');
+    }).populate("candidateId");
 
     if (!scheduledAssessment || !scheduledAssessment.candidateId) {
-      return res.status(404).json({ success: false, message: 'Candidate assessment not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Candidate assessment not found" });
     }
 
     const candidate = scheduledAssessment.candidateId;
     const emails = Array.isArray(candidate.emails)
       ? candidate.emails
       : candidate.emails
-        ? [candidate.emails]
-        : candidate.Email
-          ? [candidate.Email]
-          : [];
+      ? [candidate.emails]
+      : candidate.Email
+      ? [candidate.Email]
+      : [];
 
     if (emails.length === 0) {
-      return res.status(400).json({ success: false, message: 'No valid email address for candidate' });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "No valid email address for candidate",
+        });
     }
 
     // Generate OTP
@@ -85,48 +110,66 @@ exports.sendOtp = async (req, res) => {
       existingOtp.expiresAt = expiresAt;
       await existingOtp.save();
     } else {
-      await Otp.create({ scheduledAssessmentId, candidateId, candidateAssessmentId, otp, expiresAt });
+      await Otp.create({
+        scheduledAssessmentId,
+        candidateId,
+        candidateAssessmentId,
+        otp,
+        expiresAt,
+      });
     }
 
     // Get system email template for OTP
-    const template = await emailTemplateModel.findOne({ category: 'assessment_otp', isSystemTemplate: true, isActive: true });
+    const template = await emailTemplateModel.findOne({
+      category: "assessment_otp",
+      isSystemTemplate: true,
+      isActive: true,
+    });
 
     if (!template) {
-      return res.status(500).json({ success: false, message: 'OTP email template not found in the system' });
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "OTP email template not found in the system",
+        });
     }
 
     // Replace placeholders in template body
     const emailBody = template.body
-      .replace('{{candidateName}}',
-        (candidate.FirstName ? candidate.FirstName + ' ' : '') +
-        (candidate.LastName || 'Candidate')
+      .replace(
+        "{{candidateName}}",
+        (candidate.FirstName ? candidate.FirstName + " " : "") +
+          (candidate.LastName || "Candidate")
       )
-      .replace('{{otp}}', otp);
+      .replace("{{otp}}", otp);
 
     const sendEmailResponses = await Promise.all(
       emails.map((email) => sendEmail(email, template.subject, emailBody))
     );
 
     const emailStatus = sendEmailResponses.every((response) => response.success)
-      ? 'Success'
-      : 'Failed';
+      ? "Success"
+      : "Failed";
 
     sendEmailResponses.forEach((response, index) => {
       if (!response.success) {
-        console.error(`Error sending email to ${emails[index]}: ${response.message}`);
+        console.error(
+          `Error sending email to ${emails[index]}: ${response.message}`
+        );
       }
     });
 
     return res.status(200).json({
       success: true,
-      message: 'OTP sent successfully',
+      message: "OTP sent successfully",
       emailStatus,
     });
   } catch (error) {
-    console.error('Error sending OTP:', error);
+    console.error("Error sending OTP:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to send OTP',
+      message: "Failed to send OTP",
       error: error.message,
     });
   }
@@ -141,7 +184,7 @@ exports.resendAssessmentLink = async (req, res) => {
       organizationId,
       assessmentId,
       companyName = process.env.COMPANY_NAME,
-      supportEmail = process.env.SUPPORT_EMAIL
+      supportEmail = process.env.SUPPORT_EMAIL,
     } = req.body;
 
     // Handle both single and multiple candidate assessment IDs
@@ -150,57 +193,87 @@ exports.resendAssessmentLink = async (req, res) => {
     if (candidateAssessmentIds && Array.isArray(candidateAssessmentIds)) {
       // Multiple candidates
       candidateAssessmentIdArray = candidateAssessmentIds;
-    } else if (candidateAssessmentId && mongoose.isValidObjectId(candidateAssessmentId)) {
+    } else if (
+      candidateAssessmentId &&
+      mongoose.isValidObjectId(candidateAssessmentId)
+    ) {
       // Single candidate
       candidateAssessmentIdArray = [candidateAssessmentId];
     } else {
-      return res.status(400).json({ success: false, message: 'Invalid or missing candidate assessment ID(s)' });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Invalid or missing candidate assessment ID(s)",
+        });
     }
 
     if (!userId || !mongoose.isValidObjectId(userId)) {
-      return res.status(400).json({ success: false, message: 'Invalid or missing user ID' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid or missing user ID" });
     }
 
     if (!organizationId || !mongoose.isValidObjectId(organizationId)) {
-      return res.status(400).json({ success: false, message: 'Invalid or missing organization ID' });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Invalid or missing organization ID",
+        });
     }
 
     // Validate all candidate assessment IDs
     for (const id of candidateAssessmentIdArray) {
       if (!mongoose.isValidObjectId(id)) {
-        return res.status(400).json({ success: false, message: `Invalid candidate assessment ID: ${id}` });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: `Invalid candidate assessment ID: ${id}`,
+          });
       }
     }
 
     const assessment = await Assessment.findById(assessmentId);
     if (!assessment) {
-      return res.status(404).json({ success: false, message: 'Assessment not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Assessment not found" });
     }
     const assessmentDuration = assessment.assessmentDuration || 60;
 
-    const emailTemplate = await emailTemplateModel.findOne({ category: 'assessment_invite', isSystemTemplate: true, isActive: true });
+    const emailTemplate = await emailTemplateModel.findOne({
+      category: "assessment_invite",
+      isSystemTemplate: true,
+      isActive: true,
+    });
     if (!emailTemplate) {
-      return res.status(404).json({ success: false, message: 'Email template not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Email template not found" });
     }
 
     const results = [];
     let successCount = 0;
     let failureCount = 0;
-    console.log("candidateAssessmentIdArray", candidateAssessmentIdArray)
+    // console.log("candidateAssessmentIdArray", candidateAssessmentIdArray)
 
     for (const candidateAssessmentId of candidateAssessmentIdArray) {
-      console.log("candidateAssessmentId", candidateAssessmentId)
+      // console.log("candidateAssessmentId", candidateAssessmentId)
       try {
-        const candidateAssessment = await CandidateAssessment.findById(candidateAssessmentId)
-          .populate('candidateId')
-          .populate('scheduledAssessmentId');
-        console.log("candidateAssessment", candidateAssessment)
+        const candidateAssessment = await CandidateAssessment.findById(
+          candidateAssessmentId
+        )
+          .populate("candidateId")
+          .populate("scheduledAssessmentId");
+        // console.log("candidateAssessment", candidateAssessment)
 
         if (!candidateAssessment) {
           results.push({
             candidateAssessmentId,
             success: false,
-            message: 'Candidate assessment not found'
+            message: "Candidate assessment not found",
           });
           failureCount++;
           continue;
@@ -210,7 +283,7 @@ exports.resendAssessmentLink = async (req, res) => {
           results.push({
             candidateAssessmentId,
             success: false,
-            message: 'Candidate assessment is not active'
+            message: "Candidate assessment is not active",
           });
           failureCount++;
           continue;
@@ -220,7 +293,7 @@ exports.resendAssessmentLink = async (req, res) => {
           results.push({
             candidateAssessmentId,
             success: false,
-            message: 'No assessment link available'
+            message: "No assessment link available",
           });
           failureCount++;
           continue;
@@ -231,7 +304,7 @@ exports.resendAssessmentLink = async (req, res) => {
           results.push({
             candidateAssessmentId,
             success: false,
-            message: 'Candidate not found'
+            message: "Candidate not found",
           });
           failureCount++;
           continue;
@@ -240,34 +313,42 @@ exports.resendAssessmentLink = async (req, res) => {
         const emails = Array.isArray(candidate.emails)
           ? candidate.emails
           : candidate.emails
-            ? [candidate.emails]
-            : candidate.Email
-              ? [candidate.Email]
-              : [];
+          ? [candidate.emails]
+          : candidate.Email
+          ? [candidate.Email]
+          : [];
 
         if (emails.length === 0) {
           results.push({
             candidateAssessmentId,
             success: false,
-            message: 'No valid email address for candidate'
+            message: "No valid email address for candidate",
           });
           failureCount++;
           continue;
         }
 
-        const candidateName = (candidate.FirstName ? candidate.FirstName + ' ' : '') + (candidate.LastName || 'Candidate');
-        const formattedExpiryDate = candidateAssessment.expiryAt.toLocaleString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZoneName: 'short'
-        });
+        const candidateName =
+          (candidate.FirstName ? candidate.FirstName + " " : "") +
+          (candidate.LastName || "Candidate");
+        const formattedExpiryDate = candidateAssessment.expiryAt.toLocaleString(
+          "en-US",
+          {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZoneName: "short",
+          }
+        );
 
-        const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, '');
-        const emailSubject = emailTemplate.subject.replace('{{companyName}}', companyName);
+        const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, "");
+        const emailSubject = emailTemplate.subject.replace(
+          "{{companyName}}",
+          companyName
+        );
         const emailBody = cleanedBody
           .replace(/{{candidateName}}/g, candidateName)
           .replace(/{{companyName}}/g, companyName)
@@ -280,9 +361,13 @@ exports.resendAssessmentLink = async (req, res) => {
           emails.map((email) => sendEmail(email, emailSubject, emailBody))
         );
 
-        const emailStatus = sendEmailResponses.every((response) => response.success) ? 'Success' : 'Failed';
+        const emailStatus = sendEmailResponses.every(
+          (response) => response.success
+        )
+          ? "Success"
+          : "Failed";
 
-        if (emailStatus === 'Success') {
+        if (emailStatus === "Success") {
           successCount++;
         } else {
           failureCount++;
@@ -290,24 +375,31 @@ exports.resendAssessmentLink = async (req, res) => {
 
         sendEmailResponses.forEach((response, index) => {
           if (!response.success) {
-            console.error(`Error sending email to ${emails[index]}: ${response.message}`);
+            console.error(
+              `Error sending email to ${emails[index]}: ${response.message}`
+            );
           }
         });
 
         results.push({
           candidateAssessmentId,
-          success: emailStatus === 'Success',
-          message: emailStatus === 'Success' ? 'Assessment link resent successfully' : 'Failed to send email',
+          success: emailStatus === "Success",
+          message:
+            emailStatus === "Success"
+              ? "Assessment link resent successfully"
+              : "Failed to send email",
           candidateName,
-          emails
+          emails,
         });
-
       } catch (error) {
-        console.error(`Error processing candidate assessment ${candidateAssessmentId}:`, error);
+        console.error(
+          `Error processing candidate assessment ${candidateAssessmentId}:`,
+          error
+        );
         results.push({
           candidateAssessmentId,
           success: false,
-          message: 'Internal server error'
+          message: "Internal server error",
         });
         failureCount++;
       }
@@ -337,23 +429,25 @@ exports.resendAssessmentLink = async (req, res) => {
         summary: {
           total: candidateAssessmentIdArray.length,
           successful: successCount,
-          failed: failureCount
-        }
+          failed: failureCount,
+        },
       });
     }
-
   } catch (error) {
-    console.error('Error resending assessment link(s):', error);
+    console.error("Error resending assessment link(s):", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to resend assessment link(s)',
+      message: "Failed to resend assessment link(s)",
       error: error.message,
     });
   }
 };
 // ------------------------------v1.0.3 >
 
-const { checkAssessmentUsageLimit, handleAssessmentStatusChange } = require('../../services/assessmentUsageService');
+const {
+  checkAssessmentUsageLimit,
+  handleAssessmentStatusChange,
+} = require("../../services/assessmentUsageService");
 
 exports.shareAssessment = async (req, res) => {
   try {
@@ -363,44 +457,58 @@ exports.shareAssessment = async (req, res) => {
       organizationId,
       userId,
       companyName = process.env.COMPANY_NAME,
-      supportEmail = process.env.SUPPORT_EMAIL
+      supportEmail = process.env.SUPPORT_EMAIL,
     } = req.body;
 
     // Validate input
     if (!assessmentId || !mongoose.isValidObjectId(assessmentId)) {
-      return res.status(400).json({ success: false, message: 'Invalid or missing assessment ID' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid or missing assessment ID" });
     }
 
     if (!selectedCandidates || selectedCandidates.length === 0) {
-      return res.status(400).json({ success: false, message: 'No candidates selected' });
+      return res
+        .status(400)
+        .json({ success: false, message: "No candidates selected" });
     }
 
     // Fetch assessment without session for Cosmos DB compatibility
     const assessment = await Assessment.findById(assessmentId);
     if (!assessment) {
-      return res.status(404).json({ success: false, message: 'Assessment not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Assessment not found" });
     }
 
     // Enforce assessment usage limits before creating schedules (per-tenant limit)
     // Determine tenant and remaining capacity
     const tenantId = assessment.tenantId;
-    const candidatesToShare = Array.isArray(selectedCandidates) ? selectedCandidates.length : 0;
+    const candidatesToShare = Array.isArray(selectedCandidates)
+      ? selectedCandidates.length
+      : 0;
 
     // Use organizationId for usage limit check since ScheduleAssessment uses organizationId
     const limit = await checkAssessmentUsageLimit(organizationId || tenantId);
     const entitled = limit.entitled;
     const utilized = limit.utilized;
-    const remaining = limit.remaining === Infinity ? Infinity : Math.max((limit.remaining || 0), 0);
+    const remaining =
+      limit.remaining === Infinity
+        ? Infinity
+        : Math.max(limit.remaining || 0, 0);
 
     if (entitled !== 0) {
-      if (!limit.canShare || (remaining !== Infinity && candidatesToShare > remaining)) {
+      if (
+        !limit.canShare ||
+        (remaining !== Infinity && candidatesToShare > remaining)
+      ) {
         const ms = new Date(limit.toDate) - new Date(limit.fromDate);
         const days = Math.round(ms / (1000 * 60 * 60 * 24));
-        const period = days > 330 ? 'annual' : 'monthly';
+        const period = days > 330 ? "annual" : "monthly";
 
         return res.status(400).json({
           success: false,
-          code: 'ASSESSMENT_LIMIT_EXCEEDED',
+          code: "ASSESSMENT_LIMIT_EXCEEDED",
           message: `Your ${period} assessment limit is used. Remaining: ${remaining}. You selected ${candidatesToShare}. Wait for next ${period} cycle or upgrade your plan.`,
           details: {
             entitled,
@@ -408,8 +516,8 @@ exports.shareAssessment = async (req, res) => {
             remaining,
             period,
             periodFrom: limit.fromDate,
-            periodTo: limit.toDate
-          }
+            periodTo: limit.toDate,
+          },
         });
       }
     }
@@ -430,11 +538,11 @@ exports.shareAssessment = async (req, res) => {
     if (isNaN(expiryAt.getTime())) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid expiry date calculation',
+        message: "Invalid expiry date calculation",
         details: {
           linkExpiryDays: assessment.linkExpiryDays,
-          calculatedDate: expiryAt.toString()
-        }
+          calculatedDate: expiryAt.toString(),
+        },
       });
     }
 
@@ -448,24 +556,27 @@ exports.shareAssessment = async (req, res) => {
     const scheduleCount = await ScheduleAssessment.countDocuments({
       tenantId: organizationId,
       ownerId: userId,
-      scheduledAssessmentCode: { $exists: true, $ne: null }
+      scheduledAssessmentCode: { $exists: true, $ne: null },
     });
 
     // Generate the new code with 5-digit padding based on count
     const nextNumber = scheduleCount + 1;
-    let scheduledAssessmentCode = `ASMT-${String(nextNumber).padStart(5, '0')}`;
+    let scheduledAssessmentCode = `ASMT-${String(nextNumber).padStart(5, "0")}`;
 
     // Check if this code already exists (in case of concurrent requests)
     const existingCode = await ScheduleAssessment.findOne({
       tenantId: organizationId,
       ownerId: userId,
-      scheduledAssessmentCode
+      scheduledAssessmentCode,
     });
 
     if (existingCode) {
       // If code exists, try with a higher number
       const newNextNumber = nextNumber + 1;
-      scheduledAssessmentCode = `ASMT-${String(newNextNumber).padStart(5, '0')}`;
+      scheduledAssessmentCode = `ASMT-${String(newNextNumber).padStart(
+        5,
+        "0"
+      )}`;
     }
     // <---------------------- v1.0.1
 
@@ -477,7 +588,7 @@ exports.shareAssessment = async (req, res) => {
       tenantId: organizationId,
       ownerId: userId,
       expiryAt,
-      createdBy: userId
+      createdBy: userId,
     });
 
     let savedScheduleAssessment;
@@ -486,7 +597,7 @@ exports.shareAssessment = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Validation failed",
-        errors
+        errors,
       });
     } else {
       const scheduleAssessment = new ScheduleAssessment({
@@ -494,7 +605,7 @@ exports.shareAssessment = async (req, res) => {
         assessmentId,
         tenantId: organizationId,
         ownerId: userId,
-        status: 'scheduled',
+        status: "scheduled",
         proctoringEnabled: true,
         createdBy: userId,
         order: `Assessment ${nextNumber}`,
@@ -503,75 +614,84 @@ exports.shareAssessment = async (req, res) => {
       savedScheduleAssessment = await scheduleAssessment.save();
     }
 
-
     // Create push notification for scheduled assessment
     try {
       await createAssessmentScheduledNotification(savedScheduleAssessment);
     } catch (notificationError) {
-      console.error('[ASSESSMENT] Error creating scheduled notification:', notificationError);
+      console.error(
+        "[ASSESSMENT] Error creating scheduled notification:",
+        notificationError
+      );
       // Continue execution even if notification fails
     }
 
     // Check for existing candidate assessments without session
     const existingAssessments = await CandidateAssessment.find({
       scheduledAssessmentId: savedScheduleAssessment._id,
-      candidateId: { $in: selectedCandidates.map(c => c._id) },
+      candidateId: { $in: selectedCandidates.map((c) => c._id) },
     });
 
-    const existingCandidateIds = existingAssessments.map(a => a.candidateId.toString());
+    const existingCandidateIds = existingAssessments.map((a) =>
+      a.candidateId.toString()
+    );
     const newCandidates = selectedCandidates.filter(
-      candidate => !existingCandidateIds.includes(candidate._id.toString())
+      (candidate) => !existingCandidateIds.includes(candidate._id.toString())
     );
 
     if (newCandidates.length === 0) {
       return res.status(200).json({
         success: true,
-        message: 'All selected candidates already assigned',
+        message: "All selected candidates already assigned",
         data: { scheduledAssessmentId: savedScheduleAssessment._id },
       });
     }
 
     // Create candidate assessments with validated dates
-    const candidateAssessments = newCandidates.map(candidate => ({
+    const candidateAssessments = newCandidates.map((candidate) => ({
       scheduledAssessmentId: savedScheduleAssessment._id,
       candidateId: candidate._id,
-      status: 'pending',
+      status: "pending",
       expiryAt: new Date(expiryAt), // Create new Date instance for each
       isActive: true,
-      assessmentLink: '',
+      assessmentLink: "",
     }));
 
     // Validate each candidate assessment before inserting
     // for (const candidateAssessment of candidateAssessments) {
     //   const { errors, isValid } = validateCandidateAssessment(candidateAssessment);
     //   if (!isValid) {
-    //     return res.status(400).json({ 
+    //     return res.status(400).json({
     //       success: false,
-    //       message: "Candidate assessment validation failed", 
-    //       errors 
+    //       message: "Candidate assessment validation failed",
+    //       errors
     //     });
     //   }
     // }
 
-    const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments);
+    const insertedAssessments = await CandidateAssessment.insertMany(
+      candidateAssessments
+    );
 
     // Track usage for each newly created candidate assessment
     for (const insertedAssessment of insertedAssessments) {
       try {
         await handleAssessmentStatusChange(
           insertedAssessment._id,
-          null,  // Old status (no previous status for new assessments)
-          'pending',  // New status
+          null, // Old status (no previous status for new assessments)
+          "pending", // New status
           {
             // Use organizationId as tenantId since ScheduleAssessment uses organizationId
             // This ensures usage tracking aligns with how we find assessments
             tenantId: organizationId || assessment.tenantId,
-            ownerId: assessment.ownerId || userId
+            ownerId: assessment.ownerId || userId,
           }
         );
-        console.log(`[ASSESSMENT_SHARE] Usage tracked for candidate assessment: ${insertedAssessment._id}`);
+        // console.log(`[ASSESSMENT_SHARE] Usage tracked for candidate assessment: ${insertedAssessment._id}`);
       } catch (usageError) {
-        console.error('[ASSESSMENT_SHARE] Error updating usage for new assessment:', usageError);
+        console.error(
+          "[ASSESSMENT_SHARE] Error updating usage for new assessment:",
+          usageError
+        );
         // Continue even if usage tracking fails - don't block the sharing process
       }
     }
@@ -579,19 +699,22 @@ exports.shareAssessment = async (req, res) => {
     const tenant = await Tenant.findById(organizationId);
     const orgCompanyName = tenant.company;
 
-    const templateCategory = tenant.type === 'individual'
-      ? 'assessment_invite_individual'
-      : 'assessment_invite';
+    const templateCategory =
+      tenant.type === "individual"
+        ? "assessment_invite_individual"
+        : "assessment_invite";
 
     // Process emails without session
     const emailTemplate = await emailTemplateModel.findOne({
       category: templateCategory,
       isSystemTemplate: true,
-      isActive: true
+      isActive: true,
     });
 
     if (!emailTemplate) {
-      return res.status(404).json({ success: false, message: 'Email template not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Email template not found" });
     }
 
     const notifications = [];
@@ -604,10 +727,12 @@ exports.shareAssessment = async (req, res) => {
         continue;
       }
 
-      const emails = [].concat(
-        candidate.emails || [],
-        candidate.Email ? [candidate.Email] : []
-      ).filter(Boolean);
+      const emails = []
+        .concat(
+          candidate.emails || [],
+          candidate.Email ? [candidate.Email] : []
+        )
+        .filter(Boolean);
 
       if (emails.length === 0) {
         console.error(`No email for candidate: ${candidate._id}`);
@@ -615,33 +740,37 @@ exports.shareAssessment = async (req, res) => {
       }
 
       const candidateAssessment = insertedAssessments.find(
-        ca => ca.candidateId.toString() === candidate._id.toString()
+        (ca) => ca.candidateId.toString() === candidate._id.toString()
       );
       if (!candidateAssessment) continue;
 
-      const encryptedId = encrypt(candidateAssessment._id.toString(), 'test');
+      const encryptedId = encrypt(candidateAssessment._id.toString(), "test");
       // console.log("encryptedId", encryptedId)
       // console.log("config.REACT_APP_API_URL_FRONTEND", config.REACT_APP_API_URL_FRONTEND)
       const link = `${config.REACT_APP_API_URL_FRONTEND}/assessmenttest?candidateAssessmentId=${encryptedId}`;
       // console.log("link", link)
-      await CandidateAssessment.findByIdAndUpdate(
-        candidateAssessment._id,
-        { assessmentLink: link }
-      );
-
-      // Format email content
-      const candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
-      const formattedExpiryDate = expiryAt.toLocaleString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZoneName: 'short'
+      await CandidateAssessment.findByIdAndUpdate(candidateAssessment._id, {
+        assessmentLink: link,
       });
 
-      const emailSubject = emailTemplate.subject.replace(/{{orgCompanyName}}/g, orgCompanyName);
+      // Format email content
+      const candidateName =
+        [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
+        "Candidate";
+      const formattedExpiryDate = expiryAt.toLocaleString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZoneName: "short",
+      });
+
+      const emailSubject = emailTemplate.subject.replace(
+        /{{orgCompanyName}}/g,
+        orgCompanyName
+      );
       const emailBody = emailTemplate.body
         .replace(/{{candidateName}}/g, candidateName)
         .replace(/{{companyName}}/g, companyName)
@@ -650,17 +779,14 @@ exports.shareAssessment = async (req, res) => {
         .replace(/{{assessmentDuration}}/g, assessmentDuration)
         .replace(/{{supportEmail}}/g, supportEmail)
         .replace(/{{orgCompanyName}}/g, orgCompanyName)
-        .replace(/{{title}}/g, assessment.AssessmentTitle)
-
-
-
+        .replace(/{{title}}/g, assessment.AssessmentTitle);
 
       // Queue email sends
       emailPromises.push(
-        ...emails.map(email =>
+        ...emails.map((email) =>
           sendEmail(email, emailSubject, emailBody)
-            .then(response => ({ email, success: true }))
-            .catch(error => ({ email, success: false, error: error.message }))
+            .then((response) => ({ email, success: true }))
+            .catch((error) => ({ email, success: false, error: error.message }))
         )
       );
 
@@ -669,12 +795,12 @@ exports.shareAssessment = async (req, res) => {
         fromAddress: process.env.EMAIL_FROM,
         title: emailSubject,
         body: emailBody,
-        notificationType: 'email',
+        notificationType: "email",
         object: {
-          objectName: 'assessment',
+          objectName: "assessment",
           objectId: assessmentId,
         },
-        status: 'Pending',
+        status: "Pending",
         tenantId: organizationId,
         ownerId: userId,
         recipientId: candidate._id,
@@ -686,16 +812,14 @@ exports.shareAssessment = async (req, res) => {
       // ✅ Save all notifications once at the end
       if (notifications.length > 0) {
         req.notificationData = notifications;
-        await notificationMiddleware(req, res, () => { });
+        await notificationMiddleware(req, res, () => {});
       }
-
     }
-    console.log("notifications", notifications)
-
+    // console.log("notifications", notifications)
 
     // Send emails outside transaction
     const emailResults = await Promise.all(emailPromises);
-    const failedEmails = emailResults.filter(r => !r.success);
+    const failedEmails = emailResults.filter((r) => !r.success);
 
     // if (failedEmails.length > 0) {
     //   console.error('Failed emails:', failedEmails);
@@ -714,24 +838,25 @@ exports.shareAssessment = async (req, res) => {
     try {
       // Use organizationId for recalculation as ScheduleAssessment uses organizationId
       // In many cases organizationId and tenantId are the same
-      await require('../../services/assessmentUsageService').recalculateAssessmentUsage(organizationId || tenantId);
+      await require("../../services/assessmentUsageService").recalculateAssessmentUsage(
+        organizationId || tenantId
+      );
     } catch (e) {
-      console.error('[ASSESSMENT_USAGE] Recalc after share failed:', e.message);
+      console.error("[ASSESSMENT_USAGE] Recalc after share failed:", e.message);
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Assessment shared successfully',
+      message: "Assessment shared successfully",
       data: { scheduledAssessmentId: savedScheduleAssessment._id },
     });
-
   } catch (error) {
-    console.error('Error sharing assessment:', error);
+    console.error("Error sharing assessment:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to share assessment',
+      message: "Failed to share assessment",
       error: error.message,
-      ...(error.errors ? { details: error.errors } : {})
+      ...(error.errors ? { details: error.errors } : {}),
     });
   }
 };

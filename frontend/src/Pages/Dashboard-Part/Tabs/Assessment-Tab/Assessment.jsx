@@ -478,10 +478,6 @@ const Assessment = () => {
   };
 
   const handleDelete = async (assessment) => {
-    console.log(
-      "effectivePermissions.assessment?.Delete",
-      effectivePermissions.assessment?.Delete
-    );
 
     // if (effectivePermissions.assessment?.Delete) {  // have to check beause this is mandtoary or not ?
     setDeleteAssessmentTemplate(assessment);

@@ -282,7 +282,6 @@ const InternalInterviews = ({
     onSelectCandidates([], type, "");
   };
 
-  console.log("filteredData", filteredData);
 
   return (
     // v1.0.3 <----------------------------------------------------------------------------------

@@ -46,7 +46,6 @@ export class MockVideoCall {
 
     // Simulate connecting to a room
     async connectToRoom(roomID, userID, userName) {
-        console.log('Mock: Connecting to room:', roomID, 'as user:', userName);
 
         // Simulate connection delay
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -83,16 +82,12 @@ export class MockVideoCall {
                 video: true,
                 audio: true
             });
-            console.log('Mock: Local stream obtained');
 
             // Store references to tracks for proper management
             this.videoTrack = this.localStream.getVideoTracks()[0];
             this.audioTrack = this.localStream.getAudioTracks()[0];
 
-            console.log('Video track:', this.videoTrack?.label);
-            console.log('Audio track:', this.audioTrack?.label);
         } catch (error) {
-            console.log('Mock: Could not get local stream:', error);
             // Create a mock stream for testing
             this.localStream = this.createMockStream();
         }
@@ -116,7 +111,6 @@ export class MockVideoCall {
         // Trigger participant update event
         this.triggerEvent('participantsUpdate', this.participants);
 
-        console.log('Mock: Connected to room with', this.participants.length, 'participants');
 
         return { success: true, roomID, userID };
     }
@@ -177,7 +171,6 @@ export class MockVideoCall {
 
             // Check if participants have changed
             if (currentParticipantCount !== localParticipantCount) {
-                console.log('Mock: Room participants changed:', currentParticipantCount, 'vs', localParticipantCount);
 
                 // Update local participants
                 this.participants = currentParticipants;
@@ -199,7 +192,6 @@ export class MockVideoCall {
 
     // Simulate disconnecting
     async disconnect() {
-        console.log('Mock: Disconnecting from room');
 
         // Stop polling
         if (this.pollingInterval) {
@@ -211,7 +203,6 @@ export class MockVideoCall {
         if (this.localStream) {
             this.localStream.getTracks().forEach(track => {
                 track.stop();
-                console.log('Stopped track:', track.kind);
             });
         }
 
@@ -253,18 +244,15 @@ export class MockVideoCall {
     // Simulate toggling microphone
     async toggleMic() {
         this.isMicOn = !this.isMicOn;
-        console.log('Mock: Microphone toggled:', this.isMicOn ? 'ON' : 'OFF');
 
         // Properly handle audio tracks
         if (this.audioTrack) {
             if (this.isMicOn) {
                 // Enable audio track
                 this.audioTrack.enabled = true;
-                console.log('Audio track enabled');
             } else {
                 // Disable audio track
                 this.audioTrack.enabled = false;
-                console.log('Audio track disabled');
             }
         }
 
@@ -291,18 +279,15 @@ export class MockVideoCall {
     // Simulate toggling video
     async toggleVideo() {
         this.isVideoOn = !this.isVideoOn;
-        console.log('Mock: Video toggled:', this.isVideoOn ? 'ON' : 'OFF');
 
         // Properly handle camera tracks
         if (this.videoTrack) {
             if (this.isVideoOn) {
                 // Enable video track
                 this.videoTrack.enabled = true;
-                console.log('Video track enabled');
             } else {
                 // Disable video track (this stops the camera light)
                 this.videoTrack.enabled = false;
-                console.log('Video track disabled - camera light should turn off');
             }
         }
 
@@ -355,11 +340,9 @@ export class MockVideoCall {
 
                 // Listen for screen share stop
                 screenStream.getVideoTracks()[0].onended = () => {
-                    console.log('Mock: Screen share ended by user');
                     this.stopScreenShare();
                 };
 
-                console.log('Mock: Screen sharing started');
                 this.triggerEvent('screenShareStarted', { stream: screenStream });
 
             } else {
@@ -392,7 +375,6 @@ export class MockVideoCall {
             }
         }
 
-        console.log('Mock: Screen sharing stopped');
         this.triggerEvent('screenShareStopped');
     }
 
@@ -411,19 +393,16 @@ export class MockVideoCall {
 
     // Simulate a new participant joining
     async addParticipant(userID, userName) {
-        console.log('Mock: New participant joining:', userName);
 
         // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         if (!this.roomID) {
-            console.log('Mock: Not connected to a room');
             return { success: false, error: 'Not connected to a room' };
         }
 
         const roomData = this.getRoomData(this.roomID);
         if (!roomData) {
-            console.log('Mock: Room not found');
             return { success: false, error: 'Room not found' };
         }
 
@@ -448,13 +427,11 @@ export class MockVideoCall {
         this.triggerEvent('participantJoined', newParticipant);
         this.triggerEvent('participantsUpdate', this.participants);
 
-        console.log('Mock: Participant added:', userName);
         return { success: true, participant: newParticipant };
     }
 
     // Simulate a participant leaving
     async removeParticipant(userID) {
-        console.log('Mock: Participant leaving:', userID);
 
         if (!this.roomID) {
             return { success: false, error: 'Not connected to a room' };
@@ -479,7 +456,6 @@ export class MockVideoCall {
             this.triggerEvent('participantLeft', { userID });
             this.triggerEvent('participantsUpdate', this.participants);
 
-            console.log('Mock: Participant removed:', userID);
         }
 
         return { success: true };

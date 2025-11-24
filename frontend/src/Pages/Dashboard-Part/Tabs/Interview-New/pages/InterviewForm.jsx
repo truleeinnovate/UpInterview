@@ -178,7 +178,6 @@ const InterviewForm = () => {
             // Use setTimeout to ensure state updates after component renders
             setTimeout(() => {
               setTemplateId(templateIdToSet);
-              console.log("Template ID set:", templateIdToSet);
             }, 0);
           } else {
             console.warn("Template not found in templatesData:", templateIdToSet);
@@ -216,7 +215,6 @@ const InterviewForm = () => {
       }
 
       if (selectedPosition) {
-        console.log("selectedPosition.rounds", selectedPosition);
 
         if (selectedPosition?.templateId) {
           setTemplateId(selectedPosition?.templateId);

@@ -64,7 +64,6 @@ const NotificationDetailsModal = ({
       !notification.object ||
       !notification.object.objectName
     ) {
-      console.log("Missing object data:", notification);
       return "";
     }
     return (

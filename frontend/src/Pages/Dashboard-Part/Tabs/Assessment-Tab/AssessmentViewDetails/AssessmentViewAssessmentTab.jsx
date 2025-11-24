@@ -35,16 +35,9 @@ function AssessmentsTab({ assessment }) {
     isLoading,
   } = useScheduleAssessments(assessment._id);
 
-  console.log("scheduleData", scheduleData);
 
   // ------------------------------v1.0.3 >
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
-  // Remove console.log to prevent loops
-  // useEffect(() => {
-  //   if (assessment) {
-  //     console.log('assessment', assessment);
-  //   }
-  // }, [assessment]);
 
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;
@@ -66,7 +59,6 @@ function AssessmentsTab({ assessment }) {
   //   useScheduledAssessments(assessment?._id);
   // ------------------------------v1.0.3 >
 
-  // console.log("scheduledAssessments", scheduledAssessments);
   // Check if assessment has sections
   useEffect(() => {
     const checkAssessmentSections = async () => {
@@ -119,7 +111,6 @@ function AssessmentsTab({ assessment }) {
         return;
       }
 
-      console.log("candidateAssessmentId", candidateAssessmentId);
 
       if (!userId || !organizationId) {
         console.error("Missing userId or organizationId:", {

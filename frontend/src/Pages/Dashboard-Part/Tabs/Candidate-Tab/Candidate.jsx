@@ -498,7 +498,6 @@ function Candidate({
       //-----v1.0.4-------->
     };
     setSelectedFilters(filters);
-    console.log("setSelectedFilters ", filters);
 
     setCurrentPage(0);
     setIsFilterActive(

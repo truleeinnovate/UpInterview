@@ -142,20 +142,12 @@ exports.deleteAssessment = async (req, res) => {
       assessmentId: id,
     }).session(session);
 
-    console.log(
-      `[ASSESSMENT] Deleted ${deletedCandidateAssessments.deletedCount} candidate assessments for ${id}`
-    );
-
     // ✅ 3️⃣ Delete related selected assessment questions (added new)
     const deletedQuestions = await selectedAssessmentquestions
       .deleteMany({
         assessmentId: id,
       })
       .session(session);
-
-    console.log(
-      `[ASSESSMENT] Deleted ${deletedQuestions.deletedCount} question sets for ${id}`
-    );
 
     // ✅ Commit transaction if everything succeeded
     await session.commitTransaction();
@@ -303,18 +295,17 @@ exports.newAssessment = async (req, res) => {
     try {
       // Pass ownerId as the createdBy parameter
       await createAssessmentCreatedNotification(assessment, assessment.ownerId);
-      
+
       // Trigger assessment created webhook
       try {
-        console.log('[ASSESSMENT WEBHOOK] Triggering assessment.created event');
         await triggerWebhook(
-          'assessment.status.updated',
+          "assessment.status.updated",
           {
-            event: 'assessment.created',
+            event: "assessment.created",
             assessmentId: assessment._id,
             assessmentCode: assessment.AssessmentCode,
             title: assessment.AssessmentTitle,
-            status: 'created',
+            status: "created",
             createdAt: assessment.createdAt,
             createdBy: assessment.CreatedBy,
             tenantId: assessment.tenantId,
@@ -323,12 +314,15 @@ exports.newAssessment = async (req, res) => {
             totalQuestions: assessment.NumberOfQuestions,
             totalScore: assessment.totalScore,
             passScore: assessment.passScore,
-            expiryDate: assessment.ExpiryDate
+            expiryDate: assessment.ExpiryDate,
           },
           assessment.tenantId
         );
       } catch (webhookError) {
-        console.error('[ASSESSMENT WEBHOOK] Error triggering assessment created webhook:', webhookError);
+        console.error(
+          "[ASSESSMENT WEBHOOK] Error triggering assessment created webhook:",
+          webhookError
+        );
       }
     } catch (notificationError) {
       console.error(
@@ -394,7 +388,7 @@ exports.updateAssessment = async (req, res) => {
     // Get the current assessment to compare status changes
     const currentAssessment = await Assessment.findById(id);
     const oldStatus = currentAssessment.status;
-    
+
     const updatedAssessment = await Assessment.findByIdAndUpdate(
       id,
       updateData,
@@ -411,24 +405,26 @@ exports.updateAssessment = async (req, res) => {
     // Trigger assessment updated webhook if status changed
     if (updateData.status && updateData.status !== oldStatus) {
       try {
-        console.log('[ASSESSMENT WEBHOOK] Triggering assessment status updated event');
         await triggerWebhook(
-          'assessment.status.updated',
+          "assessment.status.updated",
           {
-            event: 'assessment.status.updated',
+            event: "assessment.status.updated",
             assessmentId: updatedAssessment._id,
             assessmentCode: updatedAssessment.AssessmentCode,
             title: updatedAssessment.AssessmentTitle,
             previousStatus: oldStatus,
             newStatus: updateData.status,
             updatedAt: updatedAssessment.updatedAt,
-            updatedBy: req.user?.id || 'system',
-            tenantId: updatedAssessment.tenantId
+            updatedBy: req.user?.id || "system",
+            tenantId: updatedAssessment.tenantId,
           },
           updatedAssessment.tenantId
         );
       } catch (webhookError) {
-        console.error('[ASSESSMENT WEBHOOK] Error triggering assessment status updated webhook:', webhookError);
+        console.error(
+          "[ASSESSMENT WEBHOOK] Error triggering assessment status updated webhook:",
+          webhookError
+        );
       }
     }
 
@@ -665,7 +661,6 @@ exports.getAllAssessments = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log("Error in get assessments:", error.message);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

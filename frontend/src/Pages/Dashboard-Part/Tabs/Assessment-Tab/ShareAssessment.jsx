@@ -418,20 +418,6 @@ const ShareAssessment = ({
       return;
     }
 
-    console.log("selectedAssessment", {
-      assessmentId: fromscheduleAssessment
-        ? selectedAssessment._id
-        : assessment._id,
-      selectedCandidates,
-      linkExpiryDays,
-      onClose: onCloseshare,
-      setErrors,
-      setIsLoading,
-      organizationId,
-      userId,
-      queryClient,
-    });
-
     setIsLoading(true);
     const result = await shareAssessmentAPI({
       assessmentId: fromscheduleAssessment
@@ -446,7 +432,6 @@ const ShareAssessment = ({
       userId,
       queryClient,
     });
-    console.log("assessment result", result);
 
     if (result.success) {
       // React Query will handle data refresh automatically

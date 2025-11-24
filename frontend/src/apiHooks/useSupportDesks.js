@@ -11,9 +11,10 @@ import { usePermissions } from "../Context/PermissionsContext";
 // Helper: format backend validation errors { message, errors } into a toast-friendly string
 const buildToastFromAxiosError = (err) => {
   const data = err?.response?.data || {};
-  const main = typeof data?.message === "string" && data.message.trim()
-    ? data.message
-    : err?.message || "Request failed";
+  const main =
+    typeof data?.message === "string" && data.message.trim()
+      ? data.message
+      : err?.message || "Request failed";
 
   const errors = data?.errors;
   const details = [];
@@ -27,8 +28,8 @@ const buildToastFromAxiosError = (err) => {
           const path = Array.isArray(e.path)
             ? e.path.join(".")
             : typeof e.path === "string"
-              ? e.path
-              : undefined;
+            ? e.path
+            : undefined;
           if (path && e.message) details.push(`${path}: ${e.message}`);
           else if (e.message) details.push(e.message);
           else {
@@ -41,15 +42,18 @@ const buildToastFromAxiosError = (err) => {
       }
     } else if (typeof errors === "object") {
       for (const [field, val] of Object.entries(errors)) {
-        if (Array.isArray(val)) details.push(...val.map((m) => `${field}: ${m}`));
+        if (Array.isArray(val))
+          details.push(...val.map((m) => `${field}: ${m}`));
         else if (typeof val === "string") details.push(`${field}: ${val}`);
-        else if (val && typeof val === "object" && val.message) details.push(`${field}: ${val.message}`);
+        else if (val && typeof val === "object" && val.message)
+          details.push(`${field}: ${val.message}`);
       }
     }
   }
 
   const lines = details.slice(0, 5).map((m) => `- ${m}`);
-  const extra = details.length > 5 ? `\n+ ${details.length - 5} more error(s)…` : "";
+  const extra =
+    details.length > 5 ? `\n+ ${details.length - 5} more error(s)…` : "";
   return lines.length ? `${main}\n${lines.join("\n")}${extra}` : main;
 };
 
@@ -59,12 +63,17 @@ axios.defaults.withCredentials = true;
 export const useSupportTickets = (filters = {}) => {
   const queryClient = useQueryClient();
   // const { userRole } = useCustomContext(); // “SuperAdmin”, “Admin”, “Individual”, …
-  const impersonationToken = Cookies.get('impersonationToken');
-  const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
-  const { effectivePermissions, superAdminPermissions, impersonatedUser_roleName, effectivePermissions_RoleName } = usePermissions();
-  const userRole = effectivePermissions_RoleName;//need to work on passing role dynamic -ashraf
-
-
+  const impersonationToken = Cookies.get("impersonationToken");
+  const impersonationPayload = impersonationToken
+    ? decodeJwt(impersonationToken)
+    : null;
+  const {
+    effectivePermissions,
+    superAdminPermissions,
+    impersonatedUser_roleName,
+    effectivePermissions_RoleName,
+  } = usePermissions();
+  const userRole = effectivePermissions_RoleName; //need to work on passing role dynamic -ashraf
 
   /* --------------------------------------------------------------------- */
   /*  Auth token                                                            */
@@ -85,20 +94,11 @@ export const useSupportTickets = (filters = {}) => {
     // impersonatedUser_roleName,
   };
 
-
-
-  console.log("params---", params)
-
-
-
   /* --------------------------------------------------------------------- */
   /*  QUERY: fetch tickets                                                  */
   /* --------------------------------------------------------------------- */
   const fetchTickets = async () => {
     try {
-
-
-
       // const { data } = await axios.get(
       //   `${config.REACT_APP_API_URL}/get-tickets`,
       //   {params,
@@ -106,13 +106,16 @@ export const useSupportTickets = (filters = {}) => {
 
       // });
 
-      const { data } = await axios.get(`${config.REACT_APP_API_URL}/get-tickets`, {
-        params,
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-      return data
+      const { data } = await axios.get(
+        `${config.REACT_APP_API_URL}/get-tickets`,
+        {
+          params,
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+      return data;
 
       // // const all = data?.tickets ?? [];
       // const all = data?.tickets ?? [];
@@ -123,7 +126,6 @@ export const useSupportTickets = (filters = {}) => {
       // console.log("all---", all)
       // console.log("data tickets---", data)
       // console.log("impersonatedUser_roleName---", impersonatedUser_roleName)
-
 
       // let filteredTickets = [];
 
@@ -161,7 +163,7 @@ export const useSupportTickets = (filters = {}) => {
       //  filteredTickets = all;
       //       // if (!userRole) return [];
       //       if(!userRole){
-      //  filteredTickets = [];        
+      //  filteredTickets = [];
       //       }
       //       if (!organization) {
       //         if (userRole === "Admin" && userId)
@@ -172,7 +174,6 @@ export const useSupportTickets = (filters = {}) => {
       //       }
       //       if (userRole === "Individual" && userId)
       //         return all.filter((t) => t.ownerId === userId);
-
 
       //       return [];
     } catch (err) {
@@ -193,7 +194,6 @@ export const useSupportTickets = (filters = {}) => {
     // enabled: !!userRole, // wait until role is known
     staleTime: 1000 * 60 * 5, // 5 min
     retry: 1,
-
   });
 
   /* --------------------------------------------------------------------- */
@@ -206,17 +206,13 @@ export const useSupportTickets = (filters = {}) => {
       ticketId,
       attachmentFile,
       isAttachmentFileRemoved,
-
     }) => {
-
       // Prepare the payload with tenantId and ownerId
       const payload = {
         ...data,
         tenantId: data.tenantId || tenantId, // Use provided tenantId or fallback to token tenantId
-        ownerId: data.ownerId || userId,     // Use provided ownerId or fallback to token userId
+        ownerId: data.ownerId || userId, // Use provided ownerId or fallback to token userId
       };
-
-
 
       const url = editMode
         ? `${config.REACT_APP_API_URL}/update-ticket/${ticketId}`
@@ -233,7 +229,12 @@ export const useSupportTickets = (filters = {}) => {
       if (isAttachmentFileRemoved && !attachmentFile) {
         await uploadFile(null, "attachment", "support", updatedTicketId);
       } else if (attachmentFile instanceof File) {
-        await uploadFile(attachmentFile, "attachment", "support", updatedTicketId);
+        await uploadFile(
+          attachmentFile,
+          "attachment",
+          "support",
+          updatedTicketId
+        );
       }
       return res.data;
     },

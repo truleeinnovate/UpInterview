@@ -43,8 +43,6 @@ const UserForm = ({ mode }) => {
   });
   const userType = AuthCookieManager.getUserType();
 
-  console.log("UserForm - userType:", userType);
-  console.log("UserForm - allRoles:", allRoles);
   // ------------------------------ v1.0.0 >
   // Filter roles based on user type
   const organizationRoles = useMemo(() => {
@@ -56,16 +54,11 @@ const UserForm = ({ mode }) => {
       const filteredRoles = allRoles.filter(
         (role) => role.roleType === "internal"
       );
-      console.log("SuperAdmin - Filtered roles (internal):", filteredRoles);
       return filteredRoles;
     } else {
       // For regular users, show roles with roleType 'organization'
       const filteredRoles = allRoles.filter(
         (role) => role.roleType === "organization"
-      );
-      console.log(
-        "Regular user - Filtered roles (organization):",
-        filteredRoles
       );
       return filteredRoles;
     }
@@ -183,7 +176,6 @@ const UserForm = ({ mode }) => {
   // Initialize form data for edit mode
   useEffect(() => {
     if (editMode && initialUserData) {
-      console.log("Initializing form for edit mode:", initialUserData);
       setUserData({
         _id: initialUserData._id || "",
         firstName: initialUserData.firstName || "",
@@ -300,7 +292,6 @@ const UserForm = ({ mode }) => {
         editMode,
       });
 
-      console.log("User saved successfully");
       navigate("/account-settings/users");
     } catch (error) {
       console.error("Submission error:", error);

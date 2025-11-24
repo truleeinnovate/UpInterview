@@ -31,7 +31,6 @@ const AssessmentKanban = ({
   assessmentSections,
   loading = false,
 }) => {
-  console.log("assessments----", assessments);
   const [columns, setColumns] = useState({
     active: {
       title: "Active",

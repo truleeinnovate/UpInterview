@@ -61,7 +61,6 @@ const RoundCard = ({
   isExpanded,
   onInitiateAction,
 }) => {
-  console.log("round in the roound card page: ", round);
   // const {
   //   assessmentData,
   //   // sectionQuestions,
@@ -229,7 +228,6 @@ const RoundCard = ({
       //   payload
       // );
       const response = await updateInterviewRound(payload);
-      console.log("Status updated:", response.data);
       // Show success toast
       notify.success(`Round Status updated to ${newStatus}`, {});
     } catch (error) {
@@ -318,8 +316,6 @@ const RoundCard = ({
         setCandidateAssessment(candidateData);
       }
 
-      console.log("Filtered scheduled assessment:", filteredAssessment);
-      console.log("Candidate assessment data:", candidateData);
     }
   }, [scheduledAssessments, round, interviewData]);
 
@@ -401,8 +397,6 @@ const RoundCard = ({
       throw new Error("Unable to determine assessment ID for share operation");
     }
 
-    console.log("Sharing assessment for round:", round);
-    console.log("Candidate data:", interviewData?.candidateId);
 
     try {
       // Calculate link expiry days from assessment data
@@ -423,7 +417,6 @@ const RoundCard = ({
         queryClient,
       });
 
-      console.log("Share assessment result:", result);
 
       if (result.success) {
         // Update the round with the scheduled assessment ID
@@ -442,7 +435,6 @@ const RoundCard = ({
 
         // Update the round in the database
         const response = await updateInterviewRound(payload);
-        console.log("Round update response:", response);
 
         if (response?.status === "ok") {
           notify.success("Assessment link shared successfully!");
@@ -464,9 +456,6 @@ const RoundCard = ({
   // result showing
   const shouldShowResultButton = () => {
     if (round.roundTitle !== "Assessment") return false;
-
-    console.log("candidateAssessment", candidateAssessment);
-    console.log("candidateAssessment?.status", candidateAssessment?.status);
 
     if (candidateAssessment?.status) {
       const showStatuses = ['completed', 'failed', 'pass'];
@@ -876,7 +865,6 @@ const RoundCard = ({
 
   // console.log("status", round.status);
   const permissions = getRoundPermissions(round.status);
-  console.log('round.status:-', round.status)
 
   // v1.0.4 -------------------------->
 
@@ -932,9 +920,7 @@ const RoundCard = ({
           isEditing: true,
         };
         // Use saveInterviewRound mutation from useInterviews hook
-        console.log("Calling saveInterviewRound...");
         const response = await updateInterviewRound(payload);
-        console.log("response", response);
 
         // navigate(`/interviews/${interviewId}`);
         if (response?.status === "ok") {
@@ -1656,7 +1642,6 @@ const RoundCard = ({
                     </button>
                   )}
                   {/* Select */}
-                  {console.log("333", permissions.canSelect)}
                   {permissions.canSelect && (
                     <button
                       onClick={handleSelect}
@@ -1666,7 +1651,6 @@ const RoundCard = ({
                     </button>
                   )}
                   {/* Reject */}
-                  {console.log("333", permissions.canReject)}
                   {permissions.canReject && (
                     <button
                       onClick={() =>

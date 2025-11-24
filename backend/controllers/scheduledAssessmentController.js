@@ -1,5 +1,7 @@
 // v1.0.0  -  Ashraf  -  fixed name schedule assessment to assessment schema
-const { CandidateAssessment } = require("../models/Assessment/candidateAssessment");
+const {
+  CandidateAssessment,
+} = require("../models/Assessment/candidateAssessment");
 const Otp = require("../models/Otp");
 // <-------------------------------v1.0.0
 const scheduledAssessmentsSchema = require("../models/Assessment/assessmentsSchema");
@@ -8,8 +10,10 @@ const { triggerWebhook, EVENT_TYPES } = require("../services/webhookService");
 const mongoose = require("mongoose");
 
 // Import push notification functions
-const { createAssessmentScheduledNotification } = require("./PushNotificationControllers/pushNotificationAssessmentController");
-const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
+const {
+  createAssessmentScheduledNotification,
+} = require("./PushNotificationControllers/pushNotificationAssessmentController");
+const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
 
 exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
   try {
@@ -17,11 +21,11 @@ exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
     const scheduledAssessment = await scheduledAssessmentsSchema
       .findById(id)
       .populate({
-        path: 'assessmentId',
+        path: "assessmentId",
         populate: {
-          path: 'Position',
-          model: 'Position'
-        }
+          path: "Position",
+          model: "Position",
+        },
       });
 
     return res.status(200).send({
@@ -30,7 +34,6 @@ exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
       scheduledAssessment,
     });
   } catch (error) {
-    console.log("error in getting scheduled assessment from backed", error);
     res.status(500).send({
       message: "Failed to get scheduled assessment",
       success: false,
@@ -99,7 +102,6 @@ exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
 //   }
 // };
 
-
 exports.createScheduledAssessment = async (req, res) => {
   try {
     const {
@@ -115,9 +117,13 @@ exports.createScheduledAssessment = async (req, res) => {
     } = req.body;
 
     // Generate custom code like ASMT-TPL-00001
-    const scheduledAssessmentCode = await generateUniqueId('ASMT', scheduledAssessmentsSchema, 'scheduledAssessmentCode', tenantId);
+    const scheduledAssessmentCode = await generateUniqueId(
+      "ASMT",
+      scheduledAssessmentsSchema,
+      "scheduledAssessmentCode",
+      tenantId
+    );
 
-    console.log("expiryAt---", expiryAt);
     // Build new object
     const scheduledAssessment = new scheduledAssessmentsSchema({
       scheduledAssessmentCode,
@@ -153,14 +159,20 @@ exports.createScheduledAssessment = async (req, res) => {
         savedAssessment.tenantId
       );
     } catch (webhookError) {
-      console.error("[ASSESSMENT] Error triggering status webhook:", webhookError);
+      console.error(
+        "[ASSESSMENT] Error triggering status webhook:",
+        webhookError
+      );
     }
 
     // Create push notification for scheduled assessment
     try {
       await createAssessmentScheduledNotification(savedAssessment);
     } catch (notificationError) {
-      console.error('[ASSESSMENT] Error creating scheduled notification:', notificationError);
+      console.error(
+        "[ASSESSMENT] Error creating scheduled notification:",
+        notificationError
+      );
       // Continue execution even if notification fails
     }
 

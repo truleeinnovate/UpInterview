@@ -165,7 +165,6 @@ function UsersTab({ users, viewMode }) {
 
   // Common function for Login as User API call
   const handleLoginAsUser = async (userId) => {
-    console.log("🚀 Starting login as user process for userId:", userId);
     setIsLoading(true);
     try {
       const impersonationToken = getImpersonationToken();
@@ -281,11 +280,6 @@ function UsersTab({ users, viewMode }) {
       label: "Login as User",
       icon: <User className="w-4 h-4 text-blue-600" />,
       onClick: (row) => {
-        console.log("🖱️ Login as User button clicked for user:", {
-          userId: row._id,
-          userName: row.firstName,
-          userEmail: row.email,
-        });
         handleLoginAsUser(row._id);
       },
     },
@@ -850,14 +844,6 @@ function UsersTab({ users, viewMode }) {
                   <button
                     className="w-full btn-primary flex items-center justify-center space-x-2"
                     onClick={() => {
-                      console.log(
-                        "🖱️ Modal Login as User button clicked for user:",
-                        {
-                          userId: selectedUser._id,
-                          userName: selectedUser.name,
-                          userEmail: selectedUser.email,
-                        }
-                      );
                       handleLoginAsUser(selectedUser._id);
                     }}
                   >

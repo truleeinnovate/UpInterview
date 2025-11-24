@@ -10,7 +10,6 @@
 // v1.0.9  -  Ashok   -  Modified master data controllers
 
 require("dotenv").config();
-
 const cors = require("cors");
 const express = require("express");
 const cookieParser = require("cookie-parser");
@@ -26,26 +25,13 @@ app.set("trust proxy", 1);
 // ✅ Parse cookies
 app.use(cookieParser());
 
-// console.log('config.REACT_APP_CLIENT_ID', config.REACT_APP_CLIENT_ID);
-// console.log('config.REACT_APP_CLIENT_SECRET', config.REACT_APP_CLIENT_SECRET);
-// console.log('config.REACT_APP_REDIRECT_URI', config.REACT_APP_REDIRECT_URI);
-// console.log('config.REACT_APP_API_URL_FRONTEND', config.REACT_APP_API_URL_FRONTEND);
-
 const config = require("./config.js");
-
-// console.log(
-//   "from index config.REACT_APP_API_URL_FRONTEND",
-//   config.REACT_APP_API_URL_FRONTEND
-// );
 
 // CORS configuration
 const allowedOrigins = [
-  //   `https://${config.REACT_APP_API_URL_FRONTEND}`,
   "http://localhost:3000",
   "http://localhost:5000",
   /^https:\/\/[a-z0-9-]+\.dev\.upinterview\.io$/,
-  // "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
-  // "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
   "https://dev.upinterview.io",
   "https://app.upinterview.io",
   "https://upinterview-dpdgchhbafekdhca.canadacentral-01.azurewebsites.net",
@@ -54,34 +40,9 @@ const allowedOrigins = [
   "null", // Allow null origin for local HTML testing
 ];
 
-// const allowedOrigins = [
-//   config.REACT_APP_API_URL_FRONTEND.startsWith("http")
-//     ? config.REACT_APP_API_URL_FRONTEND
-//     : `https://${config.REACT_APP_API_URL_FRONTEND}`,
-// ];
-
 // CORS middleware
 app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    // console.log('🔍 [CORS] Request details:', {
-    //     method: req.method,
-    //     path: req.path,
-    //     origin: origin,
-    //     referer: req.headers.referer,
-    //     userAgent: req.headers['user-agent'],
-    //     hasCookies: Object.keys(req.cookies).length > 0,
-    //     cookieHeader: req.headers.cookie
-    // });
-    
-    //   console.log(
-    //     "Request Method:",
-    //     req.method,
-    //     "Path:",
-    //     req.path,
-    //     "Origin:",
-    //     origin
-    //   );
-
+  const origin = req.headers.origin;
   const isAllowed = allowedOrigins.some((o) =>
     typeof o === "string" ? o === origin : o.test(origin)
   );
@@ -121,7 +82,6 @@ app.use((req, res, next) => {
   }
 
   if (req.method === "OPTIONS") {
-    // console.log("Responding to OPTIONS request with headers:", res.getHeaders());
     return res.status(200).end();
   }
 
@@ -160,15 +120,13 @@ const organizationRoutes = require("./routes/organizationLoginRoutes.js");
 const Cardrouter = require("./routes/Carddetailsroutes.js");
 const EmailRouter = require("./routes/EmailsRoutes/emailsRoute.js");
 const usersRoutes = require("./routes/usersRoutes.js");
+
 // Add import for agoraRoomRoute
 const agoraRoomRoute = require("./routes/agoraRoomRoute.js");
 const feedbackRoute = require("./routes/feedbackRoute.js");
 const usageRoutes = require("./routes/usageRoutes.js");
 const organizationRequestRoutes = require("./routes/organizationRequestRoutes.js");
 const bandwidthRoutes = require("./routes/bandwidthRoutes.js");
-
-// CORS is now handled by our custom middleware above
-// <---------------------- v1.0.3
 
 // Standard middleware with increased payload limit for bulk operations
 app.use(bodyParser.json({ limit: "50mb" }));
@@ -270,26 +228,6 @@ mongoose.connection.on("reconnected", () => {
   console.log("✅ MongoDB reconnected successfully");
 });
 
-// mongoose.connection.on('connected', async () => {
-//   console.log('✅ MongoDB c onnected successfully');
-
-//   // Wait a short moment to ensure the connection is fully established
-//   await new Promise(resolve => setTimeout(resolve, 1000));
-
-//   // Start the schedule assessment cron job after database connection is established
-//   try {
-//     const { startScheduleAssessmentCronJob, runInitialScheduleAssessmentCheck } = require('./controllers/candidateAssessmentController');
-//     await startScheduleAssessmentCronJob();
-//     await runInitialScheduleAssessmentCheck();
-//   } catch (error) {
-//     console.error('Error starting schedule assessment cron job:', error);
-//   }
-// });
-
-// mongoose.connection.on('connecting', () => {
-//   console.log('🔄 MongoDB connecting...');
-// });
-
 // Add connection monitoring
 setInterval(() => {
   const state = mongoose.connection.readyState;
@@ -299,7 +237,6 @@ setInterval(() => {
     2: "connecting",
     3: "disconnecting",
   };
-  // console.log(`📊 MongoDB connection state: ${states[state]} (${state})`);
 }, 30000); // Log every 30 seconds
 
 // Middleware to capture raw body for webhook endpoints
@@ -564,13 +501,12 @@ const serverPromise = startServer();
 
 // Handle server shutdown
 const shutdown = async () => {
-    // console.log('SIGTERM received. Shutting down gracefully');
-    try {
-        const server = await serverPromise;
-        server.close(() => {
-            console.log('Process terminated');
-            process.exit(0);
-        });
+  try {
+    const server = await serverPromise;
+    server.close(() => {
+      console.log("Process terminated");
+      process.exit(0);
+    });
 
     // Force close the server after 10 seconds
     setTimeout(() => {
@@ -660,17 +596,14 @@ process.on("SIGINT", shutdown);
 
 // // // v1.0.7 <----------------------------------------------------------------------------------
 // app.get("/technology", async (req, res) => {
-//   console.log("technology master called");
 //   try {
 //     const technology = await TechnologyMaster.find({})
 //       .populate("ownerId", "firstName lastName email -password")
 //       .populate("createdBy", "firstName lastName email -password")
 //       .populate("updatedBy", "firstName lastName email -password")
 //       .lean();
-//     // console.log("technology master ", technology);
 //     res.json(technology);
 //   } catch (error) {
-//     console.log("technology master error", error);
 //     res.status(500).json({ message: error.message });
 //   }
 // });
@@ -704,17 +637,14 @@ process.on("SIGINT", shutdown);
 // });
 
 // app.get("/company", async (req, res) => {
-//   console.log("CompanyNames sas");
 //   try {
 //     const CompanyNames = await Company.find({})
 //       .populate("ownerId", "firstName lastName email -password")
 //       .populate("createdBy", "firstName lastName email -password")
 //       .populate("updatedBy", "firstName lastName email -password")
 //       .lean();
-//     console.log("CompanyNames", CompanyNames);
 //     res.json(CompanyNames);
 //   } catch (err) {
-//     console.log("CompanyNames err", err);
 //     res.status(500).json({ message: err.message });
 //   }
 // });
@@ -950,7 +880,6 @@ const SharingRule = require("./models/SharingRules.js");
 //         return res.status(200).json(groupedQuestions);
 
 //       case "position":
-//         // console.log("query",query);
 //         query = query.populate({
 //           path: "rounds.interviewers",
 //           model: "Contacts",
@@ -1079,7 +1008,6 @@ app.get("/rolesdata/:id", async (req, res) => {
 //this is related to roles main page get
 // app.get('/rolesdata', async (req, res) => {
 //   const { organizationId } = req.query; // Use query parameters
-//   console.log("333333333");
 //   try {
 //     const roles = await Role.find({ organizationId }).populate('reportsToRoleId');
 //     if (!roles || roles.length === 0) {
@@ -1166,7 +1094,6 @@ dbConnection
   .then(() => {
     if (process.env.NODE_ENV !== "test") {
       startFreePlanRenewalCron();
-      // console.log('[FREE PLAN RENEWAL] Automatic renewal system initialized - runs hourly');
     }
   })
   .catch((err) => {
@@ -1421,7 +1348,6 @@ app.use("/tasks", taskRoutes);
 if (process.env.NODE_ENV !== "production") {
   const notificationTestRoutes = require("./routes/pushNotificationTestRoutes");
   app.use("/notifications", notificationTestRoutes);
-  //   console.log('[NOTIFICATIONS] Test endpoints registered at /notifications/*');
 }
 
 //i am using this code for outsource interviewers we need to change his into contact controller
@@ -1794,7 +1720,6 @@ app.post("/api/create-meeting", async (req, res) => {
       },
     };
 
-        // console.log("Creating Zoom meeting with:", body);
 
     const create = await axios.post(
       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
@@ -1833,11 +1758,8 @@ const upinterviewEnterpriseContactRoutes = require("./routes/upinterviewEnterpri
 app.use("/upinterviewEnterpriseContact", upinterviewEnterpriseContactRoutes);
 
 // for external api routes
-const externalRoutes = require('./routes/external.routes');
-app.use('/external', externalRoutes);
-
-
-
+const externalRoutes = require("./routes/external.routes");
+app.use("/external", externalRoutes);
 
 // Create meeting endpoint
 // app.post('/api/create-meeting', async (req, res) => {
@@ -1878,7 +1800,6 @@ app.use('/external', externalRoutes);
 //       }
 //     };
 
-//     console.log("Creating Zoom meeting with:", body);
 
 //     const create = await axios.post(
 //       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
@@ -1931,7 +1852,6 @@ app.use('/external', externalRoutes);
 //       { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
 //     );
 
-//     console.log("create data ", create);
 
 //     return res.json({
 //       join_url: create.data.join_url,

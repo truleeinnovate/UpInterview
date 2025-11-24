@@ -197,9 +197,7 @@ const Task = () => {
 
   const handleDeletePosition = async () => {
     try {
-      console.log("Deleting task with ID:", deleteTask?._id);
       let res = await deleteTaskMutation.mutateAsync(deleteTask?._id);
-      console.log("Delete response:", res);
 
       if (res && res.success) {
         setShowDeleteConfirmModal(false);

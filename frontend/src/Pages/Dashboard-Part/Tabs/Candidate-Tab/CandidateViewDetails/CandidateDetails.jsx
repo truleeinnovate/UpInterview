@@ -74,7 +74,6 @@ const CandidateDetails = ({ mode, candidateId }) => {
     };
   }, [id, candidateData]);
 
-  console.log("candidate Details", candidate);
 
   // v1.0.4 <-----------------------------------------------------------------
   // With this:

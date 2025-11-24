@@ -14,13 +14,10 @@ const OAuthCallback = () => {
     }
 
     if (code) {
-      console.log('OAuth code received, sending to parent window');
-      console.log('Code length:', code.length);
       window.opener?.postMessage({ code }, window.location.origin);
       window.close();
     } else {
       console.error('No authorization code received');
-      console.log('URL params:', window.location.search);
       window.opener?.postMessage({ error: 'No authorization code received' }, window.location.origin);
       window.close();
     }

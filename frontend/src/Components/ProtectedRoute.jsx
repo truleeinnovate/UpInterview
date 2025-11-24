@@ -66,7 +66,6 @@ const ProtectedRoute = ({ children }) => {
 
         // Listen for token expiration events
         const handleTokenExpired = () => {
-            console.log('Token expired in ProtectedRoute, redirecting to login');
             if (window.sessionExpirationVisible) {
                 // Modal overlay is handling UX; do not navigate away
                 return;
@@ -81,7 +80,6 @@ const ProtectedRoute = ({ children }) => {
 
         // Listen for token refresh failure events from axios interceptor
         const handleTokenRefreshFailed = () => {
-            console.log('Token refresh failed, redirecting to login');
             if (window.sessionExpirationVisible) {
                 return;
             }
@@ -142,7 +140,6 @@ const ProtectedRoute = ({ children }) => {
 
             // Add event listener for user inactivity
             const handleUserInactive = () => {
-                console.log('User inactive, showing modal without clearing tokens');
                 // Do NOT clear tokens or navigate; allow the modal to appear and keep UI visible.
             };
 
@@ -169,9 +166,6 @@ const ProtectedRoute = ({ children }) => {
                     setIsChecking(false);
                     return;
                 }
-                console.log('loginType', loginType);
-                // If no tokens at all, redirect to login unless the session expiration modal is visible
-                console.log('No tokens found, assessing redirect to login');
                 if (window.sessionExpirationVisible) {
                     // Keep user on current page under modal overlay
                     setIsChecking(false);

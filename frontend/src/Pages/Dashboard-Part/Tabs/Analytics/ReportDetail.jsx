@@ -97,7 +97,6 @@ const ReportDetail = () => {
 
   const handleColumnsChange = (newColumns) => {
     // Update the columns for the current report
-    console.log("Columns changed:", newColumns);
   };
 
   const getReportData = () => {

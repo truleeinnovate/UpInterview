@@ -49,7 +49,6 @@ const AvailabilityUser = ({
     loading: isAvailabilityLoading,
     error: availabilityError,
   } = useInterviewAvailability(availabilityId);
-  console.log("availability", availability);
 
   useEffect(() => {
     // console.log('User Profile:', userProfile); // Check if userProfile has the expected data

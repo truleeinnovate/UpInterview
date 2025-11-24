@@ -17,7 +17,6 @@ const Usage = () => {
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
   const tenantId = tokenPayload?.tenantId;
-  console.log("tenantId", tenantId);
 
   // Helper function to format date as dd-mm-yy
   const formatDate = (dateStr) => {
@@ -37,7 +36,6 @@ const Usage = () => {
 
   // Local state for usage API
   const [usage, setUsage] = useState({});
-  console.log("usage--", usage);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 

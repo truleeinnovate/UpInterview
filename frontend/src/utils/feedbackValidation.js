@@ -8,7 +8,7 @@ const PositionAddFromValidation = (formData, addFormCustomMsgFunction) => {
     "additionalNotes",
     "rounds",
   ];
-  const { min:minExp, max:maxExp } = formData.experience;
+  const { min: minExp, max: maxExp } = formData.experience;
 
   let hasError = false;
   requiredFields.forEach((field) => {
@@ -26,13 +26,11 @@ const PositionAddFromValidation = (formData, addFormCustomMsgFunction) => {
       } else {
         addFormCustomMsgFunction("expMax", "");
       }
-    }
-     else if (
+    } else if (
       !formData[field] ||
       (Array.isArray(formData[field]) && formData[field].length === 0)
     ) {
       hasError = true;
-      console.log('list',formData[field])
       addFormCustomMsgFunction(field, `${field} is required`);
     } else {
       addFormCustomMsgFunction(field, ``);
@@ -42,10 +40,12 @@ const PositionAddFromValidation = (formData, addFormCustomMsgFunction) => {
   return !hasError;
 };
 
-const AddCustomQuestionValidation = (question,answer, CustomQuestionErrFunction) => {
-  console.log("Validation started");
+const AddCustomQuestionValidation = (
+  question,
+  answer,
+  CustomQuestionErrFunction
+) => {
   let hasError = false;
-
 
   // Validate question field
   if (!question.trim()) {
@@ -66,13 +66,15 @@ const AddCustomQuestionValidation = (question,answer, CustomQuestionErrFunction)
   return !hasError;
 };
 
-
-const SchedulerQuestionsValidation = (SchedulerSectionData,setSchedulerSectionData) => {
+const SchedulerQuestionsValidation = (
+  SchedulerSectionData,
+  setSchedulerSectionData
+) => {
   let isValid = true;
   const updatedData = SchedulerSectionData.map((question) => {
     // if (question.mandatory && !question.isAnswered) {
-    if (question.mandatory && !question.isAnswered ) {
-      if (question.isLiked==="disliked" && question.whyDislike===""){
+    if (question.mandatory && !question.isAnswered) {
+      if (question.isLiked === "disliked" && question.whyDislike === "") {
         isValid = false;
         return { ...question, error: true };
       }
@@ -85,33 +87,33 @@ const SchedulerQuestionsValidation = (SchedulerSectionData,setSchedulerSectionDa
   return isValid;
 };
 
-
-const ValidateSkills = (skillsTabData,setSkillsTabData) => {
+const ValidateSkills = (skillsTabData, setSkillsTabData) => {
   let isValid = true; // Assume valid unless an error is found
 
-  const updatedData = skillsTabData.map(category=>
-  ({
+  const updatedData = skillsTabData.map((category) => ({
     ...category,
-    skillsList:category.skillsList.map(skill=>{
-      if (skill.required && skill.rating<=1){
-        isValid= false;
-        return {...skill,error:true}
+    skillsList: category.skillsList.map((skill) => {
+      if (skill.required && skill.rating <= 1) {
+        isValid = false;
+        return { ...skill, error: true };
       }
-      return {...skill,error:false}
-    })
-  })
-  )
-  setSkillsTabData(updatedData)
+      return { ...skill, error: false };
+    }),
+  }));
+  setSkillsTabData(updatedData);
 
   return isValid;
 };
 
-const validateOverallImpression = (overallImpressionTabData, setInterviewTabData) => {
+const validateOverallImpression = (
+  overallImpressionTabData,
+  setInterviewTabData
+) => {
   const { rating, note, recommendation, required } = overallImpressionTabData;
 
   // Determine if there's an error in the data
   // const hasError = required && (rating <= 1 || note.trim() === "" || recommendation.trim() === "");
-  const hasError = required && (rating <= 1  || recommendation.trim() === "");
+  const hasError = required && (rating <= 1 || recommendation.trim() === "");
 
   // Update the state with the error
   setInterviewTabData((prev) => ({
@@ -126,7 +128,10 @@ const validateOverallImpression = (overallImpressionTabData, setInterviewTabData
   return !hasError;
 };
 
-
-
-  
-module.exports = { PositionAddFromValidation, AddCustomQuestionValidation,SchedulerQuestionsValidation ,ValidateSkills,validateOverallImpression};
+module.exports = {
+  PositionAddFromValidation,
+  AddCustomQuestionValidation,
+  SchedulerQuestionsValidation,
+  ValidateSkills,
+  validateOverallImpression,
+};

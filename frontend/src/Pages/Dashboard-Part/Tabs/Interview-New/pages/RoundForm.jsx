@@ -172,7 +172,6 @@ const RoundFormInterviews = () => {
       // setTemplate(interview?.templateId || null)
     }
   }, [interviewData, interview, data]);
-  console.log("selectedMeetingPlatform", selectedMeetingPlatform);
 
   const navigate = useNavigate();
   const [roundTitle, setRoundTitle] = useState("");
@@ -680,7 +679,6 @@ const RoundFormInterviews = () => {
       // Update assessmentTemplate only if different
 
       const foundGroup = groups?.find((g) => g?._id === roundEditData?.interviewerGroupId);
-      console.log("foundGroup groups", foundGroup);
 
       // Find full assessment object
       const fullAssessment =
@@ -814,7 +812,6 @@ const RoundFormInterviews = () => {
   useEffect(() => {
     // Clear external interviewers when date/time changes
     if (externalInterviewers.length > 0 && (scheduledDate || interviewType === "instant")) {
-      console.log("Date/Time changed - clearing external interviewers");
       setExternalInterviewers([]);
 
       // If only external interviewers were selected, reset the interview type
@@ -827,7 +824,6 @@ const RoundFormInterviews = () => {
   // Also add this useEffect to handle combinedDateTime changes for scheduled interviews
   useEffect(() => {
     if (interviewType === "scheduled" && combinedDateTime && externalInterviewers.length > 0) {
-      console.log("Interview timing changed - clearing external interviewers");
       setExternalInterviewers([]);
 
       if (selectedInterviewType === "External" && internalInterviewers.length === 0) {
@@ -1093,9 +1089,7 @@ const RoundFormInterviews = () => {
   //   // [rounds, isEditing, roundEditData, navigate, assessmentData, fetchAssessmentQuestions]
   // );
 
-  console.log("interview", interview);
   // console.log("assessmentTemplate",assessmentTemplate);
-  console.log("selectedAssessmentData", selectedAssessmentData);
 
   const location = useLocation();
   const isReschedule = location.state?.isReschedule || false;
@@ -1117,7 +1111,6 @@ const RoundFormInterviews = () => {
 
     // Prevent multiple submissions
     if (isSubmitting) {
-      console.log("Form is already submitting, ignoring this submission");
       return;
     }
 
@@ -1191,9 +1184,7 @@ const RoundFormInterviews = () => {
       const validationErrors = validateInterviewRoundData(roundData);
       setErrors(validationErrors);
 
-      console.log("Validation errors:", validationErrors);
       if (Object.keys(validationErrors).length > 0) {
-        console.log("Validation errors found, stopping submission");
         scrollToFirstError(validationErrors, fieldRefs);
         return;
       }
@@ -1229,7 +1220,6 @@ const RoundFormInterviews = () => {
         const isNewScheduling = !isEditing || (isEditing && roundEditData?.status !== 'Scheduled');
 
         if (isNewScheduling) {
-          console.log("Checking internal interview usage limits...");
           const usageCheck = await checkInternalInterviewUsage(orgId, !organization ? userId : null);
 
           if (!usageCheck.canSchedule) {
@@ -1287,7 +1277,6 @@ const RoundFormInterviews = () => {
           // organizationId,
           // userId,
         });
-        console.log("assessment result", result);
         if (result.success) {
           const updatedRoundData = {
             ...roundData,
@@ -1367,9 +1356,6 @@ const RoundFormInterviews = () => {
               selectedInterviewers.length > 0
             ) {
               try {
-                console.log(
-                  "=== Sending outsource interview request emails ==="
-                );
                 const interviewerIds = selectedInterviewers.map(
                   (interviewer) => interviewer.contact?._id || interviewer._id
                 );
@@ -1448,7 +1434,6 @@ const RoundFormInterviews = () => {
             payload?.round?.interviewMode !== "Face to Face" &&
             Array.isArray(selectedInterviewers) &&
             selectedInterviewers.length > 0;
-          console.log(shouldGenerateMeeting, "shouldGenerateMeeting");
 
 
 
@@ -1555,12 +1540,8 @@ const RoundFormInterviews = () => {
               }
 
               const data = await meetingLink;
-              console.log("meetingLink zoom response", data);
             }
 
-            console.log("meetingLink", meetingLink);
-            console.log("data?.start_url", data?.meetingLink?.start_url);
-            console.log("meetingLink?.start_url", meetingLink?.start_url);
 
             // Persist meeting link on the round (avoid reassigning consts)
             if (data) {
@@ -1582,12 +1563,10 @@ const RoundFormInterviews = () => {
               const updateResponse = await updateInterviewRound(
                 updatePayload
               );
-              console.log("Round updated with meeting link:", updateResponse);
             }
             else if (Array.isArray(selectedInterviewers) &&
               selectedInterviewers.length > 0) {
               // Handle Face to Face interview
-              console.log("=== Handling Face to Face Interview ===");
 
               const targetRoundId = response?.savedRound?._id || roundId;
 
@@ -1609,18 +1588,15 @@ const RoundFormInterviews = () => {
 
               // Update the round status
               const updateResponse = await updateInterviewRound(updatePayload);
-              console.log("updateResponse", updateResponse);
               // navigate(`/interviews/${interviewId}`);
               // notify.success("Interview Round Created successfully");
             }
 
 
             // ✅ CHANGES START HERE - Email sending logic
-            console.log("=== Starting email sending process ===");
 
             // Use the new utility to generate and save meeting URLs
             try {
-              console.log("=== Starting meeting URL processing ===");
 
 
 
@@ -1636,7 +1612,6 @@ const RoundFormInterviews = () => {
               if (shouldSendEmails) {
                 // Send emails after meeting links are generated
                 try {
-                  console.log("=== Sending interview round emails ===");
 
                   if (isInternal) {
                     const emailResponse = await axios.post(
@@ -1654,7 +1629,6 @@ const RoundFormInterviews = () => {
                       }
                     );
 
-                    console.log("Email sending response:", emailResponse.data);
 
                     // Show success toast for emails
                     if (emailResponse.data.success) {
@@ -1665,9 +1639,7 @@ const RoundFormInterviews = () => {
                         successMessages.push(
                           `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
                         );
-                        console.log("Navigation function type:", typeof navigate);
                         navigate(`/interviews/${interviewId}`);
-                        console.log("Navigation called successfully");
                       }
                     } else {
                       notify.error("Round created but email sending failed");
@@ -1679,7 +1651,6 @@ const RoundFormInterviews = () => {
                 }
 
               } else {
-                console.log("Skipping email sending - Face to Face mode or no interviewers");
                 successMessages.push("Interview round created successfully!");
               }
 
@@ -1717,7 +1688,6 @@ const RoundFormInterviews = () => {
               meetingCreation: err.message || "Failed to create meeting",
             });
           } finally {
-            console.log("Meeting creation process finished");
             setIsMeetingCreationLoading(false);
             setMeetingCreationProgress("");
           }
@@ -1744,8 +1714,6 @@ const RoundFormInterviews = () => {
           err instanceof Error ? err.message : "An unknown error occurred",
       });
     } finally {
-      console.log("=== handleSubmit END ===");
-      console.log("Form submission process completed");
       setIsSubmitting(false);
     }
   };

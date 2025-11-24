@@ -40,7 +40,6 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
       // );
       const response = await saveInterviewRound(payload);
 
-      console.log("Status updated to in-progress:", response.data);
       // toast.success("Interview marked as in progress", {});
     } catch (error) {
       console.error("Error updating status:", error);
