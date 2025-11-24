@@ -25,11 +25,12 @@ export const useInterviewTemplates = (filters = {}) => {
   // const params = filters;
 
   // Build params object with all filters INCLUDING type
-  const params = {
-    ...filters,
-    // Ensure type is explicitly included
-    type: filters.type,
-  };
+  //   const params = {
+  //     ...filters,
+
+  //     // Ensure type is explicitly included
+  //     // type: filters.type
+  //   };
 
   const queryParams = useMemo(
     () => ({
@@ -49,8 +50,14 @@ export const useInterviewTemplates = (filters = {}) => {
   } = useQuery({
     queryKey: ["interviewTemplates", filters],
     queryFn: async () => {
+      const params = filters;
+      console.log("params", params);
       const data = await fetchFilterData("interviewtemplate", params); // <- lowercase to match backend
+      // v1.0.1 <------------------------------------------------------
+      //   return data.reverse();
+      console.log("interviewTemplates data", data);
       return data;
+      // v1.0.1 ------------------------------------------------------>
     },
     enabled: !!hasViewPermission,
     retry: 1,
