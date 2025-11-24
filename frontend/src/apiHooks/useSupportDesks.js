@@ -81,8 +81,8 @@ export const useSupportTickets = (filters = {}) => {
     userId,
     tenantId,
     organization,
-    userRole,
-    impersonatedUser_roleName,
+    // userRole,
+    // impersonatedUser_roleName,
   };
 
 
@@ -190,7 +190,7 @@ export const useSupportTickets = (filters = {}) => {
     // queryKey: ["supportTickets", userRole, tenantId, userId, impersonatedUser_roleName],
     queryKey: ["supportTickets", params],
     queryFn: fetchTickets,
-    enabled: !!userRole, // wait until role is known
+    // enabled: !!userRole, // wait until role is known
     staleTime: 1000 * 60 * 5, // 5 min
     retry: 1,
 
