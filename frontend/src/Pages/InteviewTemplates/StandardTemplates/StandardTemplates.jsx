@@ -95,7 +95,9 @@ const StandardTemplates = ({ handleClone }) => {
   const itemsPerPage = 10;
   const {
     templatesData,
+    standardCount,
     totalCount,
+    customCount,
     // currentPage,
     // itemsPerPage,
     isLoading,
@@ -335,6 +337,8 @@ const StandardTemplates = ({ handleClone }) => {
           filterIconRef={filterIconRef}
           // v1.0.2 <------------------------------------------
           templatesData={normalizedTemplates}
+          standardCount={standardCount}
+          customCount={customCount}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           // v1.0.2 ------------------------------------------>

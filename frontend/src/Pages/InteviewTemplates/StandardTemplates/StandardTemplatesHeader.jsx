@@ -72,12 +72,15 @@ const StandardTemplatesToolbar = ({
   showViewToggles = true,
   searchPlaceholder = "Search...",
   filterIconRef,
+  customCount,
+  standardCount,
+  totalCount,
   // templatesData,
   activeTab,
   setActiveTab,
 }) => {
   const isTablet = useMediaQuery({ maxWidth: 320 });
-    const { templatesData } = useInterviewTemplates();
+  // const { templatesData } = useInterviewTemplates();
 
   // Tab state
   // const [activeTab, setActiveTab] = useState(() => {
@@ -89,11 +92,11 @@ const StandardTemplatesToolbar = ({
   //     : "standard";
   // });
 
-  const standardCount =
-    templatesData?.filter((t) => t.type === "standard").length || 0;
-  const customCount =
-    templatesData?.filter((t) => t.type === "custom").length || 0;
-  const totalCount = templatesData?.length || 0;
+  // const standardCount =
+  //   templatesData?.filter((t) => t.type === "standard").length || 0;
+  // const customCount =
+  //   templatesData?.filter((t) => t.type === "custom").length || 0;
+  // const totalCount = templatesData?.length || 0;
 
   return (
     <motion.div
@@ -153,7 +156,7 @@ const StandardTemplatesToolbar = ({
         <div className="sm:mt-0 flex justify-end w-full sm:w-auto">
           {/* v1.0.0 <------------------------------------- */}
           <div className="w-[280px]">
-          {/* v1.0.0 -------------------------------------> */}
+            {/* v1.0.0 -------------------------------------> */}
             <label htmlFor="search" className="sr-only">
               Search
             </label>

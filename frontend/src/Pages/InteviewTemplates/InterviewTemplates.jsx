@@ -133,6 +133,8 @@ const InterviewTemplates = () => {
   const {
     templatesData,
     totalCount,
+    customCount,
+    standardCount,
     // currentPage,
     // itemsPerPage,
     isLoading,
@@ -150,11 +152,6 @@ const InterviewTemplates = () => {
     //  === 'standard' ? 'standard' : 'custom'
   });
   // Add proper loading state handling
-  useEffect(() => {
-    console.log("Loading state:", isLoading);
-    console.log("Templates data length:", templatesData.length);
-  }, [isLoading, templatesData]);
-  console.log("templatesData", templatesData);
 
   const totalPages = Math.ceil(totalCount / 10);
 
@@ -768,6 +765,10 @@ const InterviewTemplates = () => {
                 filterIconRef={filterIconRef}
                 // v1.0.6 <----------------------------------------
                 templatesData={templatesData}
+                customCount={customCount}
+                totalCount={totalCount}
+                standardCount={standardCount}
+                // standardCount={standardCount}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 // v1.0.6 ---------------------------------------->
