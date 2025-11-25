@@ -1262,10 +1262,14 @@ router.get(
               model: "Contacts",
               select: "firstName lastName email",
             })
+            .populate({
+              path: "rounds.selectedInterviewers",
+              model: "Contacts",
+              select: "firstName lastName email",
+            })
             .sort({ _id: -1 })
-            // .sort({ createdAt: -1 })
-            .skip(positionSkip)
-            .limit(parsedPositionLimit)
+            .skip(skip)
+            .limit(limitNum)
             .lean();
 
           // Get total count
@@ -1277,41 +1281,392 @@ router.get(
             page: parsedPositionPage,
             totalPages: Math.ceil(total / parsedPositionLimit),
           };
+        } catch (err) {
+          console.error("InterviewTemplate query error:", err);
+          return res.status(500).json({
+            error: "Failed to fetch templates",
+            details: err.message,
+          });
+        }
+        break;
+      }
 
-          data = dataObj;
+      // ------------------------------ v1.0.9 END
+      // <------------------------------- v1.0.3
+      //   case 'interviewtemplate':
+      //   const {
+      //   page = 1,
+      //   limit = 10,
+      //   search = '',
+      //   status,
+      //   format,
+      //   roundsMin,
+      //   roundsMax,
+      //   createdDate,
+      //   sortBy = 'createdAt',
+      //   sortOrder = 'desc'
+      // } = req.query;
+
+      //       // Parse page and limit
+      // const pageNum = parseInt(page);
+      // const limitNum = parseInt(limit);
+      // const skip = (pageNum - 1) * limitNum;
+
+      //   // Use the existing query (which has tenantId and ownerId filters) and add standard templates
+
+      //     query = {
+      //       $or: [
+      //         { type: 'standard' }, // Standard templates are accessible to all
+      //         {
+      //           $and: [
+      //             { type: 'custom' },
+      //             query, // Reuse the base query with tenantId and ownerId filters
+      //           ],
+      //         },
+      //       ],
+      //     };
+
+      //     data = await DataModel.find(query)
+      //       .populate({
+      //         path: 'rounds.interviewers',
+      //         model: 'Contacts',
+      //         select: 'firstName lastName email',
+      //       })
+      //       .lean();
+
+      //     break;
+      // ------------------------------ v1.0.4 >
+
+      case "assessment": //assessment templates
+        query = {
+          $or: [
+            { type: "standard" }, // Standard templates are accessible to all
+            {
+              $and: [
+                { type: "custom" },
+                query, // Reuse the base query with tenantId and ownerId filters
+              ],
+            },
+          ],
+        };
+        // console.log('[36] Processing Assessment model');
+        data = await DataModel.find(query).lean();
+        // console.log('[37] Found', data.length, 'Assessment records');
+        break;
+
+      case "scheduleassessment": {
+        const {
+          assessmentId,
+          page,
+          limit,
+          searchQuery,
+          status,
+          assessmentIds,
+          orderMin,
+          orderMax,
+          expiryPreset,
+          createdPreset,
+        } = req.query;
+
+        // Base filter: tenant + ownership (already built in `query`)
+        const scheduledFilter = {
+          ...query, // includes tenantId, ownerId (or $in for inherited roles)
+          isActive: true,
+        };
+
+        // Only add assessmentId filter if it's provided AND valid
+        if (assessmentId) {
+          if (!mongoose.isValidObjectId(assessmentId)) {
+            return res.status(400).json({
+              success: false,
+              message: "Invalid assessmentId format",
+            });
+          }
+          scheduledFilter.assessmentId = assessmentId;
+        }
+
+        // Additional template filter (comma-separated assessmentIds)
+        if (assessmentIds) {
+          const ids = String(assessmentIds)
+            .split(",")
+            .map((id) => id.trim())
+            .filter((id) => mongoose.isValidObjectId(id));
+          if (ids.length) {
+            scheduledFilter.assessmentId = { $in: ids };
+          }
+        }
+
+        // Order range filter
+        const orderCond = {};
+        if (orderMin !== undefined && orderMin !== "") {
+          const minVal = Number(orderMin);
+          if (!Number.isNaN(minVal)) orderCond.$gte = minVal;
+        }
+        if (orderMax !== undefined && orderMax !== "") {
+          const maxVal = Number(orderMax);
+          if (!Number.isNaN(maxVal)) orderCond.$lte = maxVal;
+        }
+        if (Object.keys(orderCond).length) {
+          scheduledFilter.order = orderCond;
+        }
+
+        // Expiry date presets: expired | next7 | next30
+        if (expiryPreset) {
+          const now = new Date();
+          const expiryCond = {};
+          if (expiryPreset === "expired") {
+            expiryCond.$lt = now;
+          } else if (expiryPreset === "next7") {
+            const future = new Date(now);
+            future.setDate(future.getDate() + 7);
+            expiryCond.$gte = now;
+            expiryCond.$lte = future;
+          } else if (expiryPreset === "next30") {
+            const future = new Date(now);
+            future.setDate(future.getDate() + 30);
+            expiryCond.$gte = now;
+            expiryCond.$lte = future;
+          }
+          if (Object.keys(expiryCond).length) {
+            scheduledFilter.expiryAt = expiryCond;
+          }
+        }
+
+        // Created date presets: last7 | last30 | last90
+        if (createdPreset) {
+          const now = new Date();
+          const createdCond = {};
+          const daysMap = { last7: 7, last30: 30, last90: 90 };
+          const days = daysMap[createdPreset];
+          if (days) {
+            const past = new Date(now);
+            past.setDate(past.getDate() - days);
+            createdCond.$gte = past;
+          }
+          if (Object.keys(createdCond).length) {
+            scheduledFilter.createdAt = createdCond;
+          }
+        }
+
+        // Status filter (comma-separated, case-insensitive match)
+        if (status) {
+          const rawStatuses = String(status)
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          if (rawStatuses.length) {
+            // Store as-is; DB likely has title-case statuses (Scheduled, Completed, ...)
+            scheduledFilter.status = { $in: rawStatuses };
+          }
+        }
+
+        // Determine if advanced (paginated) mode should be used
+        const hasAdvancedParams =
+          page !== undefined ||
+          limit !== undefined ||
+          (typeof searchQuery === "string" && searchQuery.trim() !== "") ||
+          status !== undefined ||
+          assessmentIds !== undefined ||
+          orderMin !== undefined ||
+          orderMax !== undefined ||
+          expiryPreset !== undefined ||
+          createdPreset !== undefined;
+
+        // Legacy behavior: no advanced params -> return full list array (backwards compatible)
+        if (!hasAdvancedParams) {
+          const scheduledAssessments = await ScheduledAssessmentSchema.find(
+            scheduledFilter
+          )
+            .select("_id scheduledAssessmentCode order expiryAt status createdAt assessmentId")
+            .lean();
+
+          if (!scheduledAssessments.length) {
+            data = [];
+            break;
+          }
+
+          const scheduledIds = scheduledAssessments.map((sa) => sa._id);
+
+          const candidateAssessments = await CandidateAssessment.find({
+            scheduledAssessmentId: { $in: scheduledIds },
+          })
+            .populate("candidateId")
+            .lean();
+
+          const schedulesWithCandidates = scheduledAssessments.map((schedule) => {
+            const candidates = candidateAssessments.filter(
+              (ca) =>
+                ca.scheduledAssessmentId.toString() === schedule._id.toString()
+            );
+            return {
+              _id: schedule._id,
+              assessmentId: schedule.assessmentId,
+              scheduledAssessmentCode: schedule.scheduledAssessmentCode,
+              order: schedule.order,
+              expiryAt: schedule.expiryAt,
+              status: schedule.status,
+              createdAt: schedule.createdAt,
+              candidates,
+            };
+          });
+
+          data = schedulesWithCandidates;
+          break;
+        }
+
+        // Paginated behavior when advanced params are present
+        const pageNumber = parseInt(page, 10) > 0 ? parseInt(page, 10) : 1;
+        const limitNumber = parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 10;
+        const skip = (pageNumber - 1) * limitNumber;
+
+        // Text search over a few key fields
+        const textSearch =
+          typeof searchQuery === "string" ? searchQuery.trim() : "";
+        const searchFilter = {};
+        if (textSearch) {
+          const searchRegex = new RegExp(textSearch.replace(/\s+/g, " "), "i");
+          searchFilter.$or = [
+            { scheduledAssessmentCode: searchRegex },
+            { status: searchRegex },
+            { order: isNaN(Number(textSearch)) ? undefined : Number(textSearch) },
+          ].filter((cond) => cond && Object.keys(cond).length > 0);
+        }
+
+        const finalMatch = Object.keys(searchFilter).length
+          ? { $and: [scheduledFilter, searchFilter] }
+          : scheduledFilter;
+
+        const [scheduledAssessments, totalItems] = await Promise.all([
+          ScheduledAssessmentSchema.find(finalMatch)
+            .select("_id scheduledAssessmentCode order expiryAt status createdAt assessmentId")
+            .sort({ _id: -1 })
+            .skip(skip)
+            .limit(limitNumber)
+            .lean(),
+          ScheduledAssessmentSchema.countDocuments(finalMatch),
+        ]);
+
+        if (!scheduledAssessments.length) {
+          data = {
+            data: [],
+            total: 0,
+            page: pageNumber,
+            totalPages: 0,
+            itemsPerPage: limitNumber,
+          };
           break;
 
-        // data = await DataModel.find(query)
-        //   .populate({
-        //     path: 'rounds.interviewers',
-        //     model: 'Contacts',
-        //     select: 'firstName lastName email',
-        //   })
-        //   .lean();
-        // console.log('[33] Found', data.length, 'Position records');
-        // break;
-
-        case "feedback":
-          // console.log('[34] Processing Feedback model with complex logic');
-
-          // Get all interviews for the current tenant/owner (using the already filtered query)
-          const feedbackInterviews = await Interview.find(query)
-            .populate(
-              "candidateId",
-              "FirstName LastName Email Phone skills CurrentExperience"
-            )
-            .populate("positionId", "title companyname jobDescription Location")
-            .lean();
+        const scheduledIds = scheduledAssessments.map((sa) => sa._id);
 
           // console.log('[35] Found', feedbackInterviews.length, 'interviews for feedback lookup');
 
-          // Get all interview round IDs from these interviews
-          const feedbackInterviewIds = feedbackInterviews.map(
-            (interview) => interview._id
+        const schedulesWithCandidates = scheduledAssessments.map((schedule) => {
+          const candidates = candidateAssessments.filter(
+            (ca) =>
+              ca.scheduledAssessmentId.toString() === schedule._id.toString()
           );
-          const feedbackInterviewRounds = await InterviewRounds.find({
-            interviewId: { $in: feedbackInterviewIds },
-          }).lean();
+          return {
+            _id: schedule._id,
+            assessmentId: schedule.assessmentId,
+            scheduledAssessmentCode: schedule.scheduledAssessmentCode,
+            order: schedule.order,
+            expiryAt: schedule.expiryAt,
+            status: schedule.status,
+            createdAt: schedule.createdAt,
+            candidates,
+          };
+        });
+
+        const totalPages = Math.max(
+          1,
+          Math.ceil((totalItems || 0) / (limitNumber || 10))
+        );
+
+        data = {
+          data: schedulesWithCandidates,
+          total: totalItems,
+          page: pageNumber,
+          totalPages,
+          itemsPerPage: limitNumber,
+        };
+        break;
+      }
+      // ------------------------------ v1.0.4 >
+      case "assessmentlist":
+        query = {
+          $or: [
+            { type: "standard" }, // Standard templates are accessible to all
+            {
+              $and: [
+                { type: "custom" },
+                query, // Reuse the base query with tenantId and ownerId filters
+              ],
+            },
+          ],
+        };
+        data = await DataModel.find(query);
+        break;
+
+      case "position":
+        // query search params based on that will get the data
+        // query search params based on that will get the data
+        const {
+          page,
+          limit,
+          searchQuery,
+          location,
+          tech,
+          company,
+          experienceMin,
+          experienceMax,
+          salaryMin,
+          salaryMax,
+          createdDate,
+        } = req.query;
+
+        const parsedPositionPage = parseInt(page) || 1;
+        const parsedPositionLimit = parseInt(limit) || 10;
+        const positionSkip = (parsedPositionPage - 1) * parsedPositionLimit;
+
+        // Apply search
+        if (searchQuery) {
+          const searchRegex = new RegExp(searchQuery, "i");
+          query.$or = [
+            { title: searchRegex },
+            { companyname: searchRegex },
+            { Location: searchRegex },
+            { positionCode: searchRegex },
+          ];
+        }
+
+        // Apply location filter
+        if (location) {
+          const locations = Array.isArray(location) ? location : [location];
+          query.Location = { $in: locations };
+        }
+
+        // Apply tech/skills filter
+        if (tech) {
+          const techs = Array.isArray(tech) ? tech : [tech];
+          query["skills.skill"] = { $in: techs };
+        }
+
+        // Apply company filter
+        if (company) {
+          const companies = Array.isArray(company) ? company : [company];
+          query.companyname = { $in: companies };
+        }
+
+        // Apply experience filter
+        const positionExpMin = parseInt(experienceMin) || 0;
+        const positionExpMax = parseInt(experienceMax) || Infinity;
+        if (positionExpMin > 0 || positionExpMax < Infinity) {
+          query.$and = query.$and || [];
+          if (positionExpMin > 0)
+            query.$and.push({ minexperience: { $gte: positionExpMin } });
+          if (positionExpMax < Infinity)
+            query.$and.push({ maxexperience: { $lte: positionExpMax } });
+        }
 
           const feedbackRoundIds = feedbackInterviewRounds.map(
             (round) => round._id
