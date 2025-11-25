@@ -8,7 +8,12 @@ import { useNavigate } from "react-router-dom";
 import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
 
-export const useInterviews = (filters = {}, page = 1, limit = 10) => {
+export const useInterviews = (
+  filters = {},
+  page = 1,
+  limit = 10,
+  type = "interviews"
+) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Interviews?.View;
@@ -22,8 +27,9 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
       ...filters,
       page: page,
       limit: limit,
+      type: type,
     }),
-    [filters, page, limit]
+    [filters, page, limit, type]
   );
 
   // FIX: Use state to hold total
@@ -38,7 +44,7 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["interviews", params],
+    queryKey: ["interviews", params, type],
     queryFn: async () => {
       const response = await fetchFilterData("interview", {}, params);
       // Enhanced with candidate data
@@ -74,6 +80,7 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
   const total = responseData?.data?.total || 0;
   const currentPage = responseData?.data?.page || 1;
   const totalPages = responseData?.data?.totalPages || 1;
+  const responseDashBoard = responseData?.data || {};
 
   // Create new interview mutation
   const createInterview = useMutation({
@@ -383,6 +390,7 @@ export const useInterviews = (filters = {}, page = 1, limit = 10) => {
 
   return {
     interviewData,
+    responseDashBoard,
     total,
     currentPage,
     totalPages,
