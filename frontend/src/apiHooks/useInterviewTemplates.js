@@ -64,12 +64,15 @@ export const useInterviewTemplates = (filters = {}) => {
     retry: 1,
     staleTime: 1000 * 60 * 5,
   });
+  console.log("responseData", responseData);
   // console.log("isQueryLoading ", isQueryLoading);
   const templatesData = responseData?.data || [];
   const totalPages = responseData?.totalPages || 0;
   const totalCount = responseData?.totalItems || 0;
   const currentPage = responseData?.currentPage || 1;
   const itemsPerPage = responseData?.itemsPerPage || 10;
+  const customCount = responseData?.customCount || 0;
+  const standardCount = responseData?.standardCount || 0;
 
   // Save template mutation
   const saveTemplate = useMutation({
@@ -269,6 +272,8 @@ export const useInterviewTemplates = (filters = {}) => {
 
   return {
     templatesData,
+    customCount,
+    standardCount,
     totalPages,
     totalCount,
     currentPage,
