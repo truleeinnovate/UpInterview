@@ -6,16 +6,16 @@ const { Schema } = mongoose;
 // =============================================================================
 const columnConfigurationSchema = new Schema(
   {
-    tenantId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    ownerId: {
-      type: String,
-      required: true,
-      index: true,
-    },
+    // tenantId: {
+    //   type: String,
+    //   required: true,
+    //   index: true,
+    // },
+    // ownerId: {
+    //   type: String,
+    //   required: true,
+    //   index: true,
+    // },
     configId: {
       type: String,
       required: true,
@@ -204,6 +204,9 @@ const columnConfigurationSchema = new Schema(
         default: "csv",
       },
     },
+    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
   },
   {
     timestamps: true,
