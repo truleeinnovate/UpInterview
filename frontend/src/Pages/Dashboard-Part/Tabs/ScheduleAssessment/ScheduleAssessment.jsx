@@ -169,8 +169,20 @@ const ScheduleAssessment = () => {
   // <-------------------------------v1.0.3
   const { assessmentData, checkExpiredAssessments, updateAllScheduleStatuses } =
     useAssessments();
-  const { scheduleData, isLoading } = useScheduleAssessments();
-  console.log("Schedule Data:", scheduleData);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const rowsPerPage = 10;
+
+  const {
+    scheduleData,
+    total,
+    itemsPerPage,
+    isLoading,
+  } = useScheduleAssessments({
+    page: currentPage + 1,
+    limit: rowsPerPage,
+    searchQuery: debouncedSearch,
+  });
   const navigate = useNavigate();
   // <---------------------- v1.0.1
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -192,10 +204,9 @@ const ScheduleAssessment = () => {
     updateAllScheduleStatuses.mutate();
   };
   // ------------------------------v1.0.3 >
-  const assessmentIds = assessmentData?.map((a) => a._id) || [];
+  // const assessmentIds = assessmentData?.map((a) => a._id) || [];
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
   const filterIconRef = useRef(null);
 
   // Filter state
@@ -209,7 +220,6 @@ const ScheduleAssessment = () => {
     "Expired",
     "Failed",
   ]);
-  // ------------------------------v1.0.3 >
   // Applied filters
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedTemplates, setSelectedTemplates] = useState([]);
@@ -217,6 +227,22 @@ const ScheduleAssessment = () => {
   const [selectedExpiryDate, setSelectedExpiryDate] = useState(""); // '', 'expired', 'next7', 'next30'
   const [selectedCreatedDate, setSelectedCreatedDate] = useState(""); // '', 'last7', 'last30', 'last90'
 
+
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(
+      () => setDebouncedSearch((searchQuery || "").trim()),
+      500
+    );
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  // Reset page when debounced search or filters change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [debouncedSearch, selectedStatus, selectedTemplates, selectedOrder, selectedExpiryDate, selectedCreatedDate]);
+  // ------------------------------v1.0.3 >
+  
   // Draft filters edited inside popup (not applied until Apply is clicked)
   const [tempSelectedStatus, setTempSelectedStatus] = useState([]);
   const [tempSelectedTemplates, setTempSelectedTemplates] = useState([]);
@@ -226,7 +252,7 @@ const ScheduleAssessment = () => {
 
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isTemplateOpen, setIsTemplateOpen] = useState(false);
-  const [isOrderOpen, setIsOrderOpen] = useState(false);
+  // const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [isExpiryDateOpen, setIsExpiryDateOpen] = useState(false);
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
 
@@ -234,143 +260,8 @@ const ScheduleAssessment = () => {
   useScrollLock(viewMode === "kanban");
   // v1.0.8 ------------------------------------------------------------->
 
-  // Derived pagination
-  const rowsPerPage = 10;
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-
-  // Helper function to normalize spaces for better search
-  const normalizeSpaces = (str) =>
-    str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
-
-  // Filters and search apply here
-  const filteredSchedules = (
-    Array.isArray(scheduleData) ? scheduleData : []
-  ).filter((s) => {
-    // Restrict to selected assessments
-    if (assessmentIds.length && s.assessmentId) {
-      const aId =
-        typeof s.assessmentId === "object"
-          ? s.assessmentId._id || s.assessmentId.toString()
-          : s.assessmentId.toString();
-      if (!assessmentIds.includes(aId)) return false;
-    }
-
-    // Status filter
-    const matchesStatus =
-      selectedStatus.length === 0 ||
-      selectedStatus.includes(
-        (s.status || "").charAt(0).toUpperCase() + (s.status || "").slice(1)
-      );
-
-    // Template filter
-    const matchesTemplate = () => {
-      if (selectedTemplates.length === 0) return true;
-      const templateId =
-        typeof s.assessmentId === "object"
-          ? s.assessmentId._id
-          : s.assessmentId;
-      return selectedTemplates.includes(templateId);
-    };
-
-    // Order range filter
-    const orderValue = parseInt(s.order) || 0;
-    const matchesOrder =
-      (selectedOrder.min === "" || orderValue >= Number(selectedOrder.min)) &&
-      (selectedOrder.max === "" || orderValue <= Number(selectedOrder.max));
-
-    // Expiry date filter
-    const matchesExpiryDate = () => {
-      if (!selectedExpiryDate) return true;
-      if (!s.expiryAt) return false;
-      const expiryAt = new Date(s.expiryAt);
-      const now = new Date();
-      const daysDiff = Math.floor((expiryAt - now) / (1000 * 60 * 60 * 24));
-
-      switch (selectedExpiryDate) {
-        case "expired":
-          return daysDiff < 0;
-        case "next7":
-          return daysDiff >= 0 && daysDiff <= 7;
-        case "next30":
-          return daysDiff >= 0 && daysDiff <= 30;
-        default:
-          return true;
-      }
-    };
-
-    // Created date filter
-    const matchesCreatedDate = () => {
-      if (!selectedCreatedDate) return true;
-      if (!s.createdAt) return false;
-      const createdAt = new Date(s.createdAt);
-      const now = new Date();
-      const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-
-      switch (selectedCreatedDate) {
-        case "last7":
-          return daysDiff <= 7;
-        case "last30":
-          return daysDiff <= 30;
-        case "last90":
-          return daysDiff <= 90;
-        default:
-          return true;
-      }
-    };
-
-    // Enhanced search filter
-    const normalizedQuery = normalizeSpaces(searchQuery);
-
-    // Get assessment template details
-    let assessmentTemplateTitle = null;
-    let assessmentTemplateCode = null;
-
-    if (s.assessmentId) {
-      if (typeof s.assessmentId === "object") {
-        assessmentTemplateTitle = s.assessmentId.AssessmentTitle;
-        assessmentTemplateCode =
-          s.assessmentId.AssessmentCode || s.assessmentId._id;
-      } else {
-        // If assessmentId is just an ID string, find the assessment in assessmentData
-        const assessment = assessmentData?.find(
-          (a) => a._id === s.assessmentId
-        );
-        if (assessment) {
-          assessmentTemplateTitle = assessment.AssessmentTitle;
-          assessmentTemplateCode = assessment.AssessmentCode || assessment._id;
-        } else {
-          // Fallback to using the ID itself as searchable
-          assessmentTemplateCode = s.assessmentId;
-        }
-      }
-    }
-
-    const fields = [
-      s.scheduledAssessmentCode,
-      s.order?.toString(),
-      s.expiryAt,
-      s.status,
-      assessmentTemplateTitle,
-      assessmentTemplateCode,
-    ].filter(Boolean);
-
-    const matchesSearch =
-      searchQuery === "" ||
-      fields.some((f) => normalizeSpaces(f).includes(normalizedQuery));
-
-    return (
-      matchesStatus &&
-      matchesTemplate() &&
-      matchesOrder &&
-      matchesExpiryDate() &&
-      matchesCreatedDate() &&
-      matchesSearch
-    );
-  });
-
-  const totalPages = Math.ceil(filteredSchedules.length / rowsPerPage) || 1;
-  const currentRows = filteredSchedules.slice(startIndex, endIndex);
+  // Derived pagination is now driven by server metadata
+  const currentRows = Array.isArray(scheduleData) ? scheduleData : [];
 
   // Effects
   useEffect(() => {
@@ -394,7 +285,6 @@ const ScheduleAssessment = () => {
       // Reset all open states
       setIsStatusOpen(false);
       setIsTemplateOpen(false);
-      setIsOrderOpen(false);
       setIsExpiryDateOpen(false);
       setIsCreatedDateOpen(false);
     }
@@ -450,6 +340,7 @@ const ScheduleAssessment = () => {
         tempCreatedDatePreset !== ""
     );
     setFilterPopupOpen(false);
+    setCurrentPage(0);
   };
   // ------------------------------v1.0.3 >
   const handleClearFilters = () => {
@@ -464,6 +355,7 @@ const ScheduleAssessment = () => {
     setTempExpiryDatePreset("");
     setTempCreatedDatePreset("");
     setIsFilterActive(false);
+    setCurrentPage(0);
   };
 
   const handleFilterIconClick = () => {
@@ -472,11 +364,16 @@ const ScheduleAssessment = () => {
 
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0);
   };
 
   const nextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
+    const totalPagesFromServer = Math.max(
+      1,
+      Math.ceil((total || 0) / (itemsPerPage || rowsPerPage))
+    );
+    setCurrentPage((prev) =>
+      prev + 1 < totalPagesFromServer ? prev + 1 : prev
+    );
   };
 
   const prevPage = () => {
@@ -597,7 +494,7 @@ const ScheduleAssessment = () => {
 
   // ------------------------ empty state message -------------------------------
   const isSearchActive = searchQuery.length > 0 || isFilterActive;
-  const initialDataCount = scheduleData?.length || 0;
+  const initialDataCount = total || scheduleData?.length || 0;
   const currentFilteredCount = currentRows?.length || 0;
   const emptyStateMessage = getEmptyStateMessage(
     isSearchActive,
@@ -809,13 +706,16 @@ const ScheduleAssessment = () => {
               searchQuery={searchQuery}
               onSearch={handleSearchInputChange}
               currentPage={currentPage}
-              totalPages={totalPages}
+              totalPages={Math.max(
+                1,
+                Math.ceil((total || 0) / (itemsPerPage || rowsPerPage))
+              )}
               onPrevPage={prevPage}
               onNextPage={nextPage}
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
-              dataLength={Array.isArray(scheduleData) ? scheduleData.length : 0}
+              dataLength={Math.max(1, total || scheduleData?.length || 0)}
               searchPlaceholder="Search Assessments..."
               filterIconRef={filterIconRef}
             />
