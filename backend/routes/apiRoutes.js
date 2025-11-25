@@ -965,7 +965,7 @@ router.get("/:model", permissionMiddleware, authContextMiddleware, async (req, r
               model: "Contacts",
               select: "firstName lastName email",
             })
-            .sort(sortObj)
+            .sort({ _id: -1 })
             .skip(skip)
             .limit(limitNum)
             .lean();
@@ -1057,7 +1057,18 @@ router.get("/:model", permissionMiddleware, authContextMiddleware, async (req, r
         break;
 
       case "scheduleassessment": {
-        const { assessmentId } = req.query;
+        const {
+          assessmentId,
+          page,
+          limit,
+          searchQuery,
+          status,
+          assessmentIds,
+          orderMin,
+          orderMax,
+          expiryPreset,
+          createdPreset,
+        } = req.query;
 
         // Base filter: tenant + ownership (already built in `query`)
         const scheduledFilter = {
@@ -1076,20 +1087,178 @@ router.get("/:model", permissionMiddleware, authContextMiddleware, async (req, r
           scheduledFilter.assessmentId = assessmentId;
         }
 
-        // 1. Fetch active scheduled assessments (filtered by assessmentId if provided)
-        const scheduledAssessments = await ScheduledAssessmentSchema.find(
-          scheduledFilter
-        )
-          .select("_id order expiryAt status createdAt assessmentId")
-          .lean();
+        // Additional template filter (comma-separated assessmentIds)
+        if (assessmentIds) {
+          const ids = String(assessmentIds)
+            .split(",")
+            .map((id) => id.trim())
+            .filter((id) => mongoose.isValidObjectId(id));
+          if (ids.length) {
+            scheduledFilter.assessmentId = { $in: ids };
+          }
+        }
 
-        // If no assessments found, return empty array
-        if (!scheduledAssessments.length) {
-          data = [];
+        // Order range filter
+        const orderCond = {};
+        if (orderMin !== undefined && orderMin !== "") {
+          const minVal = Number(orderMin);
+          if (!Number.isNaN(minVal)) orderCond.$gte = minVal;
+        }
+        if (orderMax !== undefined && orderMax !== "") {
+          const maxVal = Number(orderMax);
+          if (!Number.isNaN(maxVal)) orderCond.$lte = maxVal;
+        }
+        if (Object.keys(orderCond).length) {
+          scheduledFilter.order = orderCond;
+        }
+
+        // Expiry date presets: expired | next7 | next30
+        if (expiryPreset) {
+          const now = new Date();
+          const expiryCond = {};
+          if (expiryPreset === "expired") {
+            expiryCond.$lt = now;
+          } else if (expiryPreset === "next7") {
+            const future = new Date(now);
+            future.setDate(future.getDate() + 7);
+            expiryCond.$gte = now;
+            expiryCond.$lte = future;
+          } else if (expiryPreset === "next30") {
+            const future = new Date(now);
+            future.setDate(future.getDate() + 30);
+            expiryCond.$gte = now;
+            expiryCond.$lte = future;
+          }
+          if (Object.keys(expiryCond).length) {
+            scheduledFilter.expiryAt = expiryCond;
+          }
+        }
+
+        // Created date presets: last7 | last30 | last90
+        if (createdPreset) {
+          const now = new Date();
+          const createdCond = {};
+          const daysMap = { last7: 7, last30: 30, last90: 90 };
+          const days = daysMap[createdPreset];
+          if (days) {
+            const past = new Date(now);
+            past.setDate(past.getDate() - days);
+            createdCond.$gte = past;
+          }
+          if (Object.keys(createdCond).length) {
+            scheduledFilter.createdAt = createdCond;
+          }
+        }
+
+        // Status filter (comma-separated, case-insensitive match)
+        if (status) {
+          const rawStatuses = String(status)
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          if (rawStatuses.length) {
+            // Store as-is; DB likely has title-case statuses (Scheduled, Completed, ...)
+            scheduledFilter.status = { $in: rawStatuses };
+          }
+        }
+
+        // Determine if advanced (paginated) mode should be used
+        const hasAdvancedParams =
+          page !== undefined ||
+          limit !== undefined ||
+          (typeof searchQuery === "string" && searchQuery.trim() !== "") ||
+          status !== undefined ||
+          assessmentIds !== undefined ||
+          orderMin !== undefined ||
+          orderMax !== undefined ||
+          expiryPreset !== undefined ||
+          createdPreset !== undefined;
+
+        // Legacy behavior: no advanced params -> return full list array (backwards compatible)
+        if (!hasAdvancedParams) {
+          const scheduledAssessments = await ScheduledAssessmentSchema.find(
+            scheduledFilter
+          )
+            .select("_id scheduledAssessmentCode order expiryAt status createdAt assessmentId")
+            .lean();
+
+          if (!scheduledAssessments.length) {
+            data = [];
+            break;
+          }
+
+          const scheduledIds = scheduledAssessments.map((sa) => sa._id);
+
+          const candidateAssessments = await CandidateAssessment.find({
+            scheduledAssessmentId: { $in: scheduledIds },
+          })
+            .populate("candidateId")
+            .lean();
+
+          const schedulesWithCandidates = scheduledAssessments.map((schedule) => {
+            const candidates = candidateAssessments.filter(
+              (ca) =>
+                ca.scheduledAssessmentId.toString() === schedule._id.toString()
+            );
+            return {
+              _id: schedule._id,
+              assessmentId: schedule.assessmentId,
+              scheduledAssessmentCode: schedule.scheduledAssessmentCode,
+              order: schedule.order,
+              expiryAt: schedule.expiryAt,
+              status: schedule.status,
+              createdAt: schedule.createdAt,
+              candidates,
+            };
+          });
+
+          data = schedulesWithCandidates;
           break;
         }
 
-        // 2. Get all candidate assessments for these scheduled IDs
+        // Paginated behavior when advanced params are present
+        const pageNumber = parseInt(page, 10) > 0 ? parseInt(page, 10) : 1;
+        const limitNumber = parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 10;
+        const skip = (pageNumber - 1) * limitNumber;
+
+        // Text search over a few key fields
+        const textSearch =
+          typeof searchQuery === "string" ? searchQuery.trim() : "";
+        const searchFilter = {};
+        if (textSearch) {
+          const searchRegex = new RegExp(textSearch.replace(/\s+/g, " "), "i");
+          searchFilter.$or = [
+            { scheduledAssessmentCode: searchRegex },
+            { status: searchRegex },
+            { order: isNaN(Number(textSearch)) ? undefined : Number(textSearch) },
+          ].filter((cond) => cond && Object.keys(cond).length > 0);
+        }
+
+        const finalMatch = Object.keys(searchFilter).length
+          ? { $and: [scheduledFilter, searchFilter] }
+          : scheduledFilter;
+
+        const [scheduledAssessments, totalItems] = await Promise.all([
+          ScheduledAssessmentSchema.find(finalMatch)
+            .select("_id scheduledAssessmentCode order expiryAt status createdAt assessmentId")
+            .sort({ _id: -1 })
+            .skip(skip)
+            .limit(limitNumber)
+            .lean(),
+          ScheduledAssessmentSchema.countDocuments(finalMatch),
+        ]);
+
+        if (!scheduledAssessments.length) {
+          data = {
+            data: [],
+            total: 0,
+            page: pageNumber,
+            totalPages: 0,
+            itemsPerPage: limitNumber,
+          };
+          break;
+        }
+
         const scheduledIds = scheduledAssessments.map((sa) => sa._id);
 
         const candidateAssessments = await CandidateAssessment.find({
@@ -1098,7 +1267,6 @@ router.get("/:model", permissionMiddleware, authContextMiddleware, async (req, r
           .populate("candidateId")
           .lean();
 
-        // 3. Group candidates under each scheduled assessment
         const schedulesWithCandidates = scheduledAssessments.map((schedule) => {
           const candidates = candidateAssessments.filter(
             (ca) =>
@@ -1107,6 +1275,7 @@ router.get("/:model", permissionMiddleware, authContextMiddleware, async (req, r
           return {
             _id: schedule._id,
             assessmentId: schedule.assessmentId,
+            scheduledAssessmentCode: schedule.scheduledAssessmentCode,
             order: schedule.order,
             expiryAt: schedule.expiryAt,
             status: schedule.status,
@@ -1115,8 +1284,18 @@ router.get("/:model", permissionMiddleware, authContextMiddleware, async (req, r
           };
         });
 
-        data = schedulesWithCandidates;
-        // console.log("scheduleassessment", data);
+        const totalPages = Math.max(
+          1,
+          Math.ceil((totalItems || 0) / (limitNumber || 10))
+        );
+
+        data = {
+          data: schedulesWithCandidates,
+          total: totalItems,
+          page: pageNumber,
+          totalPages,
+          itemsPerPage: limitNumber,
+        };
         break;
       }
       // ------------------------------ v1.0.4 >

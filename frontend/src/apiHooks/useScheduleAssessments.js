@@ -83,44 +83,147 @@
 // };
 
 // hooks/useScheduleAssessments.js
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRef } from 'react';
+import { useQuery} from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { fetchFilterData } from '../api';
-import { config } from '../config';
+
 import { usePermissions } from '../Context/PermissionsContext';
-import axios from 'axios';
+
 
 /**
  * useScheduleAssessments
- * 
- * @param {string} [assessmentId] - Optional: filter by assessment template
- * @returns {object} - { scheduleData, isLoading, isError, error, addOrUpdateSchedule }
+ *
+ * @param {string|object} [arg] - Legacy: assessmentId string, or new options object
+ *   New options shape:
+ *     {
+ *       assessmentId?: string;
+ *       page?: number;        // 1-based page index for server pagination
+ *       limit?: number;       // items per page
+ *       searchQuery?: string; // free text search
+ *       status?: string[];    // status filters (Scheduled, Completed, ...)
+ *       templates?: string[]; // assessment template _ids
+ *       orderRange?: { min?: number|string; max?: number|string };
+ *       expiryPreset?: string;  // '', 'expired', 'next7', 'next30'
+ *       createdPreset?: string; // '', 'last7', 'last30', 'last90'
+ *     }
+ *
+ * @returns {object} -
+ *   - For options mode:
+ *       { scheduleData, total, page, totalPages, itemsPerPage, isLoading, isError, error }
+ *   - For legacy mode (string arg or no arg):
+ *       { scheduleData, isLoading, isError, error }
  */
-export const useScheduleAssessments = (assessmentId) => {
-  const queryClient = useQueryClient();
+export const useScheduleAssessments = (arg) => {
+  // const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Assessments?.View;
-  const initialLoad = useRef(true);
+  // const initialLoad = useRef(true);
+
+  // Determine call mode
+  const isOptionsMode = arg && typeof arg === 'object' && !Array.isArray(arg);
+  const legacyAssessmentId = !isOptionsMode ? arg : undefined;
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const options = isOptionsMode ? arg || {} : {};
+
+  const params = useMemo(() => {
+    if (!isOptionsMode) {
+      // Legacy behavior: only optional assessmentId
+      return legacyAssessmentId ? { assessmentId: legacyAssessmentId } : {};
+    }
+
+    const {
+      assessmentId,
+      page,
+      limit,
+      searchQuery,
+      status,
+      templates,
+      orderRange,
+      expiryPreset,
+      createdPreset,
+    } = options;
+
+    const p = {};
+
+    if (assessmentId) p.assessmentId = assessmentId;
+    if (page) p.page = page;
+    if (limit) p.limit = limit;
+
+    if (typeof searchQuery === 'string' && searchQuery.trim()) {
+      p.searchQuery = searchQuery.trim();
+    }
+
+    if (Array.isArray(status) && status.length) {
+      // Backend expects exact status strings as stored (Scheduled, Completed, ...)
+      p.status = status.join(',');
+    }
+
+    if (Array.isArray(templates) && templates.length) {
+      p.assessmentIds = templates.join(',');
+    }
+
+    if (orderRange) {
+      const { min, max } = orderRange;
+      if (min !== undefined && min !== null && min !== '') p.orderMin = min;
+      if (max !== undefined && max !== null && max !== '') p.orderMax = max;
+    }
+
+    if (typeof expiryPreset === 'string' && expiryPreset) {
+      p.expiryPreset = expiryPreset;
+    }
+
+    if (typeof createdPreset === 'string' && createdPreset) {
+      p.createdPreset = createdPreset;
+    }
+
+    return p;
+  }, [isOptionsMode, legacyAssessmentId, options]);
 
   /* -------------------------------------------------------------------------- */
   /*                               QUERY: LIST                                  */
   /* -------------------------------------------------------------------------- */
   const {
-    data: scheduleData = [],
+    data: rawData,
     isLoading: isQueryLoading,
     isError,
     error,
   } = useQuery({
-    queryKey: ['scheduleassessment', assessmentId], // Unique per assessmentId
+    queryKey: ['scheduleassessment', params],
     queryFn: async () => {
-      const params = assessmentId ? { assessmentId } : {};
-      const data = await fetchFilterData('scheduleassessment', effectivePermissions, params);
-      return data.reverse(); // Latest first
+      const response = await fetchFilterData('scheduleassessment', effectivePermissions, params);
+
+      // When backend advanced params are used, it returns an object
+      //   { data: [...], total, page, totalPages, itemsPerPage }
+      // When not, it returns a plain array.
+
+      // fetchFilterData currently returns `response.data.data || []`.
+      // To support both shapes, we treat array vs object differently:
+
+      if (Array.isArray(response)) {
+        // Legacy behavior: array only, no metadata
+        return {
+          data: response.slice().reverse(),
+          total: response.length,
+          page: 1,
+          totalPages: 1,
+          itemsPerPage: response.length,
+        };
+      }
+
+      const arr = Array.isArray(response?.data) ? response.data : [];
+      return {
+        data: arr.slice().reverse(),
+        total: response?.total ?? arr.length,
+        page: response?.page ?? (params.page || 1),
+        totalPages: response?.totalPages ?? 1,
+        itemsPerPage: response?.itemsPerPage ?? (params.limit || arr.length || 10),
+      };
     },
     enabled: !!hasViewPermission,
     retry: 1,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    keepPreviousData: true,   // Smooth UX when switching assessmentId
+    keepPreviousData: true,
   });
 
   /* -------------------------------------------------------------------------- */
@@ -153,8 +256,23 @@ export const useScheduleAssessments = (assessmentId) => {
   /* -------------------------------------------------------------------------- */
   /*                                 RETURN                                     */
   /* -------------------------------------------------------------------------- */
+
+  const scheduleData = rawData?.data || [];
+  const total = rawData?.total ?? scheduleData.length;
+  const page = rawData?.page ?? 1;
+  const totalPages = rawData?.totalPages ?? 1;
+  const itemsPerPage = rawData?.itemsPerPage ?? scheduleData.length;
+
+  // Legacy callers (Dashboard, RoundCard, VerticalRoundsView, AssessmentViewAssessmentTab)
+  // only care about scheduleData + isLoading + errors and pass an assessmentId string.
+  // They will ignore the extra fields.
+
   return {
     scheduleData,
+    total,
+    page,
+    totalPages,
+    itemsPerPage,
     isLoading: isQueryLoading,
     isError,
     error,
