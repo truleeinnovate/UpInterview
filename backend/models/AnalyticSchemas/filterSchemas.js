@@ -6,21 +6,18 @@ const { Schema } = mongoose;
 // =============================================================================
 const filterPresetSchema = new Schema(
   {
-    tenantId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    ownerId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    presetId: {
-      type: String,
-      required: true,
-      index: true,
-    },
+    // tenantId: {type: mongoose.Schema.Types.ObjectId},
+      // ownerId: {
+      //   type: String,
+      //   required: true,
+      //   index: true,
+      // },
+    // presetId: {
+    //   type: String,
+    //   required: true,
+    //   index: true,
+    // },
+    templateId: {type: mongoose.Schema.Types.ObjectId},
 
     name: {
       type: String,
@@ -150,6 +147,9 @@ const filterPresetSchema = new Schema(
     },
 
     tags: [String],
+    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
   },
   {
     timestamps: true,
@@ -157,7 +157,7 @@ const filterPresetSchema = new Schema(
 );
 
 // Indexes
-filterPresetSchema.index({ tenantId: 1, ownerId: 1 });
+filterPresetSchema.index({ tenantId: 1 });
 filterPresetSchema.index({ tenantId: 1, presetId: 1 }, { unique: true });
 filterPresetSchema.index({ tenantId: 1, "context.page": 1 });
 filterPresetSchema.index({ tenantId: 1, isPublic: 1 });
@@ -165,214 +165,214 @@ filterPresetSchema.index({ tenantId: 1, isPublic: 1 });
 // =============================================================================
 // FILTER ANALYTICS SCHEMA - Track filter usage patterns
 // =============================================================================
-const filterAnalyticsSchema = new Schema(
-  {
-    tenantId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    ownerId: String,
-    sessionId: String,
+// const filterAnalyticsSchema = new Schema(
+//   {
+//     tenantId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
+//     ownerId: String,
+//     sessionId: String,
 
-    // Filter Application Event
-    event: {
-      type: {
-        type: String,
-        enum: [
-          "filter_applied",
-          "filter_cleared",
-          "preset_used",
-          "preset_saved",
-        ],
-        required: true,
-      },
-      timestamp: {
-        type: Date,
-        default: Date.now,
-        index: true,
-      },
-    },
+//     // Filter Application Event
+//     event: {
+//       type: {
+//         type: String,
+//         enum: [
+//           "filter_applied",
+//           "filter_cleared",
+//           "preset_used",
+//           "preset_saved",
+//         ],
+//         required: true,
+//       },
+//       timestamp: {
+//         type: Date,
+//         default: Date.now,
+//         index: true,
+//       },
+//     },
 
-    // Context Information
-    context: {
-      page: String,
-      reportType: String,
-      userAgent: String,
-      ipAddress: String,
-    },
+//     // Context Information
+//     context: {
+//       page: String,
+//       reportType: String,
+//       userAgent: String,
+//       ipAddress: String,
+//     },
 
-    // Applied Filters
-    filters: {
-      basic: Schema.Types.Mixed,
-      advanced: Schema.Types.Mixed,
-      presetId: String,
-      presetName: String,
-    },
+//     // Applied Filters
+//     filters: {
+//       basic: Schema.Types.Mixed,
+//       advanced: Schema.Types.Mixed,
+//       presetId: String,
+//       presetName: String,
+//     },
 
-    // Performance Metrics
-    performance: {
-      executionTime: Number, // milliseconds
-      resultCount: Number,
-      queryComplexity: Number,
-    },
+//     // Performance Metrics
+//     performance: {
+//       executionTime: Number, // milliseconds
+//       resultCount: Number,
+//       queryComplexity: Number,
+//     },
 
-    // Results
-    results: {
-      success: {
-        type: Boolean,
-        default: true,
-      },
-      errorMessage: String,
-      dataReturned: Number,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
+//     // Results
+//     results: {
+//       success: {
+//         type: Boolean,
+//         default: true,
+//       },
+//       errorMessage: String,
+//       dataReturned: Number,
+//     },
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
 
-// Indexes for analytics
-filterAnalyticsSchema.index({ tenantId: 1, "event.timestamp": -1 });
-filterAnalyticsSchema.index({ tenantId: 1, ownerId: 1, "event.timestamp": -1 });
-filterAnalyticsSchema.index({ tenantId: 1, "context.page": 1 });
+// // Indexes for analytics
+// filterAnalyticsSchema.index({ tenantId: 1, "event.timestamp": -1 });
+// filterAnalyticsSchema.index({ tenantId: 1, ownerId: 1, "event.timestamp": -1 });
+// filterAnalyticsSchema.index({ tenantId: 1, "context.page": 1 });
 
-// =============================================================================
-// FILTER FIELD CONFIGURATION SCHEMA - Available filter fields per report type
-// =============================================================================
-const filterFieldConfigSchema = new Schema(
-  {
-    tenantId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    reportType: {
-      type: String,
-      required: true,
-      enum: [
-        "interview",
-        "interviewer",
-        "assessment",
-        "candidate",
-        "organization",
-        "dashboard",
-        "trends",
-      ],
-    },
+// // =============================================================================
+// // FILTER FIELD CONFIGURATION SCHEMA - Available filter fields per report type
+// // =============================================================================
+// const filterFieldConfigSchema = new Schema(
+//   {
+//     tenantId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
+//     reportType: {
+//       type: String,
+//       required: true,
+//       enum: [
+//         "interview",
+//         "interviewer",
+//         "assessment",
+//         "candidate",
+//         "organization",
+//         "dashboard",
+//         "trends",
+//       ],
+//     },
 
-    // Available Filter Fields
-    fields: [
-      {
-        key: {
-          type: String,
-          required: true,
-        },
-        label: {
-          type: String,
-          required: true,
-        },
-        type: {
-          type: String,
-          enum: [
-            "text",
-            "number",
-            "date",
-            "select",
-            "multiselect",
-            "boolean",
-            "range",
-          ],
-          required: true,
-        },
-        description: String,
+//     // Available Filter Fields
+//     fields: [
+//       {
+//         key: {
+//           type: String,
+//           required: true,
+//         },
+//         label: {
+//           type: String,
+//           required: true,
+//         },
+//         type: {
+//           type: String,
+//           enum: [
+//             "text",
+//             "number",
+//             "date",
+//             "select",
+//             "multiselect",
+//             "boolean",
+//             "range",
+//           ],
+//           required: true,
+//         },
+//         description: String,
 
-        // For select/multiselect fields
-        options: [String],
+//         // For select/multiselect fields
+//         options: [String],
 
-        // For number/date fields
-        validation: {
-          min: Schema.Types.Mixed,
-          max: Schema.Types.Mixed,
-          step: Number,
-        },
+//         // For number/date fields
+//         validation: {
+//           min: Schema.Types.Mixed,
+//           max: Schema.Types.Mixed,
+//           step: Number,
+//         },
 
-        // Available operators for this field
-        operators: [
-          {
-            type: String,
-            enum: [
-              "equals",
-              "not_equals",
-              "contains",
-              "starts_with",
-              "ends_with",
-              "greater_than",
-              "less_than",
-              "between",
-              "in",
-              "not_in",
-              "exists",
-              "not_exists",
-            ],
-          },
-        ],
+//         // Available operators for this field
+//         operators: [
+//           {
+//             type: String,
+//             enum: [
+//               "equals",
+//               "not_equals",
+//               "contains",
+//               "starts_with",
+//               "ends_with",
+//               "greater_than",
+//               "less_than",
+//               "between",
+//               "in",
+//               "not_in",
+//               "exists",
+//               "not_exists",
+//             ],
+//           },
+//         ],
 
-        // Field properties
-        isRequired: {
-          type: Boolean,
-          default: false,
-        },
-        isVisible: {
-          type: Boolean,
-          default: true,
-        },
-        order: {
-          type: Number,
-          default: 0,
-        },
+//         // Field properties
+//         isRequired: {
+//           type: Boolean,
+//           default: false,
+//         },
+//         isVisible: {
+//           type: Boolean,
+//           default: true,
+//         },
+//         order: {
+//           type: Number,
+//           default: 0,
+//         },
 
-        // Database mapping
-        dbField: String, // Actual database field name
-        collection: String, // Which collection this field belongs to
+//         // Database mapping
+//         dbField: String, // Actual database field name
+//         collection: String, // Which collection this field belongs to
 
-        // Custom field properties
-        isCustom: {
-          type: Boolean,
-          default: false,
-        },
-        calculation: String, // For calculated fields
-        dependencies: [String], // Other fields this depends on
-      },
-    ],
+//         // Custom field properties
+//         isCustom: {
+//           type: Boolean,
+//           default: false,
+//         },
+//         calculation: String, // For calculated fields
+//         dependencies: [String], // Other fields this depends on
+//       },
+//     ],
 
-    // Default filter configuration
-    defaultFilters: [
-      {
-        field: String,
-        operator: String,
-        value: Schema.Types.Mixed,
-      },
-    ],
+//     // Default filter configuration
+//     defaultFilters: [
+//       {
+//         field: String,
+//         operator: String,
+//         value: Schema.Types.Mixed,
+//       },
+//     ],
 
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
+//     isActive: {
+//       type: Boolean,
+//       default: true,
+//     },
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
 
-// Indexes
-filterFieldConfigSchema.index({ tenantId: 1, reportType: 1 }, { unique: true });
+// // Indexes
+// filterFieldConfigSchema.index({ tenantId: 1, reportType: 1 }, { unique: true });
 
 module.exports = {
   FilterPreset: mongoose.model("FilterPreset", filterPresetSchema),
-  FilterAnalytics: mongoose.model("FilterAnalytics", filterAnalyticsSchema),
-  FilterFieldConfig: mongoose.model(
-    "FilterFieldConfig",
-    filterFieldConfigSchema
-  ),
+  // FilterAnalytics: mongoose.model("FilterAnalytics", filterAnalyticsSchema),
+  // FilterFieldConfig: mongoose.model(
+  //   "FilterFieldConfig",
+  //   filterFieldConfigSchema
+  // ),
 };
