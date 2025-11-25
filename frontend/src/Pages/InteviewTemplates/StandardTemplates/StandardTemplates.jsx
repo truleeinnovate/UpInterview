@@ -34,37 +34,39 @@ class ErrorBoundary extends React.Component {
 }
 
 const StandardTemplates = ({ handleClone }) => {
-  const { templatesData, isLoading } = useInterviewTemplates();
+  // const { templatesData, isLoading } = useInterviewTemplates();
   const { effectivePermissions } = usePermissions();
   const navigate = useNavigate();
 
   // Transform API data to match the expected structure
-  const normalizedTemplates = useMemo(() => {
-    if (!templatesData || !Array.isArray(templatesData)) return [];
 
-    return templatesData
-      .filter((template) => template.type === "standard")
-      .map((template) => ({
-        _id: template._id || `template-${Math.random()}`,
-        title: template.title || template.roundTitle || "Unnamed Template",
-        name: template.name || "",
-        description: template.description || "No description available",
-        rounds: Array.isArray(template.rounds)
-          ? template.rounds
-          : Array.isArray(template.sequence)
-          ? template.sequence
-          : [{ roundTitle: "Unknown round" }],
-        bestFor: template.bestFor || "General roles",
-        format: template.format || "Unknown format",
-        type: template.type || "standard",
-        status: template.status || "active",
-        category: template.category || "Uncategorized",
-        createdAt: template.createdAt || new Date().toISOString(),
-        updatedAt: template.updatedAt || new Date().toISOString(),
-      }));
-  }, [templatesData]);
+  // useMemo(() => {
+  //   if (!templatesData || !Array.isArray(templatesData)) return [];
+
+  //   return templatesData
+  //     .filter((template) => template.type === "standard")
+  //     .map((template) => ({
+  //       _id: template._id || `template-${Math.random()}`,
+  //       title: template.title || template.roundTitle || "Unnamed Template",
+  //       name: template.name || "",
+  //       description: template.description || "No description available",
+  //       rounds: Array.isArray(template.rounds)
+  //         ? template.rounds
+  //         : Array.isArray(template.sequence)
+  //         ? template.sequence
+  //         : [{ roundTitle: "Unknown round" }],
+  //       bestFor: template.bestFor || "General roles",
+  //       format: template.format || "Unknown format",
+  //       type: template.type || "standard",
+  //       status: template.status || "active",
+  //       category: template.category || "Uncategorized",
+  //       createdAt: template.createdAt || new Date().toISOString(),
+  //       updatedAt: template.updatedAt || new Date().toISOString(),
+  //     }));
+  // }, [templatesData]);
 
   // Toolbar & Filter state
+
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
@@ -90,7 +92,28 @@ const StandardTemplates = ({ handleClone }) => {
       ? tabFromUrl
       : "standard";
   });
+  const itemsPerPage = 10;
+  const {
+    templatesData,
+    totalCount,
+    // currentPage,
+    // itemsPerPage,
+    isLoading,
+    // saveTemplate,
+    deleteInterviewTemplate,
+  } = useInterviewTemplates({
+    search: searchQuery,
+    status: selectedStatus,
+    formats: selectedFormats,
+    // rounds: roundsRange,
+    createdDate: createdDatePreset,
+    page: currentPage,
+    limit: itemsPerPage,
+    type: activeTab,
+    //  === 'standard' ? 'standard' : 'custom'
+  });
 
+  const normalizedTemplates = templatesData;
   // Keep URL in sync with tab state
   useEffect(() => {
     console.log("Current active tab:", activeTab);
@@ -160,9 +183,9 @@ const StandardTemplates = ({ handleClone }) => {
 
   // Format toggle handler
   const handleFormatToggle = (format) => {
-    setSelectedFormats(prev =>
+    setSelectedFormats((prev) =>
       prev.includes(format)
-        ? prev.filter(f => f !== format)
+        ? prev.filter((f) => f !== format)
         : [...prev, format]
     );
   };
@@ -171,7 +194,7 @@ const StandardTemplates = ({ handleClone }) => {
   const formatOptions = [
     { label: "Online / Virtual", value: "online" },
     { label: "Face to Face / Onsite", value: "offline" },
-    { label: "Hybrid (Online + Onsite)", value: "hybrid" }
+    { label: "Hybrid (Online + Onsite)", value: "hybrid" },
   ];
 
   // Apply filters
@@ -182,7 +205,11 @@ const StandardTemplates = ({ handleClone }) => {
       createdDate: createdDatePreset,
     };
     setSelectedFilters(filters);
-    setIsFilterActive(selectedStatus.length > 0 || selectedFormats.length > 0 || createdDatePreset !== "");
+    setIsFilterActive(
+      selectedStatus.length > 0 ||
+        selectedFormats.length > 0 ||
+        createdDatePreset !== ""
+    );
     setFilterPopupOpen(false);
     setCurrentPage(0);
   };
@@ -204,7 +231,11 @@ const StandardTemplates = ({ handleClone }) => {
   const filteredTemplates = useMemo(() => {
     return normalizedTemplates.filter((template) => {
       const normalizedQuery = normalizeSpaces(searchQuery);
-      const fieldsToSearch = [template.title, template.status, template.format].filter(Boolean);
+      const fieldsToSearch = [
+        template.title,
+        template.status,
+        template.format,
+      ].filter(Boolean);
 
       // Search query matching
       const matchesSearchQuery =
@@ -252,12 +283,13 @@ const StandardTemplates = ({ handleClone }) => {
   }, [searchQuery, selectedFilters, normalizedTemplates]);
 
   // Pagination
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
-  const paginatedTemplates = filteredTemplates.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  //
+  // const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
+  const totalPages = Math.ceil(totalCount / 10);
+  // const paginatedTemplates = filteredTemplates.slice(
+  //   currentPage * itemsPerPage,
+  //   (currentPage + 1) * itemsPerPage
+  // );
 
   // Toolbar handlers
   const handlePreviousPage = () => {
@@ -302,7 +334,7 @@ const StandardTemplates = ({ handleClone }) => {
           searchPlaceholder="Search Interview Templates..."
           filterIconRef={filterIconRef}
           // v1.0.2 <------------------------------------------
-          templatesData={paginatedTemplates}
+          templatesData={normalizedTemplates}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           // v1.0.2 ------------------------------------------>
@@ -359,7 +391,10 @@ const StandardTemplates = ({ handleClone }) => {
               {isFormatOpen && (
                 <div className="mt-2 pl-3 space-y-2">
                   {formatOptions.map((format) => (
-                    <label key={format.value} className="flex items-center space-x-2">
+                    <label
+                      key={format.value}
+                      className="flex items-center space-x-2"
+                    >
                       <input
                         type="checkbox"
                         checked={selectedFormats.includes(format.value)}
@@ -419,7 +454,7 @@ const StandardTemplates = ({ handleClone }) => {
           <div className="w-full overflow-x-auto">
             <ErrorBoundary>
               <StandardTemplateTableView
-                templatesData={paginatedTemplates}
+                templatesData={normalizedTemplates}
                 handleClone={handleClone}
               />
             </ErrorBoundary>
@@ -428,7 +463,7 @@ const StandardTemplates = ({ handleClone }) => {
           <div>
             <ErrorBoundary>
               <StandardTemplateKanbanView
-                templates={paginatedTemplates}
+                templates={normalizedTemplates}
                 loading={isLoading}
                 effectivePermissions={effectivePermissions}
                 onView={handleView}

@@ -29,6 +29,8 @@ const TableView = ({
   const [delayedLoading, setDelayedLoading] = useState(loading);
   const [showEmptyState, setShowEmptyState] = useState(false);
 
+  console.log("TableView loading prop", data, loading);
+
   // // Delay hiding loading by 1 second
   // useEffect(() => {
   //   let timeout;
@@ -55,6 +57,7 @@ const TableView = ({
   useEffect(() => {
     setDelayedLoading(loading);
   }, [loading]);
+  // console.log("loading setDelayedLoading", loading);
 
   useEffect(() => {
     setShowEmptyState(!loading && data.length === 0);

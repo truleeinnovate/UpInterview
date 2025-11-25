@@ -28,7 +28,8 @@ import { getEmptyStateMessage } from "../../utils/EmptyStateMessage/emptyStateMe
 
 const InterviewTemplates = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  console.log("searchParams", searchParams.get("tab"));
   const itemsPerPage = 10;
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") || "standard"
@@ -55,35 +56,35 @@ const InterviewTemplates = () => {
     useState(null);
 
   // Handle tab change from URL (e.g., browser back/forward)
-  useEffect(() => {
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      const tabFromUrl = params.get("tab");
+  // useEffect(() => {
+  //   const handlePopState = () => {
+  //     const params = new URLSearchParams(window.location.search);
+  //     const tabFromUrl = params.get("tab");
 
-      if (
-        tabFromUrl &&
-        (tabFromUrl === "standard" || tabFromUrl === "custom")
-      ) {
-        setActiveTab(tabFromUrl);
-      } else if (!tabFromUrl) {
-        // If no tab in URL, set default and update URL
+  //     if (
+  //       tabFromUrl &&
+  //       (tabFromUrl === "standard" || tabFromUrl === "custom")
+  //     ) {
+  //       setActiveTab(tabFromUrl);
+  //     } else if (!tabFromUrl) {
+  //       // If no tab in URL, set default and update URL
 
-        setActiveTab("standard");
-        params.set("tab", "standard");
-        navigate({ search: params.toString() }, { replace: true });
-      }
-    };
+  //       setActiveTab("standard");
+  //       params.set("tab", "standard");
+  //       navigate({ search: params.toString() }, { replace: true });
+  //     }
+  //   };
 
-    // Listen for URL changes
-    window.addEventListener("popstate", handlePopState);
+  //   // Listen for URL changes
+  //   window.addEventListener("popstate", handlePopState);
 
-    // Initial check
-    handlePopState();
+  //   // Initial check
+  //   handlePopState();
 
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [navigate]);
+  //   return () => {
+  //     window.removeEventListener("popstate", handlePopState);
+  //   };
+  // }, [navigate]);
 
   // Filter states
   const [selectedStatus, setSelectedStatus] = useState([]);
@@ -135,7 +136,7 @@ const InterviewTemplates = () => {
     // currentPage,
     // itemsPerPage,
     isLoading,
-    saveTemplate,
+    // saveTemplate,
     deleteInterviewTemplate,
   } = useInterviewTemplates({
     search: searchQuery,
@@ -148,10 +149,23 @@ const InterviewTemplates = () => {
     type: activeTab,
     //  === 'standard' ? 'standard' : 'custom'
   });
+  // Add proper loading state handling
+  useEffect(() => {
+    console.log("Loading state:", isLoading);
+    console.log("Templates data length:", templatesData.length);
+  }, [isLoading, templatesData]);
+  console.log("templatesData", templatesData);
 
   const totalPages = Math.ceil(totalCount / 10);
 
-  console.log("activeTab params", activeTab);
+  // Add this useEffect (only once)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab === "standard" || tab === "custom") {
+      setActiveTab(tab);
+    }
+  }, []);
 
   // Template cloning states
   // const [templateToClone, setTemplateToClone] = useState(null);
@@ -166,7 +180,7 @@ const InterviewTemplates = () => {
       params.set("tab", activeTab);
       navigate({ search: params.toString() }, { replace: true });
     }
-  }, [activeTab, navigate]);
+  }, [activeTab, navigate, templatesData]);
 
   // Derived state
   const normalizedTemplates = templatesData;
@@ -259,8 +273,8 @@ const InterviewTemplates = () => {
   };
 
   // Helper function to normalize spaces for better search
-  const normalizeSpaces = (str) =>
-    str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
+  // const normalizeSpaces = (str) =>
+  //   str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
 
   // const filteredTemplates = useMemo(() => {
   //   return normalizedTemplates.filter((template) => {
@@ -346,14 +360,14 @@ const InterviewTemplates = () => {
 
   // const totalPages = Math.ceil(normalizedTemplates.length / itemsPerPage);
 
-  const startIndex = currentPage * itemsPerPage;
-  const endIndex = Math.min(
-    startIndex + itemsPerPage,
-    normalizedTemplates.length
-  );
-  const paginatedTemplates = normalizedTemplates;
+  // const startIndex = currentPage * itemsPerPage;
+  // const endIndex = Math.min(
+  //   startIndex + itemsPerPage,
+  //   normalizedTemplates.length
+  // );
+  // const paginatedTemplates = normalizedTemplates;
   // .slice(startIndex, endIndex)
-
+  // console.log("paginatedTemplates", paginatedTemplates);
   const handlePreviousPage = () => {
     if (currentPage > 0) {
       setCurrentPage((prev) => prev - 1);
@@ -571,7 +585,7 @@ const InterviewTemplates = () => {
   const isSearchActive = searchQuery.length > 0 || isFilterActive;
   // Use the totalCount from the API hook
   const initialDataCount = totalCount || 0;
-  const currentFilteredCount = paginatedTemplates?.length || 0;
+  const currentFilteredCount = normalizedTemplates?.length || 0;
 
   const emptyStateMessage = getEmptyStateMessage(
     isSearchActive,
@@ -753,7 +767,7 @@ const InterviewTemplates = () => {
                 searchPlaceholder="Search Interview Templates..."
                 filterIconRef={filterIconRef}
                 // v1.0.6 <----------------------------------------
-                templatesData={paginatedTemplates}
+                templatesData={templatesData}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 // v1.0.6 ---------------------------------------->
@@ -763,7 +777,7 @@ const InterviewTemplates = () => {
               <motion.div className="bg-white">
                 {view === "kanban" ? (
                   <KanbanView
-                    templates={paginatedTemplates}
+                    templates={templatesData}
                     loading={isLoading}
                     effectivePermissions={effectivePermissions}
                     onView={handleView}
@@ -772,7 +786,7 @@ const InterviewTemplates = () => {
                 ) : (
                   <div className="overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                     <TableView
-                      data={paginatedTemplates}
+                      data={templatesData}
                       columns={tableColumns}
                       actions={tableActions}
                       loading={isLoading}

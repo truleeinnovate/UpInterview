@@ -41,6 +41,7 @@ export const useInterviewTemplates = (filters = {}) => {
     }),
     [tenantId, userId, organization, authToken]
   );
+  // console.log("queryParams", queryParams);
 
   const {
     data: responseData = {},
@@ -52,7 +53,7 @@ export const useInterviewTemplates = (filters = {}) => {
     queryFn: async () => {
       const params = filters;
       console.log("params", params);
-      const data = await fetchFilterData("interviewtemplate", params); // <- lowercase to match backend
+      const data = await fetchFilterData("interviewtemplate", {}, params); // <- lowercase to match backend
       // v1.0.1 <------------------------------------------------------
       //   return data.reverse();
       console.log("interviewTemplates data", data);
@@ -63,6 +64,7 @@ export const useInterviewTemplates = (filters = {}) => {
     retry: 1,
     staleTime: 1000 * 60 * 5,
   });
+  // console.log("isQueryLoading ", isQueryLoading);
   const templatesData = responseData?.data || [];
   const totalPages = responseData?.totalPages || 0;
   const totalCount = responseData?.totalItems || 0;
