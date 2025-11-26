@@ -86,13 +86,18 @@ function SupportDetails() {;
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/users`);
-
-        const filteredUsers = response.data.filter(
-          (user) =>
-            user.roleId === "680360b7682a6e89ff1c49e1" ||
-            user.roleId === "67f77613588be9a9ef019765"
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/users/super-admins`
         );
+
+        const filteredUsers = Array.isArray(response.data)
+          ? response.data.filter(
+              (user) =>
+                user.roleName === "Super_Admin" ||
+                user.roleName === "Support_Team"
+            )
+          : [];
+
         console.log("filteredUsers---", filteredUsers);
         setOwnerOptions(filteredUsers);
       } catch (error) {
@@ -208,6 +213,7 @@ function SupportDetails() {;
           assignedToId: selectedOwnerId,
           issueType: currentTicket.issueType,
           description: currentTicket.description,
+          subject: currentTicket.subject,
         }
       );
 
