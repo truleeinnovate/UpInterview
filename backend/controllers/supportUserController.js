@@ -202,7 +202,7 @@ exports.getTicket = async (req, res) => {
        1️⃣  IMPERSONATED ROLE CHECK (TOP PRIORITY)
        If impersonatedUser_roleType === "Internal" → Full Access
        ===================================================== */
-    if (impersonatedUser_roleType === "Internal") {
+    if (impersonatedUser_roleType === "internal") {
       // NO FILTER — super admin / support → read all tickets
     }
 
