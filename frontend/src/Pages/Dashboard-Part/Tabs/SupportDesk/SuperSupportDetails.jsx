@@ -214,6 +214,8 @@ function SupportDetails() {;
           issueType: currentTicket.issueType,
           description: currentTicket.description,
           subject: currentTicket.subject,
+          ownerId: currentTicket.ownerId,
+          tenantId: currentTicket.tenantId,
         }
       );
 
