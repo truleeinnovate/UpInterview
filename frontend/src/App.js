@@ -19,8 +19,7 @@ import ProtectedRoute from "./Components/ProtectedRoute";
 import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
 import AuthCookieManager, { getAuthToken } from "./utils/AuthCookieManager/AuthCookieManager";
 import { usePermissions, PermissionsProvider } from "./Context/PermissionsContext";
-import { CustomProvider } from "./Context/Contextfetch";
-import PageSetter from "./Components/PageSetter";
+// import { CustomProvider } from "./Context/Contextfetch";
 import BillingSubtabs from "./Pages/Dashboard-Part/Accountsettings/account/billing/BillingSubtabs.jsx";
 import UserInvoiceDetails from "./Pages/Dashboard-Part/Tabs/Invoice-Tab/InvoiceDetails.jsx";
 import SubscriptionSuccess from "./Pages/Login-Part/SubscriptionPlans/SubscriptionSuccess.jsx";
@@ -490,6 +489,7 @@ const AuthRoutes = () => (
         <Route path="/verify-user-email" element={<VerifyUserEmail />} />
         <Route path="/resetPassword" element={<ResetPassword />} />
         <Route path="/forgot-password" element={<ForgetPassword />} />
+        <Route path="/assessmenttest" element={<AssessmentTest />} />
         <Route path="/pending-approval" element={<PendingApproval />} />
         <Route path="/subscription-success" element={<SubscriptionSuccess />} />
         <Route path="/payment-details" element={<><CardDetails /><SubscriptionPlan /></>} />
@@ -1392,6 +1392,7 @@ const App = () => {
             "/verify-user-email",
             "/resetPassword",
             "/forgot-password",
+            "/assessmenttest",
             "/pending-approval",
             "/subscription-success",
             "/payment-details",
@@ -1441,7 +1442,7 @@ const App = () => {
                             <AuthRoutes />
                         ) : (
                             <ProtectedRoute>
-                                <CustomProvider>
+                                {/* <CustomProvider> */}
                                     <PermissionsProvider>
                                         <MainAppRoutes
                                             location={location}
@@ -1452,7 +1453,7 @@ const App = () => {
                                             noNavbarPaths={noNavbarPaths}
                                         />
                                     </PermissionsProvider>
-                                </CustomProvider>
+                                {/* </CustomProvider> */}
                             </ProtectedRoute>
                         )}
                     </UserDataLoader>
