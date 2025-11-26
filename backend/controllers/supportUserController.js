@@ -675,6 +675,9 @@ exports.updateTicketById = async (req, res) => {
       return res.status(404).json({ message: "Ticket not found" });
     }
 
+    const effectiveOwnerId = ownerId || currentTicket.ownerId;
+    const effectiveTenantId = tenantId || currentTicket.tenantId;
+
     const updateData = {
       issueType: issueType || currentTicket.issueType,
       description: description || currentTicket.description,
@@ -728,13 +731,13 @@ exports.updateTicketById = async (req, res) => {
     }
 
     res.locals.feedData = {
-      tenantId: tenantId,
+      tenantId: effectiveTenantId,
       feedType: "update",
       action: {
         name: "ticket_updated",
         description: `Support ticket was updated`,
       },
-      ownerId: ownerId,
+      ownerId: effectiveOwnerId,
       parentId: ticket._id,
       parentObject: "SupportTicket",
       metadata: req.body,
@@ -748,8 +751,8 @@ exports.updateTicketById = async (req, res) => {
     // console.log("feedData", r);
 
     res.locals.logData = {
-      tenantId: tenantId,
-      ownerId: ownerId,
+      tenantId: effectiveTenantId,
+      ownerId: effectiveOwnerId,
       processName: "Update Ticket",
       requestBody: req.body,
       status: "success",
