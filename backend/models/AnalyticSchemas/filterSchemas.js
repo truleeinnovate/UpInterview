@@ -4,163 +4,188 @@ const { Schema } = mongoose;
 // =============================================================================
 // FILTER PRESET SCHEMA - Saved filter combinations
 // =============================================================================
-const filterPresetSchema = new Schema(
-  {
-    // tenantId: {type: mongoose.Schema.Types.ObjectId},
-      // ownerId: {
-      //   type: String,
-      //   required: true,
-      //   index: true,
-      // },
-    // presetId: {
-    //   type: String,
-    //   required: true,
-    //   index: true,
-    // },
-    templateId: {type: mongoose.Schema.Types.ObjectId},
+// const filterPresetSchema = new Schema(
+//   {
+//     // tenantId: {type: mongoose.Schema.Types.ObjectId},
+//       // ownerId: {
+//       //   type: String,
+//       //   required: true,
+//       //   index: true,
+//       // },
+//     // presetId: {
+//     //   type: String,
+//     //   required: true,
+//     //   index: true,
+//     // },
+//     templateId: {type: mongoose.Schema.Types.ObjectId},
 
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    description: String,
+//     name: {
+//       type: String,
+//       required: true,
+//       trim: true,
+//     },
+//     description: String,
 
-    // Basic Filters
-    basicFilters: {
-      interviewType: {
-        type: String,
-        enum: ["all", "internal", "external"],
-        default: "all",
-      },
-      candidateStatus: {
-        type: String,
-        enum: ["all", "active", "inactive", "cancelled"],
-        default: "all",
-      },
-      position: {
-        type: String,
-        default: "all",
-      },
-      interviewer: {
-        type: String,
-        default: "all",
-      },
-      organization: String,
-      dateRange: {
-        type: String,
-        enum: [
-          "today",
-          "yesterday",
-          "last7days",
-          "last30days",
-          "last90days",
-          "thisMonth",
-          "lastMonth",
-          "thisYear",
-          "custom",
-        ],
-        default: "last30days",
-      },
-      customStartDate: Date,
-      customEndDate: Date,
-    },
+//     // Basic Filters
+//     basicFilters: {
+//       interviewType: {
+//         type: String,
+//         enum: ["all", "internal", "external"],
+//         default: "all",
+//       },
+//       candidateStatus: {
+//         type: String,
+//         enum: ["all", "active", "inactive", "cancelled"],
+//         default: "all",
+//       },
+//       position: {
+//         type: String,
+//         default: "all",
+//       },
+//       interviewer: {
+//         type: String,
+//         default: "all",
+//       },
+//       organization: String,
+//       dateRange: {
+//         type: String,
+//         enum: [
+//           "today",
+//           "yesterday",
+//           "last7days",
+//           "last30days",
+//           "last90days",
+//           "thisMonth",
+//           "lastMonth",
+//           "thisYear",
+//           "custom",
+//         ],
+//         default: "last30days",
+//       },
+//       customStartDate: Date,
+//       customEndDate: Date,
+//     },
 
-    // Advanced Filters
-    advancedFilters: [
-      {
-        id: String,
-        field: {
-          type: String,
-          required: true,
-        },
-        operator: {
-          type: String,
-          enum: [
-            "equals",
-            "not_equals",
-            "contains",
-            "starts_with",
-            "ends_with",
-            "greater_than",
-            "less_than",
-            "between",
-            "in",
-            "not_in",
-            "exists",
-            "not_exists",
-          ],
-          required: true,
-        },
-        value: Schema.Types.Mixed,
-        logic: {
-          type: String,
-          enum: ["AND", "OR"],
-          default: "AND",
-        },
-      },
-    ],
+//     // Advanced Filters
+//     advancedFilters: [
+//       {
+//         id: String,
+//         field: {
+//           type: String,
+//           required: true,
+//         },
+//         operator: {
+//           type: String,
+//           enum: [
+//             "equals",
+//             "not_equals",
+//             "contains",
+//             "starts_with",
+//             "ends_with",
+//             "greater_than",
+//             "less_than",
+//             "between",
+//             "in",
+//             "not_in",
+//             "exists",
+//             "not_exists",
+//           ],
+//           required: true,
+//         },
+//         value: Schema.Types.Mixed,
+//         logic: {
+//           type: String,
+//           enum: ["AND", "OR"],
+//           default: "AND",
+//         },
+//       },
+//     ],
 
-    // Context where filter applies
-    context: {
-      page: {
-        type: String,
-        enum: [
-          "dashboard",
-          "reports",
-          "trends",
-          "interviews",
-          "interviewers",
-          "assessments",
-          "candidates",
-        ],
-        required: true,
-      },
-      reportType: String, // For report-specific filters
-    },
+//     // Context where filter applies
+//     context: {
+//       page: {
+//         type: String,
+//         enum: [
+//           "dashboard",
+//           "reports",
+//           "trends",
+//           "interviews",
+//           "interviewers",
+//           "assessments",
+//           "candidates",
+//         ],
+//         required: true,
+//       },
+//       reportType: String, // For report-specific filters
+//     },
 
-    // Usage Statistics
-    usage: {
-      count: {
-        type: Number,
-        default: 0,
-      },
-      lastUsed: Date,
-      averageExecutionTime: Number, // milliseconds
-    },
+//     // Usage Statistics
+//     usage: {
+//       count: {
+//         type: Number,
+//         default: 0,
+//       },
+//       lastUsed: Date,
+//       averageExecutionTime: Number, // milliseconds
+//     },
 
-    // Sharing
-    isPublic: {
-      type: Boolean,
-      default: false,
-    },
-    sharedWith: [String], // User IDs
+//     // Sharing
+//     isPublic: {
+//       type: Boolean,
+//       default: false,
+//     },
+//     sharedWith: [String], // User IDs
 
-    // System flags
-    isDefault: {
-      type: Boolean,
-      default: false,
-    },
-    isSystem: {
-      type: Boolean,
-      default: false,
-    },
+//     // System flags
+//     isDefault: {
+//       type: Boolean,
+//       default: false,
+//     },
+//     isSystem: {
+//       type: Boolean,
+//       default: false,
+//     },
 
-    tags: [String],
-    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+//     tags: [String],
+//     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
+//     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+//     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
+
+const filterPresetSchema = new Schema({
+  tenantId:   { type: Schema.Types.ObjectId, ref: "Tenant", required: true },
+  templateId: { type: Schema.Types.ObjectId, ref: "ReportTemplate", required: true },
+
+  name:        { type: String, required: true }, // "My Q4 View", "Engineering Team"
+  description: String,
+
+  // USER'S FILTER SELECTION
+  filters: {
+    // BASIC FILTERS
+    dateRange:        String, // "last30days", "thisMonth"
+    customStartDate:  Date,
+    customEndDate:    Date,
+    interviewType:    String, // "all", "internal", "external"
+    candidateStatus:  String, // "all", "active", "hired"
+    position:         String, // "Frontend Engineer", "all"
+    interviewer:      String, // userId or "all"
+
+    // ADVANCED FILTERS (if enabled)
+    advancedFilters: [Schema.Types.Mixed] // [{ field: "experience", operator: ">", value: 5 }]
   },
-  {
-    timestamps: true,
-  }
-);
 
-// Indexes
-filterPresetSchema.index({ tenantId: 1 });
-filterPresetSchema.index({ tenantId: 1, presetId: 1 }, { unique: true });
-filterPresetSchema.index({ tenantId: 1, "context.page": 1 });
-filterPresetSchema.index({ tenantId: 1, isPublic: 1 });
+  // AUTO-APPLY SETTINGS
+  isDefault:   { type: Boolean, default: false }, // Auto-apply when opening report
+
+  // SHARING
+  isPublic:    { type: Boolean, default: false } // Share with team
+}, { timestamps: true });
+
+filterPresetSchema.index({ tenantId: 1, userId: 1, templateId: 1, isDefault: 1 });
 
 // =============================================================================
 // FILTER ANALYTICS SCHEMA - Track filter usage patterns
