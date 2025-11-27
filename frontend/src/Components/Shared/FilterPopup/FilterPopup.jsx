@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Issue fixed added note about that
 // v1.0.1 - Ashok - Improved filter popup positioning logic and added custom height prop
+// v1.0.2 - Ashok - Added max height to popup for better UX
 
 /*
  * Popup Positioning Note:
@@ -37,7 +38,7 @@ export const FilterPopup = ({
   onClearAll,
   filterIconRef,
   children,
-  customHeight = "65vh",
+  customHeight = "max-h-[65vh]",
 }) => {
   const popupRef = useRef(null);
   // v1.0.0 <------------------------------------------------------------------

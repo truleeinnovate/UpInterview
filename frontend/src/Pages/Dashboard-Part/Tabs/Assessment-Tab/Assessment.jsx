@@ -10,6 +10,7 @@
 // v1.0.7  -  Ashok   -  improved responsiveness
 // v1.0.8  -  Ashok   -  disabled column and actions for standard type templates
 // v1.0.9  -  Ashok   -  added common code for empty state messages and fixed style issues
+// v2.0.0  -  Ashok   -  fixed filter container scroll issue
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -759,7 +760,7 @@ const Assessment = () => {
               onClearAll={handleClearFilters}
               filterIconRef={filterIconRef}
             >
-              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+              <div className="space-y-3 pr-2">
                 {/* Difficulty Level Filter */}
                 <div>
                   <div

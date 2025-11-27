@@ -10,6 +10,7 @@
 // v1.0.7 - Ashok - Fixed responsive issues
 // v1.0.7 - Ashok - Fixed suggested questions header
 // v1.0.8 - Ashok - Fixed style issues
+// v1.0.9 - Ashok - fixed filter popup container scroll issue
 
 import React, {
   useEffect,
@@ -1477,7 +1478,7 @@ const SuggestedQuestionsComponent = ({
         }}
         filterIconRef={filterIconRef}
       >
-        <div style={{ maxHeight: 340, minWidth: 260, overflowY: "auto" }}>
+        <div>
           {/*//<------v1.0.4-------- Question Type - only when allowed */}
           {(() => {
             const section = tempFiltrationData.find((s) => s.id === 1);
