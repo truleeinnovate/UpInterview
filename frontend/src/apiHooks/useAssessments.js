@@ -31,11 +31,11 @@ export const useAssessments = (filters = {}) => {
   const initialLoad = useRef(true);
   const authToken = AuthCookieManager.getAuthToken();
   const tokenPayload = decodeJwt(authToken);
-  const tenantId = tokenPayload.tenantId;
-  const ownerId = tokenPayload.userId;
-
+  // const tenantId = tokenPayload.tenantId;
+  // const ownerId = tokenPayload.userId;
+  console.log("filters in useAssessments:", filters);
   const {
-    data: assessmentData = [],
+    data: responseData = [],
     isLoading: isQueryLoading,
     isError,
     error,
@@ -45,15 +45,18 @@ export const useAssessments = (filters = {}) => {
     queryKey: ["AssessmentTemplates", filters],
     // ---------------------- v1.0.1 >
     queryFn: async () => {
-      const data = await fetchFilterData("assessment");
+      const params = filters;
+      console.log("Fetching assessments with params:", params);
+      const data = await fetchFilterData("assessment", {}, params);
 
-      return data
-        .map((assessment) => ({
-          ...assessment,
-          // <---------------------- v1.0.4
-          // Add any assessment-specific transformations here
-        }))
-        .reverse();
+      console.log("Fetched assessment data:", data);
+      return data;
+      // .map((assessment) => ({
+      //   ...assessment,
+      //   // <---------------------- v1.0.4
+      //   // Add any assessment-specific transformations here
+      // }))
+      // .reverse();
       // ---------------------- v1.0.4 >
     },
     enabled: !!hasViewPermission,
@@ -61,11 +64,17 @@ export const useAssessments = (filters = {}) => {
     staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
     cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    // refetchOnMount: false, // Don't refetch when component mounts if data exists
     refetchOnReconnect: false, // Don't refetch on network reconnect
+    refetchOnMount: true, // Change this to true to refetch when component mounts
   });
 
   const isLoading = isQueryLoading;
+  const assessmentData = responseData?.data || [];
+  const totalCount = responseData?.totalCount || 0;
+  const totalPages = Math.ceil(totalCount / filters.limit);
+  const customCount = responseData?.customCount || 0;
+  const standardCount = responseData?.standardCount || 0;
 
   // <---------------------- v1.0.0
 
@@ -88,28 +97,27 @@ export const useAssessments = (filters = {}) => {
     onSuccess: (data, variables) => {
       // Optimistically update the cache
       // <---------------------- v1.0.1
-      queryClient.setQueryData(["AssessmentTemplates", filters], (oldData) => {
+      queryClient.setQueryData(["AssessmentTemplates", filters], () => {
         // ---------------------- v1.0.1 >
-        if (!oldData) return oldData;
-
-        if (
-          variables.isEditing &&
-          variables.id &&
-          variables.id !== "" &&
-          variables.id !== null &&
-          variables.id !== undefined
-        ) {
-          // <---------------------- v1.0.0
-          // Update existing assessment
-          return oldData.map((assessment) =>
-            assessment._id === variables.id
-              ? { ...assessment, ...data.data }
-              : assessment
-          );
-        } else {
-          // Add new assessment
-          return [data.data, ...oldData];
-        }
+        //   if (!oldData) return oldData;
+        //   if (
+        //     variables.isEditing &&
+        //     variables.id &&
+        //     variables.id !== "" &&
+        //     variables.id !== null &&
+        //     variables.id !== undefined
+        //   ) {
+        //     // <---------------------- v1.0.0
+        //     // Update existing assessment
+        //     return oldData.map((assessment) =>
+        //       assessment._id === variables.id
+        //         ? { ...assessment, ...data.data }
+        //         : assessment
+        //     );
+        //   } else {
+        //     // Add new assessment
+        //     return [data.data, ...oldData];
+        //   }
       });
 
       // Invalidate to ensure consistency
@@ -440,6 +448,10 @@ export const useAssessments = (filters = {}) => {
 
   return {
     assessmentData,
+    customCount,
+    standardCount,
+    totalCount,
+    totalPages,
     isLoading,
     isQueryLoading,
     isMutationLoading,

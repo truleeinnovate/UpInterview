@@ -43,6 +43,7 @@ import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookie
 import StatusBadge from "../../../../../Components/SuperAdminComponents/common/StatusBadge";
 import { getEmptyStateMessage } from "../../../../../utils/EmptyStateMessage/emptyStateMessage";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { useSuperAdminUsers } from "../../../../../apiHooks/superAdmin/useContacts";
 
 const UsersAccountTab = () => {
   const userType = AuthCookieManager.getUserType();
@@ -89,6 +90,13 @@ const UsersAccountTab = () => {
     limit: 10,
   });
 
+  // Use the new super admin users hook
+  // const {
+  //   data: superAdminUsers = [],
+  //   isLoading: superAdminLoading,
+  //   error: superAdminError,
+  // } = useSuperAdminUsers();
+
   const users = usersRes?.users || [];
   const pagination = usersRes?.pagination || {};
 
@@ -110,9 +118,10 @@ const UsersAccountTab = () => {
               // No Authorization or tenantId header for super admin API
             },
           });
+          console.log("response.data", response?.data);
           // <-------------------------------v1.0.0
           // Reverse to show latest at top
-          setSuperAdminUsers((response.data || []).reverse());
+          setSuperAdminUsers((response?.data || []).reverse());
           // ------------------------------v1.0.0 >
         } catch (error) {
           console.error("Error fetching super admin users:", error);
@@ -125,6 +134,7 @@ const UsersAccountTab = () => {
       fetchSuperAdminUsers();
     }
   }, [userType]);
+  console.log("dataSource", dataSource);
 
   // Sync current page with API response
   useEffect(() => {
@@ -269,7 +279,7 @@ const UsersAccountTab = () => {
   const startIndex = currentPage * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, users.length);
   // const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
-  const currentFilteredRows = users;
+  const currentFilteredRows = dataSource;
 
   // Action logic
   const handleStatusToggleAction = (user) => {

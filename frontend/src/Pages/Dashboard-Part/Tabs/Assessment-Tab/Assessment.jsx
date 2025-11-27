@@ -97,12 +97,7 @@ const Assessment = () => {
   // All hooks at the top
   const { effectivePermissions, isInitialized } = usePermissions();
   // <---------------------- v1.0.2
-  const {
-    assessmentData,
-    isLoading,
-    fetchAssessmentQuestions,
-    deleteAssessment,
-  } = useAssessments();
+
   // <---------------------- v1.0.2 >
   const { positionData } = usePositions();
   const navigate = useNavigate();
@@ -112,15 +107,17 @@ const Assessment = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
+  const [activeTab, setActiveTab] = useState("standard");
   const [selectedFilters, setSelectedFilters] = useState({
     difficultyLevel: [],
     duration: [],
     position: [],
-    sections: { min: "", max: "" },
-    questions: { min: "", max: "" },
+    // sections: { min: "", max: "" },
+    // questions: { min: "", max: "" },
     totalScore: { min: "", max: "" },
     createdDate: "", // '', 'last7', 'last30', 'last90'
   });
+
   const [isShareOpen, setIsShareOpen] = useState(false);
   const filterIconRef = useRef(null);
   // <---------------------- v1.0.3
@@ -148,8 +145,35 @@ const Assessment = () => {
   const [deleteAssessmentTemplate, setDeleteAssessmentTemplate] =
     useState(null);
 
-  const [activeTab, setActiveTab] = useState("standard");
   const [selectedOption, setSelectedOption] = useState(null);
+
+  const {
+    assessmentData,
+    customCount,
+    standardCount,
+    // totalCount,
+    totalPages,
+    isLoading,
+    fetchAssessmentQuestions,
+    deleteAssessment,
+  } = useAssessments({
+    search: searchQuery, // ← Must match backend param name
+    difficultyLevel: selectedFilters.difficultyLevel,
+    duration: selectedFilters.duration,
+    position: selectedFilters.position,
+    totalScore: selectedFilters.totalScore,
+    createdDate: selectedFilters.createdDate,
+    type: activeTab,
+    page: currentPage,
+    limit: 10,
+    selectedOptionId: selectedOption?._id || null,
+    // selectedFilters,
+    // type: activeTab,
+    // searchQuery,
+    // page: currentPage,
+    // limit: 10,
+    // selectedOption,
+  });
 
   // console.log('assessmentToDelete', assessmentToDelete);
   // <---------------------- v1.0.0
@@ -162,6 +186,14 @@ const Assessment = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "standard") {
+      console.log("Clearing selected option for standard tab");
+    } else {
+      console.log("Retaining selected option for custom tab");
+    }
+  }, [activeTab, assessmentData]);
 
   // Sync filter states when popup opens
   useEffect(() => {
@@ -263,9 +295,15 @@ const Assessment = () => {
   }
 
   const handleSearchInputChange = (e) => {
-    setSearchQuery(e.target.value);
+    const value = e.target.value;
+    setSearchQuery(value);
     setCurrentPage(0);
   };
+
+  // const handleSearchInputChange = (e) => {
+  //   console.log("Search input changed:", e.target.value);
+  //   setFilters((prev) => ({ ...prev, search: e.target.value, page: 0 }));
+  // };
 
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
@@ -273,25 +311,33 @@ const Assessment = () => {
       filters.difficultyLevel.length > 0 ||
         filters.duration.length > 0 ||
         filters.position.length > 0 ||
-        filters.sections.min !== "" ||
-        filters.sections.max !== "" ||
-        filters.questions.min !== "" ||
-        filters.questions.max !== "" ||
+        // filters.sections.min !== "" ||
+        // filters.sections.max !== "" ||
+        // filters.questions.min !== "" ||
+        // filters.questions.max !== "" ||
         filters.totalScore.min !== "" ||
         filters.totalScore.max !== "" ||
         filters.createdDate !== ""
     );
-    setFilterPopupOpen(false);
     setCurrentPage(0);
+    setFilterPopupOpen(false);
   };
+
+  // const handleFilterChange = (newFilters) => {
+  //   setFilters((prev) => ({
+  //     ...prev,
+  //     ...newFilters,
+  //     page: 0,
+  //   }));
+  // };
 
   const handleClearFilters = () => {
     const clearedFilters = {
       difficultyLevel: [],
       duration: [],
       position: [],
-      sections: { min: "", max: "" },
-      questions: { min: "", max: "" },
+      // sections: { min: "", max: "" },
+      // questions: { min: "", max: "" },
       totalScore: { min: "", max: "" },
       createdDate: "",
     };
@@ -325,117 +371,7 @@ const Assessment = () => {
   const normalizeSpaces = (str) =>
     str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
 
-  const FilteredData = () => {
-    if (!Array.isArray(assessmentData)) return [];
-    return assessmentData.filter((assessment) => {
-      // Filter by active tab (standard/custom)
-      const matchesType =
-        assessment?.type &&
-        assessment?.type.toLowerCase() === activeTab.toLowerCase();
-
-      if (!matchesType) return false;
-
-      // 🧩 NEW FILTER: Match selectedOption._id with assessmentTemplateList
-      const matchesTemplate =
-        !selectedOption ||
-        assessment.assessmentTemplateList === selectedOption._id;
-
-      // Enhanced search across multiple fields
-      const normalizedQuery = normalizeSpaces(searchQuery);
-      const fieldsToSearch = [
-        assessment?.AssessmentCode,
-        assessment?.AssessmentTitle,
-        assessment?.Position,
-        assessment?.DifficultyLevel,
-        assessment?.Duration,
-      ].filter(Boolean);
-
-      const matchesSearchQuery =
-        searchQuery === "" ||
-        fieldsToSearch.some((field) =>
-          normalizeSpaces(field).includes(normalizedQuery)
-        );
-
-      // Existing filters
-      const matchesDifficultyLevel =
-        selectedFilters.difficultyLevel.length === 0 ||
-        selectedFilters.difficultyLevel.includes(assessment?.DifficultyLevel);
-
-      const matchesDuration =
-        selectedFilters.duration.length === 0 ||
-        selectedFilters.duration.includes(assessment?.Duration);
-
-      // Position filter - match by ID
-      const matchesPosition =
-        selectedFilters.position.length === 0 ||
-        selectedFilters.position.includes(assessment?.Position);
-
-      // Sections range filter
-      const sectionsCount = assessmentSections[assessment._id] || 0;
-      const matchesSections =
-        (selectedFilters.sections.min === "" ||
-          sectionsCount >= Number(selectedFilters.sections.min)) &&
-        (selectedFilters.sections.max === "" ||
-          sectionsCount <= Number(selectedFilters.sections.max));
-
-      // Questions range filter
-      const questionsCount = assessment?.NumberOfQuestions || 0;
-      const matchesQuestions =
-        (selectedFilters.questions.min === "" ||
-          questionsCount >= Number(selectedFilters.questions.min)) &&
-        (selectedFilters.questions.max === "" ||
-          questionsCount <= Number(selectedFilters.questions.max));
-
-      // Total score range filter
-      const totalScore = assessment?.totalScore || 0;
-      const matchesTotalScore =
-        (selectedFilters.totalScore.min === "" ||
-          totalScore >= Number(selectedFilters.totalScore.min)) &&
-        (selectedFilters.totalScore.max === "" ||
-          totalScore <= Number(selectedFilters.totalScore.max));
-
-      // Created date filter
-      const matchesCreatedDate = () => {
-        if (!selectedFilters.createdDate) return true;
-        if (!assessment.createdAt) return false;
-        const createdAt = new Date(assessment.createdAt);
-        const now = new Date();
-        const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-
-        switch (selectedFilters.createdDate) {
-          case "last7":
-            return daysDiff <= 7;
-          case "last30":
-            return daysDiff <= 30;
-          case "last90":
-            return daysDiff <= 90;
-          default:
-            return true;
-        }
-      };
-
-      return (
-        matchesTemplate &&
-        matchesSearchQuery &&
-        matchesDifficultyLevel &&
-        matchesDuration &&
-        matchesPosition &&
-        matchesSections &&
-        matchesQuestions &&
-        matchesTotalScore &&
-        matchesCreatedDate()
-      );
-    });
-  };
-
-  // <---------------------- v1.0.0
-  const rowsPerPage = 10;
-
-  const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  // <---------------------- v1.0.0
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  const currentFilteredRows = assessmentData || [];
 
   const nextPage = () => {
     if (currentPage < totalPages - 1) {
@@ -448,6 +384,18 @@ const Assessment = () => {
       setCurrentPage((prev) => prev - 1);
     }
   };
+
+  // const nextPage = () => {
+  //   if (filters.page < totalPages - 1) {
+  //     setFilters((prev) => ({ ...prev, page: prev.page + 1 }));
+  //   }
+  // };
+
+  // const prevPage = () => {
+  //   if (filters.page > 0) {
+  //     setFilters((prev) => ({ ...prev, page: prev.page - 1 }));
+  //   }
+  // };
 
   // <---------------------- v1.0.0
   // <---------------------- v1.0.1
@@ -478,7 +426,6 @@ const Assessment = () => {
   };
 
   const handleDelete = async (assessment) => {
-
     // if (effectivePermissions.assessment?.Delete) {  // have to check beause this is mandtoary or not ?
     setDeleteAssessmentTemplate(assessment);
     setShowDeleteConfirmModal(true);
@@ -517,7 +464,12 @@ const Assessment = () => {
   // v1.0.5 <------------------------------------------------------------
   const difficultyOptions = ["Easy", "Medium", "Hard"];
   // const durationOptions = ["30 minutes", "60 minutes"];
-  const durationOptions = ["30 Minutes", "60 Minutes"];
+  const durationOptions = [
+    "30 Minutes",
+    "45 Minutes",
+    "60 Minutes",
+    "90 Minutes",
+  ];
   // v1.0.5 ------------------------------------------------------------>
 
   const handleDifficultyToggle = (option) => {
@@ -559,8 +511,8 @@ const Assessment = () => {
       difficultyLevel: selectedDifficulty,
       duration: selectedDuration,
       position: selectedPositions,
-      sections: sectionsRange,
-      questions: questionsRange,
+      // sections: sectionsRange,
+      // questions: questionsRange,
       totalScore: totalScoreRange,
       createdDate: createdDatePreset,
     });
@@ -752,9 +704,13 @@ const Assessment = () => {
               searchQuery={searchQuery}
               onSearch={handleSearchInputChange}
               currentPage={currentPage}
-              totalPages={totalPages}
-              onPrevPage={prevPage}
-              onNextPage={nextPage}
+              totalPages={totalPages || 1}
+              customCount={customCount}
+              standardCount={standardCount}
+              // onPrevPage={prevPage}
+              // onNextPage={nextPage}
+              onPrevPage={() => setCurrentPage((prev) => Math.max(0, prev - 1))}
+              onNextPage={() => setCurrentPage((prev) => prev + 1)}
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
@@ -875,7 +831,7 @@ const Assessment = () => {
                 </div>
 
                 {/* Sections Range Filter */}
-                <div>
+                {/* <div>
                   <div
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => setIsSectionsOpen(!isSectionsOpen)}
@@ -918,7 +874,7 @@ const Assessment = () => {
                   )}
                 </div>
 
-                {/* Questions Range Filter */}
+                Questions Range Filter 
                 <div>
                   <div
                     className="flex justify-between items-center cursor-pointer"
@@ -960,7 +916,7 @@ const Assessment = () => {
                       </div>
                     </div>
                   )}
-                </div>
+                </div> */}
 
                 {/* Total Score Range Filter */}
                 <div>
