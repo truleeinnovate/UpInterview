@@ -1,6 +1,7 @@
 //<-----v1.0.0-------Venkatesh---------add current round column
 // v1.0.1 - Ashok - made first letter capital
 // v1.0.2 - Ashok - fixed style issues
+// v1.0.3 - Ashok - style issues fixed
 
 import React, { useState, useEffect } from "react";
 import {
@@ -12,7 +13,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import StatusBadge from "../../CommonCode-AllTabs/StatusBadge";
+// import StatusBadge from "../../CommonCode-AllTabs/StatusBadge";
 import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
 import {
   Card,
@@ -24,6 +25,8 @@ import { motion } from "framer-motion";
 import { formatDate } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
 import { formatDateTime } from "../../../../../utils/dateFormatter";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import StatusBadge from "../../../../../Components/SuperAdminComponents/common/StatusBadge";
 
 function InterviewCard({
   interview,
@@ -99,11 +102,6 @@ function InterviewCard({
   ).length;
   //-----v1.0.0------->
 
-  // v1.0.1 <-----------------------------------------------------
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-  // v1.0.1 ----------------------------------------------------->
-
   return (
     <>
       <motion.div
@@ -178,11 +176,7 @@ function InterviewCard({
                   </div>
                 </div>
               </div>
-              <StatusBadge
-                status={interview.status}
-                size="md"
-                className="flex-shrink-0"
-              />
+              <StatusBadge status={capitalizeFirstLetter(interview?.status)} />
             </div>
 
             <div className="mt-4 space-y-2">
@@ -213,7 +207,9 @@ function InterviewCard({
                     </p>
                     {/* v1.0.1 --------------------------------------------------------> */}
                   </div>
-                  <StatusBadge status={currentRound.status} size="sm" />
+                  <StatusBadge
+                    status={capitalizeFirstLetter(currentRound?.status)}
+                  />
                 </div>
 
                 {currentRoundInterviewers.length > 0 && (
@@ -262,7 +258,9 @@ function InterviewCard({
                     </p>
                     {/* v1.0.1 ---------------------------------------------------------> */}
                   </div>
-                  <StatusBadge status={nextRound.status} size="sm" />
+                  <StatusBadge
+                    status={capitalizeFirstLetter(nextRound?.status)}
+                  />
                 </div>
 
                 {nextRoundInterviewers.length > 0 && (

@@ -9,6 +9,7 @@
 // v1.0.8 - Ashok - Added common code kanban
 // v1.0.9 - Ashok - Added clickable title to navigate to details page at kanban
 // v2.0.0 - Ashok - Added common code for empty state messages and fixed style issues
+// v2.0.1 - Ashok - Added custom blue color to eye icon
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
@@ -82,7 +83,7 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
   return (
     <div ref={menuRef} className="flex items-center gap-2 relative">
       {/* Always visible actions */}
-      {mainActions.map((action) => (
+      {/* {mainActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -94,7 +95,32 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
         >
           {action.icon}
         </button>
-      ))}
+      ))} */}
+
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
 
       {/* More button (shows dropdown) */}
       {overflowActions.length > 0 && (
@@ -680,7 +706,7 @@ const Task = () => {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => handleTaskClick(row),
     },
     {

@@ -4,6 +4,7 @@
 // v1.0.3  -  Ashok   -  improved responsiveness
 // v1.0.4  -  Ashok   -  made first leter capital
 // v1.0.5  -  Ashok   -  fixed style issues
+// v1.0.6  -  Ashok   -  style issues fixed
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +27,7 @@ import Toolbar from "../../../../../Components/Shared/Toolbar/Toolbar.jsx";
 import TableView from "../../../../../Components/Shared/Table/TableView.jsx";
 import { FilterPopup } from "../../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import KanbanBoard from "../components/KanbanBoard.jsx";
-import StatusBadge from "../../CommonCode-AllTabs/StatusBadge";
+import StatusBadge from "../../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
@@ -68,8 +69,10 @@ function InterviewList() {
     total,
     // currentPage: currentPage + 1,
     // totalPages: serverTotalPages,
-    isLoading, deleteInterviewMutation } = useInterviews(
-      {
+    isLoading,
+    deleteInterviewMutation,
+  } = useInterviews(
+    {
       searchQuery: debouncedSearch, // Debounced search for fewer requests
       status: selectedFilters.status,
       tech: selectedFilters.tech,
@@ -88,8 +91,6 @@ function InterviewList() {
     currentPage + 1,
     rowsPerPage
   );
-
-  
 
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedTech, setSelectedTech] = useState([]);
@@ -357,7 +358,10 @@ function InterviewList() {
 
   // Debounce search input to reduce requests
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch((searchQuery || '').trim()), 500);
+    const t = setTimeout(
+      () => setDebouncedSearch((searchQuery || "").trim()),
+      500
+    );
     return () => clearTimeout(t);
   }, [searchQuery]);
 
@@ -811,7 +815,9 @@ function InterviewList() {
                   {capitalizeFirstLetter(currentRound.interviewType)}
                 </div>
                 <div className="flex items-center justify-between mt-1">
-                  <StatusBadge status={currentRound.status} size="sm" />
+                  <StatusBadge
+                    status={capitalizeFirstLetter(currentRound?.status)}
+                  />
                   <div className="text-xs text-gray-500">
                     {currentRound.dateTime ? (
                       <span>{currentRound.dateTime.split(" - ")[0]}</span>
@@ -859,7 +865,9 @@ function InterviewList() {
                     {nextRound.roundTitle}
                   </div>
                   <div className="flex items-center mt-1">
-                    <StatusBadge status={nextRound.status} size="sm" />
+                    <StatusBadge
+                      status={capitalizeFirstLetter(nextRound?.status)}
+                    />
                     <span className="ml-2 text-xs text-gray-500 truncate">
                       {nextRound.interviewType}
                     </span>

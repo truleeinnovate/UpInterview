@@ -9,6 +9,7 @@
 // v1.0.8  -  Ashok   -  Added common code to kanban
 // v1.0.9  -  Ashok   -  added clickable title to navigate to details page at kanban
 // v2.0.0  -  Ashok   -  added common code for empty state messages
+// v2.0.1  -  Ashok   -  fixed style issue
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -657,7 +658,7 @@ const ScheduleAssessment = () => {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         handleView(row);
       },
