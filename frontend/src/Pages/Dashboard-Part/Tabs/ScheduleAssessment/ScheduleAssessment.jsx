@@ -174,16 +174,13 @@ const ScheduleAssessment = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const rowsPerPage = 10;
 
-  const {
-    scheduleData,
-    total,
-    itemsPerPage,
-    isLoading,
-  } = useScheduleAssessments({
-    page: currentPage + 1,
-    limit: rowsPerPage,
-    searchQuery: debouncedSearch,
-  });
+  const { scheduleData, total, itemsPerPage, isLoading } =
+    useScheduleAssessments({
+      page: currentPage + 1,
+      limit: rowsPerPage,
+      searchQuery: debouncedSearch,
+      type: "scheduled",
+    });
   const navigate = useNavigate();
   // <---------------------- v1.0.1
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -228,7 +225,6 @@ const ScheduleAssessment = () => {
   const [selectedExpiryDate, setSelectedExpiryDate] = useState(""); // '', 'expired', 'next7', 'next30'
   const [selectedCreatedDate, setSelectedCreatedDate] = useState(""); // '', 'last7', 'last30', 'last90'
 
-
   // Debounce search input
   useEffect(() => {
     const t = setTimeout(
@@ -241,9 +237,16 @@ const ScheduleAssessment = () => {
   // Reset page when debounced search or filters change
   useEffect(() => {
     setCurrentPage(0);
-  }, [debouncedSearch, selectedStatus, selectedTemplates, selectedOrder, selectedExpiryDate, selectedCreatedDate]);
+  }, [
+    debouncedSearch,
+    selectedStatus,
+    selectedTemplates,
+    selectedOrder,
+    selectedExpiryDate,
+    selectedCreatedDate,
+  ]);
   // ------------------------------v1.0.3 >
-  
+
   // Draft filters edited inside popup (not applied until Apply is clicked)
   const [tempSelectedStatus, setTempSelectedStatus] = useState([]);
   const [tempSelectedTemplates, setTempSelectedTemplates] = useState([]);
