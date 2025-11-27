@@ -46,10 +46,7 @@ export const useAssessments = (filters = {}) => {
     // ---------------------- v1.0.1 >
     queryFn: async () => {
       const params = filters;
-      console.log("Fetching assessments with params:", params);
       const data = await fetchFilterData("assessment", {}, params);
-
-      console.log("Fetched assessment data:", data);
       return data;
       // .map((assessment) => ({
       //   ...assessment,
@@ -97,7 +94,7 @@ export const useAssessments = (filters = {}) => {
     onSuccess: (data, variables) => {
       // Optimistically update the cache
       // <---------------------- v1.0.1
-      queryClient.setQueryData(["AssessmentTemplates", filters], () => {
+      queryClient.setQueryData(["AssessmentTemplates", filters], (oldData) => {
         // ---------------------- v1.0.1 >
         //   if (!oldData) return oldData;
         //   if (

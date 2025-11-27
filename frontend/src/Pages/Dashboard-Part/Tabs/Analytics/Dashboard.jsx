@@ -29,6 +29,8 @@ import {
 import { useInterviews } from "../../../../apiHooks/useInterviews";
 import { useOutsourceInterviewers } from "../../../../apiHooks/superAdmin/useOutsourceInterviewers";
 import { useScheduleAssessments } from "../../../../apiHooks/useScheduleAssessments";
+import { useAssessments } from "../../../../apiHooks/useAssessments";
+import { convertOffsetToTimes } from "framer-motion";
 
 const calculateTotalInterviewsCounts = (interviews) => {
   const now = new Date();
@@ -267,7 +269,13 @@ const Dashboard = () => {
     undefined,
     type
   );
-  console.log("responseDashBoard ", responseDashBoard);
+
+  // Assessments
+  const { scheduleData, responseAssessmentDashBoard } = useScheduleAssessments({
+    type,
+  });
+
+  console.log("responseAssessmentDashBoard", responseAssessmentDashBoard);
 
   // const { currentMonthCount, lastMonthCount, trend, trendValue } =
   //   calculateTotalInterviewsCounts(responseDashBoard);
@@ -290,8 +298,6 @@ const Dashboard = () => {
     trendValue: outsourcedTrendValue,
   } = calculateOutsourceInterviewerCounts(outsourceInterviewers);
 
-  // Assessments
-  const { scheduleData } = useScheduleAssessments();
   const {
     currentMonthCount: assessmentCurrent,
     lastMonthCount: assessmentLast,
@@ -387,11 +393,11 @@ const Dashboard = () => {
       {
         key: "totalInterviews",
         title: "Total Interviews",
-        value: responseDashBoard?.totalRounds, //This month's interviews
-        subtitle: `Last month: ${responseDashBoard?.lastMonthInterviews}`,
+        value: responseDashBoard?.totalInterviews?.totalRounds, //This month's interviews
+        subtitle: `Last month: ${responseDashBoard?.totalInterviews?.lastMonth}`,
         icon: Users,
-        // trend,
-        // trendValue,
+        trend: responseDashBoard?.totalInterviews?.trend,
+        trendValue: responseDashBoard?.totalInterviews?.trendValue,
       },
       // {
       //   key: "outsourcedInterviews",
@@ -412,22 +418,24 @@ const Dashboard = () => {
       {
         key: "outsourcedInterviews",
         title: "Outsourced Interviews",
-        value: responseDashBoard?.outsourcedCount || 0,
+        value: responseDashBoard?.outsourcedInterviews?.totalCount || 0,
         subtitle: `Last month: ${
-          responseDashBoard?.outsourcedLastMonthCount || 0
+          responseDashBoard?.outsourcedInterviews?.lastMonth || 0
         }`,
         icon: Clock,
-        trend: outsourcedTrend,
-        trendValue: outsourcedTrendValue,
+        trend: responseDashBoard?.outsourcedInterviews?.trend,
+        trendValue: responseDashBoard?.outsourcedInterviews?.trendValue,
       },
       {
         key: "upcomingInterviews",
         title: "Upcoming Interviews",
-        value: responseDashBoard?.upcomingInterviews || 0,
-        subtitle: `Last week: ${responseDashBoard?.upcomingLastWeek || 0}`,
+        value: responseDashBoard?.upcomingInterviews?.currentWeekCount || 0,
+        subtitle: `Last week: ${
+          responseDashBoard?.upcomingInterviews?.lastWeek || 0
+        }`,
         icon: Calendar,
-        // trend: upcomingTrend,
-        // trendValue: upcomingTrendValue,
+        trend: responseDashBoard?.upcomingInterviews?.trend,
+        trendValue: responseDashBoard?.upcomingInterviews?.trendValue,
       },
       {
         key: "noShows",
@@ -454,11 +462,11 @@ const Dashboard = () => {
       {
         key: "assessmentsCompleted",
         title: "Assessments Completed",
-        value: assessmentCurrent || 0,
-        subtitle: `Last month: ${assessmentLast}`,
+        value: responseAssessmentDashBoard?.totalCompleted || 0,
+        subtitle: `Last month: ${responseAssessmentDashBoard?.lastMonth}`,
         icon: CheckCircle,
-        trend: assessmentTrend,
-        trendValue: assessmentTrendValue,
+        trend: responseAssessmentDashBoard?.trend,
+        trendValue: responseAssessmentDashBoard?.trendValue,
       },
       {
         key: "averageScore",

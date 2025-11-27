@@ -1063,6 +1063,7 @@ router.get(
         //     break;
         // ------------------------------ v1.0.4 >
 
+        // assessment templates api
         case "assessment": //assessment templates
           try {
             const {
@@ -1235,136 +1236,226 @@ router.get(
           // console.log('[37] Found', data.length, 'Assessment records');
           break;
 
+        // assessment scheduled for candidate api
         case "scheduleassessment": {
-          const {
-            assessmentId,
-            page,
-            limit,
-            searchQuery,
-            status,
-            assessmentIds,
-            orderMin,
-            orderMax,
-            expiryPreset,
-            createdPreset,
-          } = req.query;
+          console.log("req?.query?.type", req?.query);
+          if (req?.query?.type !== "analytics") {
+            const {
+              assessmentId,
+              page,
+              limit,
+              searchQuery,
+              status,
+              assessmentIds,
+              orderMin,
+              orderMax,
+              expiryPreset,
+              createdPreset,
+              type,
+            } = req.query;
 
-          // Base filter: tenant + ownership (already built in `query`)
-          const scheduledFilter = {
-            ...query, // includes tenantId, ownerId (or $in for inherited roles)
-            isActive: true,
-          };
+            // Base filter: tenant + ownership (already built in `query`)
+            const scheduledFilter = {
+              ...query, // includes tenantId, ownerId (or $in for inherited roles)
+              isActive: true,
+            };
 
-          // Only add assessmentId filter if it's provided AND valid
-          if (assessmentId) {
-            if (!mongoose.isValidObjectId(assessmentId)) {
-              return res.status(400).json({
-                success: false,
-                message: "Invalid assessmentId format",
-              });
+            // Only add assessmentId filter if it's provided AND valid
+            if (assessmentId) {
+              if (!mongoose.isValidObjectId(assessmentId)) {
+                return res.status(400).json({
+                  success: false,
+                  message: "Invalid assessmentId format",
+                });
+              }
+              scheduledFilter.assessmentId = assessmentId;
             }
-            scheduledFilter.assessmentId = assessmentId;
-          }
 
-          // Additional template filter (comma-separated assessmentIds)
-          if (assessmentIds) {
-            const ids = String(assessmentIds)
-              .split(",")
-              .map((id) => id.trim())
-              .filter((id) => mongoose.isValidObjectId(id));
-            if (ids.length) {
-              scheduledFilter.assessmentId = { $in: ids };
+            // Additional template filter (comma-separated assessmentIds)
+            if (assessmentIds) {
+              const ids = String(assessmentIds)
+                .split(",")
+                .map((id) => id.trim())
+                .filter((id) => mongoose.isValidObjectId(id));
+              if (ids.length) {
+                scheduledFilter.assessmentId = { $in: ids };
+              }
             }
-          }
 
-          // Order range filter
-          const orderCond = {};
-          if (orderMin !== undefined && orderMin !== "") {
-            const minVal = Number(orderMin);
-            if (!Number.isNaN(minVal)) orderCond.$gte = minVal;
-          }
-          if (orderMax !== undefined && orderMax !== "") {
-            const maxVal = Number(orderMax);
-            if (!Number.isNaN(maxVal)) orderCond.$lte = maxVal;
-          }
-          if (Object.keys(orderCond).length) {
-            scheduledFilter.order = orderCond;
-          }
-
-          // Expiry date presets: expired | next7 | next30
-          if (expiryPreset) {
-            const now = new Date();
-            const expiryCond = {};
-            if (expiryPreset === "expired") {
-              expiryCond.$lt = now;
-            } else if (expiryPreset === "next7") {
-              const future = new Date(now);
-              future.setDate(future.getDate() + 7);
-              expiryCond.$gte = now;
-              expiryCond.$lte = future;
-            } else if (expiryPreset === "next30") {
-              const future = new Date(now);
-              future.setDate(future.getDate() + 30);
-              expiryCond.$gte = now;
-              expiryCond.$lte = future;
+            // Order range filter
+            const orderCond = {};
+            if (orderMin !== undefined && orderMin !== "") {
+              const minVal = Number(orderMin);
+              if (!Number.isNaN(minVal)) orderCond.$gte = minVal;
             }
-            if (Object.keys(expiryCond).length) {
-              scheduledFilter.expiryAt = expiryCond;
+            if (orderMax !== undefined && orderMax !== "") {
+              const maxVal = Number(orderMax);
+              if (!Number.isNaN(maxVal)) orderCond.$lte = maxVal;
             }
-          }
-
-          // Created date presets: last7 | last30 | last90
-          if (createdPreset) {
-            const now = new Date();
-            const createdCond = {};
-            const daysMap = { last7: 7, last30: 30, last90: 90 };
-            const days = daysMap[createdPreset];
-            if (days) {
-              const past = new Date(now);
-              past.setDate(past.getDate() - days);
-              createdCond.$gte = past;
+            if (Object.keys(orderCond).length) {
+              scheduledFilter.order = orderCond;
             }
-            if (Object.keys(createdCond).length) {
-              scheduledFilter.createdAt = createdCond;
+
+            // Expiry date presets: expired | next7 | next30
+            if (expiryPreset) {
+              const now = new Date();
+              const expiryCond = {};
+              if (expiryPreset === "expired") {
+                expiryCond.$lt = now;
+              } else if (expiryPreset === "next7") {
+                const future = new Date(now);
+                future.setDate(future.getDate() + 7);
+                expiryCond.$gte = now;
+                expiryCond.$lte = future;
+              } else if (expiryPreset === "next30") {
+                const future = new Date(now);
+                future.setDate(future.getDate() + 30);
+                expiryCond.$gte = now;
+                expiryCond.$lte = future;
+              }
+              if (Object.keys(expiryCond).length) {
+                scheduledFilter.expiryAt = expiryCond;
+              }
             }
-          }
 
-          // Status filter (comma-separated, case-insensitive match)
-          if (status) {
-            const rawStatuses = String(status)
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean);
-            if (rawStatuses.length) {
-              // Store as-is; DB likely has title-case statuses (Scheduled, Completed, ...)
-              scheduledFilter.status = { $in: rawStatuses };
+            // Created date presets: last7 | last30 | last90
+            if (createdPreset) {
+              const now = new Date();
+              const createdCond = {};
+              const daysMap = { last7: 7, last30: 30, last90: 90 };
+              const days = daysMap[createdPreset];
+              if (days) {
+                const past = new Date(now);
+                past.setDate(past.getDate() - days);
+                createdCond.$gte = past;
+              }
+              if (Object.keys(createdCond).length) {
+                scheduledFilter.createdAt = createdCond;
+              }
             }
-          }
 
-          // Determine if advanced (paginated) mode should be used
-          const hasAdvancedParams =
-            page !== undefined ||
-            limit !== undefined ||
-            (typeof searchQuery === "string" && searchQuery.trim() !== "") ||
-            status !== undefined ||
-            assessmentIds !== undefined ||
-            orderMin !== undefined ||
-            orderMax !== undefined ||
-            expiryPreset !== undefined ||
-            createdPreset !== undefined;
+            // Status filter (comma-separated, case-insensitive match)
+            if (status) {
+              const rawStatuses = String(status)
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+              if (rawStatuses.length) {
+                // Store as-is; DB likely has title-case statuses (Scheduled, Completed, ...)
+                scheduledFilter.status = { $in: rawStatuses };
+              }
+            }
 
-          // Legacy behavior: no advanced params -> return full list array (backwards compatible)
-          if (!hasAdvancedParams) {
-            const scheduledAssessments = await ScheduledAssessmentSchema.find(
-              scheduledFilter
-            )
-              .select(
-                "_id scheduledAssessmentCode order expiryAt status createdAt assessmentId"
+            // Determine if advanced (paginated) mode should be used
+            const hasAdvancedParams =
+              page !== undefined ||
+              limit !== undefined ||
+              (typeof searchQuery === "string" && searchQuery.trim() !== "") ||
+              status !== undefined ||
+              assessmentIds !== undefined ||
+              orderMin !== undefined ||
+              orderMax !== undefined ||
+              expiryPreset !== undefined ||
+              createdPreset !== undefined;
+
+            // Legacy behavior: no advanced params -> return full list array (backwards compatible)
+            if (!hasAdvancedParams) {
+              const scheduledAssessments = await ScheduledAssessmentSchema.find(
+                scheduledFilter
               )
-              .lean();
+                .select(
+                  "_id scheduledAssessmentCode order expiryAt status createdAt assessmentId"
+                )
+                .lean();
+
+              if (!scheduledAssessments.length) {
+                data = [];
+                break;
+              }
+
+              const scheduledIds = scheduledAssessments.map((sa) => sa._id);
+
+              const candidateAssessments = await CandidateAssessment.find({
+                scheduledAssessmentId: { $in: scheduledIds },
+              })
+                .populate("candidateId")
+                .lean();
+
+              const schedulesWithCandidates = scheduledAssessments.map(
+                (schedule) => {
+                  const candidates = candidateAssessments.filter(
+                    (ca) =>
+                      ca.scheduledAssessmentId.toString() ===
+                      schedule._id.toString()
+                  );
+                  return {
+                    _id: schedule._id,
+                    assessmentId: schedule.assessmentId,
+                    scheduledAssessmentCode: schedule.scheduledAssessmentCode,
+                    order: schedule.order,
+                    expiryAt: schedule.expiryAt,
+                    status: schedule.status,
+                    createdAt: schedule.createdAt,
+                    candidates,
+                  };
+                }
+              );
+
+              data = schedulesWithCandidates;
+
+              break;
+            }
+
+            // Paginated behavior when advanced params are present
+            const pageNumber = parseInt(page, 10) > 0 ? parseInt(page, 10) : 1;
+            const limitNumber =
+              parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 10;
+            const skip = (pageNumber - 1) * limitNumber;
+
+            // Text search over a few key fields
+            const textSearch =
+              typeof searchQuery === "string" ? searchQuery.trim() : "";
+            const searchFilter = {};
+            if (textSearch) {
+              const searchRegex = new RegExp(
+                textSearch.replace(/\s+/g, " "),
+                "i"
+              );
+              searchFilter.$or = [
+                { scheduledAssessmentCode: searchRegex },
+                { status: searchRegex },
+                {
+                  order: isNaN(Number(textSearch))
+                    ? undefined
+                    : Number(textSearch),
+                },
+              ].filter((cond) => cond && Object.keys(cond).length > 0);
+            }
+
+            const finalMatch = Object.keys(searchFilter).length
+              ? { $and: [scheduledFilter, searchFilter] }
+              : scheduledFilter;
+
+            const [scheduledAssessments, totalItems] = await Promise.all([
+              ScheduledAssessmentSchema.find(finalMatch)
+                .select(
+                  "_id scheduledAssessmentCode order expiryAt status createdAt assessmentId"
+                )
+                .sort({ _id: -1 })
+                .skip(skip)
+                .limit(limitNumber)
+                .lean(),
+              ScheduledAssessmentSchema.countDocuments(finalMatch),
+            ]);
 
             if (!scheduledAssessments.length) {
-              data = [];
+              data = {
+                data: [],
+                total: 0,
+                page: pageNumber,
+                totalPages: 0,
+                itemsPerPage: limitNumber,
+              };
               break;
             }
 
@@ -1396,103 +1487,139 @@ router.get(
               }
             );
 
-            data = schedulesWithCandidates;
-            break;
-          }
-
-          // Paginated behavior when advanced params are present
-          const pageNumber = parseInt(page, 10) > 0 ? parseInt(page, 10) : 1;
-          const limitNumber =
-            parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 10;
-          const skip = (pageNumber - 1) * limitNumber;
-
-          // Text search over a few key fields
-          const textSearch =
-            typeof searchQuery === "string" ? searchQuery.trim() : "";
-          const searchFilter = {};
-          if (textSearch) {
-            const searchRegex = new RegExp(
-              textSearch.replace(/\s+/g, " "),
-              "i"
+            const totalPages = Math.max(
+              1,
+              Math.ceil((totalItems || 0) / (limitNumber || 10))
             );
-            searchFilter.$or = [
-              { scheduledAssessmentCode: searchRegex },
-              { status: searchRegex },
-              {
-                order: isNaN(Number(textSearch))
-                  ? undefined
-                  : Number(textSearch),
-              },
-            ].filter((cond) => cond && Object.keys(cond).length > 0);
-          }
 
-          const finalMatch = Object.keys(searchFilter).length
-            ? { $and: [scheduledFilter, searchFilter] }
-            : scheduledFilter;
-
-          const [scheduledAssessments, totalItems] = await Promise.all([
-            ScheduledAssessmentSchema.find(finalMatch)
-              .select(
-                "_id scheduledAssessmentCode order expiryAt status createdAt assessmentId"
-              )
-              .sort({ _id: -1 })
-              .skip(skip)
-              .limit(limitNumber)
-              .lean(),
-            ScheduledAssessmentSchema.countDocuments(finalMatch),
-          ]);
-
-          if (!scheduledAssessments.length) {
             data = {
-              data: [],
-              total: 0,
+              data: schedulesWithCandidates,
+              total: totalItems,
               page: pageNumber,
-              totalPages: 0,
+              totalPages,
               itemsPerPage: limitNumber,
             };
-            break;
-          }
-
-          const scheduledIds = scheduledAssessments.map((sa) => sa._id);
-
-          const candidateAssessments = await CandidateAssessment.find({
-            scheduledAssessmentId: { $in: scheduledIds },
-          })
-            .populate("candidateId")
-            .lean();
-
-          const schedulesWithCandidates = scheduledAssessments.map(
-            (schedule) => {
-              const candidates = candidateAssessments.filter(
-                (ca) =>
-                  ca.scheduledAssessmentId.toString() ===
-                  schedule._id.toString()
+          } else {
+            // ANALYTICS: Calculate Assessments Completed metrics using aggregation
+            try {
+              const now = new Date();
+              const currentMonthStart = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                1
               );
-              return {
-                _id: schedule._id,
-                assessmentId: schedule.assessmentId,
-                scheduledAssessmentCode: schedule.scheduledAssessmentCode,
-                order: schedule.order,
-                expiryAt: schedule.expiryAt,
-                status: schedule.status,
-                createdAt: schedule.createdAt,
-                candidates,
+              const lastMonthStart = new Date(
+                now.getFullYear(),
+                now.getMonth() - 1,
+                1
+              );
+              const lastMonthEnd = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                0
+              );
+
+              const analyticsAggregation =
+                await ScheduledAssessmentSchema.aggregate([
+                  {
+                    $match: {
+                      tenantId: tenantId,
+                      ...(ownerId ? { ownerId: userId } : {}),
+                      status: "completed",
+                      isActive: true,
+                    },
+                  },
+                  {
+                    $group: {
+                      _id: null,
+                      totalCompleted: { $sum: 1 },
+                      currentMonthCount: {
+                        $sum: {
+                          $cond: [
+                            { $gte: ["$createdAt", currentMonthStart] },
+                            1,
+                            0,
+                          ],
+                        },
+                      },
+                      lastMonthCount: {
+                        $sum: {
+                          $cond: [
+                            {
+                              $and: [
+                                { $gte: ["$createdAt", lastMonthStart] },
+                                { $lte: ["$createdAt", lastMonthEnd] },
+                              ],
+                            },
+                            1,
+                            0,
+                          ],
+                        },
+                      },
+                    },
+                  },
+                ]);
+
+              const result = analyticsAggregation[0] || {
+                totalCompleted: 0,
+                currentMonthCount: 0,
+                lastMonthCount: 0,
+              };
+
+              // Calculate trend
+              let trend = "up";
+              let trendValue = "+0% vs last month";
+
+              if (result.lastMonthCount === 0) {
+                trend = "up";
+                trendValue = "+100% vs last month";
+              } else {
+                const percentageChange =
+                  ((result.currentMonthCount - result.lastMonthCount) /
+                    result.lastMonthCount) *
+                  100;
+                trend = percentageChange >= 0 ? "up" : "down";
+                trendValue = `${Math.abs(percentageChange).toFixed(
+                  1
+                )}% vs last month`;
+              }
+
+              data = {
+                assessmentsCompleted: {
+                  value: result.currentMonthCount,
+                  lastMonth: result.lastMonthCount,
+                  trend: trend,
+                  trendValue: trendValue,
+                  totalCompleted: result.totalCompleted,
+                },
+                metadata: {
+                  calculationDate: now,
+                  dateRanges: {
+                    currentMonth: { start: currentMonthStart, end: now },
+                    lastMonth: { start: lastMonthStart, end: lastMonthEnd },
+                  },
+                },
+              };
+            } catch (error) {
+              console.error(
+                "Error in scheduleassessment analytics aggregation:",
+                error
+              );
+              data = {
+                assessmentsCompleted: {
+                  value: 0,
+                  lastMonth: 0,
+                  trend: "up",
+                  trendValue: "+100% vs last month",
+                  totalCompleted: 0,
+                },
+                metadata: {
+                  calculationDate: new Date(),
+                  error: "Failed to calculate assessment metrics",
+                },
               };
             }
-          );
-
-          const totalPages = Math.max(
-            1,
-            Math.ceil((totalItems || 0) / (limitNumber || 10))
-          );
-
-          data = {
-            data: schedulesWithCandidates,
-            total: totalItems,
-            page: pageNumber,
-            totalPages,
-            itemsPerPage: limitNumber,
-          };
+          }
           break;
         }
         // ------------------------------ v1.0.4 >
@@ -2358,8 +2485,12 @@ async function handleInterviewFiltering(options) {
 
 // getting dashboard stats for interviews
 
+// Enhanced dashboard stats function
+// Enhanced dashboard stats function with proper date handling
 async function getInterviewDashboardStats({ filterQuery, DataModel }) {
   if (!DataModel) throw new Error("DataModel missing");
+
+  const mongoose = require("mongoose");
 
   // Convert tenantId & ownerId to ObjectId
   const tenantId = new mongoose.Types.ObjectId(filterQuery.tenantId);
@@ -2372,8 +2503,28 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     ...(ownerId ? { "interview.ownerId": ownerId } : {}),
   };
 
+  const now = new Date();
+
+  // Date ranges for calculations
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+  const currentWeekStart = new Date(now);
+  currentWeekStart.setDate(now.getDate() - now.getDay() + 1); // Monday
+  const currentWeekEnd = new Date(currentWeekStart);
+  currentWeekEnd.setDate(currentWeekStart.getDate() + 6); // Sunday
+
+  const lastWeekStart = new Date(currentWeekStart);
+  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+  const lastWeekEnd = new Date(currentWeekEnd);
+  lastWeekEnd.setDate(lastWeekEnd.getDate() - 7);
+
+  const next7DaysEnd = new Date();
+  next7DaysEnd.setDate(now.getDate() + 7);
+
   // --------------------------------------------------------------------
-  // TOTAL INTERVIEWS
+  // TOTAL INTERVIEWS (All time count)
   // --------------------------------------------------------------------
   const totalInterviews = await DataModel.countDocuments({
     tenantId,
@@ -2381,22 +2532,9 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
   });
 
   // --------------------------------------------------------------------
-  // LAST MONTH
+  // CURRENT MONTH & LAST MONTH INTERVIEWS (Based on rounds)
   // --------------------------------------------------------------------
-  const lastMonthDate = new Date();
-  lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
-
-  const lastMonthInterviews = await DataModel.countDocuments({
-    tenantId,
-    ...(ownerId ? { ownerId } : {}),
-    createdAt: { $gte: lastMonthDate },
-  });
-
-  // --------------------------------------------------------------------
-  // OUTSOURCED INTERVIEWS (ANY external round)
-  // --------------------------------------------------------------------
-  const outsourced = await InterviewRounds.aggregate([
-    { $match: { interviewerType: "External" } },
+  const monthlyRoundsAgg = await InterviewRounds.aggregate([
     {
       $lookup: {
         from: "interviews",
@@ -2407,76 +2545,96 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     },
     { $unwind: "$interview" },
     { $match: matchInterview },
-    { $group: { _id: "$interviewId" } },
-  ]);
-
-  const outsourcedCount = outsourced.length;
-
-  // LAST MONTH OUTSOURCED
-  const outsourcedLastMonthAgg = await InterviewRounds.aggregate([
-    { $match: { interviewerType: "External" } },
     {
-      $lookup: {
-        from: "interviews",
-        localField: "interviewId",
-        foreignField: "_id",
-        as: "interview",
+      $project: {
+        createdAt: 1,
+        // Use createdAt as fallback for date calculations
+        effectiveDate: {
+          $cond: {
+            if: {
+              $and: [
+                { $ne: ["$dateTime", ""] },
+                { $ne: ["$dateTime", null] },
+                { $ne: ["$dateTime", undefined] },
+              ],
+            },
+            then: {
+              $cond: {
+                if: { $eq: [{ $type: "$dateTime" }, "string"] },
+                then: {
+                  $dateFromString: {
+                    dateString: "$dateTime",
+                    onError: "$createdAt", // Fallback to createdAt if parsing fails
+                  },
+                },
+                else: "$dateTime",
+              },
+            },
+            else: "$createdAt", // Default to createdAt if dateTime is empty/invalid
+          },
+        },
       },
     },
-    { $unwind: "$interview" },
+    {
+      $group: {
+        _id: null,
+        currentMonthCount: {
+          $sum: {
+            $cond: [{ $gte: ["$effectiveDate", currentMonthStart] }, 1, 0],
+          },
+        },
+        lastMonthCount: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ["$effectiveDate", lastMonthStart] },
+                  { $lte: ["$effectiveDate", lastMonthEnd] },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        totalRounds: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const monthlyData = monthlyRoundsAgg[0] || {
+    currentMonthCount: 0,
+    lastMonthCount: 0,
+    totalRounds: 0,
+  };
+
+  // Calculate trend for total interviews
+  const totalTrend =
+    monthlyData.lastMonthCount === 0
+      ? "up"
+      : monthlyData.currentMonthCount >= monthlyData.lastMonthCount
+      ? "up"
+      : "down";
+
+  const totalTrendValue =
+    monthlyData.lastMonthCount === 0
+      ? "+100% vs last month"
+      : `${(
+          ((monthlyData.currentMonthCount - monthlyData.lastMonthCount) /
+            monthlyData.lastMonthCount) *
+          100
+        ).toFixed(1)}% vs last month`;
+
+  // --------------------------------------------------------------------
+  // OUTSOURCED INTERVIEWS
+  // --------------------------------------------------------------------
+  const outsourcedAgg = await InterviewRounds.aggregate([
     {
       $match: {
-        ...matchInterview,
-        "interview.createdAt": { $gte: lastMonthDate },
+        interviewerType: "External",
+        ...(matchInterview["interview.tenantId"] ? {} : {}),
       },
     },
-    { $group: { _id: "$interviewId" } },
-  ]);
-
-  // --------------------------------------------------------------------
-  // UPCOMING INTERVIEWS
-  // --------------------------------------------------------------------
-  const upcomingRounds = await InterviewRounds.find({
-    dateTime: { $ne: null },
-  }).populate({
-    path: "interviewId",
-    match: { tenantId, ...(ownerId ? { ownerId } : {}) },
-  });
-
-  const upcomingInterviews = upcomingRounds.filter((r) => r.interviewId).length;
-
-  // LAST WEEK
-  const lastWeekDate = new Date();
-  lastWeekDate.setDate(lastWeekDate.getDate() - 7);
-
-  const upcomingLastWeek = upcomingRounds.filter((r) => {
-    if (!r.interviewId) return false;
-    return new Date(r.dateTime) >= lastWeekDate;
-  }).length;
-
-  // --------------------------------------------------------------------
-  // TOTAL ROUNDS
-  // --------------------------------------------------------------------
-  const totalRoundsAgg = await InterviewRounds.aggregate([
-    {
-      $lookup: {
-        from: "interviews",
-        localField: "interviewId",
-        foreignField: "_id",
-        as: "interview",
-      },
-    },
-    { $unwind: "$interview" },
-    { $match: matchInterview },
-    { $count: "count" },
-  ]);
-
-  const totalRounds = totalRoundsAgg[0]?.count || 0;
-
-  // --------------------------------------------------------------------
-  // ALL ROUNDS PER INTERVIEW
-  // --------------------------------------------------------------------
-  const allRoundsAggregation = await InterviewRounds.aggregate([
     {
       $lookup: {
         from: "interviews",
@@ -2489,31 +2647,387 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     { $match: matchInterview },
     {
       $group: {
-        _id: "$interviewId",
-        totalRounds: { $sum: 1 },
-        internalRounds: {
-          $sum: { $cond: [{ $eq: ["$interviewerType", "Internal"] }, 1, 0] },
+        _id: null,
+        currentMonthCount: {
+          $sum: {
+            $cond: [{ $gte: ["$createdAt", currentMonthStart] }, 1, 0],
+          },
         },
-        externalRounds: {
-          $sum: { $cond: [{ $eq: ["$interviewerType", "External"] }, 1, 0] },
+        lastMonthCount: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ["$createdAt", lastMonthStart] },
+                  { $lte: ["$createdAt", lastMonthEnd] },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        totalCount: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const outsourcedData = outsourcedAgg[0] || {
+    currentMonthCount: 0,
+    lastMonthCount: 0,
+    totalCount: 0,
+  };
+
+  // Calculate trend for outsourced interviews
+  const outsourcedTrend =
+    outsourcedData.lastMonthCount === 0
+      ? "up"
+      : outsourcedData.currentMonthCount >= outsourcedData.lastMonthCount
+      ? "up"
+      : "down";
+
+  const outsourcedTrendValue =
+    outsourcedData.lastMonthCount === 0
+      ? "+100% vs last month"
+      : `${(
+          ((outsourcedData.currentMonthCount - outsourcedData.lastMonthCount) /
+            outsourcedData.lastMonthCount) *
+          100
+        ).toFixed(1)}% vs last month`;
+
+  // --------------------------------------------------------------------
+  // UPCOMING INTERVIEWS (with safe date parsing)
+  // --------------------------------------------------------------------
+  const upcomingAgg = await InterviewRounds.aggregate([
+    {
+      $match: {
+        $and: [
+          { dateTime: { $ne: null, $exists: true } },
+          { dateTime: { $ne: "" } }, // Exclude empty strings
+          { dateTime: { $type: "string" } }, // Only consider string dates
+        ],
+        status: { $in: ["Draft", "RequestSent", "Scheduled"] },
+      },
+    },
+    {
+      $lookup: {
+        from: "interviews",
+        localField: "interviewId",
+        foreignField: "_id",
+        as: "interview",
+      },
+    },
+    { $unwind: "$interview" },
+    { $match: matchInterview },
+    {
+      $project: {
+        dateTime: 1,
+        // Safe date parsing with validation
+        parsedDateTime: {
+          $cond: {
+            if: {
+              $and: [
+                { $ne: ["$dateTime", ""] },
+                { $ne: ["$dateTime", null] },
+                {
+                  $regexMatch: {
+                    input: "$dateTime",
+                    regex: /^\d{4}-\d{2}-\d{2}/,
+                  },
+                }, // Basic date format validation
+              ],
+            },
+            then: {
+              $dateFromString: {
+                dateString: "$dateTime",
+                onError: null, // Return null if parsing fails
+                onNull: null,
+              },
+            },
+            else: null,
+          },
+        },
+      },
+    },
+    {
+      $match: {
+        parsedDateTime: { $ne: null }, // Only include documents with valid dates
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        upcoming7Days: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ["$parsedDateTime", now] },
+                  { $lte: ["$parsedDateTime", next7DaysEnd] },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        currentWeekCount: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ["$parsedDateTime", currentWeekStart] },
+                  { $lte: ["$parsedDateTime", currentWeekEnd] },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        lastWeekCount: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ["$parsedDateTime", lastWeekStart] },
+                  { $lte: ["$parsedDateTime", lastWeekEnd] },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
         },
       },
     },
   ]);
 
+  const upcomingData = upcomingAgg[0] || {
+    upcoming7Days: 0,
+    currentWeekCount: 0,
+    lastWeekCount: 0,
+  };
+
+  // Calculate trend for upcoming interviews
+  const upcomingTrend =
+    upcomingData.lastWeekCount === 0
+      ? "up"
+      : upcomingData.currentWeekCount >= upcomingData.lastWeekCount
+      ? "up"
+      : "down";
+
+  const upcomingTrendValue =
+    upcomingData.lastWeekCount === 0
+      ? "+100% vs last week"
+      : `${(
+          ((upcomingData.currentWeekCount - upcomingData.lastWeekCount) /
+            upcomingData.lastWeekCount) *
+          100
+        ).toFixed(1)}% vs last week`;
+
   // --------------------------------------------------------------------
-  // RETURN
+  // RETURN COMPLETE DASHBOARD DATA
   // --------------------------------------------------------------------
   return {
-    totalInterviews,
-    lastMonthInterviews,
-    outsourcedCount,
-    outsourcedLastMonth: outsourcedLastMonthAgg.length,
-    upcomingInterviews,
-    upcomingLastWeek,
-    totalRounds,
-    allRounds: allRoundsAggregation,
+    // Total Interviews Card Data
+    totalInterviews: {
+      value: monthlyData.currentMonthCount,
+      lastMonth: monthlyData.lastMonthCount,
+      trend: totalTrend,
+      trendValue: totalTrendValue,
+      totalRounds: monthlyData.totalRounds,
+    },
+
+    // Outsourced Interviews Card Data
+    outsourcedInterviews: {
+      value: outsourcedData.currentMonthCount,
+      lastMonth: outsourcedData.lastMonthCount,
+      trend: outsourcedTrend,
+      trendValue: outsourcedTrendValue,
+      totalCount: outsourcedData.totalCount,
+    },
+
+    // Upcoming Interviews Card Data
+    upcomingInterviews: {
+      value: upcomingData.upcoming7Days,
+      lastWeek: upcomingData.lastWeekCount,
+      trend: upcomingTrend,
+      trendValue: upcomingTrendValue,
+      currentWeekCount: upcomingData.currentWeekCount,
+    },
+
+    // Additional metadata
+    metadata: {
+      totalInterviewsCount: totalInterviews,
+      calculationDate: now,
+      dateRanges: {
+        currentMonth: { start: currentMonthStart, end: now },
+        lastMonth: { start: lastMonthStart, end: lastMonthEnd },
+        currentWeek: { start: currentWeekStart, end: currentWeekEnd },
+        lastWeek: { start: lastWeekStart, end: lastWeekEnd },
+        next7Days: { start: now, end: next7DaysEnd },
+      },
+    },
   };
 }
+
+// async function getInterviewDashboardStats({ filterQuery, DataModel }) {
+//   if (!DataModel) throw new Error("DataModel missing");
+
+//   // Convert tenantId & ownerId to ObjectId
+//   const tenantId = new mongoose.Types.ObjectId(filterQuery.tenantId);
+//   const ownerId = filterQuery.ownerId
+//     ? new mongoose.Types.ObjectId(filterQuery.ownerId)
+//     : null;
+
+//   const matchInterview = {
+//     "interview.tenantId": tenantId,
+//     ...(ownerId ? { "interview.ownerId": ownerId } : {}),
+//   };
+
+//   // --------------------------------------------------------------------
+//   // TOTAL INTERVIEWS
+//   // --------------------------------------------------------------------
+//   const totalInterviews = await DataModel.countDocuments({
+//     tenantId,
+//     ...(ownerId ? { ownerId } : {}),
+//   });
+
+//   // --------------------------------------------------------------------
+//   // LAST MONTH
+//   // --------------------------------------------------------------------
+//   const lastMonthDate = new Date();
+//   lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
+
+//   const lastMonthInterviews = await DataModel.countDocuments({
+//     tenantId,
+//     ...(ownerId ? { ownerId } : {}),
+//     createdAt: { $gte: lastMonthDate },
+//   });
+
+//   // --------------------------------------------------------------------
+//   // OUTSOURCED INTERVIEWS (ANY external round)
+//   // --------------------------------------------------------------------
+//   const outsourced = await InterviewRounds.aggregate([
+//     { $match: { interviewerType: "External" } },
+//     {
+//       $lookup: {
+//         from: "interviews",
+//         localField: "interviewId",
+//         foreignField: "_id",
+//         as: "interview",
+//       },
+//     },
+//     { $unwind: "$interview" },
+//     { $match: matchInterview },
+//     { $group: { _id: "$interviewId" } },
+//   ]);
+
+//   const outsourcedCount = outsourced.length;
+
+//   // LAST MONTH OUTSOURCED
+//   const outsourcedLastMonthAgg = await InterviewRounds.aggregate([
+//     { $match: { interviewerType: "External" } },
+//     {
+//       $lookup: {
+//         from: "interviews",
+//         localField: "interviewId",
+//         foreignField: "_id",
+//         as: "interview",
+//       },
+//     },
+//     { $unwind: "$interview" },
+//     {
+//       $match: {
+//         ...matchInterview,
+//         "interview.createdAt": { $gte: lastMonthDate },
+//       },
+//     },
+//     { $group: { _id: "$interviewId" } },
+//   ]);
+
+//   // --------------------------------------------------------------------
+//   // UPCOMING INTERVIEWS
+//   // --------------------------------------------------------------------
+//   const upcomingRounds = await InterviewRounds.find({
+//     dateTime: { $ne: null },
+//   }).populate({
+//     path: "interviewId",
+//     match: { tenantId, ...(ownerId ? { ownerId } : {}) },
+//   });
+
+//   const upcomingInterviews = upcomingRounds.filter((r) => r.interviewId).length;
+
+//   // LAST WEEK
+//   const lastWeekDate = new Date();
+//   lastWeekDate.setDate(lastWeekDate.getDate() - 7);
+
+//   const upcomingLastWeek = upcomingRounds.filter((r) => {
+//     if (!r.interviewId) return false;
+//     return new Date(r.dateTime) >= lastWeekDate;
+//   }).length;
+
+//   // --------------------------------------------------------------------
+//   // TOTAL ROUNDS
+//   // --------------------------------------------------------------------
+//   const totalRoundsAgg = await InterviewRounds.aggregate([
+//     {
+//       $lookup: {
+//         from: "interviews",
+//         localField: "interviewId",
+//         foreignField: "_id",
+//         as: "interview",
+//       },
+//     },
+//     { $unwind: "$interview" },
+//     { $match: matchInterview },
+//     { $count: "count" },
+//   ]);
+
+//   const totalRounds = totalRoundsAgg[0]?.count || 0;
+
+//   // --------------------------------------------------------------------
+//   // ALL ROUNDS PER INTERVIEW
+//   // --------------------------------------------------------------------
+//   const allRoundsAggregation = await InterviewRounds.aggregate([
+//     {
+//       $lookup: {
+//         from: "interviews",
+//         localField: "interviewId",
+//         foreignField: "_id",
+//         as: "interview",
+//       },
+//     },
+//     { $unwind: "$interview" },
+//     { $match: matchInterview },
+//     {
+//       $group: {
+//         _id: "$interviewId",
+//         totalRounds: { $sum: 1 },
+//         internalRounds: {
+//           $sum: { $cond: [{ $eq: ["$interviewerType", "Internal"] }, 1, 0] },
+//         },
+//         externalRounds: {
+//           $sum: { $cond: [{ $eq: ["$interviewerType", "External"] }, 1, 0] },
+//         },
+//       },
+//     },
+//   ]);
+
+//   // --------------------------------------------------------------------
+//   // RETURN
+//   // --------------------------------------------------------------------
+//   return {
+//     totalInterviews,
+//     lastMonthInterviews,
+//     outsourcedCount,
+//     outsourcedLastMonth: outsourcedLastMonthAgg.length,
+//     upcomingInterviews,
+//     upcomingLastWeek,
+//     totalRounds,
+//     allRounds: allRoundsAggregation,
+//   };
+// }
 
 module.exports = router;
