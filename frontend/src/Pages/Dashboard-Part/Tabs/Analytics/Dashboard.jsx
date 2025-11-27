@@ -469,15 +469,15 @@ const Dashboard = () => {
         trend: "up",
         trendValue: "+0.3 vs last month",
       },
-      {
-        key: "billableInterviews",
-        title: "Billable Interviews",
-        value: kpiData?.billableInterviews || 0,
-        subtitle: "External revenue",
-        icon: DollarSign,
-        trend: "up",
-        trendValue: "+18% vs last month",
-      },
+      // {
+      //   key: "billableInterviews",
+      //   title: "Billable Interviews",
+      //   value: kpiData?.billableInterviews || 0,
+      //   subtitle: "External revenue",
+      //   icon: DollarSign,
+      //   trend: "up",
+      //   trendValue: "+18% vs last month",
+      // },
     ];
 
     return allKPIs.filter((kpi) => customSettings.kpiCards[kpi.key]);

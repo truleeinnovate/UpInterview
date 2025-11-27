@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Fixed style issue
+
 import React, { useState, useEffect } from "react";
 import { GripVertical, Eye, EyeOff, Settings, RotateCcw } from "lucide-react";
 
@@ -297,7 +299,7 @@ const DragDropDashboard = ({
       <div
         className={`grid gap-6 transition-colors ${
           customSettings.layout === "grid"
-            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
+            ? "sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3"
             : customSettings.layout === "list"
             ? "grid-cols-1"
             : "grid-cols-1 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-6"
