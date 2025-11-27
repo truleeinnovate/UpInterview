@@ -1761,6 +1761,10 @@ app.use("/upinterviewEnterpriseContact", upinterviewEnterpriseContactRoutes);
 const externalRoutes = require("./routes/external.routes");
 app.use("/external", externalRoutes);
 
+const analyticsRoutes = require("./routes/AnalyticsRoutes/analytics.js");
+app.use("/analytics", analyticsRoutes);
+
+
 // Create meeting endpoint
 // app.post('/api/create-meeting', async (req, res) => {
 //   try {

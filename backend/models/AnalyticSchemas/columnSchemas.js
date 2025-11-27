@@ -4,221 +4,235 @@ const { Schema } = mongoose;
 // =============================================================================
 // COLUMN CONFIGURATION SCHEMA - User column preferences per report type
 // =============================================================================
-const columnConfigurationSchema = new Schema(
-  {
-    // tenantId: {
-    //   type: String,
-    //   required: true,
-    //   index: true,
-    // },
-    // ownerId: {
-    //   type: String,
-    //   required: true,
-    //   index: true,
-    // },
-    configId: {
-      type: String,
-      required: true,
-      index: true,
-    },
+// const columnConfigurationSchema = new Schema(
+//   {
+//     // tenantId: {
+//     //   type: String,
+//     //   required: true,
+//     //   index: true,
+//     // },
+//     // ownerId: {
+//     //   type: String,
+//     //   required: true,
+//     //   index: true,
+//     // },
+//     configId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
 
-    // Report/Table Type
-    reportType: {
-      type: String,
-      required: true,
-      enum: [
-        "interview",
-        "interviewer",
-        "assessment",
-        "candidate",
-        "organization",
-        "dashboard",
-        "custom",
-      ],
-    },
+//     // Report/Table Type
+//     reportType: {
+//       type: String,
+//       required: true,
+//       enum: [
+//         "interview",
+//         "interviewer",
+//         "assessment",
+//         "candidate",
+//         "organization",
+//         "dashboard",
+//         "custom",
+//       ],
+//     },
 
-    // Column Configuration
-    columns: [
-      {
-        key: {
-          type: String,
-          required: true,
-        },
-        label: {
-          type: String,
-          required: true,
-        },
-        visible: {
-          type: Boolean,
-          default: true,
-        },
-        width: {
-          type: String,
-          default: "auto",
-          enum: [
-            "auto",
-            "100px",
-            "150px",
-            "200px",
-            "250px",
-            "300px",
-            "350px",
-            "400px",
-          ],
-        },
-        order: {
-          type: Number,
-          default: 0,
-        },
-        type: {
-          type: String,
-          enum: [
-            "text",
-            "number",
-            "date",
-            "select",
-            "array",
-            "object",
-            "boolean",
-          ],
-          default: "text",
-        },
-        sortable: {
-          type: Boolean,
-          default: true,
-        },
-        filterable: {
-          type: Boolean,
-          default: true,
-        },
-        render: String, // Custom render function name
-        description: String,
-        isCustom: {
-          type: Boolean,
-          default: false,
-        },
+//     // Column Configuration
+//     columns: [
+//       {
+//         key: {
+//           type: String,
+//           required: true,
+//         },
+//         label: {
+//           type: String,
+//           required: true,
+//         },
+//         visible: {
+//           type: Boolean,
+//           default: true,
+//         },
+//         width: {
+//           type: String,
+//           default: "auto",
+//           enum: [
+//             "auto",
+//             "100px",
+//             "150px",
+//             "200px",
+//             "250px",
+//             "300px",
+//             "350px",
+//             "400px",
+//           ],
+//         },
+//         order: {
+//           type: Number,
+//           default: 0,
+//         },
+//         type: {
+//           type: String,
+//           enum: [
+//             "text",
+//             "number",
+//             "date",
+//             "select",
+//             "array",
+//             "object",
+//             "boolean",
+//           ],
+//           default: "text",
+//         },
+//         sortable: {
+//           type: Boolean,
+//           default: true,
+//         },
+//         filterable: {
+//           type: Boolean,
+//           default: true,
+//         },
+//         render: String, // Custom render function name
+//         description: String,
+//         isCustom: {
+//           type: Boolean,
+//           default: false,
+//         },
 
-        // For select type columns
-        options: [String],
+//         // For select type columns
+//         options: [String],
 
-        // For custom columns
-        calculation: String, // Formula or aggregation
-        dataSource: String, // Source field or API endpoint
+//         // For custom columns
+//         calculation: String, // Formula or aggregation
+//         dataSource: String, // Source field or API endpoint
 
-        // Formatting options
-        format: {
-          dateFormat: String, // 'MM/DD/YYYY', 'DD/MM/YYYY', etc.
-          numberFormat: String, // 'currency', 'percentage', 'decimal'
-          precision: Number, // Decimal places
-          prefix: String, // Currency symbol, etc.
-          suffix: String, // Unit, percentage sign, etc.
-        },
-      },
-    ],
+//         // Formatting options
+//         format: {
+//           dateFormat: String, // 'MM/DD/YYYY', 'DD/MM/YYYY', etc.
+//           numberFormat: String, // 'currency', 'percentage', 'decimal'
+//           precision: Number, // Decimal places
+//           prefix: String, // Currency symbol, etc.
+//           suffix: String, // Unit, percentage sign, etc.
+//         },
+//       },
+//     ],
 
-    // Layout Settings
-    layout: {
-      type: {
-        type: String,
-        enum: ["table", "grid", "list", "kanban"],
-        default: "table",
-      },
-      density: {
-        type: String,
-        enum: ["compact", "normal", "comfortable"],
-        default: "normal",
-      },
-      showBorders: {
-        type: Boolean,
-        default: true,
-      },
-      showStripes: {
-        type: Boolean,
-        default: true,
-      },
-      stickyHeader: {
-        type: Boolean,
-        default: true,
-      },
-    },
+//     // Layout Settings
+//     layout: {
+//       type: {
+//         type: String,
+//         enum: ["table", "grid", "list", "kanban"],
+//         default: "table",
+//       },
+//       density: {
+//         type: String,
+//         enum: ["compact", "normal", "comfortable"],
+//         default: "normal",
+//       },
+//       showBorders: {
+//         type: Boolean,
+//         default: true,
+//       },
+//       showStripes: {
+//         type: Boolean,
+//         default: true,
+//       },
+//       stickyHeader: {
+//         type: Boolean,
+//         default: true,
+//       },
+//     },
 
-    // Sorting and Filtering
-    defaultSort: {
-      column: String,
-      direction: {
-        type: String,
-        enum: ["asc", "desc"],
-        default: "asc",
-      },
-    },
+//     // Sorting and Filtering
+//     defaultSort: {
+//       column: String,
+//       direction: {
+//         type: String,
+//         enum: ["asc", "desc"],
+//         default: "asc",
+//       },
+//     },
 
-    defaultFilters: [
-      {
-        column: String,
-        operator: String,
-        value: Schema.Types.Mixed,
-      },
-    ],
+//     defaultFilters: [
+//       {
+//         column: String,
+//         operator: String,
+//         value: Schema.Types.Mixed,
+//       },
+//     ],
 
-    // Pagination
-    pagination: {
-      enabled: {
-        type: Boolean,
-        default: true,
-      },
-      pageSize: {
-        type: Number,
-        default: 25,
-        enum: [10, 25, 50, 100],
-      },
-    },
+//     // Pagination
+//     pagination: {
+//       enabled: {
+//         type: Boolean,
+//         default: true,
+//       },
+//       pageSize: {
+//         type: Number,
+//         default: 25,
+//         enum: [10, 25, 50, 100],
+//       },
+//     },
 
-    // Grouping Settings
-    grouping: {
-      enabled: {
-        type: Boolean,
-        default: false,
-      },
-      column: String, // Column to group by
-      expandedGroups: [String], // Which groups are expanded
-      showGroupCounts: {
-        type: Boolean,
-        default: true,
-      },
-      sortGroups: {
-        type: String,
-        enum: ["asc", "desc", "count_asc", "count_desc"],
-        default: "asc",
-      },
-    },
+//     // Grouping Settings
+//     grouping: {
+//       enabled: {
+//         type: Boolean,
+//         default: false,
+//       },
+//       column: String, // Column to group by
+//       expandedGroups: [String], // Which groups are expanded
+//       showGroupCounts: {
+//         type: Boolean,
+//         default: true,
+//       },
+//       sortGroups: {
+//         type: String,
+//         enum: ["asc", "desc", "count_asc", "count_desc"],
+//         default: "asc",
+//       },
+//     },
 
-    // Export Settings
-    exportSettings: {
-      includeHiddenColumns: {
-        type: Boolean,
-        default: false,
-      },
-      format: {
-        type: String,
-        enum: ["csv", "excel", "pdf", "json"],
-        default: "csv",
-      },
-    },
-    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-  },
-  {
-    timestamps: true,
+//     // Export Settings
+//     exportSettings: {
+//       includeHiddenColumns: {
+//         type: Boolean,
+//         default: false,
+//       },
+//       format: {
+//         type: String,
+//         enum: ["csv", "excel", "pdf", "json"],
+//         default: "csv",
+//       },
+//     },
+//     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
+//     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+//     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
+
+const columnConfigurationSchema = new Schema({
+  tenantId:   { type: Schema.Types.ObjectId, ref: "Tenant", required: true },
+  templateId: { type: Schema.Types.ObjectId, ref: "ReportTemplate", required: true },
+
+  // USER'S COLUMN SELECTION (overrides report defaults)
+  selectedColumns: [{
+    key:     String, // "candidateName", "position", "interviewDate"
+    visible: { type: Boolean, default: true },
+    order:   { type: Number }, // user's preferred order
+    width:   String // "150px", "auto"
+  }],
+
+  // LAYOUT PREFERENCES
+  layout: {
+    density: { type: String, enum: ["compact", "normal", "comfortable"], default: "normal" },
+    showBorders: { type: Boolean, default: true }
   }
-);
+}, { timestamps: true });
 
-// Indexes
-columnConfigurationSchema.index(
-  { tenantId: 1, ownerId: 1, reportType: 1 },
-  { unique: true }
-);
-columnConfigurationSchema.index({ tenantId: 1, configId: 1 }, { unique: true });
+columnConfigurationSchema.index({ tenantId: 1, userId: 1, templateId: 1 }, { unique: true });
 
 // =============================================================================
 // DASHBOARD LAYOUT SCHEMA - Dashboard widget positions and configurations

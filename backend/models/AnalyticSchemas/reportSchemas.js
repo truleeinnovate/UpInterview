@@ -266,226 +266,58 @@ const { Schema } = mongoose;
 // );
 
 const reportTemplateSchema = new Schema({
-  // templateId: {
-  //   type: String,
-  //   required: true,
-  //   index: true
-  // },
-  // tenantId: {
-  //   type: mongoose.Schema.Types.ObjectId
-  // },
-  label: {
-    type: String,
-    required: true
-  },
-  name: {
-    type: String,
-    required: true
-  },
+  tenantId: { type: String, index: true }, // "null" for standard templates
+
+  name:        { type: String, required: true },
+  label:       { type: String, required: true },
   description: String,
-  category: {
-    type: Schema.Types.ObjectId,
-    ref: "ReportCategory",
-    required: false, // false = template can be "uncategorized" 
-    index: true,
-    default: null,
-  },
-  // Template Configuration
+  category:    { type: Schema.Types.ObjectId, ref: "ReportCategory", index: true },
+
+  isSystemTemplate: { type: Boolean, default: false, index: true },
+  requiredPlans: [{ type: String, enum: ["free", "starter", "professional", "enterprise"] }],
+
   configuration: {
-    // Data Source Settings
     dataSource: {
-      collections: [String], // Which collections to query: ['interviews', 'assessments']
-      defualtColumns: ['Column1', 'Column1'],
-      selectedColumns: ['Column1', 'Column1'], // always query should be run on selectedColumns columns
-      availableColumns: ['Column1', 'Column1'],
-      ShowMe: ['My Interviews', 'All Interviews'],
-      dateRange: {
-        type: String,
-        enum: ['today', 'yesterday', 'last7days', 'last30days', 'last90days', 'thisMonth', 'lastMonth', 'thisYear', 'custom'],
-        default: 'last30days'
+      collections: [String],
+
+      columns: {
+        lockedColumns: [{
+          key: String, label: String, order: Number, width: { type: String, default: "200px" }
+        }],
+        default: [{
+          key: String, label: String, order: Number, width: { type: String, default: "150px" }
+        }],
+        available: [{
+          key: String, label: String, type: { type: String, enum: ["text","number","date","status","user","tag"] }
+        }]
       },
-      customDateRange: {
-        startDate: Date,
-        endDate: Date
-      },
+
       filters: {
-        interviewType: {
-          type: String,
-          enum: ['all', 'internal', 'external'],
-          default: 'all'
+        default: {
+          dateRange:       { type: String, default: "last30days" },
+          interviewType:   { type: String, default: "all" },
+          candidateStatus: { type: String, default: "all" },
+          position:        { type: String, default: "all" },
+          interviewer:     { type: String, default: "all" }
         },
-        candidateStatus: {
-          type: String,
-          enum: ['all', 'active', 'inactive', 'cancelled'],
-          default: 'all'
-        },
-        position: {
-          type: String,
-          default: 'all'
-        },
-        interviewer: {
-          type: String,
-          default: 'all'
-        },
-        organization: String,
-        status: String
+        available: [{
+          key: String, label: String,
+          type: { type: String, enum: ["select","multiselect","date","text","user"] },
+          optionsFrom: String,
+          required: { type: Boolean, default: false }
+        }],
+        advancedEnabled: { type: Boolean, default: false }
       }
     },
-    // Layout Configuration
-    layout: {
-      format: {
-        type: String,
-        enum: ['dashboard', 'table', 'chart', 'summary', 'kanban'],
-        default: 'dashboard'
-      },
-      style: {
-        type: String,
-        enum: ['grid', 'list', 'compact'],
-        default: 'grid'
-      },
-      theme: {
-        type: String,
-        enum: ['default', 'dark', 'high-contrast'],
-        default: 'default'
-      },
-      // Sections Configuration
-      sections: [{
-        id: String,
-        type: {
-          type: String,
-          enum: ['kpi', 'chart', 'table', 'text', 'filter']
-        },
-        title: String,
-        position: {
-          row: Number,
-          column: Number,
-          width: Number,
-          height: Number
-        },
-        visible: {
-          type: Boolean,
-          default: true
-        },
-        config: {
-          // KPI Configuration
-          kpiType: String, // 'totalInterviews', 'averageScore', etc.
-          chartType: String, // 'line', 'bar', 'pie', etc.
-          dataKey: String,
-          aggregation: String, // 'sum', 'avg', 'count'
-          // Chart Configuration
-          xAxis: String,
-          yAxis: String,
-          groupBy: String,
-          colors: [String],
-          // Table Configuration
-          columns: [{
-            key: String,
-            label: String,
-            visible: { type: Boolean, default: true },
-            width: { type: String, default: 'auto' },
-            order: { type: Number, default: 0 },
-            sortable: Boolean,
-            filterable: Boolean,
-            type: {
-              type: String,
-              enum: ['text', 'number', 'date', 'select', 'array', 'object'],
-              default: 'text'
-            },
-            render: String, // Function name for custom rendering
-            description: String
-          }],
-          // Custom settings
-          customSettings: Schema.Types.Mixed
-        }
-      }]
-    },
-    // Scheduling Configuration
-    //later we need to check about scheduling
-    // scheduling: {
-    //   frequency: {
-    //     type: String,
-    //     enum: ['manual', 'daily', 'weekly', 'monthly', 'quarterly'],
-    //     default: 'manual'
-    //   },
-    //   dayOfWeek: Number, // 0-6 for weekly
-    //   dayOfMonth: Number, // 1-31 for monthly
-    //   time: String, // HH:MM format
-    //   timezone: String,
-    //   recipients: [String], // email addresses
-    //   autoExport: {
-    //     enabled: {
-    //       type: Boolean,
-    //       default: false
-    //     },
-    //     format: {
-    //       type: String,
-    //       enum: ['pdf', 'csv', 'excel', 'json'],
-    //       default: 'pdf'
-    //     }
-    //   }
-    // }
+    layout: { type: Schema.Types.Mixed }
   },
-  // Template Status and Metadata
-  status: {
-    type: String,
-    enum: ['active', 'draft', 'archived', 'template'],
-    default: 'draft'
-  },
-  // Sharing and Permissions
-  sharing: {
-    isPublic: {
-      type: Boolean,
-      default: false
-    },
-    sharedWith: [{
-      userId: String,
-      permission: {
-        type: String,
-        enum: ['view', 'edit', 'admin'],
-        default: 'view'
-      }
-    }],
-    // teamAccess: {
-    //   type: String,
-    //   enum: ['private', 'team', 'organization'],
-    //   default: 'private'
-    // }
-  },
-  // Usage Statistics
-  usage: {
-    lastGenerated: Date,
-    generationCount: {
-      type: Number,
-      default: 0
-    },
-    lastModified: Date,
-    modifiedBy: String,
-    viewCount: {
-      type: Number,
-      default: 0
-    },
-    favoriteCount: {
-      type: Number,
-      default: 0
-    }
-  },
-  // Template Tags and Search
-  tags: [String],
-  searchKeywords: [String],
 
-  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-}, {
-  timestamps: true
-});
+  status: { type: String, enum: ["active","draft","archived"], default: "active" },
+  createdBy: { type: String, default: "system" }
+}, { timestamps: true });
 
-// Indexes for Report Templates
-reportTemplateSchema.index({ tenantId: 1, templateId: 1 }, { unique: true });
-reportTemplateSchema.index({ tenantId: 1, type: 1 });
-reportTemplateSchema.index({ tenantId: 1, createdBy: 1 });
-reportTemplateSchema.index({ tenantId: 1, status: 1 });
-reportTemplateSchema.index({ tenantId: 1, "sharing.isPublic": 1 });
+// reportTemplateSchema.index({ tenantId: 1, templateId: 1 }, { unique: true });
+reportTemplateSchema.index({ isSystemTemplate: 1 });
 
 // =============================================================================
 // DASHBOARD CONFIGURATION SCHEMA - User dashboard preferences
@@ -884,90 +716,90 @@ trendsConfigSchema.index({ tenantId: 1, configId: 1 }, { unique: true });
 // =============================================================================
 // SAVED QUERIES SCHEMA - User's saved custom queries
 // =============================================================================
-const savedQuerySchema = new Schema(
-  {
-    tenantId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    ownerId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    queryId: {
-      type: String,
-      required: true,
-      index: true,
-    },
+// const savedQuerySchema = new Schema(
+//   {
+//     tenantId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
+//     ownerId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
+//     queryId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
 
-    name: {
-      type: String,
-      required: true,
-    },
-    description: String,
+//     name: {
+//       type: String,
+//       required: true,
+//     },
+//     description: String,
 
-    // Query Configuration
-    query: {
-      collection: {
-        type: String,
-        required: true,
-        enum: [
-          "interviews",
-          "interviewers",
-          "assessments",
-          "candidates",
-          "organizations",
-        ],
-      },
-      filters: Schema.Types.Mixed,
-      aggregation: [
-        {
-          stage: String,
-          config: Schema.Types.Mixed,
-        },
-      ],
-      sort: Schema.Types.Mixed,
-      limit: Number,
-    },
+//     // Query Configuration
+//     query: {
+//       collection: {
+//         type: String,
+//         required: true,
+//         enum: [
+//           "interviews",
+//           "interviewers",
+//           "assessments",
+//           "candidates",
+//           "organizations",
+//         ],
+//       },
+//       filters: Schema.Types.Mixed,
+//       aggregation: [
+//         {
+//           stage: String,
+//           config: Schema.Types.Mixed,
+//         },
+//       ],
+//       sort: Schema.Types.Mixed,
+//       limit: Number,
+//     },
 
-    // Visualization Settings
-    visualization: {
-      type: {
-        type: String,
-        enum: ["table", "chart", "kpi", "list"],
-        default: "table",
-      },
-      chartType: String, // 'line', 'bar', 'pie', etc.
-      config: Schema.Types.Mixed,
-    },
+//     // Visualization Settings
+//     visualization: {
+//       type: {
+//         type: String,
+//         enum: ["table", "chart", "kpi", "list"],
+//         default: "table",
+//       },
+//       chartType: String, // 'line', 'bar', 'pie', etc.
+//       config: Schema.Types.Mixed,
+//     },
 
-    // Sharing
-    isPublic: {
-      type: Boolean,
-      default: false,
-    },
-    sharedWith: [String], // userIds
+//     // Sharing
+//     isPublic: {
+//       type: Boolean,
+//       default: false,
+//     },
+//     sharedWith: [String], // userIds
 
-    // Usage
-    lastExecuted: Date,
-    executionCount: {
-      type: Number,
-      default: 0,
-    },
+//     // Usage
+//     lastExecuted: Date,
+//     executionCount: {
+//       type: Number,
+//       default: 0,
+//     },
 
-    tags: [String],
-  },
-  {
-    timestamps: true,
-  }
-);
+//     tags: [String],
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
 
-// Indexes for Saved Queries
-savedQuerySchema.index({ tenantId: 1, userId: 1 });
-savedQuerySchema.index({ tenantId: 1, queryId: 1 }, { unique: true });
-savedQuerySchema.index({ tenantId: 1, isPublic: 1 });
+// // Indexes for Saved Queries
+// savedQuerySchema.index({ tenantId: 1, userId: 1 });
+// savedQuerySchema.index({ tenantId: 1, queryId: 1 }, { unique: true });
+// savedQuerySchema.index({ tenantId: 1, isPublic: 1 });
 
 // =============================================================================
 // EXPORT MODELS
@@ -976,5 +808,5 @@ module.exports = {
   ReportTemplate: mongoose.model("ReportTemplate", reportTemplateSchema),
   DashboardConfig: mongoose.model("DashboardConfig", dashboardConfigSchema),
   TrendsConfig: mongoose.model("TrendsConfig", trendsConfigSchema),
-  SavedQuery: mongoose.model("SavedQuery", savedQuerySchema),
+  // SavedQuery: mongoose.model("SavedQuery", savedQuerySchema),
 };
