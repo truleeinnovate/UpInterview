@@ -282,7 +282,7 @@ const UserForm = ({ mode }) => {
       }
       console.log("is loading before submit", isLoading);
       // ------------------------------v1.0.1 >
-      const result = await addOrUpdateUser.mutateAsync({
+      await addOrUpdateUser.mutateAsync({
         userData: submitUserData,
         file,
         isFileRemoved,

@@ -11,6 +11,7 @@
 // v2.0.0  -  Ashok   - added max salary annually for filters
 // v2.0.1  -  Ashok   - added common code for empty state messages when fetch, search and filter etc.
 // v2.0.2  -  Ashok   - fixed style issues
+// v2.0.3  -  Ashok   - fixed eye button color
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -774,7 +775,7 @@ const PositionTab = () => {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => handleView(row),
           },
         ]

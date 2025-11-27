@@ -3,6 +3,7 @@
 // v1.0.2  -  Ashraf  -  getting error in azure for organization get based on id
 // v1.0.3  -  Ashraf  -  fixed suepr admin creation issue
 // v1.0.4  -  Ashok   -  small change in get tenant by Id controller
+// v1.0.5  -  Ashok   -  added returning response after user creation at organizationUserCreation controller
 
 const bcrypt = require("bcrypt");
 const Tenant = require("../models/Tenant");
@@ -158,6 +159,10 @@ const organizationUserCreation = async (req, res) => {
       });
 
       const savedContact = await newContact.save();
+      return res.status(200).json({
+        message: "User created successfully",
+        contactId: savedContact._id, // using this profile image upload
+      });
     }
   } catch (error) {
     console.error("Error in organizationUserCreation:", {
