@@ -37,7 +37,6 @@ const InterviewAvailability = require("../models/InterviewAvailability.js");
 
 const organizationUserCreation = async (req, res) => {
   try {
-
     const { UserData, contactData } = req.body;
 
     if (!UserData || !contactData) {
@@ -159,7 +158,6 @@ const organizationUserCreation = async (req, res) => {
       });
 
       const savedContact = await newContact.save();
-
     }
   } catch (error) {
     console.error("Error in organizationUserCreation:", {
@@ -782,7 +780,6 @@ const verifyEmailChange = async (req, res) => {
         .json({ success: false, message: "Email change verification failed" });
     }
 
-
     // Update email
     user.email = decoded.newEmail;
     user.newEmail = "";
@@ -812,14 +809,14 @@ const getAllOrganizations = async (req, res) => {
     const {
       page = 0,
       limit = 10,
-      search = '',
+      search = "",
       status,
       subscriptionStatus,
       plan,
       createdDate,
       minUsers,
       maxUsers,
-      type
+      type,
     } = req.query;
 
     const skip = parseInt(page) * parseInt(limit);
@@ -830,19 +827,19 @@ const getAllOrganizations = async (req, res) => {
 
     // Search optimization - use regex for text search
     if (search) {
-      const searchRegex = new RegExp(search, 'i');
+      const searchRegex = new RegExp(search, "i");
       query.$or = [
         { firstName: searchRegex },
         { lastName: searchRegex },
         { Email: searchRegex },
         { Phone: searchRegex },
-        { company: searchRegex }
+        { company: searchRegex },
       ];
     }
 
     // Filter optimizations
     if (status) {
-      query.status = { $in: status.split(',') };
+      query.status = { $in: status.split(",") };
     }
 
     if (type) {
@@ -867,7 +864,7 @@ const getAllOrganizations = async (req, res) => {
       .lean();
 
     // Get tenant IDs for aggregation
-    const tenantIds = organizations.map(org => org._id);
+    const tenantIds = organizations.map((org) => org._id);
 
     // Total user count per tenant (only for paginated results)
     const userCounts = await Users.aggregate([
@@ -907,7 +904,7 @@ const getAllOrganizations = async (req, res) => {
 
     // Fetch subscriptions only for paginated tenants
     const allSubscriptions = await CustomerSubscription.find({
-      tenantId: { $in: tenantIds }
+      tenantId: { $in: tenantIds },
     })
       .sort({ _id: -1 })
       .lean();
@@ -923,7 +920,7 @@ const getAllOrganizations = async (req, res) => {
 
     // Fetch contacts only for paginated tenants
     const contacts = await Contacts.find({
-      tenantId: { $in: tenantIds }
+      tenantId: { $in: tenantIds },
     }).lean();
     const contactsMap = {};
     contacts.forEach((contact) => {
@@ -976,23 +973,26 @@ const getAllOrganizations = async (req, res) => {
 
     // Filter by subscription status if provided
     if (subscriptionStatus) {
-      const statusList = subscriptionStatus.split(',');
-      filteredOrganizations = filteredOrganizations.filter(org => 
-        org.subscription && statusList.includes(org.subscription.status)
+      const statusList = subscriptionStatus.split(",");
+      filteredOrganizations = filteredOrganizations.filter(
+        (org) =>
+          org.subscription && statusList.includes(org.subscription.status)
       );
     }
 
     // Filter by plan if provided
     if (plan) {
-      const planList = plan.split(',');
-      filteredOrganizations = filteredOrganizations.filter(org => 
-        org.subscriptionPlan && planList.includes(org.subscriptionPlan.planName)
+      const planList = plan.split(",");
+      filteredOrganizations = filteredOrganizations.filter(
+        (org) =>
+          org.subscriptionPlan &&
+          planList.includes(org.subscriptionPlan.planName)
       );
     }
 
     // Filter by user count if provided
     if (minUsers || maxUsers) {
-      filteredOrganizations = filteredOrganizations.filter(org => {
+      filteredOrganizations = filteredOrganizations.filter((org) => {
         const userCount = org.usersCount || 0;
         if (minUsers && userCount < parseInt(minUsers)) return false;
         if (maxUsers && userCount > parseInt(maxUsers)) return false;
@@ -1008,7 +1008,7 @@ const getAllOrganizations = async (req, res) => {
         totalItems: total,
         hasNext: skip + limitNum < total,
         hasPrev: parseInt(page) > 0,
-        itemsPerPage: limitNum
+        itemsPerPage: limitNum,
       },
       status: true,
     });

@@ -853,9 +853,6 @@ router.get(
             type, // Don't set default here, check if it exists
           } = req.query;
 
-          console.log("Received query params:", req.query);
-          console.log("Type parameter:", type);
-
           const pageNum = Math.max(1, parseInt(reqPage) || 1);
           const limitNum = Math.max(1, Math.min(100, parseInt(reqLimit) || 10));
           const skip = (pageNum - 1) * limitNum;
@@ -1067,19 +1064,174 @@ router.get(
         // ------------------------------ v1.0.4 >
 
         case "assessment": //assessment templates
-          query = {
-            $or: [
-              { type: "standard" }, // Standard templates are accessible to all
-              {
-                $and: [
-                  { type: "custom" },
-                  query, // Reuse the base query with tenantId and ownerId filters
-                ],
-              },
-            ],
-          };
+          try {
+            const {
+              search = "",
+              difficultyLevel = [],
+              duration = [],
+              position = [],
+              sections = { min: "", max: "" },
+              questions = { min: "", max: "" },
+              totalScore = { min: "", max: "" },
+              createdDate = "",
+              page = 0,
+              limit = 10,
+              type, // ← NO DEFAULT!
+              selectedOptionId = null,
+            } = req.query;
+
+            const ownerId = userId;
+            const assessmentType = type === "custom" ? "custom" : "standard";
+
+            console.log("Assessment type body:", type);
+            console.log("Using assessmentType:", assessmentType);
+
+            let query = {};
+
+            // === TYPE FILTERING (CRITICAL) ===
+            if (assessmentType === "standard") {
+              query.type = "standard";
+            } else if (assessmentType === "custom") {
+              query = {
+                type: "custom",
+                tenantId,
+                ownerId,
+              };
+            }
+
+            // === SEARCH ===
+            if (search && search.trim()) {
+              const regex = { $regex: search.trim(), $options: "i" };
+              query.$or = [
+                { AssessmentTitle: regex },
+                { AssessmentCode: regex },
+                { Position: regex },
+                { DifficultyLevel: regex },
+                { Duration: regex },
+              ];
+            }
+
+            // === FILTERS ===
+            if (difficultyLevel.length > 0)
+              query.DifficultyLevel = { $in: difficultyLevel };
+            if (duration.length > 0) query.Duration = { $in: duration };
+            if (position.length > 0) query.Position = { $in: position };
+            if (selectedOptionId)
+              query.assessmentTemplateList = selectedOptionId;
+
+            // === RANGE FILTERS ===
+            if (sections.min)
+              query.NumberOfSections = {
+                ...query.NumberOfSections,
+                $gte: +sections.min,
+              };
+            if (sections.max)
+              query.NumberOfSections = {
+                ...query.NumberOfSections,
+                $lte: +sections.max,
+              };
+            if (questions.min)
+              query.NumberOfQuestions = {
+                ...query.NumberOfQuestions,
+                $gte: +questions.min,
+              };
+            if (questions.max)
+              query.NumberOfQuestions = {
+                ...query.NumberOfQuestions,
+                $lte: +questions.max,
+              };
+            if (totalScore.min)
+              query.totalScore = { ...query.totalScore, $gte: +totalScore.min };
+            if (totalScore.max)
+              query.totalScore = { ...query.totalScore, $lte: +totalScore.max };
+
+            // === DATE FILTER ===
+            if (createdDate) {
+              const days =
+                createdDate === "last7"
+                  ? 7
+                  : createdDate === "last30"
+                  ? 30
+                  : 90;
+              const date = new Date();
+              date.setDate(date.getDate() - days);
+              query.createdAt = { $gte: date };
+            }
+
+            const skip = +page * +limit;
+
+            console.log(
+              "Final Assessment query:",
+              JSON.stringify(query, null, 2)
+            );
+
+            const [dataSection, totalCount, customCount, standardCount] =
+              await Promise.all([
+                Assessment.find(query)
+                  .populate("Position", "title")
+                  .populate("assessmentTemplateList", "name")
+                  .sort({ createdAt: -1 })
+                  .skip(skip)
+                  .limit(+limit)
+                  .lean(),
+                Assessment.countDocuments(query),
+
+                // Custom assessments count (ONLY tenant and owner filter - NO search/filters)
+                Assessment.countDocuments({
+                  type: "custom",
+                  tenantId,
+                  ownerId,
+                }),
+
+                // Standard assessments count (ONLY type filter - NO search/filters)
+                Assessment.countDocuments({
+                  type: "standard",
+                }),
+              ]);
+
+            data = {
+              data: dataSection,
+              customCount,
+              standardCount,
+              totalCount,
+              totalPages: Math.ceil(totalCount / limit),
+              currentPage: +page,
+            };
+
+            // Optional: Add sections count
+            // const dataWithSections = await Promise.all(
+            //   dataSection.map(async (item) => {
+            //     const sectionCount = await Section.countDocuments({
+            //       assessmentTemplateId: item._id,
+            //     });
+            //     return { ...item, sectionsCount: sectionCount };
+            //   })
+            // );
+
+            // res.json({
+            //   data: dataWithSections,
+            //   totalCount,
+            //   totalPages: Math.ceil(totalCount / limit),
+            //   currentPage: +page,
+            // });
+          } catch (error) {
+            console.error("Assessment filter error:", error);
+            res.status(500).json({ message: "Server error" });
+          }
+
+          // query = {
+          //   $or: [
+          //     { type: "standard" }, // Standard templates are accessible to all
+          //     {
+          //       $and: [
+          //         { type: "custom" },
+          //         query, // Reuse the base query with tenantId and ownerId filters
+          //       ],
+          //     },
+          //   ],
+          // };
           // console.log('[36] Processing Assessment model');
-          data = await DataModel.find(query).lean();
+          // data = await DataModel.find(query).lean();
           // console.log('[37] Found', data.length, 'Assessment records');
           break;
 

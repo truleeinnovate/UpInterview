@@ -5,16 +5,12 @@
 // v1.0.4 - Ashok - Improved responsiveness and added common code to popup and added delete confirmation popup for image
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Camera,
-  //  X,
-    Trash } from "lucide-react";
-// import classNames from "classnames";
-// import Modal from "react-modal";
+import { Camera, Trash } from "lucide-react";
+
 import Cookies from "js-cookie";
 import { useNavigate, useLocation } from "react-router-dom";
 import { validateUserForm } from "../../../../../utils/AppUserValidation";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
-import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { useUsers } from "../../../../../apiHooks/useUsers.js";
 import {
   validateWorkEmail,
@@ -284,6 +280,7 @@ const UserForm = ({ mode }) => {
       if (userType === "superAdmin" && "isProfileCompleted" in submitUserData) {
         delete submitUserData.isProfileCompleted;
       }
+      console.log("is loading before submit", isLoading);
       // ------------------------------v1.0.1 >
       const result = await addOrUpdateUser.mutateAsync({
         userData: submitUserData,
@@ -291,6 +288,7 @@ const UserForm = ({ mode }) => {
         isFileRemoved,
         editMode,
       });
+      console.log("is loading after submit", isLoading);
 
       navigate("/account-settings/users");
     } catch (error) {

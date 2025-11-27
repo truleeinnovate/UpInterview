@@ -272,6 +272,8 @@ const AssessmentToolbar = ({
   onSearch,
   currentPage,
   totalPages,
+  customCount,
+  standardCount,
   onPrevPage,
   onNextPage,
   onFilterClick,
@@ -298,10 +300,11 @@ const AssessmentToolbar = ({
 
   const { assessmentListData } = useAssessmentList(filters, hasViewPermission);
 
-  const standardCount =
-    assessmentData?.filter((t) => t?.type === "standard")?.length || 0;
-  const customCount =
-    assessmentData?.filter((t) => t?.type === "custom")?.length || 0;
+  // const standardCount =
+  //   assessmentData?.filter((t) => t?.type === "standard")?.length || 0;
+  // const customCount =
+  //   assessmentData?.filter((t) => t?.type === "custom")?.length || 0;
+
   const totalCount = assessmentData?.length || 0;
   const [selected, setSelected] = useState(null);
 
