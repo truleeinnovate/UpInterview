@@ -10,6 +10,7 @@
 // v1.0.9  -  Ashok   -  added clickable title to navigate to details page at kanban
 // v2.0.0  -  Ashok   -  added common code for empty state messages
 // v2.0.1  -  Ashok   -  fixed style issue
+// v2.0.2  -  Ashok   -  fixed style issue
 
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
@@ -790,7 +791,7 @@ const ScheduleAssessment = () => {
               onClearAll={handleClearFilters}
               filterIconRef={filterIconRef}
             >
-              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+              <div className="space-y-3 pr-2">
                 {/* Status Filter */}
                 <div>
                   <div

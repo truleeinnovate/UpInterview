@@ -5,6 +5,7 @@
 // v1.0.4  -  Ashok   -  made first leter capital
 // v1.0.5  -  Ashok   -  fixed style issues
 // v1.0.6  -  Ashok   -  style issues fixed
+// v1.0.7  -  Ashok   -  fixed filter container scroll issue
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -1285,7 +1286,7 @@ function InterviewList() {
                 onClearAll={handleClearAll}
                 filterIconRef={filterIconRef}
               >
-                <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                <div className="space-y-3 pr-2">
                   {/* Status Filter */}
                   <div>
                     <div
