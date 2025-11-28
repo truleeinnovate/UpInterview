@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 
 import { X } from "lucide-react";
 import axios from "axios";
-import { fetchMasterData } from "../../../../../../utils/fetchMasterData";
+//import { fetchMasterData } from "../../../../../../utils/fetchMasterData";
 import {
   isEmptyObject,
   validateInterviewForm,
@@ -189,7 +189,10 @@ const EditInterviewDetails = ({
   const showMidLevel = expYears >= 4;
   const showSeniorLevel = expYears >= 7;
   const pageType = "adminPortal";
-  const { skills, loadSkills, isSkillsFetching } = useMasterData({}, pageType);
+  const { skills, loadSkills, isSkillsFetching, 
+    technologies,
+    loadTechnologies,
+    isTechnologiesFetching, } = useMasterData({}, pageType);
 
   // State for form errors and loading
   const [errors, setErrors] = useState({});
@@ -199,7 +202,7 @@ const EditInterviewDetails = ({
 
   const [selectedSkills, setSelectedSkills] = useState([]);
 
-  const [services, setServices] = useState([]);
+  //const [services, setServices] = useState([]);
   const [rateCards, setRateCards] = useState([]);
   // const [InterviewPreviousExperience, setInterviewPreviousExperience] = useState("");
   const [showCustomDiscount, setShowCustomDiscount] = useState(false);
@@ -226,18 +229,18 @@ const EditInterviewDetails = ({
   const [initialFormData, setInitialFormData] = useState(null);
   const bioLength = formData.bio?.length || 0;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const technologyData = await fetchMasterData("technology");
-        setServices(technologyData);
-      } catch (error) {
-        console.error("Error fetching master data:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const technologyData = await fetchMasterData("technology");
+  //       setServices(technologyData);
+  //     } catch (error) {
+  //       console.error("Error fetching master data:", error);
+  //     }
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
 
   // Check if form has changes compared to initial data
   const checkForChanges = useCallback(
@@ -895,7 +898,7 @@ const EditInterviewDetails = ({
   const handleTechnologyChange = (selectedValue) => {
     if (selectedValue) {
       // Find the technology from services or create a temporary one
-      const technology = services.find(
+      const technology = technologies.find(
         (t) => t.TechnologyMasterName === selectedValue
       ) || {
         _id: Math.random().toString(36).substr(2, 9),
@@ -1035,7 +1038,7 @@ const EditInterviewDetails = ({
               <DropdownWithSearchField
                 disabled={from !== "outsource-interviewer"}
                 value={selectedCandidates[0]?.TechnologyMasterName || ""}
-                options={services.map((tech) => ({
+                options={technologies.map((tech) => ({
                   value: tech.TechnologyMasterName,
                   label: tech.TechnologyMasterName,
                 }))}
@@ -1046,8 +1049,8 @@ const EditInterviewDetails = ({
                 label="Select Your Comfortable Technology"
                 name="technology"
                 required={true}
-                onMenuOpen={() => console.log("Dropdown menu opened")}
-                loading={false}
+                onMenuOpen={loadTechnologies}
+                loading={isTechnologiesFetching}
               />
             </div>
 

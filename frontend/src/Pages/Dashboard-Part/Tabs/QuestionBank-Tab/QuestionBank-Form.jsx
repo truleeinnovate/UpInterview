@@ -22,7 +22,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-input-2/lib/style.css";
 import axios from "axios";
-import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
+// import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
+
 import { validateQuestionBankData } from "../../../../utils/questionBankValidation.js";
 import Cookies from "js-cookie";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
@@ -115,7 +116,8 @@ const QuestionBankForm = ({
   // console.log('selected---541651',selectedLabels)
   // Master data (categories) for common dropdowns
   const pageType = "adminPortal";
-  const { category, loadCategory, isCategoryFetching } = useMasterData({}, pageType);
+  const { skills,loadSkills,category, loadCategory, isCategoryFetching } = useMasterData({}, pageType);
+
 
   const [selectedListId, setSelectedListId] = useState([]);
   console.log("selectedLabelId =================+", [
@@ -820,7 +822,7 @@ const extractValidationErrors = (axiosError) => {
   const [showSkillsPopup, setShowSkillsPopup] = useState(false);
   const [searchTermSkills, setSearchTermSkills] = useState("");
   const skillsPopupRef = useRef(null);
-  const [skills, setSkills] = useState([]);
+  //const [skills, setSkills] = useState([]);
   const toggleSkillsPopup = () => {
     closeOtherDropdowns("showDropdownSkillPopup");
     setShowSkillsPopup((prev) => !prev);
@@ -876,22 +878,22 @@ const extractValidationErrors = (axiosError) => {
   }, []);
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const skillsData = await fetchMasterData("skills");
-        setSkills(skillsData);
-        //console.log("Skills Data:", skillsData);
-        // const categoryData = await fetchMasterData("category");
-        // setCategory(categoryData);
-        //console.log("categoryData",categoryData)
-      } catch (error) {
-        console.error("Error fetching master data:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const skillsData = await fetchMasterData("skills");
+  //       setSkills(skillsData);
+  //       //console.log("Skills Data:", skillsData);
+  //       // const categoryData = await fetchMasterData("category");
+  //       // setCategory(categoryData);
+  //       //console.log("categoryData",categoryData)
+  //     } catch (error) {
+  //       console.error("Error fetching master data:", error);
+  //     }
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
 
   // <-------v1.0.3---------
   const closeOtherDropdowns = (currentDropdown) => {
@@ -1428,6 +1430,7 @@ const extractValidationErrors = (axiosError) => {
                       closeMenuOnSelect={false}
                       hasError={!!errors?.skill}
                       placeholder="Select Skills"
+                      onMenuOpen={loadSkills}
                       options={(skills || []).map((s) => ({ value: s.SkillName, label: s.SkillName }))}
                       value={(Array.isArray(selectedSkill) ? selectedSkill : []).map((name) => ({ value: name, label: name }))}
                       onChange={(opts) => {

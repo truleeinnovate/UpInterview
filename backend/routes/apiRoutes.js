@@ -51,6 +51,8 @@ const {
 } = require("../models/Assessment/candidateAssessment.js");
 // ------------------------------v1.0.7 >
 
+const { authContextMiddleware } = require("../middleware/authContext.js");
+
 const modelRequirements = {
   candidate: {
     model: Candidate,
@@ -124,39 +126,51 @@ const getModelMapping = (permissions) => {
   }, {});
 };
 
-router.get("/:model", permissionMiddleware, async (req, res) => {
+router.get("/:model", permissionMiddleware, authContextMiddleware, async (req, res) => {
   try {
     const { model } = req.params;
 
-    // Get user information from res.locals (set by permissionMiddleware)
-    let { userId, tenantId } = res.locals;
+    const {
+      actingAsUserId,
+      actingAsTenantId,
+      onBehalfOfUserId,
+      isImpersonating,
+      isSuperAdminOnly,
+      isEffectiveOnly,
+    } = res.locals.auth;
 
-    // If res.locals doesn't have user info, try to extract from token directly
-    if (!userId || !tenantId) {
-      // console.log('[2.1] No user info in res.locals, trying direct token extraction');
+    // // Get user information from res.locals (set by permissionMiddleware)
+    // let { userId, tenantId } = res.locals;
 
-      // Try to get token from cookies first, then from Authorization header
-      let authToken = req.cookies.authToken;
+    // // If res.locals doesn't have user info, try to extract from token directly
+    // if (!userId || !tenantId) {
+    //   // console.log('[2.1] No user info in res.locals, trying direct token extraction');
 
-      if (!authToken) {
-        const authHeader = req.headers.authorization;
-        if (authHeader && authHeader.startsWith("Bearer ")) {
-          authToken = authHeader.substring(7);
-          // console.log('[2.2] Got token from Authorization header');
-        }
-      }
+    //   // Try to get token from cookies first, then from Authorization header
+    //   let authToken = req.cookies.authToken;
 
-      if (authToken) {
-        try {
-          const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-          userId = decoded.userId;
-          tenantId = decoded.tenantId;
-          // console.log('[2.3] Extracted user info from token:', { userId, tenantId });
-        } catch (err) {
-          console.error("[2.4] JWT verification failed:", err.message);
-        }
-      }
-    }
+    //   if (!authToken) {
+    //     const authHeader = req.headers.authorization;
+    //     if (authHeader && authHeader.startsWith("Bearer ")) {
+    //       authToken = authHeader.substring(7);
+    //       // console.log('[2.2] Got token from Authorization header');
+    //     }
+    //   }
+
+    //   if (authToken) {
+    //     try {
+    //       const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
+    //       userId = decoded.userId;
+    //       tenantId = decoded.tenantId;
+    //       // console.log('[2.3] Extracted user info from token:', { userId, tenantId });
+    //     } catch (err) {
+    //       console.error("[2.4] JWT verification failed:", err.message);
+    //     }
+    //   }
+    // }
+
+    let userId = actingAsUserId;
+    let tenantId = actingAsTenantId;
 
     if (!userId || !tenantId) {
       return res
@@ -1825,8 +1839,8 @@ async function handleInterviewFiltering(options) {
     const roundIds = rounds.map((r) => r._id);
     const questions = roundIds.length
       ? await InterviewQuestions.find({ roundId: { $in: roundIds } })
-          .select("roundId snapshot")
-          .lean()
+        .select("roundId snapshot")
+        .lean()
       : [];
 
     const questionsMap = questions.reduce((acc, q) => {
