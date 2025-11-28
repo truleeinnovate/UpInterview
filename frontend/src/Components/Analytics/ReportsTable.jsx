@@ -438,12 +438,15 @@ import { Play, Download, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { config } from "../../config";
+import { useGenerateReport } from "../../apiHooks/useReportTemplates";
 
 const ReportsTable = ({ data, columns: propColumns, title, type }) => {
   const navigate = useNavigate();
   const [tableColumns, setTableColumns] = useState([]);
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const generateReportMutation = useGenerateReport(); // generate mutation
 
   // If type === "templates" → this is listing templates → show Generate button
   // If type === "data" → this is showing generated report → show data only
@@ -456,21 +459,51 @@ const ReportsTable = ({ data, columns: propColumns, title, type }) => {
   }, [data, propColumns, type]);
 
   // NEW: When user clicks "Generate"
-  const handleGenerateReport = async (template) => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${config.REACT_APP_API_URL}/analytics/generate/${template.id}`);
+  // const handleGenerateReport = async (template) => {
+  //   setLoading(true);
+  //   try {
+  //     const res = await axios.get(`${config.REACT_APP_API_URL}/analytics/generate/${template.id}`);
 
-      if (res.data.success) {
-        const { columns, data: reportData, report } = res.data;
+  //     if (res.data.success) {
+  //       const { columns, data: reportData, report } = res.data;
 
-        // Update table to show REAL report
+  //       // Update table to show REAL report
+  //       setTableColumns(
+  //         columns.map((col) => ({
+  //           key: col.key,
+  //           label: col.label,
+  //           width: col.width || "180px",
+  //           render: (value) => (value === null || value === undefined ? "-" : value),
+  //         }))
+  //       );
+
+  //       setTableData(
+  //         reportData.map((item) => ({
+  //           id: item.id,
+  //           ...item,
+  //         }))
+  //       );
+
+  //       // Optional: Show success message
+  //       // toast.success(`${report.label} generated – ${report.totalRecords} records}`);
+  //     }
+  //   } catch (err) {
+  //     alert("Failed to generate report: " + (err.response?.data?.message || err.message));
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+    const handleGenerateReport = async (template) => {
+    generateReportMutation.mutate(template.id, {
+      onSuccess: ({ columns, data: reportData, report }) => {
         setTableColumns(
           columns.map((col) => ({
             key: col.key,
             label: col.label,
             width: col.width || "180px",
-            render: (value) => (value === null || value === undefined ? "-" : value),
+            render: (value) =>
+              value === null || value === undefined ? "-" : value,
           }))
         );
 
@@ -481,14 +514,12 @@ const ReportsTable = ({ data, columns: propColumns, title, type }) => {
           }))
         );
 
-        // Optional: Show success message
-        // toast.success(`${report.label} generated – ${report.totalRecords} records}`);
-      }
-    } catch (err) {
-      alert("Failed to generate report: " + (err.response?.data?.message || err.message));
-    } finally {
-      setLoading(false);
-    }
+        // toast.success(`${report.label} generated – ${report.totalRecords} records`);
+      },
+      onError: (err) => {
+        alert("Failed to generate report: " + (err.message || "Unknown error"));
+      },
+    });
   };
 
   // Regular table render (no grouping, no search – clean & fast)

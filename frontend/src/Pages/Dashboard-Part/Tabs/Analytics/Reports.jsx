@@ -355,7 +355,7 @@
 //           dataLength={dataLength}
 //           searchPlaceholder="Search reports..."
 //         />
-//          
+//
 //       </div>
 
 //       {/* Tabs */}
@@ -520,7 +520,6 @@
 
 // export default Reports;
 
-
 // Reports.jsx
 // src/pages/Reports/Reports.jsx
 import React, { useState, useEffect } from "react";
@@ -541,7 +540,6 @@ import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/c
 // REAL DATA HOOK
 import { useReportTemplates } from "../../../../apiHooks/useReportTemplates.js";
 
-
 const Reports = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState("table");
@@ -550,6 +548,7 @@ const Reports = () => {
   const itemsPerPage = 10;
 
   const { data, isLoading, error } = useReportTemplates();
+  console.log("REPORT TEMPLATES DATA ==============================> ", data);
   const [allTemplates, setAllTemplates] = useState([]);
 
   // Load real templates
@@ -576,13 +575,11 @@ const Reports = () => {
   const tabs = [
     { id: "all", name: "All Reports", icon: FileText },
     ...(data?.categories || []).map((cat) => ({
-      id: cat.id,                    // ← MongoDB _id as string
+      id: cat.id, // ← MongoDB _id as string
       name: cat.label,
       icon: getIconComponent(cat.icon || "folder"),
     })),
   ];
-
-
 
   // FILTER: Category + Search
   const filteredTemplates = allTemplates.filter((template) => {
@@ -618,7 +615,11 @@ const Reports = () => {
       label: "Report Name",
       render: (value) => <span className="font-medium">{value}</span>,
     },
-    { key: "description", label: "Description" },
+    {
+      key: "description",
+      label: "Description",
+      render: (value) => <span>{value}</span>,
+    },
     {
       key: "status",
       label: "Status",
@@ -627,22 +628,30 @@ const Reports = () => {
       ),
     },
     {
-      key: "category",
-      label: "Category",
-      render: (_, row) => row.category?.label || "Uncategorized",
+      key: "frequency",
+      label: "Frequency",
     },
     {
-      key: "action",
-      label: "",
-      render: (_, row) => (
-        <button
-          onClick={() => alert(`Generate: ${row.label}`)}
-          className="text-primary-600 hover:underline text-sm font-medium"
-        >
-          Generate →
-        </button>
-      ),
+      key: "lastGenerated",
+      label: "Last Generated",
     },
+    // {
+    //   key: "category",
+    //   label: "Category",
+    //   render: (_, row) => row.category?.label || "Uncategorized",
+    // },
+    // {
+    //   key: "action",
+    //   label: "",
+    //   render: (_, row) => (
+    //     <button
+    //       onClick={() => alert(`Generate: ${row.label}`)}
+    //       className="text-primary-600 hover:underline text-sm font-medium"
+    //     >
+    //       Generate →
+    //     </button>
+    //   ),
+    // },
   ];
 
   if (isLoading) {
@@ -691,7 +700,9 @@ const Reports = () => {
           currentPage={currentPage}
           totalPages={totalPages}
           onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
-          onNextPage={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
+          onNextPage={() =>
+            setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
+          }
           dataLength={totalItems}
           searchPlaceholder="Search reports..."
         />
@@ -709,10 +720,11 @@ const Reports = () => {
                   setActiveTab(tab.id);
                   setCurrentPage(0);
                 }}
-                className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                  ? "border-custom-blue text-custom-blue"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === tab.id
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
               >
                 <Icon className="w-5 h-5" />
                 {tab.name}
@@ -734,11 +746,7 @@ const Reports = () => {
             // />
             <ReportsTable
               data={paginatedTemplates}
-              columns={[
-                { key: "label", label: "Report Name" },
-                { key: "description", label: "Description" },
-                { key: "category.label", render: (_, row) => row.category?.label },
-              ]}
+              columns={reportTemplateColumns}
               type="templates"
             />
           ) : (
