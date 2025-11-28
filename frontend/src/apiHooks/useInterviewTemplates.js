@@ -64,7 +64,7 @@ export const useInterviewTemplates = (filters = {}) => {
     retry: 1,
     staleTime: 1000 * 60 * 5,
   });
-  console.log("responseData", responseData);
+
   // console.log("isQueryLoading ", isQueryLoading);
   const templatesData = responseData?.data || [];
   const totalPages = responseData?.totalPages || 0;

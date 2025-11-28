@@ -242,6 +242,8 @@ router.get(
         query.tenantId = tenantId;
       }
 
+      console.log("query query", query);
+
       let data;
       switch (model.toLowerCase()) {
         case "mockinterview":
@@ -364,8 +366,8 @@ router.get(
           };
 
           const filterQuery = {
-            tenantId: query.tenantId,
-            ownerId: query.ownerId,
+            tenantId: query?.tenantId,
+            ownerId: query?.ownerId,
           };
 
           if (req?.query?.type !== "analytics") {
@@ -866,16 +868,16 @@ router.get(
           } else {
             // Custom templates (default): Filter by type, tenantId, and ownerId (if provided)
             baseQuery = { type: "custom" };
-            if (tenantId) {
-              baseQuery.tenantId = tenantId; // Use destructured tenantId
+            if (query?.tenantId) {
+              baseQuery.tenantId = query?.tenantId; // Use destructured tenantId
             } else {
               // If no tenantId for custom, throw error or handle (assuming required)
               return res
                 .status(400)
                 .json({ error: "tenantId is required for custom templates" });
             }
-            if (userId) {
-              baseQuery.ownerId = userId; // Add ownerId filter if provided
+            if (query?.ownerId) {
+              baseQuery.ownerId = query?.ownerId; // Add ownerId filter if provided
             }
             // console.log('Building CUSTOM template query with tenantId:', tenantId, 'and ownerId:', ownerId);
           }
@@ -989,7 +991,7 @@ router.get(
             });
             const customCount = await DataModel.countDocuments({
               type: "custom",
-              tenantId: tenantId, // custom requires tenant
+              tenantId: query?.tenantId, // custom requires tenant
             });
 
             // console.log(`Fetched ${templates.length} ${type || 'custom'} templates for page ${pageNum}`);
@@ -1081,29 +1083,26 @@ router.get(
               selectedOptionId = null,
             } = req.query;
 
-            const ownerId = userId;
+            // const ownerId = userId;
             const assessmentType = type === "custom" ? "custom" : "standard";
 
-            console.log("Assessment type body:", type);
-            console.log("Using assessmentType:", assessmentType);
-
-            let query = {};
+            let Basequery = {};
 
             // === TYPE FILTERING (CRITICAL) ===
             if (assessmentType === "standard") {
-              query.type = "standard";
+              Basequery.type = "standard";
             } else if (assessmentType === "custom") {
-              query = {
+              Basequery = {
                 type: "custom",
-                tenantId,
-                ownerId,
+                tenantId: query?.tenantId,
+                // ownerId: query?.ownerId,
               };
             }
 
             // === SEARCH ===
             if (search && search.trim()) {
               const regex = { $regex: search.trim(), $options: "i" };
-              query.$or = [
+              Basequery.$or = [
                 { AssessmentTitle: regex },
                 { AssessmentCode: regex },
                 { Position: regex },
@@ -1114,37 +1113,43 @@ router.get(
 
             // === FILTERS ===
             if (difficultyLevel.length > 0)
-              query.DifficultyLevel = { $in: difficultyLevel };
-            if (duration.length > 0) query.Duration = { $in: duration };
-            if (position.length > 0) query.Position = { $in: position };
+              Basequery.DifficultyLevel = { $in: difficultyLevel };
+            if (duration.length > 0) Basequery.Duration = { $in: duration };
+            if (position.length > 0) Basequery.Position = { $in: position };
             if (selectedOptionId)
-              query.assessmentTemplateList = selectedOptionId;
+              Basequery.assessmentTemplateList = selectedOptionId;
 
             // === RANGE FILTERS ===
             if (sections.min)
-              query.NumberOfSections = {
-                ...query.NumberOfSections,
+              Basequery.NumberOfSections = {
+                ...Basequery.NumberOfSections,
                 $gte: +sections.min,
               };
             if (sections.max)
-              query.NumberOfSections = {
-                ...query.NumberOfSections,
+              Basequery.NumberOfSections = {
+                ...Basequery.NumberOfSections,
                 $lte: +sections.max,
               };
             if (questions.min)
-              query.NumberOfQuestions = {
-                ...query.NumberOfQuestions,
+              Basequery.NumberOfQuestions = {
+                ...Basequery.NumberOfQuestions,
                 $gte: +questions.min,
               };
             if (questions.max)
-              query.NumberOfQuestions = {
-                ...query.NumberOfQuestions,
+              Basequery.NumberOfQuestions = {
+                ...Basequery.NumberOfQuestions,
                 $lte: +questions.max,
               };
             if (totalScore.min)
-              query.totalScore = { ...query.totalScore, $gte: +totalScore.min };
+              Basequery.totalScore = {
+                ...Basequery.totalScore,
+                $gte: +totalScore.min,
+              };
             if (totalScore.max)
-              query.totalScore = { ...query.totalScore, $lte: +totalScore.max };
+              Basequery.totalScore = {
+                ...Basequery.totalScore,
+                $lte: +totalScore.max,
+              };
 
             // === DATE FILTER ===
             if (createdDate) {
@@ -1156,32 +1161,27 @@ router.get(
                   : 90;
               const date = new Date();
               date.setDate(date.getDate() - days);
-              query.createdAt = { $gte: date };
+              Basequery.createdAt = { $gte: date };
             }
 
             const skip = +page * +limit;
 
-            console.log(
-              "Final Assessment query:",
-              JSON.stringify(query, null, 2)
-            );
-
             const [dataSection, totalCount, customCount, standardCount] =
               await Promise.all([
-                Assessment.find(query)
+                Assessment.find(Basequery)
                   .populate("Position", "title")
                   .populate("assessmentTemplateList", "name")
                   .sort({ createdAt: -1 })
                   .skip(skip)
                   .limit(+limit)
                   .lean(),
-                Assessment.countDocuments(query),
+                Assessment.countDocuments(Basequery),
 
                 // Custom assessments count (ONLY tenant and owner filter - NO search/filters)
                 Assessment.countDocuments({
                   type: "custom",
-                  tenantId,
-                  ownerId,
+                  tenantId: query?.tenantId,
+                  // ownerId: query?.ownerId,
                 }),
 
                 // Standard assessments count (ONLY type filter - NO search/filters)
@@ -1523,8 +1523,8 @@ router.get(
                 await ScheduledAssessmentSchema.aggregate([
                   {
                     $match: {
-                      tenantId: tenantId,
-                      ...(ownerId ? { ownerId: userId } : {}),
+                      tenantId: query?.tenantId,
+                      ...(ownerId ? { ownerId: query?.ownerId } : {}),
                       status: "completed",
                       isActive: true,
                     },
@@ -1804,7 +1804,7 @@ router.get(
           let feedbackQuery = {
             $or: [
               { interviewRoundId: { $in: feedbackRoundIds } },
-              { tenantId: tenantId },
+              { tenantId: query?.tenantId },
             ],
           };
 
@@ -2222,6 +2222,7 @@ async function handleInterviewFiltering(options) {
     }
 
     let interviews = await DataModel.find(baseQuery)
+      .sort({ _id: -1 })
       .populate({
         path: "candidateId",
         select: "FirstName LastName Email skills CurrentExperience ImageData",
@@ -2871,163 +2872,5 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     },
   };
 }
-
-// async function getInterviewDashboardStats({ filterQuery, DataModel }) {
-//   if (!DataModel) throw new Error("DataModel missing");
-
-//   // Convert tenantId & ownerId to ObjectId
-//   const tenantId = new mongoose.Types.ObjectId(filterQuery.tenantId);
-//   const ownerId = filterQuery.ownerId
-//     ? new mongoose.Types.ObjectId(filterQuery.ownerId)
-//     : null;
-
-//   const matchInterview = {
-//     "interview.tenantId": tenantId,
-//     ...(ownerId ? { "interview.ownerId": ownerId } : {}),
-//   };
-
-//   // --------------------------------------------------------------------
-//   // TOTAL INTERVIEWS
-//   // --------------------------------------------------------------------
-//   const totalInterviews = await DataModel.countDocuments({
-//     tenantId,
-//     ...(ownerId ? { ownerId } : {}),
-//   });
-
-//   // --------------------------------------------------------------------
-//   // LAST MONTH
-//   // --------------------------------------------------------------------
-//   const lastMonthDate = new Date();
-//   lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
-
-//   const lastMonthInterviews = await DataModel.countDocuments({
-//     tenantId,
-//     ...(ownerId ? { ownerId } : {}),
-//     createdAt: { $gte: lastMonthDate },
-//   });
-
-//   // --------------------------------------------------------------------
-//   // OUTSOURCED INTERVIEWS (ANY external round)
-//   // --------------------------------------------------------------------
-//   const outsourced = await InterviewRounds.aggregate([
-//     { $match: { interviewerType: "External" } },
-//     {
-//       $lookup: {
-//         from: "interviews",
-//         localField: "interviewId",
-//         foreignField: "_id",
-//         as: "interview",
-//       },
-//     },
-//     { $unwind: "$interview" },
-//     { $match: matchInterview },
-//     { $group: { _id: "$interviewId" } },
-//   ]);
-
-//   const outsourcedCount = outsourced.length;
-
-//   // LAST MONTH OUTSOURCED
-//   const outsourcedLastMonthAgg = await InterviewRounds.aggregate([
-//     { $match: { interviewerType: "External" } },
-//     {
-//       $lookup: {
-//         from: "interviews",
-//         localField: "interviewId",
-//         foreignField: "_id",
-//         as: "interview",
-//       },
-//     },
-//     { $unwind: "$interview" },
-//     {
-//       $match: {
-//         ...matchInterview,
-//         "interview.createdAt": { $gte: lastMonthDate },
-//       },
-//     },
-//     { $group: { _id: "$interviewId" } },
-//   ]);
-
-//   // --------------------------------------------------------------------
-//   // UPCOMING INTERVIEWS
-//   // --------------------------------------------------------------------
-//   const upcomingRounds = await InterviewRounds.find({
-//     dateTime: { $ne: null },
-//   }).populate({
-//     path: "interviewId",
-//     match: { tenantId, ...(ownerId ? { ownerId } : {}) },
-//   });
-
-//   const upcomingInterviews = upcomingRounds.filter((r) => r.interviewId).length;
-
-//   // LAST WEEK
-//   const lastWeekDate = new Date();
-//   lastWeekDate.setDate(lastWeekDate.getDate() - 7);
-
-//   const upcomingLastWeek = upcomingRounds.filter((r) => {
-//     if (!r.interviewId) return false;
-//     return new Date(r.dateTime) >= lastWeekDate;
-//   }).length;
-
-//   // --------------------------------------------------------------------
-//   // TOTAL ROUNDS
-//   // --------------------------------------------------------------------
-//   const totalRoundsAgg = await InterviewRounds.aggregate([
-//     {
-//       $lookup: {
-//         from: "interviews",
-//         localField: "interviewId",
-//         foreignField: "_id",
-//         as: "interview",
-//       },
-//     },
-//     { $unwind: "$interview" },
-//     { $match: matchInterview },
-//     { $count: "count" },
-//   ]);
-
-//   const totalRounds = totalRoundsAgg[0]?.count || 0;
-
-//   // --------------------------------------------------------------------
-//   // ALL ROUNDS PER INTERVIEW
-//   // --------------------------------------------------------------------
-//   const allRoundsAggregation = await InterviewRounds.aggregate([
-//     {
-//       $lookup: {
-//         from: "interviews",
-//         localField: "interviewId",
-//         foreignField: "_id",
-//         as: "interview",
-//       },
-//     },
-//     { $unwind: "$interview" },
-//     { $match: matchInterview },
-//     {
-//       $group: {
-//         _id: "$interviewId",
-//         totalRounds: { $sum: 1 },
-//         internalRounds: {
-//           $sum: { $cond: [{ $eq: ["$interviewerType", "Internal"] }, 1, 0] },
-//         },
-//         externalRounds: {
-//           $sum: { $cond: [{ $eq: ["$interviewerType", "External"] }, 1, 0] },
-//         },
-//       },
-//     },
-//   ]);
-
-//   // --------------------------------------------------------------------
-//   // RETURN
-//   // --------------------------------------------------------------------
-//   return {
-//     totalInterviews,
-//     lastMonthInterviews,
-//     outsourcedCount,
-//     outsourcedLastMonth: outsourcedLastMonthAgg.length,
-//     upcomingInterviews,
-//     upcomingLastWeek,
-//     totalRounds,
-//     allRounds: allRoundsAggregation,
-//   };
-// }
 
 module.exports = router;

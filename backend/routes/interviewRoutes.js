@@ -16,6 +16,7 @@ const {
   updateInterviewStatus,
   checkInternalInterviewUsage,
   deleteInterview,
+  getInterviewDataforOrg,
 } = require("../controllers/interviewController");
 
 // post call interview create routes
@@ -25,10 +26,10 @@ router.post("/", createInterview);
 router.patch("/:id", updateInterview);
 
 // Interview Status Update
-router.patch('/status/:interviewId/:status', updateInterviewStatus);
+router.patch("/status/:interviewId/:status", updateInterviewStatus);
 
 //  interview delete routes
-router.delete('/delete-interview/:id', deleteInterview);
+router.delete("/delete-interview/:id", deleteInterview);
 
 //  interview Rounds post APi's routes
 router.post("/save-round", saveInterviewRound);
@@ -42,14 +43,16 @@ router.delete("/delete-round/:id", deleteRound);
 // Route to fetch dashboard statistics routes
 router.get("/dashboard-stats", getDashboardStats);
 
+// to get indidual interveiw & interview rounds data for org
+router.get("/interview-details/:interviewId", getInterviewDataforOrg);
+
 // Check internal interview usage
-router.get('/check-usage', checkInternalInterviewUsage);
+router.get("/check-usage", checkInternalInterviewUsage);
 
 //  interview get all routes SUPER ADMIN pages added by ASHOK
 router.get("/all-interviews", getInterviews); // SUPER ADMIN Added by Ashok
 router.get("/interviews", getAllInterviews);
 router.get("/interview-rounds", getAllInterviewRounds); // SUPER ADMIN - All interview rounds with details
 router.get("/interview-rounds/:id/transaction", getInterviewRoundTransaction);
-
 
 module.exports = router;

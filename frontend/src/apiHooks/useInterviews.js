@@ -22,15 +22,18 @@ export const useInterviews = (
   // const params = filters
 
   // // const total = 0;
-  const params = useMemo(
-    () => ({
+  const params =
+    // useMemo(() => (
+    {
       ...filters,
+
       page: page,
       limit: limit,
       type: type,
-    }),
-    [filters, page, limit, type]
-  );
+    };
+  // ),
+  //   [filters, page, limit, type]
+  // );
 
   // FIX: Use state to hold total
   // const [total, setTotal] = useState(0);
@@ -74,13 +77,33 @@ export const useInterviews = (
     keepPreviousData: true,
   });
 
-  // console.log("responseData", responseData);
   // Extract data and total from response
   const interviewData = responseData?.data?.data || [];
   const total = responseData?.data?.total || 0;
   const currentPage = responseData?.data?.page || 1;
   const totalPages = responseData?.data?.totalPages || 1;
   const responseDashBoard = responseData?.data || {};
+
+  // Child hook returned from useInterviews
+  const useInterviewDetails = (interviewId) => {
+    return useQuery({
+      queryKey: ["interview-details", interviewId],
+      queryFn: async () => {
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/interview/interview-details/${interviewId}`
+        );
+        return response.data.data;
+      },
+      enabled: !!interviewId,
+      retry: 1,
+      staleTime: 1000 * 60 * 10,
+      cacheTime: 1000 * 60 * 30,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      keepPreviousData: true,
+    });
+  };
 
   // Create new interview mutation
   const createInterview = useMutation({
@@ -131,15 +154,19 @@ export const useInterviews = (
 
       return response.data;
     },
-    onSuccess: (data) => {
-      // Optimistically update the cache
-      // queryClient.setQueryData(['interviews', params], (oldData) => {
-      //   if (!oldData) return oldData;
-      //   return [data, ...oldData];
-      // });
+    // onSuccess: (data) => {
+    //   // Optimistically update the cache
+    //   // queryClient.setQueryData(['interviews', params], (oldData) => {
+    //   //   if (!oldData) return oldData;
+    //   //   return [data, ...oldData];
+    //   // });
 
-      queryClient.invalidateQueries(["interviews"]);
-      navigate(`/interviews/${data._id}`);
+    //   queryClient.invalidateQueries(["interviews"]);
+    //   navigate(`/interviews/${data._id}`);
+    // },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["interviews"]); // Fixed
+      // navigate(`/interviews/${data._id}`);
     },
     onError: (error) => {
       console.error("Interview creation error:", error);
@@ -162,9 +189,16 @@ export const useInterviews = (
       return response.data;
     },
     // v1.0.2 <-----------------------------------------
-    onSuccess: (data) => {
-      queryClient.invalidateQueries(["interviews"]);
-      // Toast notifications are now handled in the frontend after meeting links are generated
+    // onSuccess: (data) => {
+    //   queryClient.invalidateQueries(["interview-details"]);
+    //   // Toast notifications are now handled in the frontend after meeting links are generated
+    // },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(["interviews"]); // Fixed
+      queryClient.invalidateQueries([
+        "interview-details",
+        variables.interviewId,
+      ]);
     },
     onError: (error) => {
       console.error("Round save error:", error);
@@ -187,8 +221,12 @@ export const useInterviews = (
       );
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["interviews"]);
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(["interviews"]); // Fixed
+      queryClient.invalidateQueries([
+        "interview-details",
+        variables.interviewId,
+      ]);
     },
     onError: (error) => {
       console.error("Round update error:", error);
@@ -301,18 +339,26 @@ export const useInterviews = (
       );
       return response.data;
     },
-    onSuccess: (data, variables) => {
-      // Optimistically update the cache
-      // queryClient.setQueryData(['interviews', params], (oldData) => {
-      //   if (!oldData) return oldData;
-      //   return oldData.map(interview =>
-      //     interview._id === variables.interviewId
-      //       ? { ...interview, status: variables.status }
-      //       : interview
-      //   );
-      // });
+    // onSuccess: (data, variables) => {
+    //   // Optimistically update the cache
+    //   // queryClient.setQueryData(['interviews', params], (oldData) => {
+    //   //   if (!oldData) return oldData;
+    //   //   return oldData.map(interview =>
+    //   //     interview._id === variables.interviewId
+    //   //       ? { ...interview, status: variables.status }
+    //   //       : interview
+    //   //   );
+    //   // });
 
-      queryClient.invalidateQueries(["interviews"]);
+    //   queryClient.invalidateQueries(["interview-details"]);
+    // },
+
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(["interviews"]); // Fixed
+      queryClient.invalidateQueries([
+        "interview-details",
+        variables.interviewId,
+      ]);
     },
     onError: (error) => {
       console.error("Interview status update error:", error);
@@ -327,8 +373,9 @@ export const useInterviews = (
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries(["interviews"]);
+      queryClient.invalidateQueries(["interview-details"]); // or better: pass interviewId
     },
     onError: (error) => {
       console.error("Error deleting round:", error);
@@ -336,7 +383,6 @@ export const useInterviews = (
     },
   });
 
-  //  interview and round deletion
   // Interview deletion mutation
   const deleteInterviewMutation = useMutation({
     mutationFn: async (interviewId) => {
@@ -351,18 +397,24 @@ export const useInterviews = (
       );
       return response.data;
     },
-    onSuccess: (data, deletedInterviewId) => {
-      // Optimistically remove from cache
-      queryClient.setQueryData(["interviews", params], (oldData) => {
-        if (!oldData) return oldData;
-        return oldData.filter(
-          (interview) => interview._id !== deletedInterviewId
-        );
-      });
+    // onSuccess: (data, deletedInterviewId) => {
+    //   // Optimistically remove from cache
+    //   queryClient.setQueryData(["interviews", params], (oldData) => {
+    //     if (!oldData) return oldData;
+    //     return oldData.filter(
+    //       (interview) => interview._id !== deletedInterviewId
+    //     );
+    //   });
 
-      // Invalidate and refetch
-      queryClient.invalidateQueries(["interviews"]);
+    //   // Invalidate and refetch
+    //   queryClient.invalidateQueries(["interview-details"]);
+    // },
+
+    // In deleteInterviewMutation:
+    onSuccess: () => {
+      queryClient.invalidateQueries(["interviews"]); // Fixed
     },
+
     onError: (error) => {
       console.error("Interview deletion error:", error);
       const errorMessage =
@@ -389,6 +441,7 @@ export const useInterviews = (
   }, [interviewData.length, isLoading, isQueryLoading, isMutationLoading]);
 
   return {
+    useInterviewDetails,
     interviewData,
     responseDashBoard,
     total,

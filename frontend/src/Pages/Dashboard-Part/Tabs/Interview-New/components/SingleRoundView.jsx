@@ -9,7 +9,7 @@ const SingleRoundView = ({
   rounds,
   interviewId,
   currentRoundId,
-  canEditRound,
+  // canEditRound,
   onEditRound,
   onChangeRound,
 }) => {
@@ -91,7 +91,7 @@ const SingleRoundView = ({
       <RoundCard
         round={currentRound}
         interviewId={interviewId}
-        canEdit={canEditRound(currentRound)}
+        // canEdit={canEditRound(currentRound)}
         onEdit={() => onEditRound(currentRound)}
         isActive={true}
       />
@@ -108,7 +108,7 @@ SingleRoundView.propTypes = {
   ).isRequired,
   interviewId: PropTypes.string,
   currentRoundId: PropTypes.string,
-  canEditRound: PropTypes.func,
+  // canEditRound: PropTypes.func,
   onEditRound: PropTypes.func,
   onChangeRound: PropTypes.func,
 };

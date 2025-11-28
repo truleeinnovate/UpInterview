@@ -17,6 +17,7 @@ import useInterviewers from "../../../../../../hooks/useInterviewers";
 import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
 // v1.0.1 <------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+import { useGroupsQuery } from "../../../../../../apiHooks/useInterviewerGroups.js";
 // v1.0.1 ------------------------------------------------------------>
 
 const InternalInterviews = ({
@@ -26,9 +27,9 @@ const InternalInterviews = ({
   selectedInterviewers: selectedInterviewersProp = [],
   defaultViewType = "individuals",
   selectedGroupName = "",
-  selectedGroupId
+  selectedGroupId,
 }) => {
-  const {  groups } = useCustomContext();
+  const { data: groups = [] } = useGroupsQuery();
   const { interviewers } = useInterviewers();
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -36,15 +37,15 @@ const InternalInterviews = ({
   const modalRef = useRef(null);
   // const [viewType, setViewType] = useState(defaultViewType);
   // const [viewType, setViewType] = useState(defaultViewType);
-    // CHANGED: Auto-detect view type based on groupName or groupId
-    const [viewType, setViewType] = useState(() => {
-      // If groupName or groupId is provided, default to groups view
-      if (selectedGroupName || selectedGroupId) {
-        return "groups";
-      }
-      return defaultViewType;
-    });
-    
+  // CHANGED: Auto-detect view type based on groupName or groupId
+  const [viewType, setViewType] = useState(() => {
+    // If groupName or groupId is provided, default to groups view
+    if (selectedGroupName || selectedGroupId) {
+      return "groups";
+    }
+    return defaultViewType;
+  });
+
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   // const [selectedInterviewers, setSelectedInterviewers] = useState(selectedInterviewersProp);
@@ -62,9 +63,8 @@ const InternalInterviews = ({
     // CHANGED: Enhanced group detection logic
     if ((selectedGroupName || selectedGroupId) && groups) {
       const matchingGroup = groups.find(
-        (group) => 
-          group.name === selectedGroupName || 
-          group._id === selectedGroupId
+        (group) =>
+          group.name === selectedGroupName || group._id === selectedGroupId
       );
       return matchingGroup ? [matchingGroup] : [];
     }
@@ -82,9 +82,8 @@ const InternalInterviews = ({
   useEffect(() => {
     if ((selectedGroupName || selectedGroupId) && groups && groups.length > 0) {
       const matchingGroup = groups.find(
-        (group) => 
-          group.name === selectedGroupName || 
-          group._id === selectedGroupId
+        (group) =>
+          group.name === selectedGroupName || group._id === selectedGroupId
       );
       if (matchingGroup) {
         setSelectedInterviewers([matchingGroup]);
@@ -189,14 +188,12 @@ const InternalInterviews = ({
     viewType,
     selectedRole,
     selectedGroupName,
-    selectedGroupId
+    selectedGroupId,
   ]); // Added selectedRole to dependencies
 
   useEffect(() => {
     setFilteredData(FilteredData);
   }, [FilteredData]);
-
-  
 
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
@@ -235,9 +232,9 @@ const InternalInterviews = ({
 
   const handleScheduleClick = () => {
     if (viewType === "groups" && selectedInterviewers.length > 0) {
-          // For groups, pass the group name AND group ID
-    const groupName = selectedInterviewers[0]?.name || "";
-    const groupId = selectedInterviewers[0]?._id || "";
+      // For groups, pass the group name AND group ID
+      const groupName = selectedInterviewers[0]?.name || "";
+      const groupId = selectedInterviewers[0]?._id || "";
 
       onSelectCandidates(selectedInterviewers, viewType, groupName, groupId);
     } else {
@@ -281,7 +278,6 @@ const InternalInterviews = ({
     setShowDropdown(false);
     onSelectCandidates([], type, "");
   };
-
 
   return (
     // v1.0.3 <----------------------------------------------------------------------------------

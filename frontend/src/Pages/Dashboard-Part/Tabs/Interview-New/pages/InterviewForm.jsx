@@ -90,10 +90,9 @@ const InterviewForm = () => {
 
   const [rounds, setRounds] = useState([]);
 
-    // Filter positions to show only "opened" status
-  const filteredPositionData = positionData?.filter(position => 
-    position.status === "opened"
-  ) || [];
+  // Filter positions to show only "opened" status
+  const filteredPositionData =
+    positionData?.filter((position) => position.status === "opened") || [];
 
   // Modal handlers for Add New buttons
   const handleAddNewCandidate = () => {
@@ -146,41 +145,42 @@ const InterviewForm = () => {
   const interview = isEditing
     ? interviewData.find((interview) => interview._id === id)
     : null;
- 
-
-
 
   // v1.0.7  -  Your Name  -  Fixed template dropdown not showing selected value in edit mode
 
   useEffect(() => {
     if (isEditing && interview && templatesData.length > 0) {
-      // console.log("Interview data:", interview);
-
       setCandidateId(interview.candidateId?._id || "");
       setPositionId(interview.positionId?._id || "");
 
       // Fix for template - handle the nested object structure
       if (interview.templateId) {
-        // console.log("Template data:", interview.templateId);
-
         let templateIdToSet = null;
 
-        if (typeof interview.templateId === 'object' && interview.templateId._id) {
+        if (
+          typeof interview.templateId === "object" &&
+          interview.templateId._id
+        ) {
           templateIdToSet = interview.templateId._id;
-        } else if (typeof interview.templateId === 'string') {
+        } else if (typeof interview.templateId === "string") {
           templateIdToSet = interview.templateId;
         }
 
         // Verify template exists in templatesData
         if (templateIdToSet) {
-          const templateExists = templatesData.some(t => t._id === templateIdToSet);
+          const templateExists = templatesData.some(
+            (t) => t._id === templateIdToSet
+          );
           if (templateExists) {
             // Use setTimeout to ensure state updates after component renders
             setTimeout(() => {
               setTemplateId(templateIdToSet);
             }, 0);
           } else {
-            console.warn("Template not found in templatesData:", templateIdToSet);
+            console.warn(
+              "Template not found in templatesData:",
+              templateIdToSet
+            );
             setTemplateId("");
           }
         }
@@ -196,12 +196,6 @@ const InterviewForm = () => {
     }
   }, [isEditing, interview, templatesData]);
 
-  // console.log("Render state:", {
-  //   templateId,
-  //   templatesDataLength: templatesData?.length,
-  //   selectedTemplate: templatesData?.find((t) => t._id === templateId)?.title,
-  // });
-
   useEffect(() => {
     if (positionId) {
       const selectedPosition = positionData.find(
@@ -215,7 +209,6 @@ const InterviewForm = () => {
       }
 
       if (selectedPosition) {
-
         if (selectedPosition?.templateId) {
           setTemplateId(selectedPosition?.templateId);
 
@@ -320,8 +313,10 @@ const InterviewForm = () => {
         templateId,
         id, // interviewId
       });
+
       // On success, navigate to rounds step and pass state
       const interviewId = result?._id || id;
+
       if (interviewId && templateId) {
         navigate(`/interviews/${interviewId}`);
       } else {
@@ -337,7 +332,6 @@ const InterviewForm = () => {
     }
   };
   // v1.0.0 ---------------------------->
-  // console.log("rounds", rounds);
 
   // v1.0.6
   const handleClearTemplate = () => {
@@ -369,45 +363,62 @@ const InterviewForm = () => {
             ]}
           />
 
-
           {/* Guidelines Component */}
           <InfoGuide
             className="mt-4"
             title="Interview Creation Guidelines"
             items={[
               <>
-                <span className="font-medium">Candidate Selection:</span> Choose from existing candidates or add new candidates using the "Add New" option
+                <span className="font-medium">Candidate Selection:</span> Choose
+                from existing candidates or add new candidates using the "Add
+                New" option
               </>,
               <>
-                <span className="font-medium">Position Selection:</span> Only positions with "opened" status are available for selection. Use "Add New" to create new positions
+                <span className="font-medium">Position Selection:</span> Only
+                positions with "opened" status are available for selection. Use
+                "Add New" to create new positions
               </>,
               <>
-                <span className="font-medium">Interview Template:</span> Optional - Select a predefined interview template to automatically set up rounds and evaluation criteria
+                <span className="font-medium">Interview Template:</span>{" "}
+                Optional - Select a predefined interview template to
+                automatically set up rounds and evaluation criteria
               </>,
               <>
-                <span className="font-medium">Template Override:</span> Changing templates after position selection will override existing rounds with template rounds
+                <span className="font-medium">Template Override:</span> Changing
+                templates after position selection will override existing rounds
+                with template rounds
               </>,
               <>
-                <span className="font-medium">Rounds Pathway:</span> The interview process flow is displayed as a horizontal stepper showing all rounds in sequence
+                <span className="font-medium">Rounds Pathway:</span> The
+                interview process flow is displayed as a horizontal stepper
+                showing all rounds in sequence
               </>,
               <>
-                <span className="font-medium">Status Management:</span> Interviews can have different statuses: draft, opened, closed, hold, or cancelled
+                <span className="font-medium">Status Management:</span>{" "}
+                Interviews can have different statuses: draft, opened, closed,
+                hold, or cancelled
               </>,
               <>
-                <span className="font-medium">Required Fields:</span> Candidate and Position are mandatory fields for creating an interview
+                <span className="font-medium">Required Fields:</span> Candidate
+                and Position are mandatory fields for creating an interview
               </>,
               <>
-                <span className="font-medium">Template Clearing:</span> Use the × button to clear the selected template and remove associated rounds
+                <span className="font-medium">Template Clearing:</span> Use the
+                × button to clear the selected template and remove associated
+                rounds
               </>,
               <>
-                <span className="font-medium">Round Types:</span> Supports various round types including Assessment, Technical, HR, and Final interviews
+                <span className="font-medium">Round Types:</span> Supports
+                various round types including Assessment, Technical, HR, and
+                Final interviews
               </>,
               <>
-                <span className="font-medium">Interview Flow:</span> After creation, you'll be directed to set up individual rounds with specific questions and evaluators
+                <span className="font-medium">Interview Flow:</span> After
+                creation, you'll be directed to set up individual rounds with
+                specific questions and evaluators
               </>,
             ]}
           />
-
 
           <div className="mt-4 bg-white shadow overflow sm:rounded-lg">
             {/* v1.0.4 <----------------------------------- */}

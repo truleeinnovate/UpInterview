@@ -68,8 +68,8 @@ const UsersAccountTab = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [newStatus, setNewStatus] = useState("");
   const [showUserManagementPopup, setShowUserManagementPopup] = useState(false);
-  const [superAdminUsers, setSuperAdminUsers] = useState([]);
-  const [superAdminLoading, setSuperAdminLoading] = useState(false);
+  // const [superAdminUsers, setSuperAdminUsers] = useState([]);
+  // const [superAdminLoading, setSuperAdminLoading] = useState(false);
   const filterIconRef = useRef(null);
 
   // const { usersRes, usersLoading, toggleUserStatus } = useUsers({
@@ -91,58 +91,71 @@ const UsersAccountTab = () => {
   });
 
   // Use the new super admin users hook
-  // const {
-  //   data: superAdminUsers = [],
-  //   isLoading: superAdminLoading,
-  //   error: superAdminError,
-  // } = useSuperAdminUsers();
+  const {
+    // data: superAdminUsers = [],
+    data: superAdminData = { users: [], pagination: {} },
+    isLoading: superAdminLoading,
+    error: superAdminError,
+  } = useSuperAdminUsers({
+    search: searchQuery.trim(),
+    // role: selectedFilters?.roles.length > 0 ? selectedFilters?.roles.join(",") : "", // Use selectedFilters, not selectedRoles
+    role:
+      selectedFilters.roles && selectedFilters.roles.length > 0
+        ? selectedFilters.roles.join(",")
+        : "",
+    page: currentPage, // API expects 1-based, we use 0-based internally
+    limit: 10,
+  });
 
   const users = usersRes?.users || [];
-  const pagination = usersRes?.pagination || {};
+  // const pagination = usersRes?.pagination || {};
+  const superAdminUsers = superAdminData?.users || [];
+  const superAdminPagination = superAdminData?.pagination || {};
+  const pagination =
+    userType === "superAdmin" ? superAdminPagination : usersRes?.pagination;
 
   // Select data and loading state based on type
   const dataSource = userType === "superAdmin" ? superAdminUsers : users;
   const loading = userType === "superAdmin" ? superAdminLoading : usersLoading;
 
   // Fetch super admin users when type is superAdmin
-  useEffect(() => {
-    if (userType === "superAdmin") {
-      const fetchSuperAdminUsers = async () => {
-        setSuperAdminLoading(true);
-        try {
-          const url = `${config.REACT_APP_API_URL}/users/super-admins`;
-          // console.log("Fetching super admin users from:", url);
-          const response = await axios.get(url, {
-            headers: {
-              "Content-Type": "application/json",
-              // No Authorization or tenantId header for super admin API
-            },
-          });
-          console.log("response.data", response?.data);
-          // <-------------------------------v1.0.0
-          // Reverse to show latest at top
-          setSuperAdminUsers((response?.data || []).reverse());
-          // ------------------------------v1.0.0 >
-        } catch (error) {
-          console.error("Error fetching super admin users:", error);
-          toast.error("Failed to load super admin users");
-          setSuperAdminUsers([]);
-        } finally {
-          setSuperAdminLoading(false);
-        }
-      };
-      fetchSuperAdminUsers();
-    }
-  }, [userType]);
-  console.log("dataSource", dataSource);
+  // useEffect(() => {
+  //   if (userType === "superAdmin") {
+  //     const fetchSuperAdminUsers = async () => {
+  //       setSuperAdminLoading(true);
+  //       try {
+  //         const url = `${config.REACT_APP_API_URL}/users/super-admins`;
+  //         // console.log("Fetching super admin users from:", url);
+  //         const response = await axios.get(url, {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //             // No Authorization or tenantId header for super admin API
+  //           },
+  //         });
+  //         console.log("response.data", response?.data);
+  //         // <-------------------------------v1.0.0
+  //         // Reverse to show latest at top
+  //         setSuperAdminUsers((response?.data || []).reverse());
+  //         // ------------------------------v1.0.0 >
+  //       } catch (error) {
+  //         console.error("Error fetching super admin users:", error);
+  //         toast.error("Failed to load super admin users");
+  //         setSuperAdminUsers([]);
+  //       } finally {
+  //         setSuperAdminLoading(false);
+  //       }
+  //     };
+  //     fetchSuperAdminUsers();
+  //   }
+  // }, [userType]);
 
   // Sync current page with API response
-  useEffect(() => {
-    if (pagination.currentPage !== undefined) {
-      // Convert 1-based backend to 0-based frontend
-      setCurrentPage(pagination?.currentPage - 1);
-    }
-  }, [pagination.currentPage]);
+  // useEffect(() => {
+  //   if (pagination.currentPage !== undefined) {
+  //     // Convert 1-based backend to 0-based frontend
+  //     setCurrentPage(pagination?.currentPage - 1);
+  //   }
+  // }, [pagination.currentPage]);
 
   // Set view based on screen size
   useEffect(() => {
@@ -260,7 +273,7 @@ const UsersAccountTab = () => {
   // };
   // console.log("usersRes dataSource", usersRes);
 
-  const rowsPerPage = 10;
+  // const rowsPerPage = 10;
   // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
 
   // Navigation handlers - FIXED: Use pagination from API
@@ -276,8 +289,21 @@ const UsersAccountTab = () => {
     }
   };
 
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, users.length);
+  // Navigation handlers - Use pagination from API
+  // const handleNextPage = () => {
+  //   if (pagination?.hasNext) {
+  //     setCurrentPage((prev) => prev + 1);
+  //   }
+  // };
+
+  // const handlePrevPage = () => {
+  //   if (pagination?.hasPrev) {
+  //     setCurrentPage((prev) => prev - 1);
+  //   }
+  // };
+
+  // const startIndex = currentPage * rowsPerPage;
+  // const endIndex = Math.min(startIndex + rowsPerPage, users.length);
   // const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
   const currentFilteredRows = dataSource;
 
@@ -550,7 +576,7 @@ const UsersAccountTab = () => {
               // totalPages={usersRes?.pagination?.totalPages}
               // onPrevPage={prevPage}
               // onNextPage={nextPage}
-              totalPages={pagination.totalPages || 1}
+              totalPages={pagination?.totalPages || 1}
               currentPage={currentPage} // Convert back to 1-based for display
               onPrevPage={handlePrevPage}
               onNextPage={handleNextPage}
