@@ -118,11 +118,10 @@ export const useScheduleAssessments = (arg) => {
   const hasViewPermission = effectivePermissions?.Assessments?.View;
   // const initialLoad = useRef(true);
 
-  console.log("arg before", arg);
   // Determine call mode
   const isOptionsMode = arg && typeof arg === "object" && !Array.isArray(arg);
   // const legacyAssessmentId = !isOptionsMode ? arg : undefined;
-  console.log("isOptionsMode", isOptionsMode);
+
   // console.log("legacyAssessmentId", legacyAssessmentId);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps

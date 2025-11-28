@@ -29,7 +29,7 @@ import { getEmptyStateMessage } from "../../utils/EmptyStateMessage/emptyStateMe
 const InterviewTemplates = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  console.log("searchParams", searchParams.get("tab"));
+
   const itemsPerPage = 10;
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") || "standard"
@@ -161,6 +161,7 @@ const InterviewTemplates = () => {
     const tab = params.get("tab");
     if (tab === "standard" || tab === "custom") {
       setActiveTab(tab);
+      setCurrentPage(0);
     }
   }, []);
 
@@ -169,7 +170,6 @@ const InterviewTemplates = () => {
   // const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
   // Keep URL in sync with tab state
   useEffect(() => {
-    // console.log("Current active tab:", activeTab);
     const params = new URLSearchParams(window.location.search);
 
     // Only update URL if it doesn't match the current tab
@@ -364,7 +364,7 @@ const InterviewTemplates = () => {
   // );
   // const paginatedTemplates = normalizedTemplates;
   // .slice(startIndex, endIndex)
-  // console.log("paginatedTemplates", paginatedTemplates);
+
   const handlePreviousPage = () => {
     if (currentPage > 0) {
       setCurrentPage((prev) => prev - 1);
@@ -458,8 +458,6 @@ const InterviewTemplates = () => {
   //     }
   //     // v1.0.5 -------------------------------------------------------------->
 
-  //     console.log("Cloning:", template);
-
   //     try {
   //         // Get all existing template names for uniqueness check
   //         const existingNames = templatesData.map(t => t.name);
@@ -490,9 +488,6 @@ const InterviewTemplates = () => {
 
   //         // Generate a unique name
   //         const safeName = generateUniqueName(baseName);
-
-  //         console.log("Original name:", template.name); // Debug
-  //         console.log("New unique name:", safeName); // Debug
 
   //         // Define the fields to pass based on the schema, with safe defaults
   //         const clonedTemplateData = {
@@ -771,6 +766,7 @@ const InterviewTemplates = () => {
                 // standardCount={standardCount}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
+                setCurrentPage={setCurrentPage}
                 // v1.0.6 ---------------------------------------->
               />
             </div>

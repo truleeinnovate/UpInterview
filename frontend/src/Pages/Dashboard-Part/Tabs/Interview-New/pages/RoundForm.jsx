@@ -18,20 +18,19 @@ import {
   Clock,
   Calendar,
   ChevronUp,
-//   Info,
+  //   Info,
 } from "lucide-react";
 import { Button } from "../../CommonCode-AllTabs/ui/button.jsx";
 import axios from "axios";
 import InternalInterviews from "./Internal-Or-Outsource/InternalInterviewers.jsx";
 import OutsourcedInterviewerModal from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import Cookies from "js-cookie";
-import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from "../../../../../utils/interviewRoundValidation.js";
-// import { Search } from "lucide-react";
+
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../../config";
 import QuestionBank from "../../QuestionBank-Tab/QuestionBank.jsx";
-// import Loading from "../../../../../Components/Loading.js";
+
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import { useInternalInterviewUsage } from "../../../../../apiHooks/useInternalInterviewUsage.js";
@@ -52,6 +51,7 @@ import { notify } from "../../../../../services/toastService.js";
 import { ROUND_TITLES } from "../../CommonCode-AllTabs/roundTitlesConfig.js";
 // import InternalInterviewUsageDisplay from "../../../../../Components/InternalInterviewUsageDisplay.jsx";
 import { useVideoSettingsQuery } from "../../../../../apiHooks/VideoDetail.js";
+import { useGroupsQuery } from "../../../../../apiHooks/useInterviewerGroups.js";
 
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
@@ -93,8 +93,11 @@ const RoundFormInterviews = () => {
     // updateRoundWithMeetingLinks,
   } = useInterviews();
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
-  const { groups } = useCustomContext();
-  const { checkInternalInterviewUsage, isChecking } = useInternalInterviewUsage();
+  // const { groups } = useCustomContext();
+  // Get groups data and mutations from TanStack Query
+  const { data: groups = [] } = useGroupsQuery();
+  const { checkInternalInterviewUsage, isChecking } =
+    useInternalInterviewUsage();
   // v1.0.2 <-----------------------------------------
 
   const {
@@ -106,7 +109,6 @@ const RoundFormInterviews = () => {
     // isOrganization,
   } = useVideoSettingsQuery();
 
-
   // State for meeting creation loading
   const [isMeetingCreationLoading, setIsMeetingCreationLoading] =
     useState(false);
@@ -117,6 +119,8 @@ const RoundFormInterviews = () => {
   // v1.0.2 <-----------------------------------------
 
   const { interviewId, roundId } = useParams();
+  const stateisReschedule = useLocation().state;
+
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
@@ -161,7 +165,7 @@ const RoundFormInterviews = () => {
       }
     };
     fetchOwnerData();
-  }, [organization, userId,]);
+  }, [organization, userId]);
 
   useEffect(() => {
     if (interviewData) {
@@ -185,7 +189,6 @@ const RoundFormInterviews = () => {
   // const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [interviewQuestionsList, setInterviewQuestionsList] = useState([]);
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
-  // console.log("interviewQuestionsList",interviewQuestionsList);
 
   const [interviewType, setInterviewType] = useState("instant"); // "instant" or "scheduled"
   const [scheduledDate, setScheduledDate] = useState(""); // Start Date & Time
@@ -201,14 +204,8 @@ const RoundFormInterviews = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [internalInterviewers, setInternalInterviewers] = useState([]);
-  // console.log("internalInterviewers selected", internalInterviewers);
+
   const [externalInterviewers, setExternalInterviewers] = useState([]);
-
-  // console.log("externalInterviewers 0000000000000000", externalInterviewers);
-
-  // console.log("internalInterviewers", internalInterviewers);
-  // console.log("interviewerViewType", interviewerViewType);
-  // console.log("interviewerGroupName", interviewerGroupName);
 
   useEffect(() => {
     if (
@@ -217,7 +214,9 @@ const RoundFormInterviews = () => {
     ) {
       setStatus("RequestSent");
     } else if (selectedInterviewType !== "External") {
-      internalInterviewers.length > 0 ? setStatus("Scheduled") : setStatus("Draft");
+      internalInterviewers.length > 0
+        ? setStatus("Scheduled")
+        : setStatus("Draft");
     }
   }, [selectedInterviewType, externalInterviewers, internalInterviewers]);
 
@@ -304,7 +303,6 @@ const RoundFormInterviews = () => {
         const formattedEnd = formatDateTime(end, false);
         let combinedDateTime = `${formattedStart} - ${formattedEnd}`;
 
-        // console.log("Combined DateTime:", combinedDateTime);
         setCombinedDateTime(combinedDateTime);
       }
     },
@@ -418,8 +416,6 @@ const RoundFormInterviews = () => {
         ]; // Add new question
       });
 
-      // console.log("question", question);
-
       setErrors((prev) => ({
         ...prev,
         questions: undefined,
@@ -432,13 +428,13 @@ const RoundFormInterviews = () => {
       prev.map((question) =>
         question.questionId === questionId
           ? {
-            ...question,
-            snapshot: {
-              ...question.snapshot,
-              mandatory:
-                question.snapshot.mandatory === "true" ? "false" : "true",
-            },
-          }
+              ...question,
+              snapshot: {
+                ...question.snapshot,
+                mandatory:
+                  question.snapshot.mandatory === "true" ? "false" : "true",
+              },
+            }
           : question
       )
     );
@@ -515,8 +511,6 @@ const RoundFormInterviews = () => {
     // Clear instructions whenever round title changes
     // setInstructions("");
 
-
-
     if (value === "Assessment") {
       setInterviewMode("Virtual");
       setInterviewQuestionsList([]);
@@ -538,7 +532,6 @@ const RoundFormInterviews = () => {
       setInternalInterviewers([]);
       setExternalInterviewers([]);
       setSelectedInterviewType(null);
-
     } else {
       // setInterviewMode("");
       setInstructions(previousRoundTitle === "Assessment" ? "" : instructions); // Clear instructions for non-Assessment rounds
@@ -560,7 +553,7 @@ const RoundFormInterviews = () => {
       ...prev,
       roundTitle: "",
       interviewMode: "",
-      instructions: "" // Clear instructions validation error
+      instructions: "", // Clear instructions validation error
     }));
   };
 
@@ -573,7 +566,6 @@ const RoundFormInterviews = () => {
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
       setSelectedAssessmentData(null);
       setCombinedDateTime("");
-
     } else {
       setRoundTitle(selectedTitle);
       setCustomRoundTitle("");
@@ -588,7 +580,7 @@ const RoundFormInterviews = () => {
 
       setInterviewerGroupName("");
 
-      setInterviewerGroupId("")
+      setInterviewerGroupId("");
       setInterviewerViewType("");
       setCombinedDateTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
@@ -604,7 +596,7 @@ const RoundFormInterviews = () => {
       setInstructions("");
 
       setInterviewerGroupName("");
-      setInterviewerGroupId("")
+      setInterviewerGroupId("");
       setInterviewerViewType("");
       // setStatus("Pending");
       setInterviewType("instant");
@@ -678,27 +670,29 @@ const RoundFormInterviews = () => {
     if (isEditing && roundEditData) {
       // Update assessmentTemplate only if different
 
-      const foundGroup = groups?.find((g) => g?._id === roundEditData?.interviewerGroupId);
+      const foundGroup = groups?.find(
+        (g) => g?._id === roundEditData?.interviewerGroupId
+      );
 
       // Find full assessment object
       const fullAssessment =
         roundEditData?.roundTitle === "Assessment" &&
-          roundEditData?.assessmentId
+        roundEditData?.assessmentId
           ? assessmentData?.find(
-            (a) => a._id === roundEditData?.assessmentId
-          ) || null
+              (a) => a._id === roundEditData?.assessmentId
+            ) || null
           : null;
 
       const newAssessmentTemplate =
         roundEditData?.roundTitle === "Assessment" &&
-          roundEditData?.assessmentId
+        roundEditData?.assessmentId
           ? {
-            assessmentId: roundEditData?.assessmentId,
-            assessmentName:
-              assessmentData?.find(
-                (a) => a._id === roundEditData?.assessmentId
-              )?.AssessmentTitle || "",
-          }
+              assessmentId: roundEditData?.assessmentId,
+              assessmentName:
+                assessmentData?.find(
+                  (a) => a._id === roundEditData?.assessmentId
+                )?.AssessmentTitle || "",
+            }
           : { assessmentId: "", assessmentName: "" };
       if (
         JSON.stringify(assessmentTemplate) !==
@@ -730,12 +724,11 @@ const RoundFormInterviews = () => {
         setSequence(roundEditData.sequence);
       if (duration !== (roundEditData.duration || 60))
         setDuration(Number(roundEditData.duration) || 60);
-      if (
-        interviewerGroupName !== (foundGroup?.name || "")
-      ) {
+      if (interviewerGroupName !== (foundGroup?.name || "")) {
         setInterviewerGroupName(foundGroup?.name || "");
         // setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
-      } if (interviewerGroupId !== (roundEditData?.interviewerGroupId || "")) {
+      }
+      if (interviewerGroupId !== (roundEditData?.interviewerGroupId || "")) {
         setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
       }
       if (interviewerViewType !== (roundEditData?.interviewerViewType || "")) {
@@ -756,7 +749,7 @@ const RoundFormInterviews = () => {
         //   const [showDropdown, setShowDropdown] = useState(false);
         //   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
         //   const [internalInterviewers, setInternalInterviewers] = useState([]);
-        //   // console.log("internalInterviewers selected", internalInterviewers);
+
         //   const [externalInterviewers, setExternalInterviewers] = useState([]);
         // >>>>>>> main
 
@@ -807,15 +800,20 @@ const RoundFormInterviews = () => {
     }
   }, [rounds, roundId, isEditing, assessmentData, interviewData, groups]);
 
-
   // Add this useEffect hook after your existing useEffect hooks
   useEffect(() => {
     // Clear external interviewers when date/time changes
-    if (externalInterviewers.length > 0 && (scheduledDate || interviewType === "instant")) {
+    if (
+      externalInterviewers.length > 0 &&
+      (scheduledDate || interviewType === "instant")
+    ) {
       setExternalInterviewers([]);
 
       // If only external interviewers were selected, reset the interview type
-      if (selectedInterviewType === "External" && internalInterviewers.length === 0) {
+      if (
+        selectedInterviewType === "External" &&
+        internalInterviewers.length === 0
+      ) {
         setSelectedInterviewType(null);
       }
     }
@@ -823,15 +821,21 @@ const RoundFormInterviews = () => {
 
   // Also add this useEffect to handle combinedDateTime changes for scheduled interviews
   useEffect(() => {
-    if (interviewType === "scheduled" && combinedDateTime && externalInterviewers.length > 0) {
+    if (
+      interviewType === "scheduled" &&
+      combinedDateTime &&
+      externalInterviewers.length > 0
+    ) {
       setExternalInterviewers([]);
 
-      if (selectedInterviewType === "External" && internalInterviewers.length === 0) {
+      if (
+        selectedInterviewType === "External" &&
+        internalInterviewers.length === 0
+      ) {
         setSelectedInterviewType(null);
       }
     }
   }, [combinedDateTime]);
-
 
   // Replace the existing scheduledDate change handler with this enhanced version
   const handleScheduledDateChange = (e) => {
@@ -843,7 +847,10 @@ const RoundFormInterviews = () => {
     // Clear external interviewers when date changes
     if (newScheduledDate !== scheduledDate && externalInterviewers.length > 0) {
       setExternalInterviewers([]);
-      if (selectedInterviewType === "External" && internalInterviewers.length === 0) {
+      if (
+        selectedInterviewType === "External" &&
+        internalInterviewers.length === 0
+      ) {
         setSelectedInterviewType(null);
       }
       // Show notification to user
@@ -858,7 +865,10 @@ const RoundFormInterviews = () => {
     // Clear external interviewers when switching between instant and scheduled
     if (interviewType !== type && externalInterviewers.length > 0) {
       setExternalInterviewers([]);
-      if (selectedInterviewType === "External" && internalInterviewers.length === 0) {
+      if (
+        selectedInterviewType === "External" &&
+        internalInterviewers.length === 0
+      ) {
         setSelectedInterviewType(null);
       }
       // toast.warn("Interview type changed - external interviewers have been cleared. Please reselect them.");
@@ -866,26 +876,18 @@ const RoundFormInterviews = () => {
     setInterviewType(type);
   };
 
-
-
-
-
   const handleInternalInterviewerSelect = (
     interviewers,
     viewType,
     groupName,
     groupId
   ) => {
-    // console.log("Interviewers passed to parent:", interviewers); // Debugging
-
     if (selectedInterviewType === "External") {
       alert(
         "You need to clear external interviewers before selecting Internal interviewers."
       );
       return;
     }
-
-    // console.log("interviwers", interviewers, viewType, groupName);
 
     // Clear existing interviewers when view type changes
 
@@ -914,13 +916,9 @@ const RoundFormInterviews = () => {
       // setInternalInterviewers([...internalInterviewers, ...uniqueInterviewers]);
     }
 
-    // console.log("uniqueInterviewers", uniqueInterviewers);
-
     // Extract only contactId values
     // const contactIds = uniqueInterviewers?.map((interviewer) => interviewer.contactId);
-    // console.log("contactIds", contactIds);
 
-    // console.log("internalInterviewers, uniqueInterviewers", internalInterviewers, uniqueInterviewers);
     // setInternalInterviewers([...internalInterviewers, ...interviewers]); // Append new interviewers
   };
 
@@ -931,7 +929,6 @@ const RoundFormInterviews = () => {
       );
       return;
     }
-    // console.log("interviewersselcetd:", interviewers);
 
     // Ensure no duplicates and append new interviewers
     const uniqueInterviewers = interviewers.filter(
@@ -944,7 +941,6 @@ const RoundFormInterviews = () => {
   };
 
   const handleRemoveInternalInterviewer = (interviewerId) => {
-    // console.log("Clearing interviewer");
     setInternalInterviewers((prev) => {
       const updatedInterviewers = prev.filter((i) => i._id !== interviewerId);
 
@@ -984,8 +980,6 @@ const RoundFormInterviews = () => {
   };
 
   const handleClearAllInterviewers = () => {
-    // console.log("not clearing");
-
     setInternalInterviewers([]);
     setExternalInterviewers([]);
     setSelectedInterviewType(null);
@@ -998,7 +992,7 @@ const RoundFormInterviews = () => {
     selectedInterviewType === "Internal"
       ? internalInterviewers
       : externalInterviewers;
-  // console.log("selectedInterviewers", selectedInterviewers);
+
   const isInternalSelected = selectedInterviewType === "Internal";
   const isExternalSelected = selectedInterviewType === "External";
 
@@ -1010,11 +1004,9 @@ const RoundFormInterviews = () => {
   //   //   // For external interviewers, access `id` directly
   //   //   return interviewer._id;
   //   // }
-  //   console.log("interviewer 3", interviewer);
+
   //   return interviewer; // Fallback for unexpected cases
   // }).filter(Boolean);
-
-  // console.log("selectedInterviewersData", selectedInterviewersData);
 
   //   useEffect(() => {
   //     if (isEditing && roundEditData) {
@@ -1089,24 +1081,10 @@ const RoundFormInterviews = () => {
   //   // [rounds, isEditing, roundEditData, navigate, assessmentData, fetchAssessmentQuestions]
   // );
 
-  // console.log("assessmentTemplate",assessmentTemplate);
-
   const location = useLocation();
   const isReschedule = location.state?.isReschedule || false;
 
   const handleSubmit = async (e) => {
-    // v1.0.2 <-----------------------------------------
-    // console.log("=== handleSubmit START ===");
-    // console.log("Form submission started");
-    // console.log("Current form data:", {
-    //   roundTitle,
-    //   interviewType,
-    //   scheduledDate,
-    //   duration,
-    //   instructions,
-    //   selectedInterviewers: selectedInterviewers?.length || 0,
-    //   selectedMeetingPlatform,
-    // });
     e.preventDefault();
 
     // Prevent multiple submissions
@@ -1116,16 +1094,13 @@ const RoundFormInterviews = () => {
 
     setIsSubmitting(true);
 
-
     try {
-      // console.log("Preparing round data for validation");
       // Clean interviewers data to remove undefined fields
       const cleanInterviewer = (interviewer) => {
         const { availability, ...rest } = interviewer;
         return rest;
       };
       // const cleanedInterviewers = selectedInterviewersData.map(cleanInterviewer);
-      // console.log("cleanedInterviewers", cleanedInterviewers);
 
       // Format interviewers data based on view type
       let formattedInterviewers = [];
@@ -1143,7 +1118,6 @@ const RoundFormInterviews = () => {
       }
       // v1.0.1 <---------------------------------------------------------------------------------
 
-
       // If editing and rescheduling, increment rescheduleCount
       let updatedRescheduleCount = roundEditData?.rescheduleCount || 0;
       if (isEditing && isReschedule) {
@@ -1157,19 +1131,25 @@ const RoundFormInterviews = () => {
         interviewMode,
         // interviewerGroupName,
         interviewerGroupId:
-          interviewerViewType === "groups" &&
-            roundTitle !== "Assessment"
+          interviewerViewType === "groups" && roundTitle !== "Assessment"
             ? interviewerGroupId
             : "", // added newly
         // interviewerViewType,
         rescheduleCount: updatedRescheduleCount,
         sequence,
+
         ...(roundTitle === "Assessment" && assessmentTemplate.assessmentId
           ? { assessmentId: assessmentTemplate.assessmentId }
           : {}),
         instructions,
         duration,
-        status: roundTitle === "Assessment" ? "Scheduled" : status,
+        status: isReschedule
+          ? "Rescheduled"
+          : roundTitle === "Assessment"
+          ? "Scheduled"
+          : status,
+
+        // stateisReschedule  status: roundTitle === "Assessment" ? "Scheduled" :  status,
         ...(roundTitle !== "Assessment" && {
           interviewerType: selectedInterviewType,
           dateTime: combinedDateTime,
@@ -1180,7 +1160,6 @@ const RoundFormInterviews = () => {
         }),
       };
 
-      // console.log("Validating the round data");
       const validationErrors = validateInterviewRoundData(roundData);
       setErrors(validationErrors);
 
@@ -1193,41 +1172,44 @@ const RoundFormInterviews = () => {
 
       const payload = isEditing
         ? {
-          interviewId,
-          round: roundData,
-          roundId,
-          questions: interviewQuestionsList,
-        }
+            interviewId,
+            round: roundData,
+            roundId,
+            questions: interviewQuestionsList,
+          }
         : {
-          interviewId,
-          round: roundData,
-          questions:
-            interviewQuestionsList.map((q) => ({
-              questionId: q.questionId,
-              snapshot: {
-                ...q.snapshot,
-                mandatory: q.snapshot.mandatory || "false",
-              },
-            })) || [],
-        };
-
-      // console.log("=== Round Saving Process ===");
-      // console.log("Payload for submission:", payload);
+            interviewId,
+            round: roundData,
+            questions:
+              interviewQuestionsList.map((q) => ({
+                questionId: q.questionId,
+                snapshot: {
+                  ...q.snapshot,
+                  mandatory: q.snapshot.mandatory || "false",
+                },
+              })) || [],
+          };
 
       // Check internal interview usage before scheduling
-      if (selectedInterviewType === 'internal' && status === 'Scheduled') {
+      if (selectedInterviewType === "internal" && status === "Scheduled") {
         // Check if this is a new scheduling (not already scheduled)
-        const isNewScheduling = !isEditing || (isEditing && roundEditData?.status !== 'Scheduled');
+        const isNewScheduling =
+          !isEditing || (isEditing && roundEditData?.status !== "Scheduled");
 
         if (isNewScheduling) {
-          const usageCheck = await checkInternalInterviewUsage(orgId, !organization ? userId : null);
+          const usageCheck = await checkInternalInterviewUsage(
+            orgId,
+            !organization ? userId : null
+          );
 
           if (!usageCheck.canSchedule) {
             // Show detailed error with usage stats
             const usageInfo = usageCheck.usageStats || usageCheck.usage || {};
             notify.error(
               `Cannot schedule: ${usageCheck.message}. ` +
-              `Used: ${usageInfo.utilized || 0}/${usageInfo.entitled || 0} interviews.`,
+                `Used: ${usageInfo.utilized || 0}/${
+                  usageInfo.entitled || 0
+                } interviews.`,
               { duration: 5000 }
             );
             setIsSubmitting(false);
@@ -1245,11 +1227,9 @@ const RoundFormInterviews = () => {
         response = await saveInterviewRound(payload);
       }
 
-
       // ✅ Collect success messages instead of showing immediately
       const successMessages = [];
       successMessages.push("Interview round created successfully!");
-
 
       if (payload.round.roundTitle === "Assessment") {
         // Calculate link expiry days
@@ -1292,6 +1272,7 @@ const RoundFormInterviews = () => {
           };
 
           response = await updateInterviewRound(updatePayload);
+
           if (response.status === "ok") {
             navigate(`/interviews/${interviewId}`);
           }
@@ -1301,20 +1282,13 @@ const RoundFormInterviews = () => {
         }
       }
       if (payload.round.roundTitle !== "Assessment") {
-
         //  out sourced email sent
         if (payload?.round?.interviewMode !== "Face to Face") {
           // Handle outsource request if interviewers are selected
           if (selectedInterviewers && selectedInterviewers.length > 0) {
             const isInternal = selectedInterviewType === "Internal";
-            // console.log(
-            //   `Sending ${selectedInterviewers.length} outsource requests`
-            // );
-            // console.log("selectedInterviewers", selectedInterviewers);
 
             for (const interviewer of selectedInterviewers) {
-              // console.log("interviewer", interviewer);
-              // console.log("interviewer contactId", interviewer.contact?._id);
               const outsourceRequestData = {
                 tenantId: orgId,
                 ownerId: userId,
@@ -1336,7 +1310,6 @@ const RoundFormInterviews = () => {
                 ).toISOString(),
               };
 
-              // console.log("Sending outsource request:", outsourceRequestData);
               await axios.post(
                 `${config.REACT_APP_API_URL}/interviewrequest`,
                 outsourceRequestData,
@@ -1381,11 +1354,6 @@ const RoundFormInterviews = () => {
                   }
                 );
 
-                // console.log(
-                //   "Outsource email sending response:",
-                //   emailResponse.data
-                // );
-
                 if (emailResponse.data.success) {
                   // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
                   if (emailResponse.data.data.failedEmails > 0) {
@@ -1411,8 +1379,6 @@ const RoundFormInterviews = () => {
           }
         }
 
-        // console.log("response", response);
-
         // don't remove this code related to agora video room
         // if (response.status === 'ok'){
         //   const video_call_res = await axios.post(`${config.REACT_APP_API_URL}/api/agora/create-video-room`,
@@ -1421,26 +1387,19 @@ const RoundFormInterviews = () => {
         //       enablePSTN: false
         //     }
         //   )
-        //   console.log("video_call_res",video_call_res.data);
 
         // }
 
         // internal  interview  email sent
         // Meeting platform link creation
         if (response.status === "ok") {
-          // console.log("Generating meeting link for the interview");
           const shouldGenerateMeeting =
-            !isEditing &&                                   // 🧩 Skip in edit mode
+            !isEditing && // 🧩 Skip in edit mode
             payload?.round?.interviewMode !== "Face to Face" &&
             Array.isArray(selectedInterviewers) &&
             selectedInterviewers.length > 0;
 
-
-
-
-
           try {
-
             // v1.0.3 <-----------------------------------------------------------
             setMeetingCreationProgress("Creating links...");
             // v1.0.3 ----------------------------------------------------------->
@@ -1448,8 +1407,6 @@ const RoundFormInterviews = () => {
             const { createMeeting } = await import(
               "../../../../../utils/meetingPlatforms.js"
             );
-
-
 
             let meetingLink;
             if (shouldGenerateMeeting) {
@@ -1517,10 +1474,10 @@ const RoundFormInterviews = () => {
                   userId: undefined,
                   ...(interviewType === "scheduled" &&
                     formattedStartTime && {
-                    start_time: formattedStartTime,
-                    timezone:
-                      Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  }),
+                      start_time: formattedStartTime,
+                      timezone:
+                        Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    }),
                   settings: {
                     join_before_host: true,
                     host_video: false,
@@ -1535,19 +1492,18 @@ const RoundFormInterviews = () => {
                     setMeetingCreationProgress(progress);
                   }
                 );
-
-                // console.log("Zoom meeting response:", meetingLink);
               }
 
               const data = await meetingLink;
             }
 
-
             // Persist meeting link on the round (avoid reassigning consts)
             if (data) {
               const updatedRoundData = {
                 ...roundData,
-                meetingId: meetingLink?.start_url ? meetingLink?.start_url : meetingLink,
+                meetingId: meetingLink?.start_url
+                  ? meetingLink?.start_url
+                  : meetingLink,
                 meetPlatform: selectedMeetingPlatform,
               };
               const targetRoundId = response?.savedRound?._id || roundId;
@@ -1557,26 +1513,23 @@ const RoundFormInterviews = () => {
                 round: updatedRoundData,
                 ...(isEditing ? { questions: interviewQuestionsList } : {}),
               };
-              // console.log("updatePayload", updatePayload);
 
               // 🔹 Call PATCH mutation instead of POST
-              const updateResponse = await updateInterviewRound(
-                updatePayload
-              );
-            }
-            else if (Array.isArray(selectedInterviewers) &&
-              selectedInterviewers.length > 0) {
+              const updateResponse = await updateInterviewRound(updatePayload);
+            } else if (
+              Array.isArray(selectedInterviewers) &&
+              selectedInterviewers.length > 0
+            ) {
               // Handle Face to Face interview
 
               const targetRoundId = response?.savedRound?._id || roundId;
-
 
               // have to add email template for face to face round
 
               // Update the round with proper status
               const faceToFaceRoundData = {
                 ...roundData,
-                status: "Scheduled" // Use the current status from state
+                status: isReschedule ? "Rescheduled" : "Scheduled", // Use the current status from state
               };
 
               const updatePayload = {
@@ -1588,19 +1541,15 @@ const RoundFormInterviews = () => {
 
               // Update the round status
               const updateResponse = await updateInterviewRound(updatePayload);
+
               // navigate(`/interviews/${interviewId}`);
               // notify.success("Interview Round Created successfully");
             }
-
 
             // ✅ CHANGES START HERE - Email sending logic
 
             // Use the new utility to generate and save meeting URLs
             try {
-
-
-
-              // console.log("Meeting URL processing completed successfully:", result);
               const isInternal = selectedInterviewType === "Internal";
 
               // Determine if we should send emails
@@ -1612,7 +1561,6 @@ const RoundFormInterviews = () => {
               if (shouldSendEmails) {
                 // Send emails after meeting links are generated
                 try {
-
                   if (isInternal) {
                     const emailResponse = await axios.post(
                       `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
@@ -1628,7 +1576,6 @@ const RoundFormInterviews = () => {
                         },
                       }
                     );
-
 
                     // Show success toast for emails
                     if (emailResponse.data.success) {
@@ -1649,7 +1596,6 @@ const RoundFormInterviews = () => {
                   console.error("Error sending emails:", emailError);
                   notify.error("Round created but email sending failed");
                 }
-
               } else {
                 successMessages.push("Interview round created successfully!");
               }
@@ -1665,8 +1611,6 @@ const RoundFormInterviews = () => {
               setTimeout(() => {
                 navigate(`/interviews/${interviewId}`);
               }, successMessages.length * 1000);
-
-
             } catch (urlError) {
               console.error("Error processing meeting URLs:", urlError);
               console.error("URL Error details:", {
@@ -1675,13 +1619,6 @@ const RoundFormInterviews = () => {
                 response: urlError.response?.data,
               });
             }
-
-            // Navigate to interview page after successful creation
-            // console.log(
-            //   "Navigating to interview page:",
-            //   `/interviews/${interviewId}`
-            // );
-
           } catch (err) {
             console.error("Error in meeting creation:", err);
             setErrors({
@@ -1691,7 +1628,6 @@ const RoundFormInterviews = () => {
             setIsMeetingCreationLoading(false);
             setMeetingCreationProgress("");
           }
-
 
           // notify.success("Selected interview mode is Face to Face");
           navigate(`/interviews/${interviewId}`);
@@ -1717,8 +1653,6 @@ const RoundFormInterviews = () => {
       setIsSubmitting(false);
     }
   };
-
-
 
   // v1.0.2 <-----------------------------------------
   // useEffect(() => {
@@ -1788,7 +1722,7 @@ const RoundFormInterviews = () => {
     };
     setAssessmentTemplate(assessmentData);
     setSelectedAssessmentData(assessment);
-    // console.log("assessment", assessment);
+
     setDuration(parseInt(assessment.Duration.replace(" minutes", "")));
     setInstructions(assessment.Instructions);
     setExpandedSections({});
@@ -1849,7 +1783,6 @@ const RoundFormInterviews = () => {
     //   await fetchQuestionsForAssessment(assessmentTemplate.assessmentId);
     // }
   };
-
 
   return (
     <div className="h-[calc(100vh-4rem)] mt-2 overflow-y-auto bg-gray-50">
@@ -1991,9 +1924,15 @@ const RoundFormInterviews = () => {
                             const newMode = e.target.value;
 
                             // Clear external interviewers when switching from Virtual to Face to Face
-                            if (newMode === "Face to Face" && externalInterviewers.length > 0) {
+                            if (
+                              newMode === "Face to Face" &&
+                              externalInterviewers.length > 0
+                            ) {
                               setExternalInterviewers([]);
-                              if (selectedInterviewType === "External" && internalInterviewers.length === 0) {
+                              if (
+                                selectedInterviewType === "External" &&
+                                internalInterviewers.length === 0
+                              ) {
                                 setSelectedInterviewType(null);
                               }
                               // Optional: Show notification to user
@@ -2111,7 +2050,6 @@ const RoundFormInterviews = () => {
                                 setInterviewerGroupName("");
                                 setInterviewerGroupId("");
                                 setInterviewerViewType("individuals");
-
                               }
                               setErrors((prev) => ({
                                 ...prev,
@@ -2147,193 +2085,196 @@ const RoundFormInterviews = () => {
                                 ) : (
                                   <div className="space-y-4">
                                     {!sectionQuestions ||
-                                      sectionQuestions.noQuestions ? (
+                                    sectionQuestions.noQuestions ? (
                                       <div className="text-center py-4 text-gray-500">
                                         No Sections available for this
                                         Assessment
                                       </div>
                                     ) : //  <div className="space-y-4">
-                                      Object.keys(sectionQuestions).length > 0 ? (
-                                        Object.entries(sectionQuestions).map(
-                                          ([sectionId, sectionData]) => {
-                                            // Find section details from assessmentData
-                                            // const selectedAssessment = assessmentData.find(
-                                            //   a => a._id === formData.assessmentTemplate[0].assessmentId
-                                            // );
+                                    Object.keys(sectionQuestions).length > 0 ? (
+                                      Object.entries(sectionQuestions).map(
+                                        ([sectionId, sectionData]) => {
+                                          // Find section details from assessmentData
+                                          // const selectedAssessment = assessmentData.find(
+                                          //   a => a._id === formData.assessmentTemplate[0].assessmentId
+                                          // );
 
-                                            // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
+                                          // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
 
-                                            if (
-                                              !sectionData ||
-                                              !Array.isArray(
-                                                sectionData.questions
-                                              )
-                                            ) {
-                                              return (
-                                                <div
-                                                  key={sectionId}
-                                                  className="border rounded-md shadow-sm p-4"
-                                                >
-                                                  <div className="text-center py-4 text-gray-500">
-                                                    No Valid data for this section
-                                                  </div>
-                                                </div>
-                                              );
-                                            }
-
+                                          if (
+                                            !sectionData ||
+                                            !Array.isArray(
+                                              sectionData.questions
+                                            )
+                                          ) {
                                             return (
                                               <div
                                                 key={sectionId}
                                                 className="border rounded-md shadow-sm p-4"
                                               >
-                                                <button
-                                                  onClick={(e) =>
-                                                    toggleSection(sectionId, e)
-                                                  }
-                                                  className="flex justify-between items-center w-full"
-                                                >
-                                                  <span className="font-medium">
-                                                    {sectionData?.sectionName
-                                                      ? sectionData?.sectionName
+                                                <div className="text-center py-4 text-gray-500">
+                                                  No Valid data for this section
+                                                </div>
+                                              </div>
+                                            );
+                                          }
+
+                                          return (
+                                            <div
+                                              key={sectionId}
+                                              className="border rounded-md shadow-sm p-4"
+                                            >
+                                              <button
+                                                onClick={(e) =>
+                                                  toggleSection(sectionId, e)
+                                                }
+                                                className="flex justify-between items-center w-full"
+                                              >
+                                                <span className="font-medium">
+                                                  {sectionData?.sectionName
+                                                    ? sectionData?.sectionName
                                                         .charAt(0)
                                                         .toUpperCase() +
                                                       sectionData?.sectionName.slice(
                                                         1
                                                       )
-                                                      : "Unnamed Section"}
-                                                  </span>
-                                                  <ChevronUp
-                                                    className={`transform transition-transform ${expandedSections[sectionId]
+                                                    : "Unnamed Section"}
+                                                </span>
+                                                <ChevronUp
+                                                  className={`transform transition-transform ${
+                                                    expandedSections[sectionId]
                                                       ? ""
                                                       : "rotate-180"
-                                                      }`}
-                                                  />
-                                                </button>
+                                                  }`}
+                                                />
+                                              </button>
 
-                                                {expandedSections[sectionId] && (
-                                                  <div className="mt-4 space-y-3">
-                                                    {sectionData?.questions
-                                                      .length > 0 ? (
-                                                      sectionData?.questions.map(
-                                                        (question, idx) => (
+                                              {expandedSections[sectionId] && (
+                                                <div className="mt-4 space-y-3">
+                                                  {sectionData?.questions
+                                                    .length > 0 ? (
+                                                    sectionData?.questions.map(
+                                                      (question, idx) => (
+                                                        <div
+                                                          key={
+                                                            question._id || idx
+                                                          }
+                                                          className="border rounded-md shadow-sm overflow-hidden"
+                                                        >
                                                           <div
-                                                            key={
-                                                              question._id || idx
-                                                            }
-                                                            className="border rounded-md shadow-sm overflow-hidden"
-                                                          >
-                                                            <div
-                                                              onClick={() =>
-                                                                setExpandedQuestions(
-                                                                  (prev) => ({
-                                                                    ...prev,
-                                                                    [question._id]:
-                                                                      !prev[
+                                                            onClick={() =>
+                                                              setExpandedQuestions(
+                                                                (prev) => ({
+                                                                  ...prev,
+                                                                  [question._id]:
+                                                                    !prev[
                                                                       question
                                                                         ._id
-                                                                      ],
-                                                                  })
-                                                                )
-                                                              }
-                                                              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                                                            >
-                                                              <div className="flex items-center gap-2">
-                                                                <span className="font-medium text-gray-600">
-                                                                  {idx + 1}.
-                                                                </span>
-                                                                <p className="text-sm text-gray-700">
-                                                                  {question
-                                                                    .snapshot
-                                                                    ?.questionText ||
-                                                                    "No question text"}
-                                                                </p>
-                                                              </div>
-                                                              <ChevronDown
-                                                                className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
+                                                                    ],
+                                                                })
+                                                              )
+                                                            }
+                                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                                          >
+                                                            <div className="flex items-center gap-2">
+                                                              <span className="font-medium text-gray-600">
+                                                                {idx + 1}.
+                                                              </span>
+                                                              <p className="text-sm text-gray-700">
+                                                                {question
+                                                                  .snapshot
+                                                                  ?.questionText ||
+                                                                  "No question text"}
+                                                              </p>
+                                                            </div>
+                                                            <ChevronDown
+                                                              className={`w-5 h-5 text-gray-400 transition-transform ${
+                                                                expandedQuestions[
                                                                   question._id
                                                                 ]
                                                                   ? "transform rotate-180"
                                                                   : ""
-                                                                  }`}
-                                                              />
-                                                            </div>
+                                                              }`}
+                                                            />
+                                                          </div>
 
-                                                            {expandedQuestions[
-                                                              question._id
-                                                            ] && (
-                                                                <div className="px-4 py-3">
-                                                                  <div className="flex justify-between mb-2">
-                                                                    <div className="flex items-center gap-2">
-                                                                      <span className="text-sm font-medium text-gray-500">
-                                                                        Type:
-                                                                      </span>
-                                                                      <span className="text-sm text-gray-700">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.questionType ||
-                                                                          "Not specified"}
-                                                                      </span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                      <span className="text-sm font-medium text-gray-500">
-                                                                        Score:
-                                                                      </span>
-                                                                      <span className="text-sm text-gray-700">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.score ||
-                                                                          "0"}
-                                                                      </span>
-                                                                    </div>
-                                                                  </div>
+                                                          {expandedQuestions[
+                                                            question._id
+                                                          ] && (
+                                                            <div className="px-4 py-3">
+                                                              <div className="flex justify-between mb-2">
+                                                                <div className="flex items-center gap-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Type:
+                                                                  </span>
+                                                                  <span className="text-sm text-gray-700">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.questionType ||
+                                                                      "Not specified"}
+                                                                  </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Score:
+                                                                  </span>
+                                                                  <span className="text-sm text-gray-700">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.score ||
+                                                                      "0"}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
 
-                                                                  {/* Display question options if MCQ */}
-                                                                  {question.snapshot
-                                                                    ?.questionType ===
-                                                                    "MCQ" && (
-                                                                      <div className="mt-2">
-                                                                        <span className="text-sm font-medium text-gray-500">
-                                                                          Options:
-                                                                        </span>
-                                                                        <div className="grid grid-cols-2 gap-2 mt-1">
-                                                                          {question.snapshot?.options?.map(
-                                                                            (
-                                                                              option,
-                                                                              optIdx
-                                                                            ) => (
-                                                                              <div
-                                                                                key={
-                                                                                  optIdx
-                                                                                }
-                                                                                //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                                className={`text-sm p-2 rounded border ${option ===
-                                                                                  question
-                                                                                    .snapshot
-                                                                                    .correctAnswer
-                                                                                  ? "bg-green-50 border-green-200 text-green-800"
-                                                                                  : "bg-gray-50 border-gray-200"
-                                                                                  }`}
-                                                                              >
-                                                                                {
-                                                                                  option
-                                                                                }
-                                                                                {option ===
-                                                                                  question
-                                                                                    .snapshot
-                                                                                    .correctAnswer && (
-                                                                                    <span className="ml-2 text-green-600">
-                                                                                      ✓
-                                                                                    </span>
-                                                                                  )}
-                                                                              </div>
-                                                                            )
+                                                              {/* Display question options if MCQ */}
+                                                              {question.snapshot
+                                                                ?.questionType ===
+                                                                "MCQ" && (
+                                                                <div className="mt-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Options:
+                                                                  </span>
+                                                                  <div className="grid grid-cols-2 gap-2 mt-1">
+                                                                    {question.snapshot?.options?.map(
+                                                                      (
+                                                                        option,
+                                                                        optIdx
+                                                                      ) => (
+                                                                        <div
+                                                                          key={
+                                                                            optIdx
+                                                                          }
+                                                                          //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                          className={`text-sm p-2 rounded border ${
+                                                                            option ===
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer
+                                                                              ? "bg-green-50 border-green-200 text-green-800"
+                                                                              : "bg-gray-50 border-gray-200"
+                                                                          }`}
+                                                                        >
+                                                                          {
+                                                                            option
+                                                                          }
+                                                                          {option ===
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer && (
+                                                                            <span className="ml-2 text-green-600">
+                                                                              ✓
+                                                                            </span>
                                                                           )}
                                                                         </div>
-                                                                      </div>
+                                                                      )
                                                                     )}
+                                                                  </div>
+                                                                </div>
+                                                              )}
 
-                                                                  {/* Display correct answer */}
-                                                                  {/* <div className="mt-2">
+                                                              {/* Display correct answer */}
+                                                              {/* <div className="mt-2">
                                                                                               <span className="text-sm font-medium text-gray-500">
                                                                                                 Correct Answer:
                                                                                               </span>
@@ -2342,52 +2283,52 @@ const RoundFormInterviews = () => {
                                                                                               </div>
                                                                                             </div> */}
 
-                                                                  {/* Additional question metadata */}
-                                                                  <div className="grid grid-cols-2 gap-4 mt-3">
-                                                                    <div>
-                                                                      <span className="text-xs font-medium text-gray-500">
-                                                                        Difficulty:
-                                                                      </span>
-                                                                      <span className="text-xs text-gray-700 ml-1">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.difficultyLevel ||
-                                                                          "Not specified"}
-                                                                      </span>
-                                                                    </div>
-                                                                    <div>
-                                                                      <span className="text-xs font-medium text-gray-500">
-                                                                        Skills:
-                                                                      </span>
-                                                                      <span className="text-xs text-gray-700 ml-1">
-                                                                        {question.snapshot?.skill?.join(
-                                                                          ", "
-                                                                        ) || "None"}
-                                                                      </span>
-                                                                    </div>
-                                                                  </div>
+                                                              {/* Additional question metadata */}
+                                                              <div className="grid grid-cols-2 gap-4 mt-3">
+                                                                <div>
+                                                                  <span className="text-xs font-medium text-gray-500">
+                                                                    Difficulty:
+                                                                  </span>
+                                                                  <span className="text-xs text-gray-700 ml-1">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.difficultyLevel ||
+                                                                      "Not specified"}
+                                                                  </span>
                                                                 </div>
-                                                              )}
-                                                          </div>
-                                                        )
+                                                                <div>
+                                                                  <span className="text-xs font-medium text-gray-500">
+                                                                    Skills:
+                                                                  </span>
+                                                                  <span className="text-xs text-gray-700 ml-1">
+                                                                    {question.snapshot?.skill?.join(
+                                                                      ", "
+                                                                    ) || "None"}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                        </div>
                                                       )
-                                                    ) : (
-                                                      <div className="text-center py-4 text-gray-500">
-                                                        No Questions found in this
-                                                        section
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                )}
-                                              </div>
-                                            );
-                                          }
-                                        )
-                                      ) : (
-                                        <div className="text-center py-4 text-gray-500">
-                                          No Assessment data available
-                                        </div>
-                                      )}
+                                                    )
+                                                  ) : (
+                                                    <div className="text-center py-4 text-gray-500">
+                                                      No Questions found in this
+                                                      section
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        }
+                                      )
+                                    ) : (
+                                      <div className="text-center py-4 text-gray-500">
+                                        No Assessment data available
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -2409,22 +2350,25 @@ const RoundFormInterviews = () => {
                             type="button"
                             // onClick={() => setInterviewType("instant")}
                             onClick={() => handleInterviewTypeChange("instant")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "instant"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${interviewType === "instant"
-                                ? "text-custom-blue/70"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue/70"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "instant"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Instant Interview
                             </span>
@@ -2435,24 +2379,29 @@ const RoundFormInterviews = () => {
 
                           <button
                             type="button"
-                            onClick={() => handleInterviewTypeChange("scheduled")} // Use new handler
+                            onClick={() =>
+                              handleInterviewTypeChange("scheduled")
+                            } // Use new handler
                             // onClick={() => setInterviewType("scheduled")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "scheduled"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${interviewType === "scheduled"
-                                ? "text-custom-blue/70"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue/70"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "scheduled"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Schedule for Later
                             </span>
@@ -2584,10 +2533,11 @@ const RoundFormInterviews = () => {
                               }}
                               variant="outline"
                               size="sm"
-                              className={`${isExternalSelected
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                                }`}
+                              className={`${
+                                isExternalSelected
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -2606,10 +2556,11 @@ const RoundFormInterviews = () => {
                               onClick={() => setInternalInterviews(true)}
                               variant="outline"
                               size="sm"
-                              className={`${isExternalSelected
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                                }`}
+                              className={`${
+                                isExternalSelected
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -2629,10 +2580,11 @@ const RoundFormInterviews = () => {
                             onClick={() => setShowOutsourcePopup(true)}
                             variant="outline"
                             size="sm"
-                            className={`${isInternalSelected
-                              ? "opacity-50 cursor-not-allowed"
-                              : ""
-                              }`}
+                            className={`${
+                              isInternalSelected
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }`}
                             disabled={
                               isInternalSelected ||
                               interviewMode === "Face to Face"
@@ -2711,12 +2663,18 @@ const RoundFormInterviews = () => {
                             {isInternalSelected && (
                               <section className="mb-4 mt-2 w-full">
                                 <h4 className="text-sm font-semibold text-gray-600 mb-3">
-                                  {interviewerViewType === "groups" || interviewerGroupId
+                                  {interviewerViewType === "groups" ||
+                                  interviewerGroupId
                                     ? "Interviewer Groups "
                                     : "Internal Interviewers "}
                                   <span className="text-xs text-custom-blue">
-                                    ({selectedInterviewers.length || "Not Provided"}{" "}
-                                    {selectedInterviewers.length > 1 ? "Members" : "Member"})
+                                    (
+                                    {selectedInterviewers.length ||
+                                      "Not Provided"}{" "}
+                                    {selectedInterviewers.length > 1
+                                      ? "Members"
+                                      : "Member"}
+                                    )
                                   </span>
                                 </h4>
                                 <div className="grid grid-cols-4 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 w-full gap-4">
@@ -2729,9 +2687,12 @@ const RoundFormInterviews = () => {
                                       <div className="flex justify-between items-start mb-2">
                                         <div>
                                           <span className="font-medium text-blue-900 block">
-                                            {interviewerGroupName || "Not Provided"}
+                                            {interviewerGroupName ||
+                                              "Not Provided"}
                                           </span>
-                                          <span className="text-xs text-blue-700">(Group)</span>
+                                          <span className="text-xs text-blue-700">
+                                            (Group)
+                                          </span>
                                         </div>
                                         <button
                                           onClick={handleClearAllInterviewers}
@@ -2743,63 +2704,90 @@ const RoundFormInterviews = () => {
                                       <div>
                                         <ul className="list-disc list-inside text-xs text-blue-800 ml-1">
                                           {/* Check if we have a group with usersNames */}
-                                          {interviewerGroupId && selectedInterviewers[0]?.usersNames ? (
-                                            // Render group members from usersNames
-                                            selectedInterviewers[0].usersNames.map((name, i) => (
-                                              <li key={`${selectedInterviewers[0]._id}-user-${i}`}>
-                                                {name}
-                                              </li>
-                                            ))
-                                          ) : interviewerGroupId && selectedInterviewers[0]?.userIds ? (
-                                            // Fallback: if we have group but no usersNames, show placeholder
-                                            selectedInterviewers[0].userIds.map((userId, i) => (
-                                              <li key={`${selectedInterviewers[0]._id}-user-${i}`}>
-                                                User ID: {userId}
-                                              </li>
-                                            ))
-                                          ) : (
-                                            // Render individual interviewers
-                                            selectedInterviewers.map((interviewer, index) => (
-                                              <li key={`${interviewer._id}-${index}`}>
-                                                {`${interviewer.firstName || ""} ${interviewer.lastName || ""}`.trim() ||
-                                                  interviewer.email}
-                                              </li>
-                                            ))
-                                          )}
+                                          {interviewerGroupId &&
+                                          selectedInterviewers[0]?.usersNames
+                                            ? // Render group members from usersNames
+                                              selectedInterviewers[0].usersNames.map(
+                                                (name, i) => (
+                                                  <li
+                                                    key={`${selectedInterviewers[0]._id}-user-${i}`}
+                                                  >
+                                                    {name}
+                                                  </li>
+                                                )
+                                              )
+                                            : interviewerGroupId &&
+                                              selectedInterviewers[0]?.userIds
+                                            ? // Fallback: if we have group but no usersNames, show placeholder
+                                              selectedInterviewers[0].userIds.map(
+                                                (userId, i) => (
+                                                  <li
+                                                    key={`${selectedInterviewers[0]._id}-user-${i}`}
+                                                  >
+                                                    User ID: {userId}
+                                                  </li>
+                                                )
+                                              )
+                                            : // Render individual interviewers
+                                              selectedInterviewers.map(
+                                                (interviewer, index) => (
+                                                  <li
+                                                    key={`${interviewer._id}-${index}`}
+                                                  >
+                                                    {`${
+                                                      interviewer.firstName ||
+                                                      ""
+                                                    } ${
+                                                      interviewer.lastName || ""
+                                                    }`.trim() ||
+                                                      interviewer.email}
+                                                  </li>
+                                                )
+                                              )}
                                         </ul>
                                       </div>
                                     </div>
                                   )}
 
                                   {/* Render individual interviewers if no group */}
-                                  {!interviewerGroupId && selectedInterviewers.map((interviewer, index) => (
-                                    <div
-                                      key={`${interviewer._id}-${index}`}
-                                      className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 p-3 shadow-sm w-full md:w-auto"
-                                    >
-                                      <div className="flex items-center">
-                                        <User className="h-4 w-4 text-blue-600 mr-2" />
-                                        <span className="text-sm font-medium text-blue-900 truncate">
-                                          {`${interviewer?.firstName || ""} ${interviewer?.lastName || ""}`.trim() ||
-                                            interviewer?.email}
-                                        </span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleRemoveInternalInterviewer(interviewer._id)}
-                                        className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
-                                        title="Remove interviewer"
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  ))}
+                                  {!interviewerGroupId &&
+                                    selectedInterviewers.map(
+                                      (interviewer, index) => (
+                                        <div
+                                          key={`${interviewer._id}-${index}`}
+                                          className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 p-3 shadow-sm w-full md:w-auto"
+                                        >
+                                          <div className="flex items-center">
+                                            <User className="h-4 w-4 text-blue-600 mr-2" />
+                                            <span className="text-sm font-medium text-blue-900 truncate">
+                                              {`${
+                                                interviewer?.firstName || ""
+                                              } ${
+                                                interviewer?.lastName || ""
+                                              }`.trim() || interviewer?.email}
+                                            </span>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleRemoveInternalInterviewer(
+                                                interviewer._id
+                                              )
+                                            }
+                                            className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
+                                            title="Remove interviewer"
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </button>
+                                        </div>
+                                      )
+                                    )}
                                 </div>
                               </section>
                               // <div className="mb-3">
                               //   <h4 className="text-xs font-medium text-gray-500 mb-2">Internal Interviewers</h4>
                               //   <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                              //     {/* {console.log("internalInterviewers near shoing place :", internalInterviewers)} */}
+
                               //     {internalInterviewers?.map((interviewer) => (
                               //       <div key={interviewer._id} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2">
                               //         <div className="flex items-center">
@@ -2826,14 +2814,12 @@ const RoundFormInterviews = () => {
                                   Outsourced Interviewers
                                 </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-3">
-                                  {/* {console.log("externalInterviewers near shoing place :", externalInterviewers)} */}
                                   {externalInterviewers?.map((interviewer) => (
                                     <div
                                       key={interviewer.id}
                                       className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 p-3 shadow-sm hover:shadow-md transition-shadow duration-200 min-w-0"
 
-
-                                    // className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
+                                      // className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
                                     >
                                       <div className="flex items-center min-w-0 flex-1">
                                         <span className="ml-2 text-sm text-orange-800 truncate">
@@ -2893,10 +2879,11 @@ const RoundFormInterviews = () => {
                                     return (
                                       <li
                                         key={qIndex}
-                                        className={`flex justify-between items-center p-3 border rounded-md ${isMandatory
-                                          ? "border-red-500"
-                                          : "border-gray-300"
-                                          }`}
+                                        className={`flex justify-between items-center p-3 border rounded-md ${
+                                          isMandatory
+                                            ? "border-red-500"
+                                            : "border-gray-300"
+                                        }`}
                                       >
                                         <span className="text-gray-900 font-medium">
                                           {qIndex + 1}.{" "}
@@ -3015,10 +3002,10 @@ const RoundFormInterviews = () => {
                         isMeetingCreationLoading
                           ? meetingCreationProgress || "Creating meeting..."
                           : isSubmitting
-                            ? "Submitting..."
-                            : isEditing
-                              ? "Updating..."
-                              : "Saving..."
+                          ? "Submitting..."
+                          : isEditing
+                          ? "Updating..."
+                          : "Saving..."
                       }
                       disabled={isSubmitting}
                     >
@@ -3064,7 +3051,7 @@ const RoundFormInterviews = () => {
           // defaultViewType={interviewerViewType}
           selectedGroupName={interviewerGroupName}
           selectedGroupId={interviewerGroupId}
-        //  clearOnViewTypeChange={true}
+          //  clearOnViewTypeChange={true}
         />
       )}
     </div>

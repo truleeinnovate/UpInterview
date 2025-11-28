@@ -176,7 +176,6 @@ const Assessment = () => {
     // selectedOption,
   });
 
-  // console.log('assessmentToDelete', assessmentToDelete);
   // <---------------------- v1.0.0
   useEffect(() => {
     document.title = "Assessment Template";
@@ -708,10 +707,10 @@ const Assessment = () => {
               totalPages={totalPages || 1}
               customCount={customCount}
               standardCount={standardCount}
-              // onPrevPage={prevPage}
-              // onNextPage={nextPage}
-              onPrevPage={() => setCurrentPage((prev) => Math.max(0, prev - 1))}
-              onNextPage={() => setCurrentPage((prev) => prev + 1)}
+              onPrevPage={prevPage}
+              onNextPage={nextPage}
+              // onPrevPage={() => setCurrentPage((prev) => Math.max(0, prev - 1))}
+              // onNextPage={() => setCurrentPage((prev) => prev + 1 )}
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}

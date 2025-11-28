@@ -1754,6 +1754,67 @@ const getInterviewRoundTransaction = async (req, res) => {
   }
 };
 
+const getInterviewDataforOrg = async (req, res) => {
+  try {
+    const { interviewId } = req.params;
+
+    // STEP 1: Fetch interview with population
+    const interview = await Interview.findById(interviewId)
+      .populate({
+        path: "candidateId",
+        select: "FirstName LastName Email skills CurrentExperience ImageData",
+      })
+      .populate({
+        path: "positionId",
+        select: "title companyname Location",
+      })
+      .populate({ path: "templateId" })
+      .lean();
+
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    // STEP 2: Get all rounds for THIS interview
+    const rounds = await InterviewRounds.find({ interviewId })
+      .populate({
+        path: "interviewers",
+        select: "firstName lastName email",
+      })
+      .lean();
+
+    // STEP 3: Fetch questions for rounds
+    const roundIds = rounds.map((r) => r._id);
+    const questions = await interviewQuestions
+      .find({
+        roundId: { $in: roundIds },
+      })
+      .select("roundId snapshot")
+      .lean();
+
+    // STEP 4: Map questions → rounds
+    const questionMap = {};
+    questions.forEach((q) => {
+      const key = String(q.roundId);
+      if (!questionMap[key]) questionMap[key] = [];
+      questionMap[key].push(q);
+    });
+
+    const fullRounds = rounds.map((r) => ({
+      ...r,
+      questions: questionMap[String(r._id)] || [],
+    }));
+
+    // STEP 5: Attach rounds to interview
+    interview.rounds = fullRounds;
+
+    return res.json({ success: true, data: interview });
+  } catch (err) {
+    console.error("Interview Fetch Failed:", err);
+    return res.status(500).json({ message: "Server error", error: err });
+  }
+};
+
 // Export all controller functions
 module.exports = {
   createInterview,
@@ -1769,4 +1830,5 @@ module.exports = {
   checkInternalInterviewUsage,
   updateInterviewStatus: updateInterviewStatusController,
   deleteInterview,
+  getInterviewDataforOrg,
 };
