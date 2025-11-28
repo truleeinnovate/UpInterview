@@ -1452,13 +1452,13 @@ app.use("/receipts", ReceiptsRoute);
 
 // ==================================================================================>
 
-const feedbackRoutes = require("./routes/feedbackRoute");
+// const feedbackRoutes = require("./routes/feedbackRoute");
 const exchangeRateRoutes = require("./routes/exchangeRateRoutes");
 
 // Exchange rate routes
 app.use("/exchange", exchangeRateRoutes);
 
-app.use("/feedback", feedbackRoutes);
+// app.use("/feedback", feedbackRoutes);
 
 // <================ getting the availability by contact id to show in the account settings user profile ==============>
 const interviewAvailabilityRoutes = require("./routes/interviewAvailabilityRoutes");

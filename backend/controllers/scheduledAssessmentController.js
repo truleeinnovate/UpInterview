@@ -5,7 +5,6 @@ const {
 const Otp = require("../models/Otp");
 // <-------------------------------v1.0.0
 const scheduledAssessmentsSchema = require("../models/Assessment/assessmentsSchema");
-const { triggerWebhook, EVENT_TYPES } = require("../services/webhookService");
 // ------------------------------v1.0.0 >
 const mongoose = require("mongoose");
 
@@ -102,91 +101,67 @@ exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
 //   }
 // };
 
-exports.createScheduledAssessment = async (req, res) => {
-  try {
-    const {
-      assessmentId,
-      tenantId,
-      ownerId,
-      expiryAt,
-      status,
-      rescheduledFrom,
-      proctoringEnabled,
-      createdBy,
-      order,
-    } = req.body;
+// exports.createScheduledAssessment = async (req, res) => {
+//   try {
+//     const {
+//       assessmentId,
+//       tenantId,
+//       ownerId,
+//       expiryAt,
+//       status,
+//       rescheduledFrom,
+//       proctoringEnabled,
+//       createdBy,
+//       order,
+//     } = req.body;
 
-    // Generate custom code like ASMT-TPL-00001
-    const scheduledAssessmentCode = await generateUniqueId(
-      "ASMT",
-      scheduledAssessmentsSchema,
-      "scheduledAssessmentCode",
-      tenantId
-    );
+//     // Generate custom code like ASMT-TPL-00001
+//     const scheduledAssessmentCode = await generateUniqueId(
+//       "ASMT",
+//       scheduledAssessmentsSchema,
+//       "scheduledAssessmentCode",
+//       tenantId
+//     );
 
-    // Build new object
-    const scheduledAssessment = new scheduledAssessmentsSchema({
-      scheduledAssessmentCode,
-      assessmentId,
-      tenantId,
-      ownerId,
-      expiryAt,
-      status,
-      rescheduledFrom,
-      proctoringEnabled,
-      createdBy,
-      order: order || "Assessment 1",
-    });
+//     // Build new object
+//     const scheduledAssessment = new scheduledAssessmentsSchema({
+//       scheduledAssessmentCode,
+//       assessmentId,
+//       tenantId,
+//       ownerId,
+//       expiryAt,
+//       status,
+//       rescheduledFrom,
+//       proctoringEnabled,
+//       createdBy,
+//       order: order || "Assessment 1",
+//     });
 
-    // Save to DB
-    const savedAssessment = await scheduledAssessment.save();
+//     // Save to DB
+//     const savedAssessment = await scheduledAssessment.save();
 
-    // Trigger webhook for assessment status update (initially "scheduled")
-    try {
-      await triggerWebhook(
-        EVENT_TYPES.ASSESSMENT_STATUS_UPDATED,
-        {
-          id: savedAssessment._id,
-          assessmentId: savedAssessment.assessmentId,
-          tenantId: savedAssessment.tenantId,
-          ownerId: savedAssessment.ownerId,
-          status: savedAssessment.status,
-          expiryAt: savedAssessment.expiryAt,
-          scheduledAssessmentCode: savedAssessment.scheduledAssessmentCode,
-          createdAt: savedAssessment.createdAt,
-          updatedAt: savedAssessment.updatedAt,
-        },
-        savedAssessment.tenantId
-      );
-    } catch (webhookError) {
-      console.error(
-        "[ASSESSMENT] Error triggering status webhook:",
-        webhookError
-      );
-    }
+//     // Create push notification for scheduled assessment
+//     try {
+//       await createAssessmentScheduledNotification(savedAssessment);
+//     } catch (notificationError) {
+//       console.error(
+//         "[ASSESSMENT] Error creating scheduled notification:",
+//         notificationError
+//       );
+//       // Continue execution even if notification fails
+//     }
 
-    // Create push notification for scheduled assessment
-    try {
-      await createAssessmentScheduledNotification(savedAssessment);
-    } catch (notificationError) {
-      console.error(
-        "[ASSESSMENT] Error creating scheduled notification:",
-        notificationError
-      );
-      // Continue execution even if notification fails
-    }
-
-    res.status(201).json({
-      status: "success",
-      message: "Scheduled assessment created successfully",
-      data: savedAssessment,
-    });
-  } catch (error) {
-    console.error("Error creating scheduled assessment:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Failed to create scheduled assessment",
-      error: error.message,
-    });
-  }
-};
+//     res.status(201).json({
+//       status: "success",
+//       message: "Scheduled assessment created successfully",
+//       data: savedAssessment,
+//     });
+//   } catch (error) {
+//     console.error("Error creating scheduled assessment:", error);
+//     res.status(500).json({
+//       status: "error",
+//       message: "Failed to create scheduled assessment",
+//       error: error.message,
+//     });
+//   }
+// };

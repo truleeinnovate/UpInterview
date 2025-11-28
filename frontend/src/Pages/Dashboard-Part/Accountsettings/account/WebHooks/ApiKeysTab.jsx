@@ -12,16 +12,7 @@ const ApiKeysTab = () => {
 
   const [formData, setFormData] = useState({
     organization: "",
-    permissions: ["users:read"],
-    description: "",
-    expiresAt: "",
-    rateLimit: {
-      requestsPerMinute: 60,
-      requestsPerHour: 1000,
-      requestsPerDay: 10000
-    },
-    ipAddress: "",
-    userAgent: ""
+    permissions: ["candidates:read"],
   });
 
   // NEW: Retrieve auth token (adjust key if using context/store instead of localStorage)
@@ -72,12 +63,7 @@ const ApiKeysTab = () => {
         },
         body: JSON.stringify({
           organization: formData.organization,
-          permissions: formData.permissions,
-          description: formData.description || null,
-          expiresAt: formData.expiresAt || null,
-          rateLimit: formData.rateLimit,
-          ipAddress: formData.ipAddress ? formData.ipAddress.split(',').map(ip => ip.trim()).filter(ip => ip) : [],
-          userAgent: formData.userAgent || null
+          permissions: formData.permissions
         }),
       });
 
@@ -88,16 +74,7 @@ const ApiKeysTab = () => {
         setShowModal(false);
         setFormData({ 
           organization: "", 
-          permissions: ["users:read"],
-          description: "",
-          expiresAt: "",
-          rateLimit: {
-            requestsPerMinute: 60,
-            requestsPerHour: 1000,
-            requestsPerDay: 10000
-          },
-          ipAddress: "",
-          userAgent: ""
+          permissions: ["candidates:read"],
         });
         fetchApiKeys(); // Refresh the list
         
@@ -376,24 +353,8 @@ const ApiKeysTab = () => {
                   </label>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-xs text-gray-600 mb-2">Users</p>
-                      {["users:read", "users:write", "users:delete"].map((permission) => (
-                        <label key={permission} className="flex items-center mr-4">
-                          <input
-                            type="checkbox"
-                            checked={formData.permissions.includes(permission)}
-                            onChange={() => handlePermissionChange(permission)}
-                            className="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">
-                            {permission.split(':')[1]} Users
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                    <div>
                       <p className="text-xs text-gray-600 mb-2">Candidates</p>
-                      {["candidates:read", "candidates:write", "candidates:delete"].map((permission) => (
+                      {["candidates:read", "candidates:write", "candidates:bulk"].map((permission) => (
                         <label key={permission} className="flex items-center mr-4">
                           <input
                             type="checkbox"
@@ -408,172 +369,20 @@ const ApiKeysTab = () => {
                       ))}
                     </div>
                     <div>
-                      <p className="text-xs text-gray-600 mb-2">Interviews</p>
-                      {["interviews:read", "interviews:write", "interviews:delete"].map((permission) => (
+                      <p className="text-xs text-gray-600 mb-2">Positions</p>
+                      {["positions:read", "positions:write", "positions:bulk"].map((permission) => (
                         <label key={permission} className="flex items-center mr-4">
                           <input
                             type="checkbox"
                             checked={formData.permissions.includes(permission)}
                             onChange={() => handlePermissionChange(permission)}
-                            className="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
+                            className="mr-2"
                           />
-                          <span className="ml-2 text-sm text-gray-700">
-                            {permission.split(':')[1]} Interviews
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600 mb-2">System</p>
-                      {["analytics:read", "system:read", "system:write"].map((permission) => (
-                        <label key={permission} className="flex items-center mr-4">
-                          <input
-                            type="checkbox"
-                            checked={formData.permissions.includes(permission)}
-                            onChange={() => handlePermissionChange(permission)}
-                            className="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
-                          />
-                          <span className="ml-2 text-sm text-gray-700 capitalize">
-                            {permission.replace(':', ' ')}
-                          </span>
+                          {permission.split(':')[1]} Positions
                         </label>
                       ))}
                     </div>
                   </div>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description (Optional)
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                    placeholder="Describe the purpose of this API key..."
-                    rows="2"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Expiration Date (Optional)
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={formData.expiresAt}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        expiresAt: e.target.value,
-                      }))
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Leave empty for no expiration</p>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Rate Limits (requests per minute/hour/day)
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <input
-                      type="number"
-                      value={formData.rateLimit.requestsPerMinute}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          rateLimit: {
-                            ...prev.rateLimit,
-                            requestsPerMinute: parseInt(e.target.value) || 60
-                          }
-                        }))
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                      placeholder="60"
-                      min="1"
-                      max="1000"
-                    />
-                    <input
-                      type="number"
-                      value={formData.rateLimit.requestsPerHour}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          rateLimit: {
-                            ...prev.rateLimit,
-                            requestsPerHour: parseInt(e.target.value) || 1000
-                          }
-                        }))
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                      placeholder="1000"
-                      min="1"
-                      max="10000"
-                    />
-                    <input
-                      type="number"
-                      value={formData.rateLimit.requestsPerDay}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          rateLimit: {
-                            ...prev.rateLimit,
-                            requestsPerDay: parseInt(e.target.value) || 10000
-                          }
-                        }))
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                      placeholder="10000"
-                      min="1"
-                      max="100000"
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Default: 60/min, 1000/hour, 10000/day</p>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Allowed IP Addresses (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.ipAddress}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        ipAddress: e.target.value,
-                      }))
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                    placeholder="192.168.1.1, 10.0.0.1"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Comma-separated list. Leave empty to allow any IP</p>
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    User Agent (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.userAgent}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        userAgent: e.target.value,
-                      }))
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                    placeholder="MyApp/1.0"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Restrict to specific user agent</p>
                 </div>
 
                 <div className="flex justify-end space-x-3">
@@ -583,16 +392,7 @@ const ApiKeysTab = () => {
                       setShowModal(false);
                       setFormData({
                         organization: "",
-                        permissions: ["users:read"],
-                        description: "",
-                        expiresAt: "",
-                        rateLimit: {
-                          requestsPerMinute: 60,
-                          requestsPerHour: 1000,
-                          requestsPerDay: 10000,
-                        },
-                        ipAddress: "",
-                        userAgent: "",
+                        permissions: []
                       });
                     }}
                     className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"

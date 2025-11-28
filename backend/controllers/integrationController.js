@@ -495,7 +495,13 @@ exports.getIntegrations = asyncHandler(async (req, res) => {
   const requestId = uuidv4();
 
   try {
-    const integrations = await Integration.find({}).lean();
+    // Filter by tenantId if provided in query params
+    const query = {};
+    if (req.query.tenantId) {
+      query.tenantId = req.query.tenantId;
+    }
+
+    const integrations = await Integration.find(query).lean();
     const duration = Date.now() - startTime;
 
     // Log successful request

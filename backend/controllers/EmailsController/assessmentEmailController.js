@@ -29,6 +29,7 @@ const config = require("../../config");
 const {
   createAssessmentScheduledNotification,
 } = require("../PushNotificationControllers/pushNotificationAssessmentController");
+const { triggerWebhook, EVENT_TYPES } = require("../../services/webhookService");
 const {
   validateScheduledAssessment,
   //validateCandidateAssessment
@@ -612,6 +613,46 @@ exports.shareAssessment = async (req, res) => {
         expiryAt, // Add the expiry date
       });
       savedScheduleAssessment = await scheduleAssessment.save();
+      
+      console.log(`[ASSESSMENT WEBHOOK] New assessment created via share: ${savedScheduleAssessment._id} with status: ${savedScheduleAssessment.status}`);
+
+      // Trigger webhook for assessment creation
+      try {
+        const webhookPayload = {
+          scheduledAssessmentId: savedScheduleAssessment._id,
+          scheduledAssessmentCode: savedScheduleAssessment.scheduledAssessmentCode,
+          assessmentId: savedScheduleAssessment.assessmentId,
+          tenantId: savedScheduleAssessment.tenantId,
+          ownerId: savedScheduleAssessment.ownerId,
+          status: savedScheduleAssessment.status,
+          expiryAt: savedScheduleAssessment.expiryAt,
+          order: savedScheduleAssessment.order,
+          proctoringEnabled: savedScheduleAssessment.proctoringEnabled,
+          createdAt: savedScheduleAssessment.createdAt,
+          event: "assessment.created"
+        };
+        
+        console.log(`[ASSESSMENT WEBHOOK] Triggering creation webhook for event: ${EVENT_TYPES.ASSESSMENT_STATUS_UPDATED}`);
+        console.log(`[ASSESSMENT WEBHOOK] Payload:`, {
+          event: EVENT_TYPES.ASSESSMENT_STATUS_UPDATED,
+          data: webhookPayload,
+          tenantId: savedScheduleAssessment.tenantId
+        });
+        
+        await triggerWebhook(
+          EVENT_TYPES.ASSESSMENT_STATUS_UPDATED,
+          webhookPayload,
+          savedScheduleAssessment.tenantId
+        );
+        
+        console.log(`[ASSESSMENT WEBHOOK] Creation webhook sent successfully for assessment ${savedScheduleAssessment._id}`);
+      } catch (webhookError) {
+        console.error(
+          "[ASSESSMENT WEBHOOK] Error triggering assessment creation webhook:",
+          webhookError
+        );
+        // Continue execution even if webhook fails
+      }
     }
 
     // Create push notification for scheduled assessment

@@ -151,7 +151,7 @@
         </div>
         <div class="form-group">
           <label for="apiKey">API Key:</label>
-          <input type="text" id="apiKey" value="your_api_key_here" />
+          <input type="text" id="apiKey" value="up_test_api_key_1234567890abcdef" placeholder="Enter your API key here" />
         </div>
       </div>
 
@@ -274,75 +274,133 @@
           <div class="two-column">
             <div class="form-group">
               <label for="positionTitle">Position Title *</label>
-              <input type="text" id="positionTitle" required />
+              <input type="text" id="positionTitle" value="Senior Software Engineer" required />
             </div>
             <div class="form-group">
-              <label for="department">Department *</label>
-              <input type="text" id="department" required />
+              <label for="companyName">Company Name *</label>
+              <input type="text" id="companyName" value="Tech Corp" required />
             </div>
           </div>
 
           <div class="two-column">
             <div class="form-group">
               <label for="location">Location *</label>
-              <input type="text" id="location" required />
+              <input type="text" id="location" value="Bangalore" required />
             </div>
             <div class="form-group">
-              <label for="employmentType">Employment Type *</label>
-              <select id="employmentType" required>
-                <option value="full-time">Full Time</option>
-                <option value="part-time">Part Time</option>
-                <option value="contract">Contract</option>
-                <option value="internship">Internship</option>
-              </select>
+              <label for="noOfPositions">Number of Positions *</label>
+              <input type="number" id="noOfPositions" min="1" value="2" required />
             </div>
-          </div>
-
-          <div class="form-group">
-            <label for="description">Job Description *</label>
-            <textarea id="description" rows="4" required></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="requirements">Requirements *</label>
-            <textarea
-              id="requirements"
-              rows="4"
-              placeholder="Enter requirements, one per line"
-              required
-            ></textarea>
           </div>
 
           <div class="two-column">
             <div class="form-group">
               <label for="minExperience">Min Experience (years) *</label>
-              <input type="number" id="minExperience" min="0" required />
+              <input type="number" id="minExperience" min="0" value="3" required />
             </div>
             <div class="form-group">
               <label for="maxExperience">Max Experience (years)</label>
-              <input type="number" id="maxExperience" min="0" />
+              <input type="number" id="maxExperience" min="0" value="6" />
+            </div>
+          </div>
+
+          <div class="two-column">
+            <div class="form-group">
+              <label for="minSalary">Min Salary (LPA)</label>
+              <input type="text" id="minSalary" value="15" />
+            </div>
+            <div class="form-group">
+              <label for="maxSalary">Max Salary (LPA)</label>
+              <input type="text" id="maxSalary" value="25" />
             </div>
           </div>
 
           <div class="form-group">
-            <label for="skills">Required Skills (comma separated)</label>
-            <input
-              type="text"
-              id="skills"
-              placeholder="e.g., JavaScript, React, Node.js"
-            />
+            <label for="jobDescription">Job Description *</label>
+            <textarea id="jobDescription" rows="4" required>We are looking for a Senior Software Engineer with experience in full-stack development...</textarea>
           </div>
 
           <div class="form-group">
-            <label for="status">Status *</label>
-            <select id="status" required>
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
-              <option value="on-hold">On Hold</option>
-            </select>
+            <label for="additionalNotes">Additional Notes</label>
+            <textarea id="additionalNotes" rows="2">Must be available to join within 30 days</textarea>
           </div>
 
-          <button type="submit" class="btn btn-primary">Create Position</button>
+          <div class="form-group">
+            <label>Required Skills *</label>
+            <div class="skills-container">
+              <div id="positionSkillsList">
+                <div class="skill-item">
+                  <input
+                    type="text"
+                    placeholder="Skill name"
+                    class="skill-name"
+                    value="JavaScript"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Experience"
+                    class="skill-experience"
+                    value="4 years"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Expertise level"
+                    class="skill-expertise"
+                    value="Advanced"
+                  />
+                  <button type="button" class="btn btn-sm btn-danger remove-skill">✕</button>
+                </div>
+                <div class="skill-item">
+                  <input
+                    type="text"
+                    placeholder="Skill name"
+                    class="skill-name"
+                    value="React"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Experience"
+                    class="skill-experience"
+                    value="3 years"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Expertise level"
+                    class="skill-expertise"
+                    value="Advanced"
+                  />
+                  <button type="button" class="btn btn-sm btn-danger remove-skill">✕</button>
+                </div>
+                <div class="skill-item">
+                  <input
+                    type="text"
+                    placeholder="Skill name"
+                    class="skill-name"
+                    value="Node.js"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Experience"
+                    class="skill-experience"
+                    value="3 years"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Expertise level"
+                    class="skill-expertise"
+                    value="Intermediate"
+                  />
+                  <button type="button" class="btn btn-sm btn-danger remove-skill">✕</button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-sm btn-secondary" id="addPositionSkill">+ Add Skill</button>
+            </div>
+          </div>
+
+          <div class="two-column">
+            <button type="submit" class="btn btn-primary">Create Position</button>
+            <button type="button" class="btn btn-secondary" onclick="clearPositionForm()">Clear Form</button>
+          </div>
         </form>
       </div>
 
@@ -743,6 +801,146 @@
           container.className = "response error";
         }
       }
+
+      // Position Management Functions
+      async function createPosition(positionData) {
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiKey = document.getElementById("apiKey").value;
+
+        try {
+          const response = await fetch(`${baseUrl}/positions`, {
+            method: "POST",
+            headers: {
+              "X-API-Key": apiKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(positionData),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            showResponse(data, true);
+          } else {
+            showResponse(data, false);
+            console.error("❌ Error creating position:", data);
+          }
+        } catch (error) {
+          showResponse({ error: error.message }, false);
+          console.error("❌ Network error:", error);
+        }
+      }
+
+      function clearPositionForm() {
+        document.getElementById("positionForm").reset();
+        document.getElementById("positionTitle").value = "Senior Software Engineer";
+        document.getElementById("companyName").value = "Tech Corp";
+        document.getElementById("location").value = "Bangalore";
+        document.getElementById("noOfPositions").value = "2";
+        document.getElementById("minExperience").value = "3";
+        document.getElementById("maxExperience").value = "6";
+        document.getElementById("minSalary").value = "15";
+        document.getElementById("maxSalary").value = "25";
+        document.getElementById("jobDescription").value = "We are looking for a Senior Software Engineer with experience in full-stack development...";
+        document.getElementById("additionalNotes").value = "Must be available to join within 30 days";
+        
+        // Reset skills to default
+        const skillsList = document.getElementById("positionSkillsList");
+        skillsList.innerHTML = `
+          <div class="skill-item">
+            <input type="text" placeholder="Skill name" class="skill-name" value="JavaScript" />
+            <input type="text" placeholder="Experience" class="skill-experience" value="4 years" />
+            <input type="text" placeholder="Expertise level" class="skill-expertise" value="Advanced" />
+            <button type="button" class="btn btn-sm btn-danger remove-skill">✕</button>
+          </div>
+          <div class="skill-item">
+            <input type="text" placeholder="Skill name" class="skill-name" value="React" />
+            <input type="text" placeholder="Experience" class="skill-experience" value="3 years" />
+            <input type="text" placeholder="Expertise level" class="skill-expertise" value="Advanced" />
+            <button type="button" class="btn btn-sm btn-danger remove-skill">✕</button>
+          </div>
+          <div class="skill-item">
+            <input type="text" placeholder="Skill name" class="skill-name" value="Node.js" />
+            <input type="text" placeholder="Experience" class="skill-experience" value="3 years" />
+            <input type="text" placeholder="Expertise level" class="skill-expertise" value="Intermediate" />
+            <button type="button" class="btn btn-sm btn-danger remove-skill">✕</button>
+          </div>
+        `;
+        document.getElementById("response").textContent = "";
+      }
+
+      // Position Skills Management
+      function addPositionSkill() {
+        const skillsList = document.getElementById("positionSkillsList");
+        const newSkill = document.createElement("div");
+        newSkill.className = "skill-item";
+        newSkill.innerHTML = `
+          <input type="text" placeholder="Skill name" class="skill-name" />
+          <input type="text" placeholder="Experience" class="skill-experience" />
+          <input type="text" placeholder="Expertise level" class="skill-expertise" />
+          <button type="button" class="btn btn-sm btn-danger remove-skill">✕</button>
+        `;
+        skillsList.appendChild(newSkill);
+      }
+
+      function removePositionSkill(button) {
+        button.parentElement.remove();
+      }
+
+      function getPositionSkills() {
+        const skillItems = document.querySelectorAll("#positionSkillsList .skill-item");
+        const skills = [];
+        
+        skillItems.forEach(item => {
+          const skillName = item.querySelector(".skill-name").value.trim();
+          const experience = item.querySelector(".skill-experience").value.trim();
+          const expertise = item.querySelector(".skill-expertise").value.trim();
+          
+          if (skillName) {
+            skills.push({
+              skill: skillName,
+              experience: experience || "Not specified",
+              expertise: expertise || "Beginner"
+            });
+          }
+        });
+        
+        return skills;
+      }
+
+      // Position Form Submission
+      document.getElementById("positionForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const positionData = {
+          title: document.getElementById("positionTitle").value,
+          companyname: document.getElementById("companyName").value,
+          Location: document.getElementById("location").value,
+          NoofPositions: parseInt(document.getElementById("noOfPositions").value),
+          minexperience: parseInt(document.getElementById("minExperience").value),
+          maxexperience: parseInt(document.getElementById("maxExperience").value) || null,
+          minSalary: document.getElementById("minSalary").value || "",
+          maxSalary: document.getElementById("maxSalary").value || "",
+          jobDescription: document.getElementById("jobDescription").value.trim(),
+          additionalNotes: document.getElementById("additionalNotes").value.trim(),
+          skills: getPositionSkills(),
+          templateId: null, // Optional template ID
+          rounds: [], // Empty rounds array
+          type: "" // Empty type
+        };
+
+        console.log("Position data to send:", positionData);
+        await createPosition(positionData);
+      });
+
+      // Position Skills Event Listeners
+      document.getElementById("addPositionSkill").addEventListener("click", addPositionSkill);
+      
+      document.addEventListener("click", (e) => {
+        if (e.target.classList.contains("remove-skill")) {
+          removePositionSkill(e.target);
+        }
+      });
     </script>
 
     <style>
@@ -827,6 +1025,29 @@
         border-radius: 4px;
         max-height: 300px;
         overflow-y: auto;
+      }
+
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+
+      .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background-color: #5a6268;
+      }
+
+      .btn-danger {
+        background-color: #dc3545;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background-color: #c82333;
       }
     </style>
   </body>

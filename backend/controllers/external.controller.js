@@ -2,12 +2,60 @@ const { Candidate } = require("../models/candidate.js");
 const { Position } = require("../models/Position/position.js");
 const { v4: uuidv4 } = require("uuid");
 const mongoose = require("mongoose");
+const ApiKey = require("../models/ApiKey.js");
 
-// Add this helper function at the top of the file
-const getTenantFromApiKey = (req) => {
-  // Extract tenant information from the API key if needed
-  // For now, we'll return a default tenant ID
-  return "default-tenant";
+const getTenantAndUserFromApiKey = async (req) => {
+  try {
+    // Get API key from Authorization header (Bearer token) or x-api-key header
+    const authHeader = req.headers.authorization;
+    const apiKeyHeader = req.headers['x-api-key'];
+    
+    let apiKey = null;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      apiKey = authHeader.substring(7); // Remove 'Bearer ' prefix
+    } else if (apiKeyHeader) {
+      apiKey = apiKeyHeader;
+    }
+    
+    if (!apiKey) {
+      return { error: "Missing API key in headers" };
+    }
+    
+    // Find the API key in database
+    const apiKeyDoc = await ApiKey.findOne({ 
+      key: apiKey, 
+      enabled: true 
+    });
+    
+    if (!apiKeyDoc) {
+      return { error: "Invalid or disabled API key" };
+    }
+    
+    // Update last used and usage count
+    apiKeyDoc.lastUsed = new Date();
+    apiKeyDoc.usageCount += 1;
+    await apiKeyDoc.save();
+    
+    console.log(`[API_KEY] Valid API key used: ${apiKeyDoc.key.substring(0, 8)}... for tenant: ${apiKeyDoc.tenantId}`);
+    
+    return {
+      tenantId: apiKeyDoc.tenantId,
+      userId: apiKeyDoc.ownerId,
+      apiKey: apiKeyDoc
+    };
+  } catch (error) {
+    console.error("[API_KEY] Error validating API key:", error);
+    return { error: "Error validating API key" };
+  }
+};
+
+// Helper function to check API key permissions
+const checkApiKeyPermission = (apiKey, requiredPermission) => {
+  if (!apiKey || !apiKey.permissions || !Array.isArray(apiKey.permissions)) {
+    return false;
+  }
+  return apiKey.permissions.includes(requiredPermission);
 };
 
 const getTenantAndUserFromCookies = (req) => {
@@ -22,20 +70,31 @@ const getTenantAndUserFromCookies = (req) => {
  */
 exports.createCandidate = async (req, res) => {
   try {
-    const { tenantId, userId } = getTenantAndUserFromCookies(req);
-
-    if (!tenantId || !userId) {
-      return res.status(400).json({
+    // Use API key validation instead of cookies
+    const authResult = await getTenantAndUserFromApiKey(req);
+    
+    if (authResult.error) {
+      return res.status(401).json({
         success: false,
-        error: "Missing tenant or user information in cookies",
+        error: authResult.error,
+      });
+    }
+    
+    const { tenantId, userId, apiKey } = authResult;
+    console.log('tenantId, userId:', tenantId, userId)
+    
+    // Check if the API key has candidates:write permission
+    if (!checkApiKeyPermission(apiKey, 'candidates:write')) {
+      return res.status(403).json({
+        success: false,
+        error: "Insufficient permissions. Required: candidates:write",
+        code: 403,
+        availablePermissions: apiKey.permissions
       });
     }
 
     const candidateData = {
       ...req.body,
-      externalId: req.body.externalId || `ext_${uuidv4()}`,
-      isExternal: true,
-      source: req.body.source || "external_api",
       tenantId: tenantId,
       createdBy: userId,
       ownerId: userId,
@@ -43,48 +102,180 @@ exports.createCandidate = async (req, res) => {
 
     const candidate = await Candidate.create(candidateData);
 
+    console.log(`[EXTERNAL_API] Candidate created via API: ${candidate._id} for tenant: ${tenantId}`);
+
     res.status(201).json({
       success: true,
       message: "Candidate created successfully",
+      code: 201,
       data: {
         candidateId: candidate._id,
-        externalId: candidate.externalId,
-        referenceId: `CAND-${Date.now()}`,
-        nextSteps: "Your candidate profile has been created successfully.",
+        tenantId: candidate.tenantId,
+        ownerId: candidate.ownerId,
+        createdAt: candidate.createdAt,
+        updatedAt: candidate.updatedAt,
       },
     });
   } catch (error) {
-    // Error handling remains the same
     console.error("External candidate creation error:", error);
 
+    // 1. Validation Errors (400) - Missing required fields, invalid data formats
     if (error.name === "ValidationError") {
       const errors = Object.values(error.errors).map((err) => ({
         field: err.path,
         message: err.message,
+        value: err.value,
+        kind: err.kind
       }));
 
       return res.status(400).json({
         success: false,
         error: "Validation Error",
-        message: "Invalid candidate data",
+        message: "Invalid candidate data - required fields missing or invalid",
+        code: 400,
         details: errors,
+        suggestion: "Please check all required fields and data formats"
       });
     }
 
+    // 2. Duplicate Entry Errors (409) - Email, phone, or other unique field conflicts
     if (error.code === 11000) {
+      const duplicateField = Object.keys(error.keyPattern)[0];
+      const duplicateValue = error.keyValue[duplicateField];
+      
       return res.status(409).json({
         success: false,
         error: "Duplicate Entry",
-        message: "A candidate with this email already exists",
-        field: "email",
+        message: `A candidate with this ${duplicateField} already exists`,
+        code: 409,
+        field: duplicateField,
+        value: duplicateValue,
+        suggestion: `Use a different ${duplicateField} or update existing candidate`
       });
     }
 
-    res.status(500).json({
+    // 3. Cast Errors (400) - Invalid data type conversion
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        error: "Data Type Error",
+        message: `Invalid data type for field ${error.path}: expected ${error.kind}`,
+        code: 400,
+        field: error.path,
+        value: error.value,
+        expectedType: error.kind,
+        suggestion: "Ensure all fields have correct data types"
+      });
+    }
+
+    // 4. JSON Syntax Errors (400) - Malformed request body
+    if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+      return res.status(400).json({
+        success: false,
+        error: "JSON Syntax Error",
+        message: "Invalid JSON format in request body",
+        code: 400,
+        suggestion: "Please check JSON syntax and structure"
+      });
+    }
+
+    // 5. Database Connection Errors (503) - MongoDB unavailable
+    if (error.name === "MongoNetworkError" || error.name === "MongoTimeoutError") {
+      return res.status(503).json({
+        success: false,
+        error: "Database Unavailable",
+        message: "Unable to connect to database",
+        code: 503,
+        suggestion: "Please try again later or contact support"
+      });
+    }
+
+    // 6. Authentication/Authorization Errors (401/403) - API key issues
+    if (error.message && error.message.includes("API key")) {
+      const statusCode = error.message.includes("Invalid") ? 401 : 403;
+      return res.status(statusCode).json({
+        success: false,
+        error: statusCode === 401 ? "Authentication Failed" : "Authorization Failed",
+        message: error.message,
+        code: statusCode,
+        suggestion: "Check your API key and permissions"
+      });
+    }
+
+    // 7. Rate Limiting Errors (429) - Too many requests
+    if (error.name === "RateLimitError") {
+      return res.status(429).json({
+        success: false,
+        error: "Rate Limit Exceeded",
+        message: "Too many requests - please wait before trying again",
+        code: 429,
+        retryAfter: error.retryAfter || 60,
+        suggestion: "Reduce request frequency or upgrade your plan"
+      });
+    }
+
+    // 8. File/Document Size Errors (413) - Request too large
+    if (error.name === "PayloadTooLargeError") {
+      return res.status(413).json({
+        success: false,
+        error: "Request Too Large",
+        message: "Request body exceeds maximum allowed size",
+        code: 413,
+        maxSize: error.limit,
+        suggestion: "Reduce the size of your request data"
+      });
+    }
+
+    // 9. Required Field Missing (400) - Specific check for essential fields
+    const requiredFields = ['FirstName', 'LastName', 'Email'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Required Fields Missing",
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        code: 400,
+        missingFields: missingFields,
+        suggestion: "Please provide all required fields"
+      });
+    }
+
+    // 10. Email Format Validation (400) - Invalid email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (req.body.Email && !emailRegex.test(req.body.Email)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid Email Format",
+        message: "Email address is not in a valid format",
+        code: 400,
+        field: "Email",
+        value: req.body.Email,
+        suggestion: "Please provide a valid email address (e.g., user@example.com)"
+      });
+    }
+
+    // 11. Phone Number Validation (400) - Invalid phone format
+    if (req.body.Phone && !/^\d{10,15}$/.test(req.body.Phone.replace(/\D/g, ''))) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid Phone Number",
+        message: "Phone number must be 10-15 digits",
+        code: 400,
+        field: "Phone",
+        value: req.body.Phone,
+        suggestion: "Please provide a valid phone number (10-15 digits)"
+      });
+    }
+
+    // 12. Generic Server Error (500) - Catch-all for unexpected errors
+    return res.status(500).json({
       success: false,
       error: "Internal Server Error",
-      message: "Failed to create candidate",
-      referenceId: `ERR-${Date.now()}`,
+      message: "An unexpected error occurred while creating candidate",
+      code: 500,
+      suggestion: "Please try again or contact support if the problem persists",
+      timestamp: new Date().toISOString()
     });
   }
 };
@@ -94,20 +285,73 @@ exports.createCandidate = async (req, res) => {
  */
 exports.bulkCreateCandidates = async (req, res) => {
   try {
-    const { tenantId, userId } = getTenantAndUserFromCookies(req);
-
-    if (!tenantId || !userId) {
+    // Validate input array
+    if (!req.body || !Array.isArray(req.body) || req.body.length === 0) {
       return res.status(400).json({
         success: false,
-        error: "Missing tenant or user information in cookies",
+        error: "Invalid Input",
+        message: "Please provide a valid JSON array of candidates",
+        code: 400,
+        suggestion: "Ensure request body is an array with at least one candidate"
+      });
+    }
+
+    // Check if candidates array is too large
+    if (req.body.length > 50) {
+      return res.status(413).json({
+        success: false,
+        error: "Request Too Large",
+        message: "Maximum 50 candidates allowed per bulk request",
+        code: 413,
+        requestedCount: req.body.length,
+        maxAllowed: 50,
+        suggestion: "Split your request into smaller batches"
+      });
+    }
+
+    // Get tenant and user info from API key (not cookies for external API)
+    const authResult = await getTenantAndUserFromApiKey(req);
+    
+    if (authResult.error) {
+      return res.status(401).json({
+        success: false,
+        error: "Authentication Required",
+        message: authResult.error,
+        code: 401,
+        suggestion: "Ensure valid API key is provided in headers"
+      });
+    }
+
+    const { tenantId, userId } = authResult;
+
+    // Validate each candidate has required fields
+    const requiredFields = ['FirstName', 'LastName', 'Email'];
+    const validationErrors = [];
+    
+    req.body.forEach((candidate, index) => {
+      const missingFields = requiredFields.filter(field => !candidate[field]);
+      if (missingFields.length > 0) {
+        validationErrors.push({
+          index: index,
+          missingFields: missingFields,
+          email: candidate.Email || 'N/A'
+        });
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Validation Error",
+        message: "Some candidates have missing required fields",
+        code: 400,
+        details: validationErrors,
+        suggestion: "Ensure all candidates have FirstName, LastName, and Email"
       });
     }
 
     const candidates = req.body.map((candidate) => ({
       ...candidate,
-      externalId: candidate.externalId || `ext_${uuidv4()}`,
-      isExternal: true,
-      source: candidate.source || "external_api",
       tenantId: tenantId,
       createdBy: userId,
       ownerId: userId,
@@ -118,86 +362,113 @@ exports.bulkCreateCandidates = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Bulk candidates created successfully",
+      code: 201,
       data: {
         created: result.length,
         total: req.body.length,
-        referenceId: `BULK-${Date.now()}`,
+        tenantId: tenantId,
+        createdAt: new Date(),
       },
     });
   } catch (error) {
     console.error("Bulk candidate creation error:", error);
 
+    // 1. Duplicate Entry Errors (207) - Some candidates already exist
     if (error.code === 11000) {
       const duplicateCount = error.writeErrors ? error.writeErrors.length : 0;
       const createdCount = error.result ? error.result.nInserted : 0;
-
+      
       return res.status(207).json({
         success: true,
-        message: "Partial success - some candidates were not created",
+        message: "Partial success - some candidates already exist",
+        code: 207,
         data: {
           created: createdCount,
           duplicates: duplicateCount,
           total: req.body.length,
-          referenceId: `BULK-PARTIAL-${Date.now()}`,
+          tenantId: req.body.tenantId,
+          createdAt: new Date(),
         },
         warnings: ["Some duplicate entries were skipped"],
+        suggestion: "Check duplicate candidates and update existing ones if needed"
       });
     }
 
-    res.status(500).json({
-      success: false,
-      error: "Internal Server Error",
-      message: "Failed to process bulk candidates",
-      referenceId: `ERR-BULK-${Date.now()}`,
-    });
-  }
-};
-
-/**
- * Create a single position via external API
- */
-exports.createPosition = async (req, res) => {
-  try {
-    const positionData = {
-      ...req.body,
-      externalId: req.body.externalId || `pos_ext_${uuidv4()}`,
-      isExternal: true,
-      tenantId: req.tenantId || "external_tenant",
-      createdBy: req.user?._id || "external_api",
-      status: "open", // Default status
-    };
-
-    const position = await Position.create(positionData);
-
-    res.status(201).json({
-      success: true,
-      message: "Position created successfully",
-      data: {
-        positionId: position._id,
-        externalId: position.externalId,
-        referenceId: `POS-${Date.now()}`,
-      },
-    });
-  } catch (error) {
-    console.error("External position creation error:", error);
-
+    // 2. Validation Errors (400) - Invalid data in candidates
     if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map((err) => ({
+        field: err.path,
+        message: err.message,
+        value: err.value,
+        kind: err.kind
+      }));
+
       return res.status(400).json({
         success: false,
         error: "Validation Error",
-        message: "Invalid position data",
-        details: Object.values(error.errors).map((err) => ({
-          field: err.path,
-          message: err.message,
-        })),
+        message: "Invalid candidate data in bulk request",
+        code: 400,
+        details: errors,
+        suggestion: "Please check all candidate data formats and required fields"
       });
     }
 
-    res.status(500).json({
+    // 3. Cast Errors (400) - Invalid data types
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        error: "Data Type Error",
+        message: `Invalid data type for field ${error.path}: expected ${error.kind}`,
+        code: 400,
+        field: error.path,
+        value: error.value,
+        expectedType: error.kind,
+        suggestion: "Ensure all fields have correct data types"
+      });
+    }
+
+    // 4. JSON Syntax Errors (400) - Malformed request body
+    if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+      return res.status(400).json({
+        success: false,
+        error: "JSON Syntax Error",
+        message: "Invalid JSON format in request body",
+        code: 400,
+        suggestion: "Please check JSON syntax and structure"
+      });
+    }
+
+    // 5. Database Connection Errors (503) - MongoDB unavailable
+    if (error.name === "MongoNetworkError" || error.name === "MongoTimeoutError") {
+      return res.status(503).json({
+        success: false,
+        error: "Database Unavailable",
+        message: "Unable to connect to database",
+        code: 503,
+        suggestion: "Please try again later or contact support"
+      });
+    }
+
+    // 6. Request Too Large Errors (413) - Payload exceeds limit
+    if (error.name === "PayloadTooLargeError") {
+      return res.status(413).json({
+        success: false,
+        error: "Request Too Large",
+        message: "Request body exceeds maximum allowed size",
+        code: 413,
+        maxSize: error.limit,
+        suggestion: "Reduce the size of your request data"
+      });
+    }
+
+    // 7. Generic Server Error (500) - Catch-all for unexpected errors
+    return res.status(500).json({
       success: false,
       error: "Internal Server Error",
-      message: "Failed to create position",
-      referenceId: `ERR-POS-${Date.now()}`,
+      message: "An unexpected error occurred while creating bulk candidates",
+      code: 500,
+      suggestion: "Please try again or contact support if the problem persists",
+      timestamp: new Date().toISOString()
     });
   }
 };
@@ -207,18 +478,58 @@ exports.createPosition = async (req, res) => {
  */
 exports.bulkCreatePositions = async (req, res) => {
   try {
-    if (!Array.isArray(req.body) || req.body.length === 0) {
+    // Validate input array
+    if (!req.body || !Array.isArray(req.body) || req.body.length === 0) {
       return res.status(400).json({
         success: false,
-        error: "Bad Request",
-        message: "Expected an array of positions",
+        error: "Invalid Input",
+        message: "Please provide a valid JSON array of positions",
+        code: 400,
+        suggestion: "Ensure request body is an array with at least one position"
+      });
+    }
+
+    // Check if positions array is too large
+    if (req.body.length > 50) {
+      return res.status(413).json({
+        success: false,
+        error: "Request Too Large",
+        message: "Maximum 50 positions allowed per bulk request",
+        code: 413,
+        requestedCount: req.body.length,
+        maxAllowed: 50,
+        suggestion: "Split your request into smaller batches"
+      });
+    }
+
+    // Validate each position has required fields
+    const requiredFields = ['title', 'companyName', 'location'];
+    const validationErrors = [];
+    
+    req.body.forEach((position, index) => {
+      const missingFields = requiredFields.filter(field => !position[field]);
+      if (missingFields.length > 0) {
+        validationErrors.push({
+          index: index,
+          missingFields: missingFields,
+          title: position.title || 'N/A'
+        });
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Validation Error",
+        message: "Some positions have missing required fields",
+        code: 400,
+        details: validationErrors,
+        suggestion: "Ensure all positions have title, companyName, and location"
       });
     }
 
     const positions = req.body.map((position) => ({
       ...position,
-      externalId: position.externalId || `pos_ext_${uuidv4()}`,
-      isExternal: true,
       tenantId: req.tenantId || "external_tenant",
       createdBy: req.user?._id || "external_api",
       status: position.status || "open",
@@ -229,37 +540,200 @@ exports.bulkCreatePositions = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Bulk positions created successfully",
+      code: 201,
       data: {
         created: result.length,
         total: req.body.length,
-        referenceId: `BULK-POS-${Date.now()}`,
+        tenantId: req.tenantId || "external_tenant",
+        createdAt: new Date(),
       },
     });
   } catch (error) {
     console.error("Bulk position creation error:", error);
 
+    // 1. Duplicate Entry Errors (207) - Some positions already exist
     if (error.code === 11000) {
       const duplicateCount = error.writeErrors ? error.writeErrors.length : 0;
       const createdCount = error.result ? error.result.nInserted : 0;
 
       return res.status(207).json({
         success: true,
-        message: "Partial success - some positions were not created",
+        message: "Partial success - some positions already exist",
+        code: 207,
         data: {
           created: createdCount,
           duplicates: duplicateCount,
           total: req.body.length,
-          referenceId: `BULK-POS-PARTIAL-${Date.now()}`,
+          tenantId: req.tenantId || "external_tenant",
+          createdAt: new Date(),
         },
         warnings: ["Some duplicate entries were skipped"],
+        suggestion: "Check duplicate positions and update existing ones if needed"
+      });
+    }
+
+    // 2. Validation Errors (400) - Invalid data in positions
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map((err) => ({
+        field: err.path,
+        message: err.message,
+        value: err.value,
+        kind: err.kind
+      }));
+
+      return res.status(400).json({
+        success: false,
+        error: "Validation Error",
+        message: "Invalid position data in bulk request",
+        code: 400,
+        details: errors,
+        suggestion: "Please check all position data formats and required fields"
+      });
+    }
+
+    // 3. Cast Errors (400) - Invalid data types
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        error: "Data Type Error",
+        message: `Invalid data type for field ${error.path}: expected ${error.kind}`,
+        code: 400,
+        field: error.path,
+        value: error.value,
+        expectedType: error.kind,
+        suggestion: "Ensure all fields have correct data types"
+      });
+    }
+
+    // 4. JSON Syntax Errors (400) - Malformed request body
+    if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+      return res.status(400).json({
+        success: false,
+        error: "JSON Syntax Error",
+        message: "Invalid JSON format in request body",
+        code: 400,
+        suggestion: "Please check JSON syntax and structure"
+      });
+    }
+
+    // 5. Database Connection Errors (503) - MongoDB unavailable
+    if (error.name === "MongoNetworkError" || error.name === "MongoTimeoutError") {
+      return res.status(503).json({
+        success: false,
+        error: "Database Unavailable",
+        message: "Unable to connect to database",
+        code: 503,
+        suggestion: "Please try again later or contact support"
+      });
+    }
+
+    // 6. Request Too Large Errors (413) - Payload exceeds limit
+    if (error.name === "PayloadTooLargeError") {
+      return res.status(413).json({
+        success: false,
+        error: "Request Too Large",
+        message: "Request body exceeds maximum allowed size",
+        code: 413,
+        maxSize: error.limit,
+        suggestion: "Reduce the size of your request data"
+      });
+    }
+
+    // 7. Generic Server Error (500) - Catch-all for unexpected errors
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+      message: "An unexpected error occurred while creating bulk positions",
+      code: 500,
+      suggestion: "Please try again or contact support if the problem persists",
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
+/**
+ * Create a single position via external API
+ */
+exports.createPosition = async (req, res) => {
+  try {
+    // Use API key validation instead of cookies
+    const authResult = await getTenantAndUserFromApiKey(req);
+    
+    if (authResult.error) {
+      return res.status(401).json({
+        success: false,
+        error: authResult.error,
+      });
+    }
+    
+    const { tenantId, userId, apiKey } = authResult;
+    
+    // Check if the API key has positions:write permission
+    if (!checkApiKeyPermission(apiKey, 'positions:write')) {
+      return res.status(403).json({
+        success: false,
+        error: "Insufficient permissions. Required: positions:write",
+        availablePermissions: apiKey.permissions
+      });
+    }
+
+    const positionData = {
+      ...req.body,
+      tenantId: tenantId,
+      ownerId: userId,
+      createdBy: userId,
+    };
+
+    const position = await Position.create(positionData);
+
+    console.log(`[EXTERNAL_API] Position created via API: ${position._id} for tenant: ${tenantId}`);
+
+    res.status(201).json({
+      success: true,
+      message: "Position created successfully",
+      code: 201,
+      data: {
+        positionId: position._id,
+        title: position.title,
+        tenantId: position.tenantId,
+        ownerId: position.ownerId,
+        createdAt: position.createdAt,
+        updatedAt: position.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error("External position creation error:", error);
+
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map((err) => ({
+        field: err.path,
+        message: err.message,
+      }));
+
+      return res.status(400).json({
+        success: false,
+        error: "Validation Error",
+        message: "Invalid position data",
+        code: 400,
+        details: errors,
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        error: "Duplicate Entry",
+        message: "A position with this title already exists",
+        code: 409,
+        field: "title",
       });
     }
 
     res.status(500).json({
       success: false,
       error: "Internal Server Error",
-      message: "Failed to process bulk positions",
-      referenceId: `ERR-BULK-POS-${Date.now()}`,
+      message: "Failed to create position",
+      code: 500,
     });
   }
 };

@@ -12,6 +12,16 @@ const integrationSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tenant',
+      required: false,
+    },
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
+    },
     webhookUrl: {
       type: String,
       required: true,

@@ -768,6 +768,8 @@ const MainAppRoutes = ({
                             </>
                         )}
 
+                        
+
                         {/* Wallet */}
                         {hasPermission("Wallet") && (
                             <Route path="/wallet" element={<Wallet />}>
