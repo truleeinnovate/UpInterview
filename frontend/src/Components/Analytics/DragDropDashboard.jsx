@@ -16,6 +16,16 @@ const DragDropDashboard = ({
   });
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDragDisabled, setIsDragDisabled] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (
+      dashboardLayout.kpiCards.length > 0 ||
+      dashboardLayout.charts.length > 0
+    ) {
+      setIsLoading(false);
+    }
+  }, [dashboardLayout]);
 
   useEffect(() => {
     // Initialize layout from props
@@ -260,11 +270,35 @@ const DragDropDashboard = ({
     );
   };
 
+  const LoadingView = () => (
+    <div
+      className={`grid gap-6 transition-colors ${
+        customSettings.layout === "grid"
+          ? "sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3"
+          : customSettings.layout === "list"
+          ? "grid-cols-1"
+          : "grid-cols-1 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-6"
+      } ${isEditMode ? "bg-gray-50 rounded-lg p-4" : ""}`}
+    >
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div
+          key={index}
+          className="animate-pulse bg-white rounded-xl shadow p-5 flex flex-col gap-4"
+        >
+          <div className="h-6 w-32 bg-gray-200 rounded"></div>
+          <div className="h-10 w-24 bg-gray-200 rounded"></div>
+          <div className="h-4 w-full bg-gray-200 rounded"></div>
+          <div className="h-4 w-2/3 bg-gray-200 rounded"></div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Edit Mode Controls */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+        {/* <div className="flex items-center space-x-3">
           <button
             onClick={() => setIsEditMode(!isEditMode)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors ${
@@ -286,7 +320,7 @@ const DragDropDashboard = ({
               <span>Reset Layout</span>
             </button>
           )}
-        </div>
+        </div> */}
 
         {isEditMode && (
           <div className="text-sm text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
@@ -296,19 +330,23 @@ const DragDropDashboard = ({
       </div>
 
       {/* KPI Cards Section */}
-      <div
-        className={`grid gap-6 transition-colors ${
-          customSettings.layout === "grid"
-            ? "sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3"
-            : customSettings.layout === "list"
-            ? "grid-cols-1"
-            : "grid-cols-1 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-6"
-        } ${isEditMode ? "bg-gray-50 rounded-lg p-4" : ""}`}
-      >
-        {dashboardLayout.kpiCards
-          .filter((item) => item.visible || isEditMode)
-          .map((item, index) => renderKpiCard(item, index))}
-      </div>
+      {isLoading ? (
+        <LoadingView />
+      ) : (
+        <div
+          className={`grid gap-6 transition-colors ${
+            customSettings.layout === "grid"
+              ? "sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3"
+              : customSettings.layout === "list"
+              ? "grid-cols-1"
+              : "grid-cols-1 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-6"
+          } ${isEditMode ? "bg-gray-50 rounded-lg p-4" : ""}`}
+        >
+          {dashboardLayout.kpiCards
+            .filter((item) => item.visible || isEditMode)
+            .map((item, index) => renderKpiCard(item, index))}
+        </div>
+      )}
 
       {/* Charts Section */}
       <div
