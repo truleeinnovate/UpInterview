@@ -43,15 +43,7 @@ exports.getApiKeys = asyncHandler(async (req, res) => {
 exports.createApiKey = asyncHandler(async (req, res) => {
   const requestId = uuidv4();
   const startTime = Date.now();
-  const {
-    organization,
-    permissions,
-    description,
-    expiresAt,
-    rateLimit,
-    ipAddress,
-    userAgent,
-  } = req.body;
+  const { organization, permissions } = req.body;
 
   // Extract user context from auth middleware
   const auth = res.locals.auth;
@@ -82,20 +74,14 @@ exports.createApiKey = asyncHandler(async (req, res) => {
       });
     }
 
-    // Validate permissions with new fine-grained system
+    // Validate permissions with simplified system
     const validPermissions = [
-      "users:read",
-      "users:write",
-      "users:delete",
       "candidates:read",
       "candidates:write",
-      "candidates:delete",
-      "interviews:read",
-      "interviews:write",
-      "interviews:delete",
-      "analytics:read",
-      "system:read",
-      "system:write",
+      "candidates:bulk",
+      "positions:read",
+      "positions:write",
+      "positions:bulk"
     ];
     const invalidPermissions = permissions.filter(
       (p) => !validPermissions.includes(p)
@@ -109,44 +95,6 @@ exports.createApiKey = asyncHandler(async (req, res) => {
         )}. Valid permissions: ${validPermissions.join(", ")}`,
         requestId,
       });
-    }
-
-    // Validate expiration date if provided
-    if (expiresAt && new Date(expiresAt) <= new Date()) {
-      return res.status(400).json({
-        success: false,
-        message: "Expiration date must be in the future",
-        requestId,
-      });
-    }
-
-    // Validate rate limits if provided
-    if (rateLimit) {
-      const { requestsPerMinute, requestsPerHour, requestsPerDay } = rateLimit;
-      if (
-        requestsPerMinute &&
-        (requestsPerMinute < 1 || requestsPerMinute > 1000)
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Requests per minute must be between 1 and 1000",
-          requestId,
-        });
-      }
-      if (requestsPerHour && (requestsPerHour < 1 || requestsPerHour > 10000)) {
-        return res.status(400).json({
-          success: false,
-          message: "Requests per hour must be between 1 and 10000",
-          requestId,
-        });
-      }
-      if (requestsPerDay && (requestsPerDay < 1 || requestsPerDay > 100000)) {
-        return res.status(400).json({
-          success: false,
-          message: "Requests per day must be between 1 and 100000",
-          requestId,
-        });
-      }
     }
 
     // Generate API key
@@ -170,22 +118,13 @@ exports.createApiKey = asyncHandler(async (req, res) => {
       });
     }
 
-    // Create API key with all new fields
+    // Create API key with simplified fields
     const apiKey = await ApiKey.create({
       key,
       organization: organization.trim(),
       permissions,
-      description: description?.trim() || null,
-      expiresAt: expiresAt ? new Date(expiresAt) : null,
       ownerId,
       tenantId,
-      rateLimit: {
-        requestsPerMinute: rateLimit?.requestsPerMinute || 60,
-        requestsPerHour: rateLimit?.requestsPerHour || 1000,
-        requestsPerDay: rateLimit?.requestsPerDay || 10000,
-      },
-      ipAddress: ipAddress || [],
-      userAgent: userAgent || null,
     });
 
     const duration = Date.now() - startTime;

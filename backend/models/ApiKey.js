@@ -17,16 +17,10 @@ const apiKeySchema = new mongoose.Schema(
     permissions: [{
       type: String,
       enum: [
-        // User Management
-        'users:read', 'users:write', 'users:delete',
         // Candidate Management  
-        'candidates:read', 'candidates:write', 'candidates:delete',
-        // Interview Management
-        'interviews:read', 'interviews:write', 'interviews:delete',
-        // Analytics
-        'analytics:read',
-        // System
-        'system:read', 'system:write'
+        'candidates:read', 'candidates:write', 'candidates:bulk',
+        // Position Management
+        'positions:read', 'positions:write', 'positions:bulk'
       ],
       required: true
     }],
@@ -42,74 +36,6 @@ const apiKeySchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
-    // Rate Limiting
-    rateLimit: {
-      requestsPerMinute: {
-        type: Number,
-        default: 60, // 60 requests per minute
-        min: 1,
-        max: 1000
-      },
-      requestsPerHour: {
-        type: Number,
-        default: 1000, // 1000 requests per hour
-        min: 1,
-        max: 10000
-      },
-      requestsPerDay: {
-        type: Number,
-        default: 10000, // 10000 requests per day
-        min: 1,
-        max: 100000
-      }
-    },
-    // Usage Analytics
-    usageAnalytics: {
-      totalRequests: {
-        type: Number,
-        default: 0
-      },
-      requestsToday: {
-        type: Number,
-        default: 0
-      },
-      requestsThisHour: {
-        type: Number,
-        default: 0
-      },
-      requestsThisMinute: {
-        type: Number,
-        default: 0
-      },
-      lastResetTime: {
-        type: Date,
-        default: Date.now
-      },
-      endpointsUsed: [{
-        endpoint: String,
-        count: Number,
-        lastUsed: Date
-      }],
-      errorCount: {
-        type: Number,
-        default: 0
-      },
-      lastError: {
-        type: Date,
-        default: null
-      }
-    },
-    // Key Expiration
-    expiresAt: {
-      type: Date,
-      default: null
-    },
-    // Additional metadata
-    description: {
-      type: String,
-      trim: true,
-      maxlength: 500
-    },
     // Store owner and tenant context for automatic extraction
     ownerId: {
       type: String,
@@ -119,14 +45,6 @@ const apiKeySchema = new mongoose.Schema(
     tenantId: {
       type: String,
       required: false
-    },
-    ipAddress: {
-      type: [String],
-      default: [] // Allowed IP addresses (empty = allow all)
-    },
-    userAgent: {
-      type: String,
-      default: null
     }
   },
   {

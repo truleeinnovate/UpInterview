@@ -490,6 +490,7 @@ const AuthRoutes = () => (
         <Route path="/verify-user-email" element={<VerifyUserEmail />} />
         <Route path="/resetPassword" element={<ResetPassword />} />
         <Route path="/forgot-password" element={<ForgetPassword />} />
+        <Route path="/assessmenttest" element={<AssessmentTest />} />
         <Route path="/pending-approval" element={<PendingApproval />} />
         <Route path="/subscription-success" element={<SubscriptionSuccess />} />
         <Route path="/payment-details" element={<><CardDetails /><SubscriptionPlan /></>} />
@@ -767,6 +768,8 @@ const MainAppRoutes = ({
                                 />
                             </>
                         )}
+
+                        
 
                         {/* Wallet */}
                         {hasPermission("Wallet") && (
@@ -1392,6 +1395,7 @@ const App = () => {
             "/verify-user-email",
             "/resetPassword",
             "/forgot-password",
+            "/assessmenttest",
             "/pending-approval",
             "/subscription-success",
             "/payment-details",

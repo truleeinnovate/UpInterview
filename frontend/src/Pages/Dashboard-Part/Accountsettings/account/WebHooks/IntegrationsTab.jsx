@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Plus, Edit, Trash2, Power, PowerOff } from "lucide-react";
 import Portal from "./Portal";
 import InputField from "../../../../../Components/FormFields/InputField";
@@ -6,6 +6,8 @@ import DropdownWithSearchField from "../../../../../Components/FormFields/Dropdo
 import { config } from "../../../../../config";
 import { getAuthToken } from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 import { notify } from "../../../../../services/toastService";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 
 const IntegrationsTab = () => {
   const [integrations, setIntegrations] = useState([]);
@@ -36,14 +38,20 @@ const IntegrationsTab = () => {
     { id: "feedback.status.updated", label: "feedback.status.updated" },
   ];
 
-  useEffect(() => {
-    fetchIntegrations();
-  }, []);
+  // Extract tenantId and userId from cookies
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const ownerId = tokenPayload?.userId;
+  const tenantId = tokenPayload?.tenantId;
 
-  const fetchIntegrations = async () => {
+  const fetchIntegrations = useCallback(async () => {
     try {
       const authToken = getAuthToken();
-      const response = await fetch(`${config.REACT_APP_API_URL}/integrations`, {
+      // Include tenantId in the query to filter integrations for the current tenant
+      const url = tenantId 
+        ? `${config.REACT_APP_API_URL}/integrations?tenantId=${tenantId}`
+        : `${config.REACT_APP_API_URL}/integrations`;
+      
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
@@ -62,7 +70,11 @@ const IntegrationsTab = () => {
       console.error('Error fetching integrations:', error);
       // Consider adding user feedback here (e.g., toast notification)
     }
-  };
+  }, [tenantId]);
+
+  useEffect(() => {
+    fetchIntegrations();
+  }, [fetchIntegrations]);
 
   // Function to validate form data
   const validateForm = (data) => {
@@ -114,7 +126,13 @@ const IntegrationsTab = () => {
       const response = await fetch(url, {
         method,
         headers,
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          // Include tenantId and ownerId from cookies
+          // Don't send organization from formData, use tenantId from cookies instead
+          tenantId: tenantId,
+          ownerId: ownerId
+        }),
       });
 
       if (response.ok) {

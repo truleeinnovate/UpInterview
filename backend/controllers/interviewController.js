@@ -34,75 +34,6 @@ const {
   MockInterviewRound,
 } = require("../models/MockInterview/mockinterviewRound.js");
 
-// Helper: map InterviewRounds.status (DB) to webhook status values
-const mapRoundStatusForWebhook = (status) => {
-  if (!status) return null;
-  switch (status) {
-    case "Scheduled":
-      return "scheduled";
-    case "Rescheduled":
-      return "rescheduled";
-    case "Rejected":
-      return "rejected";
-    case "Selected":
-      return "selected";
-    case "Cancelled":
-      return "cancelled";
-    case "NoShow":
-      return "no_show";
-    default:
-      return null;
-  }
-};
-
-// Helper: trigger interview.round.status.updated webhook for a round
-const triggerInterviewRoundStatusUpdated = async (
-  roundDoc,
-  oldStatus,
-  interview
-) => {
-  try {
-    const mappedStatus = mapRoundStatusForWebhook(roundDoc.status);
-    if (!mappedStatus) {
-      return; // Only fire for allowed statuses
-    }
-
-    // If interview not passed in, fetch it
-    let interviewDoc = interview;
-    if (!interviewDoc) {
-      interviewDoc = await Interview.findById(roundDoc.interviewId).lean();
-    }
-    if (!interviewDoc) {
-      return;
-    }
-
-    const payload = {
-      roundId: roundDoc._id,
-      interviewId: roundDoc.interviewId,
-      candidateId: interviewDoc.candidateId,
-      positionId: interviewDoc.positionId,
-      roundName: roundDoc.roundTitle,
-      status: mappedStatus,
-      dbStatus: roundDoc.status,
-      previousStatus: oldStatus,
-      dateTime: roundDoc.dateTime,
-      interviewerType: roundDoc.interviewerType,
-      sequence: roundDoc.sequence,
-    };
-
-    await triggerWebhook(
-      EVENT_TYPES.INTERVIEW_ROUND_STATUS_UPDATED,
-      payload,
-      interviewDoc.tenantId
-    );
-  } catch (error) {
-    console.error(
-      "[INTERVIEW] Error triggering interview.round.status.updated:",
-      error
-    );
-  }
-};
-
 //  post call for interview page
 // const createInterview = async (req, res) => {
 //     try {
@@ -985,6 +916,55 @@ const updateInterviewRound = async (req, res) => {
       message: "Internal server error.",
       error: error.message,
     });
+  }
+};
+
+// Helper function to trigger webhook for interview round status updates
+const triggerInterviewRoundStatusUpdated = async (round, oldStatus, interview = null) => {
+  try {
+    // Skip if no status change or if status is not set
+    if (!round.status || round.status === oldStatus) {
+      return;
+    }
+
+    // Skip draft status as per requirements
+    if (round.status === 'Draft') {
+      return;
+    }
+
+    // If interview is not provided, fetch it
+    if (!interview) {
+      interview = await Interview.findById(round.interviewId).lean();
+      if (!interview) {
+        console.error('Interview not found for round:', round._id);
+        return;
+      }
+    }
+
+    // Prepare the webhook data
+    const webhookData = {
+      interviewId: interview._id,
+      interviewCode: interview.interviewCode,
+      roundId: round._id,
+      roundTitle: round.roundTitle,
+      previousStatus: oldStatus,
+      newStatus: round.status,
+      updatedAt: new Date().toISOString(),
+      candidateId: interview.candidateId,
+      positionId: interview.positionId,
+      tenantId: interview.tenantId
+    };
+
+    // Trigger the webhook
+    await triggerWebhook(
+      EVENT_TYPES.INTERVIEW_ROUND_STATUS_UPDATED,
+      webhookData,
+      interview.tenantId
+    );
+
+    console.log(`Webhook triggered for interview round ${round._id} status change: ${oldStatus} -> ${round.status}`);
+  } catch (error) {
+    console.error('Error in triggerInterviewRoundStatusUpdated:', error);
   }
 };
 

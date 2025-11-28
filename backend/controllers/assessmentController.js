@@ -21,7 +21,6 @@ const { encrypt } = require("../utils/generateOtp");
 const sendEmail = require("../utils/sendEmail");
 const emailTemplateModel = require("../models/EmailTemplatemodel");
 const notificationMiddleware = require("../middleware/notificationMiddleware");
-const { EVENT_TYPES, triggerWebhook } = require("../services/webhookService");
 
 // Import push notification functions
 const {
@@ -295,35 +294,6 @@ exports.newAssessment = async (req, res) => {
     try {
       // Pass ownerId as the createdBy parameter
       await createAssessmentCreatedNotification(assessment, assessment.ownerId);
-
-      // Trigger assessment created webhook
-      try {
-        await triggerWebhook(
-          "assessment.status.updated",
-          {
-            event: "assessment.created",
-            assessmentId: assessment._id,
-            assessmentCode: assessment.AssessmentCode,
-            title: assessment.AssessmentTitle,
-            status: "created",
-            createdAt: assessment.createdAt,
-            createdBy: assessment.CreatedBy,
-            tenantId: assessment.tenantId,
-            position: assessment.Position,
-            difficultyLevel: assessment.DifficultyLevel,
-            totalQuestions: assessment.NumberOfQuestions,
-            totalScore: assessment.totalScore,
-            passScore: assessment.passScore,
-            expiryDate: assessment.ExpiryDate,
-          },
-          assessment.tenantId
-        );
-      } catch (webhookError) {
-        console.error(
-          "[ASSESSMENT WEBHOOK] Error triggering assessment created webhook:",
-          webhookError
-        );
-      }
     } catch (notificationError) {
       console.error(
         "[ASSESSMENT] Error creating notification:",
@@ -400,32 +370,6 @@ exports.updateAssessment = async (req, res) => {
         success: false,
         message: "Assessment not found",
       });
-    }
-
-    // Trigger assessment updated webhook if status changed
-    if (updateData.status && updateData.status !== oldStatus) {
-      try {
-        await triggerWebhook(
-          "assessment.status.updated",
-          {
-            event: "assessment.status.updated",
-            assessmentId: updatedAssessment._id,
-            assessmentCode: updatedAssessment.AssessmentCode,
-            title: updatedAssessment.AssessmentTitle,
-            previousStatus: oldStatus,
-            newStatus: updateData.status,
-            updatedAt: updatedAssessment.updatedAt,
-            updatedBy: req.user?.id || "system",
-            tenantId: updatedAssessment.tenantId,
-          },
-          updatedAssessment.tenantId
-        );
-      } catch (webhookError) {
-        console.error(
-          "[ASSESSMENT WEBHOOK] Error triggering assessment status updated webhook:",
-          webhookError
-        );
-      }
     }
 
     res.status(200).json({
