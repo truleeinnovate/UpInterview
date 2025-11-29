@@ -157,35 +157,36 @@ const { Schema } = mongoose;
 // );
 
 const filterPresetSchema = new Schema({
-  tenantId:   { type: Schema.Types.ObjectId, ref: "Tenant", required: true },
+  tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", required: true },
   templateId: { type: Schema.Types.ObjectId, ref: "ReportTemplate", required: true },
 
-  name:        { type: String, required: true }, // "My Q4 View", "Engineering Team"
+  name: { type: String, required: true }, // "My Q4 View", "Engineering Team"
   description: String,
 
   // USER'S FILTER SELECTION
-  filters: {
-    // BASIC FILTERS
-    dateRange:        String, // "last30days", "thisMonth"
-    customStartDate:  Date,
-    customEndDate:    Date,
-    interviewType:    String, // "all", "internal", "external"
-    candidateStatus:  String, // "all", "active", "hired"
-    position:         String, // "Frontend Engineer", "all"
-    interviewer:      String, // userId or "all"
-
-    // ADVANCED FILTERS (if enabled)
-    advancedFilters: [Schema.Types.Mixed] // [{ field: "experience", operator: ">", value: 5 }]
-  },
+  filters: [{
+    key: { type: String, required: true },     // "positionId", "status", "interviewerId"
+    value: { type: Schema.Types.Mixed },         // "pos_123", ["Scheduled","Completed"], "pending"
+    label: { type: String },                     // "Senior Frontend", "Scheduled, Completed", "Venkatesh"
+    type: Schema.Types.Mixed
+  }],
 
   // AUTO-APPLY SETTINGS
-  isDefault:   { type: Boolean, default: false }, // Auto-apply when opening report
+  // isDefault:   { type: Boolean, default: false }, // Auto-apply when opening report
 
   // SHARING
-  isPublic:    { type: Boolean, default: false } // Share with team
+  // // isPublic:    { type: Boolean, default: false } // Share with team
+  //   label: { type: String }                      // "Senior Frontend", "Scheduled, Completed", "Venkatesh"
+  // }],
+
+  // AUTO-APPLY SETTINGS
+  // isDefault:   { type: Boolean, default: false }, // Auto-apply when opening report
+
+  // SHARING
+  // isPublic:    { type: Boolean, default: false } // Share with team
 }, { timestamps: true });
 
-filterPresetSchema.index({ tenantId: 1, userId: 1, templateId: 1, isDefault: 1 });
+filterPresetSchema.index({ tenantId: 1, templateId: 1, isDefault: 1 });
 
 // =============================================================================
 // FILTER ANALYTICS SCHEMA - Track filter usage patterns

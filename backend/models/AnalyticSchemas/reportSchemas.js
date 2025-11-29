@@ -266,7 +266,7 @@ const { Schema } = mongoose;
 // );
 
 const reportTemplateSchema = new Schema({
-     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },// "null" for standard templates
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },// "null" for standard templates
 
   name: { type: String, required: true },
   label: { type: String, required: true },
@@ -293,13 +293,7 @@ const reportTemplateSchema = new Schema({
       },
 
       filters: {
-        default: {
-          dateRange: { type: String, default: "last30days" },
-          interviewType: { type: String, default: "all" },
-          candidateStatus: { type: String, default: "all" },
-          position: { type: String, default: "all" },
-          interviewer: { type: String, default: "all" }
-        },
+        default: { type: Schema.Types.Mixed },
         available: [{
           label: String,
           key: String, label: String,
