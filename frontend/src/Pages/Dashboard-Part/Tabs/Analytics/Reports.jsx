@@ -558,6 +558,10 @@ const Reports = () => {
 
   const [loadingId, setLoadingId] = useState(null);
   const generateReportMutation = useGenerateReport();
+  console.log(
+    "Report Templates Data ==========================> ",
+    generateReportMutation
+  );
 
   // Load real templates
   useEffect(() => {
@@ -682,12 +686,17 @@ const Reports = () => {
   }
 
   const handleGenerateReport = (template) => {
-    generateAndNavigateReport({
-      template,
-      generateReportMutation,
-      navigate,
-      setLoadingId,
-    });
+    // console.log(
+    //   "Generating report  ============================> : ",
+    //   template
+    // );
+    // generateAndNavigateReport({
+    //   template,
+    //   generateReportMutation,
+    //   navigate,
+    //   setLoadingId,
+    // });
+    navigate(`/analytics/reports/${template.id}`);
   };
 
   return (
