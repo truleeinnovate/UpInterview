@@ -1,4 +1,6 @@
 // // v1.0.0 - Ashok - Commented Customize, Columns, Advanced Filters
+// v1.0.1 - Ashok - changed button text from "Save View" to "Apply"
+
 // import React, { useState, useEffect } from "react";
 // import { useParams, useNavigate } from "react-router-dom";
 // import {
@@ -588,8 +590,6 @@
 
 // export default ReportDetail;
 
-
-
 // Keep ALL your original imports + UI exactly as it was
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -598,10 +598,10 @@ import {
   Calendar,
   Download,
   BarChart3,
-  Table, 
+  Table,
   Eye,
   Settings,
-  Save
+  Save,
 } from "lucide-react";
 
 import AdvancedFilters from "../../../../Components/Analytics/AdvancedFilters";
@@ -643,9 +643,9 @@ const ReportDetail = () => {
 
       // Dynamic columns with render
       setColumns(
-        generatedReport.columns.map(col => ({
+        generatedReport.columns.map((col) => ({
           ...col,
-          render: (value) => (value == null ? "-" : String(value))
+          render: (value) => (value == null ? "-" : String(value)),
         }))
       );
 
@@ -653,8 +653,18 @@ const ReportDetail = () => {
 
       // Dynamic filters from template (you can enhance with API later)
       setAvailableFilters([
-        { key: "dateRange", label: "Date Range", type: "select", options: ["last30days", "last90days", "custom"] },
-        { key: "status", label: "Status", type: "select", options: ["all", "active", "hired", "rejected"] },
+        {
+          key: "dateRange",
+          label: "Date Range",
+          type: "select",
+          options: ["last30days", "last90days", "custom"],
+        },
+        {
+          key: "status",
+          label: "Status",
+          type: "select",
+          options: ["all", "active", "hired", "rejected"],
+        },
         { key: "position", label: "Position", type: "text" },
       ]);
 
@@ -673,7 +683,7 @@ const ReportDetail = () => {
 
       await saveColumnConfig.mutateAsync({
         templateId: reportId,
-        selectedColumns: columns.map(c => ({
+        selectedColumns: columns.map((c) => ({
           key: c.key,
           label: c.label,
           visible: c.visible ?? true,
@@ -706,10 +716,16 @@ const ReportDetail = () => {
           <div>
             <h1 className="text-2xl font-semibold text-custom-blue">
               {isGeneratedReport ? generatedReport.reportTitle : "Report"}
-              {isGeneratedReport && <span className="ml-3 text-sm font-normal text-green-600">Generated</span>}
+              {isGeneratedReport && (
+                <span className="ml-3 text-sm font-normal text-green-600">
+                  Generated
+                </span>
+              )}
             </h1>
             <p className="text-gray-600 mt-1">
-              {isGeneratedReport ? `${generatedReport.totalRecords} records` : ""}
+              {isGeneratedReport
+                ? `${generatedReport.totalRecords} records`
+                : ""}
             </p>
           </div>
         </div>
@@ -721,7 +737,7 @@ const ReportDetail = () => {
             className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90"
           >
             <Save className="w-4 h-4" />
-            <span>Save View</span>
+            <span>Apply & Save</span>
           </button>
 
           <button className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
@@ -738,13 +754,29 @@ const ReportDetail = () => {
       {/* YOUR ORIGINAL VIEW TOGGLE — UNCHANGED */}
       <div className="flex items-center">
         <Tooltip title="List">
-          <span onClick={() => setActiveView("dashboard")} className="cursor-pointer">
-            <FaList className={`text-xl mr-4 ${activeView === "dashboard" ? "text-custom-blue" : "text-gray-500"}`} />
+          <span
+            onClick={() => setActiveView("dashboard")}
+            className="cursor-pointer"
+          >
+            <FaList
+              className={`text-xl mr-4 ${
+                activeView === "dashboard"
+                  ? "text-custom-blue"
+                  : "text-gray-500"
+              }`}
+            />
           </span>
         </Tooltip>
         <Tooltip title="Table">
-          <span onClick={() => setActiveView("table")} className="cursor-pointer">
-            <TbLayoutGridRemove className={`text-xl ${activeView === "table" ? "text-custom-blue" : "text-gray-500"}`} />
+          <span
+            onClick={() => setActiveView("table")}
+            className="cursor-pointer"
+          >
+            <TbLayoutGridRemove
+              className={`text-xl ${
+                activeView === "table" ? "text-custom-blue" : "text-gray-500"
+              }`}
+            />
           </span>
         </Tooltip>
       </div>
@@ -786,11 +818,11 @@ const ReportDetail = () => {
           />
         </div>
       )}
-<ColumnManager
+      <ColumnManager
         isOpen={false}
         onClose={() => {}}
         columns={columns}
-        onColumnsChange={handleColumnsChange}  // ← use this instead of setColumns
+        onColumnsChange={handleColumnsChange} // ← use this instead of setColumns
         availableColumns={columns}
       />
     </div>

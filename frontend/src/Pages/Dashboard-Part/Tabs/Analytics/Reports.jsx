@@ -1,4 +1,6 @@
 // // v1.0.0 - Ashok - commented customize, filter
+// v1.0.1 - Ashok - Implemented centralized report generation handler
+
 // import React, { useState, useEffect } from "react";
 // import {
 //   Table,
@@ -523,6 +525,7 @@
 // Reports.jsx
 // src/pages/Reports/Reports.jsx
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FileText,
   Users,
@@ -536,11 +539,14 @@ import KanbanBoard from "../../../../Components/Analytics/KanbanBoard";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
-
-// REAL DATA HOOK
-import { useReportTemplates } from "../../../../apiHooks/useReportTemplates.js";
+import {
+  useReportTemplates,
+  useGenerateReport,
+} from "../../../../apiHooks/useReportTemplates.js";
+import { generateAndNavigateReport } from "../../../../Components/Analytics/utils/handleGenerateReport";
 
 const Reports = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
@@ -548,8 +554,10 @@ const Reports = () => {
   const itemsPerPage = 10;
 
   const { data, isLoading, error } = useReportTemplates();
-  console.log("REPORT TEMPLATES DATA ==============================> ", data);
   const [allTemplates, setAllTemplates] = useState([]);
+
+  const [loadingId, setLoadingId] = useState(null);
+  const generateReportMutation = useGenerateReport();
 
   // Load real templates
   useEffect(() => {
@@ -673,6 +681,15 @@ const Reports = () => {
     );
   }
 
+  const handleGenerateReport = (template) => {
+    generateAndNavigateReport({
+      template,
+      generateReportMutation,
+      navigate,
+      setLoadingId,
+    });
+  };
+
   return (
     <div>
       {/* Header */}
@@ -738,19 +755,19 @@ const Reports = () => {
       <div className="px-4 pt-6 pb-12">
         {paginatedTemplates.length > 0 ? (
           viewMode === "table" ? (
-            // <ReportsTable
-            //   data={paginatedTemplates}
-            //   columns={reportTemplateColumns}
-            //   title=""
-            //   type="templates"
-            // />
             <ReportsTable
               data={paginatedTemplates}
               columns={reportTemplateColumns}
               type="templates"
+              onGenerate={handleGenerateReport}
+              loadingId={loadingId}
             />
           ) : (
-            <KanbanBoard data={paginatedTemplates} />
+            <KanbanBoard
+              data={paginatedTemplates}
+              onGenerate={handleGenerateReport}
+              loadingId={loadingId}
+            />
           )
         ) : (
           <div className="text-center py-20">
