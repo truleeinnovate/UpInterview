@@ -213,7 +213,7 @@ const AssessmentTest = () => {
         const candidateResponse = await axios.get(
           `${config.REACT_APP_API_URL}/candidate/details/${candidateId}`
         );
-        const candidateData = candidateResponse?.data || {};
+        const candidateData = candidateResponse?.data || null;
         console.log("Candidate Data:", candidateData);
 
         if (!candidateData) {

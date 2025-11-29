@@ -244,14 +244,127 @@ router.get(
 
       console.log("query query", query);
 
+      // case "mockinterview":
+      //   // console.log('[19] Processing MockInterview model');
+      //   const mockInterviews = await DataModel.find(query).lean();
+      //   const interviewIds1 = mockInterviews.map(
+      //     (interview) => interview._id
+      //   );
+      //   const mockInterviewRoundsData = await MockInterviewRound.find({
+      //     mockInterviewId: { $in: interviewIds1 },
+      //   })
+      //     .populate({
+      //       path: "interviewers",
+      //       model: "Contacts",
+      //       select: "firstName lastName email",
+      //     })
+      //     .lean();
+      //   data = mockInterviews.map((interview) => ({
+      //     ...interview,
+      //     rounds: mockInterviewRoundsData.filter(
+      //       (round) =>
+      //         round.mockInterviewId.toString() === interview._id.toString()
+      //     ),
+      //   }));
+
+      //   // console.log('[20] Found', data.length, 'MockInterview records');
+      //   break;
+
       let data;
       switch (model.toLowerCase()) {
         case "mockinterview":
           // console.log('[19] Processing MockInterview model');
-          const mockInterviews = await DataModel.find(query).lean();
+
+          // Extract query parameters - use different variable names to avoid conflicts
+          const {
+            search: mockSearch,
+            page: mockPage = 1,
+            limit: mockLimit = 10,
+            status: mockStatus = [],
+            technology: mockTechnology = [],
+            duration: mockDuration = {},
+            createdDate: mockCreatedDate = "",
+            interviewer: mockInterviewer = [],
+          } = req.query;
+
+          // Build base query
+          let mockQuery = { ...query }; // Start with the base query that has tenant/owner filters
+
+          // Search across multiple fields
+          if (mockSearch) {
+            mockQuery.$or = [
+              { mockInterviewCode: { $regex: mockSearch, $options: "i" } },
+              { technology: { $regex: mockSearch, $options: "i" } },
+              { candidateName: { $regex: mockSearch, $options: "i" } },
+              { Role: { $regex: mockSearch, $options: "i" } },
+            ];
+          }
+
+          // Status filter
+          if (mockStatus.length > 0) {
+            const statusConditions = mockStatus.map((s) => {
+              if (s === "Requests Sent") return "RequestSent";
+              return s;
+            });
+            mockQuery["rounds.status"] = { $in: statusConditions };
+          }
+
+          // Technology filter
+          if (mockTechnology.length > 0) {
+            mockQuery.technology = { $in: mockTechnology };
+          }
+
+          // Duration filter
+          if (mockDuration.min || mockDuration.max) {
+            mockQuery["rounds.duration"] = {};
+            if (mockDuration.min)
+              mockQuery["rounds.duration"].$gte = parseInt(mockDuration.min);
+            if (mockDuration.max)
+              mockQuery["rounds.duration"].$lte = parseInt(mockDuration.max);
+          }
+
+          // Created date filter
+          if (mockCreatedDate) {
+            const now = new Date();
+            let startDate = new Date();
+
+            switch (mockCreatedDate) {
+              case "last7":
+                startDate.setDate(now.getDate() - 7);
+                break;
+              case "last30":
+                startDate.setDate(now.getDate() - 30);
+                break;
+              case "last90":
+                startDate.setDate(now.getDate() - 90);
+                break;
+              default:
+                startDate = null;
+            }
+
+            if (startDate) {
+              mockQuery.createdAt = { $gte: startDate };
+            }
+          }
+
+          // Get total count for pagination
+          const totalCount = await DataModel.countDocuments(mockQuery);
+
+          // Apply pagination - FIX: Ensure page is at least 1 and skip is not negative
+          const pageNum = Math.max(1, parseInt(mockPage));
+          const limitNum = Math.max(1, parseInt(mockLimit));
+          const skip = Math.max(0, (pageNum - 1) * limitNum); // Ensure skip is not negative
+
+          const mockInterviews = await DataModel.find(mockQuery)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limitNum)
+            .lean();
+
           const interviewIds1 = mockInterviews.map(
             (interview) => interview._id
           );
+
           const mockInterviewRoundsData = await MockInterviewRound.find({
             mockInterviewId: { $in: interviewIds1 },
           })
@@ -261,7 +374,9 @@ router.get(
               select: "firstName lastName email",
             })
             .lean();
-          data = mockInterviews.map((interview) => ({
+
+          // Interviewer name filter (applied after population)
+          let filteredData = mockInterviews.map((interview) => ({
             ...interview,
             rounds: mockInterviewRoundsData.filter(
               (round) =>
@@ -269,7 +384,29 @@ router.get(
             ),
           }));
 
-          // console.log('[20] Found', data.length, 'MockInterview records');
+          // Apply interviewer filter on populated data
+          if (mockInterviewer.length > 0) {
+            filteredData = filteredData.filter((interview) => {
+              const interviewers = interview.rounds?.[0]?.interviewers || [];
+              return interviewers.some((int) => {
+                const name =
+                  int.Name ||
+                  `${int.firstName || ""} ${int.lastName || ""}`.trim();
+                return mockInterviewer.includes(name);
+              });
+            });
+          }
+
+          data = {
+            data: filteredData,
+            totalCount: totalCount, // Use the total count from the database query
+            filteredCount: filteredData.length, // Count after interviewer filter
+            currentPage: pageNum,
+            totalPages: Math.ceil(totalCount / limitNum),
+            limit: limitNum,
+          };
+
+          // console.log('[20] Found', data.data.length, 'MockInterview records');
           break;
 
         case "tenantquestions":
