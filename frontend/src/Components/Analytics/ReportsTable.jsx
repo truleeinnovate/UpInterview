@@ -434,117 +434,225 @@
 // export default ReportsTable;
 
 // Components/Analytics/ReportsTable.jsx
-import React, { useState, useEffect } from "react";
-import { Play, Download, Settings } from "lucide-react";
-// import { useNavigate } from "react-router-dom";
-// import axios from "axios";
-// import { config } from "../../config";
-// import { useGenerateReport } from "../../apiHooks/useReportTemplates";
-// import { generateAndNavigateReport } from "./utils/handleGenerateReport";
+// import React, { useState, useEffect } from "react";
+// import { Play, Download, Settings } from "lucide-react";
+// // import { useNavigate } from "react-router-dom";
+// // import axios from "axios";
+// // import { config } from "../../config";
+// // import { useGenerateReport } from "../../apiHooks/useReportTemplates";
+// // import { generateAndNavigateReport } from "./utils/handleGenerateReport";
+
+// const ReportsTable = ({
+//   data = [],
+//   columns: propColumns = [],
+//   title,
+//   type,
+//   onGenerate,
+//   loadingId,
+// }) => {
+//   console.log("ReportsTable data =================================> :", data);
+//   console.log("ReportsTable propColumns ==========================> :", propColumns);
+//   // const navigate = useNavigate();
+//   const [tableColumns, setTableColumns] = useState([]);
+//   const [tableData, setTableData] = useState([]);
+//   // const [loading, setLoading] = useState(false);
+
+//   // const generateReportMutation = useGenerateReport(); // generate mutation
+
+//   // If type === "templates" → this is listing templates → show Generate button
+//   // If type === "data" → this is showing generated report → show data only
+//   useEffect(() => {
+//     if (type === "templates" && data && data.length > 0) {
+//       // For template list: use passed columns (label, description, category, etc.)
+//       setTableColumns(propColumns || []);
+//       setTableData(data);
+//     }
+//   }, [data, propColumns, type]);
+
+//   // NEW: When user clicks "Generate"
+//   // const handleGenerateReport = async (template) => {
+//   //   setLoading(true);
+//   //   try {
+//   //     const res = await axios.get(`${config.REACT_APP_API_URL}/analytics/generate/${template.id}`);
+
+//   //     if (res.data.success) {
+//   //       const { columns, data: reportData, report } = res.data;
+
+//   //       // Update table to show REAL report
+//   //       setTableColumns(
+//   //         columns.map((col) => ({
+//   //           key: col.key,
+//   //           label: col.label,
+//   //           width: col.width || "180px",
+//   //           render: (value) => (value === null || value === undefined ? "-" : value),
+//   //         }))
+//   //       );
+
+//   //       setTableData(
+//   //         reportData.map((item) => ({
+//   //           id: item.id,
+//   //           ...item,
+//   //         }))
+//   //       );
+
+//   //       // Optional: Show success message
+//   //       // toast.success(`${report.label} generated – ${report.totalRecords} records}`);
+//   //     }
+//   //   } catch (err) {
+//   //     alert("Failed to generate report: " + (err.response?.data?.message || err.message));
+//   //   } finally {
+//   //     setLoading(false);
+//   //   }
+//   // };
+
+//   // In ReportsTable.jsx → handleGenerateReport
+
+//   // const handleGenerateReport = async (template) => {
+//   //   // setLoading(true);
+//   //   try {
+//   //     const response = await generateReportMutation.mutateAsync(template.id);
+//   //     const { columns, data: reportData, report } = response;
+//   //     // DO NOT PASS render FUNCTION HERE
+//   //     navigate(`/analytics/reports/${template.id}`, {
+//   //       state: {
+//   //         reportTitle: report.label,
+//   //         reportDescription: report.description || "",
+//   //         totalRecords: report.totalRecords,
+//   //         generatedAt: report.generatedAt,
+//   //         // Only pass serializable data
+//   //         columns: columns.map((col) => ({
+//   //           key: col.key,
+//   //           label: col.label,
+//   //           width: col.width || "180px",
+//   //           type: col.type || "text",
+//   //           // DO NOT include render: () => ...
+//   //         })),
+//   //         data: reportData.map((item) => ({
+//   //           id: item.id,
+//   //           ...item,
+//   //         })),
+//   //       },
+//   //     });
+//   //   } catch (error) {
+//   //     alert("Failed to generate report: " + (error.message || "Server error"));
+//   //   } finally {
+//   //     setLoading(false);
+//   //   }
+//   // };
+
+//   // Regular table render (no grouping, no search – clean & fast)
+//   const renderTable = () => (
+//     <div className="overflow-x-auto">
+//       <table className="w-full">
+//         <thead className="bg-gray-50 border-b border-gray-200">
+//           <tr>
+//             {tableColumns.map((col) => (
+//               <th
+//                 key={col.key}
+//                 className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+//                 style={{ width: col.width }}
+//               >
+//                 {col.label}
+//               </th>
+//             ))}
+//             {type === "templates" && (
+//               <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase">
+//                 Actions
+//               </th>
+//             )}
+//           </tr>
+//         </thead>
+//         <tbody className="bg-white divide-y divide-gray-200">
+//           {tableData.map((item, index) => (
+//             <tr
+//               key={item.id || index}
+//               className="hover:bg-gray-50 transition-colors"
+//             >
+//               {tableColumns.map((col) => (
+//                 <td key={col.key} className="px-6 py-4 text-sm text-gray-900">
+//                   {col.render
+//                     ? col.render(item[col.key], item)
+//                     : item[col.key] ?? "-"}
+//                 </td>
+//               ))}
+//               {type === "templates" && (
+//                 <td className="px-6 py-4 text-right">
+//                   <button
+//                     // onClick={() => handleGenerateReport(item)}
+//                     onClick={() => onGenerate(item)}
+//                     // disabled={loading}
+//                     disabled={loadingId === item.id}
+//                     className="flex items-center gap-2 px-4 py-2 w-[120px] bg-custom-blue text-white text-xs font-medium rounded-lg hover:bg-primary-700 disabled:opacity-70 transition-all mx-auto"
+//                   >
+//                     <Play className="w-3.5 h-3.5" />
+//                     {/* {loading ? "Generating..." : "Generate"} */}
+//                     {loadingId === item.id ? "Generating..." : "Generate"}
+//                   </button>
+//                 </td>
+//               )}
+//             </tr>
+//           ))}
+//         </tbody>
+//       </table>
+
+//       {/* Empty State */}
+//       {tableData.length === 0 && (
+//         <div className="text-center py-12 text-gray-500">
+//           <p>No data available</p>
+//         </div>
+//       )}
+//     </div>
+//   );
+
+//   return (
+//     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+//       {/* Header */}
+//       <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+//         <h3 className="text-lg font-semibold text-custom-blue">
+//           {title ||
+//             (type === "templates" ? "Report Templates" : "Report Results")}
+//         </h3>
+//         {type !== "templates" && tableData.length > 0 && (
+//           <button className="ml-auto flex items-center gap-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90 text-sm">
+//             <Download className="w-4 h-4" />
+//             Export CSV
+//           </button>
+//         )}
+//       </div>
+
+//       {/* Table */}
+//       {renderTable()}
+//     </div>
+//   );
+// };
+
+// export default ReportsTable;
+
+import React from "react"; // Removed useState, useEffect
+import { Play, Download } from "lucide-react";
 
 const ReportsTable = ({
-  data,
-  columns: propColumns,
+  data = [],
+  columns: propColumns = [], // Rename prop to avoid confusion
   title,
   type,
   onGenerate,
   loadingId,
 }) => {
-  // const navigate = useNavigate();
-  const [tableColumns, setTableColumns] = useState([]);
-  const [tableData, setTableData] = useState([]);
-  // const [loading, setLoading] = useState(false);
+  // Debug logs to verify data is arriving
+  console.log("ReportsTable Render - Data:", data);
+  console.log("ReportsTable Render - Columns:", propColumns);
 
-  // const generateReportMutation = useGenerateReport(); // generate mutation
+  // 1. REMOVED internal state (tableColumns, tableData) and useEffect.
+  // We use 'data' and 'propColumns' directly.
 
-  // If type === "templates" → this is listing templates → show Generate button
-  // If type === "data" → this is showing generated report → show data only
-  useEffect(() => {
-    if (type === "templates" && data && data.length > 0) {
-      // For template list: use passed columns (label, description, category, etc.)
-      setTableColumns(propColumns || []);
-      setTableData(data);
-    }
-  }, [data, propColumns, type]);
-
-  // NEW: When user clicks "Generate"
-  // const handleGenerateReport = async (template) => {
-  //   setLoading(true);
-  //   try {
-  //     const res = await axios.get(`${config.REACT_APP_API_URL}/analytics/generate/${template.id}`);
-
-  //     if (res.data.success) {
-  //       const { columns, data: reportData, report } = res.data;
-
-  //       // Update table to show REAL report
-  //       setTableColumns(
-  //         columns.map((col) => ({
-  //           key: col.key,
-  //           label: col.label,
-  //           width: col.width || "180px",
-  //           render: (value) => (value === null || value === undefined ? "-" : value),
-  //         }))
-  //       );
-
-  //       setTableData(
-  //         reportData.map((item) => ({
-  //           id: item.id,
-  //           ...item,
-  //         }))
-  //       );
-
-  //       // Optional: Show success message
-  //       // toast.success(`${report.label} generated – ${report.totalRecords} records}`);
-  //     }
-  //   } catch (err) {
-  //     alert("Failed to generate report: " + (err.response?.data?.message || err.message));
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // In ReportsTable.jsx → handleGenerateReport
-
-  // const handleGenerateReport = async (template) => {
-  //   // setLoading(true);
-  //   try {
-  //     const response = await generateReportMutation.mutateAsync(template.id);
-  //     const { columns, data: reportData, report } = response;
-  //     // DO NOT PASS render FUNCTION HERE
-  //     navigate(`/analytics/reports/${template.id}`, {
-  //       state: {
-  //         reportTitle: report.label,
-  //         reportDescription: report.description || "",
-  //         totalRecords: report.totalRecords,
-  //         generatedAt: report.generatedAt,
-  //         // Only pass serializable data
-  //         columns: columns.map((col) => ({
-  //           key: col.key,
-  //           label: col.label,
-  //           width: col.width || "180px",
-  //           type: col.type || "text",
-  //           // DO NOT include render: () => ...
-  //         })),
-  //         data: reportData.map((item) => ({
-  //           id: item.id,
-  //           ...item,
-  //         })),
-  //       },
-  //     });
-  //   } catch (error) {
-  //     alert("Failed to generate report: " + (error.message || "Server error"));
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // Regular table render (no grouping, no search – clean & fast)
   const renderTable = () => (
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
-            {tableColumns.map((col) => (
+            {/* 2. Use propColumns directly */}
+            {propColumns.map((col) => (
               <th
                 key={col.key}
                 className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
@@ -553,6 +661,7 @@ const ReportsTable = ({
                 {col.label}
               </th>
             ))}
+            {/* Only show Actions column if this is the Templates list */}
             {type === "templates" && (
               <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase">
                 Actions
@@ -561,29 +670,29 @@ const ReportsTable = ({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {tableData.map((item, index) => (
+          {/* 3. Use data directly */}
+          {data.map((item, index) => (
             <tr
               key={item.id || index}
               className="hover:bg-gray-50 transition-colors"
             >
-              {tableColumns.map((col) => (
+              {propColumns.map((col) => (
                 <td key={col.key} className="px-6 py-4 text-sm text-gray-900">
                   {col.render
                     ? col.render(item[col.key], item)
                     : item[col.key] ?? "-"}
                 </td>
               ))}
+
+              {/* Only show Generate button if this is the Templates list */}
               {type === "templates" && (
                 <td className="px-6 py-4 text-right">
                   <button
-                    // onClick={() => handleGenerateReport(item)}
                     onClick={() => onGenerate(item)}
-                    // disabled={loading}
                     disabled={loadingId === item.id}
                     className="flex items-center gap-2 px-4 py-2 w-[120px] bg-custom-blue text-white text-xs font-medium rounded-lg hover:bg-primary-700 disabled:opacity-70 transition-all mx-auto"
                   >
                     <Play className="w-3.5 h-3.5" />
-                    {/* {loading ? "Generating..." : "Generate"} */}
                     {loadingId === item.id ? "Generating..." : "Generate"}
                   </button>
                 </td>
@@ -594,7 +703,7 @@ const ReportsTable = ({
       </table>
 
       {/* Empty State */}
-      {tableData.length === 0 && (
+      {(!data || data.length === 0) && (
         <div className="text-center py-12 text-gray-500">
           <p>No data available</p>
         </div>
@@ -610,7 +719,8 @@ const ReportsTable = ({
           {title ||
             (type === "templates" ? "Report Templates" : "Report Results")}
         </h3>
-        {type !== "templates" && tableData.length > 0 && (
+        {/* Show Export button only for Data views, not Template lists */}
+        {type !== "templates" && data.length > 0 && (
           <button className="ml-auto flex items-center gap-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90 text-sm">
             <Download className="w-4 h-4" />
             Export CSV
@@ -618,7 +728,6 @@ const ReportsTable = ({
         )}
       </div>
 
-      {/* Table */}
       {renderTable()}
     </div>
   );

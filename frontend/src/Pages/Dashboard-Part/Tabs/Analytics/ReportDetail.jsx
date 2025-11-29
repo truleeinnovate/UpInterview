@@ -477,34 +477,34 @@
 
 //       {/* Content */}
 //       {activeView === "dashboard" ? (
-//         <div className="space-y-6">
-//           {/* KPI Cards */}
-//           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-6">
-//             {kpiData.map((kpi, index) => (
-//               <KPICard
-//                 key={index}
-//                 title={kpi.title}
-//                 value={kpi.value}
-//                 icon={kpi.icon}
-//               />
-//             ))}
-//           </div>
+// <div className="space-y-6">
+//   {/* KPI Cards */}
+//   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-6">
+//     {kpiData.map((kpi, index) => (
+//       <KPICard
+//         key={index}
+//         title={kpi.title}
+//         value={kpi.value}
+//         icon={kpi.icon}
+//       />
+//     ))}
+//   </div>
 
-//           {/* Charts */}
-//           {/* v1.0.0 <---------------------------------------------------------------------- */}
-//           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
-//             {/* v1.0.0 ----------------------------------------------------------------------> */}
-//             <InterviewsOverTimeChart
-//               data={chartData.interviewsOverTime || []}
-//             />
-//             <InterviewerUtilizationChart
-//               data={chartData.interviewerUtilization || []}
-//             />
-//             {report.type === "assessment" && (
-//               <AssessmentPieChart data={chartData.assessmentStats || []} />
-//             )}
-//           </div>
-//         </div>
+//   {/* Charts */}
+//   {/* v1.0.0 <---------------------------------------------------------------------- */}
+//   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+//     {/* v1.0.0 ----------------------------------------------------------------------> */}
+//     <InterviewsOverTimeChart
+//       data={chartData.interviewsOverTime || []}
+//     />
+//     <InterviewerUtilizationChart
+//       data={chartData.interviewerUtilization || []}
+//     />
+//     {report.type === "assessment" && (
+//       <AssessmentPieChart data={chartData.assessmentStats || []} />
+//     )}
+//   </div>
+// </div>
 //       ) : (
 //         <ReportsTable
 //           data={reportDataResult.data}
@@ -612,23 +612,20 @@ import {
   useGenerateReport,
   useSaveFilterPreset,
   useSaveColumnConfig,
+  useReportTemplates,
 } from "../../../../apiHooks/useReportTemplates";
 
 import Tooltip from "@mui/material/Tooltip";
 import { ReactComponent as TbLayoutGridRemove } from "../../../../icons/TbLayoutGridRemove.svg";
 import { ReactComponent as FaList } from "../../../../icons/FaList.svg";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+// import { generateAndNavigateReport } from "../../../../Components/Analytics/utils/handleGenerateReport";
 
 const ReportDetail = () => {
   const { reportId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const generateReport = useGenerateReport();
-  const saveFilterPreset = useSaveFilterPreset();
-  const saveColumnConfig = useSaveColumnConfig();
-
-  const generatedReport = location.state;
-  const isGeneratedReport = !!generatedReport;
 
   const [activeView, setActiveView] = useState("dashboard");
   const [filters, setFilters] = useState({});
@@ -636,41 +633,84 @@ const ReportDetail = () => {
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
 
-  // NEW: Load dynamic filters & columns from generated report
+  const [reportMeta, setReportMeta] = useState({
+    title: "",
+    totalRecords: 0,
+  });
+
+  const generateReportMutation = useGenerateReport();
+  const saveFilterPreset = useSaveFilterPreset();
+  const saveColumnConfig = useSaveColumnConfig();
+
+  // const generatedReport = location.state;
+  // const isGeneratedReport = !!generatedReport;
+  const isGeneratedReport = data.length > 0;
+
   useEffect(() => {
-    if (isGeneratedReport) {
-      setActiveView("table");
+    const fetchReport = async () => {
+      try {
+        const response = await generateReportMutation.mutateAsync(reportId);
+        const { columns, data, report } = response;
 
-      // Dynamic columns with render
-      setColumns(
-        generatedReport.columns.map((col) => ({
-          ...col,
-          render: (value) => (value == null ? "-" : String(value)),
-        }))
-      );
+        setColumns(
+          columns.map((col) => ({
+            ...col,
+            render: (value) => (value == null ? "-" : String(value)),
+          }))
+        );
+        setData(data);
 
-      setData(generatedReport.data);
+        // If you want report title and total record count
+        setReportMeta({
+          title: report?.label,
+          totalRecords: report?.totalRecords,
+        });
 
-      // Dynamic filters from template (you can enhance with API later)
-      setAvailableFilters([
-        {
-          key: "dateRange",
-          label: "Date Range",
-          type: "select",
-          options: ["last30days", "last90days", "custom"],
-        },
-        {
-          key: "status",
-          label: "Status",
-          type: "select",
-          options: ["all", "active", "hired", "rejected"],
-        },
-        { key: "position", label: "Position", type: "text" },
-      ]);
+        setAvailableFilters(report?.availableFilters || []);
+        setFilters(report?.defaultFilters || {});
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-      setFilters({ dateRange: "last30days", status: "all" });
-    }
-  }, [isGeneratedReport, generatedReport]);
+    fetchReport();
+  }, [reportId]);
+
+  // NEW: Load dynamic filters & columns from generated report
+  // useEffect(() => {
+  //   if (isGeneratedReport) {
+  //     setActiveView("table");
+
+  //     // Dynamic columns with render
+  //     setColumns(
+  //       generatedReport.columns.map((col) => ({
+  //         ...col,
+  //         render: (value) => (value == null ? "-" : String(value)),
+  //       }))
+  //     );
+
+  //     setData(generatedReport.data);
+
+  //     // Dynamic filters from template (you can enhance with API later)
+  //     setAvailableFilters([
+  //       {
+  //         key: "dateRange",
+  //         label: "Date Range",
+  //         type: "select",
+  //         options: ["last30days", "last90days", "custom"],
+  //       },
+  //       {
+  //         key: "status",
+  //         label: "Status",
+  //         type: "select",
+  //         options: ["all", "active", "hired", "rejected"],
+  //       },
+  //       { key: "position", label: "Position", type: "text" },
+  //     ]);
+
+  //     setFilters({ dateRange: "last30days", status: "all" });
+  //   }
+  // }, [isGeneratedReport, generatedReport]);
 
   // Apply + Save View
   const handleApplyAndSave = async () => {
@@ -702,10 +742,38 @@ const ReportDetail = () => {
     setColumns(newColumns);
   }, []);
 
+  const reportTemplateColumns = [
+    {
+      key: "label",
+      label: "Report Name",
+      render: (value) => <span className="font-medium">{value}</span>,
+    },
+    {
+      key: "description",
+      label: "Description",
+      render: (value) => <span>{value}</span>,
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (status) => (
+        <StatusBadge status={capitalizeFirstLetter(status || "active")} />
+      ),
+    },
+    {
+      key: "frequency",
+      label: "Frequency",
+    },
+    {
+      key: "lastGenerated",
+      label: "Last Generated",
+    },
+  ];
+
   return (
     <div className="space-y-6 animate-fade-in p-6">
       {/* YOUR ORIGINAL HEADER — UNCHANGED */}
-      <div className="flex items-center justify-between">
+      <div className="flex sm:flex-col md:flex-col lg:flex-col xl:items-center 2xl:items-center sm:gap-4 md:gap-4 lg:gap-4 justify-between">
         <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate("/analytics/reports")}
@@ -715,7 +783,7 @@ const ReportDetail = () => {
           </button>
           <div>
             <h1 className="text-2xl font-semibold text-custom-blue">
-              {isGeneratedReport ? generatedReport.reportTitle : "Report"}
+              {isGeneratedReport ? reportMeta.title : "Report"}
               {isGeneratedReport && (
                 <span className="ml-3 text-sm font-normal text-green-600">
                   Generated
@@ -723,9 +791,7 @@ const ReportDetail = () => {
               )}
             </h1>
             <p className="text-gray-600 mt-1">
-              {isGeneratedReport
-                ? `${generatedReport.totalRecords} records`
-                : ""}
+              {isGeneratedReport ? `${reportMeta.totalRecords} records` : ""}
             </p>
           </div>
         </div>
@@ -753,7 +819,7 @@ const ReportDetail = () => {
 
       {/* YOUR ORIGINAL VIEW TOGGLE — UNCHANGED */}
       <div className="flex items-center">
-        <Tooltip title="List">
+        <Tooltip title="Dashboard">
           <span
             onClick={() => setActiveView("dashboard")}
             className="cursor-pointer"
@@ -792,14 +858,43 @@ const ReportDetail = () => {
       )}
 
       {/* YOUR ORIGINAL CONTENT LOGIC — Only shows real data when generated */}
-      {activeView === "dashboard" && !isGeneratedReport ? (
+      {/* {activeView === "dashboard" && !isGeneratedReport ? ( */}
+      {activeView === "dashboard" ? (
         /* Keep your KPI + Charts */
+        // <div className="space-y-6">
+        //   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        //     {/* Your KPI cards */}
+        //   </div>
+        //   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        //     {/* Your charts */}
+        //   </div>
+        // </div>
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* Your KPI cards */}
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-6">
+            {/* {kpiData.map((kpi, index) => (
+              <KPICard
+                key={index}
+                title={kpi.title}
+                value={kpi.value}
+                icon={kpi.icon}
+              />
+            ))} */}
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Your charts */}
+
+          {/* Charts */}
+          {/* v1.0.0 <---------------------------------------------------------------------- */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+            {/* v1.0.0 ----------------------------------------------------------------------> */}
+            {/* <InterviewsOverTimeChart
+              data={chartData.interviewsOverTime || []}
+            />
+            <InterviewerUtilizationChart
+              data={chartData.interviewerUtilization || []}
+            />
+            {report.type === "assessment" && (
+              <AssessmentPieChart data={chartData.assessmentStats || []} />
+            )} */}
           </div>
         </div>
       ) : (
@@ -811,10 +906,12 @@ const ReportDetail = () => {
             </h3>
           </div>
           <ReportsTable
-            data={isGeneratedReport ? data : []}
+            data={data}
             columns={isGeneratedReport ? columns : []}
-            title=""
-            type="data"
+            title="Report Details"
+            type="template"
+            onGenerate={() => {}}
+            loadingId="RPT001"
           />
         </div>
       )}
