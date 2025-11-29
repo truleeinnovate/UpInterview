@@ -147,8 +147,7 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
 
 const MockInterview = () => {
   const { effectivePermissions, isInitialized } = usePermissions();
-  const { mockinterviewData, isLoading } = useMockInterviews();
-  console.log("mockinterviewData", mockinterviewData);
+
   const navigate = useNavigate();
   const location = useLocation();
   const [viewMode, setViewMode] = useState("table");
@@ -156,6 +155,7 @@ const MockInterview = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
+  const rowsPerPage = 10;
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     technology: [],
@@ -177,6 +177,14 @@ const MockInterview = () => {
   const [reschedule, setReschedule] = useState(false);
   const [cancelSchedule, setCancelSchedule] = useState(false);
   const filterIconRef = useRef(null);
+
+  const { mockinterviewData, isLoading, totalCount } = useMockInterviews({
+    search: searchQuery,
+    page: currentPage, // This is 0-based, will be converted to 1-based in hook
+    limit: rowsPerPage,
+    filters: selectedFilters,
+  });
+  console.log("mockinterviewData", mockinterviewData);
 
   // v1.0.2 <--------------------------------------------
   // v1.0.5 <---------------------------------------------------------------
@@ -309,94 +317,98 @@ const MockInterview = () => {
   const normalizeSpaces = (str) =>
     str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
 
-  const FilteredData = () => {
-    if (!Array.isArray(mockinterviewData)) return [];
-    return mockinterviewData.filter((interview) => {
-      // Enhanced search across multiple fields
-      const normalizedQuery = normalizeSpaces(searchQuery);
-      const fieldsToSearch = [
-        interview?.mockInterviewCode,
-        interview?.rounds?.[0]?.roundTitle,
-        interview?.technology,
-        interview?.candidateName,
-        interview?.Role,
-        interview?.rounds?.[0]?.status,
-        interview?.interviewer,
-      ].filter(Boolean);
+  // const FilteredData = () => {
+  //   if (!Array.isArray(mockinterviewData)) return [];
+  //   return mockinterviewData.filter((interview) => {
+  //     // Enhanced search across multiple fields
+  //     const normalizedQuery = normalizeSpaces(searchQuery);
+  //     const fieldsToSearch = [
+  //       interview?.mockInterviewCode,
+  //       interview?.rounds?.[0]?.roundTitle,
+  //       interview?.technology,
+  //       interview?.candidateName,
+  //       interview?.Role,
+  //       interview?.rounds?.[0]?.status,
+  //       interview?.interviewer,
+  //     ].filter(Boolean);
 
-      const matchesSearchQuery =
-        searchQuery === "" ||
-        fieldsToSearch.some((field) =>
-          normalizeSpaces(field).includes(normalizedQuery)
-        );
+  //     const matchesSearchQuery =
+  //       searchQuery === "" ||
+  //       fieldsToSearch.some((field) =>
+  //         normalizeSpaces(field).includes(normalizedQuery)
+  //       );
 
-      // Status filter
-      const matchesStatus =
-        selectedFilters.status.length === 0 ||
-        selectedFilters.status.includes(interview.rounds?.[0]?.status);
+  //     // Status filter
+  //     const matchesStatus =
+  //       selectedFilters.status.length === 0 ||
+  //       selectedFilters.status.includes(interview.rounds?.[0]?.status);
 
-      // Technology filter
-      const matchesTechnology =
-        selectedFilters.technology.length === 0 ||
-        selectedFilters.technology.includes(interview.technology);
+  //     // Technology filter
+  //     const matchesTechnology =
+  //       selectedFilters.technology.length === 0 ||
+  //       selectedFilters.technology.includes(interview.technology);
 
-      // Duration filter
-      const duration = parseInt(interview?.rounds?.[0]?.duration) || 0;
-      const matchesDuration =
-        (selectedFilters.duration.min === "" ||
-          duration >= Number(selectedFilters.duration.min)) &&
-        (selectedFilters.duration.max === "" ||
-          duration <= Number(selectedFilters.duration.max));
+  //     // Duration filter
+  //     const duration = parseInt(interview?.rounds?.[0]?.duration) || 0;
+  //     const matchesDuration =
+  //       (selectedFilters.duration.min === "" ||
+  //         duration >= Number(selectedFilters.duration.min)) &&
+  //       (selectedFilters.duration.max === "" ||
+  //         duration <= Number(selectedFilters.duration.max));
 
-      // Created date filter
-      const matchesCreatedDate = () => {
-        if (!selectedFilters.createdDate) return true;
-        if (!interview.createdAt) return false;
-        const createdAt = new Date(interview.createdAt);
-        const now = new Date();
-        const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+  //     // Created date filter
+  //     const matchesCreatedDate = () => {
+  //       if (!selectedFilters.createdDate) return true;
+  //       if (!interview.createdAt) return false;
+  //       const createdAt = new Date(interview.createdAt);
+  //       const now = new Date();
+  //       const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
 
-        switch (selectedFilters.createdDate) {
-          case "last7":
-            return daysDiff <= 7;
-          case "last30":
-            return daysDiff <= 30;
-          case "last90":
-            return daysDiff <= 90;
-          default:
-            return true;
-        }
-      };
+  //       switch (selectedFilters.createdDate) {
+  //         case "last7":
+  //           return daysDiff <= 7;
+  //         case "last30":
+  //           return daysDiff <= 30;
+  //         case "last90":
+  //           return daysDiff <= 90;
+  //         default:
+  //           return true;
+  //       }
+  //     };
 
-      // Interviewer filter
-      const matchesInterviewer = () => {
-        if (selectedFilters.interviewer.length === 0) return true;
-        const interviewers = interview?.rounds?.[0]?.interviewers || [];
-        return interviewers.some((interviewer) => {
-          const contact = interviewer?.contact;
-          const name =
-            contact?.Name ||
-            `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim();
-          return selectedFilters.interviewer.includes(name);
-        });
-      };
+  //     // Interviewer filter
+  //     const matchesInterviewer = () => {
+  //       if (selectedFilters.interviewer.length === 0) return true;
+  //       const interviewers = interview?.rounds?.[0]?.interviewers || [];
+  //       return interviewers.some((interviewer) => {
+  //         const contact = interviewer?.contact;
+  //         const name =
+  //           contact?.Name ||
+  //           `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim();
+  //         return selectedFilters.interviewer.includes(name);
+  //       });
+  //     };
 
-      return (
-        matchesSearchQuery &&
-        matchesStatus &&
-        matchesTechnology &&
-        matchesDuration &&
-        matchesCreatedDate() &&
-        matchesInterviewer()
-      );
-    });
-  };
+  //     return (
+  //       matchesSearchQuery &&
+  //       matchesStatus &&
+  //       matchesTechnology &&
+  //       matchesDuration &&
+  //       matchesCreatedDate() &&
+  //       matchesInterviewer()
+  //     );
+  //   });
+  // };
 
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
+  // const startIndex = currentPage * rowsPerPage;
+
+  const totalPages = Math.ceil(totalCount / rowsPerPage);
+  // const startIndex = currentPage * rowsPerPage;
+
+  // const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
+  // const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  const currentFilteredRows = mockinterviewData || [];
 
   const nextPage = () => {
     if (currentPage < totalPages - 1) {
@@ -575,7 +587,10 @@ const MockInterview = () => {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`/mock-interview/${row._id}/edit`),
+      onClick: (row) =>
+        navigate(`/mock-interview/${row._id}/edit`, {
+          state: { from: "tableMode" },
+        }),
     },
     {
       key: "reschedule",
@@ -694,7 +709,7 @@ const MockInterview = () => {
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
-              dataLength={mockinterviewData?.length}
+              dataLength={totalCount}
               searchPlaceholder="Search by Title, Technology..."
               filterIconRef={filterIconRef}
             />

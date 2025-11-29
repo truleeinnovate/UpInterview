@@ -45,8 +45,6 @@ const MockInterviewDetails = () => {
 
   // Track expanded rounds
 
-  console.log("rounds", rounds);
-
   useEffect(() => {
     if (mockinterview) {
       setCandidate(mockinterview || null);

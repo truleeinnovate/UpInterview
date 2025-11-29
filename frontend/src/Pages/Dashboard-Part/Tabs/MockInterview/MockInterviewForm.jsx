@@ -6,7 +6,7 @@
 import { useState, useRef, useEffect, useCallback, forwardRef } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import Cookies from "js-cookie";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   validatemockForm,
   getErrorMessage,
@@ -30,9 +30,9 @@ import OutsourcedInterviewerModal from "../Interview-New/pages/Internal-Or-Outso
 import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
 import LoadingButton from "../../../../Components/LoadingButton";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
-import SkillsField from "../CommonCode-AllTabs/SkillsInput.jsx";
+
 import { validateFile } from "../../../../utils/FileValidation/FileValidation.js";
-import { ROUND_TITLES } from "../CommonCode-AllTabs/roundTitlesConfig.js";
+
 // v1.0.1 <-------------------------------------------------------------------------------
 import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 // v1.0.1 ------------------------------------------------------------------------------->
@@ -40,7 +40,7 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 import InputField from "../../../../Components/FormFields/InputField";
 import DescriptionField from "../../../../Components/FormFields/DescriptionField";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
-import { useAssessments } from "../../../../apiHooks/useAssessments.js";
+
 import { notify } from "../../../../services/toastService.js";
 import axios from "axios";
 import { config } from "../../../../config.js";
@@ -93,6 +93,8 @@ const MockSchedulelater = () => {
   const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } =
     useMockInterviews();
   const { id } = useParams();
+  const { state } = useLocation();
+  const pageFrom = state?.from || null;
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -2703,7 +2705,12 @@ const MockSchedulelater = () => {
                 className="border border-custom-blue p-3 rounded py-1"
                 onClick={() =>
                   navigate(
-                    id ? `/mock-interview-details/${id}` : `/mock-interview`
+                    pageFrom
+                      ? `/mock-interview`
+                      : `/mock-interview-details/${id}`
+                    //  id
+                    //   ? `/mock-interview-details/${id}`
+                    //   : `/mock-interview`
                   )
                 }
               >

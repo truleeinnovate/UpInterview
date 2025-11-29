@@ -9,7 +9,7 @@ import { config } from "../config";
 import { usePermissions } from "../Context/PermissionsContext";
 import { uploadFile } from "./imageApis";
 
-export const useMockInterviews = () => {
+export const useMockInterviews = (params = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const initialLoad = useRef(true);
@@ -17,22 +17,42 @@ export const useMockInterviews = () => {
   // Check if user has permission to view mock interviews
   const hasViewPermission = effectivePermissions?.MockInterviews?.View;
 
+  // Extract and validate params for API call
+  const { search = "", page = 0, limit = 10, filters = {} } = params;
+
+  // Ensure page is at least 0 and limit is positive
+  const validatedPage = Math.max(0, parseInt(page));
+  const validatedLimit = Math.max(1, parseInt(limit));
+
   // Query implementation
   const {
-    data: mockinterviewData = [],
+    data: responseData = { data: [], totalCount: 0 },
     isLoading: isQueryLoading,
     isError,
     error,
     refetch: refetchMockInterviews,
   } = useQuery({
-    queryKey: ["mockinterviews"],
+    queryKey: [
+      "mockinterviews",
+      { search, page: validatedPage, limit: validatedLimit, filters },
+    ],
     queryFn: async () => {
       try {
+        // Prepare API params for backend filtering
+        const apiParams = {
+          search,
+          page: validatedPage + 1, // Backend uses 1-based pagination
+          limit: validatedLimit,
+          ...filters,
+        };
+
         const filteredInterviews = await fetchFilterData(
           "mockinterview",
-          effectivePermissions
+          effectivePermissions,
+          apiParams
         );
-        return filteredInterviews.reverse();
+        console.log("Raw API response:", filteredInterviews);
+        return filteredInterviews;
       } catch (err) {
         console.error("Fetch error:", err);
         throw err;
@@ -43,9 +63,14 @@ export const useMockInterviews = () => {
     staleTime: 1000 * 60 * 10,
     cacheTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: "always",
+    // refetchOnMount: false,
     refetchOnReconnect: false,
   });
+
+  // Extract data and total count from response
+  const mockinterviewData = responseData.data || [];
+  const totalCount = responseData.totalCount || 0;
 
   // Add/Update mock interview mutation
   // In useMockInterviews.js - FIXED VERSION
@@ -168,6 +193,7 @@ export const useMockInterviews = () => {
 
   return {
     mockinterviewData,
+    totalCount,
     isLoading,
     isQueryLoading,
     isMutationLoading,
