@@ -211,9 +211,9 @@ const AssessmentTest = () => {
 
         // Fetch candidate details
         const candidateResponse = await axios.get(
-          `${config.REACT_APP_API_URL}/candidate/${candidateId}`
+          `${config.REACT_APP_API_URL}/candidate/details/${candidateId}`
         );
-        const candidateData = candidateResponse.data;
+        const candidateData = candidateResponse?.data || {};
         console.log("Candidate Data:", candidateData);
 
         if (!candidateData) {
@@ -333,8 +333,8 @@ const AssessmentTest = () => {
               Assessment Passed
             </h1>
             <p className="mt-4 text-gray-600">
-              Congratulations! You have passed this assessment. Please contact the
-              administrator for next steps.
+              Congratulations! You have passed this assessment. Please contact
+              the administrator for next steps.
             </p>
           </div>
         </div>
