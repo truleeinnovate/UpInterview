@@ -11,6 +11,7 @@ export const generateAndNavigateReport = async ({
   try {
     const response = await generateReportMutation.mutateAsync(template.id);
     const { columns, data: reportData, report } = response;
+    console.log("responseoftemplateid data", response);
 
     navigate(`/analytics/reports/${template.id}`, {
       state: {

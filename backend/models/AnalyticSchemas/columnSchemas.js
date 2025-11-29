@@ -232,7 +232,7 @@ const columnConfigurationSchema = new Schema({
   }
 }, { timestamps: true });
 
-columnConfigurationSchema.index({ tenantId: 1, userId: 1, templateId: 1 }, { unique: true });
+columnConfigurationSchema.index({ tenantId: 1, templateId: 1 }, { unique: true });
 
 // =============================================================================
 // DASHBOARD LAYOUT SCHEMA - Dashboard widget positions and configurations
