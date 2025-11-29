@@ -237,179 +237,179 @@ columnConfigurationSchema.index({ tenantId: 1, userId: 1, templateId: 1 }, { uni
 // =============================================================================
 // DASHBOARD LAYOUT SCHEMA - Dashboard widget positions and configurations
 // =============================================================================
-const dashboardLayoutSchema = new Schema(
-  {
-    tenantId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    ownerId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    layoutId: {
-      type: String,
-      required: true,
-      index: true,
-    },
+// const dashboardLayoutSchema = new Schema(
+//   {
+//     tenantId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
+//     ownerId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
+//     layoutId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
 
-    name: {
-      type: String,
-      default: "Default Layout",
-    },
+//     name: {
+//       type: String,
+//       default: "Default Layout",
+//     },
 
-    // Grid Configuration
-    grid: {
-      columns: {
-        type: Number,
-        default: 12,
-      },
-      rowHeight: {
-        type: Number,
-        default: 60,
-      },
-      margin: {
-        x: { type: Number, default: 10 },
-        y: { type: Number, default: 10 },
-      },
-      containerPadding: {
-        x: { type: Number, default: 10 },
-        y: { type: Number, default: 10 },
-      },
-    },
+//     // Grid Configuration
+//     grid: {
+//       columns: {
+//         type: Number,
+//         default: 12,
+//       },
+//       rowHeight: {
+//         type: Number,
+//         default: 60,
+//       },
+//       margin: {
+//         x: { type: Number, default: 10 },
+//         y: { type: Number, default: 10 },
+//       },
+//       containerPadding: {
+//         x: { type: Number, default: 10 },
+//         y: { type: Number, default: 10 },
+//       },
+//     },
 
-    // Widget Positions
-    widgets: [
-      {
-        id: {
-          type: String,
-          required: true,
-        },
-        type: {
-          type: String,
-          enum: ["kpi", "chart", "table", "text", "custom"],
-          required: true,
-        },
+//     // Widget Positions
+//     widgets: [
+//       {
+//         id: {
+//           type: String,
+//           required: true,
+//         },
+//         type: {
+//           type: String,
+//           enum: ["kpi", "chart", "table", "text", "custom"],
+//           required: true,
+//         },
 
-        // Position and Size
-        position: {
-          x: { type: Number, required: true },
-          y: { type: Number, required: true },
-          width: { type: Number, required: true },
-          height: { type: Number, required: true },
-        },
+//         // Position and Size
+//         position: {
+//           x: { type: Number, required: true },
+//           y: { type: Number, required: true },
+//           width: { type: Number, required: true },
+//           height: { type: Number, required: true },
+//         },
 
-        // Widget Configuration
-        config: {
-          title: String,
-          visible: { type: Boolean, default: true },
+//         // Widget Configuration
+//         config: {
+//           title: String,
+//           visible: { type: Boolean, default: true },
 
-          // KPI specific
-          kpiType: String,
-          aggregation: String,
+//           // KPI specific
+//           kpiType: String,
+//           aggregation: String,
 
-          // Chart specific
-          chartType: String,
-          dataSource: String,
-          xAxis: String,
-          yAxis: String,
+//           // Chart specific
+//           chartType: String,
+//           dataSource: String,
+//           xAxis: String,
+//           yAxis: String,
 
-          // Table specific
-          columns: [String],
-          filters: Schema.Types.Mixed,
+//           // Table specific
+//           columns: [String],
+//           filters: Schema.Types.Mixed,
 
-          // Styling
-          backgroundColor: String,
-          textColor: String,
-          borderColor: String,
-          borderWidth: Number,
-          borderRadius: Number,
+//           // Styling
+//           backgroundColor: String,
+//           textColor: String,
+//           borderColor: String,
+//           borderWidth: Number,
+//           borderRadius: Number,
 
-          // Custom settings
-          customSettings: Schema.Types.Mixed,
-        },
+//           // Custom settings
+//           customSettings: Schema.Types.Mixed,
+//         },
 
-        // Responsive breakpoints
-        breakpoints: {
-          lg: {
-            x: Number,
-            y: Number,
-            w: Number,
-            h: Number,
-          },
-          md: {
-            x: Number,
-            y: Number,
-            w: Number,
-            h: Number,
-          },
-          sm: {
-            x: Number,
-            y: Number,
-            w: Number,
-            h: Number,
-          },
-          xs: {
-            x: Number,
-            y: Number,
-            w: Number,
-            h: Number,
-          },
-        },
-      },
-    ],
+//         // Responsive breakpoints
+//         breakpoints: {
+//           lg: {
+//             x: Number,
+//             y: Number,
+//             w: Number,
+//             h: Number,
+//           },
+//           md: {
+//             x: Number,
+//             y: Number,
+//             w: Number,
+//             h: Number,
+//           },
+//           sm: {
+//             x: Number,
+//             y: Number,
+//             w: Number,
+//             h: Number,
+//           },
+//           xs: {
+//             x: Number,
+//             y: Number,
+//             w: Number,
+//             h: Number,
+//           },
+//         },
+//       },
+//     ],
 
-    // Layout Settings
-    settings: {
-      isResizable: {
-        type: Boolean,
-        default: true,
-      },
-      isDraggable: {
-        type: Boolean,
-        default: true,
-      },
-      autoSize: {
-        type: Boolean,
-        default: false,
-      },
-      verticalCompact: {
-        type: Boolean,
-        default: true,
-      },
-      preventCollision: {
-        type: Boolean,
-        default: false,
-      },
-    },
+//     // Layout Settings
+//     settings: {
+//       isResizable: {
+//         type: Boolean,
+//         default: true,
+//       },
+//       isDraggable: {
+//         type: Boolean,
+//         default: true,
+//       },
+//       autoSize: {
+//         type: Boolean,
+//         default: false,
+//       },
+//       verticalCompact: {
+//         type: Boolean,
+//         default: true,
+//       },
+//       preventCollision: {
+//         type: Boolean,
+//         default: false,
+//       },
+//     },
 
-    isDefault: {
-      type: Boolean,
-      default: false,
-    },
+//     isDefault: {
+//       type: Boolean,
+//       default: false,
+//     },
 
-    isShared: {
-      type: Boolean,
-      default: false,
-    },
+//     isShared: {
+//       type: Boolean,
+//       default: false,
+//     },
 
-    sharedWith: [String], // User IDs
-  },
-  {
-    timestamps: true,
-  }
-);
+//     sharedWith: [String], // User IDs
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
 
-// Indexes
-dashboardLayoutSchema.index({ tenantId: 1, ownerId: 1 });
-dashboardLayoutSchema.index({ tenantId: 1, layoutId: 1 }, { unique: true });
+// // Indexes
+// dashboardLayoutSchema.index({ tenantId: 1, ownerId: 1 });
+// dashboardLayoutSchema.index({ tenantId: 1, layoutId: 1 }, { unique: true });
 
 module.exports = {
   ColumnConfiguration: mongoose.model(
     "ColumnConfiguration",
     columnConfigurationSchema
   ),
-  DashboardLayout: mongoose.model("DashboardLayout", dashboardLayoutSchema),
+  // DashboardLayout: mongoose.model("DashboardLayout", dashboardLayoutSchema),
 };
