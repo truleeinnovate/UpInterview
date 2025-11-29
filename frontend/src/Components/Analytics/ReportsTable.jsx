@@ -1,4 +1,5 @@
 // // v1.0.0 - Ashok - commented Columns, Export CSV, No Groupings
+// v1.0.1 - Ashok - fixed generate report button loading state per row
 
 // import React, { useState } from 'react';
 // import { ChevronLeft, ChevronRight, Download, Search, Play, Settings, Group, ChevronDown, ChevronRight as ChevronRightIcon } from 'lucide-react';
@@ -43,10 +44,10 @@
 //   // Sort data
 //   const sortedData = [...filteredData].sort((a, b) => {
 //     if (!sortField) return 0;
-    
+
 //     const aValue = a[sortField];
 //     const bValue = b[sortField];
-    
+
 //     if (sortDirection === 'asc') {
 //       return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
 //     } else {
@@ -68,10 +69,10 @@
 
 //   // Group data if groupByColumn is selected
 //   const groupedData = groupByColumn ? groupDataByColumn(sortedData, groupByColumn) : null;
-  
+
 //   // Paginate data (either grouped or ungrouped)
 //   let totalPages, startIndex, paginatedData;
-  
+
 //   if (groupedData) {
 //     // For grouped data, we paginate the groups
 //     const groupKeys = Object.keys(groupedData);
@@ -93,9 +94,9 @@
 
 //   // Get groupable columns (exclude certain types)
 //   const getGroupableColumns = () => {
-//     return visibleColumns.filter(col => 
-//       col.type !== 'number' && 
-//       col.type !== 'date' && 
+//     return visibleColumns.filter(col =>
+//       col.type !== 'number' &&
+//       col.type !== 'date' &&
 //       col.key !== 'id' &&
 //       col.key !== 'description' &&
 //       col.key !== 'feedback'
@@ -125,7 +126,7 @@
 //     if (sortField !== field) return '↕';
 //     return sortDirection === 'asc' ? '↑' : '↓';
 //   };
-//   // v1.0.0 <---------------------------------------------------- 
+//   // v1.0.0 <----------------------------------------------------
 //   const handleGenerateReport = (item) => {
 //     if (type === 'templates') {
 //       navigate(`/analytics/reports/${item.id}`);
@@ -146,7 +147,7 @@
 //         {Object.entries(paginatedData).map(([groupKey, groupItems]) => (
 //           <div key={groupKey} className="border border-gray-200 rounded-lg overflow-hidden bg-red-500">
 //             {/* Group Header */}
-//             <div 
+//             <div
 //               className="bg-gray-50 px-6 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
 //               onClick={() => toggleGroupExpansion(groupKey)}
 //             >
@@ -198,8 +199,8 @@
 //                     {groupItems.map((item, index) => (
 //                       <tr key={item.id || index} className="hover:bg-gray-50 transition-colors">
 //                         {visibleColumns.map((column) => (
-//                           <td 
-//                             key={column.key} 
+//                           <td
+//                             key={column.key}
 //                             className="px-6 py-4 text-sm text-gray-900"
 //                             style={{ width: column.width !== 'auto' ? column.width : undefined }}
 //                           >
@@ -259,8 +260,8 @@
 //             {paginatedData.map((item, index) => (
 //               <tr key={item.id || index} className="hover:bg-gray-50 transition-colors">
 //                 {visibleColumns.map((column) => (
-//                   <td 
-//                     key={column.key} 
+//                   <td
+//                     key={column.key}
 //                     className="px-6 py-4 text-sm text-gray-900"
 //                     style={{ width: column.width !== 'auto' ? column.width : undefined }}
 //                   >
@@ -309,7 +310,7 @@
 //               {/* v1.0.0 -------------------------------------------------------------> */}
 //             </div>
 //           </div>
-          
+
 //           {/* Search and Group By */}
 //           <div className="flex items-center space-x-4">
 //             {/* <div className="relative flex-1">
@@ -322,7 +323,7 @@
 //                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
 //               />
 //             </div> */}
-            
+
 //             {/* Group By Dropdown */}
 //             {/* v1.0.0 <-------------------------------------------------------------------- */}
 //             {/* <div className="flex items-center space-x-2">
@@ -352,7 +353,7 @@
 //             </div> */}
 //             {/* v1.0.0 --------------------------------------------------------------------> */}
 //           </div>
-          
+
 //           {/* Group By Info */}
 //           {groupByColumn && (
 //             <div className="mt-3 flex items-center justify-between text-sm">
@@ -435,18 +436,26 @@
 // Components/Analytics/ReportsTable.jsx
 import React, { useState, useEffect } from "react";
 import { Play, Download, Settings } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { config } from "../../config";
-import { useGenerateReport } from "../../apiHooks/useReportTemplates";
+// import { useNavigate } from "react-router-dom";
+// import axios from "axios";
+// import { config } from "../../config";
+// import { useGenerateReport } from "../../apiHooks/useReportTemplates";
+// import { generateAndNavigateReport } from "./utils/handleGenerateReport";
 
-const ReportsTable = ({ data, columns: propColumns, title, type }) => {
-  const navigate = useNavigate();
+const ReportsTable = ({
+  data,
+  columns: propColumns,
+  title,
+  type,
+  onGenerate,
+  loadingId,
+}) => {
+  // const navigate = useNavigate();
   const [tableColumns, setTableColumns] = useState([]);
   const [tableData, setTableData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
-  const generateReportMutation = useGenerateReport(); // generate mutation
+  // const generateReportMutation = useGenerateReport(); // generate mutation
 
   // If type === "templates" → this is listing templates → show Generate button
   // If type === "data" → this is showing generated report → show data only
@@ -494,46 +503,40 @@ const ReportsTable = ({ data, columns: propColumns, title, type }) => {
   //   }
   // };
 
-// In ReportsTable.jsx → handleGenerateReport
+  // In ReportsTable.jsx → handleGenerateReport
 
-
-const handleGenerateReport = async (template) => {
-  setLoading(true);
-
-  try {
-    const response = await generateReportMutation.mutateAsync(template.id);
-    const { columns, data: reportData, report } = response;
-
-    // DO NOT PASS render FUNCTION HERE
-    navigate(`/analytics/reports/${template.id}`, {
-      state: {
-        reportTitle: report.label,
-        reportDescription: report.description || "",
-        totalRecords: report.totalRecords,
-        generatedAt: report.generatedAt,
-
-        // Only pass serializable data
-        columns: columns.map(col => ({
-          key: col.key,
-          label: col.label,
-          width: col.width || "180px",
-          type: col.type || "text"
-          // DO NOT include render: () => ...
-        })),
-
-        data: reportData.map(item => ({
-          id: item.id,
-          ...item
-        }))
-      }
-    });
-
-  } catch (error) {
-    alert("Failed to generate report: " + (error.message || "Server error"));
-  } finally {
-    setLoading(false);
-  }
-};
+  // const handleGenerateReport = async (template) => {
+  //   // setLoading(true);
+  //   try {
+  //     const response = await generateReportMutation.mutateAsync(template.id);
+  //     const { columns, data: reportData, report } = response;
+  //     // DO NOT PASS render FUNCTION HERE
+  //     navigate(`/analytics/reports/${template.id}`, {
+  //       state: {
+  //         reportTitle: report.label,
+  //         reportDescription: report.description || "",
+  //         totalRecords: report.totalRecords,
+  //         generatedAt: report.generatedAt,
+  //         // Only pass serializable data
+  //         columns: columns.map((col) => ({
+  //           key: col.key,
+  //           label: col.label,
+  //           width: col.width || "180px",
+  //           type: col.type || "text",
+  //           // DO NOT include render: () => ...
+  //         })),
+  //         data: reportData.map((item) => ({
+  //           id: item.id,
+  //           ...item,
+  //         })),
+  //       },
+  //     });
+  //   } catch (error) {
+  //     alert("Failed to generate report: " + (error.message || "Server error"));
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // Regular table render (no grouping, no search – clean & fast)
   const renderTable = () => (
@@ -559,7 +562,10 @@ const handleGenerateReport = async (template) => {
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {tableData.map((item, index) => (
-            <tr key={item.id || index} className="hover:bg-gray-50 transition-colors">
+            <tr
+              key={item.id || index}
+              className="hover:bg-gray-50 transition-colors"
+            >
               {tableColumns.map((col) => (
                 <td key={col.key} className="px-6 py-4 text-sm text-gray-900">
                   {col.render
@@ -570,12 +576,15 @@ const handleGenerateReport = async (template) => {
               {type === "templates" && (
                 <td className="px-6 py-4 text-right">
                   <button
-                    onClick={() => handleGenerateReport(item)}
-                    disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 bg-custom-blue text-white text-xs font-medium rounded-lg hover:bg-primary-700 disabled:opacity-70 transition-all mx-auto"
+                    // onClick={() => handleGenerateReport(item)}
+                    onClick={() => onGenerate(item)}
+                    // disabled={loading}
+                    disabled={loadingId === item.id}
+                    className="flex items-center gap-2 px-4 py-2 w-[120px] bg-custom-blue text-white text-xs font-medium rounded-lg hover:bg-primary-700 disabled:opacity-70 transition-all mx-auto"
                   >
                     <Play className="w-3.5 h-3.5" />
-                    {loading ? "Generating..." : "Generate"}
+                    {/* {loading ? "Generating..." : "Generate"} */}
+                    {loadingId === item.id ? "Generating..." : "Generate"}
                   </button>
                 </td>
               )}
@@ -598,7 +607,8 @@ const handleGenerateReport = async (template) => {
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h3 className="text-lg font-semibold text-custom-blue">
-          {title || (type === "templates" ? "Report Templates" : "Report Results")}
+          {title ||
+            (type === "templates" ? "Report Templates" : "Report Results")}
         </h3>
         {type !== "templates" && tableData.length > 0 && (
           <button className="ml-auto flex items-center gap-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90 text-sm">
