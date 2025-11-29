@@ -494,33 +494,46 @@ const ReportsTable = ({ data, columns: propColumns, title, type }) => {
   //   }
   // };
 
-    const handleGenerateReport = async (template) => {
-    generateReportMutation.mutate(template.id, {
-      onSuccess: ({ columns, data: reportData, report }) => {
-        setTableColumns(
-          columns.map((col) => ({
-            key: col.key,
-            label: col.label,
-            width: col.width || "180px",
-            render: (value) =>
-              value === null || value === undefined ? "-" : value,
-          }))
-        );
+// In ReportsTable.jsx → handleGenerateReport
 
-        setTableData(
-          reportData.map((item) => ({
-            id: item.id,
-            ...item,
-          }))
-        );
 
-        // toast.success(`${report.label} generated – ${report.totalRecords} records`);
-      },
-      onError: (err) => {
-        alert("Failed to generate report: " + (err.message || "Unknown error"));
-      },
+const handleGenerateReport = async (template) => {
+  setLoading(true);
+
+  try {
+    const response = await generateReportMutation.mutateAsync(template.id);
+    const { columns, data: reportData, report } = response;
+
+    // DO NOT PASS render FUNCTION HERE
+    navigate(`/analytics/reports/${template.id}`, {
+      state: {
+        reportTitle: report.label,
+        reportDescription: report.description || "",
+        totalRecords: report.totalRecords,
+        generatedAt: report.generatedAt,
+
+        // Only pass serializable data
+        columns: columns.map(col => ({
+          key: col.key,
+          label: col.label,
+          width: col.width || "180px",
+          type: col.type || "text"
+          // DO NOT include render: () => ...
+        })),
+
+        data: reportData.map(item => ({
+          id: item.id,
+          ...item
+        }))
+      }
     });
-  };
+
+  } catch (error) {
+    alert("Failed to generate report: " + (error.message || "Server error"));
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Regular table render (no grouping, no search – clean & fast)
   const renderTable = () => (
