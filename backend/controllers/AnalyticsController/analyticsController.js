@@ -10,6 +10,7 @@ const {Candidate} = require("../../models/Candidate");
 const {Position} = require("../../models/Position/position");
 const Interview = require("../../models/Interview/Interview");
 const Assessment = require("../../models/Assessment/assessmentsSchema");
+const {InterviewRounds} = require("../../models/Interview/InterviewRounds");
 
 const generateReport = async (req, res) => {
   try {
@@ -51,6 +52,9 @@ const generateReport = async (req, res) => {
         break;
       case "interviews":
         Model = Interview;
+        break;
+      case "interviewrounds":
+        Model = InterviewRounds;
         break;
       case "assessments":
         Model = Assessment;
@@ -137,7 +141,7 @@ const generateReport = async (req, res) => {
     res.json({
       success: true,
       report: {
-        id: template._id.toString(),
+        id: template._id,
         label: template.label,
         description: template.description || "",
         generatedAt: new Date().toISOString(),
@@ -146,7 +150,7 @@ const generateReport = async (req, res) => {
       },
       columns: finalColumns,
       data: data.map(item => ({
-        id: item._id.toString(),
+        id: item._id,
         ...item
       }))
     });
@@ -194,7 +198,6 @@ const getReportTemplates = async (req, res) => {
 
     const formattedTemplates = templates.map(t => ({
       id: t._id.toString(),
-      templateId: t.templateId || t.name,
       name: t.name,
       label: t.label,
       description: t.description || "No description",

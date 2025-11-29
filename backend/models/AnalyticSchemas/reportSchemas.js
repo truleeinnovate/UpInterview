@@ -266,15 +266,15 @@ const { Schema } = mongoose;
 // );
 
 const reportTemplateSchema = new Schema({
-  tenantId: { type: String, index: true }, // "null" for standard templates
+     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },// "null" for standard templates
 
-  name:        { type: String, required: true },
-  label:       { type: String, required: true },
+  name: { type: String, required: true },
+  label: { type: String, required: true },
   description: String,
-  category:    { type: Schema.Types.ObjectId, ref: "ReportCategory", index: true },
+  category: { type: Schema.Types.ObjectId, ref: "ReportCategory", index: true },
 
   isSystemTemplate: { type: Boolean, default: false, index: true },
-  requiredPlans: [{ type: String, enum: ["free", "starter", "professional", "enterprise"] }],
+  requiredPlans: [{ type: String, enum: ["Free", "Starter", "Professional", "Enterprise", "Premium", "Expert"] }],
 
   configuration: {
     dataSource: {
@@ -288,23 +288,25 @@ const reportTemplateSchema = new Schema({
           key: String, label: String, order: Number, width: { type: String, default: "150px" }
         }],
         available: [{
-          key: String, label: String, type: { type: String, enum: ["text","number","date","status","user","tag"] }
+          key: String, label: String, type: { type: String, enum: ["text", "number", "date", "status", "user", "tag"] }
         }]
       },
 
       filters: {
         default: {
-          dateRange:       { type: String, default: "last30days" },
-          interviewType:   { type: String, default: "all" },
+          dateRange: { type: String, default: "last30days" },
+          interviewType: { type: String, default: "all" },
           candidateStatus: { type: String, default: "all" },
-          position:        { type: String, default: "all" },
-          interviewer:     { type: String, default: "all" }
+          position: { type: String, default: "all" },
+          interviewer: { type: String, default: "all" }
         },
         available: [{
+          label: String,
           key: String, label: String,
-          type: { type: String, enum: ["select","multiselect","date","text","user"] },
-          optionsFrom: String,
-          required: { type: Boolean, default: false }
+          type: { type: String, enum: ["select", "multiselect", "date", "text", "user"] },
+          options: [{ label: String, value: String }],
+          required: { type: Boolean, default: false },
+          placeholder: String,
         }],
         advancedEnabled: { type: Boolean, default: false }
       }
@@ -312,7 +314,7 @@ const reportTemplateSchema = new Schema({
     layout: { type: Schema.Types.Mixed }
   },
 
-  status: { type: String, enum: ["active","draft","archived"], default: "active" },
+  status: { type: String, enum: ["active", "draft", "archived"], default: "active" },
   createdBy: { type: String, default: "system" }
 }, { timestamps: true });
 
