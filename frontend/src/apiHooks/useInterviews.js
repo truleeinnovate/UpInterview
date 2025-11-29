@@ -72,7 +72,7 @@ export const useInterviews = (
     staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
     cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnMount: "always", // Don't refetch when component mounts if data exists
     refetchOnReconnect: false, // Don't refetch on network reconnect
     keepPreviousData: true,
   });
@@ -99,7 +99,7 @@ export const useInterviews = (
       staleTime: 1000 * 60 * 10,
       cacheTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      refetchOnMount: "always",
       refetchOnReconnect: false,
       keepPreviousData: true,
     });

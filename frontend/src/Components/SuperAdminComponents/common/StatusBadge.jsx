@@ -2,7 +2,20 @@
 // v1.0.1 - Ashok - updated colors
 // v1.0.2 - Ashok - added colors
 
-function StatusBadge({ status, text }) {
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * A component that displays a status badge with a colored background and white text.
+ * The color of the background is determined by the status prop.
+ * The text prop is optional and defaults to the status prop.
+ * @param {Object} props
+ * @property {string} status - the status of the item
+ * @property {string} [text] - the text to display in the badge, defaults to status
+ * @returns {React.ReactElement} - a status badge component
+ */
+/*******  fb8416a6-2992-4904-833b-4c89a8f6e419  *******/ function StatusBadge({
+  status,
+  text,
+}) {
   const getStatusClass = () => {
     const normalizedStatus = (status || "").toLowerCase();
     switch (normalizedStatus) {
@@ -51,7 +64,11 @@ function StatusBadge({ status, text }) {
   };
 
   return (
-    <span className={`text-xs ${getStatusClass()}`}>{text || status}</span>
+    <span className={`text-xs ${getStatusClass()}`}>
+      {text === "InProgress" || status === "InProgress"
+        ? "In Progress"
+        : text || status}
+    </span>
   );
 }
 
