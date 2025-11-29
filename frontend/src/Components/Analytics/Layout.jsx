@@ -1,6 +1,7 @@
 // // v1.0.0 - Ashok - fixed style issues and commented some buttons
 // // v1.0.1 - Ashok - fixed style and alignment issues
 // v1.0.3 - Ashok - Toggle button with left/right arrow & smooth sidebar animation
+// v1.0.4 - Ashok - fixed scroll bar issue
 
 // import React from "react";
 // import { NavLink, Outlet } from "react-router-dom";
@@ -75,7 +76,7 @@ const Layout = () => {
   ];
 
   return (
-    <div className="flex bg-gray-50 h-screen overflow-hidden">
+    <div className="flex bg-gray-50 overflow-hidden">
       {/* Sidebar */}
       <nav
         className={`w-60 bg-white shadow-sm border-r border-gray-200 fixed top-0 pt-16 h-full z-40 transform transition-transform duration-300 ease-in-out
@@ -130,7 +131,7 @@ const Layout = () => {
 
       {/* Main Content */}
       <main
-        className={`flex-1 overflow-y-auto pt-4 transition-all duration-300 ${
+        className={`flex-1 pt-4 transition-all duration-300 ${
           isSidebarOpen ? "" : "lg:ml-64 xl:ml-64 2xl:ml-64"
         }`}
       >
