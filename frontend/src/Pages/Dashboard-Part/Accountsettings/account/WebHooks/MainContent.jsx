@@ -13,8 +13,8 @@ function MainContent() {
   const { toasts, removeToast } = useToast();
 
   const tabs = [
-    { id: 'integrations', label: 'Integrations', icon: Settings },
-    { id: 'api-keys', label: 'API Keys', icon: Key },
+    { id: 'integrations', label: 'Webhooks', icon: Settings },
+    { id: 'api-keys', label: 'External keys', icon: Key },
     { id: 'logs', label: 'Webhook Logs', icon: Activity },
     { id: 'test', label: 'Test Webhook', icon: TestTube },
     { id: 'docs', label: 'Documentation', icon: FileText }
