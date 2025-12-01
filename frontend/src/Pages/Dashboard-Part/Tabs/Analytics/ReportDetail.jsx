@@ -591,7 +591,7 @@
 // export default ReportDetail;
 
 // Keep ALL your original imports + UI exactly as it was
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef} from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -607,6 +607,17 @@ import {
 import AdvancedFilters from "../../../../Components/Analytics/AdvancedFilters";
 import ReportsTable from "../../../../Components/Analytics/ReportsTable";
 import ColumnManager from "../../../../Components/Analytics/ColumnManager";
+import KPICard from "../../../../Components/Analytics/KPICard";
+import {
+  interviews,
+  interviewers,
+  assessments,
+  candidates,
+  organizations,
+  reportTemplates,
+  getKPIData,
+  getChartData,
+} from "../../../../Components/Analytics/data/mockData";
 
 import {
   useGenerateReport,
@@ -621,6 +632,10 @@ import { ReactComponent as FaList } from "../../../../icons/FaList.svg";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 // import { generateAndNavigateReport } from "../../../../Components/Analytics/utils/handleGenerateReport";
+// import InterviewsOverTimeChart from "../../../../Components/Analytics/charts/InterviewsOverTimeChart";
+// import InterviewerUtilizationChart from "../../../../Components/Analytics/charts/InterviewerUtilizationChart";
+// import AssessmentPieChart from "../../../../Components/Analytics/charts/AssessmentPieChart";
+import DynamicChart from "../../../../Components/Analytics/charts/DynamicChart";
 
 const ReportDetail = () => {
   const { reportId } = useParams();
@@ -630,8 +645,14 @@ const ReportDetail = () => {
   const [activeView, setActiveView] = useState("dashboard");
   const [filters, setFilters] = useState({});
   const [availableFilters, setAvailableFilters] = useState([]);
+  const [availableColumns, setAvailableColumns] = useState([]);
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
+  const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false);
+  const [aggregates, setAggregates] = useState({});     // KPI values
+  const [chartData, setChartData] = useState({});       // Chart datasets
+  const [kpis, setKpis] = useState([]);                 // KPI config
+  const [charts, setCharts] = useState([]);             // Chart config
 
   const [reportMeta, setReportMeta] = useState({
     title: "",
@@ -645,36 +666,92 @@ const ReportDetail = () => {
   // const generatedReport = location.state;
   // const isGeneratedReport = !!generatedReport;
   const isGeneratedReport = data.length > 0;
+  console.log("isGeneratedReport", isGeneratedReport);
+
+// THIS IS THE KEY — track last fetched reportId
+  const lastFetchedId = useRef(null);
 
   useEffect(() => {
+    // If no reportId → do nothing
+    if (!reportId) return;
+
+    // Prevent double fetch on same reportId (React 18 StrictMode + page reload)
+    if (lastFetchedId.current === reportId) {
+      return;
+    }
+
+    let isMounted = true;
+
     const fetchReport = async () => {
       try {
         const response = await generateReportMutation.mutateAsync(reportId);
-        const { columns, data, report } = response;
 
+        if (!isMounted || !response) return;
+
+        const {
+          columns: apiColumns = [],
+          data: apiData = [],
+          availableColumns: apiAvailableColumns = [],
+          report = {},
+          availableFilters: apiAvailableFilters = [],
+          defaultFilters = {},
+          aggregates = {},
+          chartData: apiChartData = {},
+          kpis: apiKpis = [],
+          charts: apiCharts = [],
+        } = response;
+        console.log("Full Report Response:", response);
+
+        // Only update if still mounted and data changed
+        if (!isMounted) return;
+
+        // Update all states directly — no deepEqual needed if we control the flow
         setColumns(
-          columns.map((col) => ({
+          apiColumns.map((col, i) => ({
             ...col,
+            id: col.key || `col-${i}`,
+            visible: col.visible !== false,
+            width: col.width || "180px",
+            order: col.order ?? i,
+            locked: col.locked === true,
             render: (value) => (value == null ? "-" : String(value)),
           }))
         );
-        setData(data);
 
-        // If you want report title and total record count
+        setAvailableColumns(apiAvailableColumns.length > 0 ? apiAvailableColumns : apiColumns);
+        setData(apiData);
+
         setReportMeta({
-          title: report?.label,
-          totalRecords: report?.totalRecords,
+          title: report?.label || "Report",
+          description: report?.description || "",
+          totalRecords: report?.totalRecords || apiData.length,
         });
 
-        setAvailableFilters(report?.availableFilters || []);
-        setFilters(report?.defaultFilters || {});
-      } catch (err) {
-        console.error(err);
+        setAvailableFilters(apiAvailableFilters);
+        setFilters(Object.keys(defaultFilters).length > 0 ? defaultFilters : {});
+
+        setAggregates(aggregates);
+        setChartData(apiChartData);
+        setKpis(apiKpis);
+        setCharts(apiCharts);
+
+        // Mark as fetched
+        lastFetchedId.current = reportId;
+
+      } catch (error) {
+        if (isMounted) {
+          console.error("Failed to fetch report:", error);
+          // toast.error("Failed to load report");
+        }
       }
     };
 
     fetchReport();
-  }, [reportId]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [reportId]); // ONLY re-run when reportId changes
 
   // NEW: Load dynamic filters & columns from generated report
   // useEffect(() => {
@@ -742,34 +819,6 @@ const ReportDetail = () => {
     setColumns(newColumns);
   }, []);
 
-  const reportTemplateColumns = [
-    {
-      key: "label",
-      label: "Report Name",
-      render: (value) => <span className="font-medium">{value}</span>,
-    },
-    {
-      key: "description",
-      label: "Description",
-      render: (value) => <span>{value}</span>,
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (status) => (
-        <StatusBadge status={capitalizeFirstLetter(status || "active")} />
-      ),
-    },
-    {
-      key: "frequency",
-      label: "Frequency",
-    },
-    {
-      key: "lastGenerated",
-      label: "Last Generated",
-    },
-  ];
-
   return (
     <div className="space-y-6 animate-fade-in p-6">
       {/* YOUR ORIGINAL HEADER — UNCHANGED */}
@@ -799,6 +848,13 @@ const ReportDetail = () => {
         <div className="flex items-center space-x-3">
           {/* YOUR ORIGINAL BUTTONS + NEW SAVE BUTTON */}
           <button
+            onClick={() => setIsColumnManagerOpen(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            <span>Columns</span>
+          </button>
+          <button
             onClick={handleApplyAndSave}
             className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90"
           >
@@ -825,11 +881,10 @@ const ReportDetail = () => {
             className="cursor-pointer"
           >
             <FaList
-              className={`text-xl mr-4 ${
-                activeView === "dashboard"
+              className={`text-xl mr-4 ${activeView === "dashboard"
                   ? "text-custom-blue"
                   : "text-gray-500"
-              }`}
+                }`}
             />
           </span>
         </Tooltip>
@@ -839,9 +894,8 @@ const ReportDetail = () => {
             className="cursor-pointer"
           >
             <TbLayoutGridRemove
-              className={`text-xl ${
-                activeView === "table" ? "text-custom-blue" : "text-gray-500"
-              }`}
+              className={`text-xl ${activeView === "table" ? "text-custom-blue" : "text-gray-500"
+                }`}
             />
           </span>
         </Tooltip>
@@ -860,26 +914,23 @@ const ReportDetail = () => {
       {/* YOUR ORIGINAL CONTENT LOGIC — Only shows real data when generated */}
       {/* {activeView === "dashboard" && !isGeneratedReport ? ( */}
       {activeView === "dashboard" ? (
-        /* Keep your KPI + Charts */
-        // <div className="space-y-6">
-        //   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        //     {/* Your KPI cards */}
-        //   </div>
-        //   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        //     {/* Your charts */}
-        //   </div>
-        // </div>
         <div className="space-y-6">
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-6">
-            {/* {kpiData.map((kpi, index) => (
-              <KPICard
-                key={index}
-                title={kpi.title}
-                value={kpi.value}
-                icon={kpi.icon}
-              />
-            ))} */}
+            {/* KPIs Section */}
+            {kpis.length > 0 && (
+              <div className="mb-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {kpis.map((kpi) => (
+                    <KPICard
+                      key={kpi.key}
+                      kpi={kpi}
+                      value={aggregates[kpi.key]}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Charts */}
@@ -887,14 +938,27 @@ const ReportDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
             {/* v1.0.0 ----------------------------------------------------------------------> */}
             {/* <InterviewsOverTimeChart
-              data={chartData.interviewsOverTime || []}
-            />
-            <InterviewerUtilizationChart
-              data={chartData.interviewerUtilization || []}
-            />
-            {report.type === "assessment" && (
-              <AssessmentPieChart data={chartData.assessmentStats || []} />
-            )} */}
+      data={chartData.interviewsOverTime || []}
+    />
+    <InterviewerUtilizationChart
+      data={chartData.interviewerUtilization || []}
+    />
+    {report.type === "assessment" && (
+      <AssessmentPieChart data={chartData.assessmentStats || []} />
+    )} */}
+            {charts.length > 0 && (
+              <div className="mb-10">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-8">
+                  {charts.map((chart) => (
+                    <DynamicChart
+                      key={chart.id}
+                      chart={chart}
+                      data={chartData}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -910,18 +974,21 @@ const ReportDetail = () => {
             columns={isGeneratedReport ? columns : []}
             title="Report Details"
             type="template"
-            onGenerate={() => {}}
+            onGenerate={() => { }}
             loadingId="RPT001"
           />
         </div>
       )}
-      <ColumnManager
-        isOpen={false}
-        onClose={() => {}}
-        columns={columns}
-        onColumnsChange={handleColumnsChange} // ← use this instead of setColumns
-        availableColumns={columns}
-      />
+      {isColumnManagerOpen && (
+        <ColumnManager
+          isOpen={isColumnManagerOpen}
+          onClose={() => setIsColumnManagerOpen(false)}
+          columns={columns}
+          availableColumns={availableColumns}
+          onColumnsChange={setColumns}
+          type="table"
+        />
+      )}
     </div>
   );
 };

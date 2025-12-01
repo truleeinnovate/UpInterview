@@ -305,6 +305,46 @@ const reportTemplateSchema = new Schema({
         advancedEnabled: { type: Boolean, default: false }
       }
     },
+
+    kpis: [{
+      key: { type: String, required: true },        // e.g. "totalCandidates", "conversionRate"
+      label: { type: String, required: true },      // Display name
+      icon: { type: String, default: "TrendingUp" }, // Lucide icon name
+      color: { 
+        type: String, 
+        enum: ["blue", "green", "red", "purple", "yellow", "indigo", "pink", "gray"],
+        default: "blue"
+      },
+      format: { 
+        type: String, 
+        enum: ["number", "currency", "percent", "duration", "text"],
+        default: "number"
+      },
+      precision: { type: Number, default: 0 },
+      prefix: String,   // e.g. "$", "₹"
+      suffix: String,   // e.g. "%", "days"
+      trend: { type: String, enum: ["up", "down", "neutral"] }
+    }],
+
+    // ADDING FULLY DYNAMIC CHARTS
+    charts: [{
+      id: { type: String, required: true },           // Unique ID
+      title: { type: String, required: true },
+      type: { 
+        type: String, 
+        enum: ["line", "bar", "area", "pie", "doughnut", "radar", "funnel", "scatter"],
+        required: true
+      },
+      dataKey: { type: String, required: true },      // Key in response data
+      height: { type: Number, default: 300 },
+      stacked: { type: Boolean, default: false },
+      showLegend: { type: Boolean, default: true },
+      showGrid: { type: Boolean, default: true },
+      colors: [String], // Optional custom colors
+      xAxisKey: String,
+      yAxisKey: String,
+      series: [{ name: String, dataKey: String, color: String }]
+    }],
     layout: { type: Schema.Types.Mixed }
   },
 
