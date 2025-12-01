@@ -1,5 +1,6 @@
 // // v1.0.0 - Ashok - commented Columns, Export CSV, No Groupings
 // v1.0.1 - Ashok - fixed generate report button loading state per row
+// v1.0.2 - Ashok - fixed first letter capitalization in report data cells
 
 // import React, { useState } from 'react';
 // import { ChevronLeft, ChevronRight, Download, Search, Play, Settings, Group, ChevronDown, ChevronRight as ChevronRightIcon } from 'lucide-react';
@@ -630,6 +631,9 @@
 
 import React from "react"; // Removed useState, useEffect
 import { Play, Download } from "lucide-react";
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { formatDateTime } from "../../utils/dateFormatter";
+import StatusBadge from "../SuperAdminComponents/common/StatusBadge";
 
 const ReportsTable = ({
   data = [],
@@ -648,15 +652,15 @@ const ReportsTable = ({
 
   const renderTable = () => (
     <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead className="bg-gray-50 border-b border-gray-200">
+      <table className="w-full min-w-max">
+        <thead className="bg-gray-50 border border-gray-200">
           <tr>
             {/* 2. Use propColumns directly */}
             {propColumns.map((col) => (
               <th
                 key={col.key}
                 className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                style={{ width: col.width }}
+                // style={{ width: col.width }}
               >
                 {col.label}
               </th>
@@ -669,20 +673,65 @@ const ReportsTable = ({
             )}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white">
           {/* 3. Use data directly */}
           {data.map((item, index) => (
             <tr
               key={item.id || index}
-              className="hover:bg-gray-50 transition-colors"
+              // className="hover:bg-gray-50 transition-colors"
+              className={`hover:bg-gray-50 transition-colors
+                border-l border-r border-gray-200
+                ${index === 0 ? "border-t" : "border-t border-gray-200"}
+                ${index === data.length - 1 ? "border-b rounded-b-xl" : ""}
+              `}
             >
-              {propColumns.map((col) => (
+              {/* {propColumns.map((col) => (
                 <td key={col.key} className="px-6 py-4 text-sm text-gray-900">
                   {col.render
-                    ? col.render(item[col.key], item)
-                    : item[col.key] ?? "-"}
+                    ? col.render(capitalizeFirstLetter(item[col.key]), item)
+                    : capitalizeFirstLetter(item[col?.key]) ?? "-"}
                 </td>
-              ))}
+              ))} */}
+
+              {propColumns.map((col) => {
+                const value = item[col.key];
+
+                let displayValue = value;
+
+                if (col.key === "createdAt") {
+                  displayValue = formatDateTime(value);
+                }
+
+                if (col.key === "description") {
+                  displayValue =
+                    value?.length > 80 ? value.substring(0, 80) + "..." : value;
+                }
+
+                return (
+                  <td
+                    key={col.key}
+                    title={col.key === "description" ? value : ""}
+                    className={`px-6 py-4 text-sm text-gray-900
+                    ${
+                      col.key === "description"
+                        ? "text-gray-600 max-w-xs truncate cursor-default"
+                        : ""
+                    }
+                    `}
+                  >
+                    {/* {col.render
+                      ? col.render(capitalizeFirstLetter(displayValue), item)
+                      : capitalizeFirstLetter(displayValue) ?? "-"} */}
+                    {col.key === "status" ? (
+                      <StatusBadge status={capitalizeFirstLetter(value)} />
+                    ) : col.render ? (
+                      col.render(capitalizeFirstLetter(displayValue), item)
+                    ) : (
+                      capitalizeFirstLetter(displayValue) ?? "-"
+                    )}
+                  </td>
+                );
+              })}
 
               {/* Only show Generate button if this is the Templates list */}
               {type === "templates" && (
@@ -712,20 +761,20 @@ const ReportsTable = ({
   );
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white shadow-sm rounded-xl">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-custom-blue">
+      <div className="px-6 py-4 flex justify-between rounded-xl rounded-bl-none rounded-br-none items-center border border-gray-200 border-b-0">
+        <h3 className="text-lg font-semibold text-custom-blue rounded-xl">
           {title ||
             (type === "templates" ? "Report Templates" : "Report Results")}
         </h3>
         {/* Show Export button only for Data views, not Template lists */}
-        {type !== "templates" && data.length > 0 && (
+        {/* {type !== "templates" && data.length > 0 && (
           <button className="ml-auto flex items-center gap-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90 text-sm">
             <Download className="w-4 h-4" />
             Export CSV
           </button>
-        )}
+        )} */}
       </div>
 
       {renderTable()}

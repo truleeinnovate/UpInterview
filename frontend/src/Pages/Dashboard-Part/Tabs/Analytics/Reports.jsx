@@ -702,7 +702,7 @@ const Reports = () => {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-6 pb-2">
+      <div className="flex items-center justify-between px-8 pt-6 pb-2">
         <div>
           <h1 className="text-2xl font-semibold text-custom-blue">
             Report Templates
@@ -714,7 +714,7 @@ const Reports = () => {
       </div>
 
       {/* Toolbar */}
-      <div className="px-6">
+      <div className="px-8">
         <Toolbar
           view={viewMode}
           setView={setViewMode}
@@ -761,16 +761,18 @@ const Reports = () => {
       </div>
 
       {/* CONTENT */}
-      <div className="px-4 pt-6 pb-12">
+      <div className="px-6 pt-6">
         {paginatedTemplates.length > 0 ? (
           viewMode === "table" ? (
-            <ReportsTable
-              data={paginatedTemplates}
-              columns={reportTemplateColumns}
-              type="templates"
-              onGenerate={handleGenerateReport}
-              loadingId={loadingId}
-            />
+            <div>
+              <ReportsTable
+                data={paginatedTemplates}
+                columns={reportTemplateColumns}
+                type="templates"
+                onGenerate={handleGenerateReport}
+                loadingId={loadingId}
+              />
+            </div>
           ) : (
             <KanbanBoard
               data={paginatedTemplates}

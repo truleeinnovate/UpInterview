@@ -591,7 +591,7 @@
 // export default ReportDetail;
 
 // Keep ALL your original imports + UI exactly as it was
-import React, { useState, useEffect, useCallback, useRef} from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -602,6 +602,7 @@ import {
   Eye,
   Settings,
   Save,
+  LayoutDashboard,
 } from "lucide-react";
 
 import AdvancedFilters from "../../../../Components/Analytics/AdvancedFilters";
@@ -636,6 +637,8 @@ import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/c
 // import InterviewerUtilizationChart from "../../../../Components/Analytics/charts/InterviewerUtilizationChart";
 // import AssessmentPieChart from "../../../../Components/Analytics/charts/AssessmentPieChart";
 import DynamicChart from "../../../../Components/Analytics/charts/DynamicChart";
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+import * as Icons from "lucide-react";
 
 const ReportDetail = () => {
   const { reportId } = useParams();
@@ -649,10 +652,10 @@ const ReportDetail = () => {
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
   const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false);
-  const [aggregates, setAggregates] = useState({});     // KPI values
-  const [chartData, setChartData] = useState({});       // Chart datasets
-  const [kpis, setKpis] = useState([]);                 // KPI config
-  const [charts, setCharts] = useState([]);             // Chart config
+  const [aggregates, setAggregates] = useState({}); // KPI values
+  const [chartData, setChartData] = useState({}); // Chart datasets
+  const [kpis, setKpis] = useState([]); // KPI config
+  const [charts, setCharts] = useState([]); // Chart config
 
   const [reportMeta, setReportMeta] = useState({
     title: "",
@@ -663,12 +666,17 @@ const ReportDetail = () => {
   const saveFilterPreset = useSaveFilterPreset();
   const saveColumnConfig = useSaveColumnConfig();
 
+  console.log("KPIs ===============================> ", kpis);
+
+  // column manager scroll lock
+  useScrollLock(isColumnManagerOpen);
+
   // const generatedReport = location.state;
   // const isGeneratedReport = !!generatedReport;
   const isGeneratedReport = data.length > 0;
   console.log("isGeneratedReport", isGeneratedReport);
 
-// THIS IS THE KEY — track last fetched reportId
+  // THIS IS THE KEY — track last fetched reportId
   const lastFetchedId = useRef(null);
 
   useEffect(() => {
@@ -718,7 +726,9 @@ const ReportDetail = () => {
           }))
         );
 
-        setAvailableColumns(apiAvailableColumns.length > 0 ? apiAvailableColumns : apiColumns);
+        setAvailableColumns(
+          apiAvailableColumns.length > 0 ? apiAvailableColumns : apiColumns
+        );
         setData(apiData);
 
         setReportMeta({
@@ -728,7 +738,9 @@ const ReportDetail = () => {
         });
 
         setAvailableFilters(apiAvailableFilters);
-        setFilters(Object.keys(defaultFilters).length > 0 ? defaultFilters : {});
+        setFilters(
+          Object.keys(defaultFilters).length > 0 ? defaultFilters : {}
+        );
 
         setAggregates(aggregates);
         setChartData(apiChartData);
@@ -737,7 +749,6 @@ const ReportDetail = () => {
 
         // Mark as fetched
         lastFetchedId.current = reportId;
-
       } catch (error) {
         if (isMounted) {
           console.error("Failed to fetch report:", error);
@@ -819,6 +830,10 @@ const ReportDetail = () => {
     setColumns(newColumns);
   }, []);
 
+  const getLucideIcon = (name) => {
+    return Icons[name] || Icons.HelpCircle;
+  };
+
   return (
     <div className="space-y-6 animate-fade-in p-6">
       {/* YOUR ORIGINAL HEADER — UNCHANGED */}
@@ -834,7 +849,7 @@ const ReportDetail = () => {
             <h1 className="text-2xl font-semibold text-custom-blue">
               {isGeneratedReport ? reportMeta.title : "Report"}
               {isGeneratedReport && (
-                <span className="ml-3 text-sm font-normal text-green-600">
+                <span className="ml-3 text-sm font-normal text-green-600 bg-green-100 px-4 py-1 rounded-full">
                   Generated
                 </span>
               )}
@@ -854,13 +869,13 @@ const ReportDetail = () => {
             <Settings className="w-4 h-4" />
             <span>Columns</span>
           </button>
-          <button
+          {/* <button
             onClick={handleApplyAndSave}
             className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90"
           >
             <Save className="w-4 h-4" />
             <span>Apply & Save</span>
-          </button>
+          </button> */}
 
           <button className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
             <Download className="w-4 h-4" />
@@ -880,11 +895,12 @@ const ReportDetail = () => {
             onClick={() => setActiveView("dashboard")}
             className="cursor-pointer"
           >
-            <FaList
-              className={`text-xl mr-4 ${activeView === "dashboard"
+            <LayoutDashboard
+              className={`text-xl mr-4 ${
+                activeView === "dashboard"
                   ? "text-custom-blue"
                   : "text-gray-500"
-                }`}
+              }`}
             />
           </span>
         </Tooltip>
@@ -893,9 +909,10 @@ const ReportDetail = () => {
             onClick={() => setActiveView("table")}
             className="cursor-pointer"
           >
-            <TbLayoutGridRemove
-              className={`text-xl ${activeView === "table" ? "text-custom-blue" : "text-gray-500"
-                }`}
+            <Table
+              className={`text-xl ${
+                activeView === "table" ? "text-custom-blue" : "text-gray-500"
+              }`}
             />
           </span>
         </Tooltip>
@@ -916,16 +933,18 @@ const ReportDetail = () => {
       {activeView === "dashboard" ? (
         <div className="space-y-6">
           {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-6">
+          <div className="">
             {/* KPIs Section */}
             {kpis.length > 0 && (
               <div className="mb-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
                   {kpis.map((kpi) => (
                     <KPICard
                       key={kpi.key}
                       kpi={kpi}
                       value={aggregates[kpi.key]}
+                      title={kpi.label}
+                      icon={getLucideIcon(kpi.icon)}
                     />
                   ))}
                 </div>
@@ -935,7 +954,7 @@ const ReportDetail = () => {
 
           {/* Charts */}
           {/* v1.0.0 <---------------------------------------------------------------------- */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+          <div className="">
             {/* v1.0.0 ----------------------------------------------------------------------> */}
             {/* <InterviewsOverTimeChart
       data={chartData.interviewsOverTime || []}
@@ -948,7 +967,7 @@ const ReportDetail = () => {
     )} */}
             {charts.length > 0 && (
               <div className="mb-10">
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-8">
+                <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-8">
                   {charts.map((chart) => (
                     <DynamicChart
                       key={chart.id}
@@ -963,31 +982,42 @@ const ReportDetail = () => {
         </div>
       ) : (
         /* REAL DYNAMIC TABLE */
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div>
+          {/* <div className="px-6 py-4 rounded-xl rounded-bl-none rounded-br-none border border-gray-200 border-b-0">
             <h3 className="text-lg font-medium text-gray-900">
               {isGeneratedReport ? "Generated Report Results" : "Detailed View"}
             </h3>
+          </div> */}
+
+          <div className="flex flex-col w-full">
+            <div className="min-w-0">
+              <ReportsTable
+                data={data}
+                columns={isGeneratedReport ? columns : []}
+                title={
+                  isGeneratedReport
+                    ? "Generated Report Results"
+                    : "Detailed View"
+                }
+                type="template"
+                onGenerate={() => {}}
+                loadingId="RPT001"
+              />
+            </div>
           </div>
-          <ReportsTable
-            data={data}
-            columns={isGeneratedReport ? columns : []}
-            title="Report Details"
-            type="template"
-            onGenerate={() => { }}
-            loadingId="RPT001"
-          />
         </div>
       )}
       {isColumnManagerOpen && (
-        <ColumnManager
-          isOpen={isColumnManagerOpen}
-          onClose={() => setIsColumnManagerOpen(false)}
-          columns={columns}
-          availableColumns={availableColumns}
-          onColumnsChange={setColumns}
-          type="table"
-        />
+        <div>
+          <ColumnManager
+            isOpen={isColumnManagerOpen}
+            onClose={() => setIsColumnManagerOpen(false)}
+            columns={columns}
+            availableColumns={availableColumns}
+            onColumnsChange={setColumns}
+            type="table"
+          />
+        </div>
       )}
     </div>
   );
