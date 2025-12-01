@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const apiKeyController = require('../controllers/apiKeyController');
 const { authContextMiddleware } = require('../middleware/authContext.js');
+const loggingService = require('../middleware/loggingService');
 
 // Apply authentication to all routes except validation endpoint
 router.use(authContextMiddleware);
@@ -10,11 +11,11 @@ router.use(authContextMiddleware);
 router
   .route('/')
   .get(apiKeyController.getApiKeys)
-  .post(apiKeyController.createApiKey);
+  .post(loggingService.integrationLoggingMiddleware, apiKeyController.createApiKey);
 
 router
   .route('/:id')
-  .patch(apiKeyController.updateApiKey)
+  .patch(loggingService.integrationLoggingMiddleware, apiKeyController.updateApiKey)
   .delete(apiKeyController.deleteApiKey);
 
 // Get API key statistics

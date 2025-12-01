@@ -13,7 +13,6 @@ const {
 const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Interview } = require("../models/Interview/Interview.js");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
-const { triggerWebhook } = require("../services/webhookService");
 
 //  post call for position
 const createPosition = async (req, res) => {

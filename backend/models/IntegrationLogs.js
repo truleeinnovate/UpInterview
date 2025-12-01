@@ -11,15 +11,17 @@ const IntegrationLogsSchema = new mongoose.Schema({
         required: true 
     }, // Log status (generic for success, error, warning)
     code: { type: String },                      // Generic code for success or error
+    errorCode: { type: String },                 // Error code for failures
     message: { type: String },                   // Generic message for success or error
     serverName: { type: String },                // Name of the server where the process ran
     severity: { 
         type: String, 
         enum: ['low', 'medium', 'high'], 
-        default: null 
+        default: 'low' 
     }, // Severity level
     processName: { type: String, required: true }, // Name of the process or service
     executionTime: { type: String },             // Time taken for the execution
+    duration: { type: String },                   // Alternative duration field
     requestEndPoint: { type: String },           // API endpoint or resource accessed
     requestMethod: { 
         type: String, 
@@ -30,11 +32,17 @@ const IntegrationLogsSchema = new mongoose.Schema({
     requestHeaders: { type: mongoose.Schema.Types.Mixed, default: null }, // Optional request headers
     responseStatusCode: { type: Number },        // Response code returned
     responseDetails: { type: String },           // Additional details about the response
+    responseError: { type: mongoose.Schema.Types.Mixed, default: null }, // Error details
+    responseMessage: { type: String },          // Response message
     responseBody: { type: mongoose.Schema.Types.Mixed, default: null }, // Captures the raw response
     ipAddress: { type: String },                // Source IP address
     correlationId: { type: String },            // Correlation ID for distributed tracing
     userAgent: { type: String },                // User-Agent for request context
-    comments: { type: String, default: null }   // Optional comments for additional context
+    comments: { type: String, default: null }, // Optional comments for additional context
+    integrationName: { type: String },          // Name of the integration
+    flowType: { type: String },                 // Type of flow (webhook, api-request, etc.)
+    dateTime: { type: Date },                   // Alternative timestamp field
+    metadata: { type: mongoose.Schema.Types.Mixed, default: null } // Additional metadata
 }, { timestamps: true });
  
 module.exports = mongoose.model('IntegrationLogs', IntegrationLogsSchema);

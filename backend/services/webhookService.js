@@ -1,6 +1,8 @@
 const axios = require("axios");
 const crypto = require("crypto");
 const Integration = require("../models/Integration");
+const IntegrationLogs = require("../models/IntegrationLogs");
+const { v4: uuidv4 } = require("uuid");
 
 // Define available event types (must match frontend IntegrationsTab availableEvents ids)
 const EVENT_TYPES = {
@@ -49,8 +51,14 @@ const triggerWebhook = async (eventType, data, tenantId) => {
       return;
     }
 
-    // Process only enabled integrations with timeout
-    await Promise.all(
+    // Create a single consolidated log for all webhook calls
+    const webhookResults = [];
+    let overallSuccess = true;
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Process all enabled integrations and collect results
+    await Promise.allSettled(
       enabledIntegrations.map(async (integration) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
@@ -111,29 +119,104 @@ const triggerWebhook = async (eventType, data, tenantId) => {
             data: response.data
           });
 
+          // Determine if the webhook was actually successful (2xx status codes)
+          const isSuccess = response.status >= 200 && response.status < 300;
+          
+          if (isSuccess) {
+            successCount++;
+          } else {
+            errorCount++;
+            overallSuccess = false;
+          }
+
+          // Collect result for consolidated log
+          webhookResults.push({
+            integrationName: integration.name || "unnamed",
+            webhookUrl: integration.webhookUrl,
+            status: response.status,
+            statusText: response.statusText,
+            success: isSuccess,
+            error: !isSuccess ? {
+              type: "http_error",
+              status: response.status,
+              statusText: response.statusText,
+              data: response.data
+            } : null,
+            response: {
+              status: response.status,
+              statusText: response.statusText,
+              data: response.data
+            }
+          });
+
         } catch (error) {
+          errorCount++;
+          overallSuccess = false;
+          
+          let errorDetails = {};
+          
           if (error.name === "AbortError") {
             console.error(`[Webhook] Timeout sending to ${integration.webhookUrl}`);
+            errorDetails = {
+              type: "timeout",
+              message: "Webhook request timed out after 10 seconds"
+            };
           } else if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
             console.error(`[Webhook] Error response from ${integration.webhookUrl}:`, {
               status: error.response.status,
               data: error.response.data,
               headers: error.response.headers
             });
+            errorDetails = {
+              type: "http_error",
+              status: error.response.status,
+              statusText: error.response.statusText,
+              data: error.response.data,
+              headers: error.response.headers
+            };
           } else if (error.request) {
-            // The request was made but no response was received
             console.error(`[Webhook] No response from ${integration.webhookUrl}:`, error.request);
+            errorDetails = {
+              type: "no_response",
+              message: "No response received from webhook URL",
+              request: error.request
+            };
           } else {
-            // Something happened in setting up the request that triggered an Error
             console.error(`[Webhook] Error setting up request to ${integration.webhookUrl}:`, error.message);
+            errorDetails = {
+              type: "setup_error",
+              message: error.message
+            };
           }
+
+          // Collect error result for consolidated log
+          webhookResults.push({
+            integrationName: integration.name || "unnamed",
+            webhookUrl: integration.webhookUrl,
+            status: null,
+            statusText: null,
+            success: false,
+            error: errorDetails,
+            response: null
+          });
         } finally {
           clearTimeout(timeoutId);
         }
       })
     );
+
+    // Create single consolidated log
+    await createConsolidatedWebhookLog({
+      eventType,
+      data,
+      tenantId,
+      webhookResults,
+      overallSuccess,
+      successCount,
+      errorCount,
+      totalWebhooks: enabledIntegrations.length
+    });
+
   } catch (error) {
     console.error("[Webhook] Error in triggerWebhook:", {
       message: error.message,
@@ -141,6 +224,66 @@ const triggerWebhook = async (eventType, data, tenantId) => {
       eventType,
       tenantId,
     });
+  }
+};
+
+// Helper function to create a single consolidated webhook log
+const createConsolidatedWebhookLog = async ({ eventType, data, tenantId, webhookResults, overallSuccess, successCount, errorCount, totalWebhooks }) => {
+  try {
+    const logData = {
+      logId: `INTG-${uuidv4()}`,
+      ownerId: "system", // Use system for consolidated logs
+      status: overallSuccess ? "success" : "error",
+      message: overallSuccess 
+        ? `Webhook batch completed for ${eventType}: ${successCount}/${totalWebhooks} successful`
+        : `Webhook batch partially failed for ${eventType}: ${successCount}/${totalWebhooks} successful, ${errorCount} failed`,
+      serverName: process.env.SERVER_NAME || "backend",
+      severity: overallSuccess ? "low" : "medium", // Medium for partial failures
+      processName: "webhook-service",
+      requestEndPoint: "multiple-webhooks", // Indicate multiple webhooks
+      requestMethod: "POST",
+      requestBody: JSON.stringify({
+        event: eventType,
+        data,
+        timestamp: new Date().toISOString(),
+        webhookCount: totalWebhooks
+      }),
+      responseStatusCode: overallSuccess ? 200 : 207, // 207 for multi-status
+      responseError: !overallSuccess ? JSON.stringify({
+        failedWebhooks: webhookResults.filter(r => !r.success).map(r => ({
+          integrationName: r.integrationName,
+          webhookUrl: r.webhookUrl,
+          error: r.error
+        }))
+      }) : null,
+      responseMessage: overallSuccess ? "All webhooks successful" : "Partial webhook success",
+      integrationName: "multiple-integrations",
+      flowType: "webhook-trigger",
+      tenantId: tenantId,
+      dateTime: new Date(),
+      responseBody: JSON.stringify({
+        summary: {
+          total: totalWebhooks,
+          successful: successCount,
+          failed: errorCount,
+          overallSuccess
+        },
+        results: webhookResults.map(r => ({
+          integrationName: r.integrationName,
+          webhookUrl: r.webhookUrl,
+          status: r.status,
+          success: r.success
+        }))
+      }),
+    };
+
+    const log = new IntegrationLogs(logData);
+    await log.save();
+    
+    console.log(`[Webhook] Consolidated log created: ${logData.logId} - ${logData.status} (${successCount}/${totalWebhooks} successful)`);
+  } catch (logError) {
+    console.error("[Webhook] Error creating consolidated webhook log:", logError);
+    // Don't throw the error to prevent breaking the main webhook flow
   }
 };
 

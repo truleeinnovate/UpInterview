@@ -74,6 +74,16 @@ exports.createCandidate = async (req, res) => {
     const authResult = await getTenantAndUserFromApiKey(req);
     
     if (authResult.error) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Create Candidate",
+        requestBody: req.body,
+        message: authResult.error,
+        status: "error",
+        integrationName: "external-api",
+        flowType: "create-candidate",
+      };
       return res.status(401).json({
         success: false,
         error: authResult.error,
@@ -85,6 +95,16 @@ exports.createCandidate = async (req, res) => {
     
     // Check if the API key has candidates:write permission
     if (!checkApiKeyPermission(apiKey, 'candidates:write')) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: userId,
+        processName: "External Create Candidate",
+        requestBody: req.body,
+        message: "Insufficient permissions. Required: candidates:write",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "create-candidate",
+      };
       return res.status(403).json({
         success: false,
         error: "Insufficient permissions. Required: candidates:write",
@@ -104,7 +124,8 @@ exports.createCandidate = async (req, res) => {
 
     console.log(`[EXTERNAL_API] Candidate created via API: ${candidate._id} for tenant: ${tenantId}`);
 
-    res.status(201).json({
+    // Generate logs for success
+    const responseData = {
       success: true,
       message: "Candidate created successfully",
       code: 201,
@@ -115,7 +136,20 @@ exports.createCandidate = async (req, res) => {
         createdAt: candidate.createdAt,
         updatedAt: candidate.updatedAt,
       },
-    });
+    };
+
+    res.locals.logData = {
+      ownerId: userId,
+      processName: "External Create Candidate",
+      requestBody: req.body,
+      message: "Candidate created successfully via external API",
+      status: "success",
+      responseBody: responseData,
+      integrationName: "external-api",
+      flowType: "create-candidate",
+    };
+
+    res.status(201).json(responseData);
   } catch (error) {
     console.error("External candidate creation error:", error);
 
@@ -269,6 +303,17 @@ exports.createCandidate = async (req, res) => {
     }
 
     // 12. Generic Server Error (500) - Catch-all for unexpected errors
+    // Generate logs for the error
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "External Create Candidate",
+      requestBody: req.body,
+      message: "Internal server error while creating candidate",
+      status: "error",
+      integrationName: "external-api",
+      flowType: "create-candidate",
+    };
+
     return res.status(500).json({
       success: false,
       error: "Internal Server Error",
@@ -287,6 +332,16 @@ exports.bulkCreateCandidates = async (req, res) => {
   try {
     // Validate input array
     if (!req.body || !Array.isArray(req.body) || req.body.length === 0) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Bulk Create Candidates",
+        requestBody: req.body,
+        message: "Please provide a valid JSON array of candidates",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "bulk-create-candidates",
+      };
       return res.status(400).json({
         success: false,
         error: "Invalid Input",
@@ -298,6 +353,16 @@ exports.bulkCreateCandidates = async (req, res) => {
 
     // Check if candidates array is too large
     if (req.body.length > 50) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Bulk Create Candidates",
+        requestBody: req.body,
+        message: "Maximum 50 candidates allowed per bulk request",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "bulk-create-candidates",
+      };
       return res.status(413).json({
         success: false,
         error: "Request Too Large",
@@ -313,6 +378,16 @@ exports.bulkCreateCandidates = async (req, res) => {
     const authResult = await getTenantAndUserFromApiKey(req);
     
     if (authResult.error) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Bulk Create Candidates",
+        requestBody: req.body,
+        message: authResult.error,
+        status: "error",
+        integrationName: "external-api",
+        flowType: "bulk-create-candidates",
+      };
       return res.status(401).json({
         success: false,
         error: "Authentication Required",
@@ -359,7 +434,8 @@ exports.bulkCreateCandidates = async (req, res) => {
 
     const result = await Candidate.insertMany(candidates, { ordered: false });
 
-    res.status(201).json({
+    // Generate logs for success
+    const responseData = {
       success: true,
       message: "Bulk candidates created successfully",
       code: 201,
@@ -369,7 +445,20 @@ exports.bulkCreateCandidates = async (req, res) => {
         tenantId: tenantId,
         createdAt: new Date(),
       },
-    });
+    };
+
+    res.locals.logData = {
+      ownerId: userId,
+      processName: "External Bulk Create Candidates",
+      requestBody: { count: req.body.length },
+      message: `Successfully created ${result.length} candidates via external API`,
+      status: "success",
+      responseBody: responseData,
+      integrationName: "external-api",
+      flowType: "bulk-create-candidates",
+    };
+
+    res.status(201).json(responseData);
   } catch (error) {
     console.error("Bulk candidate creation error:", error);
 
@@ -462,6 +551,17 @@ exports.bulkCreateCandidates = async (req, res) => {
     }
 
     // 7. Generic Server Error (500) - Catch-all for unexpected errors
+    // Generate logs for the error
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "External Bulk Create Candidates",
+      requestBody: { count: req.body?.length },
+      message: "Internal server error while creating bulk candidates",
+      status: "error",
+      integrationName: "external-api",
+      flowType: "bulk-create-candidates",
+    };
+
     return res.status(500).json({
       success: false,
       error: "Internal Server Error",
@@ -480,6 +580,16 @@ exports.bulkCreatePositions = async (req, res) => {
   try {
     // Validate input array
     if (!req.body || !Array.isArray(req.body) || req.body.length === 0) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Bulk Create Positions",
+        requestBody: req.body,
+        message: "Please provide a valid JSON array of positions",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "bulk-create-positions",
+      };
       return res.status(400).json({
         success: false,
         error: "Invalid Input",
@@ -491,6 +601,16 @@ exports.bulkCreatePositions = async (req, res) => {
 
     // Check if positions array is too large
     if (req.body.length > 50) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Bulk Create Positions",
+        requestBody: req.body,
+        message: "Maximum 50 positions allowed per bulk request",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "bulk-create-positions",
+      };
       return res.status(413).json({
         success: false,
         error: "Request Too Large",
@@ -518,6 +638,16 @@ exports.bulkCreatePositions = async (req, res) => {
     });
 
     if (validationErrors.length > 0) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Bulk Create Positions",
+        requestBody: req.body,
+        message: "Some positions have missing required fields",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "bulk-create-positions",
+      };
       return res.status(400).json({
         success: false,
         error: "Validation Error",
@@ -537,7 +667,8 @@ exports.bulkCreatePositions = async (req, res) => {
 
     const result = await Position.insertMany(positions, { ordered: false });
 
-    res.status(201).json({
+    // Generate logs for success
+    const responseData = {
       success: true,
       message: "Bulk positions created successfully",
       code: 201,
@@ -547,7 +678,20 @@ exports.bulkCreatePositions = async (req, res) => {
         tenantId: req.tenantId || "external_tenant",
         createdAt: new Date(),
       },
-    });
+    };
+
+    res.locals.logData = {
+      ownerId: req.user?._id || "external_api",
+      processName: "External Bulk Create Positions",
+      requestBody: { count: req.body.length },
+      message: `Successfully created ${result.length} positions via external API`,
+      status: "success",
+      responseBody: responseData,
+      integrationName: "external-api",
+      flowType: "bulk-create-positions",
+    };
+
+    res.status(201).json(responseData);
   } catch (error) {
     console.error("Bulk position creation error:", error);
 
@@ -640,6 +784,17 @@ exports.bulkCreatePositions = async (req, res) => {
     }
 
     // 7. Generic Server Error (500) - Catch-all for unexpected errors
+    // Generate logs for the error
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "External Bulk Create Positions",
+      requestBody: { count: req.body?.length },
+      message: "Internal server error while creating bulk positions",
+      status: "error",
+      integrationName: "external-api",
+      flowType: "bulk-create-positions",
+    };
+
     return res.status(500).json({
       success: false,
       error: "Internal Server Error",
@@ -660,6 +815,16 @@ exports.createPosition = async (req, res) => {
     const authResult = await getTenantAndUserFromApiKey(req);
     
     if (authResult.error) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Create Position",
+        requestBody: req.body,
+        message: authResult.error,
+        status: "error",
+        integrationName: "external-api",
+        flowType: "create-position",
+      };
       return res.status(401).json({
         success: false,
         error: authResult.error,
@@ -670,6 +835,16 @@ exports.createPosition = async (req, res) => {
     
     // Check if the API key has positions:write permission
     if (!checkApiKeyPermission(apiKey, 'positions:write')) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: userId,
+        processName: "External Create Position",
+        requestBody: req.body,
+        message: "Insufficient permissions. Required: positions:write",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "create-position",
+      };
       return res.status(403).json({
         success: false,
         error: "Insufficient permissions. Required: positions:write",
@@ -688,7 +863,8 @@ exports.createPosition = async (req, res) => {
 
     console.log(`[EXTERNAL_API] Position created via API: ${position._id} for tenant: ${tenantId}`);
 
-    res.status(201).json({
+    // Generate logs for success
+    const responseData = {
       success: true,
       message: "Position created successfully",
       code: 201,
@@ -700,7 +876,20 @@ exports.createPosition = async (req, res) => {
         createdAt: position.createdAt,
         updatedAt: position.updatedAt,
       },
-    });
+    };
+
+    res.locals.logData = {
+      ownerId: userId,
+      processName: "External Create Position",
+      requestBody: req.body,
+      message: "Position created successfully via external API",
+      status: "success",
+      responseBody: responseData,
+      integrationName: "external-api",
+      flowType: "create-position",
+    };
+
+    res.status(201).json(responseData);
   } catch (error) {
     console.error("External position creation error:", error);
 
@@ -728,6 +917,17 @@ exports.createPosition = async (req, res) => {
         field: "title",
       });
     }
+
+    // Generate logs for the error
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "External Create Position",
+      requestBody: req.body,
+      message: "Internal server error while creating position",
+      status: "error",
+      integrationName: "external-api",
+      flowType: "create-position",
+    };
 
     res.status(500).json({
       success: false,

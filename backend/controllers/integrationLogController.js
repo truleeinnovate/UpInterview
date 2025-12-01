@@ -1,6 +1,23 @@
 // v1.0.0 - Ashok - Integration logs not getting on online fixing in v1
 const IntegrationLog = require("../models/IntegrationLogs");
 
+// Helper function to create integration log entry (for middleware use)
+exports.createIntegrationLogEntry = async (logData) => {
+  try {
+    const log = new IntegrationLog({
+      ...logData,
+      timeStamp: new Date(),
+    });
+
+    await log.save();
+    return log;
+  } catch (error) {
+    console.error("Error creating integration log entry:", error.message);
+    // Don't throw the error to prevent breaking the main flow
+    return null;
+  }
+};
+
 // Create a new integration log entry
 exports.createIntegrationLog = async (req, res) => {
   try {
