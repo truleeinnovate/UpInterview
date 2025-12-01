@@ -12,7 +12,7 @@
 // v2.0.1  -  Ashok   -  fixed style issue
 // v2.0.2  -  Ashok   -  fixed style issue
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
 import { motion } from "framer-motion";
@@ -174,36 +174,6 @@ const ScheduleAssessment = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const rowsPerPage = 10;
-
-  const { scheduleData, total, itemsPerPage, isLoading } =
-    useScheduleAssessments({
-      page: currentPage + 1,
-      limit: rowsPerPage,
-      searchQuery: debouncedSearch,
-      type: "scheduled",
-    });
-  const navigate = useNavigate();
-  // <---------------------- v1.0.1
-  const [isShareOpen, setIsShareOpen] = useState(false);
-  // <---------------------- v1.0.1 >
-  // <---------------------- v1.0.3
-  const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
-  const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [selectedAction, setSelectedAction] = useState(""); // 'extend', 'cancel', or 'resend'
-  // const [selectedAssessmentTemplateId, setSelectedAssessmentTemplateId] =
-  //   useState(null);
-  // Function to check if action buttons should be shown based on schedule status
-  const shouldShowActionButtons = (schedule) => {
-    const status = schedule.status?.toLowerCase();
-    // Hide buttons for completed, cancelled, expired, and failed statuses
-    return !["completed", "cancelled", "expired", "failed"].includes(status);
-  };
-  // Function to handle manual schedule status updates
-  const handleUpdateAllScheduleStatuses = () => {
-    updateAllScheduleStatuses.mutate();
-  };
-  // ------------------------------v1.0.3 >
-  // const assessmentIds = assessmentData?.map((a) => a._id) || [];
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
   const filterIconRef = useRef(null);
@@ -225,6 +195,44 @@ const ScheduleAssessment = () => {
   const [selectedOrder, setSelectedOrder] = useState({ min: "", max: "" });
   const [selectedExpiryDate, setSelectedExpiryDate] = useState(""); // '', 'expired', 'next7', 'next30'
   const [selectedCreatedDate, setSelectedCreatedDate] = useState(""); // '', 'last7', 'last30', 'last90'
+
+  // Helper function to normalize spaces for better search
+  const normalizeSpaces = (str) =>
+    str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
+
+  // Map search text to matching assessment template IDs (name/code/ID)
+  const searchTemplateIds = useMemo(() => {
+    const q = (debouncedSearch || "").trim();
+    if (!q) return [];
+
+    return (assessmentData || [])
+      .filter((a) => {
+        const fields = [
+          a.AssessmentTitle,
+          a.AssessmentCode,
+          a._id,
+        ].filter(Boolean);
+        return fields.some((f) =>
+          normalizeSpaces(f).includes(normalizeSpaces(q))
+        );
+      })
+      .map((a) => a._id);
+  }, [debouncedSearch, assessmentData]);
+
+  // If search text matches template(s), normally use templates filter only.
+  // But if it looks like an Assessment ID (e.g. ASMT-00009), also use
+  // backend text search over scheduledAssessmentCode / status / order.
+  const effectiveSearchQuery = useMemo(() => {
+    const q = (debouncedSearch || "").trim();
+    if (!q) return "";
+    const isAssessmentIdLike = /asmt-/i.test(q);
+    if (searchTemplateIds.length > 0 && !isAssessmentIdLike) {
+      // Pure template search (e.g. by name like "Java Developer"), avoid
+      // extra text search that would over-restrict results.
+      return "";
+    }
+    return q;
+  }, [debouncedSearch, searchTemplateIds]);
 
   // Debounce search input
   useEffect(() => {
@@ -264,6 +272,45 @@ const ScheduleAssessment = () => {
   // v1.0.8 <-------------------------------------------------------------
   useScrollLock(viewMode === "kanban");
   // v1.0.8 ------------------------------------------------------------->
+
+  const { scheduleData, total, itemsPerPage, isLoading } =
+    useScheduleAssessments({
+      page: currentPage + 1,
+      limit: rowsPerPage,
+      // Search by Assessment Template Name / ID via templates filter
+      templates: searchTemplateIds,
+      // When no templates match search, use backend text search for
+      // scheduledAssessmentCode / status / order (e.g., ASMT-00009)
+      searchQuery: effectiveSearchQuery,
+      // Server-side filters
+      status: selectedStatus,
+      orderRange: selectedOrder,
+      expiryPreset: selectedExpiryDate,
+      createdPreset: selectedCreatedDate,
+      type: "scheduled",
+    });
+
+  const navigate = useNavigate();
+  // <---------------------- v1.0.1
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  // <---------------------- v1.0.1 >
+  // <---------------------- v1.0.3
+  const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [selectedAction, setSelectedAction] = useState(""); // 'extend', 'cancel', or 'resend'
+  // const [selectedAssessmentTemplateId, setSelectedAssessmentTemplateId] =
+  //   useState(null);
+  // Function to check if action buttons should be shown based on schedule status
+  const shouldShowActionButtons = (schedule) => {
+    const status = schedule.status?.toLowerCase();
+    // Hide buttons for completed, cancelled, expired, and failed statuses
+    return !["completed", "cancelled", "expired", "failed"].includes(status);
+  };
+  // Function to handle manual schedule status updates
+  const handleUpdateAllScheduleStatuses = () => {
+    updateAllScheduleStatuses.mutate();
+  };
+  // ------------------------------v1.0.3 >
 
   // Derived pagination is now driven by server metadata
   const currentRows = Array.isArray(scheduleData) ? scheduleData : [];
@@ -521,7 +568,7 @@ const ScheduleAssessment = () => {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => handleView(row)}
         >
-          {row.order || "Not Provided"}
+          {value || "Not Provided"}
         </div>
       ),
     },
