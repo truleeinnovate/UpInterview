@@ -131,9 +131,12 @@ const Layout = () => {
 
       {/* Main Content */}
       <main
-        className={`flex-1 pt-4 transition-all duration-300 ${
-          isSidebarOpen ? "" : "lg:ml-64 xl:ml-64 2xl:ml-64"
-        }`}
+        // className={`flex-1 pt-4 transition-all duration-300 ${
+        //   isSidebarOpen ? "" : "lg:ml-60 xl:ml-60 2xl:ml-60"
+        // }`}
+        className={`flex-1 mt-1.5 transition-all duration-300 overflow-auto max-h-[calc(100vh-62px)]
+          ${isSidebarOpen ? "" : "lg:ml-60 xl:ml-60 2xl:ml-60"}
+        `}
       >
         <Outlet />
       </main>

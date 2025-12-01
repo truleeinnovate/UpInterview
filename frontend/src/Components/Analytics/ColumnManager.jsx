@@ -1,10 +1,10 @@
 // import React, { useState, useEffect } from 'react';
 // import { Settings, Plus, X, GripVertical, Eye, EyeOff, RotateCcw, Save } from 'lucide-react';
 
-// const ColumnManager = ({ 
-//   isOpen, 
-//   onClose, 
-//   columns = [], 
+// const ColumnManager = ({
+//   isOpen,
+//   onClose,
+//   columns = [],
 //   onColumnsChange,
 //   availableColumns = [],
 //   type = 'table' // 'table' or 'dashboard'
@@ -46,7 +46,7 @@
 
 //   const handleDrop = (e, targetIndex, targetType) => {
 //     e.preventDefault();
-    
+
 //     if (!draggedItem) return;
 
 //     const { item, sourceType } = draggedItem;
@@ -63,7 +63,7 @@
 
 //       const updatedActive = [...activeColumns];
 //       updatedActive.splice(targetIndex, 0, newColumn);
-      
+
 //       // Update order for all columns
 //       const reorderedActive = updatedActive.map((col, index) => ({ ...col, order: index }));
 //       setActiveColumns(reorderedActive);
@@ -74,11 +74,11 @@
 //       // Reorder within active columns
 //       const updatedActive = [...activeColumns];
 //       const dragIndex = updatedActive.findIndex(col => col.id === item.id);
-      
+
 //       if (dragIndex !== -1 && dragIndex !== targetIndex) {
 //         const [draggedColumn] = updatedActive.splice(dragIndex, 1);
 //         updatedActive.splice(targetIndex, 0, draggedColumn);
-        
+
 //         // Update order
 //         const reorderedActive = updatedActive.map((col, index) => ({ ...col, order: index }));
 //         setActiveColumns(reorderedActive);
@@ -214,7 +214,7 @@
 //                 </div>
 //               </div>
 
-//               <div 
+//               <div
 //                 className="space-y-2 min-h-[300px] bg-gray-50 rounded-lg p-4"
 //                 onDragOver={handleDragOver}
 //                 onDrop={(e) => handleDrop(e, activeColumns.length, 'active')}
@@ -232,7 +232,7 @@
 //                   >
 //                     <div className="flex items-center space-x-3">
 //                       <GripVertical className="w-4 h-4 text-gray-400" />
-                      
+
 //                       <div className="flex-1">
 //                         <div className="flex items-center space-x-2 mb-2">
 //                           <span className="font-medium text-gray-900">{column.label}</span>
@@ -242,7 +242,7 @@
 //                             </span>
 //                           )}
 //                         </div>
-                        
+
 //                         <div className="flex items-center space-x-4">
 //                           <div className="flex items-center space-x-2">
 //                             <label className="text-xs text-gray-600">Width:</label>
@@ -259,26 +259,26 @@
 //                               <option value="300px">300px</option>
 //                             </select>
 //                           </div>
-                          
+
 //                           <span className="text-xs text-gray-500">
 //                             Type: {column.type || 'text'}
 //                           </span>
 //                         </div>
 //                       </div>
-                      
+
 //                       <div className="flex items-center space-x-2">
 //                         <button
 //                           onClick={() => toggleColumnVisibility(column.id)}
 //                           className={`p-1 rounded ${
-//                             column.visible 
-//                               ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+//                             column.visible
+//                               ? 'bg-green-100 text-green-600 hover:bg-green-200'
 //                               : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
 //                           }`}
 //                           title={column.visible ? 'Hide' : 'Show'}
 //                         >
 //                           {column.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
 //                         </button>
-                        
+
 //                         <button
 //                           onClick={() => removeColumn(column.id)}
 //                           className="p-1 text-red-500 hover:bg-red-50 rounded"
@@ -290,7 +290,7 @@
 //                     </div>
 //                   </div>
 //                 ))}
-                
+
 //                 {activeColumns.length === 0 && (
 //                   <div className="text-center py-12 text-gray-500">
 //                     <Settings className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -303,7 +303,7 @@
 //             {/* Available Columns */}
 //             <div>
 //               <h3 className="text-lg font-medium text-gray-900 mb-4">Available Columns</h3>
-              
+
 //               <div className="space-y-2 min-h-[300px] bg-gray-50 rounded-lg p-4">
 //                 {availableToAdd.map((column) => (
 //                   <div
@@ -314,7 +314,7 @@
 //                   >
 //                     <div className="flex items-center space-x-3">
 //                       <GripVertical className="w-4 h-4 text-gray-400" />
-                      
+
 //                       <div className="flex-1">
 //                         <div className="font-medium text-gray-900 mb-1">{column.label}</div>
 //                         <div className="text-xs text-gray-500">
@@ -322,12 +322,12 @@
 //                           {column.description && ` • ${column.description}`}
 //                         </div>
 //                       </div>
-                      
+
 //                       <Plus className="w-4 h-4 text-gray-400" />
 //                     </div>
 //                   </div>
 //                 ))}
-                
+
 //                 {availableToAdd.length === 0 && (
 //                   <div className="text-center py-12 text-gray-500">
 //                     <Eye className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -357,7 +357,7 @@
 //           <div className="text-sm text-gray-600">
 //             {activeColumns.filter(col => col.visible).length} visible columns, {activeColumns.length} total
 //           </div>
-          
+
 //           <div className="flex items-center space-x-3">
 //             <button
 //               onClick={onClose}
@@ -381,16 +381,26 @@
 
 // export default ColumnManager;
 
-import React, { useState, useEffect } from 'react';
-import { Settings, Plus, X, GripVertical, Eye, EyeOff, RotateCcw, Save, Lock } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  Settings,
+  Plus,
+  X,
+  GripVertical,
+  Eye,
+  EyeOff,
+  RotateCcw,
+  Save,
+  Lock,
+} from "lucide-react";
 
-const ColumnManager = ({ 
-  isOpen, 
-  onClose, 
-  columns = [], 
+const ColumnManager = ({
+  isOpen,
+  onClose,
+  columns = [],
   onColumnsChange,
   availableColumns = [],
-  type = 'table'
+  type = "table",
 }) => {
   const [activeColumns, setActiveColumns] = useState([]);
   const [availableToAdd, setAvailableToAdd] = useState([]);
@@ -408,7 +418,7 @@ const ColumnManager = ({
         ...col,
         id: col.key || `col-${index}`,
         visible: col.visible !== false,
-        width: col.width || '180px',
+        width: col.width || "180px",
         order: col.order ?? index,
         locked: col.locked === true, // ← THIS IS KEY
       };
@@ -428,12 +438,11 @@ const ColumnManager = ({
     setActiveColumns(finalActive);
 
     // Available = all columns that are NOT currently active (and not locked)
-    const activeKeys = finalActive.map(c => c.key);
+    const activeKeys = finalActive.map((c) => c.key);
     const available = availableColumns.filter(
-      col => !activeKeys.includes(col.key) && !col.locked
+      (col) => !activeKeys.includes(col.key) && !col.locked
     );
     setAvailableToAdd(available);
-
   }, [columns, availableColumns, isOpen]);
 
   const handleDragStart = (e, item, sourceType) => {
@@ -443,12 +452,12 @@ const ColumnManager = ({
       return;
     }
     setDraggedItem({ item, sourceType });
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
   };
 
   const handleDrop = (e, targetIndex, targetType) => {
@@ -457,14 +466,14 @@ const ColumnManager = ({
 
     const { item, sourceType } = draggedItem;
 
-    if (sourceType === 'available' && targetType === 'active') {
+    if (sourceType === "available" && targetType === "active") {
       const newCol = {
         ...item,
         id: item.key,
         visible: true,
-        width: item.width || '180px',
+        width: item.width || "180px",
         order: targetIndex,
-        locked: false
+        locked: false,
       };
 
       const newActive = [...activeColumns];
@@ -472,11 +481,11 @@ const ColumnManager = ({
       const reordered = newActive.map((c, i) => ({ ...c, order: i }));
       setActiveColumns(reordered);
 
-      setAvailableToAdd(prev => prev.filter(c => c.key !== item.key));
+      setAvailableToAdd((prev) => prev.filter((c) => c.key !== item.key));
     }
 
-    if (sourceType === 'active' && targetType === 'active') {
-      const fromIndex = activeColumns.findIndex(c => c.id === item.id);
+    if (sourceType === "active" && targetType === "active") {
+      const fromIndex = activeColumns.findIndex((c) => c.id === item.id);
       if (fromIndex === -1 || activeColumns[fromIndex].locked) return;
 
       const newActive = [...activeColumns];
@@ -492,31 +501,31 @@ const ColumnManager = ({
   };
 
   const removeColumn = (columnId) => {
-    const col = activeColumns.find(c => c.id === columnId);
+    const col = activeColumns.find((c) => c.id === columnId);
     if (!col || col.locked) return; // Can't remove locked
 
-    const newActive = activeColumns.filter(c => c.id !== columnId);
+    const newActive = activeColumns.filter((c) => c.id !== columnId);
     setActiveColumns(newActive.map((c, i) => ({ ...c, order: i })));
 
     // Return to available only if it's in original availableColumns
-    const original = availableColumns.find(c => c.key === col.key);
+    const original = availableColumns.find((c) => c.key === col.key);
     if (original) {
-      setAvailableToAdd(prev => [...prev, original]);
+      setAvailableToAdd((prev) => [...prev, original]);
     }
   };
 
   const toggleColumnVisibility = (columnId) => {
-    const col = activeColumns.find(c => c.id === columnId);
+    const col = activeColumns.find((c) => c.id === columnId);
     if (col?.locked) return; // Can't hide locked columns
 
-    setActiveColumns(prev =>
-      prev.map(c => c.id === columnId ? { ...c, visible: !c.visible } : c)
+    setActiveColumns((prev) =>
+      prev.map((c) => (c.id === columnId ? { ...c, visible: !c.visible } : c))
     );
   };
 
   const updateColumnWidth = (columnId, width) => {
-    setActiveColumns(prev =>
-      prev.map(c => c.id === columnId ? { ...c, width } : c)
+    setActiveColumns((prev) =>
+      prev.map((c) => (c.id === columnId ? { ...c, width } : c))
     );
   };
 
@@ -525,30 +534,30 @@ const ColumnManager = ({
       ...col,
       id: col.key,
       visible: col.visible !== false,
-      width: col.width || '180px',
+      width: col.width || "180px",
       order: col.order ?? idx,
-      locked: col.locked === true
+      locked: col.locked === true,
     }));
 
     reset.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
     setActiveColumns(reset);
 
-    const activeKeys = reset.map(c => c.key);
+    const activeKeys = reset.map((c) => c.key);
     const available = availableColumns.filter(
-      c => !activeKeys.includes(c.key) && !c.locked
+      (c) => !activeKeys.includes(c.key) && !c.locked
     );
     setAvailableToAdd(available);
   };
 
   const saveChanges = () => {
-    const saved = activeColumns.map(col => ({
+    const saved = activeColumns.map((col) => ({
       key: col.key,
       label: col.label,
       visible: col.visible,
       width: col.width,
       order: col.order,
       locked: col.locked,
-      type: col.type
+      type: col.type,
     }));
 
     onColumnsChange(saved);
@@ -557,8 +566,10 @@ const ColumnManager = ({
 
   if (!isOpen) return null;
 
-  const lockedCount = activeColumns.filter(c => c.locked).length;
-  const visibleCount = activeColumns.filter(c => c.visible && !c.locked).length;
+  const lockedCount = activeColumns.filter((c) => c.locked).length;
+  const visibleCount = activeColumns.filter(
+    (c) => c.visible && !c.locked
+  ).length;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -573,22 +584,28 @@ const ColumnManager = ({
                   Manage Table Columns
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  {lockedCount} locked • {visibleCount} visible • {activeColumns.length - lockedCount} customizable
+                  {lockedCount} locked • {visibleCount} visible •{" "}
+                  {activeColumns.length - lockedCount} customizable
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
               <X className="w-6 h-6" />
             </button>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-8">
             {/* Active Columns */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Active Columns</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Active Columns
+                </h3>
                 <button
                   onClick={resetToDefault}
                   className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700"
@@ -601,41 +618,53 @@ const ColumnManager = ({
               <div
                 className="space-y-3 min-h-[400px] bg-gray-50 rounded-xl p-5 border-2 border-dashed border-gray-200"
                 onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, activeColumns.length, 'active')}
+                onDrop={(e) => handleDrop(e, activeColumns.length, "active")}
               >
                 {activeColumns.map((column, index) => (
                   <div
                     key={column.id}
                     draggable={!column.locked}
-                    onDragStart={(e) => handleDragStart(e, column, 'active')}
+                    onDragStart={(e) => handleDragStart(e, column, "active")}
                     onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, index, 'active')}
+                    onDrop={(e) => handleDrop(e, index, "active")}
                     className={`
-                      bg-white rounded-lg p-4 border ${column.locked ? 'border-blue-300 bg-blue-50' : 'border-gray-300'}
+                      bg-white rounded-lg p-4 border ${
+                        column.locked
+                          ? "border-blue-300 bg-blue-50"
+                          : "border-gray-300"
+                      }
                       shadow-sm hover:shadow transition-all flex items-center gap-4
-                      ${!column.visible ? 'opacity-60' : ''}
-                      ${column.locked ? 'cursor-not-allowed' : 'cursor-move'}
+                      ${!column.visible ? "opacity-60" : ""}
+                      ${column.locked ? "cursor-not-allowed" : "cursor-move"}
                     `}
                   >
                     {/* Lock Icon */}
-                    {column.locked && <Lock className="w-5 h-5 text-blue-600" />}
+                    {column.locked && (
+                      <Lock className="w-5 h-5 text-custom-blue" />
+                    )}
 
                     {/* Drag Handle */}
-                    {!column.locked && <GripVertical className="w-5 h-5 text-gray-400" />}
+                    {!column.locked && (
+                      <GripVertical className="w-5 h-5 text-gray-400" />
+                    )}
 
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
-                        <span className={`font-semibold ${column.locked ? 'text-blue-700' : 'text-gray-900'}`}>
+                        <span
+                          className={`font-semibold ${
+                            column.locked ? "text-custom-blue" : "text-gray-900"
+                          }`}
+                        >
                           {column.label}
                         </span>
                         {column.locked && (
-                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                          <span className="text-xs bg-custom-blue/10 text-custom-blue px-2 py-1 rounded-full font-medium">
                             Locked
                           </span>
                         )}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {column.type || 'text'} • {column.width}
+                        {column.type || "text"} • {column.width}
                       </div>
                     </div>
 
@@ -646,11 +675,15 @@ const ColumnManager = ({
                           onClick={() => toggleColumnVisibility(column.id)}
                           className={`p-2 rounded-lg transition ${
                             column.visible
-                              ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                              ? "bg-green-100 text-green-700 hover:bg-green-200"
+                              : "bg-gray-100 text-gray-400 hover:bg-gray-200"
                           }`}
                         >
-                          {column.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          {column.visible ? (
+                            <Eye className="w-4 h-4" />
+                          ) : (
+                            <EyeOff className="w-4 h-4" />
+                          )}
                         </button>
 
                         <button
@@ -675,7 +708,9 @@ const ColumnManager = ({
 
             {/* Available Columns */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Columns</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Available Columns
+              </h3>
               <div className="space-y-3 min-h-[400px] bg-gray-50 rounded-xl p-5 border-2 border-dashed border-gray-200">
                 {availableToAdd.length === 0 ? (
                   <div className="text-center py-16 text-gray-400">
@@ -687,15 +722,19 @@ const ColumnManager = ({
                     <div
                       key={column.key}
                       draggable
-                      onDragStart={(e) => handleDragStart(e, column, 'available')}
+                      onDragStart={(e) =>
+                        handleDragStart(e, column, "available")
+                      }
                       className="bg-white rounded-lg p-4 border border-gray-300 shadow-sm hover:shadow-md cursor-move transition"
                     >
                       <div className="flex items-center gap-4">
                         <GripVertical className="w-5 h-5 text-gray-400" />
                         <div className="flex-1">
-                          <div className="font-semibold text-gray-900">{column.label}</div>
+                          <div className="font-semibold text-gray-900">
+                            {column.label}
+                          </div>
                           <div className="text-xs text-gray-500">
-                            Type: {column.type || 'text'}
+                            Type: {column.type || "text"}
                           </div>
                         </div>
                         <Plus className="w-5 h-5 text-custom-blue" />
@@ -711,7 +750,9 @@ const ColumnManager = ({
         {/* Footer */}
         <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
           <div className="text-sm text-gray-600">
-            {activeColumns.filter(c => c.visible).length} visible • {lockedCount} locked • {activeColumns.length - lockedCount} customizable
+            {activeColumns.filter((c) => c.visible).length} visible •{" "}
+            {lockedCount} locked • {activeColumns.length - lockedCount}{" "}
+            customizable
           </div>
           <div className="flex gap-3">
             <button
