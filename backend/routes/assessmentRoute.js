@@ -11,6 +11,7 @@ const {
   getAllAssessments,
   deleteAssessment,
   createList,
+  getAssessmentById,
   // getLists,
 } = require("../controllers/assessmentController");
 
@@ -23,9 +24,12 @@ router.post("/new-assessment", newAssessment);
 
 router.patch("/update/:id", updateAssessment);
 
+router.get("/:assessmentId/candidates", getAssignedCandidates);
+
 // above code is created by sashak now we have changes assesment logic so wee need to check wich one is working or not
 // from here this is new code created by ashraf
 router.get("/:assessmentId/results", getAssessmentResults);
+router.get("/:id", getAssessmentById);
 
 // SUPER ADMIN added by Ashok ----------------------------------------->
 router.get("/all-assessments", getAllAssessments);
@@ -36,5 +40,7 @@ router.post("/create-list", createList);
 
 // Delete assessment
 router.delete("/:id", deleteAssessment);
+
+router.get("/");
 
 module.exports = router;

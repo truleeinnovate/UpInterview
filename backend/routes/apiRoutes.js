@@ -996,6 +996,8 @@ router.get(
           const limitNum = Math.max(1, Math.min(100, parseInt(reqLimit) || 10));
           const skip = (pageNum - 1) * limitNum;
 
+          console.log("query interview templaets", query);
+
           // Base query - CRITICAL: Standard templates should NOT have tenant or owner filtering
           let baseQuery = {};
           if (type === "standard") {
@@ -1005,14 +1007,14 @@ router.get(
           } else {
             // Custom templates (default): Filter by type, tenantId, and ownerId (if provided)
             baseQuery = { type: "custom" };
-            if (query?.tenantId) {
-              baseQuery.tenantId = query?.tenantId; // Use destructured tenantId
-            } else {
-              // If no tenantId for custom, throw error or handle (assuming required)
-              return res
-                .status(400)
-                .json({ error: "tenantId is required for custom templates" });
-            }
+            // if (query?.tenantId) {
+            //   baseQuery.tenantId = query?.tenantId; // Use destructured tenantId
+            // } else {
+            //   // If no tenantId for custom, throw error or handle (assuming required)
+            //   return res
+            //     .status(400)
+            //     .json({ error: "tenantId is required for custom templates" });
+            // }
             if (query?.ownerId) {
               baseQuery.ownerId = query?.ownerId; // Add ownerId filter if provided
             }
@@ -1128,7 +1130,7 @@ router.get(
             });
             const customCount = await DataModel.countDocuments({
               type: "custom",
-              tenantId: query?.tenantId, // custom requires tenant
+              ownerId: query?.ownerId, // custom requires tenant
             });
 
             // console.log(`Fetched ${templates.length} ${type || 'custom'} templates for page ${pageNum}`);
@@ -1220,6 +1222,10 @@ router.get(
               selectedOptionId = null,
             } = req.query;
 
+            console.log("req.query", query);
+
+            console.log("query?.tenantId", query?.ownerId);
+
             // const ownerId = userId;
             const assessmentType = type === "custom" ? "custom" : "standard";
 
@@ -1231,8 +1237,9 @@ router.get(
             } else if (assessmentType === "custom") {
               Basequery = {
                 type: "custom",
-                tenantId: query?.tenantId,
-                // ownerId: query?.ownerId,
+                // query,
+                // tenantId: query?.tenantId,
+                ownerId: query?.ownerId,
               };
             }
 
@@ -1303,6 +1310,8 @@ router.get(
 
             const skip = +page * +limit;
 
+            console.log("Basequery", Basequery);
+
             const [dataSection, totalCount, customCount, standardCount] =
               await Promise.all([
                 Assessment.find(Basequery)
@@ -1312,13 +1321,16 @@ router.get(
                   .skip(skip)
                   .limit(+limit)
                   .lean(),
+
                 Assessment.countDocuments(Basequery),
 
                 // Custom assessments count (ONLY tenant and owner filter - NO search/filters)
                 Assessment.countDocuments({
                   type: "custom",
-                  tenantId: query?.tenantId,
-                  // ownerId: query?.ownerId,
+                  // query,
+
+                  // tenantId: query?.tenantId,
+                  ownerId: query?.ownerId,
                 }),
 
                 // Standard assessments count (ONLY type filter - NO search/filters)

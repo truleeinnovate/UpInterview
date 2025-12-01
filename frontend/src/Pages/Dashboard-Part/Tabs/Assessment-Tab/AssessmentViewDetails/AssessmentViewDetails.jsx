@@ -46,6 +46,8 @@ function AssessmentView() {
     });
   };
 
+  console.log("assessmentData toggleArrow1", assessmentData);
+
   useEffect(() => {
     const loadData = async () => {
       const foundAssessment = assessmentData?.find((a) => a._id === id);

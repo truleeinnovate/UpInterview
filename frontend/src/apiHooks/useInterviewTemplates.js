@@ -41,7 +41,6 @@ export const useInterviewTemplates = (filters = {}) => {
     }),
     [tenantId, userId, organization, authToken]
   );
-  // console.log("queryParams", queryParams);
 
   const {
     data: responseData = {},
@@ -52,20 +51,23 @@ export const useInterviewTemplates = (filters = {}) => {
     queryKey: ["interviewTemplates", filters],
     queryFn: async () => {
       const params = filters;
-      console.log("params", params);
+
       const data = await fetchFilterData("interviewtemplate", {}, params); // <- lowercase to match backend
       // v1.0.1 <------------------------------------------------------
       //   return data.reverse();
-      console.log("interviewTemplates data", data);
+
       return data;
       // v1.0.1 ------------------------------------------------------>
     },
     enabled: !!hasViewPermission,
     retry: 1,
     staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchOnMount: "always",
+    refetchOnReconnect: false,
+    keepPreviousData: true,
   });
 
-  // console.log("isQueryLoading ", isQueryLoading);
   const templatesData = responseData?.data || [];
   const totalPages = responseData?.totalPages || 0;
   const totalCount = responseData?.totalItems || 0;
@@ -253,14 +255,6 @@ export const useInterviewTemplates = (filters = {}) => {
       initialLoad.current = false;
       return;
     }
-    // console.log('useInterviewTemplates state update:', {
-    //     templatesCount: templatesData.length,
-    //     isLoading,
-    //     isQueryLoading,
-    //     isMutationLoading,
-    //     saveTemplateState: saveTemplate,
-    //     addOrUpdateRoundState: addOrUpdateRound,
-    // });
   }, [
     templatesData.length,
     isLoading,
