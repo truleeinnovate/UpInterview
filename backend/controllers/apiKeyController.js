@@ -50,9 +50,23 @@ exports.createApiKey = asyncHandler(async (req, res) => {
   const ownerId = auth?.actingAsUserId;
   const tenantId = auth?.actingAsTenantId;
 
+  // Mark that logging will be handled by the controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create API Key";
+
   try {
     // Validate authentication - require user context for new API keys
     if (!ownerId || !tenantId) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "Create API Key",
+        requestBody: req.body,
+        message: "Authentication required to create API keys",
+        status: "error",
+        integrationName: "api-keys",
+        flowType: "create-api-key",
+      };
       return res.status(401).json({
         success: false,
         message: "Authentication required to create API keys",
@@ -88,6 +102,18 @@ exports.createApiKey = asyncHandler(async (req, res) => {
     );
 
     if (invalidPermissions.length > 0) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId,
+        processName: "Create API Key",
+        requestBody: req.body,
+        message: `Invalid permissions: ${invalidPermissions.join(
+          ", "
+        )}. Valid permissions: ${validPermissions.join(", ")}`,
+        status: "error",
+        integrationName: "api-keys",
+        flowType: "create-api-key",
+      };
       return res.status(400).json({
         success: false,
         message: `Invalid permissions: ${invalidPermissions.join(
@@ -111,6 +137,16 @@ exports.createApiKey = asyncHandler(async (req, res) => {
     } while (keyExists && attempts < maxAttempts);
 
     if (keyExists) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId,
+        processName: "Create API Key",
+        requestBody: req.body,
+        message: "Unable to generate unique API key",
+        status: "error",
+        integrationName: "api-keys",
+        flowType: "create-api-key",
+      };
       return res.status(500).json({
         success: false,
         message: "Unable to generate unique API key",
@@ -129,6 +165,18 @@ exports.createApiKey = asyncHandler(async (req, res) => {
 
     const duration = Date.now() - startTime;
 
+    // Generate logs for success
+    res.locals.logData = {
+      ownerId,
+      processName: "Create API Key",
+      requestBody: req.body,
+      message: "API key created successfully",
+      status: "success",
+      responseBody: { id: apiKey._id },
+      integrationName: "api-keys",
+      flowType: "create-api-key",
+    };
+
     res.status(201).json({
       success: true,
       data: apiKey,
@@ -138,6 +186,17 @@ exports.createApiKey = asyncHandler(async (req, res) => {
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`[${requestId}] Error creating API key:`, error);
+
+    // Generate logs for the error
+    res.locals.logData = {
+      ownerId: ownerId || "system",
+      processName: "Create API Key",
+      requestBody: req.body,
+      message: "Error creating API key",
+      status: "error",
+      integrationName: "api-keys",
+      flowType: "create-api-key",
+    };
 
     res.status(500).json({
       success: false,
@@ -204,6 +263,10 @@ exports.updateApiKey = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { enabled } = req.body;
 
+  // Mark that logging will be handled by the controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update API Key";
+
   try {
     // Find and update the API key (no user filtering)
     const apiKey = await ApiKey.findOneAndUpdate(
@@ -213,6 +276,16 @@ exports.updateApiKey = asyncHandler(async (req, res) => {
     );
 
     if (!apiKey) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "Update API Key",
+        requestBody: req.body,
+        message: "API key not found",
+        status: "error",
+        integrationName: "api-keys",
+        flowType: "update-api-key",
+      };
       return res.status(404).json({
         success: false,
         message: "API key not found",
@@ -221,6 +294,18 @@ exports.updateApiKey = asyncHandler(async (req, res) => {
     }
 
     const duration = Date.now() - startTime;
+
+    // Generate logs for success
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "Update API Key",
+      requestBody: req.body,
+      message: `API key ${enabled ? "enabled" : "disabled"} successfully`,
+      status: "success",
+      responseBody: { id: apiKey._id },
+      integrationName: "api-keys",
+      flowType: "update-api-key",
+    };
 
     res.status(200).json({
       success: true,
@@ -232,6 +317,17 @@ exports.updateApiKey = asyncHandler(async (req, res) => {
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`[${requestId}] Error updating API key:`, error);
+
+    // Generate logs for the error
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "Update API Key",
+      requestBody: req.body,
+      message: "Error updating API key",
+      status: "error",
+      integrationName: "api-keys",
+      flowType: "update-api-key",
+    };
 
     res.status(500).json({
       success: false,

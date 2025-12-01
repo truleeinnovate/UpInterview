@@ -1,13 +1,12 @@
 // v1.0.0 - Ashok - modified logId to auto numbers internal and integration logs
 const internalLogController = require('../controllers/internalLogController.js');
-// const integrationLogController = require('../controllers/integrationLogController');
+const integrationLogController = require('../controllers/integrationLogController.js');
 const historyFeedsController = require('../controllers/feedsController.js');
 // v1.0.0 <------------------------------------------------------------------
 const InternalLog = require("../models/InternalLog.js");
 const IntegrationLogs = require("../models/IntegrationLogs.js");
 const { generateUniqueId } = require('../services/uniqueIdGeneratorService.js');
 // v1.0.0 ------------------------------------------------------------------>
-
 
 //Middelware for intergration Logging
 exports.integrationLoggingMiddleware = async (req, res, next) => {
@@ -18,52 +17,33 @@ exports.integrationLoggingMiddleware = async (req, res, next) => {
 
     const startTime = Date.now();
 
-    // Create a flag on the response object
-    res.locals.shouldLog = true;
-
-    // v1.0.0 <---------------------------------------------------------------
-    // Generate custom logId (INTG-00001, INTG-00002, ...)
-    // v1.0.0 --------------------------------------------------------------->
-
     // Override res.json to ensure we only log once
     const originalJson = res.json;
     res.json = async function (body) {
-        if (res.locals.shouldLog) {
-            res.locals.shouldLog = false; // Prevent further logging
-
-            const responseData = res.locals.responseData || body;
-
+        const logData = res.locals.logData;
+        if (logData) {
             const logDetails = {
-                // v1.0.0 <---------------------------------------------------------------
-                logId: await generateUniqueId('ILOG', InternalLog, 'logId'),
-                // v1.0.0 --------------------------------------------------------------->
-                tenantId: '',
-                ownerId: '',
-                status: responseData.status || (res.statusCode >= 400 ? 'error' : 'success'),
-                code: res.statusCode.toString(),
-                message: (res.statusCode >= 400 ? 'Error occurred' : 'Request succeeded'), //responseData.message ||
-                serverName: 'InterviewSaaS-Server',
-                severity: res.statusCode >= 500 ? 'high' : 'low',
-                processName: 'Create Candidate',
+                ...logData,
+                // Generate custom logId (INTG-00001, INTG-00002, ...)
+                logId: await generateUniqueId('INTG', IntegrationLogs, 'logId'),
                 executionTime: `${Date.now() - startTime}ms`,
-                requestHeaders: '',
                 requestEndPoint: req.originalUrl,
                 requestMethod: req.method,
-                requestBody: req.body,
-                responseDetails: '',
-                responseStatusCode: res.statusCode.toString(),
-                responseBody: JSON.stringify(responseData),
-                ipAddress: '',
-                correlationId: '',
-                userAgent: '',
-                comments: '',
-
+                responseStatusCode: res.statusCode,
+                serverName: 'InterviewSaaS-Server',
+                severity: res.statusCode >= 500 ? 'high' : 'low',
+                responseError: res.statusCode >= 400
+                    ? { message: body?.message || 'Error occurred', stack: body?.stack || null }
+                    : null, // Error details for failures
+                responseMessage: body?.message || null,
+                ipAddress: req.ip || req.connection.remoteAddress,
+                userAgent: req.get('User-Agent') || '',
+                correlationId: req.headers['x-correlation-id'] || '',
             };
 
-            // Create log asynchronously
-            internalLogController.createLog(logDetails)
-                // .then(log => console.log('Log created:', log.logId))
-                .catch(error => console.error('Error creating log:', error.message));
+            // Create integration log asynchronously
+            integrationLogController.createIntegrationLogEntry(logDetails)
+                .catch(error => console.error('Error creating integration log:', error.message));
         }
 
         return originalJson.call(this, body);
@@ -71,10 +51,8 @@ exports.integrationLoggingMiddleware = async (req, res, next) => {
 
     next();
 };
+
 //Middelware for internal Logging
-// exports.internalLoggingMiddleware = async (req, res, next) => {
-//     // Skip logging for internal log routes
-//     if (req.originalUrl.includes('/internal-logs')) {
 //         return next();
 //     }
 
@@ -169,8 +147,6 @@ exports.internalLoggingMiddleware = async (req, res, next) => {
 
     next();
 };
-
-
 
 //Middelware for Feeds Logging
 // exports.FeedsMiddleware = async (req, res, next) => {

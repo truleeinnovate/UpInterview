@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const integrationController = require('../controllers/integrationController');
+const loggingService = require('../middleware/loggingService');
 
 // Import existing middleware
 const { authContextMiddleware } = require('../middleware/authContext');
@@ -14,16 +15,17 @@ router.use(permissionMiddleware);
 router
   .route('/')
   .get(integrationController.getIntegrations)
-  .post(integrationController.createIntegration);
+  .post(loggingService.integrationLoggingMiddleware, integrationController.createIntegration);
 
 router
   .route('/:id')
-  .put(integrationController.updateIntegration)
+  .put(loggingService.integrationLoggingMiddleware, integrationController.updateIntegration)
   .delete(integrationController.deleteIntegration);
 
 // Make authenticated API call
 router.post(
   '/:id/call',
+  loggingService.integrationLoggingMiddleware,
   integrationController.makeApiCall
 );
 
@@ -36,6 +38,7 @@ router.post(
     next();
   },
   express.json(),
+  loggingService.integrationLoggingMiddleware,
   integrationController.handleWebhook
 );
 
