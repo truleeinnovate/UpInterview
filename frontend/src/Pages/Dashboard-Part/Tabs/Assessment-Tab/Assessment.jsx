@@ -26,8 +26,7 @@ import {
 } from "@mui/material";
 import ShareAssessment from "./ShareAssessment.jsx";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { toast } from "react-toastify";
+
 import "react-toastify/dist/ReactToastify.css";
 import Header from "../../../../Components/Shared/Header/Header.jsx";
 // import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar.jsx";
@@ -36,7 +35,6 @@ import TableView from "../../../../Components/Shared/Table/TableView.jsx";
 import AssessmentKanban from "./AssessmentKanban.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
-import { config } from "../../../../config.js";
 import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 import { usePositions } from "../../../../apiHooks/usePositions";
@@ -108,7 +106,11 @@ const Assessment = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
-  const [activeTab, setActiveTab] = useState("standard");
+  // const [activeTab, setActiveTab] = useState("standard");
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = localStorage.getItem("assessmentActiveTab");
+    return savedTab || "standard";
+  });
   const [selectedFilters, setSelectedFilters] = useState({
     difficultyLevel: [],
     duration: [],
@@ -168,12 +170,6 @@ const Assessment = () => {
     page: currentPage,
     limit: 10,
     selectedOptionId: selectedOption?._id || null,
-    // selectedFilters,
-    // type: activeTab,
-    // searchQuery,
-    // page: currentPage,
-    // limit: 10,
-    // selectedOption,
   });
 
   // <---------------------- v1.0.0
@@ -187,13 +183,17 @@ const Assessment = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // useEffect(() => {
+  //   if (activeTab === "standard") {
+  //     console.log("Clearing selected option for standard tab");
+  //   } else {
+  //     console.log("Retaining selected option for custom tab");
+  //   }
+  // }, [activeTab, assessmentData]);
+
   useEffect(() => {
-    if (activeTab === "standard") {
-      console.log("Clearing selected option for standard tab");
-    } else {
-      console.log("Retaining selected option for custom tab");
-    }
-  }, [activeTab, assessmentData]);
+    localStorage.setItem("assessmentActiveTab", activeTab);
+  }, [activeTab]);
 
   // Sync filter states when popup opens
   useEffect(() => {
@@ -397,17 +397,21 @@ const Assessment = () => {
   //   }
   // };
 
-  // <---------------------- v1.0.0
-  // <---------------------- v1.0.1
   const handleView = (assessment) => {
+    console.log("view assessment", assessment);
+    console.log(
+      "view assessment",
+      effectivePermissions.AssessmentTemplates?.View
+    );
     if (effectivePermissions.AssessmentTemplates?.View) {
-      navigate(`/assessment-template-details/${assessment._id}`);
+      navigate(`/assessment-template-details/${assessment?._id}`);
+      // navigate(`/assessment-template-details/${assessment?._id}`);
     }
   };
 
   const handleEdit = (assessment) => {
     if (effectivePermissions.AssessmentTemplates?.Edit) {
-      navigate(`/assessment-templates/edit/${assessment._id}`);
+      navigate(`/assessment-templates/edit/${assessment?._id}`);
     }
   };
   // <---------------------- v1.0.1 >

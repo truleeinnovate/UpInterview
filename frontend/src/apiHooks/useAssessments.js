@@ -33,7 +33,7 @@ export const useAssessments = (filters = {}) => {
   const tokenPayload = decodeJwt(authToken);
   // const tenantId = tokenPayload.tenantId;
   // const ownerId = tokenPayload.userId;
-  console.log("filters in useAssessments:", filters);
+
   const {
     data: responseData = [],
     isLoading: isQueryLoading,
@@ -47,6 +47,7 @@ export const useAssessments = (filters = {}) => {
     queryFn: async () => {
       const params = filters;
       const data = await fetchFilterData("assessment", {}, params);
+
       return data;
       // .map((assessment) => ({
       //   ...assessment,
@@ -74,6 +75,56 @@ export const useAssessments = (filters = {}) => {
   const standardCount = responseData?.standardCount || 0;
 
   // <---------------------- v1.0.0
+
+  // New: Hook for fetching single assessment by ID
+  const useAssessmentById = (assessmentId, additionalFilters = {}) => {
+    const {
+      data: assessmentById,
+      isLoading: isAssessmentLoading,
+      isError: isAssessmentError,
+      error: assessmentError,
+      refetch: refetchAssessment,
+    } = useQuery({
+      queryKey: [
+        "AssessmentTemplates",
+        "single",
+        assessmentId,
+        additionalFilters,
+      ],
+      queryFn: async () => {
+        if (!assessmentId) {
+          throw new Error("Assessment ID is required");
+        }
+
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/assessments/${assessmentId}`
+          // { params }
+        );
+        // console.log("response assessments", response);
+
+        if (!response.data.success) {
+          throw new Error(
+            response.data.message || "Failed to fetch assessment"
+          );
+        }
+
+        return response.data.data;
+      },
+      enabled: !!hasViewPermission && !!assessmentId,
+      retry: 1,
+      staleTime: 1000 * 60 * 5,
+      cacheTime: 1000 * 60 * 15,
+      refetchOnWindowFocus: false,
+    });
+
+    return {
+      assessmentById,
+      isLoading: isAssessmentLoading,
+      isError: isAssessmentError,
+      error: assessmentError,
+      refetch: refetchAssessment,
+    };
+  };
 
   const addOrUpdateAssessment = useMutation({
     mutationFn: async ({ isEditing, id, assessmentData, tabsSubmitStatus }) => {
@@ -444,6 +495,7 @@ export const useAssessments = (filters = {}) => {
   // };
 
   return {
+    useAssessmentById,
     assessmentData,
     customCount,
     standardCount,

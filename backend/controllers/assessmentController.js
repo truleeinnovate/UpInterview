@@ -172,6 +172,64 @@ exports.deleteAssessment = async (req, res) => {
   }
 };
 
+exports.getAssessmentById = async (req, res) => {
+  try {
+    const { id } = req.params; // Assessment ID from URL params
+    // const { tenantId, ownerId } = req.query; // Optional query params
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Assessment ID is required",
+      });
+    }
+
+    // Build base query
+    const query = { _id: id };
+
+    // Add optional filters if provided
+    // if (tenantId) {
+    //   query.tenantId = tenantId;
+    // }
+    // if (ownerId) {
+    //   query.ownerId = ownerId;
+    // }
+
+    const assessment = await Assessment.findOne(query)
+      .populate("Position", "title")
+      .populate("assessmentTemplateList", "name")
+      .lean();
+
+    if (!assessment) {
+      return res.status(404).json({
+        success: false,
+        message: "Assessment not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: assessment,
+    });
+  } catch (error) {
+    console.error("Error fetching assessment:", error);
+
+    // Handle specific MongoDB errors
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid assessment ID format",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
 // Validate assessment by tab/step (for frontend step-wise validation)
 exports.validateAssessmentStep = async (req, res) => {
   try {

@@ -241,6 +241,7 @@ const FilterTabs = ({
       {tabs.map((tab) => (
         <button
           key={tab.id}
+          // onClick={() => onFilterChange(tab.id)}
           onClick={() => onFilterChange(tab.id)}
           className={`flex items-center gap-2 px-4 py-1.5 rounded-md font-semibold text-sm transition-all duration-200 
             ${
@@ -376,6 +377,23 @@ const AssessmentToolbar = ({
     }
   }, [newList.categoryOrTechnology, options]);
 
+  // Handle tab change
+  const handleTabChange = (tab) => {
+    // Save to localStorage
+    localStorage.setItem("assessmentActiveTab", tab);
+
+    // Update state - pass tab as argument
+    if (setActiveTab) {
+      setActiveTab(tab);
+    }
+
+    // Clear selections for standard tab
+    if (tab === "standard") {
+      setSelectedOption && setSelectedOption(null);
+      setSelected(null);
+    }
+  };
+
   const filteredOptionsByType = options.filter(
     (opt) => opt?.type === activeTab
   );
@@ -458,7 +476,7 @@ const AssessmentToolbar = ({
         <div className="mr-4">
           <FilterTabs
             activeTab={activeTab}
-            onFilterChange={setActiveTab}
+            onFilterChange={handleTabChange}
             standardCount={standardCount}
             customCount={customCount}
             totalCount={totalCount}

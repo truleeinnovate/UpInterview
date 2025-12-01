@@ -47,7 +47,8 @@ import AssessmentListModal from "../AssessmentListModal/AssessmentListModal.jsx"
 const NewAssessment = () => {
   const formRef = useRef(null);
   const {
-    assessmentData,
+    useAssessmentById,
+    // assessmentData,
     addOrUpdateAssessment,
     upsertAssessmentQuestions,
     isMutationLoading,
@@ -55,6 +56,19 @@ const NewAssessment = () => {
     useAssessmentList,
     createAssessmentTemplateList,
   } = useAssessments();
+
+  const { id } = useParams();
+  const {
+    assessmentById,
+    isLoading: isAssessmentLoading,
+    isError: isAssessmentError,
+    error: assessmentError,
+    refetch: refetchAssessment,
+  } = useAssessmentById(id, {
+    // Pass additional filters if needed
+    includeTemplates: true,
+  });
+
   const { positionData } = usePositions();
 
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -63,13 +77,13 @@ const NewAssessment = () => {
 
   const [showLinkExpiryDay, setShowLinkExpiryDays] = useState(false);
   const [linkExpiryDays, setLinkExpiryDays] = useState(3);
-
-  const { id } = useParams();
-
+  // console.log("assessmentById", assessmentById);
   const isEditing = !!id;
   const assessment = isEditing
-    ? assessmentData.find((assessment) => assessment._id === id)
-    : null;
+    ? assessmentById
+    : // assessmentData.find((assessment) => assessment._id === id)
+      null;
+  console.log("assessmentById", assessmentById);
 
   const [activeTab, setActiveTab] = useState("Basicdetails");
   // const [startDate, setStartDate] = useState(new Date());
@@ -211,7 +225,7 @@ const NewAssessment = () => {
 
       // Find category object using assessmentTemplateList ID
       const matchedCategory = assessmentListData.find(
-        (item) => item._id === assessment?.assessmentTemplateList
+        (item) => item._id === assessment?.assessmentTemplateList?._id
       );
 
       setFormData({
@@ -668,7 +682,6 @@ const NewAssessment = () => {
         tabsSubmitStatus,
       };
 
-
       const response = await addOrUpdateAssessment(mutationParams);
 
       // Extract the correct ID from response
@@ -715,7 +728,6 @@ const NewAssessment = () => {
         const questionsResponse = await upsertAssessmentQuestions(
           assessmentQuestionsData
         );
-
       }
 
       // 🧠 Action after save
@@ -1440,7 +1452,6 @@ const NewAssessment = () => {
     question,
     questionIdToRemove = null
   ) => {
-
     setAddedSections((prevSections) => {
       const updatedSections = prevSections.map((section) => {
         if (section.SectionName === sectionName) {
