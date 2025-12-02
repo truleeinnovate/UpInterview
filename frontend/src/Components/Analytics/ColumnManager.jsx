@@ -575,7 +575,7 @@ const ColumnManager = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 bg-gray-50">
+        <div className="px-6 py-3 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Settings className="w-7 h-7 text-custom-blue" />
@@ -748,7 +748,7 @@ const ColumnManager = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
+        <div className="px-6 py-3 bg-gray-50 flex justify-between items-center">
           <div className="text-sm text-gray-600">
             {activeColumns.filter((c) => c.visible).length} visible •{" "}
             {lockedCount} locked • {activeColumns.length - lockedCount}{" "}
@@ -757,13 +757,13 @@ const ColumnManager = ({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
             >
               Cancel
             </button>
             <button
               onClick={saveChanges}
-              className="px-6 py-3 bg-custom-blue text-white rounded-lg hover:opacity-90 flex items-center gap-2"
+              className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90 flex items-center gap-2"
             >
               <Save className="w-5 h-5" />
               Save Changes

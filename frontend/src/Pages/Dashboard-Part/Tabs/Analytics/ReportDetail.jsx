@@ -637,6 +637,7 @@ import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/c
 // import InterviewerUtilizationChart from "../../../../Components/Analytics/charts/InterviewerUtilizationChart";
 // import AssessmentPieChart from "../../../../Components/Analytics/charts/AssessmentPieChart";
 import DynamicChart from "../../../../Components/Analytics/charts/DynamicChart";
+import { notify } from "../../../../services/toastService";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import * as Icons from "lucide-react";
 
@@ -667,6 +668,7 @@ const ReportDetail = () => {
   const saveColumnConfig = useSaveColumnConfig();
 
   console.log("KPIs ===============================> ", kpis);
+  console.log("FILTERS ===============================> ", filters);
 
   // column manager scroll lock
   useScrollLock(isColumnManagerOpen);
@@ -679,90 +681,90 @@ const ReportDetail = () => {
   // THIS IS THE KEY — track last fetched reportId
   const lastFetchedId = useRef(null);
 
-  useEffect(() => {
-    // If no reportId → do nothing
-    if (!reportId) return;
+  // useEffect(() => {
+  //   // If no reportId → do nothing
+  //   if (!reportId) return;
 
-    // Prevent double fetch on same reportId (React 18 StrictMode + page reload)
-    if (lastFetchedId.current === reportId) {
-      return;
-    }
+  //   // Prevent double fetch on same reportId (React 18 StrictMode + page reload)
+  //   if (lastFetchedId.current === reportId) {
+  //     return;
+  //   }
 
-    let isMounted = true;
+  //   let isMounted = true;
 
-    const fetchReport = async () => {
-      try {
-        const response = await generateReportMutation.mutateAsync(reportId);
+  //   const fetchReport = async () => {
+  //     try {
+  //       const response = await generateReportMutation.mutateAsync(reportId);
 
-        if (!isMounted || !response) return;
+  //       if (!isMounted || !response) return;
 
-        const {
-          columns: apiColumns = [],
-          data: apiData = [],
-          availableColumns: apiAvailableColumns = [],
-          report = {},
-          availableFilters: apiAvailableFilters = [],
-          defaultFilters = {},
-          aggregates = {},
-          chartData: apiChartData = {},
-          kpis: apiKpis = [],
-          charts: apiCharts = [],
-        } = response;
-        console.log("Full Report Response:", response);
+  //       const {
+  //         columns: apiColumns = [],
+  //         data: apiData = [],
+  //         availableColumns: apiAvailableColumns = [],
+  //         report = {},
+  //         availableFilters: apiAvailableFilters = [],
+  //         defaultFilters = {},
+  //         aggregates = {},
+  //         chartData: apiChartData = {},
+  //         kpis: apiKpis = [],
+  //         charts: apiCharts = [],
+  //       } = response;
+  //       console.log("Full Report Response:", response);
 
-        // Only update if still mounted and data changed
-        if (!isMounted) return;
+  //       // Only update if still mounted and data changed
+  //       if (!isMounted) return;
 
-        // Update all states directly — no deepEqual needed if we control the flow
-        setColumns(
-          apiColumns.map((col, i) => ({
-            ...col,
-            id: col.key || `col-${i}`,
-            visible: col.visible !== false,
-            width: col.width || "180px",
-            order: col.order ?? i,
-            locked: col.locked === true,
-            render: (value) => (value == null ? "-" : String(value)),
-          }))
-        );
+  //       // Update all states directly — no deepEqual needed if we control the flow
+  //       setColumns(
+  //         apiColumns.map((col, i) => ({
+  //           ...col,
+  //           id: col.key || `col-${i}`,
+  //           visible: col.visible !== false,
+  //           width: col.width || "180px",
+  //           order: col.order ?? i,
+  //           locked: col.locked === true,
+  //           render: (value) => (value == null ? "-" : String(value)),
+  //         }))
+  //       );
 
-        setAvailableColumns(
-          apiAvailableColumns.length > 0 ? apiAvailableColumns : apiColumns
-        );
-        setData(apiData);
+  //       setAvailableColumns(
+  //         apiAvailableColumns.length > 0 ? apiAvailableColumns : apiColumns
+  //       );
+  //       setData(apiData);
 
-        setReportMeta({
-          title: report?.label || "Report",
-          description: report?.description || "",
-          totalRecords: report?.totalRecords || apiData.length,
-        });
+  //       setReportMeta({
+  //         title: report?.label || "Report",
+  //         description: report?.description || "",
+  //         totalRecords: report?.totalRecords || apiData.length,
+  //       });
 
-        setAvailableFilters(apiAvailableFilters);
-        setFilters(
-          Object.keys(defaultFilters).length > 0 ? defaultFilters : {}
-        );
+  //       setAvailableFilters(apiAvailableFilters);
+  //       setFilters(
+  //         Object.keys(defaultFilters).length > 0 ? defaultFilters : {}
+  //       );
 
-        setAggregates(aggregates);
-        setChartData(apiChartData);
-        setKpis(apiKpis);
-        setCharts(apiCharts);
+  //       setAggregates(aggregates);
+  //       setChartData(apiChartData);
+  //       setKpis(apiKpis);
+  //       setCharts(apiCharts);
 
-        // Mark as fetched
-        lastFetchedId.current = reportId;
-      } catch (error) {
-        if (isMounted) {
-          console.error("Failed to fetch report:", error);
-          // toast.error("Failed to load report");
-        }
-      }
-    };
+  //       // Mark as fetched
+  //       lastFetchedId.current = reportId;
+  //     } catch (error) {
+  //       if (isMounted) {
+  //         console.error("Failed to fetch report:", error);
+  //         // toast.error("Failed to load report");
+  //       }
+  //     }
+  //   };
 
-    fetchReport();
+  //   fetchReport();
 
-    return () => {
-      isMounted = false;
-    };
-  }, [reportId]); // ONLY re-run when reportId changes
+  //   return () => {
+  //     isMounted = false;
+  //   };
+  // }, [reportId]);
 
   // NEW: Load dynamic filters & columns from generated report
   // useEffect(() => {
@@ -801,6 +803,77 @@ const ReportDetail = () => {
   // }, [isGeneratedReport, generatedReport]);
 
   // Apply + Save View
+
+  // 1. Extract function
+
+  const fetchReport = useCallback(async (reportIdParam) => {
+    if (!reportIdParam) return;
+
+    // Prevent duplicate fetch on same reportId
+    if (lastFetchedId.current === reportIdParam) return;
+
+    try {
+      const response = await generateReportMutation.mutateAsync(reportIdParam);
+      if (!response) return;
+
+      const {
+        columns: apiColumns = [],
+        data: apiData = [],
+        availableColumns: apiAvailableColumns = [],
+        report = {},
+        availableFilters: apiAvailableFilters = [],
+        defaultFilters = {},
+        aggregates = {},
+        chartData: apiChartData = {},
+        kpis: apiKpis = [],
+        charts: apiCharts = [],
+      } = response;
+
+      console.log("Full Report Response:", response);
+
+      setColumns(
+        apiColumns.map((col, i) => ({
+          ...col,
+          id: col.key || `col-${i}`,
+          visible: col.visible !== false,
+          width: col.width || "180px",
+          order: col.order ?? i,
+          locked: col.locked === true,
+          render: (value) => (value == null ? "-" : String(value)),
+        }))
+      );
+
+      setAvailableColumns(
+        apiAvailableColumns.length > 0 ? apiAvailableColumns : apiColumns
+      );
+      setData(apiData);
+
+      setReportMeta({
+        title: report?.label || "Report",
+        description: report?.description || "",
+        totalRecords: report?.totalRecords || apiData.length,
+      });
+
+      setAvailableFilters(apiAvailableFilters);
+      setFilters(Object.keys(defaultFilters).length > 0 ? defaultFilters : {});
+      setAggregates(aggregates);
+      setChartData(apiChartData);
+      setKpis(apiKpis);
+      setCharts(apiCharts);
+
+      lastFetchedId.current = reportIdParam;
+    } catch (error) {
+      console.error("Failed to fetch report:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!reportId) return;
+    (async () => {
+      await fetchReport(reportId);
+    })();
+  }, [reportId, fetchReport]);
+
   const handleApplyAndSave = async () => {
     try {
       await saveFilterPreset.mutateAsync({
@@ -833,6 +906,30 @@ const ReportDetail = () => {
   const getLucideIcon = (name) => {
     return Icons[name] || Icons.HelpCircle;
   };
+
+  const handleSaveFilters = async (updatedFilters = filters) => {
+    try {
+      await saveFilterPreset.mutateAsync({
+        templateId: reportId,
+        filters: updatedFilters,
+        isDefault: true,
+      });
+
+      notify.success("Filters saved successfully!");
+
+      await fetchReport(reportId);
+    } catch (error) {
+      console.error(error);
+      notify.error("Failed to save filters");
+    }
+  };
+
+  const handleApplyFilters = (updatedFilters) => {
+    setFilters(updatedFilters);
+    handleSaveFilters(updatedFilters); // ← save immediately
+  };
+
+  console.log("COLUMNS ===============================> ", columns);
 
   return (
     <div className="space-y-6 animate-fade-in p-6">
@@ -921,7 +1018,8 @@ const ReportDetail = () => {
       {/* DYNAMIC FILTERS — Only this part is new */}
       {isGeneratedReport && (
         <AdvancedFilters
-          onFiltersChange={setFilters}
+          // onFiltersChange={setFilters}
+          onFiltersChange={handleApplyFilters}
           initialFilters={filters}
           availableFields={availableFilters}
           showAdvancedFilters={true}

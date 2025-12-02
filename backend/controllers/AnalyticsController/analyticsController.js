@@ -1,9 +1,15 @@
+// v1.0.0 - Ashok - modified saveFilterPreset
+
 // controllers/AnalyticsController/analyticsController.js
 const mongoose = require("mongoose");
 const ReportCategory = require("../../models/AnalyticSchemas/reportCategory");
-const { ReportTemplate } = require("../../models/AnalyticSchemas/reportSchemas");
+const {
+  ReportTemplate,
+} = require("../../models/AnalyticSchemas/reportSchemas");
 const { FilterPreset } = require("../../models/AnalyticSchemas/filterSchemas");
-const { ColumnConfiguration } = require("../../models/AnalyticSchemas/columnSchemas");
+const {
+  ColumnConfiguration,
+} = require("../../models/AnalyticSchemas/columnSchemas");
 const { buildPermissionQuery } = require("../../utils/buildPermissionQuery");
 // Import all models directly (safe & simple)
 const { Candidate } = require("../../models/Candidate");
@@ -298,7 +304,6 @@ const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
 //   }
 // };
 
-
 const generateReport = async (req, res) => {
   try {
     console.log("========== [REPORT DEBUG START] ==========\n");
@@ -319,7 +324,9 @@ const generateReport = async (req, res) => {
     }).lean();
 
     if (!template) {
-      return res.status(404).json({ success: false, message: "Report template not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Report template not found" });
     }
 
     const {
@@ -331,7 +338,9 @@ const generateReport = async (req, res) => {
     } = template.configuration || {};
 
     if (!dataSource?.collections?.length) {
-      return res.status(400).json({ success: false, message: "No data source defined" });
+      return res
+        .status(400)
+        .json({ success: false, message: "No data source defined" });
     }
 
     const collectionName = dataSource.collections[0].toLowerCase();
@@ -345,7 +354,10 @@ const generateReport = async (req, res) => {
 
     const Model = ModelMap[collectionName];
     if (!Model) {
-      return res.status(400).json({ success: false, message: `Unsupported collection: ${collectionName}` });
+      return res.status(400).json({
+        success: false,
+        message: `Unsupported collection: ${collectionName}`,
+      });
     }
 
     // 2. Saved Configs
@@ -371,8 +383,8 @@ const generateReport = async (req, res) => {
 
     if (savedColumnConfig?.selectedColumns?.length > 0) {
       const userMap = new Map();
-      savedColumnConfig.selectedColumns.forEach(col => {
-        if (col.key && !lockedColumns.some(l => l.key === col.key)) {
+      savedColumnConfig.selectedColumns.forEach((col) => {
+        if (col.key && !lockedColumns.some((l) => l.key === col.key)) {
           userMap.set(col.key, {
             key: col.key,
             label: col.label || col.key,
@@ -385,8 +397,8 @@ const generateReport = async (req, res) => {
       });
       finalColumns.push(...userMap.values());
     } else {
-      (columnConfig?.default || []).forEach(col => {
-        if (!finalColumns.some(c => c.key === col.key)) {
+      (columnConfig?.default || []).forEach((col) => {
+        if (!finalColumns.some((c) => c.key === col.key)) {
           finalColumns.push({
             key: col.key,
             label: col.label,
@@ -404,15 +416,19 @@ const generateReport = async (req, res) => {
 
     // 4. Available Columns
     const availableColumns = [
-      ...lockedColumns.map(col => ({
+      ...lockedColumns.map((col) => ({
         key: col.key,
         label: col.label,
-        type: columnConfig?.available?.find(a => a.key === col.key)?.type || "text",
+        type:
+          columnConfig?.available?.find((a) => a.key === col.key)?.type ||
+          "text",
         locked: true,
         selected: true,
       })),
-      ...(columnConfig?.available || []).map(col => {
-        const isVisible = responseColumns.some(c => c.key === col.key && c.visible);
+      ...(columnConfig?.available || []).map((col) => {
+        const isVisible = responseColumns.some(
+          (c) => c.key === col.key && c.visible
+        );
         return {
           key: col.key,
           label: col.label || col.key,
@@ -445,10 +461,15 @@ const generateReport = async (req, res) => {
       filterQuery.createdAt = { $gte: startDate };
     }
 
-    Object.keys(activeFilters).forEach(key => {
-      if (["dateRange", "customStartDate", "customEndDate"].includes(key)) return;
+    Object.keys(activeFilters).forEach((key) => {
+      if (["dateRange", "customStartDate", "customEndDate"].includes(key))
+        return;
       const value = activeFilters[key];
-      if (value != null && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
+      if (
+        value != null &&
+        value !== "all" &&
+        (!Array.isArray(value) || value.length > 0)
+      ) {
         filterQuery[key] = Array.isArray(value) ? { $in: value } : value;
       }
     });
@@ -498,16 +519,16 @@ const generateReport = async (req, res) => {
 
     aggregates.totalPositions = mappedData.length;
 
-    aggregates.openPositions = mappedData.filter(d =>
+    aggregates.openPositions = mappedData.filter((d) =>
       ["opened", "open", "active"].includes(d.status?.toLowerCase())
     ).length;
 
-    aggregates.closedPositions = mappedData.filter(d =>
+    aggregates.closedPositions = mappedData.filter((d) =>
       ["closed", "filled"].includes(d.status?.toLowerCase())
     ).length;
 
-    aggregates.onHoldPositions = mappedData.filter(d =>
-      d.status?.toLowerCase() === "hold"
+    aggregates.onHoldPositions = mappedData.filter(
+      (d) => d.status?.toLowerCase() === "hold"
     ).length;
 
     aggregates.avgSalary =
@@ -529,7 +550,7 @@ const generateReport = async (req, res) => {
 
     // Month Line
     const monthMap = {};
-    mappedData.forEach(d => {
+    mappedData.forEach((d) => {
       const date = new Date(d.createdAt);
       const month = date.toLocaleString("default", { month: "short", year: "numeric" });
       monthMap[month] = (monthMap[month] || 0) + 1;
@@ -541,7 +562,7 @@ const generateReport = async (req, res) => {
 
     // Location Bar
     const locationMap = {};
-    mappedData.forEach(d => {
+    mappedData.forEach((d) => {
       const loc = d.Location || "Unknown";
       locationMap[loc] = (locationMap[loc] || 0) + 1;
     });
@@ -609,7 +630,7 @@ const getReportTemplates = async (req, res) => {
       name: cat.name,
       label: cat.label,
       icon: cat.icon || "folder",
-      color: cat.color || "#6366f1"
+      color: cat.color || "#6366f1",
     }));
 
     /* -----------------------------------------------
@@ -618,47 +639,46 @@ const getReportTemplates = async (req, res) => {
      *    category must be a valid ObjectId OR null.
      * --------------------------------------------- */
     const templates = await ReportTemplate.find({
-      $or: [
-        { tenantId: null, isSystemTemplate: true },
-        { tenantId }
-      ],
+      $or: [{ tenantId: null, isSystemTemplate: true }, { tenantId }],
       // Prevent Azure CastErrors from bad category values
       $and: [
         {
           $or: [
             { category: { $exists: false } },
             { category: null },
-            { category: { $type: "objectId" } }
-          ]
-        }
-      ]
+            { category: { $type: "objectId" } },
+          ],
+        },
+      ],
     })
       .populate({
         path: "category",
         select: "_id name label icon color",
         // FIX: If category does not exist, skip instead of error
-        match: { _id: { $exists: true } }
+        match: { _id: { $exists: true } },
       })
       .lean();
 
-    const formattedTemplates = templates.map(t => ({
+    const formattedTemplates = templates.map((t) => ({
       id: t._id.toString(),
       name: t.name,
       label: t.label,
       description: t.description || "No description available",
 
-      category: t.category ? {
-        id: t.category._id.toString(),
-        name: t.category.name,
-        label: t.category.label,
-        icon: t.category.icon,
-        color: t.category.color
-      } : null, // ← AZURE SAFE
+      category: t.category
+        ? {
+            id: t.category._id.toString(),
+            name: t.category.name,
+            label: t.category.label,
+            icon: t.category.icon,
+            color: t.category.color,
+          }
+        : null, // ← AZURE SAFE
 
       configuration: t.configuration || {},
       status: t.status || "active",
       isSystemTemplate: !!t.isSystemTemplate,
-      requiredPlans: t.requiredPlans || []
+      requiredPlans: t.requiredPlans || [],
     }));
 
     /* -----------------------------------------------
@@ -668,41 +688,81 @@ const getReportTemplates = async (req, res) => {
       success: true,
       data: {
         categories: formattedCategories,
-        templates: formattedTemplates
-      }
+        templates: formattedTemplates,
+      },
     });
-
   } catch (error) {
     console.error("GET REPORT TEMPLATES ERROR:", error);
     return res.status(500).json({
       success: false,
       message: "Server error fetching templates",
-      error: error.message
+      error: error.message,
     });
   }
 };
 
+// const saveFilterPreset = async (req, res) => {
+//   try {
+//     const { templateId } = req.params;
+//     const tenantId = req.user.tenantId;
+//     const { filters, name = "Default View", isDefault = true } = req.body;
+//     console.log("Saving filter preset ====================>:", {
+//       templateId,
+//       tenantId,
+//       filters,
+//       name,
+//       isDefault,
+//     });
 
+//     // Upsert: delete old default, insert new
+//     if (isDefault) {
+//       await FilterPreset.deleteMany({ templateId, tenantId, isDefault: true });
+//     }
+
+//     const preset = await FilterPreset.findOneAndUpdate(
+//       { templateId, tenantId },
+//       { filters, name, isDefault, tenantId, templateId },
+//       { upsert: true, new: true }
+//     );
+
+//     res.json({ success: true, preset });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 
 const saveFilterPreset = async (req, res) => {
   try {
+    const { actingAsUserId, actingAsTenantId } = res.locals.auth;
+    const tenantId = actingAsTenantId;
     const { templateId } = req.params;
-    const tenantId = req.user.tenantId;
     const { filters, name = "Default View", isDefault = true } = req.body;
 
-    // Upsert: delete old default, insert new
+    const templateObjId = new mongoose.Types.ObjectId(templateId);
+
     if (isDefault) {
-      await FilterPreset.deleteMany({ templateId, tenantId, isDefault: true });
+      await FilterPreset.deleteMany({
+        templateId: templateObjId,
+        tenantId,
+        isDefault: true,
+      });
     }
 
     const preset = await FilterPreset.findOneAndUpdate(
-      { templateId, tenantId },
-      { filters, name, isDefault, tenantId, templateId },
+      { templateId: templateObjId, tenantId },
+      {
+        filters,
+        name,
+        isDefault,
+        tenantId,
+        templateId: templateObjId,
+      },
       { upsert: true, new: true }
     );
 
     res.json({ success: true, preset });
   } catch (error) {
+    console.error("Save Filter Preset Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -765,4 +825,11 @@ const createCategory = async (req, res) => {
   }
 };
 
-module.exports = { getReportTemplates, generateReport, saveFilterPreset, saveColumnConfig, createCategory, createTemplate };
+module.exports = {
+  getReportTemplates,
+  generateReport,
+  saveFilterPreset,
+  saveColumnConfig,
+  createCategory,
+  createTemplate,
+};
