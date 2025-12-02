@@ -50,8 +50,8 @@ const addCandidatePostCall = async (req, res) => {
     } = req.body;
 
     // Automatically get ownerId and tenantId from API key authentication
-    const ownerId = req.user?.userId || req.body.ownerId;
-    const tenantId = req.tenantId || req.body.tenantId;
+    // const ownerId = req.user?.userId || req.body.ownerId;
+    // const tenantId = req.tenantId || req.body.tenantId;
 
     if (!ownerId) {
       return res.status(400).json({
@@ -638,178 +638,6 @@ const deleteCandidate = async (req, res) => {
   }
 };
 
-// Bulk Insert Candidates
-const bulkAddCandidates = async (req, res) => {
-  // Mark that logging will be handled by the controller
-  res.locals.loggedByController = true;
-  res.locals.processName = "Bulk Create Candidates";
-
-  try {
-    // Check if request body is an array
-    if (!Array.isArray(req.body)) {
-      return res.status(400).json({
-        status: "error",
-        message: "Request body must be an array of candidates",
-      });
-    }
-
-    if (req.body.length === 0) {
-      return res.status(400).json({
-        status: "error",
-        message: "No candidates provided",
-      });
-    }
-
-    // Validate each candidate
-    const validationErrors = [];
-    const validCandidates = [];
-
-    req.body.forEach((candidateData, index) => {
-      const { isValid, errors } = validateCandidateData(candidateData);
-      if (!isValid) {
-        validationErrors.push({
-          index,
-          candidateData:
-            candidateData.Email ||
-            candidateData.FirstName ||
-            `Candidate ${index + 1}`,
-          errors,
-        });
-      } else if (!candidateData.ownerId) {
-        validationErrors.push({
-          index,
-          candidateData:
-            candidateData.Email ||
-            candidateData.FirstName ||
-            `Candidate ${index + 1}`,
-          errors: { ownerId: "OwnerId field is required" },
-        });
-      } else {
-        validCandidates.push({
-          FirstName: candidateData.FirstName,
-          LastName: candidateData.LastName,
-          Email: candidateData.Email,
-          Phone: candidateData.Phone,
-          CountryCode: candidateData.CountryCode,
-          Date_Of_Birth: candidateData.Date_Of_Birth,
-          Gender: candidateData.Gender,
-          HigherQualification: candidateData.HigherQualification,
-          UniversityCollege: candidateData.UniversityCollege,
-          CurrentExperience: candidateData.CurrentExperience,
-          CurrentRole: candidateData.CurrentRole,
-          RelevantExperience: candidateData.RelevantExperience,
-          Technology: candidateData.Technology,
-          skills: candidateData.skills,
-          PositionId: candidateData.PositionId,
-          ownerId: candidateData.ownerId,
-          tenantId: candidateData.tenantId,
-          createdBy: candidateData.ownerId,
-        });
-      }
-    });
-
-    // If there are validation errors, return them
-    if (validationErrors.length > 0) {
-      return res.status(400).json({
-        status: "error",
-        message: "Validation failed for some candidates",
-        errors: validationErrors,
-        validCandidatesCount: validCandidates.length,
-        invalidCandidatesCount: validationErrors.length,
-      });
-    }
-
-    // Bulk insert valid candidates
-    const insertedCandidates = await Candidate.insertMany(validCandidates, {
-      ordered: false, // Continue inserting even if some fail
-      rawResult: false,
-    });
-
-    // Generate feeds for successful insertions (only for first few to avoid overwhelming)
-    const feedsToGenerate = Math.min(insertedCandidates.length, 5);
-    for (let i = 0; i < feedsToGenerate; i++) {
-      const candidate = insertedCandidates[i];
-      if (res.locals.feedData) {
-        // If multiple feeds, convert to array
-        if (!Array.isArray(res.locals.feedData)) {
-          res.locals.feedData = [res.locals.feedData];
-        }
-        res.locals.feedData.push({
-          tenantId: candidate.tenantId,
-          feedType: "info",
-          action: {
-            name: "candidate_created",
-            description: `Candidate ${candidate.FirstName} ${candidate.LastName} was created successfully`,
-          },
-          ownerId: candidate.ownerId,
-          parentId: candidate._id,
-          parentObject: "Candidate",
-          metadata: candidate,
-          severity: "low",
-          message: `Candidate was created successfully`,
-        });
-      }
-    }
-
-    // Log summary
-    res.locals.logData = {
-      tenantId: validCandidates[0]?.tenantId,
-      ownerId: validCandidates[0]?.ownerId,
-      processName: "Bulk Create Candidates",
-      message: `Successfully created ${insertedCandidates.length} candidates`,
-      status: "success",
-      summary: {
-        total: req.body.length,
-        success: insertedCandidates.length,
-        failed: 0,
-      },
-    };
-
-    // Send response
-    res.status(201).json({
-      status: "success",
-      message: `Successfully created ${insertedCandidates.length} candidates`,
-      data: {
-        created: insertedCandidates.length,
-        candidates: insertedCandidates,
-      },
-    });
-  } catch (error) {
-    console.error("Bulk insert error:", error);
-
-    // Handle duplicate key errors
-    if (error.code === 11000) {
-      const duplicateEmails =
-        error.writeErrors?.map((e) => {
-          const match = e.errmsg.match(/Email_1 dup key: { Email: "([^"]+)" }/);
-          return match ? match[1] : "unknown";
-        }) || [];
-
-      return res.status(400).json({
-        status: "error",
-        message: "Some candidates have duplicate emails",
-        duplicateEmails: duplicateEmails.filter((e) => e !== "unknown"),
-        inserted: error.insertedDocs?.length || 0,
-      });
-    }
-
-    // Generate error log
-    res.locals.logData = {
-      tenantId: req.body[0]?.tenantId,
-      ownerId: req.body[0]?.ownerId,
-      processName: "Bulk Create Candidates",
-      message: error.message,
-      status: "error",
-    };
-
-    // Send error response
-    res.status(500).json({
-      status: "error",
-      message: "Failed to create candidates. Please try again later.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-};
 
 module.exports = {
   getCandidates,
@@ -819,5 +647,4 @@ module.exports = {
   getCandidatesData,
   getCandidateById,
   deleteCandidate,
-  bulkAddCandidates,
 };
