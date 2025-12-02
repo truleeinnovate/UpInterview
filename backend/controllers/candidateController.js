@@ -49,14 +49,13 @@ const addCandidatePostCall = async (req, res) => {
       Technology,
     } = req.body;
 
-    // Automatically get ownerId and tenantId from API key authentication
-    // const ownerId = req.user?.userId || req.body.ownerId;
-    // const tenantId = req.tenantId || req.body.tenantId;
+    // Get ownerId and tenantId from request body
+    const ownerId = req.body.ownerId;
+    const tenantId = req.body.tenantId;
 
     if (!ownerId) {
       return res.status(400).json({
-        error:
-          "OwnerId field is required. Either provide it in the request body or use API key authentication.",
+        error: "OwnerId field is required in the request body",
         context: "Missing owner identification",
       });
     }
