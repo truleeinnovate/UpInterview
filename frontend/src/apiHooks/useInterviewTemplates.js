@@ -22,15 +22,6 @@ export const useInterviewTemplates = (filters = {}) => {
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
   const initialLoad = useRef(true);
-  // const params = filters;
-
-  // Build params object with all filters INCLUDING type
-  //   const params = {
-  //     ...filters,
-
-  //     // Ensure type is explicitly included
-  //     // type: filters.type
-  //   };
 
   const queryParams = useMemo(
     () => ({
@@ -75,6 +66,28 @@ export const useInterviewTemplates = (filters = {}) => {
   const itemsPerPage = responseData?.itemsPerPage || 10;
   const customCount = responseData?.customCount || 0;
   const standardCount = responseData?.standardCount || 0;
+
+  // Child hook returned from useInterviews
+  const useInterviewtemplateDetails = (templateId) => {
+    return useQuery({
+      queryKey: ["interviewTemplates", templateId],
+      queryFn: async () => {
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/interviewTemplates/template/${templateId}`
+        );
+
+        return response?.data?.template;
+      },
+      enabled: !!templateId,
+      retry: 1,
+      staleTime: 1000 * 60 * 10,
+      cacheTime: 1000 * 60 * 30,
+      refetchOnWindowFocus: false,
+      refetchOnMount: "always",
+      refetchOnReconnect: false,
+      keepPreviousData: true,
+    });
+  };
 
   // Save template mutation
   const saveTemplate = useMutation({
@@ -272,6 +285,7 @@ export const useInterviewTemplates = (filters = {}) => {
     totalCount,
     currentPage,
     itemsPerPage,
+    useInterviewtemplateDetails,
     isLoading,
     isQueryLoading,
     isMutationLoading,
