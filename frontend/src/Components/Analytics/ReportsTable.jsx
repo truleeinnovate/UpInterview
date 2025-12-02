@@ -629,155 +629,377 @@
 
 // export default ReportsTable;
 
-import React from "react"; // Removed useState, useEffect
-import { Play, Download } from "lucide-react";
+// import React from "react"; // Removed useState, useEffect
+// import { Play, Download } from "lucide-react";
+// import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+// import { formatDateTime } from "../../utils/dateFormatter";
+// import StatusBadge from "../SuperAdminComponents/common/StatusBadge";
+
+// const ReportsTable = ({
+//   data = [],
+//   columns: propColumns = [], // Rename prop to avoid confusion
+//   title,
+//   type,
+//   onGenerate,
+//   loadingId,
+// }) => {
+//   // Debug logs to verify data is arriving
+//   console.log("ReportsTable Render - Data:", data);
+//   console.log("ReportsTable Render - Columns:", propColumns);
+
+//   // 1. REMOVED internal state (tableColumns, tableData) and useEffect.
+//   // We use 'data' and 'propColumns' directly.
+
+//   const renderTable = () => (
+//     <div className="overflow-x-auto">
+//       <table className="w-full min-w-max">
+//         <thead className="bg-gray-50 border border-gray-200">
+//           <tr>
+//             {/* 2. Use propColumns directly */}
+//             {propColumns.map((col) => (
+//               <th
+//                 key={col.key}
+//                 className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+//                 // style={{ width: col.width }}
+//               >
+//                 {col.label}
+//               </th>
+//             ))}
+//             {/* Only show Actions column if this is the Templates list */}
+//             {type === "templates" && (
+//               <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase">
+//                 Actions
+//               </th>
+//             )}
+//           </tr>
+//         </thead>
+//         <tbody className="bg-white">
+//           {/* 3. Use data directly */}
+//           {data.map((item, index) => (
+//             <tr
+//               key={item.id || index}
+//               // className="hover:bg-gray-50 transition-colors"
+//               className={`hover:bg-gray-50 transition-colors
+//                 border-l border-r border-gray-200
+//                 ${index === 0 ? "border-t" : "border-t border-gray-200"}
+//                 ${index === data.length - 1 ? "border-b rounded-b-xl" : ""}
+//               `}
+//             >
+//               {/* {propColumns.map((col) => (
+//                 <td key={col.key} className="px-6 py-4 text-sm text-gray-900">
+//                   {col.render
+//                     ? col.render(capitalizeFirstLetter(item[col.key]), item)
+//                     : capitalizeFirstLetter(item[col?.key]) ?? "-"}
+//                 </td>
+//               ))} */}
+
+//               {propColumns.map((col) => {
+//                 const value = item[col.key];
+
+//                 let displayValue = value;
+
+//                 if (col.key === "createdAt") {
+//                   displayValue = formatDateTime(value);
+//                 }
+
+//                 if (col.key === "description") {
+//                   displayValue =
+//                     value?.length > 80 ? value.substring(0, 80) + "..." : value;
+//                 }
+
+//                 return (
+//                   <td
+//                     key={col.key}
+//                     title={col.key === "description" ? value : ""}
+//                     className={`px-6 py-4 text-sm text-gray-900
+//                     ${
+//                       col.key === "description"
+//                         ? "text-gray-600 max-w-xs truncate cursor-default"
+//                         : ""
+//                     }
+//                     `}
+//                   >
+//                     {/* {col.render
+//                       ? col.render(capitalizeFirstLetter(displayValue), item)
+//                       : capitalizeFirstLetter(displayValue) ?? "-"} */}
+//                     {col.key === "status" ? (
+//                       <StatusBadge status={capitalizeFirstLetter(value)} />
+//                     ) : col.render ? (
+//                       col.render(capitalizeFirstLetter(displayValue), item)
+//                     ) : (
+//                       capitalizeFirstLetter(displayValue) ?? "-"
+//                     )}
+//                   </td>
+//                 );
+//               })}
+
+//               {/* Only show Generate button if this is the Templates list */}
+//               {type === "templates" && (
+//                 <td className="px-6 py-4 text-right">
+//                   <button
+//                     onClick={() => onGenerate(item)}
+//                     disabled={loadingId === item.id}
+//                     className="flex items-center gap-2 px-4 py-2 w-[120px] bg-custom-blue text-white text-xs font-medium rounded-lg hover:bg-primary-700 disabled:opacity-70 transition-all mx-auto"
+//                   >
+//                     <Play className="w-3.5 h-3.5" />
+//                     {loadingId === item.id ? "Generating..." : "Generate"}
+//                   </button>
+//                 </td>
+//               )}
+//             </tr>
+//           ))}
+//         </tbody>
+//       </table>
+
+//       {/* Empty State */}
+//       {(!data || data.length === 0) && (
+//         <div className="text-center py-12 text-gray-500">
+//           <p>No data available</p>
+//         </div>
+//       )}
+//     </div>
+//   );
+
+//   return (
+//     <div className="bg-white shadow-sm rounded-xl">
+//       {/* Header */}
+//       <div className="px-6 py-4 flex justify-between rounded-xl rounded-bl-none rounded-br-none items-center border border-gray-200 border-b-0">
+//         <h3 className="text-lg font-semibold text-custom-blue rounded-xl">
+//           {title ||
+//             (type === "templates" ? "Report Templates" : "Report Results")}
+//         </h3>
+//         {/* Show Export button only for Data views, not Template lists */}
+//         {/* {type !== "templates" && data.length > 0 && (
+//           <button className="ml-auto flex items-center gap-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90 text-sm">
+//             <Download className="w-4 h-4" />
+//             Export CSV
+//           </button>
+//         )} */}
+//       </div>
+
+//       {renderTable()}
+//     </div>
+//   );
+// };
+
+// export default ReportsTable;
+
+import React, { useEffect, useRef, useState } from "react";
+import { Play, Share2, MoreHorizontal } from "lucide-react";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { formatDateTime } from "../../utils/dateFormatter";
 import StatusBadge from "../SuperAdminComponents/common/StatusBadge";
 
 const ReportsTable = ({
   data = [],
-  columns: propColumns = [], // Rename prop to avoid confusion
+  columns: propColumns = [],
   title,
   type,
   onGenerate,
   loadingId,
+  onShare,
 }) => {
-  // Debug logs to verify data is arriving
-  console.log("ReportsTable Render - Data:", data);
-  console.log("ReportsTable Render - Columns:", propColumns);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [popupCoords, setPopupCoords] = useState({ x: 0, y: 0 });
 
-  // 1. REMOVED internal state (tableColumns, tableData) and useEffect.
-  // We use 'data' and 'propColumns' directly.
+  useEffect(() => {
+    if (!openMenuId) return;
 
-  const renderTable = () => (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-max">
-        <thead className="bg-gray-50 border border-gray-200">
-          <tr>
-            {/* 2. Use propColumns directly */}
-            {propColumns.map((col) => (
-              <th
-                key={col.key}
-                className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                // style={{ width: col.width }}
-              >
-                {col.label}
-              </th>
-            ))}
-            {/* Only show Actions column if this is the Templates list */}
-            {type === "templates" && (
-              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase">
-                Actions
-              </th>
-            )}
-          </tr>
-        </thead>
-        <tbody className="bg-white">
-          {/* 3. Use data directly */}
-          {data.map((item, index) => (
-            <tr
-              key={item.id || index}
-              // className="hover:bg-gray-50 transition-colors"
-              className={`hover:bg-gray-50 transition-colors
-                border-l border-r border-gray-200
-                ${index === 0 ? "border-t" : "border-t border-gray-200"}
-                ${index === data.length - 1 ? "border-b rounded-b-xl" : ""}
-              `}
-            >
-              {/* {propColumns.map((col) => (
-                <td key={col.key} className="px-6 py-4 text-sm text-gray-900">
-                  {col.render
-                    ? col.render(capitalizeFirstLetter(item[col.key]), item)
-                    : capitalizeFirstLetter(item[col?.key]) ?? "-"}
-                </td>
-              ))} */}
+    const handleReposition = () => {
+      const item = data.find((d) => d.id === openMenuId);
+      if (!item?.buttonRef) return;
 
-              {propColumns.map((col) => {
-                const value = item[col.key];
+      const rect = item.buttonRef.getBoundingClientRect();
+      const popupHeight = 110;
+      const popupWidth = 150;
 
-                let displayValue = value;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const verticalPosition = spaceBelow < popupHeight ? "top" : "bottom";
 
-                if (col.key === "createdAt") {
-                  displayValue = formatDateTime(value);
-                }
+      const y =
+        verticalPosition === "bottom"
+          ? rect.bottom + window.scrollY + 4
+          : rect.top + window.scrollY - popupHeight - 4;
 
-                if (col.key === "description") {
-                  displayValue =
-                    value?.length > 80 ? value.substring(0, 80) + "..." : value;
-                }
+      const spaceRight = window.innerWidth - rect.right;
+      const openToLeft = spaceRight < popupWidth;
+      const x = openToLeft
+        ? rect.right + window.scrollX - popupWidth
+        : rect.left + window.scrollX;
 
-                return (
-                  <td
-                    key={col.key}
-                    title={col.key === "description" ? value : ""}
-                    className={`px-6 py-4 text-sm text-gray-900
-                    ${
-                      col.key === "description"
-                        ? "text-gray-600 max-w-xs truncate cursor-default"
-                        : ""
-                    }
-                    `}
-                  >
-                    {/* {col.render
-                      ? col.render(capitalizeFirstLetter(displayValue), item)
-                      : capitalizeFirstLetter(displayValue) ?? "-"} */}
-                    {col.key === "status" ? (
-                      <StatusBadge status={capitalizeFirstLetter(value)} />
-                    ) : col.render ? (
-                      col.render(capitalizeFirstLetter(displayValue), item)
-                    ) : (
-                      capitalizeFirstLetter(displayValue) ?? "-"
-                    )}
-                  </td>
-                );
-              })}
+      setPopupCoords({ x, y });
+    };
 
-              {/* Only show Generate button if this is the Templates list */}
-              {type === "templates" && (
-                <td className="px-6 py-4 text-right">
-                  <button
-                    onClick={() => onGenerate(item)}
-                    disabled={loadingId === item.id}
-                    className="flex items-center gap-2 px-4 py-2 w-[120px] bg-custom-blue text-white text-xs font-medium rounded-lg hover:bg-primary-700 disabled:opacity-70 transition-all mx-auto"
-                  >
-                    <Play className="w-3.5 h-3.5" />
-                    {loadingId === item.id ? "Generating..." : "Generate"}
-                  </button>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    window.addEventListener("scroll", handleReposition, true);
+    window.addEventListener("resize", handleReposition);
+    handleReposition();
 
-      {/* Empty State */}
-      {(!data || data.length === 0) && (
-        <div className="text-center py-12 text-gray-500">
-          <p>No data available</p>
-        </div>
-      )}
-    </div>
-  );
+    return () => {
+      window.removeEventListener("scroll", handleReposition, true);
+      window.removeEventListener("resize", handleReposition);
+    };
+  }, [openMenuId, data]);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+
+    const handleClickOutside = (e) => {
+      const popupEl = document.querySelector(".report-popup-menu");
+      const clickedButton = e.target.closest(".report-menu-btn");
+      if (popupEl && !popupEl.contains(e.target) && !clickedButton) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openMenuId]);
+
+  const handleMenuOpen = (itemId, buttonRef) => {
+    if (openMenuId === itemId) return setOpenMenuId(null);
+
+    const rect = buttonRef.getBoundingClientRect();
+    const popupHeight = 110;
+    const popupWidth = 150;
+
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const verticalPosition = spaceBelow < popupHeight ? "top" : "bottom";
+
+    const y =
+      verticalPosition === "bottom"
+        ? rect.bottom + window.scrollY + 8
+        : rect.top + window.scrollY - popupHeight - 8;
+
+    const spaceRight = window.innerWidth - rect.right;
+    const openToLeft = spaceRight < popupWidth;
+    const x = openToLeft
+      ? rect.right + window.scrollX - popupWidth
+      : rect.left + window.scrollX;
+
+    setPopupCoords({ x, y });
+    setOpenMenuId(itemId);
+  };
 
   return (
-    <div className="bg-white shadow-sm rounded-xl">
-      {/* Header */}
-      <div className="px-6 py-4 flex justify-between rounded-xl rounded-bl-none rounded-br-none items-center border border-gray-200 border-b-0">
-        <h3 className="text-lg font-semibold text-custom-blue rounded-xl">
+    <div className="bg-white shadow-sm rounded-xl border border-gray-200">
+      <div className="px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-gray-200">
+        <h3 className="text-lg font-semibold text-custom-blue">
           {title ||
             (type === "templates" ? "Report Templates" : "Report Results")}
         </h3>
-        {/* Show Export button only for Data views, not Template lists */}
-        {/* {type !== "templates" && data.length > 0 && (
-          <button className="ml-auto flex items-center gap-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90 text-sm">
-            <Download className="w-4 h-4" />
-            Export CSV
-          </button>
-        )} */}
       </div>
 
-      {renderTable()}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-max">
+          <thead className="bg-gray-50 border border-gray-200">
+            <tr>
+              {propColumns.map((col) => (
+                <th
+                  key={col.key}
+                  className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase"
+                >
+                  {col.label}
+                </th>
+              ))}
+              {type === "templates" && (
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase">
+                  Actions
+                </th>
+              )}
+            </tr>
+          </thead>
+
+          <tbody className="bg-white">
+            {data.map((item, index) => (
+              <tr
+                key={item.id || index}
+                className="hover:bg-gray-50 border-t border-gray-200"
+              >
+                {propColumns.map((col) => {
+                  let value = item[col.key];
+
+                  if (col.key === "createdAt") value = formatDateTime(value);
+                  if (col.key === "description")
+                    value =
+                      value?.length > 80
+                        ? value.substring(0, 80) + "..."
+                        : value;
+
+                  return (
+                    <td
+                      key={col.key}
+                      title={col.key === "description" ? value : ""}
+                      className={`px-6 py-4 text-sm ${
+                        col.key === "description"
+                          ? "text-gray-600 max-w-xs truncate"
+                          : "text-gray-900"
+                      }`}
+                    >
+                      {col.key === "status" ? (
+                        <StatusBadge
+                          status={capitalizeFirstLetter(item[col.key])}
+                        />
+                      ) : col.render ? (
+                        col.render(capitalizeFirstLetter(value), item)
+                      ) : (
+                        capitalizeFirstLetter(value) ?? "-"
+                      )}
+                    </td>
+                  );
+                })}
+
+                {type === "templates" && (
+                  <td className="px-6 py-4 text-right relative">
+                    <button
+                      ref={(el) => (item.buttonRef = el)}
+                      onClick={() => handleMenuOpen(item.id, item.buttonRef)}
+                      className="p-2 rounded-md hover:bg-gray-100 transition report-menu-btn"
+                    >
+                      <MoreHorizontal className="w-5 h-5 text-gray-600" />
+                    </button>
+
+                    {openMenuId === item.id && (
+                      <div
+                        className="report-popup-menu fixed z-[9999] w-36 bg-white shadow-md rounded-lg border border-gray-200 animate-fade-in"
+                        style={{ top: popupCoords.y, left: popupCoords.x }}
+                      >
+                        <button
+                          onClick={() => {
+                            onGenerate(item);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-custom-blue text-sm hover:bg-custom-blue/10 flex items-center gap-2"
+                          disabled={loadingId === item.id}
+                        >
+                          <Play className="w-3.5 h-3.5 text-custom-blue" />
+                          {loadingId === item.id ? "Generating..." : "Generate"}
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            onShare(item);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-green-600 text-sm hover:bg-green-500/10 flex items-center gap-2"
+                        >
+                          <Share2 className="w-3.5 h-3.5 text-green-600" />
+                          Share
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {!data.length && (
+          <div className="text-center py-12 text-gray-500">
+            No data available
+          </div>
+        )}
+      </div>
     </div>
   );
 };
