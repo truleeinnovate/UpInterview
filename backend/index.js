@@ -1484,9 +1484,9 @@ app.use("/questions-manager", QuestionBankManager);
 // v1.0.7 --------------------------------------------------------------------------->
 
 //  v1.0.4 <------------------------------------------------------------------------------
-const filterRoutes = require("./routes/AnalyticsRoutes/filterRoutes.js");
-const columnRoutes = require("./routes/AnalyticsRoutes/columnRoutes");
-const reportRoutes = require("./routes/AnalyticsRoutes/reportRoutes");
+// const filterRoutes = require("./routes/AnalyticsRoutes/filterRoutes.js");
+// const columnRoutes = require("./routes/AnalyticsRoutes/columnRoutes");
+// const reportRoutes = require("./routes/AnalyticsRoutes/reportRoutes");
 const {
   interviews,
   interviewers,

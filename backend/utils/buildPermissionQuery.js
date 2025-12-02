@@ -9,7 +9,7 @@ const mongoose = require("mongoose");
  * @param {Object} permissions - from res.locals.effectivePermissions
  * @returns {Object} Mongo query fragment (e.g. { tenantId }, { ownerId: ... })
  */
-const buildPermissionQuery = async (userId, tenantId, effectivePermissions,
+const buildPermissionQuery = async (userId, tenantId,
     inheritedRoleIds,
     effectivePermissions_RoleType,
     effectivePermissions_RoleName) => {
