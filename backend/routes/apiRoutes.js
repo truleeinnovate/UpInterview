@@ -987,8 +987,6 @@ router.get(
             roundsMin,
             roundsMax,
             createdDate: createdDateParam,
-            sortBy = "createdAt",
-            sortOrder = "desc",
             type, // Don't set default here, check if it exists
           } = req.query;
 
@@ -1007,6 +1005,7 @@ router.get(
           } else {
             // Custom templates (default): Filter by type, tenantId, and ownerId (if provided)
             baseQuery = { type: "custom" };
+            baseQuery = query;
             // if (query?.tenantId) {
             //   baseQuery.tenantId = query?.tenantId; // Use destructured tenantId
             // } else {
@@ -1015,9 +1014,9 @@ router.get(
             //     .status(400)
             //     .json({ error: "tenantId is required for custom templates" });
             // }
-            if (query?.ownerId) {
-              baseQuery.ownerId = query?.ownerId; // Add ownerId filter if provided
-            }
+            // if (query?.ownerId) {
+            //   baseQuery.ownerId = query?.ownerId; // Add ownerId filter if provided
+            // }
             // console.log('Building CUSTOM template query with tenantId:', tenantId, 'and ownerId:', ownerId);
           }
 
@@ -1096,10 +1095,6 @@ router.get(
             }
           }
 
-          // Sort
-          const sortObj = {};
-          sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
-
           // console.log('Final query:', JSON.stringify(finalQuery, null, 2));
 
           try {
@@ -1119,7 +1114,7 @@ router.get(
                 model: "Contacts",
                 select: "firstName lastName email",
               })
-              .sort(sortObj)
+              .sort({_id:-1})
               .skip(skip)
               .limit(limitNum)
               .lean();
@@ -1130,7 +1125,9 @@ router.get(
             });
             const customCount = await DataModel.countDocuments({
               type: "custom",
-              ownerId: query?.ownerId, // custom requires tenant
+              ...(query?.ownerId
+                ? { ownerId: query.ownerId }
+                : { tenantId: query.tenantId }),
             });
 
             // console.log(`Fetched ${templates.length} ${type || 'custom'} templates for page ${pageNum}`);
@@ -1227,19 +1224,34 @@ router.get(
             console.log("query?.tenantId", query?.ownerId);
 
             // const ownerId = userId;
-            const assessmentType = type === "custom" ? "custom" : "standard";
+            const assessmentType = type;
 
             let Basequery = {};
 
             // === TYPE FILTERING (CRITICAL) ===
             if (assessmentType === "standard") {
+              // Explicit standard tab: show only global standard templates
               Basequery.type = "standard";
             } else if (assessmentType === "custom") {
+              // Explicit custom tab: show only scoped custom templates
               Basequery = {
                 type: "custom",
                 // query,
                 // tenantId: query?.tenantId,
-                ownerId: query?.ownerId,
+                ...query,
+              };
+            } else {
+              // No type provided: include both global standard and scoped custom templates
+              Basequery = {
+                $or: [
+                  { type: "standard" },
+                  {
+                    type: "custom",
+                    // query,
+                    // tenantId: query?.tenantId,
+                    ...query,
+                  },
+                ],
               };
             }
 
@@ -1317,7 +1329,7 @@ router.get(
                 Assessment.find(Basequery)
                   .populate("Position", "title")
                   .populate("assessmentTemplateList", "name")
-                  .sort({ createdAt: -1 })
+                  .sort({ _id: -1 })
                   .skip(skip)
                   .limit(+limit)
                   .lean(),
@@ -1330,7 +1342,7 @@ router.get(
                   // query,
 
                   // tenantId: query?.tenantId,
-                  ownerId: query?.ownerId,
+                  ...query,
                 }),
 
                 // Standard assessments count (ONLY type filter - NO search/filters)

@@ -183,7 +183,6 @@ const ShareAssessment = ({
       // Refetch candidates to ensure we have the latest data
       refetchCandidates();
       // ------------------------------ v1.0.2 >
-      fetchAssessmentQuestions();
       // ------------------------------ v1.0.2 >
     }
   }, [isOpen, refetchCandidates]);
@@ -516,7 +515,9 @@ const ShareAssessment = ({
                     options={
                       assessmentData?.map((assessment) => ({
                         value: assessment._id,
-                        label: assessment.AssessmentTitle,
+                        label: `${assessment.AssessmentTitle} (${
+                          assessment.type === "standard" ? "Standard" : "Custom"
+                        })`,
                       })) || []
                     }
                     onChange={(e) => {
