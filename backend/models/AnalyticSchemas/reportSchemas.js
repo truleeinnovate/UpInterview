@@ -355,223 +355,275 @@ const reportTemplateSchema = new Schema({
 // reportTemplateSchema.index({ tenantId: 1, templateId: 1 }, { unique: true });
 reportTemplateSchema.index({ isSystemTemplate: 1 });
 
+
+// models/TenantReportAccess.js
+// ONE OBJECT → MAXIMUM SIMPLICITY
+
+const TenantReportAccessSchema = new mongoose.Schema({
+  tenantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tenant',
+    required: true,
+  },
+
+  templateId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ReportTemplate',
+    required: true,
+  },
+
+  // SINGLE ACCESS OBJECT — ROLES + USERS IN ONE PLACE
+  access: {
+    roles: [{
+      type: String,
+    }],
+    users: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Users'
+    }]
+  },
+
+  // LAST GENERATED — per tenant
+  lastGenerated: {
+    at: { type: Date },
+    by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' }
+  },
+
+  // Who shared it
+  sharedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Users',
+    required: true
+  },
+
+  sharedAt: {
+    type: Date,
+    default: Date.now
+  }
+
+}, { timestamps: true });
+
+// One rule per tenant + template
+TenantReportAccessSchema.index({ tenantId: 1, templateId: 1 }, { unique: true });
+
+
 // =============================================================================
 // DASHBOARD CONFIGURATION SCHEMA - User dashboard preferences
 // =============================================================================
-const dashboardConfigSchema = new Schema(
-  {
-    tenantId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    ownerId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    configId: {
-      type: String,
-      required: true,
-      index: true,
-    },
+// const dashboardConfigSchema = new Schema(
+//   {
+//     tenantId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
+//     ownerId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
+//     configId: {
+//       type: String,
+//       required: true,
+//       index: true,
+//     },
 
-    // Dashboard Settings
-    settings: {
-      // Layout Preferences
-      layout: {
-        type: {
-          type: String,
-          enum: ["grid", "list", "compact", "custom"],
-          default: "grid",
-        },
-        columns: {
-          type: Number,
-          default: 4,
-          min: 1,
-          max: 6,
-        },
-        spacing: {
-          type: String,
-          enum: ["tight", "normal", "loose"],
-          default: "normal",
-        },
-      },
+//     // Dashboard Settings
+//     settings: {
+//       // Layout Preferences
+//       layout: {
+//         type: {
+//           type: String,
+//           enum: ["grid", "list", "compact", "custom"],
+//           default: "grid",
+//         },
+//         columns: {
+//           type: Number,
+//           default: 4,
+//           min: 1,
+//           max: 6,
+//         },
+//         spacing: {
+//           type: String,
+//           enum: ["tight", "normal", "loose"],
+//           default: "normal",
+//         },
+//       },
 
-      // Theme and Appearance
-      appearance: {
-        theme: {
-          type: String,
-          enum: ["default", "dark", "high-contrast", "custom"],
-          default: "default",
-        },
-        colorScheme: {
-          primary: String,
-          secondary: String,
-          accent: String,
-        },
-        fontSize: {
-          type: String,
-          enum: ["small", "medium", "large"],
-          default: "medium",
-        },
-      },
+//       // Theme and Appearance
+//       appearance: {
+//         theme: {
+//           type: String,
+//           enum: ["default", "dark", "high-contrast", "custom"],
+//           default: "default",
+//         },
+//         colorScheme: {
+//           primary: String,
+//           secondary: String,
+//           accent: String,
+//         },
+//         fontSize: {
+//           type: String,
+//           enum: ["small", "medium", "large"],
+//           default: "medium",
+//         },
+//       },
 
-      // Date Range Preferences
-      dateRange: {
-        default: {
-          type: String,
-          enum: [
-            "today",
-            "yesterday",
-            "last7days",
-            "last30days",
-            "last90days",
-            "thisMonth",
-            "lastMonth",
-            "thisYear",
-            "custom",
-          ],
-          default: "last30days",
-        },
-        customRange: {
-          startDate: Date,
-          endDate: Date,
-        },
-        autoRefresh: {
-          enabled: {
-            type: Boolean,
-            default: false,
-          },
-          interval: {
-            type: String,
-            enum: ["30s", "1m", "5m", "15m", "30m", "1h"],
-            default: "5m",
-          },
-        },
-      },
+//       // Date Range Preferences
+//       dateRange: {
+//         default: {
+//           type: String,
+//           enum: [
+//             "today",
+//             "yesterday",
+//             "last7days",
+//             "last30days",
+//             "last90days",
+//             "thisMonth",
+//             "lastMonth",
+//             "thisYear",
+//             "custom",
+//           ],
+//           default: "last30days",
+//         },
+//         customRange: {
+//           startDate: Date,
+//           endDate: Date,
+//         },
+//         autoRefresh: {
+//           enabled: {
+//             type: Boolean,
+//             default: false,
+//           },
+//           interval: {
+//             type: String,
+//             enum: ["30s", "1m", "5m", "15m", "30m", "1h"],
+//             default: "5m",
+//           },
+//         },
+//       },
 
-      // Default Filters
-      defaultFilters: {
-        interviewType: {
-          type: String,
-          enum: ["all", "internal", "external"],
-          default: "all",
-        },
-        candidateStatus: {
-          type: String,
-          enum: ["all", "active", "inactive", "cancelled"],
-          default: "all",
-        },
-        position: {
-          type: String,
-          default: "all",
-        },
-        interviewer: {
-          type: String,
-          default: "all",
-        },
-        organization: String,
-      },
-    },
+//       // Default Filters
+//       defaultFilters: {
+//         interviewType: {
+//           type: String,
+//           enum: ["all", "internal", "external"],
+//           default: "all",
+//         },
+//         candidateStatus: {
+//           type: String,
+//           enum: ["all", "active", "inactive", "cancelled"],
+//           default: "all",
+//         },
+//         position: {
+//           type: String,
+//           default: "all",
+//         },
+//         interviewer: {
+//           type: String,
+//           default: "all",
+//         },
+//         organization: String,
+//       },
+//     },
 
-    // KPI Cards Configuration
-    kpiCards: {
-      visible: {
-        totalInterviews: { type: Boolean, default: true },
-        outsourcedInterviews: { type: Boolean, default: true },
-        upcomingInterviews: { type: Boolean, default: true },
-        noShows: { type: Boolean, default: true },
-        assessmentsCompleted: { type: Boolean, default: true },
-        averageScore: { type: Boolean, default: true },
-        billableInterviews: { type: Boolean, default: true },
-        completionRate: { type: Boolean, default: false },
-        averageCycleTime: { type: Boolean, default: false },
-      },
-      order: [String], // Array of KPI card IDs in display order
-      customKPIs: [
-        {
-          id: String,
-          name: String,
-          query: Schema.Types.Mixed,
-          calculation: String,
-          format: String,
-          visible: Boolean,
-        },
-      ],
-    },
+//     // KPI Cards Configuration
+//     kpiCards: {
+//       visible: {
+//         totalInterviews: { type: Boolean, default: true },
+//         outsourcedInterviews: { type: Boolean, default: true },
+//         upcomingInterviews: { type: Boolean, default: true },
+//         noShows: { type: Boolean, default: true },
+//         assessmentsCompleted: { type: Boolean, default: true },
+//         averageScore: { type: Boolean, default: true },
+//         billableInterviews: { type: Boolean, default: true },
+//         completionRate: { type: Boolean, default: false },
+//         averageCycleTime: { type: Boolean, default: false },
+//       },
+//       order: [String], // Array of KPI card IDs in display order
+//       customKPIs: [
+//         {
+//           id: String,
+//           name: String,
+//           query: Schema.Types.Mixed,
+//           calculation: String,
+//           format: String,
+//           visible: Boolean,
+//         },
+//       ],
+//     },
 
-    // Charts Configuration
-    charts: {
-      visible: {
-        interviewsOverTime: { type: Boolean, default: true },
-        interviewerUtilization: { type: Boolean, default: true },
-        assessmentStats: { type: Boolean, default: true },
-        ratingDistribution: { type: Boolean, default: true },
-        noShowTrends: { type: Boolean, default: true },
-        cycleTimeTrends: { type: Boolean, default: true },
-        skillsAnalysis: { type: Boolean, default: false },
-        geographicDistribution: { type: Boolean, default: false },
-      },
-      order: [String], // Array of chart IDs in display order
-      customCharts: [
-        {
-          id: String,
-          name: String,
-          type: String, // 'line', 'bar', 'pie', etc.
-          dataSource: String,
-          config: Schema.Types.Mixed,
-          visible: Boolean,
-        },
-      ],
-    },
+//     // Charts Configuration
+//     charts: {
+//       visible: {
+//         interviewsOverTime: { type: Boolean, default: true },
+//         interviewerUtilization: { type: Boolean, default: true },
+//         assessmentStats: { type: Boolean, default: true },
+//         ratingDistribution: { type: Boolean, default: true },
+//         noShowTrends: { type: Boolean, default: true },
+//         cycleTimeTrends: { type: Boolean, default: true },
+//         skillsAnalysis: { type: Boolean, default: false },
+//         geographicDistribution: { type: Boolean, default: false },
+//       },
+//       order: [String], // Array of chart IDs in display order
+//       customCharts: [
+//         {
+//           id: String,
+//           name: String,
+//           type: String, // 'line', 'bar', 'pie', etc.
+//           dataSource: String,
+//           config: Schema.Types.Mixed,
+//           visible: Boolean,
+//         },
+//       ],
+//     },
 
-    // Widget Positions (for custom layouts)
-    widgetPositions: [
-      {
-        widgetId: String,
-        x: Number,
-        y: Number,
-        width: Number,
-        height: Number,
-      },
-    ],
+//     // Widget Positions (for custom layouts)
+//     widgetPositions: [
+//       {
+//         widgetId: String,
+//         x: Number,
+//         y: Number,
+//         width: Number,
+//         height: Number,
+//       },
+//     ],
 
-    // Export Preferences
-    exportSettings: {
-      defaultFormat: {
-        type: String,
-        enum: ["pdf", "csv", "excel", "json", "png"],
-        default: "pdf",
-      },
-      includeCharts: {
-        type: Boolean,
-        default: true,
-      },
-      includeFilters: {
-        type: Boolean,
-        default: true,
-      },
-      paperSize: {
-        type: String,
-        enum: ["A4", "Letter", "Legal"],
-        default: "A4",
-      },
-      orientation: {
-        type: String,
-        enum: ["portrait", "landscape"],
-        default: "portrait",
-      },
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
+//     // Export Preferences
+//     exportSettings: {
+//       defaultFormat: {
+//         type: String,
+//         enum: ["pdf", "csv", "excel", "json", "png"],
+//         default: "pdf",
+//       },
+//       includeCharts: {
+//         type: Boolean,
+//         default: true,
+//       },
+//       includeFilters: {
+//         type: Boolean,
+//         default: true,
+//       },
+//       paperSize: {
+//         type: String,
+//         enum: ["A4", "Letter", "Legal"],
+//         default: "A4",
+//       },
+//       orientation: {
+//         type: String,
+//         enum: ["portrait", "landscape"],
+//         default: "portrait",
+//       },
+//     },
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
 
-// Indexes for Dashboard Configuration
-dashboardConfigSchema.index({ tenantId: 1, ownerId: 1 }, { unique: true });
-dashboardConfigSchema.index({ tenantId: 1, configId: 1 }, { unique: true });
+// // Indexes for Dashboard Configuration
+// dashboardConfigSchema.index({ tenantId: 1, ownerId: 1 }, { unique: true });
+// dashboardConfigSchema.index({ tenantId: 1, configId: 1 }, { unique: true });
 
 // =============================================================================
 // TRENDS CONFIGURATION SCHEMA - Trends page preferences
@@ -842,7 +894,8 @@ trendsConfigSchema.index({ tenantId: 1, configId: 1 }, { unique: true });
 // =============================================================================
 module.exports = {
   ReportTemplate: mongoose.model("ReportTemplate", reportTemplateSchema),
-  DashboardConfig: mongoose.model("DashboardConfig", dashboardConfigSchema),
+  TenantReportAccess: mongoose.model("TenantReportAccess", TenantReportAccessSchema),
+  // DashboardConfig: mongoose.model("DashboardConfig", dashboardConfigSchema),
   TrendsConfig: mongoose.model("TrendsConfig", trendsConfigSchema),
   // SavedQuery: mongoose.model("SavedQuery", savedQuerySchema),
 };
