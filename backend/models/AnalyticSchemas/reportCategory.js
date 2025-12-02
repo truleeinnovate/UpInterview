@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const reportCategorySchema = new Schema({
-  tenantId:   { type: String, default: "null", index: true },
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
   name:       { type: String, required: true, trim: true },
   label:      { type: String, required: true, trim: true },
   description: String,
