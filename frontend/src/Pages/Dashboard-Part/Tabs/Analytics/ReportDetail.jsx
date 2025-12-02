@@ -1118,6 +1118,7 @@ const ReportDetail = () => {
           />
         </div>
       )}
+      
     </div>
   );
 };

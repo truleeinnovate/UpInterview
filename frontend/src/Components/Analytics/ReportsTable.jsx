@@ -784,11 +784,12 @@
 
 // export default ReportsTable;
 
-import React, { useEffect, useRef, useState } from "react";
-import { Play, Share2, MoreHorizontal } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Play, Share2, MoreHorizontal, X } from "lucide-react";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { formatDateTime } from "../../utils/dateFormatter";
 import StatusBadge from "../SuperAdminComponents/common/StatusBadge";
+import ShareReportPopup from "../../Pages/Dashboard-Part/Tabs/Analytics/ShareReportPopup";
 
 const ReportsTable = ({
   data = [],
@@ -797,11 +798,14 @@ const ReportsTable = ({
   type,
   onGenerate,
   loadingId,
-  onShare,
 }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [popupCoords, setPopupCoords] = useState({ x: 0, y: 0 });
+  
+  // NEW: Share popup state — fully inside this component
+  const [sharePopup, setSharePopup] = useState(null); // { templateId }
 
+  // === MENU POSITIONING (unchanged) ===
   useEffect(() => {
     if (!openMenuId) return;
 
@@ -816,10 +820,9 @@ const ReportsTable = ({
       const spaceBelow = window.innerHeight - rect.bottom;
       const verticalPosition = spaceBelow < popupHeight ? "top" : "bottom";
 
-      const y =
-        verticalPosition === "bottom"
-          ? rect.bottom + window.scrollY + 4
-          : rect.top + window.scrollY - popupHeight - 4;
+      const y = verticalPosition === "bottom"
+        ? rect.bottom + window.scrollY + 4
+        : rect.top + window.scrollY - popupHeight - 4;
 
       const spaceRight = window.innerWidth - rect.right;
       const openToLeft = spaceRight < popupWidth;
@@ -840,6 +843,7 @@ const ReportsTable = ({
     };
   }, [openMenuId, data]);
 
+  // === CLICK OUTSIDE FOR MENU ===
   useEffect(() => {
     if (!openMenuId) return;
 
@@ -865,10 +869,9 @@ const ReportsTable = ({
     const spaceBelow = window.innerHeight - rect.bottom;
     const verticalPosition = spaceBelow < popupHeight ? "top" : "bottom";
 
-    const y =
-      verticalPosition === "bottom"
-        ? rect.bottom + window.scrollY + 8
-        : rect.top + window.scrollY - popupHeight - 8;
+    const y = verticalPosition === "bottom"
+      ? rect.bottom + window.scrollY + 8
+      : rect.top + window.scrollY - popupHeight - 8;
 
     const spaceRight = window.innerWidth - rect.right;
     const openToLeft = spaceRight < popupWidth;
@@ -880,127 +883,125 @@ const ReportsTable = ({
     setOpenMenuId(itemId);
   };
 
+  // === HANDLE SHARE CLICK ===
+  const handleShare = (item) => {
+    setSharePopup({ templateId: item.id });
+    setOpenMenuId(null); // Close menu
+  };
+
   return (
-    <div className="bg-white shadow-sm rounded-xl border border-gray-200">
-      <div className="px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-custom-blue">
-          {title ||
-            (type === "templates" ? "Report Templates" : "Report Results")}
-        </h3>
-      </div>
+    <>
+      <div className="bg-white shadow-sm rounded-xl border border-gray-200">
+        <div className="px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-custom-blue">
+            {title || (type === "templates" ? "Report Templates" : "Report Results")}
+          </h3>
+        </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-max">
-          <thead className="bg-gray-50 border border-gray-200">
-            <tr>
-              {propColumns.map((col) => (
-                <th
-                  key={col.key}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase"
-                >
-                  {col.label}
-                </th>
-              ))}
-              {type === "templates" && (
-                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase">
-                  Actions
-                </th>
-              )}
-            </tr>
-          </thead>
-
-          <tbody className="bg-white">
-            {data.map((item, index) => (
-              <tr
-                key={item.id || index}
-                className="hover:bg-gray-50 border-t border-gray-200"
-              >
-                {propColumns.map((col) => {
-                  let value = item[col.key];
-
-                  if (col.key === "createdAt") value = formatDateTime(value);
-                  if (col.key === "description")
-                    value =
-                      value?.length > 80
-                        ? value.substring(0, 80) + "..."
-                        : value;
-
-                  return (
-                    <td
-                      key={col.key}
-                      title={col.key === "description" ? value : ""}
-                      className={`px-6 py-4 text-sm ${
-                        col.key === "description"
-                          ? "text-gray-600 max-w-xs truncate"
-                          : "text-gray-900"
-                      }`}
-                    >
-                      {col.key === "status" ? (
-                        <StatusBadge
-                          status={capitalizeFirstLetter(item[col.key])}
-                        />
-                      ) : col.render ? (
-                        col.render(capitalizeFirstLetter(value), item)
-                      ) : (
-                        capitalizeFirstLetter(value) ?? "-"
-                      )}
-                    </td>
-                  );
-                })}
-
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-max">
+            <thead className="bg-gray-50 border border-gray-200">
+              <tr>
+                {propColumns.map((col) => (
+                  <th key={col.key} className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">
+                    {col.label}
+                  </th>
+                ))}
                 {type === "templates" && (
-                  <td className="px-6 py-4 text-right relative">
-                    <button
-                      ref={(el) => (item.buttonRef = el)}
-                      onClick={() => handleMenuOpen(item.id, item.buttonRef)}
-                      className="p-2 rounded-md hover:bg-gray-100 transition report-menu-btn"
-                    >
-                      <MoreHorizontal className="w-5 h-5 text-gray-600" />
-                    </button>
-
-                    {openMenuId === item.id && (
-                      <div
-                        className="report-popup-menu fixed z-[9999] w-36 bg-white shadow-md rounded-lg border border-gray-200 animate-fade-in"
-                        style={{ top: popupCoords.y, left: popupCoords.x }}
-                      >
-                        <button
-                          onClick={() => {
-                            onGenerate(item);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full px-4 py-2 text-left text-custom-blue text-sm hover:bg-custom-blue/10 flex items-center gap-2"
-                          disabled={loadingId === item.id}
-                        >
-                          <Play className="w-3.5 h-3.5 text-custom-blue" />
-                          {loadingId === item.id ? "Generating..." : "Generate"}
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            onShare(item);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full px-4 py-2 text-left text-green-600 text-sm hover:bg-green-500/10 flex items-center gap-2"
-                        >
-                          <Share2 className="w-3.5 h-3.5 text-green-600" />
-                          Share
-                        </button>
-                      </div>
-                    )}
-                  </td>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase">
+                    Actions
+                  </th>
                 )}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
 
-        {!data.length && (
-          <div className="text-center py-12 text-gray-500">
-            No data available
-          </div>
-        )}
+            <tbody className="bg-white">
+              {data.map((item, index) => (
+                <tr key={item.id || index} className="hover:bg-gray-50 border-t border-gray-200">
+                  {propColumns.map((col) => {
+                    let value = item[col.key];
+                    if (col.key === "createdAt") value = formatDateTime(value);
+                    if (col.key === "description")
+                      value = value?.length > 80 ? value.substring(0, 80) + "..." : value;
+
+                    return (
+                      <td
+                        key={col.key}
+                        title={col.key === "description" ? value : ""}
+                        className={`px-6 py-4 text-sm ${
+                          col.key === "description" ? "text-gray-600 max-w-xs truncate" : "text-gray-900"
+                        }`}
+                      >
+                        {col.key === "status" ? (
+                          <StatusBadge status={capitalizeFirstLetter(item[col.key])} />
+                        ) : col.render ? (
+                          col.render(capitalizeFirstLetter(value), item)
+                        ) : (
+                          capitalizeFirstLetter(value) ?? "-"
+                        )}
+                      </td>
+                    );
+                  })}
+
+                  {type === "templates" && (
+                    <td className="px-6 py-4 text-right relative">
+                      <button
+                        ref={(el) => (item.buttonRef = el)}
+                        onClick={() => handleMenuOpen(item.id, item.buttonRef)}
+                        className="p-2 rounded-md hover:bg-gray-100 transition report-menu-btn"
+                      >
+                        <MoreHorizontal className="w-5 h-5 text-gray-600" />
+                      </button>
+
+                      {/* THREE DOT MENU */}
+                      {openMenuId === item.id && (
+                        <div
+                          className="report-popup-menu fixed z-[9999] w-40 bg-white shadow-lg rounded-lg border border-gray-200"
+                          style={{ top: popupCoords.y, left: popupCoords.x }}
+                        >
+                          <button
+                            onClick={() => {
+                              onGenerate(item);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-4 py-2 text-left text-custom-blue text-sm hover:bg-custom-blue/10 flex items-center gap-2"
+                            disabled={loadingId === item.id}
+                          >
+                            <Play className="w-4 h-4" />
+                            {loadingId === item.id ? "Generating..." : "Generate"}
+                          </button>
+
+                          <button
+                            onClick={() => handleShare(item)}
+                            className="w-full px-4 py-2 text-left text-green-600 text-sm hover:bg-green-500/10 flex items-center gap-2"
+                          >
+                            <Share2 className="w-4 h-4" />
+                            Share
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {!data.length && (
+            <div className="text-center py-12 text-gray-500">
+              No data available
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* SHARE POPUP — FULLY INSIDE THIS COMPONENT */}
+      <ShareReportPopup
+        templateId={sharePopup?.templateId}
+        isOpen={!!sharePopup}
+        onClose={() => setSharePopup(null)}
+      />
+    </>
   );
 };
 

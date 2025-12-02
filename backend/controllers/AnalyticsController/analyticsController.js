@@ -787,6 +787,90 @@ const saveColumnConfig = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+//sharing report apis
+
+const getReportAccess = async (req, res) => {
+  try {
+    const { templateId } = req.params;
+    const tenantId = res.locals.auth.actingAsTenantId;
+
+    const accessDoc = await TenantReportAccess.findOne({ tenantId, templateId })
+      .populate("access.users", "name email")
+      .populate("access.roles")
+      .lean();
+
+    if (!accessDoc) {
+      return res.json({
+        success: true,
+        access: { roles: [], users: [] },
+      });
+    }
+
+    return res.json({
+      success: true,
+      access: {
+        roles: accessDoc.access.roles.map(r => ({ _id: r._id, name: r.name })),
+        users: accessDoc.access.users.map(u => ({ _id: u._id, name: u.name, email: u.email })),
+      },
+      sharedBy: accessDoc.sharedBy,
+      sharedAt: accessDoc.sharedAt,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false });
+  }
+};
+
+const shareReport = async (req, res) => {
+  try {
+    const { templateId } = req.params;
+    const tenantId = res.locals.auth.actingAsTenantId;
+    const sharedBy = res.locals.auth.actingAsUserId;
+
+    const { roleIds = [], userIds = [] } = req.body;
+
+    if (roleIds.length === 0 && userIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please select at least one role or user",
+      });
+    }
+
+    // Upsert access (replace previous sharing for this template)
+    const accessDoc = await TenantReportAccess.findOneAndUpdate(
+      { tenantId, templateId },
+      {
+        tenantId,
+        templateId,
+        "access.roles": roleIds,
+        "access.users": userIds.map(id => new mongoose.Types.ObjectId(id)),
+        sharedBy,
+        sharedAt: new Date(),
+        "lastGenerated.at": null,
+        "lastGenerated.by": null,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    return res.json({
+      success: true,
+      message: "Report shared successfully",
+      data: {
+        sharedWith: {
+          roles: roleIds,
+          users: userIds,
+        },
+        sharedAt: accessDoc.sharedAt,
+      },
+    });
+  } catch (error) {
+    console.error("[ERROR] Share Report Failed:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to share report",
+    });
+  }
+};
 
 const createTemplate = async (req, res) => {
   try {
@@ -828,4 +912,4 @@ const createCategory = async (req, res) => {
   }
 };
 
-module.exports = { getReportTemplates, generateReport, saveFilterPreset, saveColumnConfig, createCategory, createTemplate };
+module.exports = { getReportTemplates, generateReport, saveFilterPreset, saveColumnConfig,getReportAccess,shareReport,createCategory, createTemplate };
