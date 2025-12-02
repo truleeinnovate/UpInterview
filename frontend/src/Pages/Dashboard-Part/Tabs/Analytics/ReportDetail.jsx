@@ -1022,7 +1022,7 @@ const ReportDetail = () => {
           onFiltersChange={handleApplyFilters}
           initialFilters={filters}
           availableFields={availableFilters}
-          showAdvancedFilters={true}
+          showAdvancedFilters={false}
         />
       )}
 

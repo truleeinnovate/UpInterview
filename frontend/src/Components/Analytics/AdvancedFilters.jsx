@@ -1365,7 +1365,7 @@ const AdvancedFilters = ({
   availableFields = [],
   initialFilters = {},
   onFiltersChange,
-  showAdvancedFilters = true,
+  showAdvancedFilters = false,
 }) => {
   // --- 1. Basic Filter State ---
   const [localFilters, setLocalFilters] = useState({});
@@ -1713,7 +1713,7 @@ const AdvancedFilters = ({
         })}
       </div>
 
-      {Object.keys(localFilters).length > 0 && (
+      {/* {Object.keys(localFilters).length > 0 && (
         <div className="mt-2 px-6">
           <button
             onClick={clearAllFilters}
@@ -1722,7 +1722,7 @@ const AdvancedFilters = ({
             Clear all filters
           </button>
         </div>
-      )}
+      )} */}
 
       {/* ... (The rest of your Advanced Filters UI matches your original code) ... */}
       {showAdvancedFilters && (
@@ -1731,7 +1731,6 @@ const AdvancedFilters = ({
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
             onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
           >
-            {/* ... (Chevron and title icons) ... */}
             <div className="flex items-center space-x-3">
               {isAdvancedOpen ? (
                 <ChevronDown className="w-5 h-5 text-gray-400" />
@@ -1752,8 +1751,6 @@ const AdvancedFilters = ({
 
           {isAdvancedOpen && (
             <div className="px-4 pb-4 border-t border-gray-200">
-              {/* ... (Saved filters and Advanced rules rendering) ... */}
-              {/* Saved Filter Presets */}
               {savedFilters.length > 0 && (
                 <div className="mb-6 pt-4">
                   <h5 className="text-sm font-medium text-gray-700 mb-2">
@@ -1783,15 +1780,14 @@ const AdvancedFilters = ({
                 </div>
               )}
 
-              {/* Advanced Filter Rules */}
+
               <div className="space-y-3 mb-4">
                 {advancedFilters.map((filter, index) => (
                   <div
                     key={filter.id}
                     className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
                   >
-                    {/* ... (Advanced Filter Row Inputs - Logic, Field, Operator, Value) ... */}
-                    {/* Logic Operator */}
+
                     {index > 0 && (
                       <select
                         value={filter.logic}
@@ -1809,7 +1805,7 @@ const AdvancedFilters = ({
                       </select>
                     )}
 
-                    {/* Field Selection */}
+      
                     <select
                       value={filter.field}
                       onChange={(e) =>
@@ -1818,7 +1814,6 @@ const AdvancedFilters = ({
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     >
                       <option value="">Select field...</option>
-                      {/* Note: I'm assuming 'availableFields' should be used here instead of 'fields' */}
                       {availableFields.map((field) => (
                         <option key={field.key} value={field.key}>
                           {field.label}
@@ -1826,7 +1821,6 @@ const AdvancedFilters = ({
                       ))}
                     </select>
 
-                    {/* Operator Selection */}
                     <select
                       value={filter.operator}
                       onChange={(e) =>
@@ -1845,10 +1839,8 @@ const AdvancedFilters = ({
                       ))}
                     </select>
 
-                    {/* Value Input */}
                     {renderValueInput(filter)}
 
-                    {/* Remove Filter */}
                     <button
                       onClick={() => removeAdvancedFilter(filter.id)}
                       className="text-red-500 hover:text-red-700"
@@ -1904,7 +1896,6 @@ const AdvancedFilters = ({
                 </div>
               </div>
 
-              {/* Save Dialog code... */}
               {showSaveDialog && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
