@@ -333,8 +333,8 @@ const generateReport = async (req, res) => {
       dataSource,
       columns: columnConfig,
       filters: filterConfig,
-      kpis: templateKpis = [], // ← From template
-      charts: templateCharts = [], // ← From template
+      kpis: templateKpis = [],
+      charts: templateCharts = []
     } = template.configuration || {};
 
     if (!dataSource?.collections?.length) {
@@ -360,20 +360,17 @@ const generateReport = async (req, res) => {
       });
     }
 
-    // 2. Saved Configs (unchanged)
+    // 2. Saved Configs
     const filterPreset = tenantId
-      ? await FilterPreset.findOne({
-          templateId,
-          tenantId,
-          isDefault: true,
-        }).lean()
+      ? await FilterPreset.findOne({ templateId, tenantId, isDefault: true }).lean()
       : null;
+
     const savedColumnConfig = tenantId
       ? await ColumnConfiguration.findOne({ templateId, tenantId }).lean()
       : null;
 
-    // 3. Build Columns (same logic — perfect)
-    const lockedColumns = (columnConfig?.lockedColumns || []).map((col) => ({
+    // 3. Build Columns
+    const lockedColumns = (columnConfig?.lockedColumns || []).map(col => ({
       key: col.key,
       label: col.label,
       width: col.width || "180px",
@@ -415,8 +412,9 @@ const generateReport = async (req, res) => {
     }
 
     finalColumns.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-    const responseColumns = finalColumns.map(({ order, ...col }) => col);
+    const responseColumns = finalColumns.map(({ order, ...rest }) => rest);
 
+    // 4. Available Columns
     const availableColumns = [
       ...lockedColumns.map((col) => ({
         key: col.key,
@@ -440,24 +438,25 @@ const generateReport = async (req, res) => {
         };
       }),
     ];
+
     const uniqueAvailableColumns = Array.from(
-      new Map(availableColumns.map((c) => [c.key, c])).values()
+      new Map(availableColumns.map(c => [c.key, c])).values()
     );
 
-    // 4. Active Filters
-    let activeFilters =
-      filterPreset?.filters?.length > 0
-        ? Object.fromEntries(filterPreset.filters.map((f) => [f.key, f.value]))
-        : { ...filterConfig?.default };
+    // 5. Active Filters
+    let activeFilters = filterPreset?.filters?.length
+      ? Object.fromEntries(filterPreset.filters.map(f => [f.key, f.value]))
+      : { ...filterConfig?.default };
 
-    // 5. Build Filter Query
+    // 6. Build Query (Cosmos-Safe)
     let filterQuery = {};
+
+    // date filter
     if (activeFilters.dateRange && activeFilters.dateRange !== "all") {
       const now = new Date();
-      let days = 30;
-      if (activeFilters.dateRange === "last7days") days = 7;
-      if (activeFilters.dateRange === "last90days") days = 90;
-      const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+      let days = { last7days: 7, last30days: 30, last90days: 90 }[activeFilters.dateRange] || 30;
+
+      const startDate = new Date(now.getTime() - days * 86400000);
       startDate.setHours(0, 0, 0, 0);
       filterQuery.createdAt = { $gte: startDate };
     }
@@ -475,49 +474,49 @@ const generateReport = async (req, res) => {
       }
     });
 
-    // 6. DATA FETCH (same as before)
+    // 7. Fetch Data (NO SORT — Azure issue)
     const projection = responseColumns.reduce(
       (acc, col) => ({ ...acc, [col.key]: 1 }),
-      { _id: 1 }
+      { _id: 1, createdAt: 1 }
     );
-    let data = [];
+
+    let rawData = [];
 
     if (collectionName === "interviewrounds") {
       const interviews = await Interview.find(
-        { $or: [{ tenantId }, { ownerId: tenantId }] },
+        { tenantId },
         { _id: 1 }
       ).lean();
-      const validInterviewIds = interviews.map((i) => i._id);
 
-      if (validInterviewIds.length === 0) {
-        data = [];
-      } else {
-        data = await InterviewRounds.find(
-          { interviewId: { $in: validInterviewIds }, ...filterQuery },
+      const ids = interviews.map(i => i._id);
+
+      if (ids.length > 0) {
+        rawData = await InterviewRounds.find(
+          { interviewId: { $in: ids }, ...filterQuery },
           projection
-        )
-          .sort({ createdAt: -1 })
-          .limit(2000)
-          .lean();
+        ).limit(2000).lean();
       }
     } else {
-      const query = {
-        $or: [{ tenantId }, { ownerId: tenantId }],
-        ...filterQuery,
-      };
-      data = await Model.find(query, projection)
-        .sort({ createdAt: -1 })
-        .limit(2000)
-        .lean();
+      rawData = await Model.find(
+        { tenantId, ...filterQuery },
+        projection
+      ).limit(2000).lean();
     }
 
-    const mappedData = data.map((d) => ({ id: d._id.toString(), ...d }));
+    // 8. Sort manually (Cosmos safe)
+    const sortedData = rawData.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
 
-    // 7. === NEW: CALCULATE KPIs & CHART DATA ===
+    const mappedData = sortedData.map(d => ({
+      id: d._id.toString(),
+      ...d
+    }));
+
+    // 9. KPI + Charts
     const aggregates = {};
     const chartData = {};
 
-    // KPIs: Simple counts & averages
     aggregates.totalPositions = mappedData.length;
 
     aggregates.openPositions = mappedData.filter((d) =>
@@ -538,35 +537,30 @@ const generateReport = async (req, res) => {
         return sum + avg;
       }, 0) / (mappedData.length || 1);
 
-    // Chart Data
-    // 1. Status Breakdown (Pie)
+    // Status Pie
     const statusMap = {};
-    mappedData.forEach((d) => {
-      const status = d.status || "Unknown";
-      statusMap[status] = (statusMap[status] || 0) + 1;
+    mappedData.forEach(d => {
+      const s = d.status || "Unknown";
+      statusMap[s] = (statusMap[s] || 0) + 1;
     });
-    chartData.positionsByStatus = Object.entries(statusMap).map(
-      ([name, value]) => ({
-        name: name.charAt(0).toUpperCase() + name.slice(1),
-        value,
-      })
-    );
+    chartData.positionsByStatus = Object.entries(statusMap).map(([name, value]) => ({
+      name,
+      value,
+    }));
 
-    // 2. By Month (Line)
+    // Month Line
     const monthMap = {};
     mappedData.forEach((d) => {
       const date = new Date(d.createdAt);
-      const month = date.toLocaleString("default", {
-        month: "short",
-        year: "numeric",
-      });
+      const month = date.toLocaleString("default", { month: "short", year: "numeric" });
       monthMap[month] = (monthMap[month] || 0) + 1;
     });
-    chartData.positionsByMonth = Object.entries(monthMap)
-      .sort((a, b) => new Date(a[0]) - new Date(b[0]))
-      .map(([name, value]) => ({ name, value }));
+    chartData.positionsByMonth = Object.entries(monthMap).map(([name, value]) => ({
+      name,
+      value,
+    }));
 
-    // 3. By Location (Bar)
+    // Location Bar
     const locationMap = {};
     mappedData.forEach((d) => {
       const loc = d.Location || "Unknown";
@@ -577,8 +571,8 @@ const generateReport = async (req, res) => {
       .slice(0, 10)
       .map(([name, value]) => ({ name, value }));
 
-    // 8. Final Response — NOW WITH KPIs & CHARTS
-    res.json({
+    // 10. Response
+    return res.json({
       success: true,
       report: {
         id: template._id.toString(),
@@ -592,22 +586,23 @@ const generateReport = async (req, res) => {
       data: mappedData,
       availableFilters: filterConfig?.available || [],
       defaultFilters: filterConfig?.default || {},
-
-      // ← NEW: KPIs & Charts
-      kpis: templateKpis, // From template.configuration.kpis
-      charts: templateCharts, // From template.configuration.charts
-      aggregates, // ← Real values: { totalPositions: 142, ... }
-      chartData, // ← Real chart datasets
+      kpis: templateKpis,
+      charts: templateCharts,
+      aggregates,
+      chartData,
     });
 
-    console.log("\n========== [REPORT DEBUG END] ==========\n");
   } catch (error) {
     console.error("[ERROR] Generate Report Error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Server error", error: error.message });
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
   }
 };
+
+
 
 const getReportTemplates = async (req, res) => {
   try {
@@ -617,14 +612,20 @@ const getReportTemplates = async (req, res) => {
     /* -----------------------------------------------
      * 1) GET CATEGORIES (System + Tenant-Specific)
      * --------------------------------------------- */
-    const categories = await ReportCategory.find({
-      $or: [{ tenantId: null, isSystem: true }, { tenantId }],
+    let categories = await ReportCategory.find({
+      $or: [
+        { tenantId: null, isSystem: true },
+        { tenantId }
+      ]
     })
       .select("_id name label icon color order")
-      .sort({ order: 1 })
       .lean();
 
-    const formattedCategories = categories.map((cat) => ({
+    // Sort in JS instead of Mongo (Cosmos safe)
+    categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+
+    const formattedCategories = categories.map(cat => ({
       id: cat._id.toString(),
       name: cat.name,
       label: cat.label,
