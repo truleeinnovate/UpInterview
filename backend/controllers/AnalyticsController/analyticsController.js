@@ -8,7 +8,7 @@ const { buildPermissionQuery } = require("../../utils/buildPermissionQuery");
 // Import all models directly (safe & simple)
 const { Candidate } = require("../../models/Candidate");
 const { Position } = require("../../models/Position/position");
-const { Interview }= require("../../models/Interview/Interview");
+const { Interview } = require("../../models/Interview/Interview");
 const Assessment = require("../../models/Assessment/assessmentsSchema");
 const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
 
@@ -322,9 +322,9 @@ const generateReport = async (req, res) => {
       return res.status(404).json({ success: false, message: "Report template not found" });
     }
 
-    const { 
-      dataSource, 
-      columns: columnConfig, 
+    const {
+      dataSource,
+      columns: columnConfig,
       filters: filterConfig,
       kpis: templateKpis = [],     // ← From template
       charts: templateCharts = []   // ← From template
@@ -485,15 +485,15 @@ const generateReport = async (req, res) => {
     // KPIs: Simple counts & averages
     aggregates.totalPositions = mappedData.length;
 
-    aggregates.openPositions = mappedData.filter(d => 
+    aggregates.openPositions = mappedData.filter(d =>
       ["opened", "open", "active"].includes(d.status?.toLowerCase())
     ).length;
 
-    aggregates.closedPositions = mappedData.filter(d => 
+    aggregates.closedPositions = mappedData.filter(d =>
       ["closed", "filled"].includes(d.status?.toLowerCase())
     ).length;
 
-    aggregates.onHoldPositions = mappedData.filter(d => 
+    aggregates.onHoldPositions = mappedData.filter(d =>
       d.status?.toLowerCase() === "hold"
     ).length;
 
@@ -570,14 +570,16 @@ const generateReport = async (req, res) => {
 
 const getReportTemplates = async (req, res) => {
   try {
-    // FIX: Use real null, not string "null"
-    const tenantId = req.user?.tenantId ?? null;
+    const { actingAsTenantId } = res.locals.auth;
+    const tenantId = actingAsTenantId || null;
 
-    // 1. GET ALL CATEGORIES (system + tenant)
+    /* -----------------------------------------------
+     * 1) GET CATEGORIES (System + Tenant-Specific)
+     * --------------------------------------------- */
     const categories = await ReportCategory.find({
       $or: [
-        { tenantId: null, isSystem: true },  // system categories
-        { tenantId }                         // tenant-specific
+        { tenantId: null, isSystem: true },
+        { tenantId }
       ]
     })
       .select("_id name label icon color order")
@@ -589,38 +591,62 @@ const getReportTemplates = async (req, res) => {
       name: cat.name,
       label: cat.label,
       icon: cat.icon || "folder",
-      color: cat.color || "#6366f1",
+      color: cat.color || "#6366f1"
     }));
 
-    // 2. GET ALL TEMPLATES (system + tenant)
+    /* -----------------------------------------------
+     * 2) GET TEMPLATES (System + Tenant)
+     *    FIX: Prevent Azure crashes by ensuring
+     *    category must be a valid ObjectId OR null.
+     * --------------------------------------------- */
     const templates = await ReportTemplate.find({
       $or: [
         { tenantId: null, isSystemTemplate: true },
         { tenantId }
+      ],
+      // Prevent Azure CastErrors from bad category values
+      $and: [
+        {
+          $or: [
+            { category: { $exists: false } },
+            { category: null },
+            { category: { $type: "objectId" } }
+          ]
+        }
       ]
     })
-      .populate("category", "_id name label icon color")
+      .populate({
+        path: "category",
+        select: "_id name label icon color",
+        // FIX: If category does not exist, skip instead of error
+        match: { _id: { $exists: true } }
+      })
       .lean();
 
     const formattedTemplates = templates.map(t => ({
       id: t._id.toString(),
       name: t.name,
       label: t.label,
-      description: t.description || "No description",
+      description: t.description || "No description available",
+
       category: t.category ? {
-        id: t.category._id.toString(),        // ← This is the key
+        id: t.category._id.toString(),
         name: t.category.name,
         label: t.category.label,
         icon: t.category.icon,
-        color: t.category.color,
-      } : null,
-      configuration: t.configuration,
+        color: t.category.color
+      } : null, // ← AZURE SAFE
+
+      configuration: t.configuration || {},
       status: t.status || "active",
-      isSystemTemplate: t.isSystemTemplate || false,
+      isSystemTemplate: !!t.isSystemTemplate,
       requiredPlans: t.requiredPlans || []
     }));
 
-    res.json({
+    /* -----------------------------------------------
+     * RESPONSE
+     * --------------------------------------------- */
+    return res.json({
       success: true,
       data: {
         categories: formattedCategories,
@@ -629,10 +655,15 @@ const getReportTemplates = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Analytics API Error:", error.message);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("GET REPORT TEMPLATES ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error fetching templates",
+      error: error.message
+    });
   }
 };
+
 
 
 const saveFilterPreset = async (req, res) => {
