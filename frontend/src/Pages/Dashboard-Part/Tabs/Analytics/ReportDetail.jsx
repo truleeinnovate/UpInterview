@@ -911,8 +911,11 @@ const ReportDetail = () => {
     try {
       await saveFilterPreset.mutateAsync({
         templateId: reportId,
-        filters: updatedFilters,
         isDefault: true,
+        filters: Object.entries(updatedFilters).map(([key, value]) => ({
+          key,
+          value,
+        })),
       });
 
       notify.success("Filters saved successfully!");
@@ -993,11 +996,10 @@ const ReportDetail = () => {
             className="cursor-pointer"
           >
             <LayoutDashboard
-              className={`text-xl mr-4 ${
-                activeView === "dashboard"
+              className={`text-xl mr-4 ${activeView === "dashboard"
                   ? "text-custom-blue"
                   : "text-gray-500"
-              }`}
+                }`}
             />
           </span>
         </Tooltip>
@@ -1007,16 +1009,15 @@ const ReportDetail = () => {
             className="cursor-pointer"
           >
             <Table
-              className={`text-xl ${
-                activeView === "table" ? "text-custom-blue" : "text-gray-500"
-              }`}
+              className={`text-xl ${activeView === "table" ? "text-custom-blue" : "text-gray-500"
+                }`}
             />
           </span>
         </Tooltip>
       </div>
 
       {/* DYNAMIC FILTERS — Only this part is new */}
-      {isGeneratedReport && (
+      {/* {isGeneratedReport && ( */}
         <AdvancedFilters
           // onFiltersChange={setFilters}
           onFiltersChange={handleApplyFilters}
@@ -1024,7 +1025,7 @@ const ReportDetail = () => {
           availableFields={availableFilters}
           showAdvancedFilters={true}
         />
-      )}
+      {/* // )} */}
 
       {/* YOUR ORIGINAL CONTENT LOGIC — Only shows real data when generated */}
       {/* {activeView === "dashboard" && !isGeneratedReport ? ( */}
@@ -1098,7 +1099,7 @@ const ReportDetail = () => {
                     : "Detailed View"
                 }
                 type="template"
-                onGenerate={() => {}}
+                onGenerate={() => { }}
                 loadingId="RPT001"
               />
             </div>

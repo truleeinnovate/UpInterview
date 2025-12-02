@@ -1405,11 +1405,11 @@ const AdvancedFilters = ({
   };
 
   // --- 4. Initialization Effects ---
-  useEffect(() => {
-    if (Object.keys(initialFilters).length > 0) {
-      setLocalFilters(initialFilters);
-    }
-  }, []);
+useEffect(() => {
+  if (Object.keys(initialFilters).length > 0) {
+    setLocalFilters(initialFilters);
+  }
+}, [initialFilters]);
 
   useEffect(() => {
     const saved = localStorage.getItem("savedFilters");
