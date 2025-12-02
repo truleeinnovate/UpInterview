@@ -112,3 +112,35 @@ export const useReportPresets = (templateId) => {
     enabled: !!templateId,
   });
 };
+//sharing report apis
+export const useReportAccess = (templateId) => {
+  return useQuery({
+    queryKey: ["reportAccess", templateId],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/analytics/reports/${templateId}/access`);
+      return data.access || { roles: [], users: [] };
+    },
+    enabled: !!templateId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
+// POST: Share report
+export const useShareReport = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ templateId, roleIds = [], userIds = [] }) => {
+      const { data } = await apiClient.post(`/analytics/reports/${templateId}/share`, {
+        roleIds,
+        userIds,
+      });
+      return data;
+    },
+    onSuccess: (data, variables) => {
+      const { templateId } = variables;
+      queryClient.invalidateQueries({ queryKey: ["reportAccess", templateId] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+    },
+  });
+};
