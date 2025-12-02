@@ -22,7 +22,7 @@ import { Pencil } from "lucide-react";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
 
 function AssessmentView() {
-  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  const { useAssessmentById, fetchAssessmentQuestions } = useAssessments();
   const { id } = useParams();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,6 +33,10 @@ function AssessmentView() {
   const [assessment, setAssessment] = useState(null);
   const [assessmentQuestions, setAssessmentQuestions] = useState([]);
   const [toggleStates, setToggleStates] = useState([]);
+
+  const { assessmentById } = useAssessmentById(id, {
+    includeTemplates: true,
+  });
 
   // v1.0.3 <-------------------------------------------------------------------------
   useScrollLock(true); // This will lock the outer scrollbar when the form is open
@@ -46,18 +50,12 @@ function AssessmentView() {
     });
   };
 
-  console.log("assessmentData toggleArrow1", assessmentData);
-
   useEffect(() => {
-    const loadData = async () => {
-      const foundAssessment = assessmentData?.find((a) => a._id === id);
-      if (foundAssessment) {
-        setAssessment(foundAssessment);
-        setIsModalOpen(true);
-      }
-    };
-    loadData();
-  }, [id, assessmentData]);
+    if (assessmentById) {
+      setAssessment(assessmentById);
+      setIsModalOpen(true);
+    }
+  }, [assessmentById]);
 
   useEffect(() => {
     if (assessment) {
@@ -80,7 +78,7 @@ function AssessmentView() {
         }
       });
     }
-  }, [assessment]);
+  }, [assessment, fetchAssessmentQuestions]);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -145,7 +143,7 @@ function AssessmentView() {
 
   if (!assessment)
     return (
-      <div className="text-center items-center">
+      <div className="text-center items-center pt-8">
         Loading assessment details...
       </div>
     );

@@ -731,41 +731,26 @@ const MainAppRoutes = ({
                     element={<AssessmentForm />}
                   />
                 )}
-                {hasPermission("AssessmentTemplates", "View") && (
-                  <Route
-                    path="/assessment-template-details"
-                    element={<AssessmentDetails />}
-                  />
-                )}
                 {hasPermission("AssessmentTemplates", "Edit") && (
+                  // v1.0.1---------------------- >
                   <Route
                     path="/assessment-templates/edit/:id"
                     element={<AssessmentForm />}
                   />
                 )}
-                <Route
-                  path="/assessment-template-details/:id"
-                  element={
-                    <>
-                      <Assessment />
-                      <AssessmentDetails />
-                    </>
-                  }
-                >
+                {hasPermission("AssessmentTemplates", "View") && (
+                <>
+                  <Route
+                    path="/assessment-template-details/:id"
+                    element={<AssessmentDetails />}
+                  />
                   <Route index element={null} />
                   <Route
                     path="candidate-details/:id"
                     element={<CandidateDetails mode="Assessment" />}
                   />
-
-                  {hasPermission("AssessmentTemplates", "Edit") && (
-                    // v1.0.1---------------------- >
-                    <Route
-                      path="assessments-template/edit/:id"
-                      element={<AssessmentForm />}
-                    />
-                  )}
-                </Route>
+                </>
+                )}
               </>
             )}
 
