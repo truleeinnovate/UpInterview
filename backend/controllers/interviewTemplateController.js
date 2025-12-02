@@ -261,3 +261,29 @@ exports.getTemplatesByTenantId = async (req, res) => {
     res.status(500).json({ message: "Error fetching templates" });
   }
 };
+
+exports.getTemplateById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // const template = await InterviewTemplate.findById(id);
+    const template = await InterviewTemplate.findById(id)
+      .populate({
+        path: "rounds.interviewers",
+        model: "Contacts",
+        select: "firstName lastName email",
+      })
+      .populate({
+        path: "rounds.selectedInterviewers",
+        model: "Contacts",
+        select: "firstName lastName email",
+      })
+      .lean();
+    if (!template) {
+      return res.status(404).json({ message: "Template not found" });
+    }
+    res.status(200).json({ template });
+  } catch (error) {
+    console.error("Error fetching template:", error);
+    res.status(500).json({ message: "Error fetching template" });
+  }
+};

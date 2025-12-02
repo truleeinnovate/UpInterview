@@ -21,15 +21,17 @@ import SingleRoundView from "./SingleRoundView";
 import VerticalRoundsView from "./VerticalRoundsView";
 import InterviewProgress from "./InterviewProgress";
 import { useInterviewTemplates } from "../../apiHooks/useInterviewTemplates";
-import { Switch } from "@headlessui/react";
 import Loading from "../../Components/Loading";
 import { formatDateTime } from "../../utils/dateFormatter.js";
 
 const TemplateDetail = () => {
-  const { templatesData, saveTemplate } = useInterviewTemplates();
+  const { useInterviewtemplateDetails, saveTemplate } = useInterviewTemplates();
 
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const { data: templatesData } = useInterviewtemplateDetails(id);
+
   const [template, setTemplate] = useState(null);
 
   // Get the current tab from URL or default to 'standard'
@@ -43,57 +45,50 @@ const TemplateDetail = () => {
   const [isActive, setIsActive] = useState(template?.status === "active");
 
   // useEffect(() => {
+  //   console.log("id", id);
   //   const foundTemplate = templatesData.find((tem) => tem._id === id);
   //   console.log("foundTemplate", foundTemplate);
-  //   // setIsLoading(true)
-  //   if (foundTemplate && foundTemplate) {
+
+  //   if (foundTemplate) {
   //     setTemplate(foundTemplate);
-  //     // Set the first round as active by default
-  //     if (foundTemplate.rounds?.length > 0) {
-  //       setActiveRound(foundTemplate?.rounds[0]._id);
+
+  //     const roundsList = foundTemplate.rounds || [];
+
+  //     // Set first round as active and expanded
+  //     if (roundsList.length > 0) {
+  //       setActiveRound(roundsList[0]?._id);
   //     }
 
-  //     setIsActive(foundTemplate.status === "active"); // ✅ Sync here
-  //     setIsLoading(false);
-  //     // setEditedTemplate({
-  //     //   templateName: foundTemplate?.templateName || '',
-  //     //   description: foundTemplate?.description || '',
-  //     //   label: foundTemplate?.label || '',
-  //     //   status: foundTemplate?.status || ''
-  //     // });
+  //     // Set view mode to vertical only if one round
+  //     if (roundsList.length === 1) {
+  //       setRoundsViewMode("vertical");
+  //     }
+
+  //     setIsActive(foundTemplate.status === "active");
   //     setIsLoading(false);
   //   } else {
-  //     setTemplate(null); // Ensure position is null if not found
-  //     // setEditedTemplate(null); // Reset rounds to empty array
+  //     setTemplate(null);
+  //     setIsLoading(false);
   //   }
   // }, [id, templatesData]);
 
   useEffect(() => {
-    const foundTemplate = templatesData.find((tem) => tem._id === id);
-    console.log("foundTemplate", foundTemplate);
+    if (!templatesData || templatesData.length === 0) return;
 
-    if (foundTemplate) {
-      setTemplate(foundTemplate);
+    const foundTemplate = templatesData; // single template from API
 
-      const roundsList = foundTemplate.rounds || [];
+    setTemplate(foundTemplate);
 
-      // Set first round as active and expanded
-      if (roundsList.length > 0) {
-        setActiveRound(roundsList[0]._id);
-      }
+    const roundsList = foundTemplate?.rounds || [];
 
-      // Set view mode to vertical only if one round
-      if (roundsList.length === 1) {
-        setRoundsViewMode("vertical");
-      }
-
-      setIsActive(foundTemplate.status === "active");
-      setIsLoading(false);
-    } else {
-      setTemplate(null);
-      setIsLoading(false);
+    if (roundsList.length > 0) {
+      setActiveRound(roundsList[0]?._id);
     }
-  }, [id, templatesData]);
+
+    setIsActive(foundTemplate?.status === "active");
+
+    setIsLoading(false);
+  }, [templatesData]);
 
   const handleStatusChange = async (newToggleValue) => {
     try {
@@ -181,7 +176,6 @@ const TemplateDetail = () => {
       </div>
     );
   }
-  console.log("template", template, template?.status);
 
   return (
     // v1.0.2 <----------------------------------------------------------------------------------
@@ -207,33 +201,10 @@ const TemplateDetail = () => {
               <ArrowLeft className="sm:h-4 h-5 ms:w-4 w-5 mr-2" />
               <span className="text-sm sm:text-base">Back to Templates</span>
             </button>
-            {/* <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate({
-                  pathname: `edit/${template._id}`,
-                  search: `?tab=${activeTab}`
-                })}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-custom-blue bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors duration-200 text-sm sm:text-base"
-              >
-                <Edit2 className="h-4 w-4" />
-                Edit Template
-              </button>
-            </div> */}
           </div>
 
           <Breadcrumb items={breadcrumbItems} />
-          {/* <div>
-               {template.rounds?.length === 0 &&
-                  <div className='flex justify-end'>
-                    <div className=' w-full  flex-col items-center flex gap-2 bg-slate-100 justify-center mt-2 pt-1 pb-1'>
-                    <span className='bg-amber-50 text-amber-700 border border-amber-200/60 h-6 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded text-xs sm:text-sm font-medium '>{template.status === 'draft' && "Draft"} </span>
-                    <span className='bg-amber-50 text-amber-700 text-xs px-2 py-1 rounded-md border-amber-200/60'>
-                     Note: Not Recomnded Due to no Rounds
-                    </span>
-                    </div>
-                  </div>
-                }
-              </div> */}
+
           {template.status === "draft" && (
             // && template.rounds?.length === 0
             <div className="mb-1 sm:mb-4 rounded-xl border mt-2 border-yellow-300 bg-yellow-50 p-4 sm:p-6">
@@ -266,11 +237,11 @@ const TemplateDetail = () => {
                     Interview Details
                   </h3>
                   <button
-                   onClick={() =>  navigate(
-                    `/interview-templates/${template._id}/edit`
-                  )
-                }
-                  className="bg-custom-blue text-white font-semibold text-sm py-2 px-4 rounded-lg">
+                    onClick={() =>
+                      navigate(`/interview-templates/${template._id}/edit`)
+                    }
+                    className="bg-custom-blue text-white font-semibold text-sm py-2 px-4 rounded-lg"
+                  >
                     Edit Template
                   </button>
                 </div>
