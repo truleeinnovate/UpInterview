@@ -151,6 +151,7 @@ const NewAssessment = () => {
     passScore: "",
     linkExpiryDays: "",
     categoryOrTechnology: "",
+    externalId: "",
   });
 
   const tenantId = tokenPayload?.tenantId;
@@ -201,6 +202,7 @@ const NewAssessment = () => {
     AssessmentTitle: useRef(null),
     NumberOfQuestions: useRef(null),
     DifficultyLevel: useRef(null),
+    externalId: useRef(null),
   };
   // v1.0.3 --------------------------------------------------------->
 
@@ -786,6 +788,7 @@ const NewAssessment = () => {
         ...(formData.categoryOrTechnology && {
           categoryOrTechnology: formData.categoryOrTechnology,
         }),
+        ...(formData.externalId && { externalId: formData.externalId }),
         ...{ status: formData.status },
         // Only include passScoreType and passScoreBy if they have values
         ...(formData.passScoreType &&

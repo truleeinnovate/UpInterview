@@ -533,6 +533,24 @@ const BasicDetailsTab = ({
               <div></div>
             </div>
           </div>
+
+          {/* External ID Field */}
+          <div className="mt-4">
+            <InputField
+              ref={fieldRefs.externalId}
+              label="External ID"
+              type="text"
+              name="externalId"
+              id="externalId"
+              value={formData?.externalId || ""}
+              onChange={(e) =>
+                handleInputChange("externalId", e.target.value)
+              }
+              placeholder="Optional external system identifier"
+              autoComplete="off"
+              error={errors.externalId}
+            />
+          </div>
         </div>
       </form>
 

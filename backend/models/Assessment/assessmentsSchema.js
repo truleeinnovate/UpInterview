@@ -39,6 +39,9 @@ const ScheduledAssessmentSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     order: { type: String, default: "Assessment 1" }, // New field for display name
 
+    // External system identifier
+    // externalId: { type: String, sparse: true, index: true }, // External system identifier
+
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },

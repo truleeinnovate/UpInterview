@@ -55,6 +55,7 @@ const assessmentSchema = new mongoose.Schema(
     },
     ownerId: String,
     tenantId: String,
+    externalId: { type: String, sparse: true, index: true },
   },
   { timestamps: true }
 );

@@ -90,6 +90,7 @@ const createPosition = async (req, res) => {
         : null,
       Location: req.body.Location || "",
       templateId: req.body.templateId || null,
+      externalId: req.body.externalId || undefined,
       createdBy: req.body.ownerId, // Fixed: use req.body.ownerId instead of undefined ownerId
       positionCode, // Custom code added
     };

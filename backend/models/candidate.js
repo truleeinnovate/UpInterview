@@ -50,6 +50,8 @@ const candidateSchema = new mongoose.Schema(
     // tenantId: String,
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
+    // Mansoor: added external id for creating the external id only from the external hrms applications
+    externalId: { type: String, sparse: true, index: true },
   },
   { timestamps: true }
 );

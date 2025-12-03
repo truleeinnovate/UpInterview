@@ -144,6 +144,7 @@ const AddCandidateForm = ({
     LastName: useRef(null),
     Gender: useRef(null),
     Email: useRef(null),
+    externalId: useRef(null),
     CountryCode: useRef(null),
     Phone: useRef(null),
     HigherQualification: useRef(null),
@@ -160,6 +161,7 @@ const AddCandidateForm = ({
     FirstName: "",
     LastName: "",
     Email: "",
+    externalId: "",
     Phone: "",
     Date_Of_Birth: "",
     Gender: "",
@@ -197,6 +199,7 @@ const AddCandidateForm = ({
         FirstName: selectedCandidate.FirstName || "",
         LastName: selectedCandidate.LastName || "",
         Email: selectedCandidate.Email || "",
+        externalId: selectedCandidate.externalId || "",
         Phone: selectedCandidate.Phone || "",
         Date_Of_Birth: dob ? format(dob, "MMMM dd, yyyy") : "",
         Gender: selectedCandidate.Gender || "",
@@ -487,6 +490,7 @@ const AddCandidateForm = ({
       FirstName: "",
       LastName: "",
       Email: "",
+      externalId: "",
       Phone: "",
       Date_Of_Birth: "",
       Gender: "",
@@ -592,6 +596,7 @@ const AddCandidateForm = ({
       FirstName: formData.FirstName,
       LastName: formData.LastName,
       Email: formData.Email,
+      externalId: formData.externalId || undefined,
       Phone: formData.Phone,
       CountryCode: formData.CountryCode,
       CurrentExperience: formData.CurrentExperience,
@@ -1165,6 +1170,19 @@ const AddCandidateForm = ({
                   skillpopupcancelbutton={skillpopupcancelbutton}
                   editingIndex={editingIndex}
                   onOpenSkills={loadSkills}
+                />
+              </div>
+
+              {/* External ID Field */}
+              <div className="-mt-2">
+                <InputField
+                  value={formData.externalId}
+                  onChange={handleChange}
+                  inputRef={fieldRefs.externalId}
+                  error={errors.externalId}
+                  label="External ID"
+                  name="externalId"
+                  placeholder="Optional external system identifier"
                 />
               </div>
 

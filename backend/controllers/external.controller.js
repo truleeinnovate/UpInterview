@@ -58,12 +58,12 @@ const checkApiKeyPermission = (apiKey, requiredPermission) => {
   return apiKey.permissions.includes(requiredPermission);
 };
 
-const getTenantAndUserFromCookies = (req) => {
-  return {
-    tenantId: req.cookies?.tenantId,
-    userId: req.cookies?.userId,
-  };
-};
+// const getTenantAndUserFromCookies = (req) => {
+//   return {
+//     tenantId: req.cookies?.tenantId,
+//     userId: req.cookies?.userId,
+//   };
+// };
 
 /**
  * Create a single candidate via external API
@@ -118,6 +118,8 @@ exports.createCandidate = async (req, res) => {
       tenantId: tenantId,
       createdBy: userId,
       ownerId: userId,
+      // Ensure externalId is preserved if provided
+      ...(req.body.externalId && { externalId: req.body.externalId }),
     };
 
     const candidate = await Candidate.create(candidateData);
@@ -430,6 +432,8 @@ exports.bulkCreateCandidates = async (req, res) => {
       tenantId: tenantId,
       createdBy: userId,
       ownerId: userId,
+      // Ensure externalId is preserved if provided
+      ...(candidate.externalId && { externalId: candidate.externalId }),
     }));
 
     const result = await Candidate.insertMany(candidates, { ordered: false });
@@ -663,6 +667,8 @@ exports.bulkCreatePositions = async (req, res) => {
       tenantId: req.tenantId || "external_tenant",
       createdBy: req.user?._id || "external_api",
       status: position.status || "open",
+      // Ensure externalId is preserved if provided
+      ...(position.externalId && { externalId: position.externalId }),
     }));
 
     const result = await Position.insertMany(positions, { ordered: false });
@@ -857,6 +863,8 @@ exports.createPosition = async (req, res) => {
       tenantId: tenantId,
       ownerId: userId,
       createdBy: userId,
+      // Ensure externalId is preserved if provided
+      ...(req.body.externalId && { externalId: req.body.externalId }),
     };
 
     const position = await Position.create(positionData);
@@ -934,6 +942,283 @@ exports.createPosition = async (req, res) => {
       error: "Internal Server Error",
       message: "Failed to create position",
       code: 500,
+    });
+  }
+};
+
+/**
+ * Fetch candidates by email, upId, or externalId
+ */
+exports.getCandidates = async (req, res) => {
+  try {
+    const { email, upId, externalId } = req.query;
+    
+    // Validate that at least one query parameter is provided
+    if (!email && !upId && !externalId) {
+      // Generate error log
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Get Candidates",
+        requestQuery: req.query,
+        message: "Missing query parameters - at least one of email, upId, or externalId must be provided",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "get-candidates",
+      };
+      return res.status(400).json({
+        success: false,
+        error: "Missing Query Parameters",
+        message: "At least one of email, upId, or externalId must be provided",
+        code: 400,
+        suggestion: "Provide email, upId, or externalId as query parameter"
+      });
+    }
+
+    // Build query object
+    const query = {};
+    
+    if (email) {
+      query.Email = email;
+    }
+    if (upId) {
+      query._id = upId;
+    }
+    if (externalId) {
+      query.externalId = externalId;
+    }
+
+    // Find candidates
+    const candidates = await Candidate.find(query)
+      .select('-__v -password') // Exclude sensitive fields
+      .lean(); // Return plain JavaScript objects
+
+    if (candidates.length === 0) {
+      // Generate not found log
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Get Candidates",
+        requestQuery: req.query,
+        message: "No candidates found matching the provided criteria",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "get-candidates",
+      };
+      return res.status(404).json({
+        success: false,
+        error: "Not Found",
+        message: "No candidates found matching the provided criteria",
+        code: 404,
+        query: req.query
+      });
+    }
+
+    // Generate response
+    const responseData = {
+      success: true,
+      message: "Candidates retrieved successfully",
+      code: 200,
+      data: {
+        candidates: candidates,
+        count: candidates.length,
+        query: req.query,
+        retrievedAt: new Date().toISOString(),
+      },
+    };
+
+    // Generate success log
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "External Get Candidates",
+      requestQuery: req.query,
+      message: `Successfully retrieved ${candidates.length} candidates via external API`,
+      status: "success",
+      responseBody: responseData,
+      integrationName: "external-api",
+      flowType: "get-candidates",
+    };
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("External get candidates error:", error);
+
+    // Handle different error types
+    if (error.name === "CastError") {
+      // Generate cast error log
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Get Candidates",
+        requestQuery: req.query,
+        message: `Invalid ID format provided: ${error.message}`,
+        status: "error",
+        integrationName: "external-api",
+        flowType: "get-candidates",
+      };
+      return res.status(400).json({
+        success: false,
+        error: "Invalid ID Format",
+        message: "Invalid upId format provided",
+        code: 400,
+        field: error.path,
+        value: error.value,
+        suggestion: "Provide a valid MongoDB ObjectId for upId"
+      });
+    }
+
+    // Generate general error log
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "External Get Candidates",
+      requestQuery: req.query,
+      message: "Internal server error while fetching candidates",
+      status: "error",
+      integrationName: "external-api",
+      flowType: "get-candidates",
+    };
+
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+      message: "An unexpected error occurred while fetching candidates",
+      code: 500,
+      suggestion: "Please try again or contact support if the problem persists",
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
+/**
+ * Fetch positions by upId or externalId
+ */
+exports.getPositions = async (req, res) => {
+  try {
+    const { upId, externalId } = req.query;
+    
+    // Validate that at least one query parameter is provided
+    if (!upId && !externalId) {
+      // Generate error log
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Get Positions",
+        requestQuery: req.query,
+        message: "Missing query parameters - at least one of upId or externalId must be provided",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "get-positions",
+      };
+      return res.status(400).json({
+        success: false,
+        error: "Missing Query Parameters",
+        message: "At least one of upId or externalId must be provided",
+        code: 400,
+        suggestion: "Provide upId or externalId as query parameter"
+      });
+    }
+
+    // Build query object
+    const query = {};
+    
+    if (upId) {
+      query._id = upId;
+    }
+    if (externalId) {
+      query.externalId = externalId;
+    }
+
+    // Find positions
+    const positions = await Position.find(query)
+      .select('-__v') // Exclude version field
+      .lean(); // Return plain JavaScript objects
+
+    if (positions.length === 0) {
+      // Generate not found log
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Get Positions",
+        requestQuery: req.query,
+        message: "No positions found matching the provided criteria",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "get-positions",
+      };
+      return res.status(404).json({
+        success: false,
+        error: "Not Found",
+        message: "No positions found matching the provided criteria",
+        code: 404,
+        query: req.query
+      });
+    }
+
+    // Generate response
+    const responseData = {
+      success: true,
+      message: "Positions retrieved successfully",
+      code: 200,
+      data: {
+        positions: positions,
+        count: positions.length,
+        query: req.query,
+        retrievedAt: new Date().toISOString(),
+      },
+    };
+
+    // Generate success log
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "External Get Positions",
+      requestQuery: req.query,
+      message: `Successfully retrieved ${positions.length} positions via external API`,
+      status: "success",
+      responseBody: responseData,
+      integrationName: "external-api",
+      flowType: "get-positions",
+    };
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("External get positions error:", error);
+
+    // Handle different error types
+    if (error.name === "CastError") {
+      // Generate cast error log
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Get Positions",
+        requestQuery: req.query,
+        message: `Invalid ID format provided: ${error.message}`,
+        status: "error",
+        integrationName: "external-api",
+        flowType: "get-positions",
+      };
+      return res.status(400).json({
+        success: false,
+        error: "Invalid ID Format",
+        message: "Invalid upId format provided",
+        code: 400,
+        field: error.path,
+        value: error.value,
+        suggestion: "Provide a valid MongoDB ObjectId for upId"
+      });
+    }
+
+    // Generate general error log
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "External Get Positions",
+      requestQuery: req.query,
+      message: "Internal server error while fetching positions",
+      status: "error",
+      integrationName: "external-api",
+      flowType: "get-positions",
+    };
+
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+      message: "An unexpected error occurred while fetching positions",
+      code: 500,
+      suggestion: "Please try again or contact support if the problem persists",
+      timestamp: new Date().toISOString()
     });
   }
 };

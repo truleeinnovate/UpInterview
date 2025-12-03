@@ -189,6 +189,8 @@ const positionValidationSchema = Joi.object({
       "array.min": "At least one skill must be added",
     }),
 
+  externalId: Joi.string().optional().allow("", null),
+
 //   additionalNotes: Joi.string().optional(),
 additionalNotes: Joi.string().allow(null, "").optional(),
 // selectedTemplete: Joi.string().allow(null, "").optional(),
