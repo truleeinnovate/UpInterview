@@ -455,9 +455,9 @@ const generateReport = async (req, res) => {
       }
       // NEW FORMAT: array of { key, value }
       else {
-        activeFilters = Object.fromEntries(
-          filterPreset.filters.map(f => [f.key, f.value])
-        );
+         activeFilters = Object.fromEntries(
+    filterPreset.filters.map(f => [f.key, f.value])
+  );
         console.log("[FILTERS] Applied saved filters (new format) →", activeFilters);
       }
     } else {
@@ -487,13 +487,14 @@ const generateReport = async (req, res) => {
       finalQuery.createdAt = { $gte: startDate };
     }
 
-    Object.keys(activeFilters).forEach(key => {
-      if (["dateRange", "customStartDate", "customEndDate"].includes(key)) return;
-      const value = activeFilters[key];
-      if (value != null && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
-        finalQuery[key] = Array.isArray(value) ? { $in: value } : value;
-      }
-    });
+   Object.keys(activeFilters).forEach(key => {
+  if (["dateRange", "customStartDate", "customEndDate"].includes(key)) return;
+  const value = activeFilters[key];
+  if (value != null && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
+    finalQuery[key] = Array.isArray(value) ? { $in: value } : value;
+  }
+});
+
 
     console.log("[QUERY] Final Query →", JSON.stringify(finalQuery, null, 2));
 
