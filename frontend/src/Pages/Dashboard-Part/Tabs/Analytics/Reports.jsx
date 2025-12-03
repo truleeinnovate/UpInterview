@@ -543,7 +543,7 @@ import {
   useReportTemplates,
   useGenerateReport,
 } from "../../../../apiHooks/useReportTemplates.js";
-import { generateAndNavigateReport } from "../../../../Components/Analytics/utils/handleGenerateReport";
+// import { generateAndNavigateReport } from "../../../../Components/Analytics/utils/handleGenerateReport";
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -558,10 +558,6 @@ const Reports = () => {
 
   const [loadingId, setLoadingId] = useState(null);
   const generateReportMutation = useGenerateReport();
-  console.log(
-    "Report Templates Data ==========================> ",
-    generateReportMutation
-  );
 
   // Load real templates
   useEffect(() => {

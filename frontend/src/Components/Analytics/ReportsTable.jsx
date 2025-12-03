@@ -790,6 +790,7 @@ import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capital
 import { formatDateTime } from "../../utils/dateFormatter";
 import StatusBadge from "../SuperAdminComponents/common/StatusBadge";
 import ShareReportPopup from "../../Pages/Dashboard-Part/Tabs/Analytics/ShareReportPopup";
+import { useSubscription } from "../../apiHooks/useSubscription";
 
 const ReportsTable = ({
   data = [],
@@ -801,9 +802,21 @@ const ReportsTable = ({
 }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [popupCoords, setPopupCoords] = useState({ x: 0, y: 0 });
-  
+
   // NEW: Share popup state — fully inside this component
   const [sharePopup, setSharePopup] = useState(null); // { templateId }
+
+  const { subscriptionData } = useSubscription();
+  
+  const canAccessReport = (template) => {
+    if (!subscriptionData?.active) return false;
+    if (!template.requiredPlans || template.requiredPlans.length === 0)
+      return false;
+
+    // Check if current plan is allowed
+    return template.requiredPlans.includes(subscriptionData.name);
+  };
+
 
   // === MENU POSITIONING (unchanged) ===
   useEffect(() => {
@@ -820,9 +833,10 @@ const ReportsTable = ({
       const spaceBelow = window.innerHeight - rect.bottom;
       const verticalPosition = spaceBelow < popupHeight ? "top" : "bottom";
 
-      const y = verticalPosition === "bottom"
-        ? rect.bottom + window.scrollY + 4
-        : rect.top + window.scrollY - popupHeight - 4;
+      const y =
+        verticalPosition === "bottom"
+          ? rect.bottom + window.scrollY + 4
+          : rect.top + window.scrollY - popupHeight - 4;
 
       const spaceRight = window.innerWidth - rect.right;
       const openToLeft = spaceRight < popupWidth;
@@ -869,9 +883,10 @@ const ReportsTable = ({
     const spaceBelow = window.innerHeight - rect.bottom;
     const verticalPosition = spaceBelow < popupHeight ? "top" : "bottom";
 
-    const y = verticalPosition === "bottom"
-      ? rect.bottom + window.scrollY + 8
-      : rect.top + window.scrollY - popupHeight - 8;
+    const y =
+      verticalPosition === "bottom"
+        ? rect.bottom + window.scrollY + 8
+        : rect.top + window.scrollY - popupHeight - 8;
 
     const spaceRight = window.innerWidth - rect.right;
     const openToLeft = spaceRight < popupWidth;
@@ -894,7 +909,8 @@ const ReportsTable = ({
       <div className="bg-white shadow-sm rounded-xl border border-gray-200">
         <div className="px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-gray-200">
           <h3 className="text-lg font-semibold text-custom-blue">
-            {title || (type === "templates" ? "Report Templates" : "Report Results")}
+            {title ||
+              (type === "templates" ? "Report Templates" : "Report Results")}
           </h3>
         </div>
 
@@ -903,7 +919,10 @@ const ReportsTable = ({
             <thead className="bg-gray-50 border border-gray-200">
               <tr>
                 {propColumns.map((col) => (
-                  <th key={col.key} className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">
+                  <th
+                    key={col.key}
+                    className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase"
+                  >
                     {col.label}
                   </th>
                 ))}
@@ -916,50 +935,67 @@ const ReportsTable = ({
             </thead>
 
             <tbody className="bg-white">
-              {data.map((item, index) => (
-                <tr key={item.id || index} className="hover:bg-gray-50 border-t border-gray-200">
-                  {propColumns.map((col) => {
-                    let value = item[col.key];
-                    if (col.key === "createdAt") value = formatDateTime(value);
-                    if (col.key === "description")
-                      value = value?.length > 80 ? value.substring(0, 80) + "..." : value;
+              {data.map((item, index) => {
+                const hasAccess = canAccessReport(item);
+                console.log("HAS ACCESS =================================>    ", hasAccess);
+                console.log("ITEM =================================>    ", item);
+                return (
+                  <tr
+                    key={item.id || index}
+                    className="hover:bg-gray-50 border-t border-gray-200"
+                  >
+                    {propColumns.map((col) => {
+                      let value = item[col.key];
+                      if (col.key === "createdAt")
+                        value = formatDateTime(value);
+                      if (col.key === "description")
+                        value =
+                          value?.length > 80
+                            ? value.substring(0, 80) + "..."
+                            : value;
 
-                    return (
-                      <td
-                        key={col.key}
-                        title={col.key === "description" ? value : ""}
-                        className={`px-6 py-4 text-sm ${
-                          col.key === "description" ? "text-gray-600 max-w-xs truncate" : "text-gray-900"
-                        }`}
-                      >
-                        {col.key === "status" ? (
-                          <StatusBadge status={capitalizeFirstLetter(item[col.key])} />
-                        ) : col.render ? (
-                          col.render(capitalizeFirstLetter(value), item)
-                        ) : (
-                          capitalizeFirstLetter(value) ?? "-"
-                        )}
-                      </td>
-                    );
-                  })}
-
-                  {type === "templates" && (
-                    <td className="px-6 py-4 text-right relative">
-                      <button
-                        ref={(el) => (item.buttonRef = el)}
-                        onClick={() => handleMenuOpen(item.id, item.buttonRef)}
-                        className="p-2 rounded-md hover:bg-gray-100 transition report-menu-btn"
-                      >
-                        <MoreHorizontal className="w-5 h-5 text-gray-600" />
-                      </button>
-
-                      {/* THREE DOT MENU */}
-                      {openMenuId === item.id && (
-                        <div
-                          className="report-popup-menu fixed z-[9999] w-40 bg-white shadow-lg rounded-lg border border-gray-200"
-                          style={{ top: popupCoords.y, left: popupCoords.x }}
+                      return (
+                        <td
+                          key={col.key}
+                          title={col.key === "description" ? value : ""}
+                          className={`px-6 py-4 text-sm ${
+                            col.key === "description"
+                              ? "text-gray-600 max-w-xs truncate"
+                              : "text-gray-900"
+                          }`}
                         >
-                          <button
+                          {col.key === "status" ? (
+                            <StatusBadge
+                              status={capitalizeFirstLetter(item[col.key])}
+                            />
+                          ) : col.render ? (
+                            col.render(capitalizeFirstLetter(value), item)
+                          ) : (
+                            capitalizeFirstLetter(value) ?? "-"
+                          )}
+                        </td>
+                      );
+                    })}
+
+                    {type === "templates" && (
+                      <td className="px-6 py-4 text-right relative">
+                        <button
+                          ref={(el) => (item.buttonRef = el)}
+                          onClick={() =>
+                            handleMenuOpen(item.id, item.buttonRef)
+                          }
+                          className="p-2 rounded-md hover:bg-gray-100 transition report-menu-btn"
+                        >
+                          <MoreHorizontal className="w-5 h-5 text-gray-600" />
+                        </button>
+
+                        {/* THREE DOT MENU */}
+                        {openMenuId === item.id && (
+                          <div
+                            className="report-popup-menu fixed z-[9999] w-40 bg-white shadow-lg rounded-lg border border-gray-200"
+                            style={{ top: popupCoords.y, left: popupCoords.x }}
+                          >
+                            {/* <button
                             onClick={() => {
                               onGenerate(item);
                               setOpenMenuId(null);
@@ -968,22 +1004,44 @@ const ReportsTable = ({
                             disabled={loadingId === item.id}
                           >
                             <Play className="w-4 h-4" />
-                            {loadingId === item.id ? "Generating..." : "Generate"}
-                          </button>
+                            {loadingId === item.id
+                              ? "Generating..."
+                              : "Generate"}
+                          </button> */}
+                            <button
+                              onClick={() => {
+                                if (!hasAccess) return;
+                                onGenerate(item);
+                                setOpenMenuId(null);
+                              }}
+                              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2
+                              ${
+                                hasAccess
+                                  ? "text-custom-blue hover:bg-custom-blue/10 cursor-pointer"
+                                  : "text-gray-400 opacity-50 cursor-not-allowed"
+                              }`}
+                              disabled={!hasAccess}
+                            >
+                              <Play className="w-4 h-4" />
+                              {loadingId === item.id
+                                ? "Generating..."
+                                : "Generate"}
+                            </button>
 
-                          <button
-                            onClick={() => handleShare(item)}
-                            className="w-full px-4 py-2 text-left text-green-600 text-sm hover:bg-green-500/10 flex items-center gap-2"
-                          >
-                            <Share2 className="w-4 h-4" />
-                            Share
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  )}
-                </tr>
-              ))}
+                            <button
+                              onClick={() => handleShare(item)}
+                              className="w-full px-4 py-2 text-left text-green-600 text-sm hover:bg-green-500/10 flex items-center gap-2"
+                            >
+                              <Share2 className="w-4 h-4" />
+                              Share
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
