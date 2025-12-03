@@ -3,17 +3,23 @@
 import { format, parseISO, isValid } from "date-fns";
 
 import { Building, Calendar, Clock, Users, Briefcase } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const AppliedPositions = ({ positions, onViewDetails }) => {
+const AppliedPositions = ({ positions }) => {
+    const navigate = useNavigate();
+
+    const handleViewDetails = (position) => {
+        const positionId = position?.positionId;
+        if (!positionId) return;
+        navigate(`/position/view-details/${positionId}`);
+    };
+
     return (
         <div className="space-y-8">
             <div className="flex justify-between items-center">
                 <h3 className="text-2xl font-bold text-custom-blue sm:text-lg">
                     Applied Positions
                 </h3>
-                <button className="px-4 py-2 bg-custom-blue text-white rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20 sm:text-sm">
-                    Add Position
-                </button>
             </div>
             {/* v1.0.0 <--------------------------------------------------------------------------------------- */}
             {positions?.length > 0 ? (
@@ -97,7 +103,7 @@ const AppliedPositions = ({ positions, onViewDetails }) => {
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => onViewDetails(position)}
+                                        onClick={() => handleViewDetails(position)}
                                         className="px-3 py-1.5 text-custom-blue hover:bg-custom-blue/20 rounded-lg transition-colors text-sm font-medium"
                                     >
                                         View Details
@@ -110,7 +116,7 @@ const AppliedPositions = ({ positions, onViewDetails }) => {
             ) : (
                 <div className="flex items-center justify-center h-[37vh]">
                     <p className="text-md text-gray-600">
-                        No positions are Applied yet
+                        No positions are applied yet
                     </p>
                 </div>
             )}

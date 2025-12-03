@@ -35,8 +35,7 @@ export const usePositions = (filters = {}) => {
     staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
     cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    // refetchOnMount: false, // Don't refetch when component mounts if data exists
-    refetchOnMount: "always",
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
     refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
@@ -160,12 +159,12 @@ export const usePositions = (filters = {}) => {
     onSuccess: (data, variables) => {
       // Optimistically update the cache
       queryClient.setQueryData(["positions", filters], (oldData) => {
-        if (!oldData) return oldData;
-        return oldData.map((position) => ({
-          ...position,
-          rounds:
-            position.rounds?.filter((round) => round._id !== variables) || [],
-        }));
+        // if (!oldData) return oldData;
+        // return oldData.map((position) => ({
+        //   ...position,
+        //   rounds:
+        //     position.rounds?.filter((round) => round._id !== variables) || [],
+        // }));
       });
 
       queryClient.invalidateQueries(["positions"]);

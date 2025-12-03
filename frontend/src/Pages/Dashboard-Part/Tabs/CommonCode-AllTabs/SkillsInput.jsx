@@ -39,6 +39,7 @@ const SkillsField = forwardRef(
     const initializedRef = useRef(false);
     const [rowErrors, setRowErrors] = useState({});
     const [isCustomSkill, setIsCustomSkill] = useState({}); // Track custom skill state per row
+    const containerRef = useRef(null);
 
     const expertiseOptions = ["Basic", "Medium", "Expert"];
     const experienceOptions = [
@@ -216,15 +217,18 @@ const SkillsField = forwardRef(
     }, [entries, skills]);
 
     // In SkillsField.js
-    useImperativeHandle(ref, () => ({
-      // Change name to match the call in handleSubmit
-      resetCustomSkills() {
-        setIsCustomSkill({});
-      },
-    }));
+    useImperativeHandle(ref, () => {
+      const node = containerRef.current;
+      if (node) {
+        node.resetCustomSkills = () => {
+          setIsCustomSkill({});
+        };
+      }
+      return node;
+    });
 
     return (
-      <div ref={ref}>
+      <div ref={containerRef}>
         <div className="flex justify-between items-center">
           <div className="flex flex-col mb-2">
             <label

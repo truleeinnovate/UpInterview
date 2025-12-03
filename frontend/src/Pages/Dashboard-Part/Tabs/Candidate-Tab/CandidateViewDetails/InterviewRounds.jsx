@@ -10,8 +10,6 @@ import {
   Building,
   Star,
   Eye,
-  Download,
-  Mail,
   Expand,
   Minimize,
   User,
@@ -114,7 +112,34 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
                   <div>
                     <p className="text-sm text-gray-500">Interviewer</p>
                     <p className="text-gray-800">
-                      {round?.interviewers?.name || "N/A"}
+                      {(() => {
+                        const names = Array.isArray(round?.interviewers)
+                          ? round.interviewers
+                              .map((interviewer) => {
+                                if (!interviewer) return null;
+                                const fullName =
+                                  interviewer?.name ||
+                                  interviewer?.contact?.Name ||
+                                  [
+                                    interviewer?.firstName,
+                                    interviewer?.lastName,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" ")
+                                    .trim() ||
+                                  [
+                                    interviewer?.FirstName,
+                                    interviewer?.LastName,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" ")
+                                    .trim();
+                                return fullName || null;
+                              })
+                              .filter(Boolean)
+                          : [];
+                        return names.length > 0 ? names.join(", ") : "N/A";
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -339,7 +364,7 @@ const InterviewRounds = ({
             })
           }
         >
-          Add Interview
+          Create Interview
         </button>
       </div>
 
@@ -351,73 +376,65 @@ const InterviewRounds = ({
         <div className="space-y-4">
           {/* {
          interviews?.map((interview) => ( */}
-          <div
-            // key={interview?._id}
-            className="border border-gray-200 rounded-xl overflow-hidden bg-white transition-all duration-200 hover:shadow-md"
-          >
-            <div className="flex items-center justify-between p-4 bg-gray-50">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white rounded-lg shadow-sm">
-                  <Building className="w-5 h-5 text-custom-blue" />
+          {interviews.map((interview) => (
+            <div
+              key={interview?._id}
+              className="border border-gray-200 rounded-xl overflow-hidden bg-white transition-all duration-200 hover:shadow-md"
+            >
+              <div className="flex items-center justify-between p-4 bg-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                    <Building className="w-5 h-5 text-custom-blue" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">
+                      {interview?.positionId?.companyname || "N/A"}
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      {interview?.positionId?.title || "N/A"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-gray-800">
-                    {interviews?.positionId?.companyname || "N/A"}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    {interviews?.positionId?.title || "N/A"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => onViewDetails(interviews)}
-                  className="p-2 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
-                  title="View Details"
-                >
-                  <Eye className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => toggleInterview(interviews?._id)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  {expandedInterview === interviews?._id ? (
-                    <ChevronUp className="w-4 h-4 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-600" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {expandedInterview === interviews?._id && (
-              <div className="p-4">
-                <div className="flex gap-4 mb-4 border-b border-gray-200">
+                <div className="flex items-center gap-2">
                   <button
-                    className={`pb-2 px-1 text-sm font-medium transition-colors relative ${
-                      activeTab === "details"
-                        ? "text-custom-blue border-b-2 border-custom-blue"
-                        : "text-gray-600 hover:text-gray-800"
-                    }`}
-                    onClick={() => setActiveTab("details")}
+                    onClick={() =>
+                      navigate(`/interviews/${interview?._id}`)
+                    }
+                    className="p-2 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
+                    title="View Interview Details"
                   >
-                    Details
+                    <Eye className="w-4 h-4" />
                   </button>
                   <button
-                    className={`pb-2 px-1 text-sm font-medium transition-colors relative ${
-                      activeTab === "feedback"
-                        ? "text-custom-blue border-b-2 "
-                        : "text-gray-600 hover:text-gray-800"
-                    }`}
-                    onClick={() => setActiveTab("feedback")}
+                    onClick={() => toggleInterview(interview?._id)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   >
-                    Feedback
+                    {expandedInterview === interview?._id ? (
+                      <ChevronUp className="w-4 h-4 text-gray-600" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-gray-600" />
+                    )}
                   </button>
                 </div>
+              </div>
 
-                {activeTab === "details" ? (
+              {expandedInterview === interview?._id && (
+                <div className="p-4">
+                  <div className="flex gap-4 mb-4 border-b border-gray-200">
+                    <button
+                      className={`pb-2 px-1 text-sm font-medium transition-colors relative ${
+                        activeTab === "details"
+                          ? "text-custom-blue border-b-2 border-custom-blue"
+                          : "text-gray-600 hover:text-gray-800"
+                      }`}
+                      onClick={() => setActiveTab("details")}
+                    >
+                      Rounds
+                    </button>
+                  </div>
+
                   <div className="space-y-4">
-                    {interviews?.rounds.map((round, index) => (
+                    {interview?.rounds?.map((round, index) => (
                       <div
                         key={index}
                         className="border-l-4 border-custom-blue pl-4 py-2"
@@ -428,8 +445,37 @@ const InterviewRounds = ({
                               {round?.roundTitle || "N/A"}
                             </h5>
                             <p className="text-sm text-gray-600">
-                              Interviewer:{" "}
-                              {round?.interviewers[0]?.name || "N/A"}
+                              Interviewer: {" "}
+                              {(() => {
+                                const names = Array.isArray(round?.interviewers)
+                                  ? round.interviewers
+                                      .map((interviewer) => {
+                                        if (!interviewer) return null;
+                                        const fullName =
+                                          interviewer?.name ||
+                                          interviewer?.contact?.Name ||
+                                          [
+                                            interviewer?.firstName,
+                                            interviewer?.lastName,
+                                          ]
+                                            .filter(Boolean)
+                                            .join(" ")
+                                            .trim() ||
+                                          [
+                                            interviewer?.FirstName,
+                                            interviewer?.LastName,
+                                          ]
+                                            .filter(Boolean)
+                                            .join(" ")
+                                            .trim();
+                                        return fullName || null;
+                                      })
+                                      .filter(Boolean)
+                                  : [];
+                                return names.length > 0
+                                  ? names.join(", ")
+                                  : "N/A";
+                              })()}
                             </p>
                           </div>
                           <div className="text-right">
@@ -465,105 +511,27 @@ const InterviewRounds = ({
                             </span>
                             <div className="flex items-center gap-2 mt-1">
                               <span
-                                className={`
-                                px-2 py-1 rounded-full text-xs font-medium
-                                ${
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   round.status === "Completed"
                                     ? "bg-green-100 text-green-800"
                                     : round.status === "Scheduled"
                                     ? "bg-yellow-100 text-yellow-800"
                                     : "bg-gray-100 text-gray-800"
-                                }
-                              `}
+                                }`}
                               >
                                 {round?.status || "N/A"}
                               </span>
-                              <button
-                                onClick={() =>
-                                  handleViewRound(interviews, round)
-                                }
-                                className="p-1 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
-                                title="View Round Details"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
+                             
                             </div>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="space-y-6">
-                    {interviews?.rounds?.length > 0 &&
-                      interviews?.rounds?.map((round, index) => (
-                        <div key={index} className="bg-gray-50 rounded-xl p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h6 className="font-medium text-gray-800">
-                              {round?.roundTitle}
-                            </h6>
-                            <div className="flex items-center gap-2">
-                              {round.feedback && (
-                                <>
-                                  <button
-                                    // onClick={() => handleEmailFeedback(interview, round)}
-                                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                    title="Email Feedback"
-                                  >
-                                    <Mail className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    // onClick={() => downloadFeedback(interview, round)}
-                                    className="p-2 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
-                                    title="Download Feedback"
-                                  >
-                                    <Download className="w-4 h-4" />
-                                  </button>
-                                </>
-                              )}
-                              <div className="flex items-center gap-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star
-                                    key={star}
-                                    className={`w-4 h-4 ${
-                                      star <= 4
-                                        ? "text-yellow-400"
-                                        : "text-gray-300"
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          {/* {round.feedback && (
-                          <>
-                            <p className="text-sm text-gray-600 mb-3">{round.feedback}</p>
-                            <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
-                              <div>
-                                <h6 className="text-sm font-medium text-gray-700 mb-2">Strengths</h6>
-                                <ul className="space-y-1">
-                                  <li className="text-sm text-gray-600">• Strong problem-solving</li>
-                                  <li className="text-sm text-gray-600">• Technical expertise</li>
-                                  <li className="text-sm text-gray-600">• Clear communication</li>
-                                </ul>
-                              </div>
-                              <div>
-                                <h6 className="text-sm font-medium text-gray-700 mb-2">Areas for Improvement</h6>
-                                <ul className="space-y-1">
-                                  <li className="text-sm text-gray-600">• System design patterns</li>
-                                  <li className="text-sm text-gray-600">• Performance optimization</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </>
-                        )} */}
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
+          ))}
           {/* // ))} */}
         </div>
       )}
