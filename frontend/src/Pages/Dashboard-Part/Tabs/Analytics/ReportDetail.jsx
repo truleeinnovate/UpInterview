@@ -640,6 +640,8 @@ import DynamicChart from "../../../../Components/Analytics/charts/DynamicChart";
 import { notify } from "../../../../services/toastService";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import * as Icons from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const ReportDetail = () => {
   const { reportId } = useParams();
@@ -966,6 +968,102 @@ const ReportDetail = () => {
     handleSaveFilters(updatedFilters); // ← save immediately
   };
 
+  // Helper to get visible columns and clean data
+  const getExportData = () => {
+    // 1. Filter only visible columns
+    const visibleColumns = columns.filter((col) => col.visible !== false);
+
+    // 2. Prepare Headers
+    const headers = visibleColumns.map((col) => col.label);
+
+    // 3. Prepare Rows (mapping data to visible columns only)
+    const rows = data.map((row) =>
+      visibleColumns.map((col) => {
+        const val = row[col.key];
+        // Handle null/undefined or objects
+        return val == null ? "" : String(val);
+      })
+    );
+
+    return { visibleColumns, headers, rows };
+  };
+
+  // EXPORT PDF
+  const handleExportCSV = () => {
+    const { visibleColumns, rows } = getExportData();
+
+    if (rows.length === 0) {
+      notify.error("No data available to export");
+      return;
+    }
+
+    // 1. Create CSV Header
+    const csvHeader = visibleColumns.map((col) => `"${col.label}"`).join(",");
+
+    // 2. Create CSV Rows (escaping quotes inside data)
+    const csvRows = rows
+      .map((row) =>
+        row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")
+      )
+      .join("\n");
+
+    // 3. Combine and create Blob
+    const csvContent = `${csvHeader}\n${csvRows}`;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    // 4. Trigger Download
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `${reportMeta.title || "report"}_${
+        new Date().toISOString().split("T")[0]
+      }.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // EXPORT CSV
+  const handleExportPDF = () => {
+    const { headers, rows } = getExportData();
+
+    if (rows.length === 0) {
+      notify.error("No data available to export");
+      return;
+    }
+
+    // 1. Initialize jsPDF
+    const doc = new jsPDF();
+
+    // 2. Add Title
+    doc.setFontSize(18);
+    doc.text(reportMeta.title || "Report Export", 14, 22);
+
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+
+    // 3. Generate Table
+    autoTable(doc, {
+      startY: 40,
+      head: [headers],
+      body: rows,
+      theme: "grid",
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [33, 121, 137] }, // Adjust to your brand blue if needed
+    });
+
+    // 4. Save
+    doc.save(
+      `${reportMeta.title || "report"}_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`
+    );
+  };
+
   console.log("COLUMNS ===============================> ", columns);
 
   return (
@@ -1011,11 +1109,17 @@ const ReportDetail = () => {
             <span>Apply & Save</span>
           </button> */}
 
-          <button className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+          <button
+            onClick={handleExportPDF}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+          >
             <Download className="w-4 h-4" />
             <span>Export PDF</span>
           </button>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg">
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg"
+          >
             <Download className="w-4 h-4" />
             <span>Export CSV</span>
           </button>
