@@ -104,7 +104,7 @@ function KanbanBoard({
         variants={item}
       >
         <div className="flex items-center mb-4">
-          <h3 className="text-lg font-medium text-foreground">InProgress</h3>
+          <h3 className="text-lg font-medium text-foreground">In Progress</h3>
           <span className="ml-2 bg-blue-100 text-custom-blue bg-custom-blue/10 text-xs font-medium px-2.5 py-0.5 rounded-full">
             {inProgressInterviews.length}
           </span>

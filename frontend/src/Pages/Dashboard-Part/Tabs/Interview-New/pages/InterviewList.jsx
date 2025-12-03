@@ -122,6 +122,7 @@ function InterviewList() {
   });
   const [deleteInterview, setDeleteInterview] = useState(null);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+
   // Sync filter states when popup opens
   useEffect(() => {
     if (isFilterPopupOpen) {
@@ -925,6 +926,7 @@ function InterviewList() {
             label: "Edit",
             icon: <Pencil className="w-4 h-4 text-green-600" />,
             onClick: handleEditInterview,
+            show: (row) => row.status === "Draft",
           },
         ]
       : []),
@@ -935,6 +937,39 @@ function InterviewList() {
             label: "Delete",
             icon: <Trash className="w-4 h-4 text-red-600" />,
             onClick: handleDeleteInterview,
+          },
+        ]
+      : []),
+  ];
+
+  const kanbanActions = [
+    // View Details
+
+    // Edit (only if not in assessment view)
+    ...(effectivePermissions.Candidates?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (item, e) => {
+              navigate(`edit/${item._id}`);
+            },
+          },
+        ]
+      : []),
+
+    // Delete
+    ...(effectivePermissions.Candidates?.Delete
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (item) => {
+              setShowDeleteConfirmModal(true);
+              setDeleteInterview(item);
+            },
           },
         ]
       : []),
@@ -981,6 +1016,7 @@ function InterviewList() {
                   <KanbanBoard
                     interviews={currentFilteredRows}
                     onView={handleView}
+                    kanbanActions={kanbanActions}
                     onViewInterview={handleViewInterview}
                     onEditInterview={handleEditInterview}
                     onViewPosition={handleViewPosition}

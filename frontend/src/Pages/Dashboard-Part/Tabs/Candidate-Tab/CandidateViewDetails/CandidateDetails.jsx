@@ -33,7 +33,7 @@ import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarP
 // v1.0.4 ------------------------------------------------------------------------->
 Modal.setAppElement("#root");
 
-const CandidateDetails = ({ mode, candidateId }) => {
+const CandidateDetails = ({ mode, candidateId, onClose }) => {
   const { candidateData } = useCandidates();
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});
@@ -73,7 +73,6 @@ const CandidateDetails = ({ mode, candidateId }) => {
       isMounted = false; // cleanup function to avoid state updates after unmount
     };
   }, [id, candidateData]);
-
 
   // v1.0.4 <-----------------------------------------------------------------
   // With this:
@@ -473,12 +472,20 @@ const CandidateDetails = ({ mode, candidateId }) => {
     </div>
   );
 
+  const onCloseSlide = () => {
+    if (mode === "Interview") {
+      onClose();
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <>
       {/* v1.0.8 <----------------------------------------------------------- */}
       <SidebarPopup
         title="Candidate"
-        onClose={() => navigate(-1)}
+        onClose={onCloseSlide}
         id={candidate._id}
         showEdit
         onEdit={() => navigate(`/candidate/edit/${candidate._id}`)}

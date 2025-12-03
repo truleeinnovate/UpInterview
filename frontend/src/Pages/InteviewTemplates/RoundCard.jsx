@@ -47,7 +47,6 @@ const RoundCard = ({
   hideHeader = false,
   template,
 }) => {
-  console.log("template", template);
   //console.log("rounds---",round.interviewers)
 
   const { deleteRoundMutation } = useInterviewTemplates();
