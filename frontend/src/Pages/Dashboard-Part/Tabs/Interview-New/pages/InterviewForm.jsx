@@ -576,7 +576,7 @@ const InterviewForm = () => {
                                 </span>
                                 <span
                                   className={
-                                    "font-semibold " +
+                                    "text-md " +
                                     (template.type === "custom"
                                       ? "text-custom-blue"
                                       : "text-green-600")
