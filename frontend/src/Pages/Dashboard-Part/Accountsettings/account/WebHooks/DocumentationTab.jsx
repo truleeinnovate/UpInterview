@@ -6,7 +6,7 @@ const DocumentationTab = () => {
     navigator.clipboard.writeText(text);
   };
 
-  const endpoints = [
+  const postEndpoints = [
     {
       method: 'POST',
       path: '/api/external/candidates',
@@ -428,7 +428,7 @@ const DocumentationTab = () => {
           <p className="text-gray-700 mb-6">
             Our integration hub supports major HRMS/ATS platforms with pre-configured templates:
           </p>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
             <div className="space-y-4">
               <h4 className="font-semibold text-gray-900">Enterprise Platforms</h4>
@@ -451,7 +451,7 @@ const DocumentationTab = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <h4 className="font-semibold text-gray-900">Modern ATS Platforms</h4>
               <div className="space-y-3">
@@ -474,11 +474,11 @@ const DocumentationTab = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <h5 className="font-medium text-blue-900 mb-2">Quick Setup</h5>
             <p className="text-sm text-blue-800">
-              When creating a new integration, select your platform from the "Platform Template" dropdown 
+              When creating a new integration, select your platform from the "Platform Template" dropdown
               to automatically configure authentication methods and recommended webhook events.
             </p>
           </div>
@@ -487,41 +487,225 @@ const DocumentationTab = () => {
       {/* API Endpoints */}
       <section className="mb-12">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">API Endpoints</h3>
-        <div className="space-y-6">
-          {endpoints.map((endpoint, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-sm border p-6">
+
+        {/* GET Endpoints */}
+        <div className="mb-8">
+          <h4 className="text-lg font-medium text-gray-900 mb-4">GET Endpoints</h4>
+          <div className="space-y-6">
+
+            {/* Candidates GET Endpoint */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center space-x-3 mb-4">
-                <span className={`px-2 py-1 text-xs font-medium rounded ${
-                  endpoint.method === 'POST' ? 'bg-green-100 text-green-800' :
-                  endpoint.method === 'PUT' ? 'bg-brand-100 text-brand-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {endpoint.method}
-                </span>
-                <code className="text-sm font-mono">{endpoint.path}</code>
+                <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-800">GET</span>
+                <code className="text-sm font-mono">/api/external/candidates</code>
               </div>
-              
-              <p className="text-gray-700 mb-4">{endpoint.description}</p>
-              
+
+              <p className="text-gray-700 mb-4">
+                External systems can fetch candidate data from our SAS application using a single REST endpoint.
+                You can query the candidate using any one of the supported unique identifiers: email, upId, or externalId.
+              </p>
+
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Headers</h4>
-                  <div className="bg-gray-100 p-3 rounded text-sm">
-                    {endpoint.headers.map((header, i) => (
-                      <div key={i}>{header}</div>
-                    ))}
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Query Parameters (Any one or a combination)</h4>
+                  <div className="space-y-2">
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <code>/api/external/candidates?email=example@gmail.com</code>
+                    </div>
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <code>/api/external/candidates?upId=12345</code>
+                    </div>
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <code>/api/external/candidates?externalId=XYZ-001</code>
+                    </div>
                   </div>
                 </div>
-                
+
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Request Body</h4>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Examples</h4>
+                  <div className="space-y-3">
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <p className="text-xs text-gray-600 mb-1">Fetch by Email</p>
+                      <code>GET /api/external/candidates?email=test@gmail.com</code>
+                    </div>
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <p className="text-xs text-gray-600 mb-1">Fetch by upId</p>
+                      <code>GET /api/external/candidates?upId=6579ab23dfc0123a4c16bc11</code>
+                    </div>
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <p className="text-xs text-gray-600 mb-1">Fetch by External ID</p>
+                      <code>GET /api/external/candidates?externalId=HRMS-0945</code>
+                    </div>
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <p className="text-xs text-gray-600 mb-1">Fetch by Multiple Filters</p>
+                      <code>GET /api/external/candidates?email=test@gmail.com&externalId=HRMS-0945</code>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Response Body</h4>
                   <div className="bg-gray-100 p-3 rounded text-sm">
-                    <pre>{JSON.stringify(endpoint.body, null, 2)}</pre>
+                    <pre>
+                      {`{
+  "success": true,
+  "message": "Candidates retrieved successfully",
+  "code": 200,
+  "data": {
+    "candidates": [
+      {
+        "_id": "69267b56da0a7431f50d5fe9",
+        "FirstName": "John",
+        "LastName": "Doe",
+        "Email": "JhonDoe@gmail.com",
+        "Phone": "5869425689",
+        "CountryCode": "+91",
+        "CurrentExperience": 2,
+        "RelevantExperience": 1,
+        "CurrentRole": "AI Engineer",
+        "Technology": "Security Analyst",
+        "skills": [
+          {
+            "skill": "MongoDB",
+            "experience": "0-1 Years",
+            "expertise": "Medium"
+          }
+        ],
+        "createdAt": "2025-11-26T04:00:22.224Z"
+      }
+    ],
+    "count": 1,
+    "query": {
+      "upId": "69267b56da0a7431f50d5fe9"
+    },
+    "retrievedAt": "2025-12-03T11:30:25.211Z"
+  }
+}`}
+                    </pre>
                   </div>
                 </div>
               </div>
             </div>
-          ))}
+
+            {/* Positions GET Endpoint */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-800">GET</span>
+                <code className="text-sm font-mono">/api/external/positions</code>
+              </div>
+
+              <p className="text-gray-700 mb-4">
+                External systems can fetch position data from our SAS application using a single REST endpoint.
+                You can query the position using any one of the supported unique identifiers: upId or externalId.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Query Parameters (Any one or a combination)</h4>
+                  <div className="space-y-2">
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <code>/api/external/positions?upId=12345</code>
+                    </div>
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <code>/api/external/positions?externalId=POS-001</code>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Examples</h4>
+                  <div className="space-y-3">
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <p className="text-xs text-gray-600 mb-1">Fetch by upId</p>
+                      <code>GET /api/external/positions?upId=6579ab23dfc0123a4c16bc11</code>
+                    </div>
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <p className="text-xs text-gray-600 mb-1">Fetch by External ID</p>
+                      <code>GET /api/external/positions?externalId=HRMS-POS-001</code>
+                    </div>
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <p className="text-xs text-gray-600 mb-1">Fetch by Multiple Filters</p>
+                      <code>GET /api/external/positions?upId=6579ab23dfc0123a4c16bc11&externalId=HRMS-POS-001</code>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Response Body</h4>
+                  <div className="bg-gray-100 p-3 rounded text-sm">
+                    <pre>
+                      {`{
+  "success": true,
+  "message": "Positions retrieved successfully",
+  "code": 200,
+  "data": {
+    "positions": [
+      {
+        "_id": "69267b56da0a7431f50d5fe9",
+        "title": "Senior Software Engineer",
+        "companyName": "Tech Corp",
+        "location": "Bangalore",
+        "minExperience": 3,
+        "maxExperience": 6,
+        "minSalary": "15",
+        "maxSalary": "25",
+        "jobDescription": "We are looking for a Senior Software Engineer...",
+        "createdAt": "2025-11-26T04:00:22.224Z"
+      }
+    ],
+    "count": 1,
+    "query": {
+      "upId": "69267b56da0a7431f50d5fe9"
+    },
+    "retrievedAt": "2025-12-03T11:30:25.211Z"
+  }
+}`}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* POST Endpoints */}
+        <div>
+          <h4 className="text-lg font-medium text-gray-900 mb-4">POST Endpoints</h4>
+          <div className="space-y-6">
+            {postEndpoints.map((endpoint, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${endpoint.method === 'POST' ? 'bg-green-100 text-green-800' :
+                      endpoint.method === 'PUT' ? 'bg-brand-100 text-brand-800' :
+                        'bg-gray-100 text-gray-800'
+                    }`}>
+                    {endpoint.method}
+                  </span>
+                  <code className="text-sm font-mono">{endpoint.path}</code>
+                </div>
+
+                <p className="text-gray-700 mb-4">{endpoint.description}</p>
+
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">Headers</h4>
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      {endpoint.headers.map((header, i) => (
+                        <div key={i}>{header}</div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">Request Body</h4>
+                    <div className="bg-gray-100 p-3 rounded text-sm">
+                      <pre>{JSON.stringify(endpoint.body, null, 2)}</pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -530,7 +714,7 @@ const DocumentationTab = () => {
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Webhook Events</h3>
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
           <p className="text-gray-700 mb-4">
-            Webhooks are HTTP POST requests sent to your configured endpoint when specific events occur. 
+            Webhooks are HTTP POST requests sent to your configured endpoint when specific events occur.
             Each webhook includes the following headers:
           </p>
           <div className="bg-gray-100 p-4 rounded-lg space-y-1 text-sm">
@@ -549,9 +733,9 @@ const DocumentationTab = () => {
                   {event.event}
                 </span>
               </div>
-              
+
               <p className="text-gray-700 mb-4">{event.description}</p>
-              
+
               <div>
                 <h4 className="text-sm font-medium text-gray-900 mb-2">Sample Payload</h4>
                 <div className="bg-gray-100 p-3 rounded text-sm">
@@ -631,18 +815,18 @@ const DocumentationTab = () => {
             Need help with the integration? Here are some resources:
           </p>
           <div className="space-y-2">
-            <a href="#" className="flex items-center space-x-2 text-custom-blue hover:text-custom-blue">
+            <button className="flex items-center space-x-2 text-custom-blue hover:text-custom-blue bg-transparent border-none cursor-pointer">
               <ExternalLink className="w-4 h-4" />
               <span>API Status Page</span>
-            </a>
-            <a href="#" className="flex items-center space-x-2 text-custom-blue hover:custom-blue">
+            </button>
+            <button className="flex items-center space-x-2 text-custom-blue hover:text-custom-blue bg-transparent border-none cursor-pointer">
               <ExternalLink className="w-4 h-4" />
               <span>Developer Portal</span>
-            </a>
-            <a href="#" className="flex items-center space-x-2 text-custom-blue hover:custom-blue">
+            </button>
+            <button className="flex items-center space-x-2 text-custom-blue hover:text-custom-blue bg-transparent border-none cursor-pointer">
               <ExternalLink className="w-4 h-4" />
               <span>Contact Support</span>
-            </a>
+            </button>
           </div>
         </div>
       </section>

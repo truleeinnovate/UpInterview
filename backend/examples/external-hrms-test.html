@@ -136,6 +136,7 @@
       <div class="tabs">
         <button class="tab-btn active" data-tab="candidate">Candidate</button>
         <button class="tab-btn" data-tab="position">Position</button>
+        <button class="tab-btn" data-tab="fetch">Fetch Data</button>
         <button class="tab-btn" data-tab="bulk">Bulk Operations</button>
       </div>
 
@@ -159,6 +160,10 @@
       <div id="candidate-tab" class="tab-content active">
         <form id="candidateForm">
           <h3>👤 Candidate Information</h3>
+          <div class="form-group">
+            <label for="externalId">External ID (Optional):</label>
+            <input type="text" id="externalId" placeholder="External system identifier" />
+          </div>
           <div class="two-column">
             <div class="form-group">
               <label for="firstName">First Name *</label>
@@ -271,6 +276,10 @@
       <div id="position-tab" class="tab-content">
         <form id="positionForm">
           <h3>🏢 Position Information</h3>
+          <div class="form-group">
+            <label for="positionExternalId">External ID (Optional):</label>
+            <input type="text" id="positionExternalId" placeholder="External system identifier" />
+          </div>
           <div class="two-column">
             <div class="form-group">
               <label for="positionTitle">Position Title *</label>
@@ -402,6 +411,30 @@
             <button type="button" class="btn btn-secondary" onclick="clearPositionForm()">Clear Form</button>
           </div>
         </form>
+      </div>
+
+      <!-- Fetch Data Tab -->
+      <div id="fetch-tab" class="tab-content">
+        <div class="fetch-section">
+          <h3>🔍 Fetch Data from API</h3>
+          <div class="form-group">
+            <label for="fetchUrl">API Endpoint URL:</label>
+            <input 
+              type="text" 
+              id="fetchUrl" 
+              placeholder="e.g., /api/external/candidates?email=test@gmail.com"
+              value="/api/external/candidates?email=test@gmail.com"
+            />
+          </div>
+          <div class="form-group">
+            <button type="button" class="btn btn-primary" onclick="fetchData()">
+              🚀 Fetch Data
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="clearFetchForm()">
+              Clear
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Bulk Operations Tab -->
@@ -600,8 +633,8 @@
         }
       }
 
-      function clearForm() {
-        document.getElementById("candidateForm").reset();
+      function clearCandidateForm() {
+        document.getElementById("externalId").value = "";
         document.getElementById("firstName").value = "";
         document.getElementById("lastName").value = "";
         document.getElementById("email").value = "";
@@ -621,6 +654,7 @@
           e.preventDefault();
 
           const candidateData = {
+            externalId: document.getElementById("externalId").value || undefined,
             FirstName: document.getElementById("firstName").value,
             LastName: document.getElementById("lastName").value,
             Email: document.getElementById("email").value,
@@ -833,6 +867,7 @@
 
       function clearPositionForm() {
         document.getElementById("positionForm").reset();
+        document.getElementById("positionExternalId").value = "";
         document.getElementById("positionTitle").value = "Senior Software Engineer";
         document.getElementById("companyName").value = "Tech Corp";
         document.getElementById("location").value = "Bangalore";
@@ -913,6 +948,7 @@
         e.preventDefault();
 
         const positionData = {
+          externalId: document.getElementById("positionExternalId").value || undefined,
           title: document.getElementById("positionTitle").value,
           companyname: document.getElementById("companyName").value,
           Location: document.getElementById("location").value,
@@ -941,6 +977,47 @@
           removePositionSkill(e.target);
         }
       });
+
+      // Fetch Data Functions
+      async function fetchData() {
+        const baseUrl = document.getElementById("baseUrl").value;
+        const fetchUrl = document.getElementById("fetchUrl").value;
+        const fullUrl = baseUrl + fetchUrl;
+
+        if (!fetchUrl) {
+          showResponse({ error: "Please enter an API endpoint URL" }, false);
+          return;
+        }
+
+        try {
+          console.log("🚀 Fetching data from:", fullUrl);
+          
+          const response = await fetch(fullUrl, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            showResponse(data, true);
+            console.log("✅ Data fetched successfully:", data);
+          } else {
+            showResponse(data, false);
+            console.error("❌ Error fetching data:", data);
+          }
+        } catch (error) {
+          showResponse({ error: error.message }, false);
+          console.error("❌ Network error:", error);
+        }
+      }
+
+      function clearFetchForm() {
+        document.getElementById("fetchUrl").value = "/api/external/candidates?email=test@gmail.com";
+        document.getElementById("response").textContent = "";
+      }
     </script>
 
     <style>

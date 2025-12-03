@@ -242,6 +242,7 @@ const createInterview = async (req, res) => {
       // interviewId,
       updatingInterviewStatus,
       completionReason,
+      externalId,
     } = req.body;
     let candidate = null;
 
@@ -279,6 +280,7 @@ const createInterview = async (req, res) => {
       tenantId: orgId || undefined,
       completionReason,
       status,
+      externalId,
     };
 
     // Generate interviewCode for new interview with tenant ID

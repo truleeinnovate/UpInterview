@@ -88,6 +88,7 @@ const candidateValidationSchema = Joi.object({
       "array.min": "At least one skill is required",
       "any.required": "Skills are required",
     }),
+  externalId: Joi.string().optional().allow("", null),
 });
 
 // 🔹 Add custom validation for RelevantExperience <= CurrentExperience

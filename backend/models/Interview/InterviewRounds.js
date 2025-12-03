@@ -118,7 +118,10 @@ const interviewRoundSchema = new mongoose.Schema({
         default: 'pending'
     },
     settlementDate: { type: Date },
-    settlementTransactionId: { type: String }  // Credit transaction ID in interviewer's wallet
+    settlementTransactionId: { type: String },  // Credit transaction ID in interviewer's wallet
+    
+    // External system identifier
+    externalId: { type: String, sparse: true, index: true }, // External system identifier
 }, { timestamps: true });
 
 // Add middleware to track status changes for internal interview usage

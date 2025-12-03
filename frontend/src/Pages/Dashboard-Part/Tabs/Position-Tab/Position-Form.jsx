@@ -83,6 +83,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     location: useRef(null),
     jobDescription: useRef(null),
     skills: useRef(null),
+    externalId: useRef(null),
     // Add more if needed
   };
 
@@ -101,6 +102,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     template: {},
     NoofPositions: "",
     Location: "",
+    externalId: "",
   });
   const [isEdit, setIsEdit] = useState(false);
   const navigate = useNavigate();
@@ -200,6 +202,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         additionalNotes: selectedPosition?.additionalNotes || "",
         NoofPositions: selectedPosition?.NoofPositions?.toString() || "",
         Location: selectedPosition?.Location || "",
+        externalId: selectedPosition?.externalId || "",
         template: matchingTemplate || {},
         // template: matchingTemplate
         //   ? {
@@ -523,6 +526,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // maxexperience: dataToSubmit.maxexperience || "",
       ownerId: userId,
       tenantId: orgId,
+      externalId: dataToSubmit.externalId || undefined,
       // Filter out empty skill rows - only include rows where at least one field has a value
       skills: entries
         .filter((entry) => entry.skill || entry.experience || entry.expertise)
@@ -1324,6 +1328,19 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         skillpopupcancelbutton={skillpopupcancelbutton}
                         editingIndex={editingIndex}
                         onOpenSkills={loadSkills}
+                      />
+                    </div>
+
+                    {/* External ID Field */}
+                    <div className="mt-4">
+                      <InputField
+                        value={formData.externalId}
+                        onChange={handleChange}
+                        inputRef={fieldRefs.externalId}
+                        error={errors.externalId}
+                        label="External ID"
+                        name="externalId"
+                        placeholder="Optional external system identifier"
                       />
                     </div>
 

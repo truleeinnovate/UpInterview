@@ -204,6 +204,7 @@ function validateCommonFields(payload = {}) {
   const schema = Joi.object({
     ownerId: Joi.string().allow("", null).optional(),
     tenantId: Joi.string().allow("", null).optional(),
+    externalId: Joi.string().allow("", null).optional(),
 
     // System fields
     status: Joi.string()

@@ -11,9 +11,51 @@ const EVENT_TYPES = {
   FEEDBACK_STATUS_UPDATED: "feedback.status.updated",
 };
 
+// Define allowed status changes for webhook triggers
+const ALLOWED_STATUS_CHANGES = {
+  INTERVIEW: ['RequestSent', 'Scheduled', 'Rescheduled', 'Completed', 'Rejected', 'Selected', 'Cancelled', 'NoShow'],
+  ASSESSMENT: ['scheduled', 'cancelled', 'completed', 'expired', 'failed'],
+  FEEDBACK: ['submitted']
+};
+
+// Helper function to check if status change should trigger webhook
+const shouldTriggerWebhook = (eventType, status, previousStatus = null) => {
+  console.log(`[Webhook] Checking webhook trigger for event: ${eventType}, status: ${status}, previousStatus: ${previousStatus}`);
+  
+  switch (eventType) {
+    case EVENT_TYPES.INTERVIEW_ROUND_STATUS_UPDATED:
+      const shouldTriggerInterview = ALLOWED_STATUS_CHANGES.INTERVIEW.includes(status);
+      console.log(`[Webhook] Interview webhook trigger: ${shouldTriggerInterview} (allowed statuses: ${ALLOWED_STATUS_CHANGES.INTERVIEW.join(', ')})`);
+      return shouldTriggerInterview;
+      
+    case EVENT_TYPES.ASSESSMENT_STATUS_UPDATED:
+      const shouldTriggerAssessment = ALLOWED_STATUS_CHANGES.ASSESSMENT.includes(status);
+      console.log(`[Webhook] Assessment webhook trigger: ${shouldTriggerAssessment} (allowed statuses: ${ALLOWED_STATUS_CHANGES.ASSESSMENT.join(', ')})`);
+      return shouldTriggerAssessment;
+      
+    case EVENT_TYPES.FEEDBACK_STATUS_UPDATED:
+      const shouldTriggerFeedback = ALLOWED_STATUS_CHANGES.FEEDBACK.includes(status);
+      console.log(`[Webhook] Feedback webhook trigger: ${shouldTriggerFeedback} (allowed statuses: ${ALLOWED_STATUS_CHANGES.FEEDBACK.join(', ')})`);
+      return shouldTriggerFeedback;
+      
+    default:
+      console.log(`[Webhook] Unknown event type: ${eventType}, allowing webhook`);
+      return true; // Allow unknown event types by default
+  }
+};
+
 const triggerWebhook = async (eventType, data, tenantId) => {
   try {
     console.log(`[Webhook] Triggering webhook for event: ${eventType}, tenant: ${tenantId || 'all'}`);
+
+    // Check if webhook should be triggered based on status
+    const status = data.status || data.newStatus;
+    const previousStatus = data.previousStatus || data.oldStatus;
+    
+    if (!shouldTriggerWebhook(eventType, status, previousStatus)) {
+      console.log(`[Webhook] Webhook trigger blocked for event: ${eventType}, status: ${status} - Status not in allowed list`);
+      return;
+    }
 
     // Build the query with tenantId only if it's provided
     const query = {
@@ -287,4 +329,4 @@ const createConsolidatedWebhookLog = async ({ eventType, data, tenantId, webhook
   }
 };
 
-module.exports = { EVENT_TYPES, triggerWebhook };
+module.exports = { EVENT_TYPES, triggerWebhook, shouldTriggerWebhook, ALLOWED_STATUS_CHANGES };

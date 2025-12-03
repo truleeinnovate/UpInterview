@@ -113,6 +113,7 @@ export const useInterviews = (
       orgId,
       userId,
       templateId,
+      externalId,
       id,
     }) => {
       const interviewData = {
@@ -121,6 +122,7 @@ export const useInterviews = (
         orgId,
         userId,
         ...(templateId && { templateId }),
+        ...(externalId && { externalId }),
         status: "Draft",
       };
 

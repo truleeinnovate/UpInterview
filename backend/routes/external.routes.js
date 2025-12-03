@@ -5,14 +5,16 @@ const { verifyApiKey } = require('../middleware/auth.middleware');
 const loggingService = require('../middleware/loggingService');
 
 // Apply API key verification to all routes
-router.use(verifyApiKey);
+// router.use(verifyApiKey);
 
 // Candidate routes
-router.post('/candidates', loggingService.integrationLoggingMiddleware, externalController.createCandidate);
-router.post('/candidates/bulk', loggingService.integrationLoggingMiddleware, externalController.bulkCreateCandidates);
+router.get('/candidates', loggingService.integrationLoggingMiddleware, externalController.getCandidates);
+router.post('/candidates', verifyApiKey, loggingService.integrationLoggingMiddleware, externalController.createCandidate);
+router.post('/candidates/bulk', verifyApiKey, loggingService.integrationLoggingMiddleware, externalController.bulkCreateCandidates);
 
 // Position routes
-router.post('/positions', loggingService.integrationLoggingMiddleware, externalController.createPosition);
-router.post('/positions/bulk', loggingService.integrationLoggingMiddleware, externalController.bulkCreatePositions);
+router.get('/positions', loggingService.integrationLoggingMiddleware, externalController.getPositions);
+router.post('/positions', verifyApiKey, loggingService.integrationLoggingMiddleware, externalController.createPosition);
+router.post('/positions/bulk', verifyApiKey, loggingService.integrationLoggingMiddleware, externalController.bulkCreatePositions);
 
 module.exports = router;
