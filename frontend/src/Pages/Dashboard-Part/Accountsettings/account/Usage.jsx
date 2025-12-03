@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../utils/permissionUtils";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
@@ -17,6 +18,7 @@ const Usage = () => {
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
   const tenantId = tokenPayload?.tenantId;
+  const navigate = useNavigate();
 
   // Helper function to format date as dd-mm-yy
   const formatDate = (dateStr) => {
@@ -38,6 +40,7 @@ const Usage = () => {
   const [usage, setUsage] = useState({});
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+   const [noActiveUsage, setNoActiveUsage] = useState(false);
 
   // Fetch usage when permissions are ready
   useEffect(() => {
@@ -58,6 +61,7 @@ const Usage = () => {
       try {
         setLoading(true);
         setError(null);
+        setNoActiveUsage(false);
         const url = `${process.env.REACT_APP_API_URL}/usage/${tenantId}`;
 
         const res = await axios.get(url, {
@@ -67,11 +71,20 @@ const Usage = () => {
           },
           withCredentials: true,
         });
-
         setUsage(res.data);
       } catch (err) {
-        console.error("Error fetching usage:", err);
-        setError("Failed to load usage");
+        const status = err?.response?.status;
+        const message = err?.response?.data?.message;
+
+        if (status === 404 && message === "No active usage period") {
+          console.info("Usage: no active usage period for tenant", tenantId);
+          setNoActiveUsage(true);
+          setUsage({});
+          setError("No active usage period");
+        } else {
+          console.error("Error fetching usage:", err);
+          setError("Failed to load usage");
+        }
       } finally {
         setLoading(false);
       }
@@ -147,6 +160,35 @@ const Usage = () => {
     return null;
   }
 
+  if (noActiveUsage) {
+    return (
+      <div className="sm:mx-2 sm:mt-8 space-y-6">
+        <h2 className="sm:text-xl text-2xl font-bold">Usage Analytics</h2>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium">No Active Usage Period</h3>
+          <p className="text-gray-600 mt-2">
+            You currently do not have an active usage period. Features like Internal
+            Interviews, Assessments, Question Bank Access, User Bandwidth and Active
+            Users may be limited or locked until your subscription starts a new
+            usage cycle.
+          </p>
+          <p className="text-gray-600 mt-2">
+            Please check your subscription plan or contact your administrator if you
+            believe this is a mistake.
+          </p>
+          <button
+            type="button"
+            className="mt-4 inline-flex items-center px-4 py-2 rounded-md bg-custom-blue text-white font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
+            onClick={() => navigate("/account-settings/subscription")}
+          >
+            View Subscription Plans
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Derived metrics from API (matches both "Internal Interviews" and any future interview types)
   const interviewerAttrs =
     usage?.attributes?.filter((a) => /Interview/i.test(a.type)) || [];
@@ -211,7 +253,7 @@ const Usage = () => {
               <span className="text-gray-600">Used: {interviewerUtilized}</span>
               <span className="text-gray-600">
                 Limit:{" "}
-                {interviewerEntitled === 0 ? "Unlimited" : interviewerEntitled}
+                {interviewerEntitled === 0 ? 0 : interviewerEntitled} {/*"Unlimited"*/}
               </span>
             </div>
             {interviewerEntitled !== 0 && (
@@ -242,7 +284,7 @@ const Usage = () => {
               <span className="text-gray-600">Used: {assessmentsUtilized}</span>
               <span className="text-gray-600">
                 Limit:{" "}
-                {assessmentsEntitled === 0 ? "Unlimited" : assessmentsEntitled}
+                {assessmentsEntitled === 0 ? 0 : assessmentsEntitled}
               </span>
             </div>
             {assessmentsEntitled !== 0 && (
@@ -273,7 +315,7 @@ const Usage = () => {
             <span className="text-gray-600">
               Limit:{" "}
               {questionBankEntitled === 0
-                ? "Unlimited"
+                ? 0
                 : `${questionBankEntitled} Questions`}
             </span>
           </div>
@@ -291,7 +333,7 @@ const Usage = () => {
               <span className="text-gray-600">
                 Limit:{" "}
                 {bandwidthEntitled === 0
-                  ? "Unlimited"
+                  ? 0
                   : `${bandwidthEntitled} GB`}
               </span>
             </div>
@@ -326,7 +368,7 @@ const Usage = () => {
             </span>
             <span className="text-gray-600">
               Limit:{" "}
-              {usage?.totalUsers === 0 ? "Unlimited" : usage?.totalUsers ?? "—"}
+              {usage?.totalUsers === 0 ? 0 : usage?.totalUsers ?? "—"}
             </span>
           </div>
           {usage?.totalUsers !== 0 && (

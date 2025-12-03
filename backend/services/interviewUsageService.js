@@ -112,11 +112,14 @@ async function checkInternalInterviewUsageLimit(tenantId, ownerId) {
     }
 
     if (!usage) {
-      console.warn("[USAGE] No usage document found for limit check");
+      console.warn("[USAGE] No active usage period found for internal interview limit check");
       return {
         canSchedule: false,
         remaining: 0,
-        message: "No usage document found",
+        utilized: 0,
+        entitled: 0,
+        message:
+          "You do not have an active internal interview usage period. Please start or renew a subscription to schedule internal interviews.",
       };
     }
 

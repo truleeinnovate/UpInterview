@@ -1192,7 +1192,7 @@ const RoundFormInterviews = () => {
           };
 
       // Check internal interview usage before scheduling
-      if (selectedInterviewType === "internal" && status === "Scheduled") {
+      if (selectedInterviewType === "Internal" && status === "Scheduled") {
         // Check if this is a new scheduling (not already scheduled)
         const isNewScheduling =
           !isEditing || (isEditing && roundEditData?.status !== "Scheduled");

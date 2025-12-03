@@ -7,6 +7,7 @@
 // v1.0.5 - Ashok - Fixed issues in responsiveness
 // v1.0.6 - Ashok - Added common code to kanban
 // v1.0.7 - Ashok - Added clickable title to navigate to details page at kanban
+// v1.0.8 - Ashok - Fixed outerScroll issue
 
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
@@ -195,7 +196,7 @@ function SupportDesk() {
 
   // v1.0.4 <-----------------------------------------------------------
   const isTablet = useMediaQuery({ maxWidth: 1024 });
-  useScrollLock(viewMode === "kanban"); // when view is kanban disable outer scrollbar
+  useScrollLock(viewMode === "kanban" || viewMode === "table"); // when view is kanban disable outer scrollbar
 
   // handling kanban view and table view
   useEffect(() => {
