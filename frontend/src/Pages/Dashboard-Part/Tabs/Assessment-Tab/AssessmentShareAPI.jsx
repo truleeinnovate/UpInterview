@@ -1,7 +1,6 @@
 // v1.0.0  -  Ashraf  -  added tansak query to get data without reload
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import { toast } from 'react-hot-toast';
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from '../../../../config.js';
 import { notify } from '../../../../services/toastService';
@@ -84,7 +83,7 @@ export const shareAssessmentAPI = async ({
   } catch (error) {
     console.error('Error sharing assessment:', error);
     const errorMessage = error.response?.data?.message || error.message || 'Failed to share assessment';
-    toast.error(errorMessage);
+    notify.error(errorMessage);
     setErrors((prev) => ({ ...prev, general: errorMessage }));
     return { success: false, error: errorMessage };
     // ------------------------------v1.0.0 >

@@ -498,6 +498,16 @@ exports.shareAssessment = async (req, res) => {
         ? Infinity
         : Math.max(limit.remaining || 0, 0);
 
+    // If there is no active usage period at all, block sharing with a clear message
+    if (!limit.canShare && limit.message === "No active usage period") {
+      return res.status(400).json({
+        success: false,
+        code: "NO_ACTIVE_USAGE_PERIOD",
+        message:
+          "You do not have an active assessment usage period. Please start or renew a subscription to share assessments.",
+      });
+    }
+
     if (entitled !== 0) {
       if (
         !limit.canShare ||
