@@ -146,11 +146,11 @@ export const useInterviews = (
       }
 
       // Link candidate to position
-      await axios.post(`${config.REACT_APP_API_URL}/candidateposition`, {
-        candidateId,
-        positionId,
-        interviewId: response.data._id,
-      });
+      // await axios.post(`${config.REACT_APP_API_URL}/candidateposition`, {
+      //   candidateId,
+      //   positionId,
+      //   interviewId: response.data._id,
+      // });
 
       return response.data;
     },

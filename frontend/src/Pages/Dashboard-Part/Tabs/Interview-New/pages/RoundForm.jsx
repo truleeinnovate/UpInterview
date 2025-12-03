@@ -166,7 +166,6 @@ const RoundFormInterviews = () => {
     };
     fetchOwnerData();
   }, [organization, userId]);
-  console.log("interview?.positionId", interview?.positionId);
 
   useEffect(() => {
     if (interviewData) {
@@ -666,6 +665,7 @@ const RoundFormInterviews = () => {
   // while editing
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
+  console.log("roundEditData", roundEditData);
 
   useEffect(() => {
     if (isEditing && roundEditData) {
@@ -711,7 +711,9 @@ const RoundFormInterviews = () => {
       if (interviewMode !== roundEditData.interviewMode)
         setInterviewMode(roundEditData.interviewMode);
       if (selectedInterviewType !== roundEditData.interviewerType)
-        setSelectedInterviewType(roundEditData.interviewerType);
+        setSelectedInterviewType(
+          roundEditData.interviewerType || roundEditData?.interviewerType
+        );
       if (
         JSON.stringify(interviewQuestionsList) !==
         JSON.stringify(roundEditData.questions)

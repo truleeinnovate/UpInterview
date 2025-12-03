@@ -25,7 +25,7 @@ const getAllCandidatePositions = async (req, res) => {
   }
 };
 
-const createCandidatePosition = async (req, res) => {
+const createCandidatePosition = async (req, res, data) => {
   try {
     res.locals.loggedByController = true;
     //<-----v1.0.1---
@@ -38,12 +38,26 @@ const createCandidatePosition = async (req, res) => {
     //     }
     //-----v1.0.1--->
 
-    const candidatePosition = new CandidatePosition(req.body);
-    await candidatePosition.save();
+    // const candidatePosition = new CandidatePosition(req.body || data);
+    const candidatePosition = new createCandidatePositionService(data);
+    // await candidatePosition.save();
     res.status(201).json(candidatePosition);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-module.exports = { createCandidatePosition, getAllCandidatePositions };
+const createCandidatePositionService = async (data) => {
+  try {
+    const candidatePosition = new CandidatePosition(data);
+    return await candidatePosition.save();
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+module.exports = {
+  createCandidatePosition,
+  getAllCandidatePositions,
+  createCandidatePositionService,
+};

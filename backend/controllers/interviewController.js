@@ -33,6 +33,9 @@ const {
 const {
   MockInterviewRound,
 } = require("../models/MockInterview/mockinterviewRound.js");
+const {
+  createCandidatePositionService,
+} = require("./candidatePositionController.js");
 
 //  post call for interview page
 // const createInterview = async (req, res) => {
@@ -411,6 +414,14 @@ const createInterview = async (req, res) => {
         }
       }
     }
+
+    // Create candidate position internally
+    await createCandidatePositionService({
+      candidateId,
+      positionId,
+      interviewId: interview._id,
+      status: "applied",
+    });
 
     res.status(201).json(interview);
   } catch (error) {

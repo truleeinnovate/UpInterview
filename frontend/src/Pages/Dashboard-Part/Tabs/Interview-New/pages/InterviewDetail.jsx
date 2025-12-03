@@ -46,6 +46,8 @@ import { notify } from "../../../../../services/toastService.js";
 import axios from "axios";
 import { config } from "../../../../../config.js";
 import { useMemo } from "react";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import TemplateDetail from "../../../../InteviewTemplates/TemplateDetail.jsx";
 // import FeeConfirmationModal from '../components/FeeConfirmationModal.js';
 
 const InterviewDetail = () => {
@@ -474,7 +476,18 @@ const InterviewDetail = () => {
     ["Scheduled"].includes(round.status)
   );
 
+  // const [TemplateDetailsSidebarOpen, setTemplateDetailsSidebarOpen] = useState(false);
+
   const handleViewEntityDetails = (entity, type, viewType = "sidebar") => {
+    // if (type === "template") {
+
+    //   <TemplateDetail mode="interviewDetails" templateId={entity?._id}
+    //   onClose={() => {
+    //     TemplateDetailsSidebarOpen(false);
+    //   }
+    //   />;
+    // }
+
     if (viewType === "sidebar") {
       setEntityDetailsSidebar({ entity, type });
       setEntityDetailsModal(null);
@@ -555,14 +568,16 @@ const InterviewDetail = () => {
                     </span>
                   </div>
                   {/* v1.0.4 <------------------------------------------------------------------------------------------------------ */}
-                  <Link
-                    to={`/interviews/${id}/edit`}
-                    className="inline-flex flex-shrink-0 items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit{" "}
-                    <span className="sm:hidden inline ml-1">Interview</span>
-                  </Link>
+                  {interview?.status === "Draft" && (
+                    <Link
+                      to={`/interviews/${id}/edit`}
+                      className="inline-flex flex-shrink-0 items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit{" "}
+                      <span className="sm:hidden inline ml-1">Interview</span>
+                    </Link>
+                  )}
                   {/* v1.0.4 ------------------------------------------------------------------------------------------------------> */}
                 </div>
                 <p className="mt-1 max-w-2xl text-sm text-gray-500">
@@ -684,10 +699,11 @@ const InterviewDetail = () => {
                     <div className="font-medium">
                       {position?.roundsModified
                         ? "Selected Custom round"
-                        : template?.templateName
-                        ? template.templateName.charAt(0).toUpperCase() +
-                          template.templateName.slice(1)
-                        : "Not selected any template"}
+                        : template?.title
+                        ? capitalizeFirstLetter(template?.title)
+                        : //  template.templateName.charAt(0).toUpperCase() +
+                          //   template.templateName.slice(1)
+                          "Not selected any template"}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {template && (
@@ -704,7 +720,7 @@ const InterviewDetail = () => {
                           >
                             View Details
                           </button>
-                          <button
+                          {/* <button
                             onClick={() =>
                               handleViewEntityDetails(
                                 template,
@@ -716,7 +732,7 @@ const InterviewDetail = () => {
                             title="Open in popup"
                           >
                             <ExternalLink className="h-3 w-3" />
-                          </button>
+                          </button> */}
                         </>
                       )}
                     </div>
@@ -841,7 +857,6 @@ const InterviewDetail = () => {
                         </button>
                       )}
 
-                      {/* {console.log('canAddRound', canAddRound)} */}
                       {canAddRound() && (
                         <button
                           onClick={handleAddRound}
@@ -953,6 +968,35 @@ const InterviewDetail = () => {
           interview={interview}
         />
       )}
+
+      {entityDetailsSidebar && entityDetailsSidebar.type === "template" && (
+        <TemplateDetail
+          templateId={entityDetailsSidebar.entity?._id}
+          // onClose={() => setEntityDetailsSidebar(null)}
+          onClose={() => {
+            setEntityDetailsSidebar(null);
+          }}
+          mode="interviewDetails"
+        />
+      )}
+
+      {/* if (type === "template") {
+    if (viewType === "sidebar") {
+      setEntityDetailsSidebar({ entity, type });
+      setEntityDetailsModal(null);
+    } else {
+      setEntityDetailsModal({ entity, type });
+      setEntityDetailsSidebar(null);
+    }
+  } else {
+    if (viewType === "sidebar") {
+      setEntityDetailsSidebar({ entity, type });
+      setEntityDetailsModal(null);
+    } else {
+      setEntityDetailsModal({ entity, type });
+      setEntityDetailsSidebar(null);
+    }
+  } */}
 
       {/* Entity Details Sidebar */}
       {/* {entityDetailsSidebar && (
