@@ -7,8 +7,9 @@ router.get("/generate/:templateId", generateReport);
 router.post("/presets/filter/:templateId", saveFilterPreset);
 router.post("/presets/column/:templateId", saveColumnConfig);
 // sharing report apis
-router.get("/:templateId/access", getReportAccess);
-router.post("/:templateId/share", shareReport);
+router.get("/reports/:templateId/access", getReportAccess);
+router.post("/reports/:templateId/share", shareReport);
+
 
 // Create category
 router.post("/report-category", createCategory);

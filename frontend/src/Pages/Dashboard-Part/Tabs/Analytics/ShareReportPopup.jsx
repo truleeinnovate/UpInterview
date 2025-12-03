@@ -12,37 +12,68 @@ import {
 import { notify } from "../../../../services/toastService.js";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { useUserProfile } from "../../../../apiHooks/useUsers.js"
+import { usePermissions } from "../../../../Context/PermissionsContext";
 
 const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
   const [selectedRoles, setSelectedRoles] = useState([]);
+
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [initialRoles, setInitialRoles] = useState([]);
+  const [initialUsers, setInitialUsers] = useState([]);
+
 
   const { data: accessData, isLoading: accessLoading } =
     useReportAccess(templateId);
+  const { userProfile } = useUserProfile();
+  console.log("userProfile", userProfile);
+  const { effectivePermissions_RoleName } = usePermissions();
+  console.log("effectivePermissions_RoleName", effectivePermissions_RoleName);
+
+
+
+
+
   const shareMutation = useShareReport();
 
   const { usersRes } = useUsers({ limit: 1000 });
   const { data: allRoles } = useRolesQuery({ fetchAllRoles: true });
+  console.log("allRoles ========================================> ", allRoles);
+
   console.log("USERS ========================================> ", usersRes);
 
+  // Normalize roles — your API returns different structures
   // Normalize roles — your API returns different structures
   const organizationRoles = (allRoles || [])
     .filter((role) => role.roleType === "organization")
     .map((role) => ({
       _id: role._id,
       name: role.label || role.roleName || role.name || "Unnamed Role",
+      label: role.label || role.roleName || role.name || "Unnamed Role",
       usersCount: role.usersCount || role.users?.length || 0,
-    }));
+    }))
+    // ❌ Hide role matching effectivePermissions_RoleName
+    .filter((role) => role.name !== effectivePermissions_RoleName);
+
 
   // Normalize users
-  const usersList = (usersRes?.users || []).map((user) => ({
-    _id: user?._id,
-    name: user?.firstName + " " + user?.lastName,
-    email: user?.email,
-    role: user?.roleName,
-    status: user?.status,
-  }));
+  // Normalize users and hide logged-in user
+  const usersList = (usersRes?.users || [])
+    .filter((user) => user?._id !== userProfile?._id) // ❌ Hide current user
+    .map((user) => {
+      const roleObj = allRoles?.find((r) => r._id === user.roleId);
+
+      return {
+        _id: user?._id,
+        name: user?.firstName + " " + user?.lastName,
+        email: user?.email,
+        // ✅ Show label from role table instead of name
+        role: roleObj?.label || roleObj?.name || user?.roleName,
+        status: user?.status,
+      };
+    });
+
 
   // Filter users by search
   const filteredUsers = usersList.filter(
@@ -52,12 +83,26 @@ const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
   );
 
   // Load current sharing
-  useEffect(() => {
-    if (accessData && isOpen) {
-      setSelectedRoles(accessData.roles?.map((r) => r._id || r) || []);
-      setSelectedUsers(accessData.users?.map((u) => u._id || u) || []);
-    }
-  }, [accessData, isOpen]);
+useEffect(() => {
+  if (!accessData || !isOpen) return;
+
+  const loadedRoleIds = (accessData.roles || [])
+    .map(role => typeof role === "string" ? role : role._id?.toString())
+    .filter(Boolean);
+
+  const loadedUserIds = (accessData.users || [])
+    .map(user => typeof user === "string" ? user : user._id?.toString())
+    .filter(Boolean);
+
+  setSelectedRoles(loadedRoleIds);
+  setSelectedUsers(loadedUserIds);
+  setInitialRoles(loadedRoleIds);
+  setInitialUsers(loadedUserIds);
+}, [accessData, isOpen]);
+
+  const hasChanges =
+    JSON.stringify(initialRoles.sort()) !== JSON.stringify(selectedRoles.sort()) ||
+    JSON.stringify(initialUsers.sort()) !== JSON.stringify(selectedUsers.sort());
 
   const toggleRole = (roleId) => {
     setSelectedRoles((prev) =>
@@ -136,10 +181,9 @@ const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
                         onClick={() => toggleRole(role._id)}
                         className={`
                           px-5 py-3 rounded-xl border-2 text-left transition-all duration-200
-                          ${
-                            isSelected
-                              ? "border-custom-blue bg-custom-blue/10 shadow-lg ring-2 ring-custom-blue/20"
-                              : "border-gray-200 hover:border-gray-300 bg-gray-50"
+                          ${isSelected
+                            ? "border-custom-blue bg-custom-blue/10 shadow-lg ring-2 ring-custom-blue/20"
+                            : "border-gray-200 hover:border-gray-300 bg-gray-50"
                           }
                         `}
                       >
@@ -206,10 +250,9 @@ const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
                             onClick={() => toggleUser(user._id)}
                             className={`
                               w-full p-4 rounded-lg text-left transition-all duration-200 border-2
-                              ${
-                                isSelected
-                                  ? "border-green-500 bg-green-50 shadow-sm"
-                                  : "border-transparent hover:bg-white hover:shadow"
+                              ${isSelected
+                                ? "border-green-500 bg-green-50 shadow-sm"
+                                : "border-transparent hover:bg-white hover:shadow"
                               }
                             `}
                           >
@@ -223,6 +266,7 @@ const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
                                     <p className="text-sm text-custom-blue font-semibold">
                                       ({capitalizeFirstLetter(user?.role)})
                                     </p>
+
                                   </div>
                                   <p className="text-sm text-gray-600">
                                     {user?.email}
@@ -259,7 +303,8 @@ const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
                           key={id}
                           className="bg-custom-blue text-white px-4 py-2 rounded-full font-medium shadow"
                         >
-                          Role: {role?.name}
+                          Role: {role?.label || role?.name}
+
                         </span>
                       );
                     })}
@@ -293,12 +338,14 @@ const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
             onClick={handleShare}
             disabled={
               shareMutation.isPending ||
+              !hasChanges || // <-- disable unless changes made
               (selectedRoles.length === 0 && selectedUsers.length === 0)
             }
             className="px-6 py-2 bg-custom-blue text-white font-bold rounded-xl hover:bg-custom-blue/90 disabled:opacity-50 shadow-lg transition"
           >
             {shareMutation.isPending ? "Sharing..." : "Share Report"}
           </button>
+
         </div>
       </div>
     </div>
