@@ -1,6 +1,6 @@
 // v1.0.0 - Ashok - fixed updating rounds based on sequence
 //<-----v1.0.1---Venkatesh------add permission
-const { mongoose } = require("mongoose");
+const mongoose = require("mongoose");
 const { Position } = require("../models/Position/position.js");
 const {
   validatePosition,
@@ -951,7 +951,13 @@ const deleteRound = async (req, res) => {
   const { roundId } = req.params;
 
   try {
-    const position = await Position.findOne({ "rounds._id": roundId });
+    if (!mongoose.Types.ObjectId.isValid(roundId)) {
+      return res.status(400).json({ message: "Invalid Round ID" });
+    }
+
+    const objectRoundId = new mongoose.Types.ObjectId(roundId);
+
+    const position = await Position.findOne({ "rounds._id": objectRoundId });
     if (!position) {
       return res.status(404).json({ message: "Round not found" });
     }

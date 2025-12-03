@@ -5,7 +5,6 @@ import React, { useState, useMemo } from "react";
 import InterviewRounds from "./InterviewRounds";
 import AppliedPositions from "./AppliedPositions";
 import Timeline from "./Timeline";
-import PositionDetails from "./PositionDetails";
 import InterviewDetails from "./InterviewDetails";
 import classNames from "classnames";
 import Sidebar from "./Sidebar";
@@ -49,7 +48,6 @@ const tabs = [
 
 const MainContent = () => {
   const [activeTab, setActiveTab] = useState("interviews");
-  const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectedInterview, setSelectedInterview] = useState(null);
   const { id } = useParams();
   // const [searchQuery, setSearchQuery] = useState("");
@@ -57,22 +55,23 @@ const MainContent = () => {
   const [editModeOn, setEditModeOn] = useState(false);
   // const [slideShow, setSlideShow] = useState(false);
 
-  // Get candidate data from the useCandidates hook
-  const { candidateData } = useCandidates();
-  const { interviewData } = useInterviews();
+  // Get candidate data, candidate-specific positions and all interviews
+  const { candidateData, useCandidatePositions } = useCandidates();
+  // Use a high limit so we effectively get all interviews for this tenant/owner
+  const { interviewData } = useInterviews({}, 1, 1000);
 
   // Find the current candidate from the cached data
   const candidate = useMemo(() => {
     return candidateData?.find((c) => c._id === id);
   }, [candidateData, id]);
 
-  // Extract positions from candidate data
-  const positions = useMemo(() => {
-    return candidate?.appliedPositions || [];
-  }, [candidate]);
+  // Fetch positions for this candidate via candidateposition API
+  const { data: positions = [] } = useCandidatePositions(id);
 
-  // Find interview data for the current candidate
-  const interview = interviewData.find((data) => data?.candidateId?._id === id);
+  // Collect all interviews for the current candidate
+  const interviews = useMemo(() => {
+    return interviewData.filter((data) => data?.candidateId?._id === id);
+  }, [interviewData, id]);
 
   // if (!candidate) return <Loading />
 
@@ -181,7 +180,7 @@ const MainContent = () => {
                     Interview Process
                   </h3>
                   <button className="px-4 py-2 bg-custom-blue text-white rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20 sm:text-sm">
-                    Add Interview
+                    Create Interview
                   </button>
                 </div>
                 <div className="space-y-4">
@@ -417,7 +416,7 @@ const MainContent = () => {
                 {activeTab === "interviews" && (
                   <>
                     <InterviewRounds
-                      interviews={interview || []}
+                      interviews={interviews || []}
                       onViewDetails={setSelectedInterview}
                       onEdit={handleEdit}
                       candidateId={id}
@@ -432,18 +431,7 @@ const MainContent = () => {
                   </>
                 )}
                 {activeTab === "positions" && (
-                  <>
-                    <AppliedPositions
-                      positions={positions || []}
-                      onViewDetails={setSelectedPosition}
-                    />
-                    {selectedPosition && (
-                      <PositionDetails
-                        position={selectedPosition}
-                        onClose={() => setSelectedPosition(null)}
-                      />
-                    )}
-                  </>
+                  <AppliedPositions positions={positions || []} />
                 )}
                 {activeTab === "timeline" && (
                   <Timeline

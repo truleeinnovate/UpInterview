@@ -276,13 +276,29 @@ const totalCandidatess = responseData?.data?.total || 0;
     // onError: (error, candidateId) => {
     //   console.error("Error deleting candidate:", error);
 
-    //   // Revert optimistic update on error
-    //   queryClient.invalidateQueries(["candidates"]);
-    // },
   });
+  
+  // Hook to fetch candidate positions for a specific candidate (for Candidate 360 Positions tab)
+  const useCandidatePositions = (candidateId) => {
+    return useQuery({
+      queryKey: ["candidate-positions", candidateId],
+      queryFn: async () => {
+        const response = await axios.get(
+          `${config.REACT_APP_API_URL}/candidateposition/candidate/${candidateId}`
+        );
+        // Backend returns { data: [...] }
+        return response.data?.data || [];
+      },
+      enabled: !!candidateId && !!hasViewPermission,
+      retry: 1,
+      staleTime: 1000 * 60 * 10,
+      cacheTime: 1000 * 60 * 30,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    });
+  };
 
-  // Use mutation.isPending instead of checking status (for v5+)
-  // For v4, use mutation.isLoading
+  // Aggregate loading states
   const isMutationLoading = mutation.isPending; // or mutation.isLoading for v4
   const isDeleteLoading = deleteMutation.isPending;
   const isLoading = isQueryLoading || isMutationLoading || isDeleteLoading;
@@ -293,6 +309,7 @@ const totalCandidatess = responseData?.data?.total || 0;
     isLoading,
     isQueryLoading,
     isMutationLoading,
+    isDeleteLoading,
     isError,
     error,
     isMutationError: mutation.isError,
@@ -300,5 +317,6 @@ const totalCandidatess = responseData?.data?.total || 0;
     addOrUpdateCandidate: mutation.mutateAsync,
     deleteCandidateData: deleteMutation.mutateAsync,
     refetch,
+    useCandidatePositions,
   };
 };

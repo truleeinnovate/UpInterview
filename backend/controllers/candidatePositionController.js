@@ -1,5 +1,6 @@
 //<-----v1.0.1---Venkatesh------add permission
 const CandidatePosition = require("../models/CandidatePosition.js");
+const mongoose = require("mongoose");
 
 const getAllCandidatePositions = async (req, res) => {
   try {

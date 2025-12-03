@@ -218,7 +218,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
           </div>
 
           <h3
-            className="text-center font-bold text-lg cursor-default truncate max-w-[180px]"
+            className="text-center font-bold text-lg cursor-default truncate max-w-[180px] mx-auto"
             title={`${capitalizeFirstLetter(
               candidate?.FirstName
             )} ${capitalizeFirstLetter(candidate?.LastName)}`}
