@@ -1,9 +1,15 @@
+// v1.0.0 - Ashok - modified - column management logic
+
 // controllers/AnalyticsController/analyticsController.js
 const mongoose = require("mongoose");
 const ReportCategory = require("../../models/AnalyticSchemas/reportCategory");
-const { ReportTemplate } = require("../../models/AnalyticSchemas/reportSchemas");
+const {
+  ReportTemplate,
+} = require("../../models/AnalyticSchemas/reportSchemas");
 const { FilterPreset } = require("../../models/AnalyticSchemas/filterSchemas");
-const { ColumnConfiguration } = require("../../models/AnalyticSchemas/columnSchemas");
+const {
+  ColumnConfiguration,
+} = require("../../models/AnalyticSchemas/columnSchemas");
 const { buildPermissionQuery } = require("../../utils/buildPermissionQuery");
 // Import all models directly (safe & simple)
 const { Candidate } = require("../../models/Candidate");
@@ -298,7 +304,6 @@ const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
 //   }
 // };
 
-
 const generateReport = async (req, res) => {
   try {
     console.log("========== [REPORT GENERATION START] ==========\n");
@@ -320,7 +325,9 @@ const generateReport = async (req, res) => {
 
     if (!template) {
       console.log("[ERROR] Template not found");
-      return res.status(404).json({ success: false, message: "Report template not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Report template not found" });
     }
 
     console.log("[SUCCESS] Template:", template.label);
@@ -330,11 +337,13 @@ const generateReport = async (req, res) => {
       columns: columnConfig,
       filters: filterConfig = {},
       kpis: templateKpis = [],
-      charts: templateCharts = []
+      charts: templateCharts = [],
     } = template.configuration || {};
 
     if (!dataSource?.collections?.length) {
-      return res.status(400).json({ success: false, message: "No data source defined" });
+      return res
+        .status(400)
+        .json({ success: false, message: "No data source defined" });
     }
 
     const collectionName = dataSource.collections[0].toLowerCase();
@@ -348,7 +357,12 @@ const generateReport = async (req, res) => {
 
     const Model = ModelMap[collectionName];
     if (!Model) {
-      return res.status(400).json({ success: false, message: `Unsupported collection: ${collectionName}` });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: `Unsupported collection: ${collectionName}`,
+        });
     }
 
     // 2. FETCH LATEST FILTER PRESET (ONLY 1 QUERY)
@@ -357,13 +371,15 @@ const generateReport = async (req, res) => {
     if (actingAsTenantId) {
       filterPreset = await FilterPreset.findOne({
         templateId,
-        tenantId: actingAsTenantId
+        tenantId: actingAsTenantId,
       })
         .sort({ updatedAt: -1 })
         .lean();
 
       if (filterPreset) {
-        console.log(`[FILTERS] Using latest saved preset: "${filterPreset.name}"`);
+        console.log(
+          `[FILTERS] Using latest saved preset: "${filterPreset.name}"`
+        );
       } else {
         console.log("[FILTERS] No saved preset → using template defaults");
       }
@@ -371,11 +387,14 @@ const generateReport = async (req, res) => {
 
     // 3. SAVED COLUMN CONFIG
     const savedColumnConfig = actingAsTenantId
-      ? await ColumnConfiguration.findOne({ templateId, tenantId: actingAsTenantId }).lean()
+      ? await ColumnConfiguration.findOne({
+          templateId,
+          tenantId: actingAsTenantId,
+        }).lean()
       : null;
 
     // 4. BUILD COLUMNS
-    const lockedColumns = (columnConfig?.lockedColumns || []).map(col => ({
+    const lockedColumns = (columnConfig?.lockedColumns || []).map((col) => ({
       key: col.key,
       label: col.label,
       width: col.width || "180px",
@@ -388,8 +407,8 @@ const generateReport = async (req, res) => {
 
     if (savedColumnConfig?.selectedColumns?.length > 0) {
       const userMap = new Map();
-      savedColumnConfig.selectedColumns.forEach(col => {
-        if (col.key && !lockedColumns.some(l => l.key === col.key)) {
+      savedColumnConfig.selectedColumns.forEach((col) => {
+        if (col.key && !lockedColumns.some((l) => l.key === col.key)) {
           userMap.set(col.key, {
             key: col.key,
             label: col.label || col.key,
@@ -402,8 +421,8 @@ const generateReport = async (req, res) => {
       });
       finalColumns.push(...userMap.values());
     } else {
-      (columnConfig?.default || []).forEach(col => {
-        if (!finalColumns.some(c => c.key === col.key)) {
+      (columnConfig?.default || []).forEach((col) => {
+        if (!finalColumns.some((c) => c.key === col.key)) {
           finalColumns.push({
             key: col.key,
             label: col.label,
@@ -421,15 +440,19 @@ const generateReport = async (req, res) => {
 
     // 5. AVAILABLE COLUMNS
     const availableColumns = [
-      ...lockedColumns.map(col => ({
+      ...lockedColumns.map((col) => ({
         key: col.key,
         label: col.label,
-        type: columnConfig?.available?.find(a => a.key === col.key)?.type || "text",
+        type:
+          columnConfig?.available?.find((a) => a.key === col.key)?.type ||
+          "text",
         locked: true,
         selected: true,
       })),
-      ...(columnConfig?.available || []).map(col => {
-        const isVisible = responseColumns.some(c => c.key === col.key && c.visible);
+      ...(columnConfig?.available || []).map((col) => {
+        const isVisible = responseColumns.some(
+          (c) => c.key === col.key && c.visible
+        );
         return {
           key: col.key,
           label: col.label || col.key,
@@ -440,7 +463,9 @@ const generateReport = async (req, res) => {
       }),
     ];
 
-    const uniqueAvailableColumns = Array.from(new Map(availableColumns.map(c => [c.key, c])).values());
+    const uniqueAvailableColumns = Array.from(
+      new Map(availableColumns.map((c) => [c.key, c])).values()
+    );
 
     // 6. ACTIVE FILTERS — PRESET WINS
     let activeFilters = {};
@@ -451,14 +476,20 @@ const generateReport = async (req, res) => {
       // OLD FORMAT: flat object { dateRange: "...", status: "..." }
       if (firstFilter && !firstFilter.key && !firstFilter.value) {
         activeFilters = { ...firstFilter };
-        console.log("[FILTERS] Applied saved filters (old format) →", activeFilters);
+        console.log(
+          "[FILTERS] Applied saved filters (old format) →",
+          activeFilters
+        );
       }
       // NEW FORMAT: array of { key, value }
       else {
         activeFilters = Object.fromEntries(
-          filterPreset.filters.map(f => [f.key, f.value])
+          filterPreset.filters.map((f) => [f.key, f.value])
         );
-        console.log("[FILTERS] Applied saved filters (new format) →", activeFilters);
+        console.log(
+          "[FILTERS] Applied saved filters (new format) →",
+          activeFilters
+        );
       }
     } else {
       activeFilters = { ...(filterConfig?.default || {}) };
@@ -474,7 +505,10 @@ const generateReport = async (req, res) => {
       res.locals.effectivePermissions_RoleName
     );
 
-    console.log("[PERMISSIONS] Query →", JSON.stringify(permissionQuery, null, 2));
+    console.log(
+      "[PERMISSIONS] Query →",
+      JSON.stringify(permissionQuery, null, 2)
+    );
 
     // 8. FINAL QUERY
     let finalQuery = { ...permissionQuery };
@@ -487,10 +521,15 @@ const generateReport = async (req, res) => {
       finalQuery.createdAt = { $gte: startDate };
     }
 
-    Object.keys(activeFilters).forEach(key => {
-      if (["dateRange", "customStartDate", "customEndDate"].includes(key)) return;
+    Object.keys(activeFilters).forEach((key) => {
+      if (["dateRange", "customStartDate", "customEndDate"].includes(key))
+        return;
       const value = activeFilters[key];
-      if (value != null && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
+      if (
+        value != null &&
+        value !== "all" &&
+        (!Array.isArray(value) || value.length > 0)
+      ) {
         finalQuery[key] = Array.isArray(value) ? { $in: value } : value;
       }
     });
@@ -507,54 +546,88 @@ const generateReport = async (req, res) => {
     let rawData = [];
 
     if (collectionName === "interviewrounds") {
-      const interviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
-      const interviewIds = interviews.map(i => i._id);
+      const interviews = await Interview.find(permissionQuery, {
+        _id: 1,
+      }).lean();
+      const interviewIds = interviews.map((i) => i._id);
       if (interviewIds.length > 0) {
         rawData = await InterviewRounds.find(
           { interviewId: { $in: interviewIds }, ...finalQuery },
           projection
-        ).limit(2000).lean();
+        )
+          .limit(2000)
+          .lean();
       }
     } else {
       rawData = await Model.find(
-        { ...permissionQuery, ...finalQuery },  // SECURE: permissionQuery included
+        { ...permissionQuery, ...finalQuery }, // SECURE: permissionQuery included
         projection
-      ).limit(2000).lean();
+      )
+        .limit(2000)
+        .lean();
     }
 
     console.log(`[DATA] Fetched ${rawData.length} records`);
 
-    const sortedData = rawData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    const mappedData = sortedData.map(d => ({ id: d._id.toString(), ...d }));
+    const sortedData = rawData.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+    const mappedData = sortedData.map((d) => ({ id: d._id.toString(), ...d }));
 
     // 11. KPI + CHARTS
     const aggregates = {
       totalPositions: mappedData.length,
-      openPositions: mappedData.filter(d => ["opened", "open", "active"].includes(d.status?.toLowerCase())).length,
-      closedPositions: mappedData.filter(d => ["closed", "filled"].includes(d.status?.toLowerCase())).length,
-      onHoldPositions: mappedData.filter(d => d.status?.toLowerCase() === "hold").length,
-      avgSalary: mappedData.reduce((sum, d) => sum + ((Number(d.minSalary || 0) + Number(d.maxSalary || 0)) / 2), 0) / (mappedData.length || 1)
+      openPositions: mappedData.filter((d) =>
+        ["opened", "open", "active"].includes(d.status?.toLowerCase())
+      ).length,
+      closedPositions: mappedData.filter((d) =>
+        ["closed", "filled"].includes(d.status?.toLowerCase())
+      ).length,
+      onHoldPositions: mappedData.filter(
+        (d) => d.status?.toLowerCase() === "hold"
+      ).length,
+      avgSalary:
+        mappedData.reduce(
+          (sum, d) =>
+            sum + (Number(d.minSalary || 0) + Number(d.maxSalary || 0)) / 2,
+          0
+        ) / (mappedData.length || 1),
     };
 
     const chartData = {
       positionsByStatus: Object.entries(
-        mappedData.reduce((m, d) => { m[d.status || "Unknown"] = (m[d.status || "Unknown"] || 0) + 1; return m; }, {})
+        mappedData.reduce((m, d) => {
+          m[d.status || "Unknown"] = (m[d.status || "Unknown"] || 0) + 1;
+          return m;
+        }, {})
       ).map(([name, value]) => ({ name, value })),
 
       positionsByMonth: Object.entries(
         mappedData.reduce((m, d) => {
-          const month = new Date(d.createdAt).toLocaleString("default", { month: "short", year: "numeric" });
-          m[month] = (m[month] || 0) + 1; return m;
+          const month = new Date(d.createdAt).toLocaleString("default", {
+            month: "short",
+            year: "numeric",
+          });
+          m[month] = (m[month] || 0) + 1;
+          return m;
         }, {})
       ).map(([name, value]) => ({ name, value })),
 
       positionsByLocation: Object.entries(
-        mappedData.reduce((m, d) => { m[d.Location || "Unknown"] = (m[d.Location || "Unknown"] || 0) + 1; return m; }, {})
-      ).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, value]) => ({ name, value }))
+        mappedData.reduce((m, d) => {
+          m[d.Location || "Unknown"] = (m[d.Location || "Unknown"] || 0) + 1;
+          return m;
+        }, {})
+      )
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([name, value]) => ({ name, value })),
     };
 
     // 12. FINAL RESPONSE — UX PERFECT
-    console.log("[SUCCESS] Report generated successfully\n========== [END] ==========\n");
+    console.log(
+      "[SUCCESS] Report generated successfully\n========== [END] ==========\n"
+    );
 
     return res.json({
       success: true,
@@ -570,27 +643,27 @@ const generateReport = async (req, res) => {
       data: mappedData,
       availableFilters: filterConfig?.available || [],
       // SAVED DEFAULT FILTERS (for "Reset" button)
-      defaultFilters: filterPreset?.filters?.length > 0
-        ? Object.fromEntries(filterPreset.filters.map(f => [f.key, f.value]))
-        : (filterConfig?.default || {}),
+      defaultFilters:
+        filterPreset?.filters?.length > 0
+          ? Object.fromEntries(
+              filterPreset.filters.map((f) => [f.key, f.value])
+            )
+          : filterConfig?.default || {},
 
       kpis: templateKpis,
       charts: templateCharts,
       aggregates,
       chartData,
     });
-
   } catch (error) {
     console.error("[FATAL ERROR] Generate Report Failed:", error);
     return res.status(500).json({
       success: false,
       message: "Server error",
-      error: error.message
+      error: error.message,
     });
   }
 };
-
-
 
 const getReportTemplates = async (req, res) => {
   try {
@@ -601,10 +674,7 @@ const getReportTemplates = async (req, res) => {
      * 1) GET CATEGORIES (System + Tenant-Specific)
      * --------------------------------------------- */
     let categories = await ReportCategory.find({
-      $or: [
-        { tenantId: null, isSystem: true },
-        { tenantId }
-      ]
+      $or: [{ tenantId: null, isSystem: true }, { tenantId }],
     })
       .select("_id name label icon color order")
       .lean();
@@ -612,13 +682,12 @@ const getReportTemplates = async (req, res) => {
     // Sort in JS instead of Mongo (Cosmos safe)
     categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-
-    const formattedCategories = categories.map(cat => ({
+    const formattedCategories = categories.map((cat) => ({
       id: cat._id.toString(),
       name: cat.name,
       label: cat.label,
       icon: cat.icon || "folder",
-      color: cat.color || "#6366f1"
+      color: cat.color || "#6366f1",
     }));
 
     /* -----------------------------------------------
@@ -627,47 +696,46 @@ const getReportTemplates = async (req, res) => {
      *    category must be a valid ObjectId OR null.
      * --------------------------------------------- */
     const templates = await ReportTemplate.find({
-      $or: [
-        { tenantId: null, isSystemTemplate: true },
-        { tenantId }
-      ],
+      $or: [{ tenantId: null, isSystemTemplate: true }, { tenantId }],
       // Prevent Azure CastErrors from bad category values
       $and: [
         {
           $or: [
             { category: { $exists: false } },
             { category: null },
-            { category: { $type: "objectId" } }
-          ]
-        }
-      ]
+            { category: { $type: "objectId" } },
+          ],
+        },
+      ],
     })
       .populate({
         path: "category",
         select: "_id name label icon color",
         // FIX: If category does not exist, skip instead of error
-        match: { _id: { $exists: true } }
+        match: { _id: { $exists: true } },
       })
       .lean();
 
-    const formattedTemplates = templates.map(t => ({
+    const formattedTemplates = templates.map((t) => ({
       id: t._id.toString(),
       name: t.name,
       label: t.label,
       description: t.description || "No description available",
 
-      category: t.category ? {
-        id: t.category._id.toString(),
-        name: t.category.name,
-        label: t.category.label,
-        icon: t.category.icon,
-        color: t.category.color
-      } : null, // ← AZURE SAFE
+      category: t.category
+        ? {
+            id: t.category._id.toString(),
+            name: t.category.name,
+            label: t.category.label,
+            icon: t.category.icon,
+            color: t.category.color,
+          }
+        : null, // ← AZURE SAFE
 
       configuration: t.configuration || {},
       status: t.status || "active",
       isSystemTemplate: !!t.isSystemTemplate,
-      requiredPlans: t.requiredPlans || []
+      requiredPlans: t.requiredPlans || [],
     }));
 
     /* -----------------------------------------------
@@ -677,27 +745,28 @@ const getReportTemplates = async (req, res) => {
       success: true,
       data: {
         categories: formattedCategories,
-        templates: formattedTemplates
-      }
+        templates: formattedTemplates,
+      },
     });
-
   } catch (error) {
     console.error("GET REPORT TEMPLATES ERROR:", error);
     return res.status(500).json({
       success: false,
       message: "Server error fetching templates",
-      error: error.message
+      error: error.message,
     });
   }
 };
-
-
 
 const saveFilterPreset = async (req, res) => {
   try {
     const { templateId } = req.params;
     const tenantId = res.locals.auth.actingAsTenantId;
-    const { filters: incomingFilters, name = "Default View", isDefault = true } = req.body;
+    const {
+      filters: incomingFilters,
+      name = "Default View",
+      isDefault = true,
+    } = req.body;
 
     if (!templateId || !tenantId) {
       return res.status(400).json({
@@ -712,12 +781,19 @@ const saveFilterPreset = async (req, res) => {
     if (incomingFilters) {
       // Case 1: Already correct format → array of { key, value }
       if (Array.isArray(incomingFilters)) {
-        normalizedFilters = incomingFilters.filter(f => f.key && f.value != null);
+        normalizedFilters = incomingFilters.filter(
+          (f) => f.key && f.value != null
+        );
       }
       // Case 2: Old flat object format → { dateRange: "...", status: "draft" }
-      else if (typeof incomingFilters === "object" && incomingFilters !== null) {
+      else if (
+        typeof incomingFilters === "object" &&
+        incomingFilters !== null
+      ) {
         normalizedFilters = Object.entries(incomingFilters)
-          .filter(([key, value]) => value != null && value !== "" && value !== "all")
+          .filter(
+            ([key, value]) => value != null && value !== "" && value !== "all"
+          )
           .map(([key, value]) => ({
             key,
             value: Array.isArray(value) ? value : value, // preserve arrays (multiselect)
@@ -772,8 +848,10 @@ const saveFilterPreset = async (req, res) => {
 
 const saveColumnConfig = async (req, res) => {
   try {
+    // const { templateId } = req.params;
+    // const tenantId = req.user.tenantId;
     const { templateId } = req.params;
-    const tenantId = req.user.tenantId;
+    const tenantId = res.locals.auth.actingAsTenantId;
     const { selectedColumns } = req.body;
 
     const config = await ColumnConfiguration.findOneAndUpdate(
@@ -809,8 +887,15 @@ const getReportAccess = async (req, res) => {
     return res.json({
       success: true,
       access: {
-        roles: accessDoc.access.roles.map(r => ({ _id: r._id, name: r.name })),
-        users: accessDoc.access.users.map(u => ({ _id: u._id, name: u.name, email: u.email })),
+        roles: accessDoc.access.roles.map((r) => ({
+          _id: r._id,
+          name: r.name,
+        })),
+        users: accessDoc.access.users.map((u) => ({
+          _id: u._id,
+          name: u.name,
+          email: u.email,
+        })),
       },
       sharedBy: accessDoc.sharedBy,
       sharedAt: accessDoc.sharedAt,
@@ -843,7 +928,7 @@ const shareReport = async (req, res) => {
         tenantId,
         templateId,
         "access.roles": roleIds,
-        "access.users": userIds.map(id => new mongoose.Types.ObjectId(id)),
+        "access.users": userIds.map((id) => new mongoose.Types.ObjectId(id)),
         sharedBy,
         sharedAt: new Date(),
         "lastGenerated.at": null,
@@ -912,4 +997,13 @@ const createCategory = async (req, res) => {
   }
 };
 
-module.exports = { getReportTemplates, generateReport, saveFilterPreset, saveColumnConfig,getReportAccess,shareReport,createCategory, createTemplate };
+module.exports = {
+  getReportTemplates,
+  generateReport,
+  saveFilterPreset,
+  saveColumnConfig,
+  getReportAccess,
+  shareReport,
+  createCategory,
+  createTemplate,
+};

@@ -609,16 +609,16 @@ import AdvancedFilters from "../../../../Components/Analytics/AdvancedFilters";
 import ReportsTable from "../../../../Components/Analytics/ReportsTable";
 import ColumnManager from "../../../../Components/Analytics/ColumnManager";
 import KPICard from "../../../../Components/Analytics/KPICard";
-import {
-  interviews,
-  interviewers,
-  assessments,
-  candidates,
-  organizations,
-  reportTemplates,
-  getKPIData,
-  getChartData,
-} from "../../../../Components/Analytics/data/mockData";
+// import {
+//   interviews,
+//   interviewers,
+//   assessments,
+//   candidates,
+//   organizations,
+//   reportTemplates,
+//   getKPIData,
+//   getChartData,
+// } from "../../../../Components/Analytics/data/mockData";
 
 import {
   useGenerateReport,
@@ -805,12 +805,12 @@ const ReportDetail = () => {
   // Apply + Save View
 
   // 1. Extract function
-
-  const fetchReport = useCallback(async (reportIdParam) => {
+  // --------------------------- REPORTS FETCHING LOGIC ---------------------------
+  const fetchReport = useCallback(async (reportIdParam, force = false) => {
     if (!reportIdParam) return;
 
     // Prevent duplicate fetch on same reportId
-    if (lastFetchedId.current === reportIdParam) return;
+    if (!force && lastFetchedId.current === reportIdParam) return;
 
     try {
       const response = await generateReportMutation.mutateAsync(reportIdParam);
@@ -873,7 +873,41 @@ const ReportDetail = () => {
       await fetchReport(reportId);
     })();
   }, [reportId, fetchReport]);
+  // ------------------------ END OF REPORTS FETCHING LOGIC -----------------------
 
+  // --------------------------- COLUMN MANAGEMENT LOGIC ------------------------
+  // Handle Column Change & Save
+  const handleColumnsChange = useCallback(
+    async (newColumns) => {
+      // 1. Update UI immediately (Optimistic update)
+      setColumns(newColumns);
+
+      try {
+        // 2. Format payload for backend (clean up unnecessary UI props if needed)
+        const formattedColumns = newColumns.map((c) => ({
+          key: c.key,
+          label: c.label,
+          visible: c.visible ?? true,
+          order: c.order ?? 0,
+          width: c.width,
+        }));
+
+        // 3. Call the API hook
+        await saveColumnConfig.mutateAsync({
+          templateId: reportId,
+          selectedColumns: formattedColumns,
+        });
+
+        notify.success("Column layout saved!");
+      } catch (err) {
+        console.error("Failed to save columns:", err);
+        notify.error("Failed to save column layout.");
+      }
+    },
+    [reportId, saveColumnConfig]
+  );
+
+  // ------------------------ END OF COLUMN MANAGEMENT LOGIC ----------------------
   const handleApplyAndSave = async () => {
     try {
       await saveFilterPreset.mutateAsync({
@@ -899,9 +933,9 @@ const ReportDetail = () => {
     }
   };
 
-  const handleColumnsChange = useCallback((newColumns) => {
-    setColumns(newColumns);
-  }, []);
+  // const handleColumnsChange = useCallback((newColumns) => {
+  //   setColumns(newColumns);
+  // }, []);
 
   const getLucideIcon = (name) => {
     return Icons[name] || Icons.HelpCircle;
@@ -920,7 +954,7 @@ const ReportDetail = () => {
 
       notify.success("Filters saved successfully!");
 
-      await fetchReport(reportId);
+      await fetchReport(reportId, true);
     } catch (error) {
       console.error(error);
       notify.error("Failed to save filters");
@@ -996,10 +1030,11 @@ const ReportDetail = () => {
             className="cursor-pointer"
           >
             <LayoutDashboard
-              className={`text-xl mr-4 ${activeView === "dashboard"
+              className={`text-xl mr-4 ${
+                activeView === "dashboard"
                   ? "text-custom-blue"
                   : "text-gray-500"
-                }`}
+              }`}
             />
           </span>
         </Tooltip>
@@ -1009,8 +1044,9 @@ const ReportDetail = () => {
             className="cursor-pointer"
           >
             <Table
-              className={`text-xl ${activeView === "table" ? "text-custom-blue" : "text-gray-500"
-                }`}
+              className={`text-xl ${
+                activeView === "table" ? "text-custom-blue" : "text-gray-500"
+              }`}
             />
           </span>
         </Tooltip>
@@ -1018,13 +1054,13 @@ const ReportDetail = () => {
 
       {/* DYNAMIC FILTERS — Only this part is new */}
       {/* {isGeneratedReport && ( */}
-        <AdvancedFilters
-          // onFiltersChange={setFilters}
-          onFiltersChange={handleApplyFilters}
-          initialFilters={filters}
-          availableFields={availableFilters}
-          showAdvancedFilters={false}
-        />
+      <AdvancedFilters
+        // onFiltersChange={setFilters}
+        onFiltersChange={handleApplyFilters}
+        initialFilters={filters}
+        availableFields={availableFilters}
+        showAdvancedFilters={false}
+      />
       {/* // )} */}
 
       {/* YOUR ORIGINAL CONTENT LOGIC — Only shows real data when generated */}
@@ -1099,7 +1135,7 @@ const ReportDetail = () => {
                     : "Detailed View"
                 }
                 type="template"
-                onGenerate={() => { }}
+                onGenerate={() => {}}
                 loadingId="RPT001"
               />
             </div>
@@ -1113,12 +1149,12 @@ const ReportDetail = () => {
             onClose={() => setIsColumnManagerOpen(false)}
             columns={columns}
             availableColumns={availableColumns}
-            onColumnsChange={setColumns}
+            // onColumnsChange={setColumns}
+            onColumnsChange={handleColumnsChange}
             type="table"
           />
         </div>
       )}
-      
     </div>
   );
 };
