@@ -45,6 +45,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { notify } from "../../../../../services/toastService.js";
 import axios from "axios";
 import { config } from "../../../../../config.js";
+import { useMemo } from "react";
 // import FeeConfirmationModal from '../components/FeeConfirmationModal.js';
 
 const InterviewDetail = () => {
@@ -59,18 +60,18 @@ const InterviewDetail = () => {
 
   const { data, isLoading } = useInterviewDetails(id);
 
-  const interview = data || {};
+  // const interview = data || {};
+  const interview = useMemo(() => data ?? null, [data]);
+
+  const candidate = interview?.candidateId;
+  const position = interview?.positionId;
+  const rounds = useMemo(() => interview?.rounds ?? [], [interview?.rounds]);
+  const template = interview?.templateId;
 
   // const interview = interviewData?.find((interview) => interview._id === id);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
-  /*************  ✨ Windsurf Command ⭐  *************/
-  /**
-   * Handles the candidate view popup, sets the selected candidate and toggles the select candidate view flag.
-   * Prevents an error if candidate is undefined.
-   * @param {Object} candidate - The candidate object to be viewed.
-   */
-  /*******  1e216b43-d416-4981-a30e-ba9807bee39b  *******/
+
   const handleView = (candidate) => {
     if (!candidate) return; // Prevents error if candidate is undefined
     setSelectedCandidate(candidate);
@@ -97,10 +98,10 @@ const InterviewDetail = () => {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [candidate, setCandidate] = useState(null);
-  const [position, setPosition] = useState(null);
-  const [rounds, setRounds] = useState([]);
-  const [template, setTemplate] = useState(null);
+  // const [candidate, setCandidate] = useState(null);
+  // const [position, setPosition] = useState(null);
+  // const [rounds, setRounds] = useState([]);
+  // const [template, setTemplate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statusModal, setStatusModal] = useState({
     isOpen: false,
@@ -108,6 +109,43 @@ const InterviewDetail = () => {
     message: "",
     onConfirm: null,
   });
+
+  // useEffect(() => {
+  //   if (interview) {
+  //     setCandidate(interview?.candidateId || null);
+  //     setPosition(interview?.positionId || null);
+  //     setRounds(interview?.rounds || []);
+  //     setTemplate(interview?.templateId || null);
+  //   }
+  // }, [interview]);
+
+  useEffect(() => {
+    if (rounds && rounds.length > 0) {
+      if (rounds.length === 1) {
+        // Force vertical mode when only one round exists
+        setRoundsViewMode("vertical");
+        setActiveRound(rounds[0]?._id); // Always open the only card
+        return; // No need to run the rest of the logic
+      }
+
+      // Set the active round to the first non-completed round
+      const nextRound = rounds
+        .filter((round) => ["Scheduled"].includes(round?.status))
+        .sort((a, b) => a?.sequence - b?.sequence)[0];
+
+      if (nextRound) {
+        setActiveRound(nextRound?._id);
+      } else {
+        // If all rounds are completed, set the last round as active
+        const lastRound = [...rounds].sort(
+          (a, b) => b?.sequence - a?.sequence
+        )[0];
+        if (lastRound) {
+          setActiveRound(lastRound?._id);
+        }
+      }
+    }
+  }, [rounds]);
 
   const checkRoundStatuses = (action) => {
     const allowedStatuses = [
@@ -167,15 +205,6 @@ const InterviewDetail = () => {
 
   // Ensure rounds is always an array
 
-  useEffect(() => {
-    if (interview) {
-      setCandidate(interview?.candidateId || null);
-      setPosition(interview?.positionId || null);
-      setRounds(interview?.rounds || []);
-      setTemplate(interview?.templateId || null);
-    }
-  }, [id, interview]);
-
   const handleInitiateAction = async (round, action) => {
     try {
       // Update round status and fees via API
@@ -230,40 +259,6 @@ const InterviewDetail = () => {
   //     }
   //   }
   // }, [rounds]);
-
-  useEffect(() => {
-    if (rounds && rounds.length > 0) {
-      if (rounds.length === 1) {
-        // Force vertical mode when only one round exists
-        setRoundsViewMode("vertical");
-        setActiveRound(rounds[0]._id); // Always open the only card
-        return; // No need to run the rest of the logic
-      }
-
-      // Set the active round to the first non-completed round
-      const nextRound = rounds
-        .filter((round) => ["Scheduled"].includes(round.status))
-        .sort((a, b) => a.sequence - b.sequence)[0];
-
-      if (nextRound) {
-        setActiveRound(nextRound._id);
-      } else {
-        // If all rounds are completed, set the last round as active
-        const lastRound = [...rounds].sort(
-          (a, b) => b.sequence - a.sequence
-        )[0];
-        if (lastRound) {
-          setActiveRound(lastRound._id);
-        }
-      }
-    }
-  }, [rounds]);
-  // v1.0.1 ---------------------------------------------------------------------------------->
-
-  // Ensure hooks are always called before any conditional return
-  // if (!interview) {
-  //   return <Loading />;
-  // }
 
   // Handle loading state
   if (isQueryLoading) {

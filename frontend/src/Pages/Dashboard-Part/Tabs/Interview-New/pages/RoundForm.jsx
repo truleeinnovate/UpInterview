@@ -166,6 +166,7 @@ const RoundFormInterviews = () => {
     };
     fetchOwnerData();
   }, [organization, userId]);
+  console.log("interview?.positionId", interview?.positionId);
 
   useEffect(() => {
     if (interviewData) {
@@ -3031,6 +3032,7 @@ const RoundFormInterviews = () => {
           candidateExperience={candidate?.CurrentExperience}
           isMockInterview={false}
           previousSelectedInterviewers={externalInterviewers}
+          navigatedfrom="interviewRound"
         />
       )}
 

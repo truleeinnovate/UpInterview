@@ -920,7 +920,11 @@ const updateInterviewRound = async (req, res) => {
 };
 
 // Helper function to trigger webhook for interview round status updates
-const triggerInterviewRoundStatusUpdated = async (round, oldStatus, interview = null) => {
+const triggerInterviewRoundStatusUpdated = async (
+  round,
+  oldStatus,
+  interview = null
+) => {
   try {
     // Skip if no status change or if status is not set
     if (!round.status || round.status === oldStatus) {
@@ -928,7 +932,7 @@ const triggerInterviewRoundStatusUpdated = async (round, oldStatus, interview = 
     }
 
     // Skip draft status as per requirements
-    if (round.status === 'Draft') {
+    if (round.status === "Draft") {
       return;
     }
 
@@ -936,7 +940,7 @@ const triggerInterviewRoundStatusUpdated = async (round, oldStatus, interview = 
     if (!interview) {
       interview = await Interview.findById(round.interviewId).lean();
       if (!interview) {
-        console.error('Interview not found for round:', round._id);
+        console.error("Interview not found for round:", round._id);
         return;
       }
     }
@@ -952,7 +956,7 @@ const triggerInterviewRoundStatusUpdated = async (round, oldStatus, interview = 
       updatedAt: new Date().toISOString(),
       candidateId: interview.candidateId,
       positionId: interview.positionId,
-      tenantId: interview.tenantId
+      tenantId: interview.tenantId,
     };
 
     // Trigger the webhook
@@ -962,9 +966,11 @@ const triggerInterviewRoundStatusUpdated = async (round, oldStatus, interview = 
       interview.tenantId
     );
 
-    console.log(`Webhook triggered for interview round ${round._id} status change: ${oldStatus} -> ${round.status}`);
+    console.log(
+      `Webhook triggered for interview round ${round._id} status change: ${oldStatus} -> ${round.status}`
+    );
   } catch (error) {
-    console.error('Error in triggerInterviewRoundStatusUpdated:', error);
+    console.error("Error in triggerInterviewRoundStatusUpdated:", error);
   }
 };
 
@@ -1760,13 +1766,24 @@ const getInterviewDataforOrg = async (req, res) => {
 
     // STEP 1: Fetch interview with population
     const interview = await Interview.findById(interviewId)
+      // .populate({
+      //   path: "candidateId",
+      //   select: "FirstName LastName Email skills CurrentExperience ImageData",
+      // })
+      // .populate({
+      //   path: "positionId",
+      //   select: "title companyname Location",
+      // })
       .populate({
         path: "candidateId",
-        select: "FirstName LastName Email skills CurrentExperience ImageData",
+        select:
+          "FirstName LastName Email Technology skills CurrentExperience ImageData",
+        model: "Candidate",
       })
       .populate({
         path: "positionId",
-        select: "title companyname Location",
+        select: "title companyname Location skills minexperience maxexperience",
+        model: "Position",
       })
       .populate({ path: "templateId" })
       .lean();
