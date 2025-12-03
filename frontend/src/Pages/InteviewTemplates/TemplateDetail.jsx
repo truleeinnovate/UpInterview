@@ -24,13 +24,15 @@ import { useInterviewTemplates } from "../../apiHooks/useInterviewTemplates";
 import Loading from "../../Components/Loading";
 import { formatDateTime } from "../../utils/dateFormatter.js";
 
-const TemplateDetail = () => {
+const TemplateDetail = ({ templateId, onClose, mode }) => {
   const { useInterviewtemplateDetails, saveTemplate } = useInterviewTemplates();
 
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: templatesData } = useInterviewtemplateDetails(id);
+  const { data: templatesData } = useInterviewtemplateDetails(
+    mode === "interviewDetails" ? templateId : id
+  );
 
   const [template, setTemplate] = useState(null);
 
@@ -103,8 +105,6 @@ const TemplateDetail = () => {
         isEditMode,
       });
 
-      console.log("UpdatedTemplate", updatedTemplate);
-
       // ✅ Reflect changes locally
       setIsActive(newToggleValue);
       setTemplate((prev) => ({
@@ -162,12 +162,24 @@ const TemplateDetail = () => {
             Template not found
           </h2>
           <button
-            onClick={() =>
-              navigate({
-                pathname: "/interview-templates",
-                search: `?tab=${activeTab}`,
-              })
-            }
+            onClick={() => {
+              if (mode === "interviewDetails" && onClose) {
+                onClose();
+              } else {
+                navigate({
+                  pathname: "/interview-templates",
+                  search: `?tab=${activeTab}`,
+                });
+              }
+            }}
+            // onClick={() =>
+            //   mode === "interviewDetails"
+            //     ? onClose
+            //     : navigate({
+            //         pathname: "/interview-templates",
+            //         search: `?tab=${activeTab}`,
+            //       })
+            // }
             className="text-custom-blue hover:text-custom-blue/80"
           >
             Go back to templates
@@ -190,12 +202,22 @@ const TemplateDetail = () => {
           {/* Header */}
           <div className="flex flex-row sm:items-center justify-between gap-4 sm:gap-0 mb-6 sm:mb-8">
             <button
-              onClick={() =>
-                navigate({
-                  pathname: "/interview-templates",
-                  search: `?tab=${activeTab}`,
-                })
-              }
+              onClick={() => {
+                if (mode === "interviewDetails" && onClose) {
+                  onClose();
+                } else {
+                  navigate({
+                    pathname: "/interview-templates",
+                    search: `?tab=${activeTab}`,
+                  });
+                }
+              }}
+              // onClick={() =>
+              //   navigate({
+              //     pathname: "/interview-templates",
+              //     search: `?tab=${activeTab}`,
+              //   })
+              // }
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
               <ArrowLeft className="sm:h-4 h-5 ms:w-4 w-5 mr-2" />

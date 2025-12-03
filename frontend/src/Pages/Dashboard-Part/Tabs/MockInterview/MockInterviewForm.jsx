@@ -93,9 +93,9 @@ const MockSchedulelater = () => {
   const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } =
     useMockInterviews();
   const { id } = useParams();
-  const { state } = useLocation();
-  const pageFrom = state?.from || null;
+  const location = useLocation();
   const navigate = useNavigate();
+  const pageFrom = location.state?.from || "";
 
   const [formData, setFormData] = useState({
     skills: [],
@@ -1188,6 +1188,7 @@ const MockSchedulelater = () => {
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
   };
+  // console.log("pageFrom", pageFrom);
 
   const getTodayDate = () => new Date().toISOString().slice(0, 10);
 

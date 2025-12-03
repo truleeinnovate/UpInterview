@@ -24,6 +24,7 @@ import DropdownWithSearchField from "../../../../../Components/FormFields/Dropdo
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
 import { notify } from "../../../../../services/toastService.js";
 import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 // v1.0.3 ----------------------------------------------------------->
 
 // Custom Dropdown Component
@@ -71,8 +72,11 @@ const InterviewForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { positionData, isLoading: positionsLoading } = usePositions();
-  const { templatesData, isLoading: templatesLoading } =
-    useInterviewTemplates();
+  const { templatesData, isLoading: templatesLoading } = useInterviewTemplates({
+    type: "interviewtemplates",
+  });
+
+  console.log("templatesData in InterviewForm:", templatesData);
   const { interviewData, isMutationLoading, createInterview } = useInterviews();
   const { candidateData, isLoading: candidatesLoading } = useCandidates();
 
@@ -240,7 +244,9 @@ const InterviewForm = () => {
     }
 
     const selectedPosition = positionData.find((pos) => pos._id === positionId);
-    const selectedTemplate = templatesData.find((t) => t._id === newTemplateId);
+    const selectedTemplate = templatesData?.find(
+      (t) => t._id === newTemplateId
+    );
 
     if (selectedPosition) {
       if (
@@ -267,6 +273,14 @@ const InterviewForm = () => {
 
   const handleCancel = () => {
     setTemplateId("");
+    const selectedPosition = positionData.find((pos) => pos._id === positionId);
+
+    if (selectedPosition?.rounds && selectedPosition?.rounds.length > 0) {
+      setRounds(selectedPosition?.rounds);
+    } else {
+      setRounds([]);
+    }
+
     setShowModal(false);
   };
 
@@ -521,11 +535,59 @@ const InterviewForm = () => {
                       label="Interview Template"
                       name="templateId"
                       value={templateId || ""}
+                      // options={
+                      //   templatesData
+                      //     ?.filter(
+                      //       (template) =>
+                      //         template.rounds && template.rounds.length > 0
+                      //     ) // ← FILTER ADDED
+                      //     .map((template) => ({
+                      //       value: template._id,
+                      //       label: `${template.title} (${template.type})`,
+                      //     })) || []
+                      // }
                       options={
-                        templatesData?.map((template) => ({
-                          value: template._id,
-                          label: template.title,
-                        })) || []
+                        templatesData
+                          ?.filter(
+                            (template) =>
+                              template.rounds && template.rounds.length > 0
+                          ) // only with rounds
+                          .sort((a, b) => {
+                            // custom first, standard after
+                            if (a.type === "custom" && b.type === "standard")
+                              return -1;
+                            if (a.type === "standard" && b.type === "custom")
+                              return 1;
+                            return 0;
+                          })
+                          .map((template) => ({
+                            value: template._id,
+                            label: (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  width: "99%",
+                                }}
+                              >
+                                <span>
+                                  {capitalizeFirstLetter(template.title)}
+                                </span>
+                                <span
+                                  className={
+                                    "font-semibold " +
+                                    (template.type === "custom"
+                                      ? "text-custom-blue"
+                                      : "text-green-600")
+                                  }
+                                >
+                                  {/* {template.type} */}
+                                  {capitalizeFirstLetter(template.type)}
+                                </span>
+                              </div>
+                            ),
+                          })) || []
                       }
                       onChange={(e) => {
                         const value = e?.target?.value || e?.value;

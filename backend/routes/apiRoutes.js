@@ -242,8 +242,6 @@ router.get(
         query.tenantId = tenantId;
       }
 
-      console.log("query query", query);
-
       // case "mockinterview":
       //   // console.log('[19] Processing MockInterview model');
       //   const mockInterviews = await DataModel.find(query).lean();
@@ -356,7 +354,7 @@ router.get(
           const skip = Math.max(0, (pageNum - 1) * limitNum); // Ensure skip is not negative
 
           const mockInterviews = await DataModel.find(mockQuery)
-            .sort({ createdAt: -1 })
+            .sort({ _id: -1 })
             .skip(skip)
             .limit(limitNum)
             .lean();
@@ -513,7 +511,30 @@ router.get(
               DataModel,
               ...interviewQueryParams,
             });
-          } else {
+          }
+          //  else if (req?.query?.type === "analytics") {
+          //   let interviews = await DataModel.find(query)
+          //     .sort({ _id: -1 })
+          //     .populate({
+          //       path: "candidateId",
+          //       select:
+          //         "FirstName LastName Email Technology skills CurrentExperience ImageData",
+          //       model: "Candidate",
+          //     })
+          //     .populate({
+          //       path: "positionId",
+          //       select:
+          //         "title companyname Location skills minexperience maxexperience",
+          //       model: "Position",
+          //     })
+          //     .populate({ path: "templateId", model: "InterviewTemplate" })
+          //     .lean();
+          //   data = {
+          //     data: interviews,
+          //   };
+
+          // }
+          else {
             data = await getInterviewDashboardStats({
               filterQuery,
               DataModel,
@@ -990,168 +1011,176 @@ router.get(
             type, // Don't set default here, check if it exists
           } = req.query;
 
-          const pageNum = Math.max(1, parseInt(reqPage) || 1);
-          const limitNum = Math.max(1, Math.min(100, parseInt(reqLimit) || 10));
-          const skip = (pageNum - 1) * limitNum;
+          if (req?.query?.type !== "interviewtemplates") {
+            const pageNum = Math.max(1, parseInt(reqPage) || 1);
+            const limitNum = Math.max(
+              1,
+              Math.min(100, parseInt(reqLimit) || 10)
+            );
+            const skip = (pageNum - 1) * limitNum;
 
-          console.log("query interview templaets", query);
+            console.log("query interview templaets", query);
 
-          // Base query - CRITICAL: Standard templates should NOT have tenant or owner filtering
-          let baseQuery = {};
-          if (type === "standard") {
-            // Standard templates: Only filter by type, NO tenant/owner filtering
-            baseQuery = { type: "standard" };
-            // console.log('Building STANDARD template query (no tenant/owner filter)');
-          } else {
-            // Custom templates (default): Filter by type, tenantId, and ownerId (if provided)
-            baseQuery = { type: "custom" };
-            baseQuery = query;
-            // if (query?.tenantId) {
-            //   baseQuery.tenantId = query?.tenantId; // Use destructured tenantId
-            // } else {
-            //   // If no tenantId for custom, throw error or handle (assuming required)
-            //   return res
-            //     .status(400)
-            //     .json({ error: "tenantId is required for custom templates" });
-            // }
-            // if (query?.ownerId) {
-            //   baseQuery.ownerId = query?.ownerId; // Add ownerId filter if provided
-            // }
-            // console.log('Building CUSTOM template query with tenantId:', tenantId, 'and ownerId:', ownerId);
-          }
+            // Base query - CRITICAL: Standard templates should NOT have tenant or owner filtering
+            let baseQuery = {};
+            if (type === "standard") {
+              // Standard templates: Only filter by type, NO tenant/owner filtering
+              baseQuery = { type: "standard" };
+              // console.log('Building STANDARD template query (no tenant/owner filter)');
+            } else {
+              // Custom templates (default): Filter by type, tenantId, and ownerId (if provided)
+              baseQuery = { type: "custom" };
+              baseQuery = query;
+            }
 
-          // console.log('Base query:', baseQuery);
+            let finalQuery = { ...baseQuery };
 
-          let finalQuery = { ...baseQuery };
-
-          // Search filter - works for both types
-          if (search && search.trim()) {
-            const searchRegex = new RegExp(search.trim(), "i");
-            finalQuery.$and = finalQuery.$and || [];
-            finalQuery.$and.push({
-              $or: [
-                { title: searchRegex },
-                { interviewTemplateCode: searchRegex },
-                { description: searchRegex },
-                { bestFor: searchRegex },
-              ],
-            });
-          }
-
-          // Status filter
-          if (statusParam) {
-            const statuses = Array.isArray(statusParam)
-              ? statusParam
-              : statusParam.split(",");
-            finalQuery.status = {
-              $in: statuses.map((s) => s.toLowerCase()),
-            };
-          }
-
-          // Format filter
-          if (formatParam) {
-            const formats = Array.isArray(formatParam)
-              ? formatParam
-              : formatParam.split(",");
-            finalQuery.format = { $in: formats };
-          }
-
-          // Rounds range filter
-          if (roundsMin !== undefined || roundsMax !== undefined) {
-            const min = roundsMin ? parseInt(roundsMin) : 0;
-            const max = roundsMax ? parseInt(roundsMax) : 100;
-            if (!isNaN(min) && !isNaN(max)) {
+            // Search filter - works for both types
+            if (search && search.trim()) {
+              const searchRegex = new RegExp(search.trim(), "i");
               finalQuery.$and = finalQuery.$and || [];
               finalQuery.$and.push({
-                $expr: {
-                  $and: [
-                    { $gte: [{ $size: { $ifNull: ["$rounds", []] } }, min] },
-                    { $lte: [{ $size: { $ifNull: ["$rounds", []] } }, max] },
-                  ],
-                },
+                $or: [
+                  { title: searchRegex },
+                  { interviewTemplateCode: searchRegex },
+                  { description: searchRegex },
+                  { bestFor: searchRegex },
+                ],
               });
             }
-          }
 
-          // Created Date filter
-          if (createdDateParam) {
-            const now = new Date();
-            let dateFrom;
-            switch (createdDateParam) {
-              case "last7":
-                dateFrom = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                break;
-              case "last30":
-                dateFrom = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                break;
-              case "last90":
-                dateFrom = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-                break;
-              default:
-                dateFrom = null;
+            // Status filter
+            if (statusParam) {
+              const statuses = Array.isArray(statusParam)
+                ? statusParam
+                : statusParam.split(",");
+              finalQuery.status = {
+                $in: statuses.map((s) => s.toLowerCase()),
+              };
             }
-            if (dateFrom) {
-              finalQuery.createdAt = { $gte: dateFrom };
+
+            // Format filter
+            if (formatParam) {
+              const formats = Array.isArray(formatParam)
+                ? formatParam
+                : formatParam.split(",");
+              finalQuery.format = { $in: formats };
             }
-          }
 
-          // console.log('Final query:', JSON.stringify(finalQuery, null, 2));
+            // Rounds range filter
+            if (roundsMin !== undefined || roundsMax !== undefined) {
+              const min = roundsMin ? parseInt(roundsMin) : 0;
+              const max = roundsMax ? parseInt(roundsMax) : 100;
+              if (!isNaN(min) && !isNaN(max)) {
+                finalQuery.$and = finalQuery.$and || [];
+                finalQuery.$and.push({
+                  $expr: {
+                    $and: [
+                      { $gte: [{ $size: { $ifNull: ["$rounds", []] } }, min] },
+                      { $lte: [{ $size: { $ifNull: ["$rounds", []] } }, max] },
+                    ],
+                  },
+                });
+              }
+            }
 
-          try {
-            // Get total count for the filtered query
-            const total = await DataModel.countDocuments(finalQuery);
-            // console.log(`Total ${type || 'custom'} templates matching filters: ${total}`);
+            // Created Date filter
+            if (createdDateParam) {
+              const now = new Date();
+              let dateFrom;
+              switch (createdDateParam) {
+                case "last7":
+                  dateFrom = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                  break;
+                case "last30":
+                  dateFrom = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                  break;
+                case "last90":
+                  dateFrom = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                  break;
+                default:
+                  dateFrom = null;
+              }
+              if (dateFrom) {
+                finalQuery.createdAt = { $gte: dateFrom };
+              }
+            }
 
-            // Fetch templates with pagination
-            const templates = await DataModel.find(finalQuery)
-              .populate({
-                path: "rounds.interviewers",
-                model: "Contacts",
-                select: "firstName lastName email",
-              })
-              .populate({
-                path: "rounds.selectedInterviewers",
-                model: "Contacts",
-                select: "firstName lastName email",
-              })
-              .sort({ _id: -1 })
-              .skip(skip)
-              .limit(limitNum)
-              .lean();
+            // console.log('Final query:', JSON.stringify(finalQuery, null, 2));
 
-            // Get separate counts for custom and standard (ignores filters except type)
-            const standardCount = await DataModel.countDocuments({
-              type: "standard",
-            });
-            const customCount = await DataModel.countDocuments({
-              type: "custom",
-              ...(query?.ownerId
-                ? { ownerId: query.ownerId }
-                : { tenantId: query.tenantId }),
-            });
+            try {
+              // Get total count for the filtered query
+              const total = await DataModel.countDocuments(finalQuery);
+              // console.log(`Total ${type || 'custom'} templates matching filters: ${total}`);
 
-            // console.log(`Fetched ${templates.length} ${type || 'custom'} templates for page ${pageNum}`);
+              // Fetch templates with pagination
+              const templates = await DataModel.find(finalQuery)
+                .populate({
+                  path: "rounds.interviewers",
+                  model: "Contacts",
+                  select: "firstName lastName email",
+                })
+                .populate({
+                  path: "rounds.selectedInterviewers",
+                  model: "Contacts",
+                  select: "firstName lastName email",
+                })
+                .sort({ _id: -1 })
+                .skip(skip)
+                .limit(limitNum)
+                .lean();
 
-            data = {
-              data: templates,
-              standardCount,
-              customCount,
-              total,
-              totalItems: total,
-              page: pageNum,
-              currentPage: pageNum,
-              totalPages: Math.ceil(total / limitNum),
-              limit: limitNum,
-              itemsPerPage: limitNum,
-              type: type || "custom", // Include type in response for verification
+              // Get separate counts for custom and standard (ignores filters except type)
+              const standardCount = await DataModel.countDocuments({
+                type: "standard",
+              });
+              const customCount = await DataModel.countDocuments({
+                type: "custom",
+                ...(query?.ownerId
+                  ? { ownerId: query.ownerId }
+                  : { tenantId: query.tenantId }),
+              });
+
+              // console.log(`Fetched ${templates.length} ${type || 'custom'} templates for page ${pageNum}`);
+
+              data = {
+                data: templates,
+                standardCount,
+                customCount,
+                total,
+                totalItems: total,
+                page: pageNum,
+                currentPage: pageNum,
+                totalPages: Math.ceil(total / limitNum),
+                limit: limitNum,
+                itemsPerPage: limitNum,
+                type: type || "custom", // Include type in response for verification
+              };
+            } catch (err) {
+              console.error("InterviewTemplate query error:", err);
+              return res.status(500).json({
+                error: "Failed to fetch templates",
+                details: err.message,
+              });
+            }
+          } else {
+            let baseQuery = {
+              $or: [
+                { type: "standard" }, // fetch ALL standard
+                {
+                  // fetch custom of tenant
+                  type: "custom",
+                  ...query,
+                },
+              ],
             };
-          } catch (err) {
-            console.error("InterviewTemplate query error:", err);
-            return res.status(500).json({
-              error: "Failed to fetch templates",
-              details: err.message,
-            });
+
+            Templatesdata = await DataModel.find(baseQuery).lean();
+            data = {
+              data: Templatesdata,
+            };
           }
+
           break;
         }
 
