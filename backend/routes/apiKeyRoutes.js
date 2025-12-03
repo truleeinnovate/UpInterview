@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const apiKeyController = require('../controllers/apiKeyController');
-const { authContextMiddleware } = require('../middleware/authContext.js');
 const loggingService = require('../middleware/loggingService');
 
-// Apply authentication to all routes except validation endpoint
-router.use(authContextMiddleware);
+// Validate API key (public endpoint for testing) - must come before auth middleware
+router.post('/validate', apiKeyController.validateApiKey);
 
-// Routes
+// Routes (authentication is handled globally in index.js)
 router
   .route('/')
   .get(apiKeyController.getApiKeys)
@@ -20,9 +19,6 @@ router
 
 // Get API key statistics
 router.get('/:id/stats', apiKeyController.getApiKeyStats);
-
-// Validate API key (public endpoint for testing)
-router.post('/validate', apiKeyController.validateApiKey);
 
 // Get usage analytics for all API keys
 router.get('/analytics', apiKeyController.getUsageAnalytics);
