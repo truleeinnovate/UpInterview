@@ -4,7 +4,7 @@
 const mongoose = require("mongoose");
 const ReportCategory = require("../../models/AnalyticSchemas/reportCategory");
 const {
-  ReportTemplate,
+  ReportTemplate,TenantReportAccess
 } = require("../../models/AnalyticSchemas/reportSchemas");
 const { FilterPreset } = require("../../models/AnalyticSchemas/filterSchemas");
 const {
@@ -17,6 +17,7 @@ const { Position } = require("../../models/Position/position");
 const { Interview } = require("../../models/Interview/Interview");
 const Assessment = require("../../models/Assessment/assessmentsSchema");
 const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
+const RolesPermissionObject = require('../../models/rolesPermissionObject');
 
 // const generateReport = async (req, res) => {
 //   try {
@@ -866,8 +867,8 @@ const getReportAccess = async (req, res) => {
     const tenantId = res.locals.auth.actingAsTenantId;
 
     const accessDoc = await TenantReportAccess.findOne({ tenantId, templateId })
-      .populate("access.users", "name email")
-      .populate("access.roles")
+      .populate("access.users", "firstName lastName email status")
+      // Remove .populate("access.roles") — it doesn't work with string IDs
       .lean();
 
     if (!accessDoc) {
@@ -877,16 +878,22 @@ const getReportAccess = async (req, res) => {
       });
     }
 
+    // Manually map roles — since they're stored as strings
+    const roleIds = accessDoc.access.roles || [];
+    const populatedRoles = roleIds.length > 0
+      ? await RolesPermissionObject.find({ _id: { $in: roleIds } }).select("label name").lean()
+      : [];
+
     return res.json({
       success: true,
       access: {
-        roles: accessDoc.access.roles.map((r) => ({
-          _id: r._id,
-          name: r.name,
+        roles: populatedRoles.map(r => ({
+          _id: r._id.toString(),
+          name: r.label || r.name || "Unknown Role"
         })),
-        users: accessDoc.access.users.map((u) => ({
-          _id: u._id,
-          name: u.name,
+        users: (accessDoc.access.users || []).map(u => ({
+          _id: u._id.toString(),
+          name: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
           email: u.email,
         })),
       },
@@ -920,8 +927,8 @@ const shareReport = async (req, res) => {
       {
         tenantId,
         templateId,
-        "access.roles": roleIds,
-        "access.users": userIds.map((id) => new mongoose.Types.ObjectId(id)),
+        "access.roles": roleIds.map(id => new mongoose.Types.ObjectId(id)),
+        "access.users": userIds.map(id => new mongoose.Types.ObjectId(id)),
         sharedBy,
         sharedAt: new Date(),
         "lastGenerated.at": null,

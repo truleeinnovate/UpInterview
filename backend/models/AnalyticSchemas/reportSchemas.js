@@ -373,15 +373,16 @@ const TenantReportAccessSchema = new mongoose.Schema({
   },
 
   // SINGLE ACCESS OBJECT — ROLES + USERS IN ONE PLACE
-  access: {
-    roles: [{
-      type: String,
-    }],
-    users: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Users'
-    }]
-  },
+access: {
+  roles: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Role'  // or whatever your role model is called
+  }],
+  users: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Users'
+  }]
+},
 
   // LAST GENERATED — per tenant
   lastGenerated: {
