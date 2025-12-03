@@ -10,7 +10,6 @@ import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { shareAssessmentAPI } from "./AssessmentShareAPI.jsx";
 import Cookies from "js-cookie";
-import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from "../../../../config.js";
 import { useCandidates } from "../../../../apiHooks/useCandidates";
@@ -398,22 +397,23 @@ const ShareAssessment = ({
     navigate("/candidate/new");
     // ------------------------------ v1.0.0 >
   };
+
   // <---------------------- v1.0.1 >
   const handleShareClick = async () => {
     // Validate assessment selection when fromscheduleAssessment is true
     if (fromscheduleAssessment && !selectedAssessment) {
-      setErrors({
-        ...errors,
+      setErrors((prev) => ({
+        ...prev,
         Assessment: "Please select an assessment template.",
-      });
+      }));
       return;
     }
 
     if (selectedCandidates.length === 0) {
-      setErrors({
-        ...errors,
+      setErrors((prev) => ({
+        ...prev,
         Candidate: "Please select at least one candidate.",
-      });
+      }));
       return;
     }
 
@@ -432,14 +432,13 @@ const ShareAssessment = ({
       queryClient,
     });
 
-    if (result.success) {
-      // React Query will handle data refresh automatically
-      // No need to manually fetch data
-    } else {
-      toast.error(result.message || "Failed to schedule assessment");
+    if (!result.success && result.error) {
+      setErrors((prev) => ({ ...prev, general: result.error }));
     }
+
     setIsLoading(false);
   };
+
   // <-------------------------------v1.0.3 >
   if (!isOpen) return null;
 
@@ -447,7 +446,7 @@ const ShareAssessment = ({
     <div
       // v1.0.7 <-------------------------------------------------------------------------------------------
       className="fixed inset-0 bg-black top-0 bg-opacity-30 z-50 flex items-center justify-center px-2"
-      // v1.0.7 ------------------------------------------------------------------------------------------->
+      // v1.0.7 ------------------------------------------------------------------------------------------->>
       onClick={onCloseshare}
     >
       {/* v1.0.6 <----------------------------------------------------------------------------------- */}
@@ -494,7 +493,7 @@ const ShareAssessment = ({
                 <h2 className="text-xl font-bold">Share Assessment</h2>
               </div>
               <button
-                className=" transition-colors p-1 rounded-full"
+                className="transition-colors p-1 rounded-full"
                 onClick={onCloseshare}
               >
                 <X className="h-5 w-5" />

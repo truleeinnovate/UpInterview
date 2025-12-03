@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
-import { config } from '../config';
-import toast from 'react-hot-toast';
+import { notify } from '../services/toastService';
 
 /**
  * Hook for checking internal interview usage
@@ -19,7 +18,7 @@ export const useInternalInterviewUsage = () => {
    */
   const checkInternalInterviewUsage = useCallback(async (tenantId, ownerId = null) => {
     if (!tenantId) {
-      toast.error('Tenant ID is required for usage check');
+      notify.error('Tenant ID is required for usage check');
       return { canSchedule: false, message: 'Missing tenant information' };
     }
 
@@ -49,12 +48,12 @@ export const useInternalInterviewUsage = () => {
         const { remaining, entitled, utilized } = data.usage;
         
         if (!data.canSchedule) {
-          toast.error(
+          notify.error(
             `Internal Interview limit reached! You've used ${utilized} out of ${entitled} interviews.`,
             { duration: 5000 }
           );
         } else if (remaining <= 3 && remaining > 0) {
-          toast.warning(
+          notify.warning(
             `Only ${remaining} internal interview(s) remaining out of ${entitled}`,
             { duration: 4000 }
           );
@@ -66,7 +65,7 @@ export const useInternalInterviewUsage = () => {
       console.error('Error checking internal interview usage:', error);
       const errorMessage = error.response?.data?.message || 'Failed to check usage limits';
       
-      toast.error(errorMessage);
+      notify.error(errorMessage);
       
       return {
         canSchedule: false,
