@@ -41,18 +41,17 @@ const AppliedPositions = ({ positions }) => {
                                 <span
                                     className={`
                 px-3 py-1 rounded-full text-sm font-medium
-                ${
-                  position.status === "Active"
-                    ? "bg-green-100 text-green-800"
-                    : position.status === "On Hold"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-red-100 text-red-800"
-                }
+                ${position.status === "Active"
+                                            ? "bg-green-100 text-green-800"
+                                            : position.status === "On Hold"
+                                                ? "bg-yellow-100 text-yellow-800"
+                                                : "bg-red-100 text-red-800"
+                                        }
               `}
-                >
-                  {position?.status}
-                </span>
-              </div>
+                                >
+                                    {position?.status}
+                                </span>
+                            </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex items-center gap-2 text-gray-600">
@@ -119,34 +118,10 @@ const AppliedPositions = ({ positions }) => {
                     <p className="text-md text-gray-600">
                         No positions are applied yet
                     </p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-custom-blue h-2 rounded-full"
-                          style={{ width: "60%" }}
-                        ></div>
-                      </div>
-                      <span className="text-sm text-gray-600">2/3</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => onViewDetails(position)}
-                    className="px-3 py-1.5 text-custom-blue hover:bg-custom-blue/20 rounded-lg transition-colors text-sm font-medium"
-                  >
-                    View Details
-                  </button>
                 </div>
-              </div>
-            </div>
-          ))}
+            )}
         </div>
-      ) : (
-        <div className="flex items-center justify-center h-[37vh]">
-          <p className="text-md text-gray-600">No positions are Applied yet</p>
-        </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default AppliedPositions;

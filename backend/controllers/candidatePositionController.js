@@ -57,8 +57,89 @@ const createCandidatePositionService = async (data) => {
   }
 };
 
+const getCandidatePositionsByCandidateId = async (req, res) => {
+  try {
+    res.locals.loggedByController = true;
+
+    const { candidateId } = req.params;
+
+    if (!candidateId) {
+      return res
+        .status(400)
+        .json({ message: "Candidate ID is required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(candidateId)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid candidate ID format" });
+    }
+
+    const candidatePositions = await CandidatePosition.aggregate([
+      {
+        $match: { candidateId: new mongoose.Types.ObjectId(candidateId) },
+      },
+      {
+        $lookup: {
+          from: "positions",
+          localField: "positionId",
+          foreignField: "_id",
+          as: "positionDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$positionDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ]);
+
+    const positions = candidatePositions.map((pos) => ({
+      positionId: pos.positionId,
+      status: pos.status,
+      interviewId: pos.interviewId,
+      interviewRound: pos.interviewRound,
+      interviewFeedback: pos.interviewFeedback,
+      offerDetails: pos.offerDetails,
+      applicationDate: pos.applicationDate,
+      updatedAt: pos.updatedAt,
+      positionInfo: pos.positionDetails
+        ? {
+            title: pos.positionDetails.title || "",
+            companyname: pos.positionDetails.companyname || "",
+            jobdescription: pos.positionDetails.jobdescription || "",
+            minexperience: pos.positionDetails.minexperience || 0,
+            maxexperience: pos.positionDetails.maxexperience || 0,
+            skills: pos.positionDetails.skills || [],
+            additionalnotes: pos.positionDetails.additionalnotes || "",
+            rounds: pos.positionDetails.rounds || [],
+            createdBy: pos.positionDetails.CreatedBy || "",
+            lastModifiedById: pos.positionDetails.LastModifiedById || "",
+            ownerId: pos.positionDetails.ownerId || "",
+            tenantId: pos.positionDetails.tenantId || "",
+            createdDate: pos.positionDetails.createdDate || "",
+          }
+        : null,
+    }));
+
+    return res.status(200).json({ data: positions });
+  } catch (error) {
+    console.error(
+      "Error fetching candidate positions by candidateId:",
+      error
+    );
+    res.status(500).json({
+      message: "Error fetching candidate positions",
+      error: error.message,
+    });
+  }
+};
+
+
 module.exports = {
   createCandidatePosition,
   getAllCandidatePositions,
   createCandidatePositionService,
+  getCandidatePositionsByCandidateId
 };
