@@ -17,7 +17,7 @@ const apiKeySchema = new mongoose.Schema(
     permissions: [{
       type: String,
       enum: [
-        // Candidate Management  
+        // Candidate Management
         'candidates:read', 'candidates:write', 'candidates:bulk',
         // Position Management
         'positions:read', 'positions:write', 'positions:bulk'

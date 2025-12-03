@@ -22,8 +22,6 @@ const interviewerFeedbackSchema = new mongoose.Schema({
   note:String, //comments about the question or answer
 })
  
- 
- 
 const questionFeedbackSchema = new mongoose.Schema({
   // questionId: String, //reference to question (can be string ID or full object)
   questionId: { 

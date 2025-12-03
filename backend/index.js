@@ -448,7 +448,13 @@ const { authContextMiddleware } = require("./middleware/authContext.js");
 //     return permissionMiddleware(req, res, next);
 // };
 
-app.use(authContextMiddleware);
+// Apply authContextMiddleware to all routes except API key validation
+app.use((req, res, next) => {
+  if (req.path === '/api/apikeys/validate') {
+    return next(); // Skip auth for validation endpoint
+  }
+  return authContextMiddleware(req, res, next);
+});
 // app.use(conditionalPermissionMiddleware);
 
 app.use("/api/agora", agoraRoomRoute);
