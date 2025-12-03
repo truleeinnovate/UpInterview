@@ -365,8 +365,6 @@ const RoundCard = ({
     // setIsLoading(false);
   };
 
-  const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
-
   //  Share Mail for assessment by Ranjith
   // Share Mail for assessment by Ranjith - UPDATED VERSION
   const handleShareClick = async (round) => {
@@ -453,21 +451,21 @@ const RoundCard = ({
     });
   };
 
-  useEffect(() => {
-    const getResults = async () => {
-      const { data, error } = await fetchAssessmentResults(round?.assessmentId);
+  // useEffect(() => {
+  //   const getResults = async () => {
+  //     const { data, error } = await fetchAssessmentResults(round?.assessmentId);
 
-      if (!error) {
-        setResults(data);
-      } else {
-        console.error("Error loading results:", error);
-      }
-    };
+  //     if (!error) {
+  //       setResults(data);
+  //     } else {
+  //       console.error("Error loading results:", error);
+  //     }
+  //   };
 
-    if (round?.assessmentId) {
-      getResults();
-    }
-  }, []);
+  //   if (round?.assessmentId) {
+  //     getResults();
+  //   }
+  // }, []);
 
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [assessment, setAssessment] = useState(null);
@@ -516,6 +514,85 @@ const RoundCard = ({
   //   }
   // }
 
+  // const handleResultClick = async (round) => {
+  //   setShowResultModal(true);
+
+  //   let candidateResultData = null;
+  //   let scheduledData = null;
+
+  //   if (scheduleData.length > 0 && round.scheduleAssessmentId) {
+  //     // Find the specific scheduled assessment
+  //     scheduledData = scheduleData.find(
+  //       (assessment) => assessment._id === round.scheduleAssessmentId
+  //     );
+
+  //     // Find the candidate-specific data
+  //     if (scheduledData && scheduledData.candidates) {
+  //       const candidateAssessment = scheduledData.candidates.find(
+  //         (candidate) =>
+  //           candidate.candidateId?._id === interviewData?.candidateId?._id
+  //       );
+
+  //       if (candidateAssessment) {
+  //         // Transform the data to match what ScheduledAssessmentResultView expects
+  //         candidateResultData = {
+  //           id: candidateAssessment?._id,
+  //           name: `${candidateAssessment?.candidateId?.FirstName || ""} ${
+  //             candidateAssessment?.candidateId?.LastName || ""
+  //           }`.trim(),
+  //           email: candidateAssessment?.candidateId?.Email,
+  //           answeredQuestions: candidateAssessment?.answeredQuestions || 0,
+  //           totalScore: candidateAssessment?.totalScore || 0,
+  //           result: candidateAssessment?.status,
+  //           // status: candidateAssessment.status,
+  //           completionDate: candidateAssessment?.completionDate,
+  //           expiryAt: candidateAssessment?.expiryAt,
+  //           remainingTime: candidateAssessment?.remainingTime,
+  //           sections: candidateAssessment?.sections || [],
+  //           experience: candidateAssessment?.candidateId?.CurrentExperience,
+  //           // Include the full candidate assessment data for reference
+  //           candidateAssessment: candidateAssessment,
+  //         };
+  //       }
+  //     }
+  //   }
+
+  //   // Set selected candidate and schedule for the result view
+  //   setSelectedCandidate(candidateResultData);
+  //   // setSelectedSchedule(scheduleData);
+
+  //   // Load assessment data
+  //   const loadData = async () => {
+  //     const foundAssessment = assessmentData?.find(
+  //       (a) => a._id === round?.assessmentId
+  //     );
+  //     if (foundAssessment) {
+  //       setAssessment(foundAssessment);
+  //     }
+  //   };
+
+  //   await loadData();
+
+  //   // Fetch assessment questions if needed
+  //   if (round?.assessmentId) {
+  //     fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
+  //       if (data) {
+  //         setAssessmentQuestions(data);
+  //         setToggleStates((prev) => {
+  //           if (prev.length !== data.sections.length) {
+  //             return new Array(data.sections.length)
+  //               .fill(false)
+  //               .map((_, index) => index === 0);
+  //           }
+  //           return prev;
+  //         });
+  //       } else {
+  //         console.error("Error fetching assessment questions:", error);
+  //       }
+  //     });
+  //   }
+  // };
+
   const handleResultClick = async (round) => {
     setShowResultModal(true);
 
@@ -536,7 +613,7 @@ const RoundCard = ({
         );
 
         if (candidateAssessment) {
-          // Transform the data to match what ScheduledAssessmentResultView expects
+          // Transform the data
           candidateResultData = {
             id: candidateAssessment?._id,
             name: `${candidateAssessment?.candidateId?.FirstName || ""} ${
@@ -546,22 +623,18 @@ const RoundCard = ({
             answeredQuestions: candidateAssessment?.answeredQuestions || 0,
             totalScore: candidateAssessment?.totalScore || 0,
             result: candidateAssessment?.status,
-            // status: candidateAssessment.status,
             completionDate: candidateAssessment?.completionDate,
             expiryAt: candidateAssessment?.expiryAt,
             remainingTime: candidateAssessment?.remainingTime,
             sections: candidateAssessment?.sections || [],
             experience: candidateAssessment?.candidateId?.CurrentExperience,
-            // Include the full candidate assessment data for reference
             candidateAssessment: candidateAssessment,
           };
         }
       }
     }
 
-    // Set selected candidate and schedule for the result view
     setSelectedCandidate(candidateResultData);
-    // setSelectedSchedule(scheduleData);
 
     // Load assessment data
     const loadData = async () => {
@@ -575,23 +648,38 @@ const RoundCard = ({
 
     await loadData();
 
-    // Fetch assessment questions if needed
-    if (round?.assessmentId) {
-      fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
-        if (data) {
-          setAssessmentQuestions(data);
-          setToggleStates((prev) => {
-            if (prev.length !== data.sections.length) {
-              return new Array(data.sections.length)
-                .fill(false)
-                .map((_, index) => index === 0);
+    // Fetch assessment results only if candidate has completed assessment
+    if (shouldShowResultButton() && round?.assessmentId) {
+      const { data, error } = await fetchAssessmentResults(round?.assessmentId);
+
+      if (!error) {
+        setResults(data);
+
+        // Also fetch questions if needed
+        fetchAssessmentQuestions(round?.assessmentId).then(
+          ({ data: questionData, error: questionError }) => {
+            if (questionData) {
+              setAssessmentQuestions(questionData);
+              setToggleStates((prev) => {
+                if (prev.length !== questionData.sections.length) {
+                  return new Array(questionData.sections.length)
+                    .fill(false)
+                    .map((_, index) => index === 0);
+                }
+                return prev;
+              });
+            } else {
+              console.error(
+                "Error fetching assessment questions:",
+                questionError
+              );
             }
-            return prev;
-          });
-        } else {
-          console.error("Error fetching assessment questions:", error);
-        }
-      });
+          }
+        );
+      } else {
+        console.error("Error fetching assessment results:", error);
+        notify.error("Failed to load assessment results");
+      }
     }
   };
 

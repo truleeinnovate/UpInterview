@@ -1114,7 +1114,7 @@ router.get(
                 model: "Contacts",
                 select: "firstName lastName email",
               })
-              .sort({_id:-1})
+              .sort({ _id: -1 })
               .skip(skip)
               .limit(limitNum)
               .lean();
@@ -2386,12 +2386,13 @@ async function handleInterviewFiltering(options) {
       .sort({ _id: -1 })
       .populate({
         path: "candidateId",
-        select: "FirstName LastName Email skills CurrentExperience ImageData",
+        select:
+          "FirstName LastName Email Technology skills CurrentExperience ImageData",
         model: "Candidate",
       })
       .populate({
         path: "positionId",
-        select: "title companyname Location",
+        select: "title companyname Location skills minexperience maxexperience",
         model: "Position",
       })
       .populate({ path: "templateId", model: "InterviewTemplate" })
