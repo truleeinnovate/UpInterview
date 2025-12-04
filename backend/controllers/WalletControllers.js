@@ -27,9 +27,12 @@ const Invoicemodels = require("../models/Invoicemodels");
 
 // Initialize Razorpay SDK
 // Note: This uses the same credentials for both Razorpay (payments) and RazorpayX (payouts)
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
+  key_id: RAZORPAY_KEY_ID,
+  key_secret: RAZORPAY_KEY_SECRET,
 });
 
 /**
@@ -85,6 +88,13 @@ const createTopupOrder = async (req, res) => {
 
     if (!ownerId) {
       return res.status(400).json({ error: "ownerId is required" });
+    }
+
+    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+      console.error("Razorpay keys are not configured");
+      return res.status(500).json({
+        error: "Payment configuration error. Please contact support.",
+      });
     }
 
     // Determine walletCode: reuse existing wallet's code if present, otherwise generate a new one
@@ -157,7 +167,11 @@ const createTopupOrder = async (req, res) => {
       key_id: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
-    console.error("Error creating topup order:", error);
+    const razorpayErrorData = error?.response?.data;
+    console.error(
+      "Error creating topup order:",
+      razorpayErrorData || error
+    );
     // STEP 5: Store structured log data for success
     res.locals.logData = {
       tenantId: req?.body?.tenantId || "",
@@ -167,10 +181,15 @@ const createTopupOrder = async (req, res) => {
       status: "error",
       message: "Wallet top-up order created Failed",
       responseBody: {
-        error,
+        error: razorpayErrorData || error,
       },
     };
-    res.status(500).json({ error: "Failed to create topup order" });
+    res.status(500).json({
+      error:
+        razorpayErrorData?.error?.description ||
+        razorpayErrorData?.error?.reason ||
+        "Failed to create topup order",
+    });
   }
 };
 
