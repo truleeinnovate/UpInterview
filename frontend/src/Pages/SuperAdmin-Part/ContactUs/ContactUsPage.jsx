@@ -224,7 +224,8 @@ const ContactUsPage = () => {
         {
             key: "actions",
             header: "ACTION",
-            render: (row) => (
+            cellClassName: "overflow-visible",
+            render: (_, row) => (
                 <ContactUsActionDropdown
                     row={row}
                     onView={handleView}

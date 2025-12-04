@@ -287,6 +287,17 @@ function TenantsPage() {
       .join(" ");
   };
 
+  const getTenantDisplayName = (tenant) => {
+    if (!tenant) return "";
+    if (tenant.type === "organization" && tenant.organizationName) {
+      return tenant.organizationName;
+    }
+    const first = capitalizeFirstLetter(tenant.firstName) || "";
+    const last = capitalizeFirstLetter(tenant.lastName) || "";
+    const fullName = `${first} ${last}`.trim();
+    return fullName || "Unknown Tenant";
+  };
+
   // Table Columns
   const tableColumns = [
     {
@@ -434,6 +445,16 @@ function TenantsPage() {
     {
       key: "phone",
       header: "Phone",
+      render: (value, row) => {
+        const tenantPhone = row?.phone;
+        const contactPhone = row?.contact?.phone;
+        const countryCode = row?.contact?.countryCode;
+
+        const finalPhone = tenantPhone || contactPhone;
+        if (!finalPhone) return "N/A";
+
+        return countryCode ? `${countryCode} ${finalPhone}` : finalPhone;
+      },
     },
     {
       key: "status",
@@ -866,6 +887,7 @@ function TenantsPage() {
         // entityName={
         //   deleteTenant?.FirstName + " " + deleteTenant?.LastName
         // }
+        entityName={getTenantDisplayName(deleteTenant)}
       />
     </div>
   );

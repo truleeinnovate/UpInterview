@@ -210,19 +210,35 @@ function IntegrationsPage() {
   }, [searchQuery]);
 
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
     const options = {
       year: "numeric",
       month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
+      day: "2-digit",
     };
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
+
+  const normalizeMessage = (message) => {
+    if (!message) return "";
+    if (typeof message === "string") return message;
+    if (message && typeof message.message === "string") return message.message;
+    try {
+      return JSON.stringify(message);
+    } catch (e) {
+      return String(message);
+    }
+  };
+
+  const truncateMessage = (message, maxLength = 60) => {
+    const text = normalizeMessage(message);
+    if (!text) return "N/A";
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + "...";
+  };
 
   const tableColumns = [
     {
@@ -270,6 +286,15 @@ function IntegrationsPage() {
     {
       key: "message",
       header: "Message",
+      render: (value) => {
+        const fullMessage = value || "";
+        const preview = truncateMessage(fullMessage);
+        return (
+          <span className="text-sm" title={fullMessage}>
+            {preview}
+          </span>
+        );
+      },
     },
     {
       key: "executionTime",
@@ -289,7 +314,7 @@ function IntegrationsPage() {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => {
               setSelectedLogId(row._id);
               setIsPopupOpen(true);
@@ -297,23 +322,18 @@ function IntegrationsPage() {
           },
         ]
       : []),
-    // {
-    //   key: "360-view",
-    //   label: "360° View",
-    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-    //   onClick: (row) => setSelectedLogId(row._id),
-    // },
+    
 
-    ...(superAdminPermissions?.IntegrationLogs?.Edit
-      ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => navigate(`edit/${row._id}`),
-          },
-        ]
-      : []),
+    // ...(superAdminPermissions?.IntegrationLogs?.Edit
+    //   ? [
+    //       {
+    //         key: "edit",
+    //         label: "Edit",
+    //         icon: <Pencil className="w-4 h-4 text-green-600" />,
+    //         onClick: (row) => navigate(`edit/${row._id}`),
+    //       },
+    //     ]
+    //   : []),
     // {
     //   key: "resend-link",
     //   label: "Resend Link",
@@ -472,9 +492,9 @@ function IntegrationsPage() {
                     {log?.logId ? log.logId : "N/A"}
                   </h3>
 
-                  <p className="text-gray-600 mt-1">
+                  {/* <p className="text-gray-600 mt-1">
                     {log?.CurrentRole || "position"}
-                  </p>
+                  </p> */}
                 </div>
               </div>
 
@@ -608,7 +628,7 @@ function IntegrationsPage() {
                     Message
                   </h3>
                   <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                    {log?.message ? log?.message : "N/A"}
+                    {normalizeMessage(log?.message) || "N/A"}
                   </p>
                 </div>
 
@@ -641,11 +661,11 @@ function IntegrationsPage() {
                         Error Details
                       </h3>
                       <p className="text-sm text-red-600">
-                        {log.responseError}
+                        {normalizeMessage(log.responseError) || "N/A"}
                       </p>
                       {log.responseMessage && (
                         <p className="mt-2 text-sm text-gray-600">
-                          {log.responseMessage}
+                          {normalizeMessage(log.responseMessage)}
                         </p>
                       )}
                     </div>

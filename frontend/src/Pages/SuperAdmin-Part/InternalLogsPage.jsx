@@ -329,7 +329,7 @@ function InternalLogsPage() {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => {
               setSelectedLogId(row._id);
               setIsPopupOpen(true);
@@ -516,9 +516,9 @@ function InternalLogsPage() {
                     {log?.logId ? log.logId : "N/A"}
                   </h3>
 
-                  <p className="text-gray-600 mt-1">
+                  {/* <p className="text-gray-600 mt-1">
                     {log?.position || "position"}
-                  </p>
+                  </p> */}
                 </div>
               </div>
 
