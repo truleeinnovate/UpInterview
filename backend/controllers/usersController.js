@@ -575,32 +575,152 @@ const UpdateUser = async (req, res) => {
 //   }
 // };
 
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * @function getSuperAdminUsers
- * @description Fetches all super admin users with pagination and search filters.
- * @param {Object} req - Request object
- * @param {Object} res - Response object
- * @returns {Promise} - A promise that resolves with a JSON response containing the list of super admin users and pagination details.
- * @throws {Error} - Server error while fetching super admin users
- */
+// const getSuperAdminUsers = async (req, res) => {
+//   try {
+//     const { search = "", role = "", page = 0, limit = 10 } = req.query;
 
-/*******  cc3dfc9e-c510-4090-8440-a9589a708102  *******/
+//     const internalRoles = await RolesPermissionObject.find({
+//       roleType: "internal",
+//     })
+//       .lean()
+//       .select("_id label roleName roleType");
+
+//     //       const superAdminUsers = await Users.find({
+//     //   $or: [
+//     //     { roleId: { $in: roleIds } }, // Match ObjectId
+//     //     { roleId: { $in: roleIdStrings } }, // Match string
+//     //   ],
+//     // })
+//     //   .lean()
+//     //   .select("firstName lastName email phone status roleId imageData gender");
+
+//     // Extract role IDs as both ObjectId and string for flexibility
+//     const roleIds = internalRoles.map((role) => role._id);
+//     const roleIdStrings = roleIds.map((id) => id.toString());
+
+//     if (roleIds.length === 0) {
+//       return res.status(200).json({
+//         users: [],
+//         pagination: {
+//           totalCount: 0,
+//           totalPages: 0,
+//           currentPage: parseInt(page),
+//           hasNext: false,
+//           hasPrev: false,
+//         },
+//       });
+//     }
+
+//     // Build query
+//     let query = {
+//       $or: [{ roleId: { $in: roleIds } }, { roleId: { $in: roleIdStrings } }],
+//     };
+
+//     // Add search filter
+//     if (search) {
+//       const searchRegex = new RegExp(search, "i");
+//       query.$and = [
+//         {
+//           $or: [
+//             { firstName: searchRegex },
+//             { lastName: searchRegex },
+//             { email: searchRegex },
+//             { phone: searchRegex },
+//           ],
+//         },
+//       ];
+//     }
+
+//     // Add role filter
+//     if (role) {
+//       const roleLabels = role.split(",");
+//       const filteredRoles = internalRoles.filter((r) =>
+//         roleLabels.includes(r.label)
+//       );
+//       const filteredRoleIds = filteredRoles.map((r) => r._id);
+//       const filteredRoleIdStrings = filteredRoleIds.map((id) => id.toString());
+
+//       query.$or = [
+//         { roleId: { $in: filteredRoleIds } },
+//         { roleId: { $in: filteredRoleIdStrings } },
+//       ];
+//     }
+
+//     // Calculate pagination
+//     const pageNum = Math.max(1, parseInt(page) || 1);
+//     const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+//     const skip = (pageNum - 1) * limitNum;
+
+//     // Get total count for pagination
+//     const totalCount = await Users.countDocuments(query);
+
+//     // Fetch users with pagination
+//     const superAdminUsers = await Users.find(query)
+//       .sort({ _id: -1 }) // Sort by newest first instead of client-side reverse
+//       .skip(skip)
+//       .limit(limitNum)
+//       .lean()
+//       .select(
+//         "firstName lastName email phone status roleId imageData gender createdAt"
+//       );
+
+//     // Map users to include role label and roleName
+//     const filteredUsers = superAdminUsers
+//       .map((user) => {
+//         const roleIdStr = user.roleId ? user.roleId.toString() : null;
+//         const role = internalRoles.find((r) => r._id.toString() === roleIdStr);
+//         if (!role) {
+//           return null;
+//         }
+//         const enrichedUser = {
+//           ...user,
+//           label: role.label || "Unknown",
+//           roleName: role.roleName || "Unknown",
+//         };
+//         return enrichedUser;
+//       })
+//       .filter((user) => user !== null);
+
+//     // Calculate pagination info
+//     const totalPages = Math.ceil(totalCount / limitNum);
+
+//     res.status(200).json({
+//       users: filteredUsers,
+//       pagination: {
+//         totalCount,
+//         totalPages,
+//         currentPage: pageNum,
+//         hasNext: pageNum < totalPages,
+//         hasPrev: pageNum > 1,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error in getSuperAdminUsers:", {
+//       message: error.message,
+//       stack: error.stack,
+//       errorDetails: error,
+//     });
+//     res.status(500).json({
+//       message: "Server error while fetching super admin users",
+//       error: error.message,
+//     });
+//   }
+// };
+
 const getSuperAdminUsers = async (req, res) => {
   try {
-    const { search = "", role = "", page = 0, limit = 10 } = req.query;
+    const { search = "", role = "", page = 1, limit = 10 } = req.query;
 
+    // ------------------------------------------------------------
+    // 1. GET INTERNAL ROLES
+    // ------------------------------------------------------------
     const internalRoles = await RolesPermissionObject.find({
       roleType: "internal",
     })
       .lean()
       .select("_id label roleName roleType");
 
-    // Extract role IDs as both ObjectId and string for flexibility
-    const roleIds = internalRoles.map((role) => role._id);
-    const roleIdStrings = roleIds.map((id) => id.toString());
-
-    if (roleIds.length === 0) {
+    if (!internalRoles.length) {
       return res.status(200).json({
         users: [],
         pagination: {
@@ -613,12 +733,16 @@ const getSuperAdminUsers = async (req, res) => {
       });
     }
 
-    // Build query
+    const roleIds = internalRoles.map((r) => r._id.toString());
+
+    // ------------------------------------------------------------
+    // 2. BUILD USER QUERY
+    // ------------------------------------------------------------
     let query = {
-      $or: [{ roleId: { $in: roleIds } }, { roleId: { $in: roleIdStrings } }],
+      roleId: { $in: roleIds },
     };
 
-    // Add search filter
+    // SEARCH FILTER
     if (search) {
       const searchRegex = new RegExp(search, "i");
       query.$and = [
@@ -627,67 +751,107 @@ const getSuperAdminUsers = async (req, res) => {
             { firstName: searchRegex },
             { lastName: searchRegex },
             { email: searchRegex },
-            { phone: searchRegex },
           ],
         },
       ];
     }
 
-    // Add role filter
+    // ROLE FILTER
     if (role) {
-      const roleLabels = role.split(",");
-      const filteredRoles = internalRoles.filter((r) =>
-        roleLabels.includes(r.label)
-      );
-      const filteredRoleIds = filteredRoles.map((r) => r._id);
-      const filteredRoleIdStrings = filteredRoleIds.map((id) => id.toString());
+      const labels = role.split(",");
+      const selectedRoleIds = internalRoles
+        .filter((r) => labels.includes(r.label))
+        .map((r) => r._id.toString());
 
-      query.$or = [
-        { roleId: { $in: filteredRoleIds } },
-        { roleId: { $in: filteredRoleIdStrings } },
-      ];
+      query.roleId = { $in: selectedRoleIds };
     }
 
-    // Calculate pagination
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+    // ------------------------------------------------------------
+    // 3. PAGINATION
+    // ------------------------------------------------------------
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit)));
     const skip = (pageNum - 1) * limitNum;
 
-    // Get total count for pagination
     const totalCount = await Users.countDocuments(query);
 
-    // Fetch users with pagination
-    const superAdminUsers = await Users.find(query)
-      .sort({ _id: -1 }) // Sort by newest first instead of client-side reverse
+    // ------------------------------------------------------------
+    // 4. FETCH USERS
+    // ------------------------------------------------------------
+    const users = await Users.find(query)
+      .sort({ _id: -1 })
       .skip(skip)
       .limit(limitNum)
       .lean()
+      .select("firstName lastName email status roleId profileId createdAt");
+
+    // const profileIds = users.map((u) => u.profileId).filter(Boolean);
+    const userIds = users.map((u) => u._id.toString());
+
+    // ------------------------------------------------------------
+    // 5. FETCH CONTACT DATA
+    // ------------------------------------------------------------
+    const contacts = await Contacts.find({
+      ownerId: { $in: userIds },
+    })
+      .lean()
       .select(
-        "firstName lastName email phone status roleId imageData gender createdAt"
+        "profileId phone countryCode gender imageData linkedinUrl portfolioUrl " +
+          "location introduction professionalTitle bio roleId"
       );
 
-    // Map users to include role label and roleName
-    const filteredUsers = superAdminUsers
-      .map((user) => {
-        const roleIdStr = user.roleId ? user.roleId.toString() : null;
-        const role = internalRoles.find((r) => r._id.toString() === roleIdStr);
-        if (!role) {
-          return null;
-        }
-        const enrichedUser = {
-          ...user,
-          label: role.label || "Unknown",
-          roleName: role.roleName || "Unknown",
-        };
-        return enrichedUser;
-      })
-      .filter((user) => user !== null);
+    // MAP CONTACT INFO BY PROFILE ID
+    const contactMap = {};
+    contacts.forEach((c) => {
+      contactMap[c.profileId?.toString()] = c;
+    });
 
-    // Calculate pagination info
+    // ------------------------------------------------------------
+    // 6. MERGE USER + CONTACT + ROLE DETAILS
+    // ------------------------------------------------------------
+    const finalUsers = users.map((user) => {
+      const contact = contactMap[user.profileId?.toString()] || {};
+
+      // role priority:
+      // → If contact has roleId → use that
+      // → else use user.roleId
+      const finalRoleId = contact.roleId
+        ? contact.roleId.toString()
+        : user.roleId?.toString();
+
+      const roleDetails = internalRoles.find(
+        (r) => r._id.toString() === finalRoleId
+      );
+
+      return {
+        ...user,
+
+        // CONTACT FIELDS
+        phone: contact.phone || "",
+        countryCode: contact.countryCode || "",
+        gender: contact.gender || "",
+        imageData: contact.imageData || null,
+        linkedinUrl: contact.linkedinUrl || "",
+        portfolioUrl: contact.portfolioUrl || "",
+        location: contact.location || "",
+        introduction: contact.introduction || "",
+        professionalTitle: contact.professionalTitle || "",
+        bio: contact.bio || "",
+
+        // ROLE FIELDS
+        roleId: finalRoleId,
+        label: roleDetails ? roleDetails.label : "Unknown",
+        roleName: roleDetails ? roleDetails.roleName : "Unknown",
+      };
+    });
+
     const totalPages = Math.ceil(totalCount / limitNum);
 
-    res.status(200).json({
-      users: filteredUsers,
+    // ------------------------------------------------------------
+    // 7. SEND RESPONSE
+    // ------------------------------------------------------------
+    return res.status(200).json({
+      users: finalUsers,
       pagination: {
         totalCount,
         totalPages,
@@ -697,12 +861,8 @@ const getSuperAdminUsers = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error in getSuperAdminUsers:", {
-      message: error.message,
-      stack: error.stack,
-      errorDetails: error,
-    });
-    res.status(500).json({
+    console.error("Error in getSuperAdminUsers:", error);
+    return res.status(500).json({
       message: "Server error while fetching super admin users",
       error: error.message,
     });
