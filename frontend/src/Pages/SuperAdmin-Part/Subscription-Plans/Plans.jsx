@@ -241,7 +241,12 @@ export default function Plans() {
   };
 
   const columns = [
-    { key: "planId", header: "Plan ID" },
+    {
+      key: "planId",
+      header: "Plan ID",
+      render: (val) =>
+        val ? val.charAt(0).toUpperCase() + val.slice(1) : "N/A",
+    },
     { key: "name", header: "Name" },
     {
       key: "subscriptionType",
