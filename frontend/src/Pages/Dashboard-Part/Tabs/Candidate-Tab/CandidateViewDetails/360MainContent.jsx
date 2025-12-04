@@ -58,7 +58,7 @@ const MainContent = () => {
   // Get candidate data, candidate-specific positions and all interviews
   const { candidateData, useCandidatePositions } = useCandidates();
   // Use a high limit so we effectively get all interviews for this tenant/owner
-  const { interviewData } = useInterviews({}, 1, 1000);
+  const { interviewData } = useInterviews({}, 1, Infinity);
 
   // Find the current candidate from the cached data
   const candidate = useMemo(() => {

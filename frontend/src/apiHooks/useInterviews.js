@@ -10,18 +10,16 @@ import { usePermissions } from "../Context/PermissionsContext";
 
 export const useInterviews = (
   filters = {},
-  page = 1,
-  limit = 10,
+  page,
+  limit,
   type = "interviews"
 ) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Interviews?.View;
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const initialLoad = useRef(true);
-  // const params = filters
 
-  // // const total = 0;
   const params =
     // useMemo(() => (
     {
@@ -31,6 +29,7 @@ export const useInterviews = (
       limit: limit,
       type: type,
     };
+
   // ),
   //   [filters, page, limit, type]
   // );
@@ -58,7 +57,7 @@ export const useInterviews = (
       // Update total state
       // setTotal(total);
       // setTotalPages(totalPages);
-
+      // console.log("interview response", response);
       // Return both data and total
       return {
         data: response,
@@ -82,6 +81,7 @@ export const useInterviews = (
   const total = responseData?.data?.total || 0;
   const currentPage = responseData?.data?.page || 1;
   const totalPages = responseData?.data?.totalPages || 1;
+
   const responseDashBoard = responseData?.data || {};
 
   // Child hook returned from useInterviews

@@ -4,11 +4,7 @@
 // v1.0.3 - Ashok - Improved responsiveness
 // v1.0.4 - Ashok - fixed responsiveness issues
 
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FileText,
@@ -1698,7 +1694,7 @@ const FeedbackForm = ({
           ) : (
             <div className="space-y-4">
               {questionsToRender.map((question) => {
-                console.log("questionsToRender", question);
+                // console.log("questionsToRender", question);
                 return (
                   <div
                     key={question.questionId || question.id}
@@ -1706,7 +1702,12 @@ const FeedbackForm = ({
                   >
                     <div className="flex items-start justify-between mb-3">
                       <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                        {question.snapshot?.skill || question.category || "N/A"}
+                        {
+                          // question.snapshot?.skill ||
+                          question?.snapshot?.technology[0] ||
+                            question?.snapshot?.category[0] ||
+                            "N/A"
+                        }
                       </span>
                       <span className="text-sm text-gray-500">
                         {question.snapshot?.difficultyLevel ||

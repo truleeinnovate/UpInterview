@@ -12,6 +12,8 @@ export const usePositions = (filters = {}) => {
   const hasViewPermission = effectivePermissions?.Positions?.View;
   const hasDeletePermission = effectivePermissions?.Positions?.Delete;
 
+  // console.log("filters", filters);
+
   const {
     data: responseData = {},
 
@@ -35,7 +37,8 @@ export const usePositions = (filters = {}) => {
     staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
     cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    // refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnMount: "always",
     refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 

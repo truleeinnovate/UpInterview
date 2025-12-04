@@ -114,6 +114,8 @@ const UsersAccountTab = () => {
   const pagination =
     userType === "superAdmin" ? superAdminPagination : usersRes?.pagination;
 
+  console.log("superAdminUsers", superAdminUsers);
+
   // Select data and loading state based on type
   const dataSource = userType === "superAdmin" ? superAdminUsers : users;
   const loading = userType === "superAdmin" ? superAdminLoading : usersLoading;
@@ -429,6 +431,7 @@ const UsersAccountTab = () => {
     {
       key: "status",
       header: "Status",
+
       render: (value) => {
         return value ? (
           <StatusBadge status={capitalizeFirstLetter(value)} />

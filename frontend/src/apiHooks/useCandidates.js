@@ -16,7 +16,7 @@ export const useCandidates = (filters = {}) => {
   const hasDeletePermission = effectivePermissions?.Candidates?.Delete;
 
   const {
-   data: responseData,
+    data: responseData,
     isLoading: isQueryLoading,
     isError,
     error,
@@ -24,37 +24,38 @@ export const useCandidates = (filters = {}) => {
   } = useQuery({
     queryKey: ["candidates", filters],
     queryFn: async () => {
-      const data = await fetchFilterData("candidate", effectivePermissions,filters);
+      const data = await fetchFilterData(
+        "candidate",
+        effectivePermissions,
+        filters
+      );
 
       // console.log("data data", data);
       return data;
-     
-        
     },
     enabled: !!hasViewPermission, // Only fetch if user has permission
     retry: 1,
     staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
     cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    // refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnMount: "always",
     refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
-
-// Extract data and total from response
+  // Extract data and total from response
   const candidateData = responseData?.candidate || [];
   const totalCandidates = responseData?.total || 0;
 
   // In useCandidates hook, change data extraction to:
-const candidateDatas = responseData?.data?.candidate || [];
-const totalCandidatess = responseData?.data?.total || 0;
+  // const candidateDatas = responseData?.data?.candidate || [];
+  // const totalCandidatess = responseData?.data?.total || 0;
 
-// console.log("candidateDatas", candidateDatas);
-// console.log("totalCandidatess", totalCandidatess);
+  // console.log("candidateDatas", candidateDatas);
+  // console.log("totalCandidatess", totalCandidatess);
 
-
-//   console.log("candidateData", candidateData);
-//   console.log("totalCandidates", totalCandidates);
+  //   console.log("candidateData", candidateData);
+  //   console.log("totalCandidates", totalCandidates);
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -240,8 +241,8 @@ const totalCandidatess = responseData?.data?.total || 0;
             data: {
               ...oldData.data,
               candidate: filteredCandidates,
-              total: oldData.data.total - 1
-            }
+              total: oldData.data.total - 1,
+            },
           };
         } else if (Array.isArray(oldData)) {
           // Old structure: array of candidates (fallback)
@@ -260,7 +261,6 @@ const totalCandidatess = responseData?.data?.total || 0;
       queryClient.invalidateQueries(["candidates"]);
     },
 
-
     // onSuccess: (data, candidateId) => {
     //   // Optimistically remove from cache
     //   queryClient.setQueryData(["candidates", filters], (oldData) => {
@@ -275,9 +275,8 @@ const totalCandidatess = responseData?.data?.total || 0;
     // },
     // onError: (error, candidateId) => {
     //   console.error("Error deleting candidate:", error);
-
   });
-  
+
   // Hook to fetch candidate positions for a specific candidate (for Candidate 360 Positions tab)
   const useCandidatePositions = (candidateId) => {
     return useQuery({
