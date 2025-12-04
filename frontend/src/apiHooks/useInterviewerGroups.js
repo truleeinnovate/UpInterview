@@ -9,7 +9,7 @@ const getTenantId = () => {
   return authToken ? JSON.parse(atob(authToken.split('.')[1])).tenantId : null;
 };
 
-// Fetch groups
+// Legacy hook: fetch all groups for a tenant (no pagination)
 export const useGroupsQuery = () => {
   const tenantId = getTenantId();
 
@@ -38,6 +38,68 @@ export const useGroupsQuery = () => {
   });
 };
 
+// Paginated & filterable groups hook (used by InterviewerGroups list)
+export const usePaginatedGroups = ({
+  page = 0,
+  limit,
+  search = '',
+  status = '',
+} = {}) => {
+  const tenantId = getTenantId();
+
+  // Build query params
+  const queryParams = new URLSearchParams();
+  if (tenantId) queryParams.append('tenantId', tenantId);
+  queryParams.append('page', page.toString());
+  queryParams.append('limit', limit.toString());
+  if (search) queryParams.append('search', search);
+  if (status) queryParams.append('status', status);
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['groups-paginated', tenantId, page, limit, search, status],
+    queryFn: async () => {
+      if (!tenantId) {
+        return {
+          data: [],
+          pagination: {
+            currentPage: 0,
+            totalPages: 0,
+            totalItems: 0,
+            hasNext: false,
+            hasPrev: false,
+            itemsPerPage: limit,
+          },
+        };
+      }
+
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/groups?${queryParams.toString()}`
+      );
+      return response.data;
+    },
+    enabled: !!tenantId,
+    staleTime: 5 * 60 * 1000,
+    keepPreviousData: true,
+  });
+
+  return {
+    groups: data?.data || [],
+    pagination:
+      data?.pagination || {
+        currentPage: page,
+        totalPages: 0,
+        totalItems: 0,
+        hasNext: false,
+        hasPrev: page > 0,
+        itemsPerPage: limit,
+      },
+    isLoading,
+    isError,
+    error,
+    refetch,
+  };
+};
+
 // Create group mutation
 export const useCreateGroup = () => {
   const queryClient = useQueryClient();
@@ -53,6 +115,7 @@ export const useCreateGroup = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['groups']);
+      queryClient.invalidateQueries(['groups-paginated']);
     },
     onError: (error) => {
       console.error("Error creating group:", error);
@@ -75,6 +138,7 @@ export const useUpdateGroup = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['groups']);
+      queryClient.invalidateQueries(['groups-paginated']);
     },
     onError: (error) => {
       console.error("Error updating group:", error);
@@ -96,6 +160,7 @@ export const useDeleteGroup = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['groups']);
+      queryClient.invalidateQueries(['groups-paginated']);
     },
     onError: (error) => {
       console.error("Error deleting group:", error);
@@ -118,6 +183,7 @@ export const useAddGroupMember = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['groups']);
+      queryClient.invalidateQueries(['groups-paginated']);
     },
     onError: (error) => {
       console.error("Error adding group member:", error);
@@ -139,6 +205,7 @@ export const useRemoveGroupMember = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['groups']);
+      queryClient.invalidateQueries(['groups-paginated']);
     },
     onError: (error) => {
       console.error("Error removing group member:", error);

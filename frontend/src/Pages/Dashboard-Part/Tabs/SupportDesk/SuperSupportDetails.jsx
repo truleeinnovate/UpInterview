@@ -87,16 +87,24 @@ function SupportDetails() {;
     const fetchUsers = async () => {
       try {
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/users/super-admins`
+          `${config.REACT_APP_API_URL}/users/super-admins`,
+          {
+            params: {
+              page: 1,
+              limit: Infinity,
+            },
+          }
         );
 
-        const filteredUsers = Array.isArray(response.data)
-          ? response.data.filter(
-              (user) =>
-                user.roleName === "Super_Admin" ||
-                user.roleName === "Support_Team"
-            )
+        const usersArray = Array.isArray(response.data?.users)
+          ? response.data.users
           : [];
+
+        const filteredUsers = usersArray.filter(
+          (user) =>
+            user.roleName === "Super_Admin" ||
+            user.roleName === "Support_Team"
+        );
 
         console.log("filteredUsers---", filteredUsers);
         setOwnerOptions(filteredUsers);

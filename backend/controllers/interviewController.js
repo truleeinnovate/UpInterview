@@ -1615,6 +1615,9 @@ const getAllInterviewRounds = async (req, res) => {
         _id: 1,
         interviewCode: 1,
         interviewId: "$mainInterview._id",
+        // Expose candidate and position IDs for frontend detail fetches
+        candidateId: "$mainInterview.candidateId",
+        positionId: "$mainInterview.positionId",
         sequence: 1,
         roundTitle: 1,
         interviewMode: 1,

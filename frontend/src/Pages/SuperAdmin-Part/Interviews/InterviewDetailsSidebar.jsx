@@ -133,9 +133,13 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
         return;
       }
       
+      // Determine candidate/position IDs coming from Super Admin list
+      const candidateId = interviewData?.candidateId || interviewData?.candidate;
+      const positionId = interviewData?.positionId || interviewData?.position;
+
       // For regular interviews, fetch candidate and position data from API
-      if (!interviewData?.candidate || typeof interviewData.candidate !== 'string' || 
-          !interviewData?.position || typeof interviewData.position !== 'string') {
+      if (!candidateId || !positionId ||
+          typeof candidateId !== 'string' || typeof positionId !== 'string') {
         setLoading(false);
         return;
       }
@@ -146,10 +150,10 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
         const authToken = Cookies.get('authToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
         
         // Fetch candidate data
-        if (interviewData.candidate) {
+        if (candidateId) {
           try {
             const candidateResponse = await axios.get(
-              `${config.REACT_APP_API_URL}/candidate/details/${interviewData.candidate}`,
+              `${config.REACT_APP_API_URL}/candidate/details/${candidateId}`,
               {
                 headers: {
                   Authorization: `Bearer ${authToken}`,
@@ -163,10 +167,10 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
         }
         
         // Fetch position data
-        if (interviewData.position) {
+        if (positionId) {
           try {
             const positionResponse = await axios.get(
-              `${config.REACT_APP_API_URL}/position/details/${interviewData.position}`,
+              `${config.REACT_APP_API_URL}/position/details/${positionId}`,
               {
                 headers: {
                   Authorization: `Bearer ${authToken}`,
