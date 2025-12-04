@@ -394,18 +394,7 @@ function InvoicesTable({ organizationId, viewMode }) {
         setIsPopupOpen(true);
       },
     },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
-    // {
-    //   key: "login-as-user",
-    //   label: "Login as User",
-    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
-    //   onClick: (row) => handleLoginAsUser(row._id),
-    // },
+    
   ];
 
   // Render Actions for Kanban

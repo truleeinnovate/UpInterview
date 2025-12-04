@@ -985,14 +985,19 @@ const getAllOrganizations = async (req, res) => {
       );
     }
 
-    // Filter by plan if provided
+    // Filter by plan if provided (match against SubscriptionPlan.name)
     if (plan) {
-      const planList = plan.split(",");
-      filteredOrganizations = filteredOrganizations.filter(
-        (org) =>
-          org.subscriptionPlan &&
-          planList.includes(org.subscriptionPlan.planName)
-      );
+      const planList = plan
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean);
+
+      if (planList.length > 0) {
+        filteredOrganizations = filteredOrganizations.filter((org) => {
+          const planName = org?.subscriptionPlan?.name;
+          return planName && planList.includes(planName);
+        });
+      }
     }
 
     // Filter by user count if provided

@@ -317,24 +317,7 @@ function PaymentsTable({ organizationId, viewMode }) {
         setIsPopupOpen(true);
       },
     },
-    // {
-    //   key: "360-view",
-    //   label: "360° View",
-    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-    //   onClick: (row) => row?._id && navigate(`/payment/${row._id}`),
-    // },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
-    // {
-    //   key: "resend-link",
-    //   label: "Resend Link",
-    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
-    //   disabled: (row) => row.status === "completed",
-    // },
+    
   ];
 
   // Kanban Columns Configuration
@@ -347,7 +330,7 @@ function PaymentsTable({ organizationId, viewMode }) {
       ),
     },
     {
-      key: "method",
+      key: "paymentMethod",
       header: "Payment Method",
       render: (value) => <div>{value || "N/A"}</div>,
     },
@@ -363,7 +346,7 @@ function PaymentsTable({ organizationId, viewMode }) {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         setSelectedPaymentId(row._id);
         setIsPopupOpen(true);
