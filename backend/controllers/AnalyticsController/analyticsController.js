@@ -4,7 +4,7 @@
 const mongoose = require("mongoose");
 const ReportCategory = require("../../models/AnalyticSchemas/reportCategory");
 const {
-  ReportTemplate,TenantReportAccess,ReportUsage
+  ReportTemplate, TenantReportAccess, ReportUsage
 } = require("../../models/AnalyticSchemas/reportSchemas");
 const { FilterPreset } = require("../../models/AnalyticSchemas/filterSchemas");
 const {
@@ -389,9 +389,9 @@ const generateReport = async (req, res) => {
     // 3. SAVED COLUMN CONFIG
     const savedColumnConfig = actingAsTenantId
       ? await ColumnConfiguration.findOne({
-          templateId,
-          tenantId: actingAsTenantId,
-        }).lean()
+        templateId,
+        tenantId: actingAsTenantId,
+      }).lean()
       : null;
 
     // 4. BUILD COLUMNS
@@ -484,9 +484,9 @@ const generateReport = async (req, res) => {
       }
       // NEW FORMAT: array of { key, value }
       else {
-         activeFilters = Object.fromEntries(
-    filterPreset.filters.map(f => [f.key, f.value])
-  );
+        activeFilters = Object.fromEntries(
+          filterPreset.filters.map(f => [f.key, f.value])
+        );
         console.log("[FILTERS] Applied saved filters (new format) →", activeFilters);
       }
     } else {
@@ -519,13 +519,13 @@ const generateReport = async (req, res) => {
       finalQuery.createdAt = { $gte: startDate };
     }
 
-   Object.keys(activeFilters).forEach(key => {
-  if (["dateRange", "customStartDate", "customEndDate"].includes(key)) return;
-  const value = activeFilters[key];
-  if (value != null && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
-    finalQuery[key] = Array.isArray(value) ? { $in: value } : value;
-  }
-});
+    Object.keys(activeFilters).forEach(key => {
+      if (["dateRange", "customStartDate", "customEndDate"].includes(key)) return;
+      const value = activeFilters[key];
+      if (value != null && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
+        finalQuery[key] = Array.isArray(value) ? { $in: value } : value;
+      }
+    });
 
 
     console.log("[QUERY] Final Query →", JSON.stringify(finalQuery, null, 2));
@@ -540,32 +540,32 @@ const generateReport = async (req, res) => {
     let rawData = [];
 
     if (collectionName === "interviewrounds") {
-      const interviews = await Interview.find(permissionQuery, {
-        _id: 1,
-      }).lean();
+      const interviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
       const interviewIds = interviews.map((i) => i._id);
       if (interviewIds.length > 0) {
         rawData = await InterviewRounds.find(
           { interviewId: { $in: interviewIds }, ...finalQuery },
           projection
         )
-          .limit(2000)
+          // REMOVE .sort() COMPLETELY
+          // .limit(2000)
           .lean();
       }
     } else {
       rawData = await Model.find(
-        { ...permissionQuery, ...finalQuery }, // SECURE: permissionQuery included
+        { ...permissionQuery, ...finalQuery },
         projection
       )
-        .limit(2000)
+        // REMOVE .sort() HERE TOO
+        // .limit(2000)
         .lean();
     }
 
     console.log(`[DATA] Fetched ${rawData.length} records`);
 
-    const sortedData = rawData.sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
+ const sortedData = rawData
+  .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+  .slice(0, 2000);
     const mappedData = sortedData.map((d) => ({ id: d._id.toString(), ...d }));
 
     // 11. KPI + CHARTS
@@ -653,8 +653,8 @@ const generateReport = async (req, res) => {
       defaultFilters:
         filterPreset?.filters?.length > 0
           ? Object.fromEntries(
-              filterPreset.filters.map((f) => [f.key, f.value])
-            )
+            filterPreset.filters.map((f) => [f.key, f.value])
+          )
           : filterConfig?.default || {},
 
       kpis: templateKpis,
@@ -731,12 +731,12 @@ const getReportTemplates = async (req, res) => {
 
       category: t.category
         ? {
-            id: t.category._id.toString(),
-            name: t.category.name,
-            label: t.category.label,
-            icon: t.category.icon,
-            color: t.category.color,
-          }
+          id: t.category._id.toString(),
+          name: t.category.name,
+          label: t.category.label,
+          icon: t.category.icon,
+          color: t.category.color,
+        }
         : null, // ← AZURE SAFE
 
       configuration: t.configuration || {},
@@ -890,9 +890,9 @@ const getAllReportAccess = async (req, res) => {
     const allRoleIds = [...new Set(accessDocs.flatMap(doc => doc.access.roles || []))];
     const rolesMap = allRoleIds.length > 0
       ? await RolesPermissionObject.find({ _id: { $in: allRoleIds } })
-          .select("label name")
-          .lean()
-          .then(roles => Object.fromEntries(roles.map(r => [r._id.toString(), r])))
+        .select("label name")
+        .lean()
+        .then(roles => Object.fromEntries(roles.map(r => [r._id.toString(), r])))
       : {};
 
     const accessMap = {};
