@@ -501,8 +501,7 @@ router.get(
           };
 
           const filterQuery = {
-            tenantId: query?.tenantId,
-            ownerId: query?.ownerId,
+            ...query,
           };
 
           if (req?.query?.type !== "analytics") {
@@ -511,30 +510,7 @@ router.get(
               DataModel,
               ...interviewQueryParams,
             });
-          }
-          //  else if (req?.query?.type === "analytics") {
-          //   let interviews = await DataModel.find(query)
-          //     .sort({ _id: -1 })
-          //     .populate({
-          //       path: "candidateId",
-          //       select:
-          //         "FirstName LastName Email Technology skills CurrentExperience ImageData",
-          //       model: "Candidate",
-          //     })
-          //     .populate({
-          //       path: "positionId",
-          //       select:
-          //         "title companyname Location skills minexperience maxexperience",
-          //       model: "Position",
-          //     })
-          //     .populate({ path: "templateId", model: "InterviewTemplate" })
-          //     .lean();
-          //   data = {
-          //     data: interviews,
-          //   };
-
-          // }
-          else {
+          } else {
             data = await getInterviewDashboardStats({
               filterQuery,
               DataModel,
@@ -1106,12 +1082,9 @@ router.get(
               }
             }
 
-            // console.log('Final query:', JSON.stringify(finalQuery, null, 2));
-
             try {
               // Get total count for the filtered query
               const total = await DataModel.countDocuments(finalQuery);
-              // console.log(`Total ${type || 'custom'} templates matching filters: ${total}`);
 
               // Fetch templates with pagination
               const templates = await DataModel.find(finalQuery)
@@ -1136,9 +1109,7 @@ router.get(
               });
               const customCount = await DataModel.countDocuments({
                 type: "custom",
-                ...(query?.ownerId
-                  ? { ownerId: query.ownerId }
-                  : { tenantId: query.tenantId }),
+                ...query,
               });
 
               // console.log(`Fetched ${templates.length} ${type || 'custom'} templates for page ${pageNum}`);
@@ -1248,10 +1219,6 @@ router.get(
               selectedOptionId = null,
             } = req.query;
 
-            console.log("req.query", query);
-
-            console.log("query?.tenantId", query?.ownerId);
-
             // const ownerId = userId;
             const assessmentType = type;
 
@@ -1265,8 +1232,7 @@ router.get(
               // Explicit custom tab: show only scoped custom templates
               Basequery = {
                 type: "custom",
-                // query,
-                // tenantId: query?.tenantId,
+
                 ...query,
               };
             } else {
@@ -1276,8 +1242,7 @@ router.get(
                   { type: "standard" },
                   {
                     type: "custom",
-                    // query,
-                    // tenantId: query?.tenantId,
+
                     ...query,
                   },
                 ],
@@ -1351,8 +1316,6 @@ router.get(
 
             const skip = +page * +limit;
 
-            console.log("Basequery", Basequery);
-
             const [dataSection, totalCount, customCount, standardCount] =
               await Promise.all([
                 Assessment.find(Basequery)
@@ -1368,9 +1331,7 @@ router.get(
                 // Custom assessments count (ONLY tenant and owner filter - NO search/filters)
                 Assessment.countDocuments({
                   type: "custom",
-                  // query,
 
-                  // tenantId: query?.tenantId,
                   ...query,
                 }),
 
@@ -1429,6 +1390,7 @@ router.get(
         // assessment scheduled for candidate api
         case "scheduleassessment": {
           console.log("req?.query?.type", req?.query);
+
           if (req?.query?.type !== "analytics") {
             const {
               assessmentId,
@@ -1689,6 +1651,78 @@ router.get(
               totalPages,
               itemsPerPage: limitNumber,
             };
+          } else if (req?.query?.type === "scheduled") {
+            console.log("In scheduleassessment scheduled type", req?.query);
+            // const assessmentId = req?.query?.assessmentId;
+            const { assessmentId } = req.query;
+
+            console.log("assessmentId", assessmentId);
+
+            if (!assessmentId) {
+              return sendErrorResponse(
+                res,
+                "assessmentId is required for scheduled type"
+              );
+            }
+
+            // if (!mongoose.isValidObjectId(assessmentId)) {
+            //   console.log("Invalid assessmentId format");
+            //   return res.status(400).json({
+            //     success: false,
+            //     message: "Invalid assessmentId format",
+            //   });
+            // }
+
+            // Set ONLY the assessmentId filter
+            // scheduledFilter.assessmentId = assessmentId;
+
+            // Fetch ALL data for this assessmentId (no pagination, no limits)
+            const [scheduledAssessments] = await Promise.all([
+              ScheduledAssessmentSchema.find(assessmentId)
+                .select(
+                  "_id scheduledAssessmentCode order expiryAt status createdAt assessmentId"
+                )
+                .sort({ _id: -1 })
+                .lean(),
+              ScheduledAssessmentSchema.countDocuments(finalMatch),
+            ]);
+
+            if (!scheduledAssessments.length) {
+              data = [];
+              break;
+            }
+
+            const scheduledIds = scheduledAssessments.map((sa) => sa._id);
+
+            const candidateAssessments = await CandidateAssessment.find({
+              scheduledAssessmentId: { $in: scheduledIds },
+            })
+              .populate("candidateId")
+              .lean();
+
+            const schedulesWithCandidates = scheduledAssessments.map(
+              (schedule) => {
+                const candidates = candidateAssessments.filter(
+                  (ca) =>
+                    ca.scheduledAssessmentId.toString() ===
+                    schedule._id.toString()
+                );
+                return {
+                  _id: schedule._id,
+                  assessmentId: schedule.assessmentId,
+                  scheduledAssessmentCode: schedule.scheduledAssessmentCode,
+                  order: schedule.order,
+                  expiryAt: schedule.expiryAt,
+                  status: schedule.status,
+                  createdAt: schedule.createdAt,
+                  candidates,
+                };
+              }
+            );
+
+            data = {
+              data: schedulesWithCandidates,
+            };
           } else {
             // ANALYTICS: Calculate Assessments Completed metrics using aggregation
             try {
@@ -1713,8 +1747,7 @@ router.get(
                 await ScheduledAssessmentSchema.aggregate([
                   {
                     $match: {
-                      tenantId: query?.tenantId,
-                      ...(ownerId ? { ownerId: query?.ownerId } : {}),
+                      ...query,
                       status: "completed",
                       isActive: true,
                     },
@@ -1765,8 +1798,8 @@ router.get(
                 trendValue = "+100% vs last month";
               } else {
                 const percentageChange =
-                  ((result.currentMonthCount - result.lastMonthCount) /
-                    result.lastMonthCount) *
+                  ((result?.currentMonthCount - result?.lastMonthCount) /
+                    result?.lastMonthCount) *
                   100;
                 trend = percentageChange >= 0 ? "up" : "down";
                 trendValue = `${Math.abs(percentageChange).toFixed(
@@ -1776,11 +1809,11 @@ router.get(
 
               data = {
                 assessmentsCompleted: {
-                  value: result.currentMonthCount,
-                  lastMonth: result.lastMonthCount,
+                  value: result?.currentMonthCount,
+                  lastMonth: result?.lastMonthCount,
                   trend: trend,
                   trendValue: trendValue,
-                  totalCompleted: result.totalCompleted,
+                  totalCompleted: result?.totalCompleted,
                 },
                 metadata: {
                   calculationDate: now,
@@ -1994,7 +2027,8 @@ router.get(
           let feedbackQuery = {
             $or: [
               { interviewRoundId: { $in: feedbackRoundIds } },
-              { tenantId: query?.tenantId },
+              { ...query },
+              // { tenantId: query?.tenantId },
             ],
           };
 
