@@ -100,6 +100,12 @@ export function WalletTopupPopup({ onClose, onTopup }) {
 
       const { orderId, key_id } = orderData;
 
+      if (!window.Razorpay) {
+        setError("Payment service is unavailable. Please refresh and try again.");
+        setIsProcessing(false);
+        return;
+      }
+
       // Initialize Razorpay payment
       const options = {
         key: key_id,
@@ -183,6 +189,16 @@ export function WalletTopupPopup({ onClose, onTopup }) {
       };
 
       const razorpay = new window.Razorpay(options);
+      razorpay.on("payment.failed", function (response) {
+        console.error("Razorpay payment failed:", response);
+        const description =
+          response?.error?.description || response?.error?.reason;
+        setError(
+          description ||
+            "Payment failed. Please try again or use a different payment method."
+        );
+        setIsProcessing(false);
+      });
       razorpay.open();
     } catch (error) {
       console.error("Top-up failed:", error);
