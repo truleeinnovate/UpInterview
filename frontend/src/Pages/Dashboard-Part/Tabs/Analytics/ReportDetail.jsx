@@ -659,6 +659,7 @@ const ReportDetail = () => {
   const [chartData, setChartData] = useState({}); // Chart datasets
   const [kpis, setKpis] = useState([]); // KPI config
   const [charts, setCharts] = useState([]); // Chart config
+  const [isLoading, setIsLoading] = useState(false);
 
   const [reportMeta, setReportMeta] = useState({
     title: "",
@@ -815,6 +816,7 @@ const ReportDetail = () => {
     if (!force && lastFetchedId.current === reportIdParam) return;
 
     try {
+      setIsLoading(true);
       const response = await generateReportMutation.mutateAsync(reportIdParam);
       if (!response) return;
 
@@ -866,6 +868,8 @@ const ReportDetail = () => {
       lastFetchedId.current = reportIdParam;
     } catch (error) {
       console.error("Failed to fetch report:", error);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -1035,10 +1039,18 @@ const ReportDetail = () => {
       return;
     }
 
-    // 1. Initialize jsPDF
+    // Capitalize headers
+    const formattedHeaders = headers.map((h) => capitalizeFirstLetter(h));
+
+    // Capitalize every cell in body rows
+    const formattedRows = rows.map((row) =>
+      row.map((cell) => (typeof cell === "string" ? capitalizeFirstLetter(cell) : cell))
+    );
+
+    // Initialize jsPDF
     const doc = new jsPDF();
 
-    // 2. Add Title
+    // Add Title
     doc.setFontSize(18);
     doc.text(reportMeta.title || "Report Export", 14, 22);
 
@@ -1049,20 +1061,31 @@ const ReportDetail = () => {
     // 3. Generate Table
     autoTable(doc, {
       startY: 40,
-      head: [headers],
-      body: rows,
+      head: [formattedHeaders],
+      body: formattedRows,
       theme: "grid",
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [33, 121, 137] }, // Adjust to your brand blue if needed
+      headStyles: { fillColor: [33, 121, 137] },
     });
 
-    // 4. Save
+    // Save
     doc.save(
       `${reportMeta.title || "report"}_${
         new Date().toISOString().split("T")[0]
       }.pdf`
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-[100vh] animate-fade-in">
+        <div className="w-12 h-12 border-4 border-custom-blue border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-custom-blue font-medium text-lg">
+          Loading report...
+        </p>
+      </div>
+    );
+  }
 
   console.log("COLUMNS ===============================> ", columns);
 
