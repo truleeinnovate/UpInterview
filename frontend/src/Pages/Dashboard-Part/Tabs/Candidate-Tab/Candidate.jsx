@@ -217,7 +217,7 @@ function Candidate({
   // NEW: Compute queryFilters for server-side
   const queryFilters = {
     page: currentPage + 1,
-    limit: rowsPerPage,
+    candidateLimit: rowsPerPage,
     search: searchQuery,
     status: selectedFilters.status,
     tech: selectedFilters.tech,

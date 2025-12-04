@@ -13,17 +13,7 @@ import {
   validatePage1,
 } from "../../../../utils/mockinterviewValidation.js";
 import { useSingleContact } from "../../../../apiHooks/useUsers";
-import {
-  X,
-  Users,
-  User,
-  Trash2,
-  Clock,
-  Calendar,
-  Search,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { X, Users, User, Trash2, Clock, Calendar } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 import OutsourcedInterviewerModal from "../Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx";
@@ -127,13 +117,10 @@ const MockSchedulelater = () => {
   const [mockEdit, setMockEdit] = useState(false);
   const [entries, setEntries] = useState([]);
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
-  const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
-  const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState("");
   const [selectedExp, setSelectedExp] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
-  const [deleteIndex, setDeleteIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -1188,7 +1175,6 @@ const MockSchedulelater = () => {
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
   };
-  // console.log("pageFrom", pageFrom);
 
   const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
@@ -2704,16 +2690,7 @@ const MockSchedulelater = () => {
             <div className="flex justify-between gap-4 mt-5 mb-4">
               <button
                 className="border border-custom-blue p-3 rounded py-1"
-                onClick={() =>
-                  navigate(
-                    pageFrom
-                      ? `/mock-interview`
-                      : `/mock-interview-details/${id}`
-                    //  id
-                    //   ? `/mock-interview-details/${id}`
-                    //   : `/mock-interview`
-                  )
-                }
+                onClick={() => navigate(-1)}
               >
                 Cancel
               </button>

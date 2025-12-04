@@ -39,7 +39,12 @@ const ShareAssessment = ({
   useScrollLock(isOpen);
   // v1.0.5 -------------------------------------------------------------------->
   // <---------------------- v1.0.1
-  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  const { assessmentData, fetchAssessmentQuestions } = useAssessments({
+    limit: Infinity,
+  });
+  // {
+  // type: "allData",
+  // }
   const {
     candidateData,
     loading,

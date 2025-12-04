@@ -382,7 +382,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
               <button
                 onClick={() => handleRoleSelect("interviewer")}
                 // onClick={() => onRoleSelect('interviewer')}
-                disabled={!isButtonEnabled}
+                // disabled={!isButtonEnabled}
                 className={`w-full sm:text-sm md:text-sm ${
                   isButtonEnabled
                     ? "bg-custom-blue hover:bg-custom-blue/90"
@@ -390,6 +390,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                 } text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3`}
               >
                 <Users className="w-5 h-5" />
+                {/* Join as Interviewer */}
                 {isButtonEnabled
                   ? roleInfo?.isInterviewer
                     ? "Start Interview"

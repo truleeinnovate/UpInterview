@@ -18,11 +18,12 @@ export const useMockInterviews = (params = {}) => {
   const hasViewPermission = effectivePermissions?.MockInterviews?.View;
 
   // Extract and validate params for API call
-  const { search = "", page = 0, limit = 10, filters = {} } = params;
+  const { search = "", page = 0, limit, filters = {} } = params;
 
-  // Ensure page is at least 0 and limit is positive
-  const validatedPage = Math.max(0, parseInt(page));
-  const validatedLimit = Math.max(1, parseInt(limit));
+  // // Ensure page is at least 0 and limit is positive
+  // const validatedPage = Math.max(0, parseInt(page));
+  // const validatedLimit =
+  //   limit === Infinity ? Infinity : Math.max(1, parseInt(limit));
 
   // Query implementation
   const {
@@ -34,24 +35,24 @@ export const useMockInterviews = (params = {}) => {
   } = useQuery({
     queryKey: [
       "mockinterviews",
-      { search, page: validatedPage, limit: validatedLimit, filters },
+      params,
+      // { search, page: validatedPage, limit: validatedLimit, filters },
     ],
     queryFn: async () => {
       try {
         // Prepare API params for backend filtering
         const apiParams = {
-          search,
-          page: validatedPage + 1, // Backend uses 1-based pagination
-          limit: validatedLimit,
-          ...filters,
+          ...params,
+          mockLimit: params?.limit ?? limit ?? Infinity,
         };
+
+        console.log("apiParams", apiParams);
 
         const filteredInterviews = await fetchFilterData(
           "mockinterview",
           effectivePermissions,
           apiParams
         );
-        console.log("Raw API response:", filteredInterviews);
         return filteredInterviews;
       } catch (err) {
         console.error("Fetch error:", err);
@@ -69,8 +70,9 @@ export const useMockInterviews = (params = {}) => {
   });
 
   // Extract data and total count from response
-  const mockinterviewData = responseData.data || [];
-  const totalCount = responseData.totalCount || 0;
+  const mockinterviewData = responseData?.data || [];
+  const totalCount = responseData?.totalCount || 0;
+  const totalPages = responseData?.totalPages || 0;
 
   // Add/Update mock interview mutation
   // In useMockInterviews.js - FIXED VERSION
@@ -194,6 +196,7 @@ export const useMockInterviews = (params = {}) => {
   return {
     mockinterviewData,
     totalCount,
+    totalPages,
     isLoading,
     isQueryLoading,
     isMutationLoading,

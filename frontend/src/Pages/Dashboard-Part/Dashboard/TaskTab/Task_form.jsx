@@ -38,6 +38,7 @@ import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopu
 import InputField from "../../../../Components/FormFields/InputField.jsx";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField.jsx";
 import DescriptionField from "../../../../Components/FormFields/DescriptionField.jsx";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 
 const TaskForm = ({
   onClose,
@@ -52,19 +53,26 @@ const TaskForm = ({
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
-  const { candidateData } = useCandidates();
-  const { positionData } = usePositions();
-  const { assessmentData } = useAssessments();
-  const { interviewData } = useInterviews();
-  const { mockInterviewData } = useMockInterviews();
-  //console.log("mockInterviewData:",mockInterviewData)
+  const { candidateData } = useCandidates({
+    candidateLimit: Infinity,
+  });
+  const { positionData } = usePositions({
+    limit: Infinity,
+  });
+  const { assessmentData } = useAssessments({
+    limit: Infinity,
+  });
+  const { interviewData } = useInterviews({}, 1, Infinity);
+
+  const { mockinterviewData } = useMockInterviews({
+    limit: Infinity,
+  });
 
   // const { usersRes } = useCustomContext();
   // ---------------------------- from apiHooks ---------------------------------------
   const { usersRes } = useUsers();
   // console.log("usersRes",usersRes);
   // ---------------------------- from apiHooks ---------------------------------------
-
 
   // Mutations must be inside the component
   const createTaskMutation = useCreateTask();
@@ -252,20 +260,48 @@ const TaskForm = ({
           id: interview._id,
         }));
       case "MockInterviews":
-        return mockInterviewData
-          ? mockInterviewData.map((mock) => ({
+        return mockinterviewData
+          ? mockinterviewData?.map((mock) => ({
               name:
-                mock?.rounds?.roundTitle ||
-                mock.name ||
+                `${mock?.mockInterviewCode}  ${mock?.rounds[0]?.roundTitle}` ||
                 "Unnamed Mock Interview",
-              id: mock._id,
+              id: mock?._id,
             }))
           : [];
       case "Assessments":
-        return assessmentData.map((assessment) => ({
-          name: assessment.AssessmentTitle || "Unnamed Assessment",
-          id: assessment._id,
-        }));
+        return assessmentData
+          ?.sort((a, b) => {
+            if (a.type === "custom" && b.type === "standard") return -1;
+            if (a.type === "standard" && b.type === "custom") return 1;
+            return 0;
+          })
+          .map((assessment) => ({
+            name: (
+              <div className="flex justify-between items-center w-full">
+                <span className="text-gray-800">
+                  {capitalizeFirstLetter(assessment?.AssessmentTitle) ||
+                    "Unnamed Assessment"}
+                </span>
+
+                <span
+                  className={
+                    "text-md " +
+                    (assessment?.type === "custom"
+                      ? "text-custom-blue"
+                      : "text-green-600")
+                  }
+                >
+                  {assessment?.type
+                    ? capitalizeFirstLetter(assessment.type)
+                    : ""}
+                </span>
+              </div>
+            ),
+            //   name:
+            //     assessment.AssessmentTitle + assessment.type ||
+            //     "Unnamed Assessment",
+            id: assessment._id,
+          }));
 
       default:
         return [];
@@ -432,8 +468,6 @@ const TaskForm = ({
       setSelectedStatus(initialData.status);
     }
   }, [taskId, fetchedTask, initialData]);
-
-
 
   return (
     // v1.0.3 <-------------------------------------------------------------------------
