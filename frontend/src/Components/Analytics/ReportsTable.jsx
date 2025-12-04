@@ -784,13 +784,18 @@
 
 // export default ReportsTable;
 
-import React, { useState, useEffect, useRef } from "react";
-import { Play, Share2, MoreHorizontal, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Play, Share2, MoreHorizontal } from "lucide-react";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { formatDateTime } from "../../utils/dateFormatter";
 import StatusBadge from "../SuperAdminComponents/common/StatusBadge";
 import ShareReportPopup from "../../Pages/Dashboard-Part/Tabs/Analytics/ShareReportPopup";
+
+// Correct imports (adjust path if needed)
+import { useAllReportAccess } from "../../apiHooks/useReportTemplates";
+import { useUserProfile } from "../../apiHooks/useUsers";
 import { useSubscription } from "../../apiHooks/useSubscription";
+import { usePermissions } from "../../Context/PermissionsContext";
 
 const ReportsTable = ({
   data = [],
@@ -802,106 +807,68 @@ const ReportsTable = ({
 }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [popupCoords, setPopupCoords] = useState({ x: 0, y: 0 });
+  const [sharePopup, setSharePopup] = useState(null);
 
-  // NEW: Share popup state — fully inside this component
-  const [sharePopup, setSharePopup] = useState(null); // { templateId }
-
+  // Global user & permissions
   const { subscriptionData } = useSubscription();
-  
-  const canAccessReport = (template) => {
-    if (!subscriptionData?.active) return false;
-    if (!template.requiredPlans || template.requiredPlans.length === 0)
-      return false;
+  const { effectivePermissions_RoleName } = usePermissions();
+  const { userProfile } = useUserProfile();
 
-    // Check if current plan is allowed
+  // One call: Get access for ALL reports in this tenant
+  const { data: accessMap = {} } = useAllReportAccess();
+
+  const isAdmin = effectivePermissions_RoleName === "Admin";
+
+  // Plan access check
+  const canAccessReportByPlan = (template) => {
+    if (!subscriptionData?.active) return false;
+    if (!template.requiredPlans || template.requiredPlans.length === 0) return true;
     return template.requiredPlans.includes(subscriptionData.name);
   };
 
-
-  // === MENU POSITIONING (unchanged) ===
+  // Menu positioning
   useEffect(() => {
     if (!openMenuId) return;
 
-    const handleReposition = () => {
-      const item = data.find((d) => d.id === openMenuId);
-      if (!item?.buttonRef) return;
+    const item = data.find((d) => d.id === openMenuId);
+    if (!item?.buttonRef) return;
 
-      const rect = item.buttonRef.getBoundingClientRect();
-      const popupHeight = 110;
-      const popupWidth = 150;
+    const rect = item.buttonRef.getBoundingClientRect();
+    const popupHeight = 110;
+    const popupWidth = 150;
 
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const verticalPosition = spaceBelow < popupHeight ? "top" : "bottom";
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const y = spaceBelow < popupHeight
+      ? rect.top + window.scrollY - popupHeight - 8
+      : rect.bottom + window.scrollY + 8;
 
-      const y =
-        verticalPosition === "bottom"
-          ? rect.bottom + window.scrollY + 4
-          : rect.top + window.scrollY - popupHeight - 4;
+    const spaceRight = window.innerWidth - rect.right;
+    const x = spaceRight < popupWidth
+      ? rect.right + window.scrollX - popupWidth
+      : rect.left + window.scrollX;
 
-      const spaceRight = window.innerWidth - rect.right;
-      const openToLeft = spaceRight < popupWidth;
-      const x = openToLeft
-        ? rect.right + window.scrollX - popupWidth
-        : rect.left + window.scrollX;
-
-      setPopupCoords({ x, y });
-    };
-
-    window.addEventListener("scroll", handleReposition, true);
-    window.addEventListener("resize", handleReposition);
-    handleReposition();
-
-    return () => {
-      window.removeEventListener("scroll", handleReposition, true);
-      window.removeEventListener("resize", handleReposition);
-    };
+    setPopupCoords({ x, y });
   }, [openMenuId, data]);
 
-  // === CLICK OUTSIDE FOR MENU ===
+  // Click outside to close menu
   useEffect(() => {
     if (!openMenuId) return;
-
     const handleClickOutside = (e) => {
-      const popupEl = document.querySelector(".report-popup-menu");
-      const clickedButton = e.target.closest(".report-menu-btn");
-      if (popupEl && !popupEl.contains(e.target) && !clickedButton) {
+      if (!e.target.closest(".report-menu-btn") && !e.target.closest(".report-popup-menu")) {
         setOpenMenuId(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openMenuId]);
 
   const handleMenuOpen = (itemId, buttonRef) => {
-    if (openMenuId === itemId) return setOpenMenuId(null);
-
-    const rect = buttonRef.getBoundingClientRect();
-    const popupHeight = 110;
-    const popupWidth = 150;
-
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const verticalPosition = spaceBelow < popupHeight ? "top" : "bottom";
-
-    const y =
-      verticalPosition === "bottom"
-        ? rect.bottom + window.scrollY + 8
-        : rect.top + window.scrollY - popupHeight - 8;
-
-    const spaceRight = window.innerWidth - rect.right;
-    const openToLeft = spaceRight < popupWidth;
-    const x = openToLeft
-      ? rect.right + window.scrollX - popupWidth
-      : rect.left + window.scrollX;
-
-    setPopupCoords({ x, y });
-    setOpenMenuId(itemId);
+    setOpenMenuId(openMenuId === itemId ? null : itemId);
   };
 
-  // === HANDLE SHARE CLICK ===
   const handleShare = (item) => {
     setSharePopup({ templateId: item.id });
-    setOpenMenuId(null); // Close menu
+    setOpenMenuId(null);
   };
 
   return (
@@ -909,8 +876,7 @@ const ReportsTable = ({
       <div className="bg-white shadow-sm rounded-xl border border-gray-200">
         <div className="px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-gray-200">
           <h3 className="text-lg font-semibold text-custom-blue">
-            {title ||
-              (type === "templates" ? "Report Templates" : "Report Results")}
+            {title || (type === "templates" ? "Report Templates" : "Report Results")}
           </h3>
         </div>
 
@@ -919,10 +885,7 @@ const ReportsTable = ({
             <thead className="bg-gray-50 border border-gray-200">
               <tr>
                 {propColumns.map((col) => (
-                  <th
-                    key={col.key}
-                    className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase"
-                  >
+                  <th key={col.key} className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">
                     {col.label}
                   </th>
                 ))}
@@ -935,39 +898,37 @@ const ReportsTable = ({
             </thead>
 
             <tbody className="bg-white">
-              {data.map((item, index) => {
-                const hasAccess = canAccessReport(item);
-                console.log("HAS ACCESS =================================>    ", hasAccess);
-                console.log("ITEM =================================>    ", item);
+              {data.map((item) => {
+                // Get access for this specific report
+                const access = accessMap[item.id] || { roles: [], users: [] };
+
+                const hasRoleAccess = access.roles.some(
+                  (r) => r.name === effectivePermissions_RoleName || r.label === effectivePermissions_RoleName
+                );
+                const hasUserAccess = access.users.some((u) => u._id === userProfile?._id);
+                const hasPlanAccess = canAccessReportByPlan(item);
+
+                const canGenerate = isAdmin || hasRoleAccess || hasUserAccess || hasPlanAccess;
+
                 return (
-                  <tr
-                    key={item.id || index}
-                    className="hover:bg-gray-50 border-t border-gray-200"
-                  >
+                  <tr key={item.id} className="hover:bg-gray-50 border-t border-gray-200">
+                    {/* Columns */}
                     {propColumns.map((col) => {
                       let value = item[col.key];
-                      if (col.key === "createdAt")
-                        value = formatDateTime(value);
+                      if (col.key === "createdAt") value = formatDateTime(value);
                       if (col.key === "description")
-                        value =
-                          value?.length > 80
-                            ? value.substring(0, 80) + "..."
-                            : value;
+                        value = value?.length > 80 ? value.substring(0, 80) + "..." : value;
 
                       return (
                         <td
                           key={col.key}
                           title={col.key === "description" ? value : ""}
                           className={`px-6 py-4 text-sm ${
-                            col.key === "description"
-                              ? "text-gray-600 max-w-xs truncate"
-                              : "text-gray-900"
+                            col.key === "description" ? "text-gray-600 max-w-xs truncate" : "text-gray-900"
                           }`}
                         >
                           {col.key === "status" ? (
-                            <StatusBadge
-                              status={capitalizeFirstLetter(item[col.key])}
-                            />
+                            <StatusBadge status={capitalizeFirstLetter(item[col.key])} />
                           ) : col.render ? (
                             col.render(capitalizeFirstLetter(value), item)
                           ) : (
@@ -977,55 +938,46 @@ const ReportsTable = ({
                       );
                     })}
 
+                    {/* Actions */}
                     {type === "templates" && (
                       <td className="px-6 py-4 text-right relative">
                         <button
                           ref={(el) => (item.buttonRef = el)}
-                          onClick={() =>
-                            handleMenuOpen(item.id, item.buttonRef)
-                          }
+                          onClick={() => handleMenuOpen(item.id)}
                           className="p-2 rounded-md hover:bg-gray-100 transition report-menu-btn"
                         >
                           <MoreHorizontal className="w-5 h-5 text-gray-600" />
                         </button>
 
-                        {/* THREE DOT MENU */}
+                        {/* Three-dot menu */}
                         {openMenuId === item.id && (
                           <div
                             className="report-popup-menu fixed z-[9999] w-40 bg-white shadow-lg rounded-lg border border-gray-200"
                             style={{ top: popupCoords.y, left: popupCoords.x }}
                           >
-                            {/* <button
-                            onClick={() => {
-                              onGenerate(item);
-                              setOpenMenuId(null);
-                            }}
-                            className="w-full px-4 py-2 text-left text-custom-blue text-sm hover:bg-custom-blue/10 flex items-center gap-2"
-                            disabled={loadingId === item.id}
-                          >
-                            <Play className="w-4 h-4" />
-                            {loadingId === item.id
-                              ? "Generating..."
-                              : "Generate"}
-                          </button> */}
                             <button
                               onClick={() => {
-                                if (!hasAccess) return;
-                                onGenerate(item);
-                                setOpenMenuId(null);
+                                if (canGenerate) {
+                                  onGenerate(item);
+                                  setOpenMenuId(null);
+                                }
                               }}
-                              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2
-                              ${
-                                hasAccess
+                              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-all
+                                ${canGenerate
                                   ? "text-custom-blue hover:bg-custom-blue/10 cursor-pointer"
                                   : "text-gray-400 opacity-50 cursor-not-allowed"
-                              }`}
-                              disabled={!hasAccess}
+                                }`}
+                              disabled={!canGenerate}
+                              title={
+                                !hasPlanAccess
+                                  ? "Upgrade your plan"
+                                  : !isAdmin && !hasRoleAccess && !hasUserAccess
+                                  ? "No access granted"
+                                  : ""
+                              }
                             >
                               <Play className="w-4 h-4" />
-                              {loadingId === item.id
-                                ? "Generating..."
-                                : "Generate"}
+                              {loadingId === item.id ? "Generating..." : "Generate"}
                             </button>
 
                             <button
@@ -1046,14 +998,12 @@ const ReportsTable = ({
           </table>
 
           {!data.length && (
-            <div className="text-center py-12 text-gray-500">
-              No data available
-            </div>
+            <div className="text-center py-12 text-gray-500">No reports available</div>
           )}
         </div>
       </div>
 
-      {/* SHARE POPUP — FULLY INSIDE THIS COMPONENT */}
+      {/* Share Popup */}
       <ShareReportPopup
         templateId={sharePopup?.templateId}
         isOpen={!!sharePopup}

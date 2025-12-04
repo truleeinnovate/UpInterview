@@ -113,14 +113,14 @@ export const useReportPresets = (templateId) => {
   });
 };
 //sharing report apis
-export const useReportAccess = (templateId) => {
+// src/apiHooks/useReportTemplates.js
+export const useAllReportAccess = () => {
   return useQuery({
-    queryKey: ["reportAccess", templateId],
+    queryKey: ["reportAccessAll"],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/analytics/reports/${templateId}/access`);
-      return data.access || { roles: [], users: [] };
+      const { data } = await apiClient.get("/analytics/reports/access");
+      return data.accessMap || {};
     },
-    enabled: !!templateId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
@@ -142,5 +142,16 @@ export const useShareReport = () => {
       queryClient.invalidateQueries({ queryKey: ["reportAccess", templateId] });
       queryClient.invalidateQueries({ queryKey: ["reports"] });
     },
+  });
+};
+
+export const useReportUsage = () => {
+  return useQuery({
+    queryKey: ['reportUsage'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/analytics/reports/usage');
+      return data.usage || [];
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 };

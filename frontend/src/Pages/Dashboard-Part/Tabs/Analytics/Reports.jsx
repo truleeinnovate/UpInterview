@@ -541,9 +541,10 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import {
   useReportTemplates,
-  useGenerateReport,
+  useReportUsage,
 } from "../../../../apiHooks/useReportTemplates.js";
 // import { generateAndNavigateReport } from "../../../../Components/Analytics/utils/handleGenerateReport";
+import { formatDateTime } from "../../../../utils/dateFormatter.js";
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -557,7 +558,23 @@ const Reports = () => {
   const [allTemplates, setAllTemplates] = useState([]);
 
   const [loadingId, setLoadingId] = useState(null);
-  const generateReportMutation = useGenerateReport();
+  const { data: usageData = [], isLoading: usageLoading } = useReportUsage();
+
+  // Create a map: templateId → usage info
+  const usageMap = React.useMemo(() => {
+    const map = new Map();
+    if (usageData && Array.isArray(usageData)) {
+      usageData.forEach((item) => {
+        if (item.templateId) {
+          map.set(item.templateId.toString(), {
+            lastGeneratedAt: item.lastGeneratedAt,
+            generationCount: item.generationCount || 0,
+          });
+        }
+      });
+    }
+    return map;
+  }, [usageData]);
 
   // Load real templates
   useEffect(() => {
@@ -635,13 +652,34 @@ const Reports = () => {
         <StatusBadge status={capitalizeFirstLetter(status || "active")} />
       ),
     },
-    {
-      key: "frequency",
-      label: "Frequency",
-    },
+    // {
+    //   key: "frequency",
+    //   label: "Frequency",
+    // },
     {
       key: "lastGenerated",
       label: "Last Generated",
+      render: (_, row) => {
+        const usage = usageMap.get(row.id); // row.id is templateId
+        const lastGen = usage?.lastGeneratedAt;
+
+        return (
+          <div className="text-sm">
+            {lastGen ? (
+              <span className="text-gray-700 font-medium">
+                {formatDateTime(lastGen)}
+              </span>
+            ) : (
+              <span className="text-gray-400 italic">Never</span>
+            )}
+            {usage?.generationCount > 0 && (
+              <div className="text-xs text-gray-500 mt-1">
+                Used {usage.generationCount} {usage.generationCount === 1 ? "time" : "times"}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     // {
     //   key: "category",
@@ -742,11 +780,10 @@ const Reports = () => {
                   setActiveTab(tab.id);
                   setCurrentPage(0);
                 }}
-                className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
+                className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
                     ? "border-custom-blue text-custom-blue"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 <Icon className="w-5 h-5" />
                 {tab.name}

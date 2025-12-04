@@ -4,7 +4,7 @@
 const mongoose = require("mongoose");
 const ReportCategory = require("../../models/AnalyticSchemas/reportCategory");
 const {
-  ReportTemplate,TenantReportAccess
+  ReportTemplate,TenantReportAccess,ReportUsage
 } = require("../../models/AnalyticSchemas/reportSchemas");
 const { FilterPreset } = require("../../models/AnalyticSchemas/filterSchemas");
 const {
@@ -618,6 +618,19 @@ const generateReport = async (req, res) => {
         .map(([name, value]) => ({ name, value })),
     };
 
+    await ReportUsage.findOneAndUpdate(
+      { tenantId: actingAsTenantId, templateId },
+      {
+        $inc: { "usage.generationCount": 1 },
+        $set: {
+          "usage.lastGeneratedAt": new Date(),
+          "usage.lastGeneratedBy": actingAsUserId,
+        },
+        $setOnInsert: { tenantId: actingAsTenantId, templateId }
+      },
+      { upsert: true }
+    );
+
     // 12. FINAL RESPONSE — UX PERFECT
     console.log(
       "[SUCCESS] Report generated successfully\n========== [END] ==========\n"
@@ -861,47 +874,52 @@ const saveColumnConfig = async (req, res) => {
 };
 //sharing report apis
 
-const getReportAccess = async (req, res) => {
+const getAllReportAccess = async (req, res) => {
   try {
-    const { templateId } = req.params;
     const tenantId = res.locals.auth.actingAsTenantId;
 
-    const accessDoc = await TenantReportAccess.findOne({ tenantId, templateId })
-      .populate("access.users", "firstName lastName email status")
-      // Remove .populate("access.roles") — it doesn't work with string IDs
+    const accessDocs = await TenantReportAccess.find({ tenantId })
+      .populate("access.users", "firstName lastName email")
       .lean();
 
-    if (!accessDoc) {
-      return res.json({
-        success: true,
-        access: { roles: [], users: [] },
-      });
+    if (!accessDocs.length) {
+      return res.json({ success: true, accessMap: {} });
     }
 
-    // Manually map roles — since they're stored as strings
-    const roleIds = accessDoc.access.roles || [];
-    const populatedRoles = roleIds.length > 0
-      ? await RolesPermissionObject.find({ _id: { $in: roleIds } }).select("label name").lean()
-      : [];
+    // Get all role IDs
+    const allRoleIds = [...new Set(accessDocs.flatMap(doc => doc.access.roles || []))];
+    const rolesMap = allRoleIds.length > 0
+      ? await RolesPermissionObject.find({ _id: { $in: allRoleIds } })
+          .select("label name")
+          .lean()
+          .then(roles => Object.fromEntries(roles.map(r => [r._id.toString(), r])))
+      : {};
 
-    return res.json({
-      success: true,
-      access: {
-        roles: populatedRoles.map(r => ({
-          _id: r._id.toString(),
-          name: r.label || r.name || "Unknown Role"
-        })),
-        users: (accessDoc.access.users || []).map(u => ({
-          _id: u._id.toString(),
-          name: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
-          email: u.email,
-        })),
-      },
-      sharedBy: accessDoc.sharedBy,
-      sharedAt: accessDoc.sharedAt,
+    const accessMap = {};
+
+    accessDocs.forEach(doc => {
+      const templateId = doc.templateId.toString();
+
+      const roles = (doc.access.roles || []).map(id => {
+        const role = rolesMap[id];
+        return {
+          _id: id,
+          name: role?.label || role?.name || "Unknown Role"
+        };
+      });
+
+      const users = (doc.access.users || []).map(u => ({
+        _id: u._id.toString(),
+        name: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
+        email: u.email,
+      }));
+
+      accessMap[templateId] = { roles, users };
     });
+
+    return res.json({ success: true, accessMap });
   } catch (error) {
-    console.error(error);
+    console.error("Get all access failed:", error);
     return res.status(500).json({ success: false });
   }
 };
@@ -931,8 +949,6 @@ const shareReport = async (req, res) => {
         "access.users": userIds.map(id => new mongoose.Types.ObjectId(id)),
         sharedBy,
         sharedAt: new Date(),
-        "lastGenerated.at": null,
-        "lastGenerated.by": null,
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
@@ -953,6 +969,46 @@ const shareReport = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to share report",
+    });
+  }
+};
+//report usage
+
+const getReportUsageStats = async (req, res) => {
+  try {
+    const tenantId = res.locals.auth.actingAsTenantId;
+
+    // Fetch usage + populate template label/name
+    const usageRecords = await ReportUsage.find({ tenantId })
+      .populate({
+        path: 'templateId',
+        select: 'label name isSystemTemplate',
+      })
+      .sort({ 'usage.lastGeneratedAt': -1 }) // Most recent first
+      .lean();
+
+    // Format response exactly how frontend expects
+    const usage = usageRecords.map(record => ({
+      templateId: record.templateId?._id?.toString(),
+      label: record.templateId?.label || record.templateId?.name || 'Unknown Report',
+      name: record.templateId?.name,
+      isSystemTemplate: record.templateId?.isSystemTemplate || false,
+      generationCount: record.usage.generationCount || 0,
+      lastGeneratedAt: record.usage.lastGeneratedAt || null,
+      lastGeneratedBy: record.usage.lastGeneratedBy || null,
+    }));
+
+    return res.json({
+      success: true,
+      usage, // Array of usage objects
+      totalReports: usage.length,
+    });
+
+  } catch (error) {
+    console.error('[ERROR] Get report usage failed:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch report usage stats',
     });
   }
 };
@@ -1002,8 +1058,9 @@ module.exports = {
   generateReport,
   saveFilterPreset,
   saveColumnConfig,
-  getReportAccess,
+  getAllReportAccess,
   shareReport,
+  getReportUsageStats,
   createCategory,
   createTemplate,
 };
