@@ -220,16 +220,18 @@ const columnConfigurationSchema = new Schema({
   // USER'S COLUMN SELECTION (overrides report defaults)
   selectedColumns: [{
     key:     String, // "candidateName", "position", "interviewDate"
+    label: { type: String, required: true },
+    type: { type: String, default: "text" },
     visible: { type: Boolean, default: true },
     order:   { type: Number }, // user's preferred order
     width:   String // "150px", "auto"
   }],
 
   // LAYOUT PREFERENCES
-  layout: {
-    density: { type: String, enum: ["compact", "normal", "comfortable"], default: "normal" },
-    showBorders: { type: Boolean, default: true }
-  }
+  // layout: {
+  //   density: { type: String, enum: ["compact", "normal", "comfortable"], default: "normal" },
+  //   showBorders: { type: Boolean, default: true }
+  // }
 }, { timestamps: true });
 
 columnConfigurationSchema.index({ tenantId: 1, templateId: 1 }, { unique: true });

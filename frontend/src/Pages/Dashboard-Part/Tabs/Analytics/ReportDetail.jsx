@@ -883,35 +883,33 @@ const ReportDetail = () => {
 
   // --------------------------- COLUMN MANAGEMENT LOGIC ------------------------
   // Handle Column Change & Save
-  const handleColumnsChange = useCallback(
-    async (newColumns) => {
-      // 1. Update UI immediately (Optimistic update)
-      setColumns(newColumns);
+const handleColumnsChange = useCallback(
+  async (newColumns) => {
+    setColumns(newColumns);
 
-      try {
-        // 2. Format payload for backend (clean up unnecessary UI props if needed)
-        const formattedColumns = newColumns.map((c) => ({
-          key: c.key,
-          label: c.label,
-          visible: c.visible ?? true,
-          order: c.order ?? 0,
-          width: c.width,
-        }));
+    try {
+      const formattedColumns = newColumns.map((c) => ({
+        key: c.key,
+        label: c.label,     // ← SEND LABEL
+        type: c.type || "text",      // ← SEND TYPE
+        visible: c.visible ?? true,
+        order: c.order ?? 999,
+        width: c.width || "180px",
+      }));
 
-        // 3. Call the API hook
-        await saveColumnConfig.mutateAsync({
-          templateId: reportId,
-          selectedColumns: formattedColumns,
-        });
+      await saveColumnConfig.mutateAsync({
+        templateId: reportId,
+        selectedColumns: formattedColumns,
+      });
 
-        notify.success("Column layout saved!");
-      } catch (err) {
-        console.error("Failed to save columns:", err);
-        notify.error("Failed to save column layout.");
-      }
-    },
-    [reportId, saveColumnConfig]
-  );
+      notify.success("Column layout saved!");
+    } catch (err) {
+      notify.error("Failed to save columns");
+      console.error(err);
+    }
+  },
+  [reportId, saveColumnConfig]
+);
 
   // ------------------------ END OF COLUMN MANAGEMENT LOGIC ----------------------
   const handleApplyAndSave = async () => {

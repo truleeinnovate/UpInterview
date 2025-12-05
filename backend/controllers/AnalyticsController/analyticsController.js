@@ -412,7 +412,7 @@ const generateReport = async (req, res) => {
         if (col.key && !lockedColumns.some((l) => l.key === col.key)) {
           userMap.set(col.key, {
             key: col.key,
-            label: col.label || col.key,
+            label: col.label,
             width: col.width || "180px",
             visible: col.visible !== false,
             locked: false,
@@ -456,7 +456,7 @@ const generateReport = async (req, res) => {
         );
         return {
           key: col.key,
-          label: col.label || col.key,
+          label: col.label,
           type: col.type || "text",
           locked: false,
           selected: isVisible,
@@ -853,22 +853,38 @@ const saveFilterPreset = async (req, res) => {
   }
 };
 
+// controllers/analytics/reportController.js
 const saveColumnConfig = async (req, res) => {
   try {
-    // const { templateId } = req.params;
-    // const tenantId = req.user.tenantId;
     const { templateId } = req.params;
     const tenantId = res.locals.auth.actingAsTenantId;
     const { selectedColumns } = req.body;
 
+    // Validate: must have key + label
+    if (!Array.isArray(selectedColumns)) {
+      return res.status(400).json({ success: false, message: "Invalid columns" });
+    }
+
     const config = await ColumnConfiguration.findOneAndUpdate(
       { templateId, tenantId },
-      { selectedColumns, tenantId, templateId },
-      { upsert: true, new: true }
+      {
+        selectedColumns: selectedColumns.map(col => ({
+          key: col.key,
+          label: col.label,    // ← SAVE LABEL!
+          type: col.type || "text",       // ← SAVE TYPE!
+          visible: col.visible !== false,
+          order: col.order ?? 999,
+          width: col.width || "180px",
+        })),
+        tenantId,
+        templateId,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    res.json({ success: true, config });
+    res.json({ success: true, config: config.selectedColumns });
   } catch (error) {
+    console.error("Save column config failed:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
