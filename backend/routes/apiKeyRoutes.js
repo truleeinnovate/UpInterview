@@ -9,7 +9,7 @@ router.post('/validate', apiKeyController.validateApiKey);
 // Routes (authentication is handled globally in index.js)
 router
   .route('/')
-  .get(apiKeyController.getApiKeys)
+  .get(loggingService.integrationLoggingMiddleware, apiKeyController.getApiKeys)
   .post(loggingService.integrationLoggingMiddleware, apiKeyController.createApiKey);
 
 router

@@ -9,12 +9,27 @@ exports.getApiKeys = asyncHandler(async (req, res) => {
   const requestId = uuidv4();
   const startTime = Date.now();
 
+  // Mark that logging will be handled by the controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Get API Keys";
+
   try {
     const apiKeys = await ApiKey.find({}) // Remove createdBy filter - get all API keys
       .sort({ createdAt: -1 })
       .select("-__v");
 
     const duration = Date.now() - startTime;
+
+    // Generate logs for success
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "Get API Keys",
+      message: "API keys fetched successfully",
+      status: "success",
+      responseBody: { count: apiKeys.length },
+      integrationName: "api-keys",
+      flowType: "get-api-keys",
+    };
 
     res.status(200).json({
       success: true,
@@ -26,6 +41,16 @@ exports.getApiKeys = asyncHandler(async (req, res) => {
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`[${requestId}] Error fetching API keys:`, error);
+
+    // Generate logs for the error
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "Get API Keys",
+      message: "Error fetching API keys",
+      status: "error",
+      integrationName: "api-keys",
+      flowType: "get-api-keys",
+    };
 
     res.status(500).json({
       success: false,
