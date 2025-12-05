@@ -83,7 +83,7 @@ const NewAssessment = () => {
     ? assessmentById
     : // assessmentData.find((assessment) => assessment._id === id)
       null;
-  console.log("assessmentById", assessmentById);
+  // console.log("assessmentById", assessmentById);
 
   const [activeTab, setActiveTab] = useState("Basicdetails");
   // const [startDate, setStartDate] = useState(new Date());
@@ -170,6 +170,7 @@ const NewAssessment = () => {
   const fetchCategories = async () => {
     try {
       const response = assessmentListData;
+
       setCategories(response || []);
     } catch (err) {
       console.error("fetchCategories error", err);

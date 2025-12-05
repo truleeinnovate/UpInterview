@@ -276,7 +276,7 @@ const TaskForm = ({
             return 0;
           })
           .map((assessment) => ({
-            name: (
+            label: (
               <div className="flex justify-between items-center w-full">
                 <span className="text-gray-800">
                   {capitalizeFirstLetter(assessment?.AssessmentTitle) ||
@@ -297,6 +297,9 @@ const TaskForm = ({
                 </span>
               </div>
             ),
+
+            // 👇 ONLY SAVE TEXT, NOT JSX
+            name: `${assessment?.AssessmentTitle} (${assessment?.type})`,
             //   name:
             //     assessment.AssessmentTitle + assessment.type ||
             //     "Unnamed Assessment",

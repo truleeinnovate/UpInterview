@@ -81,11 +81,9 @@ const MockSchedulelater = () => {
     lcontacts,
   } = useMasterData({}, pageType);
   const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } =
-    useMockInterviews();
+    useMockInterviews({ limit: Infinity });
   const { id } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
-  const pageFrom = location.state?.from || "";
 
   const [formData, setFormData] = useState({
     skills: [],
@@ -225,6 +223,8 @@ const MockSchedulelater = () => {
       // console.log("MockEditData", MockEditData);
       if (MockEditData) {
         setMockEdit(true);
+
+        console.log("MockEditData", MockEditData);
 
         // Map interviewers to externalInterviewers format
         const formattedInterviewers =
@@ -633,6 +633,19 @@ const MockSchedulelater = () => {
         return;
       }
 
+      if (response?.data?.mockInterview) {
+        const savedData = response.data.mockInterview;
+        setFormData((prev) => ({
+          ...prev,
+          // Preserve all current form data and update with any changes from server
+          higherQualification:
+            savedData.higherQualification || prev.higherQualification,
+          technology: savedData.technology || prev.technology,
+          Role: savedData.Role || prev.Role,
+          // Keep other fields as they are
+        }));
+      }
+
       // Store the created ID for use in Page 2
       if (!mockEdit && !createdMockInterviewId) {
         setCreatedMockInterviewId(savedMockId);
@@ -665,7 +678,7 @@ const MockSchedulelater = () => {
 
     const { formIsValid, newErrors } = validatemockForm(
       formData,
-      entries,
+      formData.skills,
       errors
     );
     setErrors(newErrors);
@@ -698,7 +711,7 @@ const MockSchedulelater = () => {
     // ✅ FIX: Properly structure the rounds data for Page 2
     const updatedFormData = {
       ...formData,
-      skills: entries, // Ensure skills from entries are included
+      skills: formData.skills, // Ensure skills from formData are included
       rounds: [
         {
           ...formData.rounds,
