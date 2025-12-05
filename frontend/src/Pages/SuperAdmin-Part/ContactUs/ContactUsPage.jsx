@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import Toolbar from "../../../Components/Shared/Toolbar/Toolbar.jsx";
 import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import TableView from "../../../Components/Shared/Table/TableView.jsx";
@@ -23,6 +23,7 @@ import Header from "../../../Components/Shared/Header/Header.jsx";
 
 const ContactUsPage = () => {
     const { superAdminPermissions } = usePermissions();
+    const navigate = useNavigate();
     const [view, setView] = useState("table");
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -151,8 +152,9 @@ const ContactUsPage = () => {
         return () => clearTimeout(t);
     }, [searchQuery]);
 
-    const handleView = (id) => {
-        notify.success(`Viewing contact message: ${id}`);
+    const handleView = (message) => {
+        if (!message?._id) return;
+        navigate(`/contact-us/${message._id}`, { state: { message } });
     };
 
     const handleEdit = (id) => {
@@ -282,7 +284,7 @@ const ContactUsPage = () => {
                     filterIconRef={filterIconRef}
                     dataLength={Math.max(1, total)}
                     isFilterPopupOpen={isFilterPopupOpen}
-                    searchPlaceholder="Search by name, email, message..."
+                    searchPlaceholder="Search By Name, Email, Message..."
                     showAddButton={false}
                 />
             </div>

@@ -37,6 +37,8 @@ const Toolbar = ({
   const isTablet = useMediaQuery({ maxWidth: 320 });
   // v1.0.1 ------------------------------------------------------------------->
   // v1.0.0 -------------------------------------------------------->
+  const safeTotalPages = typeof totalPages === 'number' && totalPages > 0 ? totalPages : 0;
+  const displayCurrentPage = safeTotalPages === 0 ? 0 : currentPage + 1;
   return (
     <motion.div
       className="flex items-center justify-between flex-wrap lg:flex-nowrap mb-4 gap-4"
@@ -94,7 +96,7 @@ const Toolbar = ({
 
         {/* Pagination Info */}
         <div className="flex items-center text-sm text-muted-foreground px-2">
-          {currentPage + 1}/{totalPages}
+          {displayCurrentPage}/{safeTotalPages}
         </div>
 
         {/* Pagination Controls */}
@@ -102,7 +104,7 @@ const Toolbar = ({
           <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
             <span
               onClick={onPrevPage}
-              className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+              className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 0 || safeTotalPages === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
             >
               <IoIosArrowBack />
             </span>
@@ -111,7 +113,7 @@ const Toolbar = ({
           <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
             <span
               onClick={onNextPage}
-              className={`border p-2 text-xl rounded-md cursor-pointer ${currentPage + 1 >= totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+              className={`border p-2 text-xl rounded-md cursor-pointer ${safeTotalPages === 0 || currentPage + 1 >= safeTotalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
             >
               <IoIosArrowForward />
             </span>

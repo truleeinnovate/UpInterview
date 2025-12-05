@@ -311,7 +311,7 @@ function PaymentsTable({ organizationId, viewMode }) {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         setSelectedPaymentId(row._id);
         setIsPopupOpen(true);
@@ -352,18 +352,7 @@ function PaymentsTable({ organizationId, viewMode }) {
         setIsPopupOpen(true);
       },
     },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
-    // {
-    //   key: "login-as-user",
-    //   label: "Login as User",
-    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
-    //   onClick: (row) => handleLoginAsUser(row._id),
-    // },
+    
   ];
 
   // Render Actions for Kanban
@@ -376,7 +365,7 @@ function PaymentsTable({ organizationId, viewMode }) {
             e.stopPropagation();
             action.onClick(item);
           }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
           title={action.label}
         >
           {action.icon}

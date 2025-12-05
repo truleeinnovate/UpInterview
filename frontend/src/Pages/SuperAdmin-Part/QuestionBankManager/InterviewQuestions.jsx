@@ -24,7 +24,10 @@ const InterviewQuestions = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {questions?.map((q) => (
-        <div className="relative flex justify-center items-center">
+        <div
+          key={q?._id}
+          className="relative flex justify-center items-center"
+        >
           {/* Checkbox for selection by Ranjith */}
 
           {showCheckboxes && (
@@ -61,10 +64,7 @@ const InterviewQuestions = ({
             </div>
           )}
 
-          <div
-            key={q?._id}
-            className=" w-full bg-white rounded-2xl shadow-md p-5 border border-gray-200 group"
-          >
+          <div className=" w-full bg-white rounded-2xl shadow-md p-5 border border-gray-200 group">
             {/* Eye and Pencil icons - hidden by default, shows on hover */}
             <div className="flex items-center gap-2 absolute top-3 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
               <button

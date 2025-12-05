@@ -177,6 +177,21 @@ exports.getOrganizationRequests = async (req, res) => {
         },
       },
       { $unwind: { path: "$tenant", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          contactFullName: {
+            $trim: {
+              input: {
+                $concat: [
+                  { $ifNull: ["$contact.firstName", ""] },
+                  " ",
+                  { $ifNull: ["$contact.lastName", ""] },
+                ],
+              },
+            },
+          },
+        },
+      },
     ];
 
     const match = {};
@@ -193,6 +208,7 @@ exports.getOrganizationRequests = async (req, res) => {
         { "contact.email": { $regex: regex } },
         { "contact.phone": { $regex: regex } },
         { "tenant.company": { $regex: regex } },
+        { contactFullName: { $regex: regex } },
       ];
     }
     if (Object.keys(match).length > 0) {

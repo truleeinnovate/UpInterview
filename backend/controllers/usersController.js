@@ -796,21 +796,21 @@ const getSuperAdminUsers = async (req, res) => {
     })
       .lean()
       .select(
-        "profileId phone countryCode gender imageData linkedinUrl portfolioUrl " +
+        "ownerId profileId phone countryCode gender imageData linkedinUrl portfolioUrl " +
           "location introduction professionalTitle bio roleId"
       );
 
-    // MAP CONTACT INFO BY PROFILE ID
+    // MAP CONTACT INFO BY OWNER ID (align with getUniqueUserByOwnerId)
     const contactMap = {};
     contacts.forEach((c) => {
-      contactMap[c.profileId?.toString()] = c;
+      contactMap[c.ownerId?.toString()] = c;
     });
 
     // ------------------------------------------------------------
     // 6. MERGE USER + CONTACT + ROLE DETAILS
     // ------------------------------------------------------------
     const finalUsers = users.map((user) => {
-      const contact = contactMap[user.profileId?.toString()] || {};
+      const contact = contactMap[user._id.toString()] || {};
 
       // role priority:
       // → If contact has roleId → use that
@@ -1179,8 +1179,9 @@ const getUniqueUserByOwnerId = async (req, res) => {
       .populate({ path: "roleId", select: "_id label roleName status" })
       .lean();
 
-    // Fetch user and populate availability
+    // Fetch user and populate availability (use latest contact by _id)
     const contact = await Contacts.findOne({ ownerId })
+      .sort({ _id: -1 })
       .populate({
         path: "availability",
         // model: 'InterviewAvailability',

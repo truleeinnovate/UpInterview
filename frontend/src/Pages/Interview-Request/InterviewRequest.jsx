@@ -79,7 +79,9 @@ const InternalRequest = () => {
     status: selectedFilters.status.join(","),
     type: (typeof selectedType === 'string' && selectedType !== 'all') ? selectedType : "",
   }); // server-side
+  // console.log("interviewRequests==",interviewRequests);
   const { interviewRequest } = useInterviewRequestById(selectedRequestId); // from apiHooks
+  // console.log("interviewRequest==========",interviewRequest);
 
 
   useEffect(() => {
@@ -156,53 +158,6 @@ const InternalRequest = () => {
     }
   }, [isTablet]);
 
-  // Fetch interview requests
-  // useEffect(() => {
-  //   const getInterviewRequests = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const response = await axios.get(
-  //         `${config.REACT_APP_API_URL}/interviewrequest`
-  //       );
-  //       setInterviewRequests(response.data);
-  //     } catch (error) {
-  //       console.error("Error fetching Interview requests:", error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   getInterviewRequests();
-  // }, []);
-
-  // Fetch interview request
-  // useEffect(() => {
-  //   const getInterviewRequests = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const response = await axios.get(
-  //         `${config.REACT_APP_API_URL}/interviewrequest/${selectedRequestId}`
-  //       );
-  //       setSelectedRequest(response.data);
-  //     } catch (error) {
-  //       console.error("Error fetching Interviewer request:", error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   getInterviewRequests();
-  // }, [selectedRequestId]);
-
-  // get user by ID
-  // useEffect(() => {
-  //   if (selectedRequestId && interviewRequests?.length) {
-  //     const foundRequest = interviewRequests.find(
-  //       (request) => request._id === selectedRequestId
-  //     );
-  //     setSelectedRequest(foundRequest || null);
-  //   }
-  // }, [selectedRequestId, interviewRequests]);
 
   const dataToUse = interviewRequests || [];
 
@@ -237,13 +192,7 @@ const InternalRequest = () => {
     setCurrentPage(0); // Reset to first page on search (debounced fetch)
   };
 
-  // if (isLoading) {
-  //   return <Loading />;
-  // }
-
-  // if (!interviewRequests || interviewRequests.length === 0) {
-  //   return <div>No tenants found.</div>;
-  // }
+  
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
@@ -306,7 +255,7 @@ const InternalRequest = () => {
             }
           }}
         >
-          {row?.interviewerId ? row?.interviewerId?._id?.slice(0, 6) : "N/A"}
+          {row?.interviewerId ? `${row?.interviewerId?.firstName}-${row?.interviewerId?._id?.slice(0, 6)}` : "N/A"}
         </span>
       ),
     },
