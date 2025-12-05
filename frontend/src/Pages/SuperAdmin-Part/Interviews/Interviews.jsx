@@ -51,6 +51,13 @@ const Interviewers = () => {
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
+    // When search is cleared, update immediately (no debounce) so results reset right away
+    if (!searchQuery) {
+      setDebouncedSearch("");
+      return;
+    }
+
+    // For non-empty queries, keep a small debounce to avoid spamming the API while typing
     const t = setTimeout(() => setDebouncedSearch(searchQuery), 500);
     return () => clearTimeout(t);
   }, [searchQuery]);

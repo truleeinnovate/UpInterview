@@ -425,7 +425,12 @@ const UsersAccountTab = () => {
     {
       key: "phone",
       header: "Phone",
-      render: (value) => value || "Not Provided",
+      render: (value, row) => {
+        if (row?.countryCode && row?.phone) {
+          return `${row.countryCode} ${row.phone}`;
+        }
+        return row?.phone || "Not Provided";
+      },
     },
     { key: "label", header: "Role", render: (value) => value || "Not Found" },
     {
