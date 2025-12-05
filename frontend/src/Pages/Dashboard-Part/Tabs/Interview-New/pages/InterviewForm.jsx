@@ -78,7 +78,7 @@ const InterviewForm = () => {
   });
 
   console.log("templatesData in InterviewForm:", templatesData);
-  const { interviewData, isMutationLoading, createInterview } = useInterviews();
+  const { interviewData, isMutationLoading, createInterview } = useInterviews({},1,Infinity);
   const { candidateData, isLoading: candidatesLoading } = useCandidates();
 
   const [candidateId, setCandidateId] = useState("");

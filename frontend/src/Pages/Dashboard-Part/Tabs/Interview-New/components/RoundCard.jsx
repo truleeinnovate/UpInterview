@@ -285,8 +285,14 @@ const RoundCard = ({
     useState(null);
 
   // Always call hooks unconditionally at the top level
+  // For non-assessment rounds, pass null so the hook disables the API call
   let { scheduleData, isLoading } = useScheduleAssessments(
-    round.roundTitle === "Assessment" ? round?.assessmentId : null
+    round.roundTitle === "Assessment"
+      ? {
+          assessmentId: round?.assessmentId,
+          type: "scheduled",
+        }
+      : null
   );
 
   // Filter scheduled assessments for Assessment rounds
@@ -1088,8 +1094,8 @@ const RoundCard = ({
                     </div>
                   )}
 
-                  {(internalInterviewers || externalInterviewers).length ===
-                    0 &&
+                 {internalInterviewers.length === 0 &&
+                    externalInterviewers.length === 0 &&
                     round.roundTitle !== "Assessment" && (
                       <span className="text-sm text-gray-500">
                         No interviewers assigned
@@ -1134,9 +1140,9 @@ const RoundCard = ({
                                     size="sm"
                                   />
                                   <span className="ml-1 text-xs text-gray-600">
-                                    {interviewer?.firstName ||
-                                      "" + interviewer.lastName ||
-                                      ""}
+                                    {interviewer?.firstName +
+                                      " " +
+                                      interviewer?.lastName || "N/A"}
                                   </span>
                                   {/* {isRoundActive && canEdit && (
                                   <button
@@ -1171,7 +1177,9 @@ const RoundCard = ({
                                   size="sm"
                                 />
                                 <span className="ml-1 text-xs text-gray-600">
-                                  {interviewer.name}
+                                  {interviewer?.firstName +
+                                      " " +
+                                      interviewer?.lastName || "N/A"}
                                 </span>
                                 {/* {isRoundActive && canEdit && (
                                   <button

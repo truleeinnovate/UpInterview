@@ -172,7 +172,7 @@ const ContactUsPage = () => {
             key: "name",
             header: "NAME",
             render: (row) => {
-                console.log("Row Data:", row);
+               
                 const name = typeof row === "string" ? row : row?.name;
 
                 return (
