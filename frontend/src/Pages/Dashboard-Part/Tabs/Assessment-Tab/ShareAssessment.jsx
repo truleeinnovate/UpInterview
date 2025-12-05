@@ -49,7 +49,9 @@ const ShareAssessment = ({
     candidateData,
     loading,
     refetch: refetchCandidates,
-  } = useCandidates();
+  } = useCandidates({
+    candidateLimit: Infinity,
+  });
   const queryClient = useQueryClient();
   // <---------------------- v1.0.1 >
 

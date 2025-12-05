@@ -34,7 +34,7 @@ const AssessmentListModal = ({
     const fetchLists = async () => {
       try {
         const response = assessmentListData;
-        console.log("Fetched Lists:", response);
+
         if (response && Array.isArray(response)) {
           const formatted = response.map((item) => ({
             categoryOrTechnology: item?.categoryOrTechnology,
@@ -49,8 +49,6 @@ const AssessmentListModal = ({
     };
     fetchLists();
   }, [show, assessmentListData]);
-
-  console.log("Existing Options:", options);
 
   // Auto-generate name field from label
   useEffect(() => {

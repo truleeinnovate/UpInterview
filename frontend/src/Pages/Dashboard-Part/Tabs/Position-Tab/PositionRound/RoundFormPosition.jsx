@@ -57,8 +57,12 @@ function RoundFormPosition() {
   const contactId = formatName(singleContact?.contactId);
   //console.log(contactId);
 
-  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
-  const { positionData, isMutationLoading, addRounds } = usePositions();
+  const { assessmentData, fetchAssessmentQuestions } = useAssessments({
+    limit: Infinity,
+  });
+  const { positionData, isMutationLoading, addRounds } = usePositions({
+    limit: Infinity,
+  });
 
   const { roundId, id } = useParams();
   const positionId = id;

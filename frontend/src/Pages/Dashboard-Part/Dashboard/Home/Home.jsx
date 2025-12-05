@@ -56,13 +56,20 @@ const Home = () => {
 
   //<----v1.0.3--------
   // Dynamic Pending Feedback count (status === 'draft')
-  const { data: feedbacksResponse, isLoading: feedbacksLoading } =
-    useFeedbacks();
-  const feedbacksData = feedbacksResponse?.feedbacks || [];
-
-  const pendingDraftCount = (feedbacksData || []).filter(
-    (f) => String(f?.status || "").toLowerCase() === "draft"
-  ).length;
+  const { data: feedbacksResponse, isLoading: feedbacksLoading } = useFeedbacks(
+    {
+      limit: Infinity,
+      type: "feedbackAnalytics",
+    }
+  );
+  const pendingDraftCount =
+    feedbacksResponse?.feedbackTotalCount > 0
+      ? feedbacksResponse.feedbackTotalCount
+      : 0;
+  // const pendingDraftCount =
+  // (feedbacksData || []).filter(
+  //   (f) => String(f?.status || "").toLowerCase() === "draft"
+  // ).length;
   //----v1.0.3-------->
 
   const [stats, setStats] = useState({
@@ -144,7 +151,7 @@ const Home = () => {
               >
                 <StatsCard
                   title="Pending Feedback"
-                  value={feedbacksLoading ? "0" : pendingDraftCount.toString()} //<----v1.0.3--------
+                  value={feedbacksLoading ? "0" : pendingDraftCount} //<----v1.0.3--------
                   icon={AlertCircle}
                   color="orange"
                 />

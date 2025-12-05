@@ -28,7 +28,9 @@ export const useInterviews = (
       page: page,
       limit: limit,
       type: type,
+      upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
     };
+  console.log("params", params);
 
   // ),
   //   [filters, page, limit, type]
@@ -59,6 +61,7 @@ export const useInterviews = (
       // setTotalPages(totalPages);
       // console.log("interview response", response);
       // Return both data and total
+      // console.log("response interview", response);
       return {
         data: response,
       };

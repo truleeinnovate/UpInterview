@@ -115,8 +115,6 @@ const Feedback = () => {
     error: feedbacksError,
   } = useFeedbacks(filters);
 
-  console.log("feedbacksResponse", feedbacksResponse);
-
   // Use data from the hook
   // const feedbacks = feedbacksData || [];
   // Extract data from response

@@ -21,52 +21,66 @@ import { useInterviews } from "../../../../../apiHooks/useInterviews";
 
 const InterviewerSchedule = () => {
   const navigate = useNavigate();
-  const { interviewData } = useInterviews();
+  const type = "analytics";
+  const { interviewData, responseDashBoard } = useInterviews(
+    {
+      type: "upcoming", // Special type for upcoming interviews
+      page: 1,
+      limit: 10, // Get exactly 10 records as requested
+      upcomingOnly: true, // Flag to indicate we want upcoming interviews
+    },
+    1,
+    10,
+    type
+  );
+
+  console.log("interviewData InterviewerSchedule", responseDashBoard);
   // interviewData is get from useInterviews hook
-  const interviewRounds = useMemo(() => {
-    return interviewData.flatMap((interview) => {
-      if (!Array.isArray(interview.rounds)) return [];
-      return interview.rounds.map((round) => ({
-        ...round,
-        interviewCode: interview.interviewCode,
-        candidateId: interview.candidateId,
-        positionId: interview.positionId,
-      }));
-    });
-  }, [interviewData]);
+  const interviewRounds = responseDashBoard?.upcomingRoundsData;
+  // useMemo(() => {
+  //   return interviewData.flatMap((interview) => {
+  //     if (!Array.isArray(interview.rounds)) return [];
+  //     return interview.rounds.map((round) => ({
+  //       ...round,
+  //       interviewCode: interview.interviewCode,
+  //       candidateId: interview.candidateId,
+  //       positionId: interview.positionId,
+  //     }));
+  //   });
+  // }, [interviewData]);
   const [upcomingRounds, setUpcomingRounds] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     if (interviewRounds && interviewRounds.length > 0) {
-      const now = new Date();
-      const today = startOfDay(now);
+      // const now = new Date();
+      // const today = startOfDay(now);
 
-      const filtered = interviewRounds.filter((round) => {
-        if (!round.dateTime) return false;
-        const startTime = round.dateTime.split(" - ")[0];
-        const parsedStart = parse(startTime, "dd-MM-yyyy hh:mm a", new Date());
-        return (
-          isValid(parsedStart) &&
-          (isAfter(parsedStart, today) || isToday(parsedStart))
-        );
-      });
+      // const filtered = interviewRounds.filter((round) => {
+      //   if (!round.dateTime) return false;
+      //   const startTime = round.dateTime.split(" - ")[0];
+      //   const parsedStart = parse(startTime, "dd-MM-yyyy hh:mm a", new Date());
+      //   return (
+      //     isValid(parsedStart) &&
+      //     (isAfter(parsedStart, today) || isToday(parsedStart))
+      //   );
+      // });
 
-      filtered.sort((a, b) => {
-        const aStart = parse(
-          a.dateTime.split(" - ")[0],
-          "dd-MM-yyyy hh:mm a",
-          new Date()
-        );
-        const bStart = parse(
-          b.dateTime.split(" - ")[0],
-          "dd-MM-yyyy hh:mm a",
-          new Date()
-        );
-        return aStart - bStart;
-      });
+      // filtered.sort((a, b) => {
+      //   const aStart = parse(
+      //     a.dateTime.split(" - ")[0],
+      //     "dd-MM-yyyy hh:mm a",
+      //     new Date()
+      //   );
+      //   const bStart = parse(
+      //     b.dateTime.split(" - ")[0],
+      //     "dd-MM-yyyy hh:mm a",
+      //     new Date()
+      //   );
+      //   return aStart - bStart;
+      // });
 
-      setUpcomingRounds(filtered.slice(0, 3));
+      setUpcomingRounds(interviewRounds);
       setCurrentIndex(0);
     }
   }, [interviewRounds]);
@@ -165,29 +179,29 @@ const InterviewerSchedule = () => {
           </div>
         ) : (
           upcomingRounds.map((round, index) => {
-            const statusToShow = round.status || "Pending";
+            const statusToShow = round?.status || "Pending";
             const statusDetails = getStatusDetails(statusToShow);
-            const interviewCode = round.interviewCode || "no interview";
-            const candidateName = round.candidateId
+            const interviewCode = round?.interviewCode || "no interview";
+            const candidateName = round?.candidate
               ? // <------v1.0.0----------Venkatesh----------
                 `${
-                  round.candidateId.FirstName &&
-                  round.candidateId.FirstName.charAt(0).toUpperCase() +
-                    round.candidateId.FirstName.slice(1)
+                  round?.candidate?.FirstName &&
+                  round?.candidate?.FirstName.charAt(0).toUpperCase() +
+                    round?.candidate?.FirstName.slice(1)
                 } ${
-                  round.candidateId.LastName &&
-                  round.candidateId.LastName.charAt(0).toUpperCase() +
-                    round.candidateId.LastName.slice(1)
+                  round?.candidate?.LastName &&
+                  round?.candidate?.LastName.charAt(0).toUpperCase() +
+                    round?.candidate?.LastName.slice(1)
                 }` || "Unknown Candidate"
               : "Unknown Candidate";
-            const positionTitle = round.positionId?.title
-              ? round.positionId?.title.charAt(0).toUpperCase() +
-                round.positionId?.title.slice(1)
+            const positionTitle = round?.position?.title
+              ? round.position?.title?.charAt(0).toUpperCase() +
+                round.position?.title?.slice(1)
               : "Unknown Position";
             // ------v1.0.0----------Venkatesh---------->
-            const companyName = round.positionId?.companyname || "";
+            const companyName = round.position?.companyname || "";
             const candidateEmail =
-              round.candidateId?.Email || "no email provided";
+              round.candidate?.Email || "no email provided";
 
             return (
               <div
