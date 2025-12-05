@@ -1,32 +1,16 @@
 // v1.0.0 - Ashok - corrected path
 // v1.0.1 - Ashok - fixed issues with generate report button in Kanban view
 
-import { Calendar, Clock, FileText, Play } from "lucide-react";
+import { Calendar, Clock, FileText, Play, Share2 } from "lucide-react";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
-const KanbanBoard = ({ data, onGenerate, loadingId }) => {
+const KanbanBoard = ({ data, onGenerate, onShare, loadingId }) => {
   const columns = [
     { id: "active", title: "Active Reports", status: "active" },
     { id: "draft", title: "Draft Reports", status: "draft" },
     { id: "archived", title: "Archived Reports", status: "archived" },
   ];
-
-  // const [loadingId, setLoadingId] = useState(null);
-  // const generateReportMutation = useGenerateReport();
-
-  // const getStatusColor = (status) => {
-  //   switch (status) {
-  //     case "active":
-  //       return "bg-success-100 text-success-800 border-success-200";
-  //     case "draft":
-  //       return "bg-warning-100 text-warning-800 border-warning-200";
-  //     case "archived":
-  //       return "bg-gray-100 text-gray-800 border-gray-200";
-  //     default:
-  //       return "bg-gray-100 text-gray-800 border-gray-200";
-  //   }
-  // };
 
   const getTypeIcon = (type) => {
     switch (type) {
@@ -40,12 +24,6 @@ const KanbanBoard = ({ data, onGenerate, loadingId }) => {
         return FileText;
     }
   };
-
-  // v1.0.0 <----------------------------------------
-  // const handleGenerateReport = (item) => {
-  //   navigate(`/analytics/reports/${item.id}`);
-  // };
-  // v1.0.0 ---------------------------------------->
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -119,17 +97,27 @@ const KanbanBoard = ({ data, onGenerate, loadingId }) => {
                         )}
                       </div>
 
-                      <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
                         <button
-                          // onClick={() => handleGenerateReport(item)}
                           onClick={() => onGenerate(item)}
-                          className="flex items-center space-x-1 px-2 py-1 bg-custom-blue text-white rounded-md hover:bg-primary-600 transition-colors text-xs w-full justify-center"
+                          className="flex items-center space-x-1 px-2 py-1.5 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-xs w-full justify-center"
                         >
                           <Play className="w-3 h-3" />
                           <span>
                             {loadingId === item.id
                               ? "Generating Report..."
                               : "Generate Report"}
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => onShare(item)}
+                          className="flex items-center space-x-1 px-2 py-1.5 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-xs w-full justify-center"
+                        >
+                          <Share2 className="w-4 h-4" />
+                          <span>
+                            {loadingId === item.id
+                              ? "Share Report..."
+                              : "Share Report"}
                           </span>
                         </button>
                       </div>

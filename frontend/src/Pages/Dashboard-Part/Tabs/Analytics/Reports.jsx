@@ -545,6 +545,7 @@ import {
 } from "../../../../apiHooks/useReportTemplates.js";
 // import { generateAndNavigateReport } from "../../../../Components/Analytics/utils/handleGenerateReport";
 import { formatDateTime } from "../../../../utils/dateFormatter.js";
+import ShareReportPopup from "./ShareReportPopup.jsx";
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -553,6 +554,8 @@ const Reports = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+
+  const [shareReport, setShareReport] = useState(null);
 
   const { data, isLoading, error } = useReportTemplates();
   const [allTemplates, setAllTemplates] = useState([]);
@@ -701,16 +704,9 @@ const Reports = () => {
     // },
   ];
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-screen">
-  //       <div className="text-center">
-  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-  //         <p className="text-gray-600">Loading reports...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  const handleShare = (template) => {
+    setShareReport(template);
+  };
 
   if (error) {
     return (
@@ -721,16 +717,6 @@ const Reports = () => {
   }
 
   const handleGenerateReport = (template) => {
-    // console.log(
-    //   "Generating report  ============================> : ",
-    //   template
-    // );
-    // generateAndNavigateReport({
-    //   template,
-    //   generateReportMutation,
-    //   navigate,
-    //   setLoadingId,
-    // });
     navigate(`/analytics/reports/${template.id}`);
   };
 
@@ -844,6 +830,7 @@ const Reports = () => {
               columns={reportTemplateColumns}
               type="templates"
               onGenerate={handleGenerateReport}
+              onShare={(item) => handleShare(item)}
               loadingId={loadingId}
             />
           ) : (
@@ -851,6 +838,7 @@ const Reports = () => {
               data={paginatedTemplates}
               onGenerate={handleGenerateReport}
               loadingId={loadingId}
+              onShare={(item) => handleShare(item)}
             />
           )
         ) : (
@@ -867,6 +855,11 @@ const Reports = () => {
           </div>
         )}
       </div>
+      <ShareReportPopup
+        templateId={shareReport?.id}
+        isOpen={!!shareReport}
+        onClose={() => setShareReport(null)}
+      />
     </div>
   );
 };
