@@ -64,6 +64,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
+  const isOrganization = tokenPayload?.organization === true;
   // Determine the correct path to return to based on current location and state
   // const fromPath =
   //   location.state?.from ||
@@ -1331,19 +1332,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       />
                     </div>
 
-                    {/* External ID Field */}
-                    <div className="mt-4">
-                      <InputField
-                        value={formData.externalId}
-                        onChange={handleChange}
-                        inputRef={fieldRefs.externalId}
-                        error={errors.externalId}
-                        label="External ID"
-                        name="externalId"
-                        placeholder="Optional external system identifier"
-                      />
-                    </div>
-
+                    
                     {/* Select Template */}
                     <div className="grid sm:grid-cols-1 grid-cols-2">
                       <div className="relative">
@@ -1395,6 +1384,26 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       rows={5}
                       maxLength={1000}
                     />
+
+                    {/* External ID Field - Only show for organization users */}
+                    {isOrganization && (
+                      <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                        <div>
+                          <InputField
+                            value={formData.externalId}
+                            onChange={handleChange}
+                            inputRef={fieldRefs.externalId}
+                            error={errors.externalId}
+                            label="External ID"
+                            name="externalId"
+                            placeholder="external system identifier"
+                          />
+                          <div className="text-xs text-gray-500 mt-1">
+                            external system reference id
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </form>
                   {/* v1.0.4 <---------------------------------------------------- */}
                   <div className="flex justify-end items-center px-0 py-4 gap-2">

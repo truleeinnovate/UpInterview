@@ -118,70 +118,77 @@ export const useScheduleAssessments = (arg) => {
   const hasViewPermission = effectivePermissions?.Assessments?.View;
   // const initialLoad = useRef(true);
 
-  const params = arg || {};
+  // Determine call mode: either new options object or legacy assessmentId string
+  const isOptionsMode =
+    arg && typeof arg === "object" && !Array.isArray(arg);
+  const legacyAssessmentId =
+    !isOptionsMode && typeof arg === "string" ? arg : undefined;
 
-  // // Determine call mode
-  // const isOptionsMode = arg && typeof arg === "object" && !Array.isArray(arg);
-  // // const legacyAssessmentId = !isOptionsMode ? arg : undefined;
+  // Normalized options object for advanced querying
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const options = isOptionsMode ? arg || {} : {};
 
-  // // eslint-disable-next-line react-hooks/exhaustive-deps
-  // const options = isOptionsMode ? arg || {} : {};
+  const params = useMemo(() => {
+    // Legacy mode: hook called with a single assessmentId string
+    if (!isOptionsMode) {
+      if (legacyAssessmentId) {
+        // Default type for legacy callers is scheduled assessments
+        return { assessmentId: legacyAssessmentId, type: "scheduled" };
+      }
+      // No assessment context → don't send any params
+      return {};
+    }
 
-  // const params = useMemo(() => {
-  //   const {
-  //     assessmentId,
-  //     page,
-  //     limit,
-  //     searchQuery,
-  //     status,
-  //     templates,
-  //     orderRange,
-  //     expiryPreset,
-  //     createdPreset,
-  //     type,
-  //   } = options;
-  //   console.log("isOptionsMode", options);
+    const {
+      assessmentId,
+      page,
+      limit,
+      searchQuery,
+      status,
+      templates,
+      orderRange,
+      expiryPreset,
+      createdPreset,
+      type,
+    } = options;
 
-  //   const p = {};
+    const p = {};
 
-  //   if (assessmentId) p.assessmentId = assessmentId;
-  //   if (page) p.page = page;
-  //   if (limit) p.limit = limit;
-  //   if (type) p.type = type;
+    if (assessmentId) p.assessmentId = assessmentId;
+    if (page) p.page = page;
+    if (limit) p.limit = limit;
+    if (type) p.type = type;
 
-  //   if (typeof searchQuery === "string" && searchQuery.trim()) {
-  //     p.searchQuery = searchQuery.trim();
-  //   }
+    if (typeof searchQuery === "string" && searchQuery.trim()) {
+      p.searchQuery = searchQuery.trim();
+    }
 
-  //   if (Array.isArray(status) && status.length) {
-  //     // Backend expects exact status strings as stored (Scheduled, Completed, ...)
-  //     p.status = status.join(",");
-  //   }
+    if (Array.isArray(status) && status.length) {
+      // Backend expects exact status strings as stored (Scheduled, Completed, ...)
+      p.status = status.join(",");
+    }
 
-  //   if (Array.isArray(templates) && templates.length) {
-  //     p.assessmentIds = templates.join(",");
-  //   }
+    if (Array.isArray(templates) && templates.length) {
+      // Backend expects comma-separated assessment template ids
+      p.assessmentIds = templates.join(",");
+    }
 
-  //   if (orderRange) {
-  //     const { min, max } = orderRange;
-  //     if (min !== undefined && min !== null && min !== "") p.orderMin = min;
-  //     if (max !== undefined && max !== null && max !== "") p.orderMax = max;
-  //   }
+    if (orderRange) {
+      const { min, max } = orderRange;
+      if (min !== undefined && min !== null && min !== "") p.orderMin = min;
+      if (max !== undefined && max !== null && max !== "") p.orderMax = max;
+    }
 
-  //   if (typeof expiryPreset === "string" && expiryPreset) {
-  //     p.expiryPreset = expiryPreset;
-  //   }
+    if (typeof expiryPreset === "string" && expiryPreset) {
+      p.expiryPreset = expiryPreset;
+    }
 
-  //   if (typeof createdPreset === "string" && createdPreset) {
-  //     p.createdPreset = createdPreset;
-  //   }
+    if (typeof createdPreset === "string" && createdPreset) {
+      p.createdPreset = createdPreset;
+    }
 
-  //   return p;
-  // }, [
-  //   isOptionsMode,
-  //   // legacyAssessmentId,
-  //   options,
-  // ]);
+    return p;
+  }, [isOptionsMode, legacyAssessmentId, options]);
 
   /* -------------------------------------------------------------------------- */
   /*                               QUERY: LIST                                  */
@@ -229,7 +236,7 @@ export const useScheduleAssessments = (arg) => {
         responseAssessmentDashBoard: response?.assessmentsCompleted,
       };
     },
-    enabled: !!hasViewPermission,
+    enabled: !!hasViewPermission && (isOptionsMode || !!legacyAssessmentId),
     retry: 1,
     staleTime: 1000 * 60 * 5, // 5 minutes
     keepPreviousData: true,

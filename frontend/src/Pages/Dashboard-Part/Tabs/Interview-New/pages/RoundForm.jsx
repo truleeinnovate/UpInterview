@@ -86,13 +86,16 @@ const formatDateTime = (date, showDate = true) => {
 const RoundFormInterviews = () => {
   // Add useScrollLock hook at the beginning
   const {
+    useInterviewDetails,
     interviewData,
     isMutationLoading,
     saveInterviewRound,
     updateInterviewRound,
     // updateRoundWithMeetingLinks,
   } = useInterviews();
-  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  const { assessmentData, fetchAssessmentQuestions } = useAssessments({
+    limit: Infinity,
+  });
   // const { groups } = useCustomContext();
   // Get groups data and mutations from TanStack Query
   const { data: groups = [] } = useGroupsQuery();
@@ -119,6 +122,7 @@ const RoundFormInterviews = () => {
   // v1.0.2 <-----------------------------------------
 
   const { interviewId, roundId } = useParams();
+  const { data: interviewDetails } = useInterviewDetails(interviewId);
   const stateisReschedule = useLocation().state;
 
   const authToken = Cookies.get("authToken");
@@ -128,9 +132,9 @@ const RoundFormInterviews = () => {
   const organization = tokenPayload?.organization;
   const [errors, setErrors] = useState({});
 
-  const interview = interviewData?.find(
-    (interview) => interview._id === interviewId
-  );
+  const interview =
+    interviewDetails ||
+    interviewData?.find((interview) => interview._id === interviewId);
   const [assessmentTemplate, setAssessmentTemplate] = useState({
     assessmentId: "",
     assessmentName: "",
@@ -168,14 +172,14 @@ const RoundFormInterviews = () => {
   }, [organization, userId]);
 
   useEffect(() => {
-    if (interviewData) {
+    if (interview) {
       setCandidate(interview?.candidateId || null);
       setPosition(interview?.positionId || null);
       setRounds(interview?.rounds || []);
       setSelectedMeetingPlatform(data?.data?.defaultProvider);
       // setTemplate(interview?.templateId || null)
     }
-  }, [interviewData, interview, data]);
+  }, [interview, data]);
 
   const navigate = useNavigate();
   const [roundTitle, setRoundTitle] = useState("");
@@ -248,6 +252,7 @@ const RoundFormInterviews = () => {
     interviewMode: useRef(null),
     sequence: useRef(null),
     assessmentTemplate: useRef(null),
+    instructions: useRef(null),
   };
   // v1.0.1 ------------------------------------------------------------------------->
 
@@ -1961,7 +1966,7 @@ const RoundFormInterviews = () => {
                         id="sequence"
                         name="sequence"
                         min={1}
-                        ref={fieldRefs.sequence}
+                        inputRef={fieldRefs.sequence}
                         value={sequence}
                         onChange={(e) => {
                           setSequence(parseInt(e.target.value));

@@ -264,7 +264,7 @@ export default function Plans() {
       header: "Annual",
       render: (_, row) => getPriceForCycle(row, "annual"),
     },
-    { key: "maxUsers", header: "Max Users" },
+    // { key: "maxUsers", header: "Max Users" },
     {
       key: "active",
       header: "Active",

@@ -324,22 +324,7 @@ function IntegrationsPage() {
       : []),
     
 
-    // ...(superAdminPermissions?.IntegrationLogs?.Edit
-    //   ? [
-    //       {
-    //         key: "edit",
-    //         label: "Edit",
-    //         icon: <Pencil className="w-4 h-4 text-green-600" />,
-    //         onClick: (row) => navigate(`edit/${row._id}`),
-    //       },
-    //     ]
-    //   : []),
-    // {
-    //   key: "resend-link",
-    //   label: "Resend Link",
-    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
-    //   disabled: (row) => row.status === "completed",
-    // },
+    
   ];
 
   // Kanban Columns Configuration
@@ -371,7 +356,7 @@ function IntegrationsPage() {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => {
               setSelectedLogId(row._id);
               setIsPopupOpen(true);
@@ -380,22 +365,7 @@ function IntegrationsPage() {
         ]
       : []),
 
-    ...(superAdminPermissions?.IntegrationLogs?.Edit
-      ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => navigate(`edit/${row._id}`),
-          },
-        ]
-      : []),
-    // {
-    //   key: "login-as-user",
-    //   label: "Login as User",
-    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
-    //   onClick: (row) => handleLoginAsUser(row._id),
-    // },
+    
   ];
 
   // Render Actions for Kanban
@@ -408,7 +378,7 @@ function IntegrationsPage() {
             e.stopPropagation();
             action.onClick(item);
           }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
           title={action.label}
         >
           {action.icon}

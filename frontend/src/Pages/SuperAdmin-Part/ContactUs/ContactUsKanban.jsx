@@ -113,14 +113,14 @@ const ContactUsKanban = ({
                 <div className="flex gap-1">
                   {permissions?.View !== false && (
                     <button
-                      onClick={() => onView(message._id)}
+                      onClick={() => onView(message)}
                       className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                       title="View"
                     >
                       <Eye className="h-4 w-4 text-gray-600" />
                     </button>
                   )}
-                  {permissions?.Edit && (
+                  {/* {permissions?.Edit && (
                     <button
                       onClick={() => onEdit(message._id)}
                       className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
@@ -128,7 +128,7 @@ const ContactUsKanban = ({
                     >
                       <Pencil className="h-4 w-4 text-blue-600" />
                     </button>
-                  )}
+                  )} */}
                   {permissions?.Delete && (
                     <button
                       onClick={() => onDelete(message._id)}

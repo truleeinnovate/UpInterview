@@ -337,7 +337,7 @@ const EnterpriseContactSale = () => {
                     filterIconRef={filterIconRef}
                     dataLength={Math.max(1, totalCount)}
                     isFilterPopupOpen={isFilterPopupOpen}
-                    searchPlaceholder="Search by company, contact, email or phone..."
+                    searchPlaceholder="Search By Company, Contact, Email or Phone..."
                     showAddButton={false}
                 />
             </div>

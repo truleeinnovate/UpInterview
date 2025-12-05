@@ -14,31 +14,28 @@ const useOnDemandQuery = (
   paramsData,
   // type,
   staleTime = ONE_WEEK,
-  retry = 1
+  retry = 1,
+  enabled = true
 ) =>
   useQuery({
     queryKey: ["masterData", type, key, pageType, paramsData],
 
     queryFn: async () => {
-      // const printType = type ? type : path;
       const params = {
         ...paramsData,
         pageType,
       };
 
-      // console.log("printType params", params);
       const res = await axios.get(
         `${config.REACT_APP_API_URL}/master-data/${type}`,
         {
           params,
         }
       );
-      // console.log("res masterData printType", res);
       return res?.data;
     },
-    // staleTime, // Data considered fresh for 7 days by default
-    // cacheTime: TWO_WEEKS, // Keep in memor y/storage for 14 days
     retry,
+    enabled,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     networkMode: "online",
@@ -49,6 +46,12 @@ export const useMasterData = (paramsData, pageType, type) => {
   const staleTime = ONE_WEEK; // 7 days - master data rarely changes
   const retry = 1;
 
+  // On Super Admin master table pages we only need the active type
+  // (e.g. technology, locations, universitycollege). Avoid firing
+  // all other master-data queries to reduce backend load.
+  const isSuperAdminTable = pageType === "Super Admin" && !!type;
+  const shouldEnable = (key) => !isSuperAdminTable || key === type;
+
   // Individual queries for each master list (all disabled by default)
   const locationsQ = useOnDemandQuery(
     "locations",
@@ -57,7 +60,8 @@ export const useMasterData = (paramsData, pageType, type) => {
     paramsData,
 
     staleTime,
-    retry
+    retry,
+    shouldEnable("locations")
   );
   const industriesQ = useOnDemandQuery(
     "industries",
@@ -66,7 +70,8 @@ export const useMasterData = (paramsData, pageType, type) => {
     paramsData,
 
     staleTime,
-    retry
+    retry,
+    shouldEnable("industries")
   );
   const rolesQ = useOnDemandQuery(
     "roles",
@@ -75,7 +80,8 @@ export const useMasterData = (paramsData, pageType, type) => {
     paramsData,
 
     staleTime,
-    retry
+    retry,
+    shouldEnable("roles")
   );
   const skillsQ = useOnDemandQuery(
     "skills",
@@ -84,7 +90,8 @@ export const useMasterData = (paramsData, pageType, type) => {
     paramsData,
 
     staleTime,
-    retry
+    retry,
+    shouldEnable("skills")
   );
   const technologiesQ = useOnDemandQuery(
     "technology",
@@ -93,7 +100,8 @@ export const useMasterData = (paramsData, pageType, type) => {
     paramsData,
 
     staleTime,
-    retry
+    retry,
+    shouldEnable("technology")
   );
   const qualificationsQ = useOnDemandQuery(
     "qualification",
@@ -102,7 +110,8 @@ export const useMasterData = (paramsData, pageType, type) => {
     paramsData,
 
     staleTime,
-    retry
+    retry,
+    shouldEnable("qualification")
   );
   const collegesQ = useOnDemandQuery(
     "universitycollege",
@@ -111,7 +120,8 @@ export const useMasterData = (paramsData, pageType, type) => {
     paramsData,
 
     staleTime,
-    retry
+    retry,
+    shouldEnable("universitycollege")
   );
   const companiesQ = useOnDemandQuery(
     "company",
@@ -120,7 +130,8 @@ export const useMasterData = (paramsData, pageType, type) => {
     paramsData,
 
     staleTime,
-    retry
+    retry,
+    shouldEnable("company")
   );
   const categoryQ = useOnDemandQuery(
     "category",
@@ -129,7 +140,8 @@ export const useMasterData = (paramsData, pageType, type) => {
     paramsData,
 
     staleTime,
-    retry
+    retry,
+    shouldEnable("category")
   );
 
   // Aggregate helpers (backward compatible fields and combined states)
