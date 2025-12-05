@@ -41,11 +41,16 @@ import DescriptionField from "../../../../Components/FormFields/DescriptionField
 // v1.0.1 ---------------------------------------------------------------------------->
 
 const PositionForm = ({ mode, onClose, isModal = false }) => {
-  const { positionData, isMutationLoading, addOrUpdatePosition } =
-    usePositions();
+  const { positionData, isMutationLoading, addOrUpdatePosition } = usePositions(
+    {
+      limit: Infinity,
+    }
+  );
 
   const { templatesData, isQueryLoading: isTemplatesFetching } =
-    useInterviewTemplates();
+    useInterviewTemplates({
+      type: "interviewtemplates",
+    });
   const pageType = "adminPortal";
 
   const {
@@ -269,7 +274,41 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     .concat([{ value: "__other__", label: "+ Others" }]);
   const templateOptions = (templatesData || [])
     .filter((t) => t?.rounds?.length > 0 && t?.status === "active")
-    .map((t) => ({ value: t._id, label: t.title }));
+    .sort((a, b) => {
+      // custom first, standard after
+      if (a.type === "custom" && b.type === "standard") return -1;
+      if (a.type === "standard" && b.type === "custom") return 1;
+      return 0;
+    })
+    .map((t) => ({
+      value: t._id,
+      label: (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "98%",
+          }}
+        >
+          <span>
+            {t.title
+              ? t.title.charAt(0).toUpperCase() + t.title.slice(1)
+              : t.type
+              ? t.type.charAt(0).toUpperCase() + t.type.slice(1)
+              : "Unnamed Template"}
+          </span>
+          <span
+            className={
+              "text-md " +
+              (t.type === "custom" ? "text-custom-blue" : "text-green-600")
+            }
+          >
+            {t.type ? t.type.charAt(0).toUpperCase() + t.type.slice(1) : ""}
+          </span>
+        </div>
+      ),
+    }));
 
   // Generic change handler for shared form fields + live cross-field validation
   const handleChange = (e) => {
@@ -504,7 +543,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }
 
     setErrors({});
-    console.log("dataToSubmit", dataToSubmit);
 
     let basicdetails = {
       // ...dataToSubmit,
@@ -1339,6 +1377,44 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         <DropdownWithSearchField
                           value={formData.template?._id || ""}
                           options={templateOptions}
+                          // Try adding this prop if it exists
+                          formatOptionLabel={(option) => {
+                            // If option.label is already JSX, return it
+                            if (option.label) {
+                              return option.label;
+                            }
+
+                            // Otherwise create a styled version
+                            const template = templatesData?.find(
+                              (t) => t._id === option.value
+                            );
+                            if (!template) return option.label;
+
+                            return (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  width: "100%",
+                                }}
+                              >
+                                <span>{option.label}</span>
+                                <span
+                                  className={
+                                    "text-xs font-medium " +
+                                    (template.type === "custom"
+                                      ? "text-blue-600"
+                                      : "text-green-600")
+                                  }
+                                >
+                                  {template.type === "custom"
+                                    ? "Custom"
+                                    : "Standard"}
+                                </span>
+                              </div>
+                            );
+                          }}
                           onChange={(e) => {
                             const selectedTemplate = templatesData.find(
                               (t) => t._id === e.target.value

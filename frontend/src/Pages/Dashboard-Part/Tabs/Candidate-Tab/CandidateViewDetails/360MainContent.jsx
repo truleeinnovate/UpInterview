@@ -56,7 +56,9 @@ const MainContent = () => {
   // const [slideShow, setSlideShow] = useState(false);
 
   // Get candidate data, candidate-specific positions and all interviews
-  const { candidateData, useCandidatePositions } = useCandidates();
+  const { candidateData, useCandidatePositions } = useCandidates({
+    candidateLimit: Infinity,
+  });
   // Use a high limit so we effectively get all interviews for this tenant/owner
   const { interviewData } = useInterviews({}, 1, Infinity);
 

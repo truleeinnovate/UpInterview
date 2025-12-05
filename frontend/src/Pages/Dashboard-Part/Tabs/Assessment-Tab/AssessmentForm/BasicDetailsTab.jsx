@@ -23,6 +23,7 @@ import DropdownSelect, {
   StickyFooterMenuList,
   preserveStickyOptionFilter,
 } from "../../../../../Components/Dropdowns/DropdownSelect.jsx"; // adjust import path if needed
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 
 const BasicDetailsTab = ({
   isEditing,
@@ -514,11 +515,50 @@ const BasicDetailsTab = ({
                 }
                 options={[
                   ...(categories
-                    ?.filter((category) => category?.type === "custom")
+                    ?.sort((a, b) => {
+                      if (a.type === "custom" && b.type === "standard")
+                        return -1;
+                      if (a.type === "standard" && b.type === "custom")
+                        return 1;
+                      return 0;
+                    })
                     ?.map((category) => ({
                       value: category._id,
-                      label: category.categoryOrTechnology,
+                      label: (
+                        <div className="flex justify-between w-[99%] items-center">
+                          <span>
+                            {capitalizeFirstLetter(
+                              category.categoryOrTechnology
+                            )}
+                          </span>
+
+                          <span
+                            className={
+                              category.type === "custom"
+                                ? "text-custom-blue"
+                                : "text-green-600"
+                            }
+                          >
+                            {capitalizeFirstLetter(category.type)}
+                          </span>
+                        </div>
+                      ),
                     })) || []),
+                  // options={[
+                  //   ...(categories
+                  //     // ?.filter((category) => category?.type === "custom")
+                  //     ?.sort((a, b) => {
+                  //       // custom first, standard after
+                  //       if (a.type === "custom" && b.type === "standard")
+                  //         return -1;
+                  //       if (a.type === "standard" && b.type === "custom")
+                  //         return 1;
+                  //       return 0;
+                  //     })
+                  //     ?.map((category) => ({
+                  //       value: category._id,
+                  //       label: category.categoryOrTechnology,
+                  //     })) || []),
                   {
                     value: "__other__",
                     label: "+ Create List",

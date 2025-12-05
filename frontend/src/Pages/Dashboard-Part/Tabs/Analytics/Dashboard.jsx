@@ -40,6 +40,7 @@ const Dashboard = () => {
     undefined,
     type
   );
+  console.log("responseDashBoard", responseDashBoard);
 
   // Assessments
   const { responseAssessmentDashBoard } = useScheduleAssessments({

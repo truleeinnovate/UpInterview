@@ -23,7 +23,9 @@ import { useCandidates } from "../../../../../apiHooks/useCandidates";
 Modal.setAppElement("#root");
 
 const CandidateFullscreen = () => {
-  const { candidateData, isQueryLoading } = useCandidates();
+  const { candidateData, isQueryLoading } = useCandidates({
+    candidateLimit: Infinity,
+  });
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});
   const { id } = useParams();

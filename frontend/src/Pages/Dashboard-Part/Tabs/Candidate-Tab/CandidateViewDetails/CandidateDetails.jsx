@@ -34,7 +34,9 @@ import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarP
 Modal.setAppElement("#root");
 
 const CandidateDetails = ({ mode, candidateId, onClose }) => {
-  const { candidateData } = useCandidates();
+  const { candidateData } = useCandidates({
+    candidateLimit: Infinity,
+  });
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});
   // const { id } = useParams();

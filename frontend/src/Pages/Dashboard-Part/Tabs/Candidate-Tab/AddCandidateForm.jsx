@@ -100,7 +100,9 @@ const AddCandidateForm = ({
     isError: _isError,
     error: _error,
     addOrUpdateCandidate,
-  } = useCandidates();
+  } = useCandidates({
+    candidateLimit: Infinity,
+  });
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();

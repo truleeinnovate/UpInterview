@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import classNames from "classnames";
 import { Minimize, Expand, X, Clock, FileText } from "lucide-react";
-import { useCandidates } from "../../../../apiHooks/useCandidates.js";
+
 import Activity from "../../Tabs/CommonCode-AllTabs/Activity.jsx";
 // v1.0.0 <---------------------------------------------------------------
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
@@ -16,11 +16,11 @@ import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/c
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 
 const TaskProfileDetails = ({ task, onClosetask }) => {
-  const { isMutationLoading } = useCandidates();
+  
   const [isFullScreen, setIsFullScreen] = useState(false);
   const navigate = useNavigate();
   const [showMainContent] = useState(true);
-  const [isModalOpen] = useState(false);
+  
   const [activeTab, setActiveTab] = useState("details"); // State for active tab
 
   useEffect(() => {

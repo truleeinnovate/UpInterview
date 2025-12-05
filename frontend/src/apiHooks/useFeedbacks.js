@@ -7,7 +7,10 @@ import toast from "react-hot-toast";
 export const useFeedbacks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const hasViewPermission = effectivePermissions?.Feedback?.View;
-  const params = filters;
+  const params = {
+    ...filters,
+    type: filters.type ? filters.type : "feedback",
+  };
 
   return useQuery({
     queryKey: ["feedbacks", filters],
@@ -17,7 +20,7 @@ export const useFeedbacks = (filters = {}) => {
         effectivePermissions,
         params
       );
-      console.log("Fetched feedback data:", data);
+
       return data;
     },
     enabled: !!hasViewPermission && isInitialized,
