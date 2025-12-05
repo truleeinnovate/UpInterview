@@ -81,6 +81,11 @@ const BasicDetailsTab = ({
   setSelected,
   handleAssessmentListChange,
 }) => {
+  // Get user token information and check organization field
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const isOrganization = tokenPayload?.organization === true;
+  console.log('isOrganization:-', isOrganization);
+
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
   const assessmentTypeRef = useRef(null);
@@ -534,23 +539,30 @@ const BasicDetailsTab = ({
             </div>
           </div>
 
-          {/* External ID Field */}
-          <div className="mt-4">
-            <InputField
-              ref={fieldRefs.externalId}
-              label="External ID"
-              type="text"
-              name="externalId"
-              id="externalId"
-              value={formData?.externalId || ""}
-              onChange={(e) =>
-                handleInputChange("externalId", e.target.value)
-              }
-              placeholder="Optional external system identifier"
-              autoComplete="off"
-              error={errors.externalId}
-            />
-          </div>
+          {/* External ID Field - Only show for organization users */}
+          {isOrganization && (
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+              <div className="mt-4">
+                <InputField
+                  ref={fieldRefs.externalId}
+                  label="External ID"
+                  type="text"
+                  name="externalId"
+                  id="externalId"
+                  value={formData?.externalId || ""}
+                  onChange={(e) =>
+                    handleInputChange("externalId", e.target.value)
+                  }
+                  placeholder="external system identifier"
+                  autoComplete="off"
+                  error={errors.externalId}
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  external system reference id
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </form>
 

@@ -394,7 +394,7 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                         </p>
                         <button
                             onClick={() => setShowStatusModal(true)}
-                            className="inline-flex items-center px-8 py-4 border border-transparent shadow-lg text-lg font-bold rounded-xl text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-200 transform hover:scale-105"
+                            className="inline-flex items-center px-8 py-4 border border-transparent shadow-lg text-lg font-bold rounded-xl text-white bg-gradient-to-r from-custom-blue to-custom-blue hover:from-custom-blue hover:to-custom-blue focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-200 transform hover:scale-105"
                         >
                             <Pencil className="h-6 w-6 mr-3" />
                             Add First Status Update
