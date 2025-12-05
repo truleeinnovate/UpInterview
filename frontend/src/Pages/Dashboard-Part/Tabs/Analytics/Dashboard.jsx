@@ -30,116 +30,11 @@ import { useInterviews } from "../../../../apiHooks/useInterviews";
 import { useOutsourceInterviewers } from "../../../../apiHooks/superAdmin/useOutsourceInterviewers";
 import { useScheduleAssessments } from "../../../../apiHooks/useScheduleAssessments";
 
-const calculateOutsourceInterviewerCounts = (interviews) => {
-  const now = new Date();
-
-  // Current month start
-  const currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  // Last month start & end
-  const lastStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-
-  let currentMonthCount = 0;
-  let lastMonthCount = 0;
-
-  interviews.forEach((interview) => {
-    (interview.rounds || []).forEach((round) => {
-      if (round.interviewerType !== "external") return;
-
-      const roundDate = new Date(round.createdAt || interview.createdAt);
-
-      if (roundDate >= currentStart) {
-        currentMonthCount++;
-      } else if (roundDate >= lastStart && roundDate <= lastEnd) {
-        lastMonthCount++;
-      }
-    });
-  });
-
-  // Calculate trend
-  const trend =
-    lastMonthCount === 0
-      ? "up"
-      : currentMonthCount >= lastMonthCount
-      ? "up"
-      : "down";
-
-  const trendValue =
-    lastMonthCount === 0
-      ? "+100% vs last month"
-      : `${(
-          ((currentMonthCount - lastMonthCount) / lastMonthCount) *
-          100
-        ).toFixed(1)}% vs last month`;
-
-  return {
-    currentMonthCount,
-    lastMonthCount,
-    trend,
-    trendValue,
-  };
-};
-
-const calculateCompletedAssessments = (assessments) => {
-  const now = new Date();
-
-  // Current month start
-  const currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  // Last month start & end
-  const lastStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-
-  let totalCompleted = 0;
-  let currentMonthCount = 0;
-  let lastMonthCount = 0;
-
-  assessments.forEach((assessment) => {
-    // We only count completed assessments
-    if (assessment.status !== "completed") return;
-
-    const createdDate = new Date(assessment.createdAt);
-
-    totalCompleted++;
-
-    if (createdDate >= currentStart) {
-      currentMonthCount++;
-    } else if (createdDate >= lastStart && createdDate <= lastEnd) {
-      lastMonthCount++;
-    }
-  });
-
-  // Trend logic
-  const trend =
-    lastMonthCount === 0
-      ? "up"
-      : currentMonthCount >= lastMonthCount
-      ? "up"
-      : "down";
-
-  const trendValue =
-    lastMonthCount === 0
-      ? "+100% vs last month"
-      : `${(
-          ((currentMonthCount - lastMonthCount) / lastMonthCount) *
-          100
-        ).toFixed(1)}% vs last month`;
-
-  return {
-    totalCompleted,
-    currentMonthCount,
-    lastMonthCount,
-    trend,
-    trendValue,
-  };
-};
-
 const Dashboard = () => {
   // --------------------------------------------------------------------------------------------
   // Interviews
   const type = "analytics";
-  const { responseDashBoard } = useInterviews(
+  const { responseDashBoard, isQueryLoading } = useInterviews(
     undefined,
     undefined,
     undefined,
@@ -147,39 +42,11 @@ const Dashboard = () => {
   );
 
   // Assessments
-  const { scheduleData, responseAssessmentDashBoard } = useScheduleAssessments({
+  const { responseAssessmentDashBoard } = useScheduleAssessments({
     type,
   });
 
   console.log("responseAssessmentDashBoard", responseAssessmentDashBoard);
-
-  // const { currentMonthCount, lastMonthCount, trend, trendValue } =
-  //   calculateTotalInterviewsCounts(responseDashBoard);
-
-  // // upcoming interviews
-  // const {
-  //   upcoming7Days,
-  //   currentWeekCount,
-  //   lastWeekCount,
-  //   trend: upcomingTrend,
-  //   trendValue: upcomingTrendValue,
-  // } = calculateUpcomingInterviewCounts(interviewData);
-
-  // Outsource Interviews
-  const { outsourceInterviewers } = useOutsourceInterviewers();
-  const {
-    currentMonthCount: outsourcedCurrent,
-    lastMonthCount: outsourcedLast,
-    trend: outsourcedTrend,
-    trendValue: outsourcedTrendValue,
-  } = calculateOutsourceInterviewerCounts(outsourceInterviewers);
-
-  const {
-    currentMonthCount: assessmentCurrent,
-    lastMonthCount: assessmentLast,
-    trend: assessmentTrend,
-    trendValue: assessmentTrendValue,
-  } = calculateCompletedAssessments(scheduleData);
 
   // ----------------------------------------------------------------------------------------------
   const [filters, setFilters] = useState({
@@ -516,6 +383,7 @@ const Dashboard = () => {
         onLayoutChange={handleLayoutChange}
         customSettings={customSettings}
         onSettingsChange={setCustomSettings}
+        isLoading={isQueryLoading}
       />
 
       {/* Customization Panel */}

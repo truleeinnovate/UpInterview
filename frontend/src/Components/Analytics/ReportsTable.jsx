@@ -785,7 +785,7 @@
 // export default ReportsTable;
 
 import React, { useState, useEffect } from "react";
-import { Play, Share2, MoreHorizontal } from "lucide-react";
+import { Play, Share2, MoreHorizontal, Crown } from "lucide-react";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { formatDateTime } from "../../utils/dateFormatter";
 import StatusBadge from "../SuperAdminComponents/common/StatusBadge";
@@ -822,7 +822,8 @@ const ReportsTable = ({
   // Plan access check
   const canAccessReportByPlan = (template) => {
     if (!subscriptionData?.active) return false;
-    if (!template.requiredPlans || template.requiredPlans.length === 0) return true;
+    if (!template.requiredPlans || template.requiredPlans.length === 0)
+      return true;
     return template.requiredPlans.includes(subscriptionData.name);
   };
 
@@ -838,14 +839,16 @@ const ReportsTable = ({
     const popupWidth = 150;
 
     const spaceBelow = window.innerHeight - rect.bottom;
-    const y = spaceBelow < popupHeight
-      ? rect.top + window.scrollY - popupHeight - 8
-      : rect.bottom + window.scrollY + 8;
+    const y =
+      spaceBelow < popupHeight
+        ? rect.top + window.scrollY - popupHeight - 8
+        : rect.bottom + window.scrollY + 8;
 
     const spaceRight = window.innerWidth - rect.right;
-    const x = spaceRight < popupWidth
-      ? rect.right + window.scrollX - popupWidth
-      : rect.left + window.scrollX;
+    const x =
+      spaceRight < popupWidth
+        ? rect.right + window.scrollX - popupWidth
+        : rect.left + window.scrollX;
 
     setPopupCoords({ x, y });
   }, [openMenuId, data]);
@@ -854,7 +857,10 @@ const ReportsTable = ({
   useEffect(() => {
     if (!openMenuId) return;
     const handleClickOutside = (e) => {
-      if (!e.target.closest(".report-menu-btn") && !e.target.closest(".report-popup-menu")) {
+      if (
+        !e.target.closest(".report-menu-btn") &&
+        !e.target.closest(".report-popup-menu")
+      ) {
         setOpenMenuId(null);
       }
     };
@@ -876,7 +882,8 @@ const ReportsTable = ({
       <div className="bg-white shadow-sm rounded-xl border border-gray-200">
         <div className="px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-gray-200">
           <h3 className="text-lg font-semibold text-custom-blue">
-            {title || (type === "templates" ? "Report Templates" : "Report Results")}
+            {title ||
+              (type === "templates" ? "Report Templates" : "Report Results")}
           </h3>
         </div>
 
@@ -885,7 +892,10 @@ const ReportsTable = ({
             <thead className="bg-gray-50 border border-gray-200">
               <tr>
                 {propColumns.map((col) => (
-                  <th key={col.key} className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">
+                  <th
+                    key={col.key}
+                    className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase"
+                  >
                     {col.label}
                   </th>
                 ))}
@@ -903,32 +913,48 @@ const ReportsTable = ({
                 const access = accessMap[item.id] || { roles: [], users: [] };
 
                 const hasRoleAccess = access.roles.some(
-                  (r) => r.name === effectivePermissions_RoleName || r.label === effectivePermissions_RoleName
+                  (r) =>
+                    r.name === effectivePermissions_RoleName ||
+                    r.label === effectivePermissions_RoleName
                 );
-                const hasUserAccess = access.users.some((u) => u._id === userProfile?._id);
+                const hasUserAccess = access.users.some(
+                  (u) => u._id === userProfile?._id
+                );
                 const hasPlanAccess = canAccessReportByPlan(item);
 
-                const canGenerate = isAdmin || hasRoleAccess || hasUserAccess || hasPlanAccess;
+                const canGenerate =
+                  isAdmin || hasRoleAccess || hasUserAccess || hasPlanAccess;
 
                 return (
-                  <tr key={item.id} className="hover:bg-gray-50 border-t border-gray-200">
+                  <tr
+                    key={item.id}
+                    className="hover:bg-gray-50 border-t border-gray-200"
+                  >
                     {/* Columns */}
                     {propColumns.map((col) => {
                       let value = item[col.key];
-                      if (col.key === "createdAt") value = formatDateTime(value);
+                      if (col.key === "createdAt")
+                        value = formatDateTime(value);
                       if (col.key === "description")
-                        value = value?.length > 80 ? value.substring(0, 80) + "..." : value;
+                        value =
+                          value?.length > 80
+                            ? value.substring(0, 80) + "..."
+                            : value;
 
                       return (
                         <td
                           key={col.key}
                           title={col.key === "description" ? value : ""}
                           className={`px-6 py-4 text-sm ${
-                            col.key === "description" ? "text-gray-600 max-w-xs truncate" : "text-gray-900"
+                            col.key === "description"
+                              ? "text-gray-600 max-w-xs truncate"
+                              : "text-gray-900"
                           }`}
                         >
                           {col.key === "status" ? (
-                            <StatusBadge status={capitalizeFirstLetter(item[col.key])} />
+                            <StatusBadge
+                              status={capitalizeFirstLetter(item[col.key])}
+                            />
                           ) : col.render ? (
                             col.render(capitalizeFirstLetter(value), item)
                           ) : (
@@ -955,7 +981,7 @@ const ReportsTable = ({
                             className="report-popup-menu fixed z-[9999] w-40 bg-white shadow-lg rounded-lg border border-gray-200"
                             style={{ top: popupCoords.y, left: popupCoords.x }}
                           >
-                            <button
+                            {/* <button
                               onClick={() => {
                                 if (canGenerate) {
                                   onGenerate(item);
@@ -978,7 +1004,27 @@ const ReportsTable = ({
                             >
                               <Play className="w-4 h-4" />
                               {loadingId === item.id ? "Generating..." : "Generate"}
-                            </button>
+                            </button> */}
+                            {/* Generate / Upgrade logic */}
+                            {canGenerate ? (
+                              <button
+                                onClick={() => {
+                                  onGenerate(item);
+                                  setOpenMenuId(null);
+                                }}
+                                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-custom-blue hover:bg-custom-blue/10 transition-all"
+                              >
+                                <Play className="w-4 h-4" />
+                                {loadingId === item.id
+                                  ? "Generating..."
+                                  : "Generate"}
+                              </button>
+                            ) : (
+                              <button className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-amber-600 hover:bg-amber-500/10 transition-all">
+                                <Crown className="w-4 h-4 text-amber-600" />
+                                Go Premier
+                              </button>
+                            )}
 
                             <button
                               onClick={() => handleShare(item)}
@@ -998,7 +1044,9 @@ const ReportsTable = ({
           </table>
 
           {!data.length && (
-            <div className="text-center py-12 text-gray-500">No reports available</div>
+            <div className="text-center py-12 text-gray-500">
+              No reports available
+            </div>
           )}
         </div>
       </div>

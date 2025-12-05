@@ -1,17 +1,18 @@
 // v1.0.0 - Ashok - changed responsive break point
 // v1.0.1 - Ashok - added 320 as max width for small screens
+// v1.0.2 - Ashok - added showFilter prop some pages require it
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import Tooltip from '@mui/material/Tooltip';
+import React from "react";
+import { motion } from "framer-motion";
+import Tooltip from "@mui/material/Tooltip";
 
-import { ReactComponent as IoIosArrowBack } from '../../../icons/IoIosArrowBack.svg';
-import { ReactComponent as IoIosArrowForward } from '../../../icons/IoIosArrowForward.svg';
-import { ReactComponent as TbLayoutGridRemove } from '../../../icons/TbLayoutGridRemove.svg';
-import { ReactComponent as IoMdSearch } from '../../../icons/IoMdSearch.svg';
-import { ReactComponent as LuFilter } from '../../../icons/LuFilter.svg';
-import { ReactComponent as LuFilterX } from '../../../icons/LuFilterX.svg';
-import { ReactComponent as FaList } from '../../../icons/FaList.svg';
+import { ReactComponent as IoIosArrowBack } from "../../../icons/IoIosArrowBack.svg";
+import { ReactComponent as IoIosArrowForward } from "../../../icons/IoIosArrowForward.svg";
+import { ReactComponent as TbLayoutGridRemove } from "../../../icons/TbLayoutGridRemove.svg";
+import { ReactComponent as IoMdSearch } from "../../../icons/IoMdSearch.svg";
+import { ReactComponent as LuFilter } from "../../../icons/LuFilter.svg";
+import { ReactComponent as LuFilterX } from "../../../icons/LuFilterX.svg";
+import { ReactComponent as FaList } from "../../../icons/FaList.svg";
 import { useMediaQuery } from "react-responsive";
 
 const Toolbar = ({
@@ -28,9 +29,10 @@ const Toolbar = ({
   isFilterPopupOpen,
   dataLength = 0,
   showViewToggles = true,
-  searchPlaceholder = 'Search...',
+  searchPlaceholder = "Search...",
   filterIconRef,
-  startContent
+  startContent,
+  showFilter = true,
 }) => {
   // v1.0.0 <--------------------------------------------------------
   // v1.0.1 <-------------------------------------------------------------------
@@ -52,13 +54,27 @@ const Toolbar = ({
           {!isTablet ? (
             <div className="flex items-center">
               <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
-                <span onClick={() => setView('table')} className="cursor-pointer">
-                  <FaList className={`text-xl mr-4 ${view === 'table' ? 'text-custom-blue' : ''}`} />
+                <span
+                  onClick={() => setView("table")}
+                  className="cursor-pointer"
+                >
+                  <FaList
+                    className={`text-xl mr-4 ${
+                      view === "table" ? "text-custom-blue" : ""
+                    }`}
+                  />
                 </span>
               </Tooltip>
               <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
-                <span onClick={() => setView('kanban')} className="cursor-pointer">
-                  <TbLayoutGridRemove className={`text-xl ${view === 'kanban' ? 'text-custom-blue' : ''}`} />
+                <span
+                  onClick={() => setView("kanban")}
+                  className="cursor-pointer"
+                >
+                  <TbLayoutGridRemove
+                    className={`text-xl ${
+                      view === "kanban" ? "text-custom-blue" : ""
+                    }`}
+                  />
                 </span>
               </Tooltip>
             </div>
@@ -70,15 +86,13 @@ const Toolbar = ({
 
       <div className="flex items-center">
         {/* Optional start content (e.g., dropdown) */}
-        {startContent && (
-          <div className="mr-3">
-            {startContent}
-          </div>
-        )}
+        {startContent && <div className="mr-3">{startContent}</div>}
         {/* Search Input */}
         <div className="sm:mt-0 flex justify-end w-full sm:w-auto">
           <div className="max-w-lg w-full">
-            <label htmlFor="search" className="sr-only">Search</label>
+            <label htmlFor="search" className="sr-only">
+              Search
+            </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <IoMdSearch className="h-5 w-5 text-muted-foreground" />
@@ -121,25 +135,23 @@ const Toolbar = ({
         </div>
 
         {/* Filter */}
-        <div className="flex items-center ml-2">
-          <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
-            <span
-              ref={filterIconRef} // Attach ref to filter icon
-              onClick={onFilterClick}
-              style={{
-                opacity: dataLength === 0 ? 0.2 : 1,
-                pointerEvents: dataLength === 0 ? 'none' : 'auto',
-              }}
-              className="cursor-pointer text-xl border rounded-md p-2"
-            >
-              {isFilterPopupOpen ? (
-                <LuFilterX />
-              ) : (
-                <LuFilter />
-              )}
-            </span>
-          </Tooltip>
-        </div>
+        {showFilter && (
+          <div className="flex items-center ml-2">
+            <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
+              <span
+                ref={filterIconRef} // Attach ref to filter icon
+                onClick={onFilterClick}
+                style={{
+                  opacity: dataLength === 0 ? 0.2 : 1,
+                  pointerEvents: dataLength === 0 ? "none" : "auto",
+                }}
+                className="cursor-pointer text-xl border rounded-md p-2"
+              >
+                {isFilterPopupOpen ? <LuFilterX /> : <LuFilter />}
+              </span>
+            </Tooltip>
+          </div>
+        )}
       </div>
     </motion.div>
   );
