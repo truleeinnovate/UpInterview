@@ -593,7 +593,12 @@ const CombinedNavbar = React.memo(() => {
           ...(checkPermission("Billing")
             ? [
                 {
-                  to: "/billing-details",
+                  // For pure super admin, go to the admin billing page.
+                  // For all effective / normal users, go to the user billing tab.
+                  to:
+                    userType === "superAdmin"
+                      ? "/admin-billing"
+                      : "/billing-details",
                   label: "Billing",
                   icon: <CreditCard className="h-5 w-5" />,
                 },

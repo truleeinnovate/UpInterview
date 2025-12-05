@@ -255,7 +255,7 @@ const InternalRequest = () => {
             }
           }}
         >
-          {row?.interviewerId ? `${row?.interviewerId?.firstName}-${row?.interviewerId?._id?.slice(0, 6)}` : "N/A"}
+          {row?.interviewerId ? row?.interviewerId?._id : "N/A"}
         </span>
       ),
     },
