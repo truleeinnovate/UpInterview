@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Plus, Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { createPortal } from "react-dom";
 import { config } from "../../../../../config";
+import Cookies from "js-cookie";
 
 const ApiKeysTab = () => {
   const [apiKeys, setApiKeys] = useState([]);
@@ -15,12 +16,16 @@ const ApiKeysTab = () => {
     permissions: ["candidates:read"],
   });
 
-  // NEW: Retrieve auth token (adjust key if using context/store instead of localStorage)
   const getAuthHeaders = () => {
-    // Simplified - no authentication required for now
     const headers = {
       "Content-Type": "application/json",
     };
+    
+    const authToken = Cookies.get("authToken");
+    if (authToken) {
+      headers["Authorization"] = `Bearer ${authToken}`;
+    }
+    
     return headers;
   };
 
@@ -57,10 +62,7 @@ const ApiKeysTab = () => {
       const response = await fetch(`${config.REACT_APP_API_URL}/apikeys`, {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...headers,
-        },
+        headers,
         body: JSON.stringify({
           organization: formData.organization,
           permissions: formData.permissions
@@ -354,33 +356,39 @@ const ApiKeysTab = () => {
                   <div className="space-y-3">
                     <div>
                       <p className="text-xs text-gray-600 mb-2">Candidates</p>
-                      {["candidates:read", "candidates:write", "candidates:bulk"].map((permission) => (
-                        <label key={permission} className="flex items-center mr-4">
-                          <input
-                            type="checkbox"
-                            checked={formData.permissions.includes(permission)}
-                            onChange={() => handlePermissionChange(permission)}
-                            className="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">
-                            {permission.split(':')[1]} Candidates
-                          </span>
-                        </label>
-                      ))}
+                      <div className="flex flex-wrap gap-4">
+                        {["candidates:read", "candidates:write", "candidates:bulk"].map((permission) => (
+                          <label key={permission} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={formData.permissions.includes(permission)}
+                              onChange={() => handlePermissionChange(permission)}
+                              className="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">
+                              {permission.split(':')[1]}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                     <div>
                       <p className="text-xs text-gray-600 mb-2">Positions</p>
-                      {["positions:read", "positions:write", "positions:bulk"].map((permission) => (
-                        <label key={permission} className="flex items-center mr-4">
-                          <input
-                            type="checkbox"
-                            checked={formData.permissions.includes(permission)}
-                            onChange={() => handlePermissionChange(permission)}
-                            className="mr-2"
-                          />
-                          {permission.split(':')[1]} Positions
-                        </label>
-                      ))}
+                      <div className="flex flex-wrap gap-4">
+                        {["positions:read", "positions:write", "positions:bulk"].map((permission) => (
+                          <label key={permission} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={formData.permissions.includes(permission)}
+                              onChange={() => handlePermissionChange(permission)}
+                              className="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">
+                              {permission.split(':')[1]}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>

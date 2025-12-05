@@ -9,12 +9,8 @@ import axios from "axios";
 import {
   Trash2,
   X,
-  ChevronDown,
-  ChevronUp,
   Tag as SkillsIcon,
 } from "lucide-react";
-import { format } from "date-fns";
-import { toast } from "react-toastify";
 import InfoBox from "./InfoBox.jsx";
 import { useMasterData } from "../../../apiHooks/useMasterData.js";
 import InputField from "../../../Components/FormFields/InputField";
@@ -22,7 +18,6 @@ import DescriptionField from "../../../Components/FormFields/DescriptionField";
 import IncreaseAndDecreaseField from "../../../Components/FormFields/IncreaseAndDecreaseField";
 import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect";
 import DropdownWithSearchField from "../../../Components/FormFields/DropdownWithSearchField";
-import { notify } from "../../../services/toastService.js";
 
 const InterviewDetails = ({
   errors,
@@ -39,8 +34,6 @@ const InterviewDetails = ({
   setIsMockInterviewSelected,
   yearsOfExperience = 0,
 }) => {
-  // console.log('=== InterviewDetails Component Props ===');
-  // console.log('interviewDetailsData:', interviewDetailsData);
   const [showCustomDiscount, setShowCustomDiscount] = useState(false);
   const [customDiscountValue, setCustomDiscountValue] = useState("");
   const expYears = parseInt(yearsOfExperience, 10) || 0;
@@ -50,10 +43,7 @@ const InterviewDetails = ({
   const showSeniorLevel = expYears >= 7;
 
   // Skills-specific state
-  const [isCustomSkill, setIsCustomSkill] = useState(false);
-  const [customSkillValue, setCustomSkillValue] = useState("");
   const [searchSkillValue, setSearchSkillValue] = useState("");
-  const [isSkillsMenuOpen, setIsSkillsMenuOpen] = useState(false);
   const skillsMenuRef = useRef(null);
 
   // Initialize form data when component mounts or interviewDetailsData changes
@@ -113,7 +103,7 @@ const InterviewDetails = ({
   ]);
   const [exchangeRate, setExchangeRate] = useState(""); // Default fallback rate
   const [isRateLoading, setIsRateLoading] = useState(false);
-  const [lastRateUpdate, setLastRateUpdate] = useState("");
+  // const [lastRateUpdate, setLastRateUpdate] = useState("");
 
   // Fetch current exchange rate
   useEffect(() => {
@@ -126,7 +116,7 @@ const InterviewDetails = ({
         // console.log('exchange rates:-', response.data)
         if (response.data && response.data.rate) {
           setExchangeRate(response.data.rate);
-          setLastRateUpdate(new Date().toISOString());
+          // setLastRateUpdate(new Date().toISOString());
         }
       } catch (error) {
         // console.error('Error fetching exchange rate:', error);
@@ -457,53 +447,6 @@ const InterviewDetails = ({
     }));
   };
 
-  // const handleSelectSkill = (skillName, isCustom = false) => {
-  //     try {
-  //         if (!skillName) {
-  //             console.error('No skill selected or invalid selection');
-  //             return;
-  //         }
-
-  //         let skill = skills?.find(s =>
-  //             s?.SkillName?.trim().toLowerCase() === skillName.toLowerCase()
-  //         );
-
-  //         if (!skill && isCustom) {
-  //             skill = {
-  //                 _id: Math.random().toString(36).substr(2, 9),
-  //                 SkillName: skillName
-  //             };
-  //         }
-
-  //         if (!skill) {
-  //             console.error('Skill not found and not a custom skill');
-  //             return;
-  //         }
-
-  //         const isAlreadySelected = selectedSkills.some(selectedSkill =>
-  //             selectedSkill?.SkillName?.trim().toLowerCase() === skillName.toLowerCase()
-  //         );
-
-  //         if (!isAlreadySelected) {
-  //             const updatedSkills = [...selectedSkills, skill];
-  //             setSelectedSkills(updatedSkills);
-  //             setInterviewDetailsData(prev => ({
-  //                 ...prev,
-  //                 skills: updatedSkills.map(s => s?.SkillName).filter(Boolean),
-  //             }));
-  //             setErrors(prevErrors => ({ ...prevErrors, skills: '' }));
-  //             if (isCustom) {
-  //                 setCustomSkillValue('');
-  //             } else {
-  //                 setSearchSkillValue('');
-  //                 setIsSkillsMenuOpen(false);
-  //             }
-  //         }
-  //     } catch (error) {
-  //         console.error('Error in handleSelectSkill:', error);
-  //     }
-  // };
-
   const handleRadioChange = (e) => {
     const value = e.target.value;
     setPreviousInterviewExperience(value);
@@ -717,7 +660,7 @@ const InterviewDetails = ({
         skillsMenuRef.current &&
         !skillsMenuRef.current.contains(event.target)
       ) {
-        setIsSkillsMenuOpen(false);
+        // setIsSkillsMenuOpen(false);
         setSearchSkillValue("");
       }
     };
