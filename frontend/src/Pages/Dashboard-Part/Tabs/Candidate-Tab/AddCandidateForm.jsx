@@ -81,8 +81,11 @@ const AddCandidateForm = ({
 
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  console.log('tokenPayload:-', tokenPayload);
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
+  const isOrganization = tokenPayload?.organization === true;
+  console.log('isOrganization:-', isOrganization);
 
   // v1.0.2 <----------------------------------------------------------------
   useScrollLock(true);
@@ -502,7 +505,7 @@ const AddCandidateForm = ({
       RelevantExperience: "",
       skills: [],
       CurrentRole: "",
-      // CountryCode: "",
+      CountryCode: "+91",
       Technology: "",
     });
 
@@ -1175,18 +1178,25 @@ const AddCandidateForm = ({
                 />
               </div>
 
-              {/* External ID Field */}
-              <div className="-mt-2">
-                <InputField
-                  value={formData.externalId}
-                  onChange={handleChange}
-                  inputRef={fieldRefs.externalId}
-                  error={errors.externalId}
-                  label="External ID"
-                  name="externalId"
-                  placeholder="Optional external system identifier"
-                />
-              </div>
+              {/* External ID Field - Only show for organization users */}
+              {isOrganization && (
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                  <div className="-mt-2">
+                    <InputField
+                      value={formData.externalId}
+                      onChange={handleChange}
+                      inputRef={fieldRefs.externalId}
+                      error={errors.externalId}
+                      label="External ID"
+                      name="externalId"
+                      placeholder="external system identifier"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      external system reference id
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* v1.0.8 <----------------------------------- */}
               <div className="flex justify-end gap-3">

@@ -68,6 +68,7 @@ const InterviewForm = () => {
   const tokenPayload = decodeJwt(authToken);
   const orgId = tokenPayload?.tenantId;
   const userId = tokenPayload?.userId;
+  const isOrganization = tokenPayload?.organization === true;
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -77,7 +78,7 @@ const InterviewForm = () => {
   });
 
   console.log("templatesData in InterviewForm:", templatesData);
-  const { interviewData, isMutationLoading, createInterview } = useInterviews();
+  const { interviewData, isMutationLoading, createInterview } = useInterviews({},1,Infinity);
   const { candidateData, isLoading: candidatesLoading } = useCandidates();
 
   const [candidateId, setCandidateId] = useState("");
@@ -530,20 +531,25 @@ const InterviewForm = () => {
                     />
                   </div>
 
-                  {/* External ID Field */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      External ID
-                    </label>
-                    <input
-                      type="text"
-                      name="externalId"
-                      value={externalId}
-                      onChange={(e) => setExternalId(e.target.value)}
-                      placeholder="Optional external system identifier"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
+                  {/* External ID Field - Only show for organization users */}
+                  {isOrganization && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        External ID
+                      </label>
+                      <input
+                        type="text"
+                        name="externalId"
+                        value={externalId}
+                        onChange={(e) => setExternalId(e.target.value)}
+                        placeholder="external system identifier"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <div className="text-xs text-gray-500 mt-1">
+                        external system reference id
+                      </div>
+                    </div>
+                  )}
 
                   <div className="relative">
                     <DropdownWithSearchField

@@ -31,6 +31,7 @@ import {
 // v1.0.1 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
+import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 // v1.0.1 ------------------------------------------------------------------------->
 
 const getStatusColor = (status) => {
@@ -78,6 +79,10 @@ function SupportDetails() {;
   const [isOwnerEditing, setIsOwnerEditing] = useState(false);
   const [ownerOptions, setOwnerOptions] = useState([]);
   console.log("ownerOptions---", ownerOptions);
+  const ownerSelectOptions = ownerOptions.map((user) => ({
+    value: user._id,
+    label: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+  }));
 
   // v1.0.1 <-------------------------------------------------------------------------
   useScrollLock(true);
@@ -179,14 +184,16 @@ function SupportDetails() {;
     [closeStatusModal]
   );
 
-  const handleOwnerChange = (e) => {
-    const selectedUserId = e.target.value;
+  const handleOwnerChange = (option) => {
+    const selectedUserId = option?.value || "";
     const selectedUser = ownerOptions.find(
       (user) => user._id === selectedUserId
     );
 
     if (selectedUser) {
-      setSelectedOwner(selectedUser.firstName + " " + selectedUser.lastName);
+      setSelectedOwner(
+        `${selectedUser.firstName || ""} ${selectedUser.lastName || ""}`.trim()
+      );
       setSelectedOwnerId(selectedUser._id);
     } else {
       setSelectedOwner("");
@@ -468,60 +475,57 @@ function SupportDetails() {;
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
                     <User className="w-5 h-5 text-custom-blue" />
                   </div>
-                  <div className="flex items-start gap-16">
-                    <div className="flex flex-col items-start">
-                      <p className="text-sm text-gray-500">Owner</p>
-                      {isOwnerEditing ? (
-                        <div className="flex items-center gap-2">
-                          <select
-                            className="border border-gray-300 rounded-md p-1 text-sm"
-                            value={selectedOwnerId}
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <p className="text-sm text-gray-500">Owner</p>
+                    {isOwnerEditing ? (
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <div className="flex-1 min-w-[180px] max-w-xs">
+                          <DropdownSelect
+                            value={
+                              ownerSelectOptions.find(
+                                (opt) => opt.value === selectedOwnerId
+                              ) || null
+                            }
                             onChange={handleOwnerChange}
-                            disabled={isUpdatingOwner}
-                          >
-                            <option value="" hidden>
-                              Select Owner
-                            </option>
-                            {ownerOptions?.map((user) => (
-                              <option key={user._id} value={user._id}>
-                                {user.firstName + " " + user.lastName}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={updateOwner}
-                            className="text-green-600 hover:text-green-800 p-1"
-                            disabled={isUpdatingOwner}
-                          >
-                            {isUpdatingOwner ? (
-                              <span>Saving...</span>
-                            ) : (
-                              <CheckCircle className="w-5 h-5" />
-                            )}
-                          </button>
-                          <button
-                            onClick={toggleOwnerEdit}
-                            className="text-red-600 hover:text-red-800 p-1"
-                            disabled={isUpdatingOwner}
-                          >
-                            <XCircle className="w-5 h-5" />
-                          </button>
+                            options={ownerSelectOptions}
+                            placeholder="Select Owner"
+                            isSearchable={true}
+                            isDisabled={isUpdatingOwner}
+                          />
                         </div>
-                      ) : (
+                        <button
+                          onClick={updateOwner}
+                          className="text-green-600 hover:text-green-800 p-1"
+                          disabled={isUpdatingOwner}
+                        >
+                          {isUpdatingOwner ? (
+                            <span>Saving...</span>
+                          ) : (
+                            <CheckCircle className="w-5 h-5" />
+                          )}
+                        </button>
+                        <button
+                          onClick={toggleOwnerEdit}
+                          className="text-red-600 hover:text-red-800 p-1"
+                          disabled={isUpdatingOwner}
+                        >
+                          <XCircle className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-1 flex items-center gap-2">
                         <p className="text-gray-700 whitespace-nowrap">
                           {currentTicket?.assignedTo || "N/A"}
                         </p>
-                      )}
-                    </div>
-                    {impersonatedUser_roleName === "Super_Admin" && (
-                      <div className="flex items-center justify-center w-full">
-                        <button
-                          onClick={toggleOwnerEdit}
-                          className="p-1 text-custom-blue hover:bg-blue-50 rounded-full transition-colors"
-                          title="Change Owner"
-                        >
-                          <Repeat className="w-5 h-5 text-custom-blue" />
-                        </button>
+                        {impersonatedUser_roleName === "Super_Admin" && (
+                          <button
+                            onClick={toggleOwnerEdit}
+                            className="p-1 text-custom-blue hover:bg-blue-50 rounded-full transition-colors"
+                            title="Change Owner"
+                          >
+                            <Repeat className="w-5 h-5 text-custom-blue" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

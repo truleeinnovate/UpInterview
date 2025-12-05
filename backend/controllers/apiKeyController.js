@@ -216,11 +216,25 @@ exports.deleteApiKey = asyncHandler(async (req, res) => {
   const startTime = Date.now();
   const { id } = req.params;
 
+  // Mark that logging will be handled by the controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Delete API Key";
+
   try {
     // Find the API key (no user filtering)
     const apiKey = await ApiKey.findOne({ _id: id });
 
     if (!apiKey) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "Delete API Key",
+        requestBody: { id },
+        message: "API key not found",
+        status: "error",
+        integrationName: "api-keys",
+        flowType: "delete-api-key",
+      };
       return res.status(404).json({
         success: false,
         message: "API key not found",
@@ -233,6 +247,18 @@ exports.deleteApiKey = asyncHandler(async (req, res) => {
 
     const duration = Date.now() - startTime;
 
+    // Generate logs for success
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "Delete API Key",
+      requestBody: { id },
+      message: "API key deleted successfully",
+      status: "success",
+      responseBody: { id },
+      integrationName: "api-keys",
+      flowType: "delete-api-key",
+    };
+
     res.status(200).json({
       success: true,
       message: "API key deleted successfully",
@@ -243,6 +269,17 @@ exports.deleteApiKey = asyncHandler(async (req, res) => {
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`[${requestId}] Error deleting API key:`, error);
+
+    // Generate logs for the error
+    res.locals.logData = {
+      ownerId: "system",
+      processName: "Delete API Key",
+      requestBody: { id },
+      message: "Error deleting API key",
+      status: "error",
+      integrationName: "api-keys",
+      flowType: "delete-api-key",
+    };
 
     res.status(500).json({
       success: false,

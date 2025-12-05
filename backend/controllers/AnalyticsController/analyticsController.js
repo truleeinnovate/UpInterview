@@ -15,7 +15,8 @@ const { buildPermissionQuery } = require("../../utils/buildPermissionQuery");
 const { Candidate } = require("../../models/Candidate");
 const { Position } = require("../../models/Position/position");
 const { Interview } = require("../../models/Interview/Interview");
-const Assessment = require("../../models/Assessment/assessmentsSchema");
+const ScheduledAssessment = require("../../models/Assessment/assessmentsSchema");
+const {CandidateAssessment} = require("../../models/Assessment/candidateAssessment");
 const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
 const RolesPermissionObject = require('../../models/rolesPermissionObject');
 
@@ -353,7 +354,8 @@ const generateReport = async (req, res) => {
       positions: Position,
       interviews: Interview,
       interviewrounds: InterviewRounds,
-      assessments: Assessment,
+      scheduledassessments: ScheduledAssessment, // ← ADD THIS
+      // assessments: Assessment,
     };
 
     const Model = ModelMap[collectionName];
@@ -412,7 +414,7 @@ const generateReport = async (req, res) => {
         if (col.key && !lockedColumns.some((l) => l.key === col.key)) {
           userMap.set(col.key, {
             key: col.key,
-            label: col.label || col.key,
+            label: col.label,
             width: col.width || "180px",
             visible: col.visible !== false,
             locked: false,
@@ -456,7 +458,7 @@ const generateReport = async (req, res) => {
         );
         return {
           key: col.key,
-          label: col.label || col.key,
+          label: col.label,
           type: col.type || "text",
           locked: false,
           selected: isVisible,
@@ -539,6 +541,7 @@ const generateReport = async (req, res) => {
     // 10. FETCH DATA — FULLY SECURE (permissionQuery applied)
     let rawData = [];
 
+    // SPECIAL CASE 1: Interview Rounds (keep your existing logic)
     if (collectionName === "interviewrounds") {
       const interviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
       const interviewIds = interviews.map((i) => i._id);
@@ -547,26 +550,94 @@ const generateReport = async (req, res) => {
           { interviewId: { $in: interviewIds }, ...finalQuery },
           projection
         )
-          // REMOVE .sort() COMPLETELY
-          // .limit(2000)
           .lean();
       }
-    } else {
+    }
+    // SPECIAL CASE 2: Scheduled Assessments → Join with CandidateAssessment
+    else if (collectionName === "scheduledassessments") {
+      // First: Get all scheduled assessments for this tenant + filters
+      const scheduled = await ScheduledAssessment.find(
+        { ...permissionQuery, ...finalQuery },
+        { _id: 1 }
+      ).lean();
+
+      const scheduledIds = scheduled.map(s => s._id);
+
+      if (scheduledIds.length === 0) {
+        rawData = [];
+      } else {
+        // Now get candidate assessments + populate candidate name
+        rawData = await CandidateAssessment.find(
+          { scheduledAssessmentId: { $in: scheduledIds } },
+          {
+            ...projection,
+            candidateId: 1,
+            totalScore: 1,
+            status: 1,
+            startedAt: 1,
+            endedAt: 1,
+            progress: 1,
+            sections: 1,
+          }
+        )
+          .populate({
+            path: "candidateId",
+            select: "FirstName LastName Email",
+          })
+          .populate({
+            path: "scheduledAssessmentId",
+            select: "assessmentId expiryAt status",
+            populate: {
+              path: "assessmentId",
+              select: "AssessmentTitle",
+            },
+          })
+          .lean();
+
+        // Flatten & enrich data for frontend
+        rawData = rawData.map(ca => {
+          const candidate = ca.candidateId || {};
+          const sched = ca.scheduledAssessmentId || {};
+          const assessment = sched.assessmentId || {};
+
+          return {
+            _id: ca._id,
+            id: ca._id.toString(),
+            candidateName: `${candidate.FirstName || ""} ${candidate.LastName || ""}`.trim() || "Unknown Candidate",
+            candidateEmail: candidate.Email || "-",
+            assessmentTitle: assessment.AssessmentTitle || "Unknown Assessment",
+            score: ca.totalScore || 0,
+            totalQuestions: ca.sections?.reduce((sum, s) => sum + (s.Answers?.length || 0), 0) || 0,
+            status: ca.status,
+            scheduledAt: sched.createdAt,
+            expiryAt: sched.expiryAt,
+            startedAt: ca.startedAt,
+            completedAt: ca.endedAt,
+            progress: ca.progress || 0,
+            durationTaken: ca.endedAt && ca.startedAt
+              ? Math.round((new Date(ca.endedAt) - new Date(ca.startedAt)) / 60000) + " mins"
+              : "-",
+            createdAt: ca.createdAt,
+          };
+        });
+      }
+    }
+    // DEFAULT CASE: All other collections (positions, candidates, etc.)
+    else {
       rawData = await Model.find(
         { ...permissionQuery, ...finalQuery },
         projection
-      )
-        // REMOVE .sort() HERE TOO
-        // .limit(2000)
-        .lean();
+      ).lean();
     }
 
-    console.log(`[DATA] Fetched ${rawData.length} records`);
+    // CLIENT-SIDE SORT (safe for Cosmos DB)
+    const sortedData = rawData
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 2000);
 
- const sortedData = rawData
-  .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-  .slice(0, 2000);
-    const mappedData = sortedData.map((d) => ({ id: d._id.toString(), ...d }));
+    const mappedData = sortedData.map((d) => ({ id: d._id?.toString() || d.id, ...d }));
+    console.log("mappedData", mappedData);
+    
 
     // 11. KPI + CHARTS
     const aggregates = {
@@ -853,22 +924,38 @@ const saveFilterPreset = async (req, res) => {
   }
 };
 
+// controllers/analytics/reportController.js
 const saveColumnConfig = async (req, res) => {
   try {
-    // const { templateId } = req.params;
-    // const tenantId = req.user.tenantId;
     const { templateId } = req.params;
     const tenantId = res.locals.auth.actingAsTenantId;
     const { selectedColumns } = req.body;
 
+    // Validate: must have key + label
+    if (!Array.isArray(selectedColumns)) {
+      return res.status(400).json({ success: false, message: "Invalid columns" });
+    }
+
     const config = await ColumnConfiguration.findOneAndUpdate(
       { templateId, tenantId },
-      { selectedColumns, tenantId, templateId },
-      { upsert: true, new: true }
+      {
+        selectedColumns: selectedColumns.map(col => ({
+          key: col.key,
+          label: col.label,    // ← SAVE LABEL!
+          type: col.type || "text",       // ← SAVE TYPE!
+          visible: col.visible !== false,
+          order: col.order ?? 999,
+          width: col.width || "180px",
+        })),
+        tenantId,
+        templateId,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    res.json({ success: true, config });
+    res.json({ success: true, config: config.selectedColumns });
   } catch (error) {
+    console.error("Save column config failed:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
