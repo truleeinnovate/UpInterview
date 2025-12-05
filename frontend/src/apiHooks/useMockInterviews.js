@@ -123,15 +123,17 @@ export const useMockInterviews = (params = {}) => {
       // const status = rounds.length > 0 && rounds[0]?.interviewers?.length > 0 ? "RequestSent" : "Draft";
 
       // Format skills properly
-      const skills = formData.entries
-        ? formData.entries
-            .filter((e) => e.skill || e.experience || e.expertise)
-            .map((e) => ({
-              skill: e.skill,
-              experience: e.experience,
-              expertise: e.expertise,
-            }))
-        : formData.skills || [];
+      // const skills = formData.entries
+      //   ? formData.entries
+      //       .filter((e) => e.skill || e.experience || e.expertise)
+      //       .map((e) => ({
+      //         skill: e.skill,
+      //         experience: e.experience,
+      //         expertise: e.expertise,
+      //       }))
+      //   : formData.skills || [];
+
+      const skills = Array.isArray(formData.skills) ? formData.skills : [];
 
       // Build payload - FIXED: Include rounds only if they exist
       const payload = {
@@ -158,6 +160,8 @@ export const useMockInterviews = (params = {}) => {
         }));
       }
 
+      console.log("/updateMockInterview/", payload);
+
       const url = isEdit
         ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
         : `${config.REACT_APP_API_URL}/mockinterview`;
@@ -178,6 +182,8 @@ export const useMockInterviews = (params = {}) => {
           await uploadFile(resume, "resume", "mockInterview", mockInterviewId);
         }
       }
+
+      console.log("response.data", response);
 
       return response.data;
     },

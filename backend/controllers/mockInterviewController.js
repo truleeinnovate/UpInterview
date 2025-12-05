@@ -42,6 +42,8 @@ exports.createMockInterview = async (req, res) => {
       lastModifiedById,
     } = req.body;
 
+    console.log("req.body", req.body);
+
     // Generate mockInterviewCode using centralized service
     const mockInterviewCode = await generateUniqueId(
       "MINT",
@@ -208,6 +210,8 @@ exports.updateMockInterview = async (req, res) => {
         message: "Mock interview not found",
       });
     }
+
+    console.log("req.body updatted", req.body);
 
     let changes = [];
     let roundsUpdatedCount = 0;
