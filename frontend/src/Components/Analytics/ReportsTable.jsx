@@ -803,11 +803,12 @@ const ReportsTable = ({
   title,
   type,
   onGenerate,
+  onShare,
   loadingId,
 }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [popupCoords, setPopupCoords] = useState({ x: 0, y: 0 });
-  const [sharePopup, setSharePopup] = useState(null);
+  // const [sharePopup, setSharePopup] = useState(null);
 
   // Global user & permissions
   const { subscriptionData } = useSubscription();
@@ -872,10 +873,10 @@ const ReportsTable = ({
     setOpenMenuId(openMenuId === itemId ? null : itemId);
   };
 
-  const handleShare = (item) => {
-    setSharePopup({ templateId: item.id });
-    setOpenMenuId(null);
-  };
+  // const handleShare = (item) => {
+  //   setSharePopup({ templateId: item.id });
+  //   setOpenMenuId(null);
+  // };
 
   return (
     <>
@@ -1027,7 +1028,11 @@ const ReportsTable = ({
                             )}
 
                             <button
-                              onClick={() => handleShare(item)}
+                              // onClick={() => handleShare(item)}
+                              onClick={() => {
+                                onShare?.(item);
+                                setOpenMenuId(null);
+                              }}
                               className="w-full px-4 py-2 text-left text-green-600 text-sm hover:bg-green-500/10 flex items-center gap-2"
                             >
                               <Share2 className="w-4 h-4" />
@@ -1052,11 +1057,11 @@ const ReportsTable = ({
       </div>
 
       {/* Share Popup */}
-      <ShareReportPopup
+      {/* <ShareReportPopup
         templateId={sharePopup?.templateId}
         isOpen={!!sharePopup}
         onClose={() => setSharePopup(null)}
-      />
+      /> */}
     </>
   );
 };

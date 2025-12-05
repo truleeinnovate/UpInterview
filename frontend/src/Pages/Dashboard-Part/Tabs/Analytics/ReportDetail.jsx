@@ -1076,7 +1076,6 @@ const ReportDetail = () => {
     );
   };
 
-
   const LoadingView = () => (
     <div className="space-y-6 animate-fade-in p-6">
       <div className="flex sm:flex-col md:flex-col lg:flex-col xl:items-center 2xl:items-center sm:gap-4 md:gap-4 lg:gap-4 justify-between">
@@ -1092,7 +1091,7 @@ const ReportDetail = () => {
               <div className="h-8 w-80 bg-gray-200 rounded shimmer"></div>
               <div className="h-8 w-32 bg-gray-200 rounded shimmer"></div>
             </div>
-            <div className="h-6 w-32 bg-gray-200 rounded shimmer mb-2"></div>
+            <div className="h-6 w-32 bg-gray-200 rounded shimmer"></div>
           </div>
         </div>
 
@@ -1118,6 +1117,28 @@ const ReportDetail = () => {
             <span>Export CSV</span>
           </button>
         </div>
+      </div>
+      <div className="flex items-center">
+        <Tooltip title="Dashboard">
+          <span className="cursor-pointer">
+            <LayoutDashboard
+              className={`text-xl mr-4 ${
+                activeView === "dashboard"
+                  ? "text-custom-blue"
+                  : "text-gray-500"
+              }`}
+            />
+          </span>
+        </Tooltip>
+        <Tooltip title="Table">
+          <span className="cursor-pointer">
+            <Table
+              className={`text-xl ${
+                activeView === "table" ? "text-custom-blue" : "text-gray-500"
+              }`}
+            />
+          </span>
+        </Tooltip>
       </div>
       <div className="mb-6 border rounded-lg bg-white">
         {/* Header shimmer */}
