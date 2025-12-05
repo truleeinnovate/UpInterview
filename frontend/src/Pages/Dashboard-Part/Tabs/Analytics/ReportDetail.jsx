@@ -883,33 +883,33 @@ const ReportDetail = () => {
 
   // --------------------------- COLUMN MANAGEMENT LOGIC ------------------------
   // Handle Column Change & Save
-const handleColumnsChange = useCallback(
-  async (newColumns) => {
-    setColumns(newColumns);
+  const handleColumnsChange = useCallback(
+    async (newColumns) => {
+      setColumns(newColumns);
 
-    try {
-      const formattedColumns = newColumns.map((c) => ({
-        key: c.key,
-        label: c.label,     // ← SEND LABEL
-        type: c.type || "text",      // ← SEND TYPE
-        visible: c.visible ?? true,
-        order: c.order ?? 999,
-        width: c.width || "180px",
-      }));
+      try {
+        const formattedColumns = newColumns.map((c) => ({
+          key: c.key,
+          label: c.label, // ← SEND LABEL
+          type: c.type || "text", // ← SEND TYPE
+          visible: c.visible ?? true,
+          order: c.order ?? 999,
+          width: c.width || "180px",
+        }));
 
-      await saveColumnConfig.mutateAsync({
-        templateId: reportId,
-        selectedColumns: formattedColumns,
-      });
+        await saveColumnConfig.mutateAsync({
+          templateId: reportId,
+          selectedColumns: formattedColumns,
+        });
 
-      notify.success("Column layout saved!");
-    } catch (err) {
-      notify.error("Failed to save columns");
-      console.error(err);
-    }
-  },
-  [reportId, saveColumnConfig]
-);
+        notify.success("Column layout saved!");
+      } catch (err) {
+        notify.error("Failed to save columns");
+        console.error(err);
+      }
+    },
+    [reportId, saveColumnConfig]
+  );
 
   // ------------------------ END OF COLUMN MANAGEMENT LOGIC ----------------------
   const handleApplyAndSave = async () => {
@@ -1042,7 +1042,9 @@ const handleColumnsChange = useCallback(
 
     // Capitalize every cell in body rows
     const formattedRows = rows.map((row) =>
-      row.map((cell) => (typeof cell === "string" ? capitalizeFirstLetter(cell) : cell))
+      row.map((cell) =>
+        typeof cell === "string" ? capitalizeFirstLetter(cell) : cell
+      )
     );
 
     // Initialize jsPDF
@@ -1074,18 +1076,104 @@ const handleColumnsChange = useCallback(
     );
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-[100vh] animate-fade-in">
-        <div className="w-12 h-12 border-4 border-custom-blue border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-custom-blue font-medium text-lg">
-          Loading report...
-        </p>
-      </div>
-    );
-  }
 
-  console.log("COLUMNS ===============================> ", columns);
+  const LoadingView = () => (
+    <div className="space-y-6 animate-fade-in p-6">
+      <div className="flex sm:flex-col md:flex-col lg:flex-col xl:items-center 2xl:items-center sm:gap-4 md:gap-4 lg:gap-4 justify-between">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigate("/analytics/reports")}
+            className="p-2 rounded-lg border text-custom-blue border-gray-300 hover:bg-gray-50 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center text-2xl font-semibold text-custom-blue gap-2 mb-3">
+              <div className="h-8 w-80 bg-gray-200 rounded shimmer"></div>
+              <div className="h-8 w-32 bg-gray-200 rounded shimmer"></div>
+            </div>
+            <div className="h-6 w-32 bg-gray-200 rounded shimmer mb-2"></div>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          {/* YOUR ORIGINAL BUTTONS + NEW SAVE BUTTON */}
+          <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            <Settings className="w-4 h-4" />
+            <span>Columns</span>
+          </button>
+          {/* <button
+            className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90"
+          >
+            <Save className="w-4 h-4" />
+            <span>Apply & Save</span>
+          </button> */}
+
+          <button className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+            <Download className="w-4 h-4" />
+            <span>Export PDF</span>
+          </button>
+          <button className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg">
+            <Download className="w-4 h-4" />
+            <span>Export CSV</span>
+          </button>
+        </div>
+      </div>
+      <div className="mb-6 border rounded-lg bg-white">
+        {/* Header shimmer */}
+        <div className="flex items-center justify-between p-6">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold text-custom-blue">Filters</h3>
+            <div className="h-4 w-12 bg-gray-200 rounded shimmer"></div>
+          </div>
+          <div className="h-9 w-28 bg-gray-300 rounded shimmer"></div>
+        </div>
+
+        {/* Fields shimmer grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 p-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <div className="h-4 w-32 bg-gray-200 rounded shimmer"></div>
+              <div className="h-10 w-full bg-gray-200 rounded shimmer"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* KPI Cards */}
+      <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-xl shadow px-4 py-8 flex flex-col gap-4"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="h-6 w-32 bg-gray-200 rounded shimmer mb-2"></div>
+                <div className="h-10 w-24 bg-gray-200 rounded shimmer"></div>
+              </div>
+              <div className="h-12 w-12 bg-gray-200 rounded shimmer"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-xl shadow p-5 flex flex-col gap-4"
+          >
+            <div className="flex items-center justify-between">
+              <div className="h-80 w-full bg-gray-200 rounded shimmer mb-2"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (isLoading) {
+    return <LoadingView />;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in p-6">
