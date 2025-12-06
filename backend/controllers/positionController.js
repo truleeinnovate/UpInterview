@@ -93,6 +93,7 @@ const createPosition = async (req, res) => {
       externalId: req.body.externalId || undefined,
       createdBy: req.body.ownerId, // Fixed: use req.body.ownerId instead of undefined ownerId
       positionCode, // Custom code added
+      status: req.body.status,
     };
 
     // Handle rounds if template exists

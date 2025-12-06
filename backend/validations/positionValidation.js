@@ -24,7 +24,6 @@ const { default: mongoose } = require("mongoose");
 
 // post call valdiaitons for rounds
 const validateRoundData = Joi.object({
-  
   sequence: Joi.number().min(1).required().messages({
     "number.base": "Sequence must be a number",
     "number.min": "Sequence must be at least 1",
@@ -75,15 +74,15 @@ const validateRoundData = Joi.object({
   // }),
 
   interviewerType: Joi.string()
-  .allow(null, '')
-  .optional()
-  .when("roundTitle", {
-    is: Joi.exist().not("Assessment"),
-    then: Joi.string().required().messages({
-      "string.empty": "Interviewer type is required",
-      "any.required": "Interviewer type is required",
+    .allow(null, "")
+    .optional()
+    .when("roundTitle", {
+      is: Joi.exist().not("Assessment"),
+      then: Joi.string().required().messages({
+        "string.empty": "Interviewer type is required",
+        "any.required": "Interviewer type is required",
+      }),
     }),
-  }),
 
   interviewers: Joi.when("roundTitle", {
     is: "Assessment",
@@ -151,7 +150,7 @@ const positionValidationSchema = Joi.object({
       "number.min": "Maximum Experience cannot be less than Minimum Experience",
     }),
 
-//   selectedTemplete: Joi.string().optional(), // typo fixed to match mongoose
+  //   selectedTemplete: Joi.string().optional(), // typo fixed to match mongoose
 
   minSalary: Joi.string().allow(null, "").optional(),
   maxSalary: Joi.string().allow(null, "").optional(),
@@ -179,9 +178,15 @@ const positionValidationSchema = Joi.object({
     .min(1)
     .items(
       Joi.object({
-        skill: Joi.string().required().messages({ "any.required": "Skill is required" }),
-        experience: Joi.string().required().messages({ "any.required": "Experience is required" }),
-        expertise: Joi.string().required().messages({ "any.required": "Expertise is required" }),
+        skill: Joi.string()
+          .required()
+          .messages({ "any.required": "Skill is required" }),
+        experience: Joi.string()
+          .required()
+          .messages({ "any.required": "Experience is required" }),
+        expertise: Joi.string()
+          .required()
+          .messages({ "any.required": "Expertise is required" }),
       })
     )
     .required()
@@ -191,10 +196,9 @@ const positionValidationSchema = Joi.object({
 
   externalId: Joi.string().optional().allow("", null),
 
-//   additionalNotes: Joi.string().optional(),
-additionalNotes: Joi.string().allow(null, "").optional(),
-// selectedTemplete: Joi.string().allow(null, "").optional(),
-
+  //   additionalNotes: Joi.string().optional(),
+  additionalNotes: Joi.string().allow(null, "").optional(),
+  // selectedTemplete: Joi.string().allow(null, "").optional(),
 
   rounds: Joi.array().items(validateRoundData).optional(),
   roundsModified: Joi.boolean().optional(),
@@ -206,6 +210,26 @@ additionalNotes: Joi.string().allow(null, "").optional(),
   tenantId: Joi.string().required(),
 }).unknown(true);
 
+const validateRoundPatchData = Joi.object({
+  sequence: Joi.number().min(1).optional(),
+  roundTitle: Joi.string().trim().optional(),
+  interviewMode: Joi.string().optional(),
+  duration: Joi.number().optional(),
+  instructions: Joi.string().optional(),
+
+  // IMPORTANT: Remove the .when() condition for interviewerType in PATCH
+  interviewerType: Joi.string().allow(null, "").optional(),
+
+  // IMPORTANT: Remove or simplify the .when() condition for interviewers in PATCH
+  interviewers: Joi.array().optional(),
+
+  interviewerGroupId: Joi.string().allow("").optional(),
+  interviewerViewType: Joi.string().allow("").optional(),
+
+  assessmentId: Joi.string().allow(null, "").optional(),
+
+  questions: Joi.array().optional(),
+}).unknown(true);
 
 // ✅ For "standard" templates, make all round fields optional
 const validateRoundDataStandard = Joi.object({
@@ -223,99 +247,92 @@ const validateRoundDataStandard = Joi.object({
   questions: Joi.array().optional(),
 }).unknown(true);
 
-
 // PATCH schema (all optional)
 const positionPatchValidationSchema = positionValidationSchema.fork(
   Object.keys(positionValidationSchema.describe().keys),
   (field) => field.optional()
 );
 
-
-
-  
 // ✅ Joi schema for PATCH validation
-const validateRoundPatchData = Joi.object({
-  sequence: Joi.number().min(1).optional(),
-  roundTitle: Joi.string().trim().optional(),
-  interviewMode: Joi.string().optional(),
-  duration: Joi.number().optional(),
-  instructions: Joi.string().optional(),
-  interviewerType: Joi.alternatives().try(
-    Joi.string().valid('Internal', 'External').allow(''),
-    Joi.valid(null)
-  ).optional(),
-  interviewerGroupId: Joi.when('assessmentId', {
-    is: Joi.exist(),
-    then: Joi.string().allow("").optional(),
-    otherwise: Joi.when('interviewerType', {
-      is: 'internal',
-      then: Joi.string().allow("").optional(),
-      otherwise: Joi.string().allow("").optional()
-    })
-  }),
-  interviewerViewType: Joi.when('assessmentId', {
-    is: Joi.exist(),
-    then: Joi.string().allow("").optional(),
-    otherwise: Joi.when('interviewerType', {
-      is: 'external',
-      then: Joi.string().allow("").optional(),
-      otherwise: Joi.string().allow("").optional()
-    })
-  }),
-  selectedInterviewersType: Joi.when('assessmentId', {
-    is: Joi.exist(),
-    then: Joi.string().allow("").optional(),
-    otherwise: Joi.when('interviewerType', {
-      is: 'external',
-      then: Joi.string().allow("").optional(),
-      otherwise: Joi.string().allow("").optional()
-    })
-  }),
-  
-  interviewers: Joi.when('assessmentId', {
-    // FIX: Check if assessmentId exists AND is not null/empty
-    is: Joi.exist().invalid(null, ""),
-    then: Joi.array().max(0).optional(),
-    otherwise: Joi.array()
-      .items(
-        Joi.string().custom((value, helpers) => {
-          if (!mongoose.Types.ObjectId.isValid(value)) {
-            return helpers.error("any.invalid");
-          }
-          return value;
-        }, "ObjectId validation")
-      )
-      .optional()
-  }).messages({
-    "any.invalid": "Each interviewer must be a valid ObjectId",
-    "array.max": "Interviewers must be empty for assessment rounds"
-  }),
-  assessmentId: Joi.alternatives()
-    .try(
-      Joi.string().custom((value, helpers) => {
-        if (value && !mongoose.Types.ObjectId.isValid(value)) {
-          return helpers.error("any.invalid");
-        }
-        return value;
-      }),
-      Joi.allow(null, "")
-    )
-    .optional()
-    .messages({
-      "any.invalid": "Assessment template must be a valid ObjectId",
-    }),
+// const validateRoundPatchData = Joi.object({
+//   sequence: Joi.number().min(1).optional(),
+//   roundTitle: Joi.string().trim().optional(),
+//   interviewMode: Joi.string().optional(),
+//   duration: Joi.number().optional(),
+//   instructions: Joi.string().optional(),
+//   interviewerType: Joi.alternatives()
+//     .try(Joi.string().valid("Internal", "External").allow(""), Joi.valid(null))
+//     .optional(),
+//   interviewerGroupId: Joi.when("assessmentId", {
+//     is: Joi.exist(),
+//     then: Joi.string().allow("").optional(),
+//     otherwise: Joi.when("interviewerType", {
+//       is: "internal",
+//       then: Joi.string().allow("").optional(),
+//       otherwise: Joi.string().allow("").optional(),
+//     }),
+//   }),
+//   interviewerViewType: Joi.when("assessmentId", {
+//     is: Joi.exist(),
+//     then: Joi.string().allow("").optional(),
+//     otherwise: Joi.when("interviewerType", {
+//       is: "external",
+//       then: Joi.string().allow("").optional(),
+//       otherwise: Joi.string().allow("").optional(),
+//     }),
+//   }),
+//   selectedInterviewersType: Joi.when("assessmentId", {
+//     is: Joi.exist(),
+//     then: Joi.string().allow("").optional(),
+//     otherwise: Joi.when("interviewerType", {
+//       is: "external",
+//       then: Joi.string().allow("").optional(),
+//       otherwise: Joi.string().allow("").optional(),
+//     }),
+//   }),
 
-  questions: Joi.array()
-    .items(
-      Joi.object({
-        questionId: Joi.any().required(),
-        snapshot: Joi.any().optional(),
-      }).unknown(true)
-    )
-    .optional(),
-}).unknown(true);
+//   interviewers: Joi.when("assessmentId", {
+//     // FIX: Check if assessmentId exists AND is not null/empty
+//     is: Joi.exist().invalid(null, ""),
+//     then: Joi.array().max(0).optional(),
+//     otherwise: Joi.array()
+//       .items(
+//         Joi.string().custom((value, helpers) => {
+//           if (!mongoose.Types.ObjectId.isValid(value)) {
+//             return helpers.error("any.invalid");
+//           }
+//           return value;
+//         }, "ObjectId validation")
+//       )
+//       .optional(),
+//   }).messages({
+//     "any.invalid": "Each interviewer must be a valid ObjectId",
+//     "array.max": "Interviewers must be empty for assessment rounds",
+//   }),
+//   assessmentId: Joi.alternatives()
+//     .try(
+//       Joi.string().custom((value, helpers) => {
+//         if (value && !mongoose.Types.ObjectId.isValid(value)) {
+//           return helpers.error("any.invalid");
+//         }
+//         return value;
+//       }),
+//       Joi.allow(null, "")
+//     )
+//     .optional()
+//     .messages({
+//       "any.invalid": "Assessment template must be a valid ObjectId",
+//     }),
 
-
+//   questions: Joi.array()
+//     .items(
+//       Joi.object({
+//         questionId: Joi.any().required(),
+//         snapshot: Joi.any().optional(),
+//       }).unknown(true)
+//     )
+//     .optional(),
+// }).unknown(true);
 
 // const validateRoundData = (data) => {
 //   const { error, value } = roundFormValidationSchema.validate(data, {
@@ -335,7 +352,10 @@ const validateRoundPatchData = Joi.object({
 //   };
 // };
 
-
-
-
-module.exports = { positionValidationSchema, positionPatchValidationSchema, validateRoundData,validateRoundPatchData,validateRoundDataStandard };
+module.exports = {
+  positionValidationSchema,
+  positionPatchValidationSchema,
+  validateRoundData,
+  validateRoundPatchData,
+  validateRoundDataStandard,
+};
