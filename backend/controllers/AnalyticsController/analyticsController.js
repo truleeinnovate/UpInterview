@@ -326,10 +326,7 @@ const generateReport = async (req, res) => {
     }).lean();
 
     if (!template) {
-      console.log("[ERROR] Template not found");
-      return res
-        .status(404)
-        .json({ success: false, message: "Report template not found" });
+      return res.status(404).json({ success: false, message: "Report template not found" });
     }
 
     console.log("[SUCCESS] Template:", template.label);
@@ -343,46 +340,41 @@ const generateReport = async (req, res) => {
     } = template.configuration || {};
 
     if (!dataSource?.collections?.length) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No data source defined" });
+      return res.status(400).json({ success: false, message: "No data source defined" });
     }
 
     const collectionName = dataSource.collections[0].toLowerCase();
+
     const ModelMap = {
       candidates: Candidate,
       positions: Position,
       interviews: Interview,
       interviewrounds: InterviewRounds,
-      scheduledassessments: ScheduledAssessment, // ← ADD THIS
-      // assessments: Assessment,
+      scheduledassessments: ScheduledAssessment,
     };
 
     const Model = ModelMap[collectionName];
     if (!Model) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Unsupported collection: ${collectionName}`,
-        });
+      return res.status(400).json({
+        success: false,
+        message: `Unsupported collection: ${collectionName}`,
+      });
     }
 
-    // 2. FETCH LATEST FILTER PRESET (ONLY 1 QUERY)
+    // 2. FETCH LATEST FILTER PRESET — COSMOS DB SAFE (NO .sort())
     let filterPreset = null;
-
     if (actingAsTenantId) {
-      filterPreset = await FilterPreset.findOne({
+      const presets = await FilterPreset.find({
         templateId,
         tenantId: actingAsTenantId,
-      })
-        .sort({ updatedAt: -1 })
-        .lean();
+      }).lean();
 
-      if (filterPreset) {
-        console.log(
-          `[FILTERS] Using latest saved preset: "${filterPreset.name}"`
+      if (presets.length > 0) {
+        // Pick latest using JavaScript (safe)
+        filterPreset = presets.reduce((latest, current) =>
+          new Date(current.updatedAt) > new Date(latest.updatedAt) ? current : latest
         );
+        console.log(`[FILTERS] Using latest saved preset: "${filterPreset.name}"`);
       } else {
         console.log("[FILTERS] No saved preset → using template defaults");
       }
@@ -391,9 +383,9 @@ const generateReport = async (req, res) => {
     // 3. SAVED COLUMN CONFIG
     const savedColumnConfig = actingAsTenantId
       ? await ColumnConfiguration.findOne({
-        templateId,
-        tenantId: actingAsTenantId,
-      }).lean()
+          templateId,
+          tenantId: actingAsTenantId,
+        }).lean()
       : null;
 
     // 4. BUILD COLUMNS
@@ -446,16 +438,12 @@ const generateReport = async (req, res) => {
       ...lockedColumns.map((col) => ({
         key: col.key,
         label: col.label,
-        type:
-          columnConfig?.available?.find((a) => a.key === col.key)?.type ||
-          "text",
+        type: columnConfig?.available?.find((a) => a.key === col.key)?.type || "text",
         locked: true,
         selected: true,
       })),
       ...(columnConfig?.available || []).map((col) => {
-        const isVisible = responseColumns.some(
-          (c) => c.key === col.key && c.visible
-        );
+        const isVisible = responseColumns.some((c) => c.key === col.key && c.visible);
         return {
           key: col.key,
           label: col.label,
@@ -470,44 +458,29 @@ const generateReport = async (req, res) => {
       new Map(availableColumns.map((c) => [c.key, c])).values()
     );
 
-    // 6. ACTIVE FILTERS — PRESET WINS
+    // 6. ACTIVE FILTERS
     let activeFilters = {};
 
     if (filterPreset?.filters?.length > 0) {
       const firstFilter = filterPreset.filters[0];
-
-      // OLD FORMAT: flat object { dateRange: "...", status: "..." }
       if (firstFilter && !firstFilter.key && !firstFilter.value) {
         activeFilters = { ...firstFilter };
-        console.log(
-          "[FILTERS] Applied saved filters (old format) →",
-          activeFilters
-        );
-      }
-      // NEW FORMAT: array of { key, value }
-      else {
+      } else {
         activeFilters = Object.fromEntries(
           filterPreset.filters.map(f => [f.key, f.value])
         );
-        console.log("[FILTERS] Applied saved filters (new format) →", activeFilters);
       }
     } else {
       activeFilters = { ...(filterConfig?.default || {}) };
-      console.log("[FILTERS] Using template defaults →", activeFilters);
     }
 
-    // 7. PERMISSIONS — DYNAMIC & SECURE
+    // 7. PERMISSIONS
     const permissionQuery = await buildPermissionQuery(
       actingAsUserId,
       actingAsTenantId,
       res.locals.inheritedRoleIds || [],
       res.locals.effectivePermissions_RoleType,
       res.locals.effectivePermissions_RoleName
-    );
-
-    console.log(
-      "[PERMISSIONS] Query →",
-      JSON.stringify(permissionQuery, null, 2)
     );
 
     // 8. FINAL QUERY
@@ -529,100 +502,69 @@ const generateReport = async (req, res) => {
       }
     });
 
-
-    console.log("[QUERY] Final Query →", JSON.stringify(finalQuery, null, 2));
-
     // 9. PROJECTION
     const projection = responseColumns.reduce(
       (acc, col) => ({ ...acc, [col.key]: 1 }),
       { _id: 1, createdAt: 1 }
     );
 
-    // 10. FETCH DATA — FULLY SECURE (permissionQuery applied)
+    // 10. FETCH DATA — NO .sort() ANYWHERE (COSMOS DB SAFE)
     let rawData = [];
 
-    // SPECIAL CASE 1: Interview Rounds (keep your existing logic)
     if (collectionName === "interviewrounds") {
       const interviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
-      const interviewIds = interviews.map((i) => i._id);
+      const interviewIds = interviews.map(i => i._id);
       if (interviewIds.length > 0) {
         rawData = await InterviewRounds.find(
           { interviewId: { $in: interviewIds }, ...finalQuery },
           projection
-        )
-          .lean();
+        ).lean();
       }
     }
-    // SPECIAL CASE 2: Scheduled Assessments → Join with CandidateAssessment
     else if (collectionName === "scheduledassessments") {
-      // First: Get all scheduled assessments for this tenant + filters
       const scheduled = await ScheduledAssessment.find(
         { ...permissionQuery, ...finalQuery },
         { _id: 1 }
       ).lean();
 
       const scheduledIds = scheduled.map(s => s._id);
-
       if (scheduledIds.length === 0) {
         rawData = [];
       } else {
-        // Now get candidate assessments + populate candidate name
         rawData = await CandidateAssessment.find(
           { scheduledAssessmentId: { $in: scheduledIds } },
-          {
-            ...projection,
-            candidateId: 1,
-            totalScore: 1,
-            status: 1,
-            startedAt: 1,
-            endedAt: 1,
-            progress: 1,
-            sections: 1,
-          }
+          { ...projection, candidateId: 1, totalScore: 1, status: 1, startedAt: 1, endedAt: 1, progress: 1 }
         )
-          .populate({
-            path: "candidateId",
-            select: "FirstName LastName Email",
-          })
+          .populate({ path: "candidateId", select: "FirstName LastName Email" })
           .populate({
             path: "scheduledAssessmentId",
-            select: "assessmentId expiryAt status",
-            populate: {
-              path: "assessmentId",
-              select: "AssessmentTitle",
-            },
+            select: "assessmentId expiryAt",
+            populate: { path: "assessmentId", select: "AssessmentTitle" }
           })
           .lean();
 
-        // Flatten & enrich data for frontend
         rawData = rawData.map(ca => {
-          const candidate = ca.candidateId || {};
-          const sched = ca.scheduledAssessmentId || {};
-          const assessment = sched.assessmentId || {};
-
+          const c = ca.candidateId || {};
+          const s = ca.scheduledAssessmentId || {};
+          const a = s.assessmentId || {};
           return {
             _id: ca._id,
             id: ca._id.toString(),
-            candidateName: `${candidate.FirstName || ""} ${candidate.LastName || ""}`.trim() || "Unknown Candidate",
-            candidateEmail: candidate.Email || "-",
-            assessmentTitle: assessment.AssessmentTitle || "Unknown Assessment",
+            candidateName: `${c.FirstName || ""} ${c.LastName || ""}`.trim() || "Unknown",
+            candidateEmail: c.Email || "",
+            assessmentTitle: a.AssessmentTitle || "Unknown",
             score: ca.totalScore || 0,
-            totalQuestions: ca.sections?.reduce((sum, s) => sum + (s.Answers?.length || 0), 0) || 0,
             status: ca.status,
-            scheduledAt: sched.createdAt,
-            expiryAt: sched.expiryAt,
+            scheduledAt: s.createdAt,
+            expiryAt: s.expiryAt,
             startedAt: ca.startedAt,
             completedAt: ca.endedAt,
             progress: ca.progress || 0,
-            durationTaken: ca.endedAt && ca.startedAt
-              ? Math.round((new Date(ca.endedAt) - new Date(ca.startedAt)) / 60000) + " mins"
-              : "-",
             createdAt: ca.createdAt,
           };
         });
       }
     }
-    // DEFAULT CASE: All other collections (positions, candidates, etc.)
     else {
       rawData = await Model.find(
         { ...permissionQuery, ...finalQuery },
@@ -630,7 +572,7 @@ const generateReport = async (req, res) => {
       ).lean();
     }
 
-    // CLIENT-SIDE SORT (safe for Cosmos DB)
+    // ALWAYS SORT IN JAVASCRIPT — COSMOS DB SAFE
     const sortedData = rawData
       .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
       .slice(0, 2000);
