@@ -106,7 +106,7 @@ const KanbanBoard = ({ data, onGenerate, onShare, loadingId }) => {
                           <span>
                             {loadingId === item.id
                               ? "Generating Report..."
-                              : "Generate Report"}
+                              : "Generate"}
                           </span>
                         </button>
                         <button
@@ -117,7 +117,7 @@ const KanbanBoard = ({ data, onGenerate, onShare, loadingId }) => {
                           <span>
                             {loadingId === item.id
                               ? "Share Report..."
-                              : "Share Report"}
+                              : "Share"}
                           </span>
                         </button>
                       </div>
