@@ -880,7 +880,7 @@ const ReportsTable = ({
 
   return (
     <>
-      <div className="bg-white shadow-sm rounded-xl border border-gray-200">
+      <div className="bg-white shadow-sm rounded-t-xl border border-gray-200 mb-12">
         <div className="px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-gray-200">
           <h3 className="text-lg font-semibold text-custom-blue">
             {title ||
@@ -1033,7 +1033,7 @@ const ReportsTable = ({
                                 onShare?.(item);
                                 setOpenMenuId(null);
                               }}
-                              className="w-full px-4 py-2 text-left text-green-600 text-sm hover:bg-green-500/10 flex items-center gap-2"
+                              className="w-full px-4 py-2 text-left text-custom-blue text-sm hover:bg-custom-blue/10 flex items-center gap-2"
                             >
                               <Share2 className="w-4 h-4" />
                               Share
