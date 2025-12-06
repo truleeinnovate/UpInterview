@@ -53,19 +53,62 @@ const TaskForm = ({
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
-  const { candidateData } = useCandidates({
-    candidateLimit: Infinity,
-  });
-  const { positionData } = usePositions({
-    limit: Infinity,
-  });
-  const { assessmentData } = useAssessments({
-    limit: Infinity,
-  });
-  const { interviewData } = useInterviews({}, 1, Infinity);
+  const [recordSearch, setRecordSearch] = useState("");
+  const [debouncedRecordSearch, setDebouncedRecordSearch] = useState("");
 
-  const { mockinterviewData } = useMockInterviews({
-    limit: Infinity,
+  const DROPDOWN_LIMIT = 10;
+  const [candidateLimit, setCandidateLimit] = useState(DROPDOWN_LIMIT);
+  const [positionLimit, setPositionLimit] = useState(DROPDOWN_LIMIT);
+  const [assessmentLimit, setAssessmentLimit] = useState(DROPDOWN_LIMIT);
+  const [interviewLimit, setInterviewLimit] = useState(DROPDOWN_LIMIT);
+  const [mockLimit, setMockLimit] = useState(DROPDOWN_LIMIT);
+  const [isRecordMenuOpen, setIsRecordMenuOpen] = useState(false);
+
+  const {
+    candidateData,
+    totalCandidates,
+    isQueryLoading: isCandidateLoading,
+  } = useCandidates({
+    page: 1,
+    limit: candidateLimit,
+    ...(debouncedRecordSearch && { search: debouncedRecordSearch }),
+  });
+  const {
+    positionData,
+    total: totalPositions,
+    isQueryLoading: isPositionLoading,
+  } = usePositions({
+    page: 1,
+    limit: positionLimit,
+    ...(debouncedRecordSearch && { searchQuery: debouncedRecordSearch }),
+  });
+  const {
+    assessmentData,
+    totalCount: totalAssessments,
+    isQueryLoading: isAssessmentLoading,
+  } = useAssessments({
+    page: 0,
+    limit: assessmentLimit,
+    ...(debouncedRecordSearch && { search: debouncedRecordSearch }),
+  });
+  const {
+    interviewData,
+    total: totalInterviews,
+    isQueryLoading: isInterviewLoading,
+  } = useInterviews(
+    debouncedRecordSearch ? { searchQuery: debouncedRecordSearch } : {},
+    1,
+    interviewLimit
+  );
+
+  const {
+    mockinterviewData,
+    totalCount: totalMockInterviews,
+    isQueryLoading: isMockLoading,
+  } = useMockInterviews({
+    page: 1,
+    limit: mockLimit,
+    ...(debouncedRecordSearch && { search: debouncedRecordSearch }),
   });
 
   // const { usersRes } = useCustomContext();
@@ -78,6 +121,15 @@ const TaskForm = ({
   const createTaskMutation = useCreateTask();
   const updateTaskMutation = useUpdateTask();
   const isSaving = createTaskMutation.isPending || updateTaskMutation.isPending;
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedRecordSearch(recordSearch.trim());
+    }, 300);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [recordSearch]);
 
   useEffect(() => {
     const fetchOwnerData = async () => {
@@ -191,11 +243,16 @@ const TaskForm = ({
 
   const handleCategorySelectRelatedTo = (category) => {
     setSelectedCategoryRelatedTo(category);
+    setSelectedOptionIdRelatedTo("");
+    setRecordSearch("");
+    setDebouncedRecordSearch("");
     setFormData((prevFormData) => ({
       ...prevFormData,
       relatedTo: {
         ...prevFormData.relatedTo,
         objectName: category, // Update objectName in formData
+        recordId: "",
+        recordName: "",
       },
     }));
     setErrors((prevErrors) => ({
@@ -203,6 +260,14 @@ const TaskForm = ({
       relatedToCategory: "", // Clear the error for the category
     }));
   };
+
+  useEffect(() => {
+    setCandidateLimit(DROPDOWN_LIMIT);
+    setPositionLimit(DROPDOWN_LIMIT);
+    setAssessmentLimit(DROPDOWN_LIMIT);
+    setInterviewLimit(DROPDOWN_LIMIT);
+    setMockLimit(DROPDOWN_LIMIT);
+  }, [debouncedRecordSearch, selectedCategoryRelatedTo]);
 
   const handleOptionSelectRelatedTo = (name, id) => {
     setSelectedOptionIdRelatedTo(id);
@@ -233,34 +298,39 @@ const TaskForm = ({
   };
 
   const getOptionsForSelectedCategory = () => {
+    let options = [];
+
     switch (selectedCategoryRelatedTo) {
       case "Candidates":
-        return candidateData.map((candidate) => ({
+        options = candidateData.map((candidate) => ({
           name:
             `${candidate.FirstName} ${candidate.LastName}` ||
             "Unnamed Candidate",
           id: candidate._id,
         }));
+        break;
       case "Positions":
-        return positionData.map((position) => ({
+        options = positionData.map((position) => ({
           name: position.title || position.name || "Unnamed Position",
           id: position._id,
         }));
+        break;
       // case "Team":
       //   return teams.map((team) => ({
       //     name: team.name || team.LastName || "Unnamed Team",
       //     id: team._id
       //   }));
       case "Interviews":
-        return interviewData.map((interview) => ({
+        options = interviewData.map((interview) => ({
           name:
             interview.candidateId?.FirstName ||
             interview.name ||
             "Unnamed Interview",
           id: interview._id,
         }));
+        break;
       case "MockInterviews":
-        return mockinterviewData
+        options = mockinterviewData
           ? mockinterviewData?.map((mock) => ({
               name:
                 `${mock?.mockInterviewCode}  ${mock?.rounds[0]?.roundTitle}` ||
@@ -268,46 +338,109 @@ const TaskForm = ({
               id: mock?._id,
             }))
           : [];
+        break;
       case "Assessments":
-        return assessmentData
-          ?.sort((a, b) => {
-            if (a.type === "custom" && b.type === "standard") return -1;
-            if (a.type === "standard" && b.type === "custom") return 1;
-            return 0;
-          })
-          .map((assessment) => ({
-            label: (
-              <div className="flex justify-between items-center w-full">
-                <span className="text-gray-800">
-                  {capitalizeFirstLetter(assessment?.AssessmentTitle) ||
-                    "Unnamed Assessment"}
-                </span>
+        options =
+          assessmentData
+            ?.sort((a, b) => {
+              if (a.type === "custom" && b.type === "standard") return -1;
+              if (a.type === "standard" && b.type === "custom") return 1;
+              return 0;
+            })
+            .map((assessment) => ({
+              label: (
+                <div className="flex justify-between items-center w-full">
+                  <span className="text-gray-800">
+                    {capitalizeFirstLetter(assessment?.AssessmentTitle) ||
+                      "Unnamed Assessment"}
+                  </span>
 
-                <span
-                  className={
-                    "text-md " +
-                    (assessment?.type === "custom"
-                      ? "text-custom-blue"
-                      : "text-green-600")
-                  }
-                >
-                  {assessment?.type
-                    ? capitalizeFirstLetter(assessment.type)
-                    : ""}
-                </span>
-              </div>
-            ),
+                  <span
+                    className={
+                      "text-md " +
+                      (assessment?.type === "custom"
+                        ? "text-custom-blue"
+                        : "text-green-600")
+                    }
+                  >
+                    {assessment?.type
+                      ? capitalizeFirstLetter(assessment.type)
+                      : ""}
+                  </span>
+                </div>
+              ),
 
-            // 👇 ONLY SAVE TEXT, NOT JSX
-            name: `${assessment?.AssessmentTitle} (${assessment?.type})`,
-            //   name:
-            //     assessment.AssessmentTitle + assessment.type ||
-            //     "Unnamed Assessment",
-            id: assessment._id,
-          }));
-
+              // 👇 ONLY SAVE TEXT, NOT JSX
+              name: `${assessment?.AssessmentTitle} (${assessment?.type})`,
+              //   name:
+              //     assessment.AssessmentTitle + assessment.type ||
+              //     "Unnamed Assessment",
+              id: assessment._id,
+            })) || [];
+        break;
       default:
-        return [];
+        options = [];
+    }
+
+    const currentRelated = formData?.relatedTo || {};
+    if (
+      currentRelated.objectName === selectedCategoryRelatedTo &&
+      currentRelated.recordId &&
+      !options.some((opt) => opt.id === currentRelated.recordId)
+    ) {
+      options = [
+        ...options,
+        {
+          id: currentRelated.recordId,
+          name:
+            currentRelated.recordName ||
+            (selectedCategoryRelatedTo === "Candidates"
+              ? "Unnamed Candidate"
+              : selectedCategoryRelatedTo === "Positions"
+              ? "Unnamed Position"
+              : selectedCategoryRelatedTo === "Interviews"
+              ? "Unnamed Interview"
+              : selectedCategoryRelatedTo === "MockInterviews"
+              ? "Unnamed Mock Interview"
+              : selectedCategoryRelatedTo === "Assessments"
+              ? "Unnamed Assessment"
+              : "Unnamed Record"),
+        },
+      ];
+    }
+
+    return options;
+  };
+
+  const handleRecordMenuScrollToBottom = () => {
+    switch (selectedCategoryRelatedTo) {
+      case "Candidates":
+        if (isCandidateLoading) return;
+        if (!totalCandidates || candidateLimit >= totalCandidates) return;
+        setCandidateLimit((prev) => prev + DROPDOWN_LIMIT);
+        break;
+      case "Positions":
+        if (isPositionLoading) return;
+        if (!totalPositions || positionLimit >= totalPositions) return;
+        setPositionLimit((prev) => prev + DROPDOWN_LIMIT);
+        break;
+      case "Interviews":
+        if (isInterviewLoading) return;
+        if (!totalInterviews || interviewLimit >= totalInterviews) return;
+        setInterviewLimit((prev) => prev + DROPDOWN_LIMIT);
+        break;
+      case "MockInterviews":
+        if (isMockLoading) return;
+        if (!totalMockInterviews || mockLimit >= totalMockInterviews) return;
+        setMockLimit((prev) => prev + DROPDOWN_LIMIT);
+        break;
+      case "Assessments":
+        if (isAssessmentLoading) return;
+        if (!totalAssessments || assessmentLimit >= totalAssessments) return;
+        setAssessmentLimit((prev) => prev + DROPDOWN_LIMIT);
+        break;
+      default:
+        break;
     }
   };
 
@@ -381,26 +514,30 @@ const TaskForm = ({
         res = await createTaskMutation.mutateAsync(taskData);
       }
 
-      if (
-        res.status === "Created successfully" ||
-        res.status === "Task updated successfully" ||
-        res.status === "no_changes"
-      ) {
-        if (res?.status === "Created successfully") {
-          notify.success("Task created successfully");
-        } else if (
-          res?.status === "Task updated successfully" ||
-          res?.status === "no_changes"
-        ) {
-          notify.success("Task updated successfully");
-        } else {
-          notify.error("Failed to save task");
-        }
-        setTimeout(() => {
-          onTaskAdded();
-          onClose();
-        }, 1000);
+      const status = res?.status;
+      const isKnownSuccess =
+        status === "Created successfully" ||
+        status === "Task updated successfully" ||
+        status === "no_changes";
+
+      if (!isKnownSuccess && status && status !== "error") {
+        // Backend returned an unexpected non-error status string, still treat as success
+        notify.success(taskId ? "Task updated successfully" : "Task created successfully");
+      } else if (status === "Created successfully") {
+        notify.success("Task created successfully");
+      } else if (status === "Task updated successfully" || status === "no_changes") {
+        notify.success("Task updated successfully");
+      } else if (status === "error") {
+        notify.error("Failed to save task");
+      } else {
+        // Fallback for any other truthy success response
+        notify.success(taskId ? "Task updated successfully" : "Task created successfully");
       }
+
+      setTimeout(() => {
+        onTaskAdded();
+        onClose();
+      }, 1000);
     } catch (error) {
       console.error("Error saving task:", error);
 
@@ -705,10 +842,18 @@ const TaskForm = ({
                         required
                         name="relatedToCategory"
                         value={selectedCategoryRelatedTo}
-                        options={(categoriesRelatedTo || []).map((c) => ({
-                          value: c,
-                          label: c,
-                        }))}
+                        options={(categoriesRelatedTo || [])
+                          .filter((c) => {
+                            if (!organization) return true;
+                            if (c !== "MockInterviews") return true;
+                            const currentObjectName =
+                              formData?.relatedTo?.objectName;
+                            return currentObjectName === "MockInterviews";
+                          })
+                          .map((c) => ({
+                            value: c,
+                            label: c,
+                          }))}
                         onChange={(e) =>
                           handleCategorySelectRelatedTo(e.target.value)
                         }
@@ -734,6 +879,47 @@ const TaskForm = ({
                           );
                           handleOptionSelectRelatedTo(opt?.name || "", id);
                         }}
+                        loading={
+                          selectedCategoryRelatedTo === "Candidates"
+                            ? isCandidateLoading
+                            : selectedCategoryRelatedTo === "Positions"
+                            ? isPositionLoading
+                            : selectedCategoryRelatedTo === "Interviews"
+                            ? isInterviewLoading
+                            : selectedCategoryRelatedTo === "MockInterviews"
+                            ? isMockLoading
+                            : selectedCategoryRelatedTo === "Assessments"
+                            ? isAssessmentLoading
+                            : false
+                        }
+                        onMenuOpen={() => setIsRecordMenuOpen(true)}
+                        onMenuClose={() => {
+                          const isLoadingCurrent =
+                            selectedCategoryRelatedTo === "Candidates"
+                              ? isCandidateLoading
+                              : selectedCategoryRelatedTo === "Positions"
+                              ? isPositionLoading
+                              : selectedCategoryRelatedTo === "Interviews"
+                              ? isInterviewLoading
+                              : selectedCategoryRelatedTo === "MockInterviews"
+                              ? isMockLoading
+                              : selectedCategoryRelatedTo === "Assessments"
+                              ? isAssessmentLoading
+                              : false;
+
+                          if (isLoadingCurrent) {
+                            setIsRecordMenuOpen(true);
+                          } else {
+                            setIsRecordMenuOpen(false);
+                          }
+                        }}
+                        menuIsOpen={isRecordMenuOpen}
+                        onInputChange={(inputValue, actionMeta) => {
+                          if (actionMeta.action === "input-change") {
+                            setRecordSearch(inputValue || "");
+                          }
+                        }}
+                        onMenuScrollToBottom={handleRecordMenuScrollToBottom}
                         error={errors.relatedToOption}
                       />
                     </div>
@@ -794,13 +980,14 @@ const TaskForm = ({
                 <div className="flex justify-end space-x-3">
                   {/* v1.0.5 ----------------------------------------> */}
                   <button
+                    type="button"
                     onClick={onClose}
                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     Cancel
                   </button>
                   <LoadingButton
-                    onClick={handleSubmit}
+                    type="submit"
                     isLoading={isSaving}
                     loadingText={taskId ? "Updating..." : "Creating..."}
                   >
