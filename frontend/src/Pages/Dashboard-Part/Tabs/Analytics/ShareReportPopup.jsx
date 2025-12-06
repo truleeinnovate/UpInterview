@@ -430,7 +430,7 @@ const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
   };
 
   const tabOptions = [
-    { label: "Roles", value: "roles" },
+    { label: "Role", value: "roles" },
     { label: "Users", value: "users" },
   ];
   // ------------------------------------------------------
@@ -456,12 +456,12 @@ const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
         </div>
         <div className="flex sm:flex-col md:flex-col sm:justify-start md:justify-start justify-between items-center gap-4 mb-6 px-6 w-full">
           {/* SEARCH + DROPDOWN COMBINED */}
-          <div className="w-full">
+          <div className="w-[70%]">
             <DropdownWithSearchField
               name={activeTab}
               placeholder={
                 activeTab === "roles"
-                  ? "Search Roles"
+                  ? "Search Role"
                   : "Search Username, Email"
               }
               value={activeTab === "roles" ? selectedRoles : selectedUsers}
@@ -474,7 +474,7 @@ const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
           </div>
 
           {/* DROPDOWN SELECTOR */}
-          <div className="w-full md:w-40">
+          <div className="w-[30%] md:w-40">
             <DropdownWithSearchField
               value={activeTab}
               options={tabOptions}
