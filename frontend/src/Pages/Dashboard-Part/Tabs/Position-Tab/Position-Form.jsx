@@ -15,14 +15,7 @@ import AssessmentDetails from "./AssessmentType";
 import TechnicalType from "./TechnicalType";
 import Cookies from "js-cookie";
 import { validateForm } from "../../../../utils/PositionValidation.js";
-import {
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  Info,
-  Search,
-  Users,
-} from "lucide-react";
+
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput.jsx";
@@ -38,6 +31,8 @@ import DropdownWithSearchField from "../../../../Components/FormFields/DropdownW
 import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
 import InputField from "../../../../Components/FormFields/InputField";
 import DescriptionField from "../../../../Components/FormFields/DescriptionField";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 // v1.0.1 ---------------------------------------------------------------------------->
 
 const PositionForm = ({ mode, onClose, isModal = false }) => {
@@ -109,6 +104,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     NoofPositions: "",
     Location: "",
     externalId: "",
+    status: "opened",
   });
   const [isEdit, setIsEdit] = useState(false);
   const navigate = useNavigate();
@@ -130,6 +126,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [hasMovedToRounds, setHasMovedToRounds] = useState(false);
   const [currentStage, setCurrentStage] = useState("basic");
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
+  const STATUS_OPTIONS = ["opened", "closed", "hold", "cancelled"];
 
   // Handle click outside company dropdown
   useEffect(() => {
@@ -210,6 +207,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         Location: selectedPosition?.Location || "",
         externalId: selectedPosition?.externalId || "",
         template: matchingTemplate || {},
+        status: selectedPosition?.status || "",
+        // rounds: selectedPosition?.rounds || [],
+        // rounds: selectedPosition?.rounds?.map((round) => ({
+        //   ...round,
+        //   _id: round._id || "",
+        // })) || [],
         // template: matchingTemplate
         //   ? {
         //     ...matchingTemplate
@@ -236,6 +239,30 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positionData, id, companies, templatesData]);
+
+  const statusOptions = STATUS_OPTIONS.map((s) => ({
+    value: s,
+    label: capitalizeFirstLetter(s),
+  }));
+
+  // const openStatusModal = (row) => {
+  //   setStatusTargetRow(row);
+  //   setStatusValue(row?.status);
+  //   setIsStatusModalOpen(true);
+  // };
+
+  // const closeStatusModal = () => {
+  //   setIsStatusModalOpen(false);
+  //   setStatusTargetRow(null);
+  // };
+
+  // const confirmStatusUpdate = async () => {
+  //   // if (!statusTargetRow) return;
+  //   // await handleStatusChange(statusTargetRow, statusValue);
+  //   // closeStatusModal();
+  //   formData.status = statusValue;
+  //   // closeStatusModal();
+  // };
 
   const isNextEnabled = () => {
     if (currentStep === 0) {
@@ -581,8 +608,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       templateId: dataToSubmit.template?._id || null,
       rounds: dataToSubmit?.template?.rounds || [],
       type: dataToSubmit?.template?.type || "",
+      status: dataToSubmit?.status || "",
+      // rounds: dataToSubmit.rounds || [],
+      // rounds: dataToSubmit?.template?.rounds || [],
     };
-    console.log("basicdetails", basicdetails);
+
+    console.log("basicdetails to submit", basicdetails);
 
     try {
       // let response;
@@ -1370,10 +1401,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       />
                     </div>
 
-                    
                     {/* Select Template */}
-                    <div className="grid sm:grid-cols-1 grid-cols-2">
-                      <div className="relative">
+                    <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                      <div>
                         <DropdownWithSearchField
                           value={formData.template?._id || ""}
                           options={templateOptions}
@@ -1442,8 +1472,52 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           </button>
                         )}
                       </div>
-                      {/* //v1.0.5 Ranjith <-----------------------------------> */}
+
+                      <div>
+                        <h3 className="text-sm font-semibold mb-1">
+                          Change Status
+                        </h3>
+                        <div>
+                          <DropdownSelect
+                            value={statusOptions.find(
+                              (opt) => opt.value === formData.status
+                            )} // match current selection
+                            onChange={(selected) => {
+                              formData.status = selected.value;
+                              setFormData({ ...formData });
+                              console.log(selected.value);
+                            }} // update state with value
+                            // options={statusOptions}
+                            options={statusOptions.map((option) => ({
+                              ...option,
+                              label: capitalizeFirstLetter(option.label),
+                            }))}
+                          />
+                        </div>
+                        {/* <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={closeStatusModal}
+                            className="px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-700"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={confirmStatusUpdate}
+                            disabled={
+                              isMutationLoading ||
+                              (statusTargetRow &&
+                                updatingStatusId === statusTargetRow._id)
+                            }
+                            className="px-3 py-1.5 text-sm rounded bg-custom-blue text-white disabled:opacity-50"
+                          >
+                            Update
+                          </button>
+                        </div> */}
+                      </div>
                     </div>
+
                     {/* v1.0.2 ---------------------------------------------------> */}
                     <DescriptionField
                       value={formData.additionalNotes}
