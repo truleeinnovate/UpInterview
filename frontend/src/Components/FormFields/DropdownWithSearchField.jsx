@@ -24,6 +24,8 @@ const DropdownWithSearchField = forwardRef(
       label,
       required = false,
       onMenuOpen,
+      onMenuClose,
+      menuIsOpen,
       isMulti = false,
       loading = false,
       onKeyDown,
@@ -31,6 +33,8 @@ const DropdownWithSearchField = forwardRef(
       creatable = false,
       allowCreateOnEnter = false, // New prop to control create on enter behavior
       autoComplete,
+      onInputChange,
+      onMenuScrollToBottom,
     },
     ref
   ) => {
@@ -250,6 +254,11 @@ const DropdownWithSearchField = forwardRef(
               allowCreateOnEnter={allowCreateOnEnter}
               onKeyDown={handleKeyDown}
               onMenuOpen={onMenuOpen}
+              onMenuClose={onMenuClose}
+              menuIsOpen={menuIsOpen}
+              onInputChange={onInputChange}
+              onMenuScrollToBottom={onMenuScrollToBottom}
+              closeMenuOnScroll={false}
               isLoading={loading}
             />
           </div>
