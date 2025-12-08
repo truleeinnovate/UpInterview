@@ -56,7 +56,7 @@ const TaskForm = ({
   const [recordSearch, setRecordSearch] = useState("");
   const [debouncedRecordSearch, setDebouncedRecordSearch] = useState("");
 
-  const DROPDOWN_LIMIT = 10;
+  const DROPDOWN_LIMIT = 50;
   const [candidateLimit, setCandidateLimit] = useState(DROPDOWN_LIMIT);
   const [positionLimit, setPositionLimit] = useState(DROPDOWN_LIMIT);
   const [assessmentLimit, setAssessmentLimit] = useState(DROPDOWN_LIMIT);

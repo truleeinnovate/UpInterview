@@ -488,58 +488,22 @@ const getCandidateById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    const {
+      actingAsUserId,
+      actingAsTenantId,
+    } = res.locals.auth;
+
+    if (!actingAsUserId || !actingAsTenantId) {
+      return res.status(400).json({ message: "OwnerId or TenantId ID is required" });
+    }
+
     if (!id) {
       return res.status(400).json({ message: "Candidate ID is required" });
     }
 
-    res.locals.loggedByController = true;
-
-    const {
-      effectivePermissions,
-      inheritedRoleIds,
-      effectivePermissions_RoleType,
-      effectivePermissions_RoleName,
-      tenantId,
-      userId,
-    } = res.locals;
-
-    const canView = await hasPermission(
-      effectivePermissions?.Candidates,
-      "View"
-    );
-
-    if (!canView || !userId || !tenantId) {
-      return res.status(403).json({
-        message: "Forbidden: missing Candidates.View permission",
-      });
-    }
+    
 
     let query = { _id: id };
-
-    const roleType = effectivePermissions_RoleType;
-    const roleName = effectivePermissions_RoleName;
-
-    if (roleType === "individual") {
-      query.ownerId = userId;
-    } else if (roleType === "organization" && roleName !== "Admin") {
-      if (inheritedRoleIds?.length > 0) {
-        const accessibleUsers = await Users.find({
-          tenantId,
-          roleId: { $in: inheritedRoleIds },
-        }).select("_id");
-
-        const userIds = accessibleUsers.map((user) => user._id);
-        userIds.push(userId);
-
-        query.ownerId = {
-          $in: [...new Set(userIds.map((id) => id.toString()))],
-        };
-      } else {
-        query.ownerId = userId;
-      }
-    } else if (roleType === "organization" && roleName === "Admin") {
-      query.tenantId = tenantId;
-    }
 
     const candidate = await Candidate.findOne(query).lean();
 

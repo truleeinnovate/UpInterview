@@ -3,13 +3,13 @@ const { getCandidates,addCandidatePostCall,updateCandidatePatchCall,getCandidate
 
 const router = express.Router();
 const loggingService = require('../middleware/loggingService.js');
-const { permissionMiddleware } = require('../middleware/permissionMiddleware.js');
+
 
 router.post('/', loggingService.internalLoggingMiddleware, loggingService.FeedsMiddleware, addCandidatePostCall);
 
 router.patch('/:id',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, updateCandidatePatchCall);
 // router.get('/',getCandidates);
-router.get('/details/:id', permissionMiddleware, getCandidateById);
+router.get('/details/:id', getCandidateById);
 
 //router.get('/details/positions/:id',getCandidatePositionById);
 
