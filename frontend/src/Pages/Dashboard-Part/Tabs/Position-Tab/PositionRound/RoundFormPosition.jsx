@@ -61,14 +61,22 @@ function RoundFormPosition() {
   const lastName = formatName(userProfile?.lastName);
   const contactId = formatName(singleContact?.contactId);
 
+  const ASSESSMENT_DROPDOWN_LIMIT = 50;
+  const [assessmentLimit, setAssessmentLimit] = useState(
+    ASSESSMENT_DROPDOWN_LIMIT
+  );
   const [assessmentSearch, setAssessmentSearch] = useState("");
+
   const {
     assessmentData,
+    totalCount: totalAssessments,
+    isQueryLoading: isAssessmentQueryLoading,
     fetchAssessmentQuestions,
     useAssessmentById,
   } = useAssessments({
-    limit: 100,
-    search: assessmentSearch,
+    page: 0,
+    limit: assessmentLimit,
+    ...(assessmentSearch && { search: assessmentSearch.trim() }),
   });
   const { isMutationLoading, addRounds } = usePositions({
     limit: 1,
@@ -127,10 +135,9 @@ function RoundFormPosition() {
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [assessmentQuestionsLoading, setAssessmentQuestionsLoading] =
     useState(false);
-  const [filteredAssessments, setFilteredAssessments] = useState([]);
-  const [hasFiltered, setHasFiltered] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isCustomRoundTitle, setIsCustomRoundTitle] = useState(false);
+  const initializedPositionRef = useRef(false);
 
   const clearError = (fieldName) => {
     setErrors((prev) => ({
@@ -314,11 +321,42 @@ function RoundFormPosition() {
   const editingAssessmentTitle = editingAssessment?.AssessmentTitle || "";
 
   const assessmentOptions = React.useMemo(() => {
-    const baseOptions = Array.isArray(filteredAssessments)
-      ? filteredAssessments.map((a) => ({
-          value: a._id,
-          label: a.AssessmentTitle,
-        }))
+    const baseOptions = Array.isArray(assessmentData)
+      ? assessmentData.map((a) => {
+          const titleLabel = a.AssessmentTitle || "Untitled Assessment";
+          const typeLabel = a.type
+            ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
+            : "";
+
+          return {
+            value: a._id,
+            label: (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "98%",
+                }}
+              >
+                <span>{titleLabel}</span>
+                {typeLabel && (
+                  <span
+                    className={
+                      "text-md " +
+                      (a.type === "custom"
+                        ? "text-custom-blue"
+                        : "text-green-600")
+                    }
+                  >
+                    {typeLabel}
+                  </span>
+                )}
+              </div>
+            ),
+            searchLabel: titleLabel,
+          };
+        })
       : [];
 
     if (editingAssessmentId && editingAssessment) {
@@ -327,23 +365,61 @@ function RoundFormPosition() {
       );
 
       if (!exists) {
+        const editingTitleLabel =
+          editingAssessment.AssessmentTitle ||
+          formData.assessmentTemplate?.assessmentName ||
+          "Untitled Assessment";
+
+        const editingTypeLabel = editingAssessment.type
+          ? editingAssessment.type.charAt(0).toUpperCase() +
+            editingAssessment.type.slice(1)
+          : "";
+
         baseOptions.push({
           value: editingAssessmentId,
-          label:
-            editingAssessment.AssessmentTitle ||
-            formData.assessmentTemplate?.assessmentName ||
-            "Untitled Assessment",
+          label: (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "98%",
+              }}
+            >
+              <span>{editingTitleLabel}</span>
+              {editingTypeLabel && (
+                <span
+                  className={
+                    "text-md " +
+                    (editingAssessment.type === "custom"
+                      ? "text-custom-blue"
+                      : "text-green-600")
+                  }
+                >
+                  {editingTypeLabel}
+                </span>
+              )}
+            </div>
+          ),
+          searchLabel: editingTitleLabel,
         });
       }
     }
 
     return baseOptions;
   }, [
-    filteredAssessments,
+    assessmentData,
     editingAssessmentId,
     editingAssessment,
     formData.assessmentTemplate?.assessmentName,
   ]);
+
+  const handleAssessmentMenuScrollToBottom = () => {
+    if (isAssessmentQueryLoading) return;
+    if (!totalAssessments || assessmentLimit >= totalAssessments) return;
+
+    setAssessmentLimit((prev) => prev + ASSESSMENT_DROPDOWN_LIMIT);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -359,9 +435,12 @@ function RoundFormPosition() {
   }, []);
 
   useEffect(() => {
+    if (initializedPositionRef.current) return;
     if (!isPositionContext || !positionId || !fetchedPosition) {
       return;
     }
+
+    initializedPositionRef.current = true;
 
     try {
       const foundPosition = fetchedPosition;
@@ -522,37 +601,8 @@ function RoundFormPosition() {
     });
   }, [isEditing, editingAssessmentId, editingAssessmentTitle]);
 
-  useEffect(() => {
-    const filterAssessmentsWithQuestions = async () => {
-      if (!position) return;
-
-      // Show loading state while we resolve which assessments actually have questions
-      setHasFiltered(false);
-
-      const results = await Promise.all(
-        assessmentData.map(async (assessment) => {
-          if (!assessment?._id) return null;
-
-          const { data } = await fetchAssessmentQuestions(assessment._id);
-
-          if (Array.isArray(data?.sections) && data.sections.length > 0) {
-            return assessment;
-          }
-
-          return null;
-        })
-      );
-
-      setFilteredAssessments(results.filter(Boolean));
-      setHasFiltered(true);
-    };
-
-    if (position && assessmentData?.length) {
-      filterAssessmentsWithQuestions();
-    } else {
-      setFilteredAssessments([]);
-    }
-  }, [position, assessmentData, fetchAssessmentQuestions]);
+  // Note: assessmentOptions are now built directly from assessmentData
+  // (which is already filtered/paginated by the backend via useAssessments).
 
   const toggleSection = async (sectionId) => {
     // Close all questions in this section when collapsing
@@ -1212,14 +1262,15 @@ function RoundFormPosition() {
                             name="assessmentTemplate"
                             value={formData.assessmentTemplate?.assessmentId}
                             options={assessmentOptions}
-                            loading={!hasFiltered}
+                            loading={isAssessmentQueryLoading}
                             onInputChange={(inputValue, { action }) => {
                               if (action === "input-change") {
                                 setAssessmentSearch(inputValue || "");
                               }
                             }}
+                            onMenuScrollToBottom={handleAssessmentMenuScrollToBottom}
                             onChange={(e) => {
-                              const selected = (filteredAssessments || []).find(
+                              const selected = (assessmentData || []).find(
                                 (a) => a._id === e.target.value
                               );
                               if (selected) {

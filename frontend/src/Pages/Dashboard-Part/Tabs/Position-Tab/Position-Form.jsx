@@ -10,7 +10,7 @@
 // v1.0.7 - Ashok - Improved scroll functionality
 // v1.0.8 - Ashok - Fixed style issues
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import AssessmentDetails from "./AssessmentType";
 import TechnicalType from "./TechnicalType";
 import Cookies from "js-cookie";
@@ -43,12 +43,21 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     limit: 1,
   });
 
+  const TEMPLATE_DROPDOWN_LIMIT = 50;
+  const [templateLimit, setTemplateLimit] = useState(TEMPLATE_DROPDOWN_LIMIT);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [debouncedTemplateSearch, setDebouncedTemplateSearch] = useState("");
+
   const {
     templatesData,
+    totalCount: totalTemplates,
     isQueryLoading: isTemplatesFetching,
     useInterviewtemplateDetails,
   } = useInterviewTemplates({
     type: "interviewtemplates",
+    page: 1,
+    limit: templateLimit,
+    ...(debouncedTemplateSearch && { search: debouncedTemplateSearch }),
   });
   const pageType = "adminPortal";
 
@@ -138,6 +147,18 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [currentStage, setCurrentStage] = useState("basic");
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
   const STATUS_OPTIONS = ["opened", "closed", "hold", "cancelled"];
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedTemplateSearch(templateSearch.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [templateSearch]);
+
+  useEffect(() => {
+    // Reset template limit when search query changes
+    setTemplateLimit(TEMPLATE_DROPDOWN_LIMIT);
+  }, [debouncedTemplateSearch]);
 
   // Handle click outside company dropdown
   useEffect(() => {
@@ -306,43 +327,109 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const locationOptionsRS = (locations || [])
     .map((l) => ({ value: l?.LocationName, label: l?.LocationName }))
     .concat([{ value: "__other__", label: "+ Others" }]);
-  const templateOptions = (templatesData || [])
-    .filter((t) => t?.rounds?.length > 0 && t?.status === "active")
-    .sort((a, b) => {
-      // custom first, standard after
-      if (a.type === "custom" && b.type === "standard") return -1;
-      if (a.type === "standard" && b.type === "custom") return 1;
-      return 0;
-    })
-    .map((t) => ({
-      value: t._id,
-      label: (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            width: "98%",
-          }}
-        >
-          <span>
-            {t.title
-              ? t.title.charAt(0).toUpperCase() + t.title.slice(1)
-              : t.type
-              ? t.type.charAt(0).toUpperCase() + t.type.slice(1)
-              : "Unnamed Template"}
-          </span>
-          <span
-            className={
-              "text-md " +
-              (t.type === "custom" ? "text-custom-blue" : "text-green-600")
-            }
-          >
-            {t.type ? t.type.charAt(0).toUpperCase() + t.type.slice(1) : ""}
-          </span>
-        </div>
-      ),
-    }));
+
+  const templateOptions = useMemo(() => {
+    const baseOptions = (templatesData || [])
+      .filter((t) => t?.rounds?.length > 0 && t?.status === "active")
+      .sort((a, b) => {
+        // custom first, standard after
+        if (a.type === "custom" && b.type === "standard") return -1;
+        if (a.type === "standard" && b.type === "custom") return 1;
+        return 0;
+      })
+      .map((t) => {
+        const titleLabel =
+          t.title
+            ? t.title.charAt(0).toUpperCase() + t.title.slice(1)
+            : t.type
+            ? t.type.charAt(0).toUpperCase() + t.type.slice(1)
+            : "Unnamed Template";
+
+        return {
+          value: t._id,
+          label: (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "98%",
+              }}
+            >
+              <span>{titleLabel}</span>
+              <span
+                className={
+                  "text-md " +
+                  (t.type === "custom"
+                    ? "text-custom-blue"
+                    : "text-green-600")
+                }
+              >
+                {t.type
+                  ? t.type.charAt(0).toUpperCase() + t.type.slice(1)
+                  : ""}
+              </span>
+            </div>
+          ),
+          searchLabel: titleLabel,
+        };
+      });
+
+    // Ensure the edit-mode selected template is always present in options,
+    // even if it's not in the current templatesData page.
+    if (selectedTemplate && selectedTemplate._id) {
+      const exists = baseOptions.some((opt) => opt.value === selectedTemplate._id);
+      if (!exists) {
+        const selectedTitleLabel =
+          selectedTemplate.title
+            ? selectedTemplate.title.charAt(0).toUpperCase() +
+              selectedTemplate.title.slice(1)
+            : selectedTemplate.type
+            ? selectedTemplate.type.charAt(0).toUpperCase() +
+              selectedTemplate.type.slice(1)
+            : "Unnamed Template";
+
+        baseOptions.push({
+          value: selectedTemplate._id,
+          label: (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "98%",
+              }}
+            >
+              <span>{selectedTitleLabel}</span>
+              <span
+                className={
+                  "text-md " +
+                  (selectedTemplate.type === "custom"
+                    ? "text-custom-blue"
+                    : "text-green-600")
+                }
+              >
+                {selectedTemplate.type
+                  ? selectedTemplate.type.charAt(0).toUpperCase() +
+                    selectedTemplate.type.slice(1)
+                  : ""}
+              </span>
+            </div>
+          ),
+          searchLabel: selectedTitleLabel,
+        });
+      }
+    }
+
+    return baseOptions;
+  }, [templatesData, selectedTemplate]);
+
+  const handleTemplateMenuScrollToBottom = () => {
+    if (isTemplatesFetching) return;
+    if (!totalTemplates || templateLimit >= totalTemplates) return;
+
+    setTemplateLimit((prev) => prev + TEMPLATE_DROPDOWN_LIMIT);
+  };
 
   // Generic change handler for shared form fields + live cross-field validation
   const handleChange = (e) => {
@@ -1413,6 +1500,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         <DropdownWithSearchField
                           value={formData.template?._id || ""}
                           options={templateOptions}
+                          onInputChange={(inputValue, actionMeta) => {
+                            if (actionMeta?.action === "input-change") {
+                              setTemplateSearch(inputValue || "");
+                            }
+                          }}
                           // Try adding this prop if it exists
                           formatOptionLabel={(option) => {
                             // If option.label is already JSX, return it
@@ -1452,12 +1544,22 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             );
                           }}
                           onChange={(e) => {
-                            const selectedTemplate = templatesData.find(
-                              (t) => t._id === e.target.value
+                            const templateId = e.target.value;
+
+                            const fromList = (templatesData || []).find(
+                              (t) => t._id === templateId
                             );
+
+                            const resolvedTemplate =
+                              fromList ||
+                              (selectedTemplate &&
+                              selectedTemplate._id === templateId
+                                ? selectedTemplate
+                                : null);
+
                             setFormData({
                               ...formData,
-                              template: selectedTemplate || {},
+                              template: resolvedTemplate || {},
                             });
                           }}
                           error={errors?.template}
@@ -1465,6 +1567,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           name="template"
                           required={false}
                           loading={isTemplatesFetching}
+                          onMenuScrollToBottom={handleTemplateMenuScrollToBottom}
                         />
                         {/* //v1.0.5 Ranjith <-----------------------------------> */}
                         {formData.template?._id && (

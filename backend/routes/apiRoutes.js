@@ -1175,7 +1175,16 @@ router.get(
               });
             }
           } else {
-            let baseQuery = {
+            // Special union mode for template selectors: return BOTH standard templates
+            // and custom templates for this tenant. Support optional pagination using
+            // page/limit similar to the main branch above.
+
+            const pageNum = Math.max(1, parseInt(reqPage) || 1);
+            const limitNum = reqLimit
+              ? Math.max(1, Math.min(100, parseInt(reqLimit)))
+              : 0;
+
+            const baseQuery = {
               $or: [
                 { type: "standard" }, // fetch ALL standard
                 {
@@ -1186,10 +1195,75 @@ router.get(
               ],
             };
 
-            Templatesdata = await DataModel.find(baseQuery).lean();
-            data = {
-              data: Templatesdata,
-            };
+            // Apply the same search filter as the main branch so that
+            // template dropdowns can use server-side search while still
+            // returning the union of standard + tenant-custom templates.
+            let finalQuery = { ...baseQuery };
+            if (search && search.trim()) {
+              const searchRegex = new RegExp(search.trim(), "i");
+              finalQuery.$and = finalQuery.$and || [];
+              finalQuery.$and.push({
+                $or: [
+                  { title: searchRegex },
+                  { interviewTemplateCode: searchRegex },
+                  { description: searchRegex },
+                  { bestFor: searchRegex },
+                ],
+              });
+            }
+
+            if (limitNum > 0) {
+              const skip = (pageNum - 1) * limitNum;
+
+              // Total across both standard + tenant custom templates,
+              // AFTER applying any search filters.
+              const total = await DataModel.countDocuments(finalQuery);
+
+              const templates = await DataModel.find(finalQuery)
+                .populate({
+                  path: "rounds.interviewers",
+                  model: "Contacts",
+                  select: "firstName lastName email",
+                })
+                .populate({
+                  path: "rounds.selectedInterviewers",
+                  model: "Contacts",
+                  select: "firstName lastName email",
+                })
+                .sort({ _id: -1 })
+                .skip(skip)
+                .limit(limitNum)
+                .lean();
+
+              const standardCount = await DataModel.countDocuments({
+                type: "standard",
+              });
+              const customCount = await DataModel.countDocuments({
+                type: "custom",
+                ...query,
+              });
+
+              data = {
+                data: templates,
+                standardCount,
+                customCount,
+                total,
+                totalItems: total,
+                page: pageNum,
+                currentPage: pageNum,
+                totalPages: Math.ceil(total / limitNum),
+                limit: limitNum,
+                itemsPerPage: limitNum,
+                type: "interviewtemplates",
+              };
+            } else {
+              // Fallback: preserve previous behaviour when no limit is provided
+              // (used by older callers that expect the full unpaginated list).
+              Templatesdata = await DataModel.find(finalQuery).lean();
+              data = {
+                data: Templatesdata,
+              };
+            }
           }
 
           break;
