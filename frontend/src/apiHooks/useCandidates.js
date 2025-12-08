@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
 import { config } from "../config";
@@ -317,5 +318,45 @@ export const useCandidates = (filters = {}) => {
     deleteCandidateData: deleteMutation.mutateAsync,
     refetch,
     useCandidatePositions,
+  };
+};
+
+export const useCandidateById = (candidateId) => {
+  const { effectivePermissions } = usePermissions();
+  const hasViewPermission = effectivePermissions?.Candidates?.View;
+
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["candidate", candidateId],
+    queryFn: async () => {
+      const authToken = Cookies.get("authToken") ?? "";
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/candidate/details/${candidateId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+          withCredentials: true,
+        }
+      );
+      return response.data;
+    },
+    enabled: !!candidateId && !!hasViewPermission,
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+  return {
+    candidate: data,
+    isLoading,
+    isError,
+    error,
   };
 };

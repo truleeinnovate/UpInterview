@@ -19,7 +19,10 @@ import { validateForm } from "../../../../utils/PositionValidation.js";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput.jsx";
-import { usePositions } from "../../../../apiHooks/usePositions";
+import {
+  usePositions,
+  usePositionById,
+} from "../../../../apiHooks/usePositions";
 import LoadingButton from "../../../../Components/LoadingButton";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { useInterviewTemplates } from "../../../../apiHooks/useInterviewTemplates.js";
@@ -36,16 +39,17 @@ import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx"
 // v1.0.1 ---------------------------------------------------------------------------->
 
 const PositionForm = ({ mode, onClose, isModal = false }) => {
-  const { positionData, isMutationLoading, addOrUpdatePosition } = usePositions(
-    {
-      limit: Infinity,
-    }
-  );
+  const { isMutationLoading, addOrUpdatePosition } = usePositions({
+    limit: 1,
+  });
 
-  const { templatesData, isQueryLoading: isTemplatesFetching } =
-    useInterviewTemplates({
-      type: "interviewtemplates",
-    });
+  const {
+    templatesData,
+    isQueryLoading: isTemplatesFetching,
+    useInterviewtemplateDetails,
+  } = useInterviewTemplates({
+    type: "interviewtemplates",
+  });
   const pageType = "adminPortal";
 
   const {
@@ -60,6 +64,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   } = useMasterData({}, pageType);
 
   const { id } = useParams();
+  const { position: selectedPosition } = usePositionById(id);
+
+  // Fetch the position's linked interview template by id instead of
+  // relying on the paginated/filtered templatesData list.
+  const { data: selectedTemplate } = useInterviewtemplateDetails(
+    selectedPosition?.templateId
+  );
   const location = useLocation();
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const userId = tokenPayload?.userId;
@@ -164,16 +175,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   }, [currentStage]);
 
   useEffect(() => {
-    if (id) {
-      const selectedPosition = positionData.find((pos) => pos._id === id);
-      setIsEdit(true);
-      console.log("selectedPosition", selectedPosition);
-      const matchingTemplate = templatesData.find(
-        (template) => template?._id === selectedPosition?.templateId
-      );
-      //setPositionId(id);
+    if (!id || !selectedPosition) {
+      return;
+    }
 
-      const companyName = selectedPosition?.companyname || "";
+    setIsEdit(true);
+    
+    const companyName = selectedPosition?.companyname || "";
 
       // Check if the company name exists in the companies list
       // Guard: wait until companies are loaded before deciding custom mode
@@ -194,51 +202,50 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         setIsCustomCompany(true);
       }
 
-      setFormData({
-        title: selectedPosition?.title || "",
-        companyName: companyName,
-        minexperience: selectedPosition?.minexperience || 0,
-        maxexperience: selectedPosition?.maxexperience || 0,
-        minSalary: selectedPosition?.minSalary || "",
-        maxSalary: selectedPosition?.maxSalary || "",
-        jobDescription: selectedPosition?.jobDescription || "",
-        additionalNotes: selectedPosition?.additionalNotes || "",
-        NoofPositions: selectedPosition?.NoofPositions?.toString() || "",
-        Location: selectedPosition?.Location || "",
-        externalId: selectedPosition?.externalId || "",
-        template: matchingTemplate || {},
-        status: selectedPosition?.status || "",
-        // rounds: selectedPosition?.rounds || [],
-        // rounds: selectedPosition?.rounds?.map((round) => ({
-        //   ...round,
-        //   _id: round._id || "",
-        // })) || [],
-        // template: matchingTemplate
-        //   ? {
-        //     ...matchingTemplate
-        //   }
-        //   : {},
-      });
+    setFormData({
+      title: selectedPosition?.title || "",
+      companyName: companyName,
+      minexperience: selectedPosition?.minexperience || 0,
+      maxexperience: selectedPosition?.maxexperience || 0,
+      minSalary: selectedPosition?.minSalary || "",
+      maxSalary: selectedPosition?.maxSalary || "",
+      jobDescription: selectedPosition?.jobDescription || "",
+      additionalNotes: selectedPosition?.additionalNotes || "",
+      NoofPositions: selectedPosition?.NoofPositions?.toString() || "",
+      Location: selectedPosition?.Location || "",
+      externalId: selectedPosition?.externalId || "",
+      template: selectedTemplate || {},
+      status: selectedPosition?.status || "",
+      // rounds: selectedPosition?.rounds || [],
+      // rounds: selectedPosition?.rounds?.map((round) => ({
+      //   ...round,
+      //   _id: round._id || "",
+      // })) || [],
+      // template: matchingTemplate
+      //   ? {
+      //     ...matchingTemplate
+      //   }
+      //   : {},
+    });
 
-      console.log("selectedPosition template", formData?.template);
+     
 
-      const formattedSkills =
-        selectedPosition?.skills?.map((skill) => ({
-          skill: skill.skill || "",
-          experience: skill.experience || "",
-          expertise: skill.expertise || "",
-          _id: skill._id || "",
-        })) || [];
+    const formattedSkills =
+      selectedPosition?.skills?.map((skill) => ({
+        skill: skill.skill || "",
+        experience: skill.experience || "",
+        expertise: skill.expertise || "",
+        _id: skill._id || "",
+      })) || [];
 
-      setEntries(formattedSkills);
-      // setAllSelectedSkills(formattedSkills)
-      setAllSelectedSkills(
-        selectedPosition?.skills?.map((skill) => skill.skill) || []
-      );
-    }
+    setEntries(formattedSkills);
+    // setAllSelectedSkills(formattedSkills)
+    setAllSelectedSkills(
+      selectedPosition?.skills?.map((skill) => skill.skill) || []
+    );
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positionData, id, companies, templatesData]);
+  }, [id, selectedPosition, companies, selectedTemplate]);
 
   const statusOptions = STATUS_OPTIONS.map((s) => ({
     value: s,
@@ -558,8 +565,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         entries || [],
         dataToSubmit.rounds || []
       );
-      console.log("formIsValid", formIsValid);
-      console.log("newErrors", newErrors);
+      
       if (!formIsValid) {
         setErrors(newErrors);
         // v1.0.1 <------------------------------------------------------
@@ -579,6 +585,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         ? parseInt(dataToSubmit?.NoofPositions)
         : null,
       companyname: dataToSubmit.companyName,
+      companyName: dataToSubmit.companyName,
       ...(dataToSubmit.minexperience && {
         minexperience: parseInt(dataToSubmit.minexperience),
       }),
@@ -613,8 +620,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // rounds: dataToSubmit?.template?.rounds || [],
     };
 
-    console.log("basicdetails to submit", basicdetails);
-
+    
     try {
       // let response;
       // if (isEdit && positionId) {
@@ -636,7 +642,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       });
       // Updated Successfully
 
-      console.log("response", response);
+      
       if (response.status === "success") {
         notify.success("Position added successfully");
       } else if (
@@ -692,7 +698,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       }
     } catch (error) {
       // --- MAP BACKEND VALIDATION ERRORS TO FRONTEND ---
-      console.log("error", error);
+      
       // Show error toast
       notify.error(
         error.response?.data?.message ||
@@ -702,7 +708,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
       if (error.response && error.response.status === 400) {
         const backendErrors = error.response.data.errors || {};
-        console.log("backendErrors", backendErrors);
+        
         setErrors(backendErrors);
         scrollToFirstError(backendErrors, fieldRefs);
       } else {
@@ -1485,7 +1491,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             onChange={(selected) => {
                               formData.status = selected.value;
                               setFormData({ ...formData });
-                              console.log(selected.value);
+                             
                             }} // update state with value
                             // options={statusOptions}
                             options={statusOptions.map((option) => ({

@@ -23,7 +23,10 @@ import InternalInterviews from "../../Interview-New/pages/Internal-Or-Outsource/
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import QuestionBank from "../../QuestionBank-Tab/QuestionBank.jsx";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
-import { usePositions } from "../../../../../apiHooks/usePositions";
+import {
+  usePositions,
+  usePositionById,
+} from "../../../../../apiHooks/usePositions";
 import LoadingButton from "../../../../../Components/LoadingButton";
 import {
   useUserProfile,
@@ -57,17 +60,24 @@ function RoundFormPosition() {
   const firstName = formatName(userProfile?.firstName);
   const lastName = formatName(userProfile?.lastName);
   const contactId = formatName(singleContact?.contactId);
-  //console.log(contactId);
 
-  const { assessmentData, fetchAssessmentQuestions } = useAssessments({
-    limit: Infinity,
+  const [assessmentSearch, setAssessmentSearch] = useState("");
+  const {
+    assessmentData,
+    fetchAssessmentQuestions,
+    useAssessmentById,
+  } = useAssessments({
+    limit: 100,
+    search: assessmentSearch,
   });
-  const { positionData, isMutationLoading, addRounds } = usePositions({
-    limit: Infinity,
+  const { isMutationLoading, addRounds } = usePositions({
+    limit: 1,
   });
 
   const { roundId, id } = useParams();
   const positionId = id;
+
+  const { position: fetchedPosition } = usePositionById(positionId);
 
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -291,6 +301,50 @@ function RoundFormPosition() {
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
 
+  const editingAssessmentId =
+    isEditing && roundEditData && roundEditData.assessmentId
+      ? roundEditData.assessmentId
+      : null;
+
+  const { assessmentById: editingAssessment } = useAssessmentById(
+    editingAssessmentId,
+    {}
+  );
+
+  const editingAssessmentTitle = editingAssessment?.AssessmentTitle || "";
+
+  const assessmentOptions = React.useMemo(() => {
+    const baseOptions = Array.isArray(filteredAssessments)
+      ? filteredAssessments.map((a) => ({
+          value: a._id,
+          label: a.AssessmentTitle,
+        }))
+      : [];
+
+    if (editingAssessmentId && editingAssessment) {
+      const exists = baseOptions.some(
+        (opt) => opt.value === editingAssessmentId
+      );
+
+      if (!exists) {
+        baseOptions.push({
+          value: editingAssessmentId,
+          label:
+            editingAssessment.AssessmentTitle ||
+            formData.assessmentTemplate?.assessmentName ||
+            "Untitled Assessment",
+        });
+      }
+    }
+
+    return baseOptions;
+  }, [
+    filteredAssessments,
+    editingAssessmentId,
+    editingAssessment,
+    formData.assessmentTemplate?.assessmentName,
+  ]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -305,153 +359,175 @@ function RoundFormPosition() {
   }, []);
 
   useEffect(() => {
-    const fetchPositionData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        if (isPositionContext && positionId) {
-          const foundPosition = positionData.find(
-            (pos) => pos._id === positionId
-          );
+    if (!isPositionContext || !positionId || !fetchedPosition) {
+      return;
+    }
 
-          if (!foundPosition) {
-            throw new Error("Position not found");
-          }
+    try {
+      const foundPosition = fetchedPosition;
 
-          // Only update rounds if they're different to prevent unnecessary re-renders
-          setPosition(foundPosition || []);
-          setRounds(foundPosition.rounds || []);
+      // Update position and rounds from the fetched position
+      setPosition(foundPosition || []);
+      setRounds(foundPosition.rounds || []);
 
-          if (isEditing) {
-            // Add safety check for foundPosition.rounds
-            const roundEditData = foundPosition.rounds?.find(
-              (r) => r._id === roundId
-            );
+      if (isEditing) {
+        // Add safety check for foundPosition.rounds
+        const roundEditData = foundPosition.rounds?.find(
+          (r) => r._id === roundId
+        );
 
-            const foundGroup = groups?.find(
-              (g) => g?._id === roundEditData?.interviewerGroupId
-            );
+        if (!roundEditData) {
+          throw new Error("Round not found");
+        }
 
-            if (!roundEditData) {
-              throw new Error("Round not found");
-            }
+        const foundGroup = groups?.find(
+          (g) => g?._id === roundEditData?.interviewerGroupId
+        );
 
-            // console.log("roundEditData", roundEditData);
+        // Add fallback empty array for interviewers
+        const interviewers = roundEditData.interviewers || [];
+        const internalInterviewers = interviewers;
 
-            // Add fallback empty array for interviewers
-            const interviewers = roundEditData.interviewers || [];
-            const internalInterviewers = interviewers;
+        setFormData((prev) => ({
+          ...prev,
+          assessmentTemplate:
+            roundEditData.roundTitle === "Assessment" &&
+            roundEditData.assessmentId
+              ? {
+                  assessmentId: roundEditData.assessmentId,
+                  assessmentName: "",
+                }
+              : { assessmentId: "", assessmentName: "" },
+          // roundTitle: roundEditData.roundTitle || '',
+          // customRoundTitle: '',
+          roundTitle: [
+            "Assessment",
+            "Technical",
+            "Final",
+            "HR Interview",
+          ].includes(roundEditData.roundTitle)
+            ? roundEditData.roundTitle
+            : "Other",
+          customRoundTitle: ![
+            "Assessment",
+            "Technical",
+            "Final",
+            "HR Interview",
+          ].includes(roundEditData.roundTitle)
+            ? roundEditData.roundTitle.trim("")
+            : "",
+          interviewMode: roundEditData.interviewMode || "",
+          selectedQuestions: [],
+          instructions: roundEditData.instructions || "",
+          sequence: roundEditData.sequence || 1,
+          interviewQuestionsList: roundEditData.questions || [],
+          // selectedInterviewType: roundEditData.interviewerType || null,
+          interviewers: internalInterviewers || [],
+          // internalInterviewers:internalInterviewers || [],
+          interviewerType: roundEditData.interviewerType || "",
+          scheduledDate: "",
+          duration: roundEditData.duration || 30,
+          interviewerViewType:
+            roundEditData.interviewerType === "Internal"
+              ? roundEditData.interviewerViewType
+              : "individuals",
+          interviewerGroupId: roundEditData?.interviewerGroupId,
+          interviewerGroupName: foundGroup?.name,
+          // if ( && roundEditData.viewType) {
+          // setInterviewerViewType(roundEditData.viewType);
+          // }
+        }));
 
-            setFormData((prev) => ({
-              ...prev,
-              assessmentTemplate:
-                roundEditData.roundTitle === "Assessment" &&
-                roundEditData.assessmentId
-                  ? {
-                      assessmentId: roundEditData.assessmentId,
-                      assessmentName:
-                        assessmentData.find(
-                          (a) => a._id === roundEditData.assessmentId
-                        )?.AssessmentTitle || "",
-                    }
-                  : { assessmentId: "", assessmentName: "" },
-              // roundTitle: roundEditData.roundTitle || '',
-              // customRoundTitle: '',
-              roundTitle: [
-                "Assessment",
-                "Technical",
-                "Final",
-                "HR Interview",
-              ].includes(roundEditData.roundTitle)
-                ? roundEditData.roundTitle
-                : "Other",
-              customRoundTitle: ![
-                "Assessment",
-                "Technical",
-                "Final",
-                "HR Interview",
-              ].includes(roundEditData.roundTitle)
-                ? roundEditData.roundTitle.trim("")
-                : "",
-              interviewMode: roundEditData.interviewMode || "",
-              selectedQuestions: [],
-              instructions: roundEditData.instructions || "",
-              sequence: roundEditData.sequence || 1,
-              interviewQuestionsList: roundEditData.questions || [],
-              // selectedInterviewType: roundEditData.interviewerType || null,
-              interviewers: internalInterviewers || [],
-              // internalInterviewers:internalInterviewers || [],
-              interviewerType: roundEditData.interviewerType || "",
-              scheduledDate: "",
-              duration: roundEditData.duration || 30,
-              interviewerViewType:
-                roundEditData.interviewerType === "Internal"
-                  ? roundEditData.interviewerViewType
-                  : "individuals",
-              interviewerGroupId: roundEditData?.interviewerGroupId,
-              interviewerGroupName: foundGroup?.name,
-              // if ( && roundEditData.viewType) {
-              // setInterviewerViewType(roundEditData.viewType);
-              // }
-            }));
-
-            if (
-              roundEditData.roundTitle === "Assessment" &&
-              roundEditData.assessmentId
-            ) {
-              const assessmentDataForTemplate = {
-                assessmentId: roundEditData.assessmentId,
-                assessmentName:
-                  assessmentData.find(
-                    (a) => a._id === roundEditData.assessmentId
-                  )?.AssessmentTitle || "",
-              };
-              // setAssessmentTemplate(assessmentDataForTemplate);
-              // fetchQuestionsForAssessment(roundEditData.assessmentId);
-              if (roundEditData?.assessmentId) {
-                setAssessmentQuestionsLoading(true);
-                fetchAssessmentQuestions(roundEditData?.assessmentId).then(
-                  ({ data, error }) => {
-                    if (data) {
-                      setAssessmentQuestionsLoading(false);
-                      setSectionQuestions(data?.sections);
-                    } else {
-                      setAssessmentQuestionsLoading(false);
-                      console.error(
-                        "Error fetching assessment questions:",
-                        error
-                      );
-                    }
-                  }
-                );
+        if (
+          roundEditData.roundTitle === "Assessment" &&
+          roundEditData.assessmentId
+        ) {
+          
+          // setAssessmentTemplate(assessmentDataForTemplate);
+          // fetchQuestionsForAssessment(roundEditData.assessmentId);
+          if (roundEditData?.assessmentId) {
+            setAssessmentQuestionsLoading(true);
+            fetchAssessmentQuestions(roundEditData?.assessmentId).then(
+              ({ data, error }) => {
+                if (data) {
+                  setAssessmentQuestionsLoading(false);
+                  setSectionQuestions(data?.sections);
+                } else {
+                  setAssessmentQuestionsLoading(false);
+                  console.error(
+                    "Error fetching assessment questions:",
+                    error
+                  );
+                }
               }
-            }
-          } else {
-            // For new round, set the sequence to be after the last round
-            const maxSequence =
-              foundPosition.rounds?.length > 0
-                ? Math.max(...foundPosition.rounds.map((r) => r.sequence))
-                : 0;
-            setFormData((prev) => ({ ...prev, sequence: maxSequence + 1 }));
+            );
           }
         }
-      } catch (error) {
-        setIsLoading(false);
-        console.error("Error fetching position data:", error);
-      } finally {
-        setIsLoading(false);
+      } else {
+        // For new round, set the sequence to be after the last round
+        const maxSequence =
+          foundPosition.rounds?.length > 0
+            ? Math.max(...foundPosition.rounds.map((r) => r.sequence))
+            : 0;
+        setFormData((prev) => ({ ...prev, sequence: maxSequence + 1 }));
       }
-    };
 
-    // Only fetch if we're in position context and have an ID
-    // if (isPositionContext && positionId) {
-    fetchPositionData();
-    // }
-  }, [positionData, positionId, isEditing, roundId, assessmentData, groups]); // Removed problematic dependencies
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      setError(error);
+      console.error("Error fetching position data:", error);
+    }
+  }, [
+    fetchedPosition,
+    isPositionContext,
+    positionId,
+    isEditing,
+    roundId,
+    groups,
+    fetchAssessmentQuestions,
+  ]);
+
+  // Ensure assessment template name is loaded via get-by-id for edit mode,
+  // so it works even when the selected template is outside the current limit.
+  useEffect(() => {
+    if (!isEditing || !editingAssessmentId || !editingAssessmentTitle) return;
+
+    setFormData((prev) => {
+      // If user already changed the template to a different one, don't overwrite.
+      if (
+        prev.assessmentTemplate?.assessmentId &&
+        prev.assessmentTemplate.assessmentId !== editingAssessmentId
+      ) {
+        return prev;
+      }
+
+      const currentName = prev.assessmentTemplate?.assessmentName || "";
+
+      // If we already have the same name for this assessment, keep state as-is.
+      if (
+        prev.assessmentTemplate?.assessmentId === editingAssessmentId &&
+        currentName === editingAssessmentTitle
+      ) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        assessmentTemplate: {
+          assessmentId: editingAssessmentId,
+          assessmentName: editingAssessmentTitle,
+        },
+      };
+    });
+  }, [isEditing, editingAssessmentId, editingAssessmentTitle]);
 
   useEffect(() => {
     const filterAssessmentsWithQuestions = async () => {
-      if (hasFiltered || !position) return;
+      if (!position) return;
+
+      // Show loading state while we resolve which assessments actually have questions
+      setHasFiltered(false);
 
       const results = await Promise.all(
         assessmentData.map(async (assessment) => {
@@ -473,6 +549,8 @@ function RoundFormPosition() {
 
     if (position && assessmentData?.length) {
       filterAssessmentsWithQuestions();
+    } else {
+      setFilteredAssessments([]);
     }
   }, [position, assessmentData, fetchAssessmentQuestions]);
 
@@ -721,7 +799,6 @@ function RoundFormPosition() {
   };
 
   const handleSubmit = async (e) => {
-    console.log("click add button");
     e.preventDefault();
 
     // v1.0.0 <---------------------------------------------------------------------------------
@@ -739,7 +816,6 @@ function RoundFormPosition() {
     }
 
     // v1.0.0 --------------------------------------------------------------------------------->
-    // console.log('errors after validation', errors);
 
     // Format interviewers data based on view type (ensure strings)
     let formattedInterviewers = [];
@@ -822,7 +898,6 @@ function RoundFormPosition() {
       //     ? ""
       //     : formData.interviewerViewType,
     };
-    // console.log("formData.duration", formData.duration);
 
     try {
       // Include roundId only if editing
@@ -830,10 +905,7 @@ function RoundFormPosition() {
         ? { positionId, round: roundData, tenantId, ownerId, roundId }
         : { positionId, round: roundData, tenantId, ownerId };
 
-      // console.log("roundData after roundData", payload);
       const response = await addRounds(payload);
-
-      console.log("response", response);
       if (response.status === "Created Round successfully") {
         notify.success("Round added successfully");
       } else if (
@@ -848,7 +920,6 @@ function RoundFormPosition() {
 
       navigate(`/position/view-details/${positionId}`);
     } catch (err) {
-      console.log("err", err);
       // Show error toast
       notify.error(
         err.response?.data?.message || err.message || "Failed to save round"
@@ -861,9 +932,6 @@ function RoundFormPosition() {
       } else {
         alert("Something went wrong. Please try again.");
       }
-
-      // console.log("err ", err);
-      // console.error("Error submitting round:", err);
     }
   };
 
@@ -907,8 +975,6 @@ function RoundFormPosition() {
     };
     // setAssessmentTemplate(assessmentData); // Update state directly
 
-    console.log("duration", assessment);
-
     setFormData((prev) => ({
       ...prev,
       assessmentTemplate: assessmentData,
@@ -944,8 +1010,6 @@ function RoundFormPosition() {
     : isPositionContext
     ? "Add New Position Round"
     : "Add New Interview Round";
-
-  console.log("formData", formData);
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
@@ -1147,15 +1211,13 @@ function RoundFormPosition() {
                             required
                             name="assessmentTemplate"
                             value={formData.assessmentTemplate?.assessmentId}
-                            options={
-                              Array.isArray(filteredAssessments)
-                                ? filteredAssessments.map((a) => ({
-                                    value: a._id,
-                                    label: a.AssessmentTitle,
-                                  }))
-                                : []
-                            }
+                            options={assessmentOptions}
                             loading={!hasFiltered}
+                            onInputChange={(inputValue, { action }) => {
+                              if (action === "input-change") {
+                                setAssessmentSearch(inputValue || "");
+                              }
+                            }}
                             onChange={(e) => {
                               const selected = (filteredAssessments || []).find(
                                 (a) => a._id === e.target.value
