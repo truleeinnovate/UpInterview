@@ -1,7 +1,7 @@
 // v1.0.0 - Ashok - Changed icons
 // v1.0.1 - Ashok - Adding loading view
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import InterviewRounds from "./InterviewRounds";
 import AppliedPositions from "./AppliedPositions";
 import Timeline from "./Timeline";
@@ -22,7 +22,10 @@ import {
 } from "lucide-react";
 // v1.0.0 -------------------------------------------------------->
 import { useInterviews } from "../../../../../apiHooks/useInterviews";
-import { useCandidates } from "../../../../../apiHooks/useCandidates";
+import {
+  useCandidates,
+  useCandidateById,
+} from "../../../../../apiHooks/useCandidates";
 import Documents from "./Documents";
 // v1.0.0 <--------------------------------------------------------
 import ActivityComponent from "../../CommonCode-AllTabs/Activity";
@@ -55,25 +58,21 @@ const MainContent = () => {
   const [editModeOn, setEditModeOn] = useState(false);
   // const [slideShow, setSlideShow] = useState(false);
 
-  // Get candidate data, candidate-specific positions and all interviews
-  const { candidateData, useCandidatePositions } = useCandidates({
-    candidateLimit: Infinity,
-  });
-  // Use a high limit so we effectively get all interviews for this tenant/owner
-  const { interviewData } = useInterviews({}, 1, Infinity);
+  // Get candidate data, candidate-specific positions and candidate-specific interviews
+  const { useCandidatePositions } = useCandidates({});
+  const { candidate } = useCandidateById(id);
 
-  // Find the current candidate from the cached data
-  const candidate = useMemo(() => {
-    return candidateData?.find((c) => c._id === id);
-  }, [candidateData, id]);
+  // Backend filtering: only interviews for this candidate
+  const { interviewData: interviews = [] } = useInterviews(
+    {
+      candidateId: id,
+    },
+    1,
+    1000
+  );
 
   // Fetch positions for this candidate via candidateposition API
   const { data: positions = [] } = useCandidatePositions(id);
-
-  // Collect all interviews for the current candidate
-  const interviews = useMemo(() => {
-    return interviewData.filter((data) => data?.candidateId?._id === id);
-  }, [interviewData, id]);
 
   // if (!candidate) return <Loading />
 

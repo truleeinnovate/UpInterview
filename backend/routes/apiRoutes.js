@@ -537,6 +537,11 @@ router.get(
             upcomingOnly: req.query.upcomingOnly,
           };
 
+          // Optional: filter by specific candidate when candidateId is provided
+          if (req.query.candidateId) {
+            query.candidateId = req.query.candidateId;
+          }
+
           const filterQuery = {
             ...query,
             upcomingOnly: req.query.upcomingOnly,

@@ -10,6 +10,7 @@ const {
   // updateRounds
 } = require('../controllers/positionController.js');
 const loggingService = require('../middleware/loggingService.js');
+const { permissionMiddleware } = require('../middleware/permissionMiddleware.js');
 
 const router = express.Router();
 
@@ -30,6 +31,6 @@ router.delete('/delete-position/:id', deletePosition);
 
 // router.get("/:id", updateRounds);
 
-router.get("/details/:id", getPositionById);
+router.get("/details/:id", permissionMiddleware, getPositionById);
 
 module.exports = router;

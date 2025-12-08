@@ -49,16 +49,20 @@ const SessionExpiration = () => {
             }
         };
 
+        const handleShowExpiration = () => {
+            setShowExpiration(true);
+        };
+
         emitter.on('warning', handleWarning);
         emitter.on('activity', handleActivity);
         emitter.on('logout', handleLogout);
-        emitter.on('showExpiration', () => setShowExpiration(true));
+        emitter.on('showExpiration', handleShowExpiration);
 
         return () => {
             emitter.off('warning', handleWarning);
             emitter.off('activity', handleActivity);
             emitter.off('logout', handleLogout);
-            emitter.off('showExpiration', () => setShowExpiration(true));
+            emitter.off('showExpiration', handleShowExpiration);
         };
     }, [showExpiration]);
 

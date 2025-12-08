@@ -11,6 +11,7 @@ const {
   validateRoundDataStandard,
 } = require("../validations/positionValidation.js");
 const { hasPermission } = require("../middleware/permissionMiddleware");
+const { Users } = require("../models/Users");
 const { Interview } = require("../models/Interview/Interview.js");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
 
@@ -453,18 +454,72 @@ const deletePosition = async (req, res) => {
 
 const getPositionById = async (req, res) => {
   const { id } = req.params; // Position ID from URL params
-  const { tenantId } = req.query; // Optional tenant ID from query string
+  const { tenantId: _tenantIdFromQuery } = req.query; // Optional tenant ID from query string (legacy, not used for auth)
 
   try {
-    // Build query - if tenantId provided, use it for filtering
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: "Position ID is required",
+      });
+    }
+
+    res.locals.loggedByController = true;
+
+    const {
+      effectivePermissions,
+      inheritedRoleIds,
+      effectivePermissions_RoleType,
+      effectivePermissions_RoleName,
+      tenantId,
+      userId,
+    } = res.locals;
+
+    const canView = await hasPermission(
+      effectivePermissions?.Positions,
+      "View"
+    );
+
+    if (!canView || !userId || !tenantId) {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden: missing Positions.View permission",
+      });
+    }
+
+    const roleType = effectivePermissions_RoleType;
+    const roleName = effectivePermissions_RoleName;
+
     const query = { _id: id };
-    if (tenantId) {
+
+    if (roleType === "individual") {
+      query.ownerId = userId;
+    } else if (roleType === "organization" && roleName !== "Admin") {
+      if (inheritedRoleIds?.length > 0) {
+        const accessibleUsers = await Users.find({
+          tenantId,
+          roleId: { $in: inheritedRoleIds },
+        }).select("_id");
+
+        const userIds = accessibleUsers.map((user) => user._id);
+        userIds.push(userId);
+
+        query.ownerId = {
+          $in: [...new Set(userIds.map((id) => id.toString()))],
+        };
+      } else {
+        query.ownerId = userId;
+      }
+    } else if (roleType === "organization" && roleName === "Admin") {
       query.tenantId = tenantId;
     }
 
-    // Find position by ID (and optionally tenantId)
     const position = await Position.findOne(query)
-      .populate("rounds") // Populate rounds if needed
+      .populate({
+        path: "rounds.interviewers",
+        model: "Contacts",
+        select: "firstName lastName email",
+      })
       .populate("skills") // Populate skills if needed
       .lean(); // Convert to plain JS object for performance
 
