@@ -295,8 +295,9 @@ const reportTemplateSchema = new Schema({
       filters: {
         default: { type: Schema.Types.Mixed },
         available: [{
+          order: Number,
           label: String,
-          key: String, label: String,
+          key: String,
           type: { type: String, enum: ["select", "multiselect", "date", "text", "user"] },
           options: [{ label: String, value: String }],
           required: { type: Boolean, default: false },
