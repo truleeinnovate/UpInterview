@@ -16,7 +16,10 @@ import { useCandidates } from "../../../../../apiHooks/useCandidates";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import LoadingButton from "../../../../../Components/LoadingButton";
 import { useInterviewTemplates } from "../../../../../apiHooks/useInterviewTemplates.js";
-import { usePositions } from "../../../../../apiHooks/usePositions.js";
+import {
+  usePositions,
+  usePositionById,
+} from "../../../../../apiHooks/usePositions.js";
 import AddCandidateForm from "../../Candidate-Tab/AddCandidateForm.jsx";
 import PositionForm from "../../Position-Tab/Position-Form.jsx";
 import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
@@ -72,14 +75,59 @@ const InterviewForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { positionData, isLoading: positionsLoading } = usePositions();
-  const { templatesData, isLoading: templatesLoading } = useInterviewTemplates({
-    type: "interviewtemplates",
+  const DROPDOWN_LIMIT = 50;
+
+  const [candidateLimit, setCandidateLimit] = useState(DROPDOWN_LIMIT);
+  const [positionLimit, setPositionLimit] = useState(DROPDOWN_LIMIT);
+  const [templateLimit, setTemplateLimit] = useState(DROPDOWN_LIMIT);
+
+  const [candidateSearch, setCandidateSearch] = useState("");
+  const [positionSearch, setPositionSearch] = useState("");
+  const [templateSearch, setTemplateSearch] = useState("");
+
+  const [debouncedCandidateSearch, setDebouncedCandidateSearch] =
+    useState("");
+  const [debouncedPositionSearch, setDebouncedPositionSearch] =
+    useState("");
+  const [debouncedTemplateSearch, setDebouncedTemplateSearch] =
+    useState("");
+
+  const {
+    positionData,
+    total: totalPositions,
+    isQueryLoading: positionsLoading,
+  } = usePositions({
+    page: 1,
+    limit: positionLimit,
+    ...(debouncedPositionSearch && { searchQuery: debouncedPositionSearch }),
   });
 
-  console.log("templatesData in InterviewForm:", templatesData);
-  const { interviewData, isMutationLoading, createInterview } = useInterviews({},1,Infinity);
-  const { candidateData, isLoading: candidatesLoading } = useCandidates();
+  const {
+    templatesData,
+    totalCount: totalTemplates,
+    isQueryLoading: templatesLoading,
+  } = useInterviewTemplates({
+    type: "interviewtemplates",
+    page: 1,
+    limit: templateLimit,
+    ...(debouncedTemplateSearch && { search: debouncedTemplateSearch }),
+  });
+
+  
+  const {
+    useInterviewDetails,
+    isMutationLoading,
+    createInterview,
+  } = useInterviews();
+  const {
+    candidateData,
+    totalCandidates,
+    isQueryLoading: candidatesLoading,
+  } = useCandidates({
+    page: 1,
+    limit: candidateLimit,
+    ...(debouncedCandidateSearch && { search: debouncedCandidateSearch }),
+  });
 
   const [candidateId, setCandidateId] = useState("");
   const [positionId, setPositionId] = useState("");
@@ -99,6 +147,44 @@ const InterviewForm = () => {
   // Filter positions to show only "opened" status
   const filteredPositionData =
     positionData?.filter((position) => position.status === "opened") || [];
+
+  // Always load full position details by id (unfiltered, unpaginated)
+  // so rounds/template are correct even if the position is not in the
+  // current paginated/filtered positionData list.
+  const { position: selectedPosition } = usePositionById(positionId);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedCandidateSearch(candidateSearch.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [candidateSearch]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedPositionSearch(positionSearch.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [positionSearch]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedTemplateSearch(templateSearch.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [templateSearch]);
+
+  useEffect(() => {
+    setCandidateLimit(DROPDOWN_LIMIT);
+  }, [debouncedCandidateSearch]);
+
+  useEffect(() => {
+    setPositionLimit(DROPDOWN_LIMIT);
+  }, [debouncedPositionSearch]);
+
+  useEffect(() => {
+    setTemplateLimit(DROPDOWN_LIMIT);
+  }, [debouncedTemplateSearch]);
 
   // Modal handlers for Add New buttons
   const handleAddNewCandidate = () => {
@@ -148,9 +234,9 @@ const InterviewForm = () => {
   //  v1.0.1---------------------->
 
   const isEditing = !!id;
-  const interview = isEditing
-    ? interviewData.find((interview) => interview._id === id)
-    : null;
+
+  const { data: interview, isLoading: interviewLoading } =
+    useInterviewDetails(isEditing ? id : null);
 
   // v1.0.7  -  Your Name  -  Fixed template dropdown not showing selected value in edit mode
 
@@ -158,6 +244,7 @@ const InterviewForm = () => {
     if (isEditing && interview && templatesData.length > 0) {
       setCandidateId(interview.candidateId?._id || "");
       setPositionId(interview.positionId?._id || "");
+      setExternalId(interview.externalId || "");
 
       // Fix for template - handle the nested object structure
       if (interview.templateId) {
@@ -202,29 +289,58 @@ const InterviewForm = () => {
     }
   }, [isEditing, interview, templatesData]);
 
+  const handleCandidateMenuScrollToBottom = () => {
+    if (candidatesLoading) return;
+    if (!totalCandidates || candidateLimit >= totalCandidates) return;
+
+    setCandidateLimit((prev) => prev + DROPDOWN_LIMIT);
+  };
+
+  const handlePositionMenuScrollToBottom = () => {
+    if (positionsLoading) return;
+    if (!totalPositions || positionLimit >= totalPositions) return;
+
+    setPositionLimit((prev) => prev + DROPDOWN_LIMIT);
+  };
+
+  const handleTemplateMenuScrollToBottom = () => {
+    if (templatesLoading) return;
+    if (!totalTemplates || templateLimit >= totalTemplates) return;
+
+    setTemplateLimit((prev) => prev + DROPDOWN_LIMIT);
+  };
+
   useEffect(() => {
-    if (positionId) {
-      const selectedPosition = positionData.find(
-        (pos) => pos._id === positionId
-      );
-
-      if (selectedPosition?.rounds && selectedPosition?.rounds.length > 0) {
-        setRounds(selectedPosition?.rounds);
-      } else {
-        setRounds([]);
-      }
-
-      if (selectedPosition) {
-        if (selectedPosition?.templateId) {
-          setTemplateId(selectedPosition?.templateId);
-
-          // toast.info("Template and rounds are fetched from the position.");
-        } else {
-          setTemplateId("");
-        }
-      }
+    if (!positionId) {
+      return;
     }
-  }, [positionId, positionData]);
+
+    if (!selectedPosition) {
+      return;
+    }
+
+    // In edit mode, don't overwrite existing interview rounds when
+    // the position is still the original one. Only apply rounds/template
+    // when user actually changes the position.
+    const isOriginalInterviewPosition =
+      isEditing && interview?.positionId?._id === positionId;
+
+    if (isOriginalInterviewPosition) {
+      return;
+    }
+
+    if (selectedPosition?.rounds && selectedPosition?.rounds.length > 0) {
+      setRounds(selectedPosition?.rounds);
+    } else {
+      setRounds([]);
+    }
+
+    if (selectedPosition?.templateId) {
+      setTemplateId(selectedPosition?.templateId);
+    } else {
+      setTemplateId("");
+    }
+  }, [positionId, selectedPosition, isEditing, interview]);
 
   useEffect(() => {
     if (
@@ -370,7 +486,8 @@ const InterviewForm = () => {
               ...(isEditing && interview
                 ? [
                     {
-                      label: candidateData?.LastName || "Interview",
+                      label:
+                        interview?.candidateId?.LastName || "Interview",
                       path: `/interviews/${id}`,
                       status: interview.status,
                     },
@@ -488,8 +605,16 @@ const InterviewForm = () => {
                           setCandidateError("");
                         }
                       }}
+                      onInputChange={(inputValue, actionMeta) => {
+                        if (actionMeta?.action === "input-change") {
+                          setCandidateSearch(inputValue || "");
+                        }
+                      }}
+                      onMenuScrollToBottom={
+                        handleCandidateMenuScrollToBottom
+                      }
                       error={candidateError}
-                      disabled={candidatesLoading}
+                      //disabled={candidatesLoading && !candidateData?.length}
                       loading={candidatesLoading}
                       required={true}
                       isMulti={false}
@@ -523,8 +648,16 @@ const InterviewForm = () => {
                           setPositionError("");
                         }
                       }}
+                      onInputChange={(inputValue, actionMeta) => {
+                        if (actionMeta?.action === "input-change") {
+                          setPositionSearch(inputValue || "");
+                        }
+                      }}
+                      onMenuScrollToBottom={
+                        handlePositionMenuScrollToBottom
+                      }
                       error={positionError}
-                      disabled={positionsLoading}
+                      //disabled={positionsLoading && !positionData?.length}
                       loading={positionsLoading}
                       required={true}
                       isMulti={false}
@@ -583,34 +716,39 @@ const InterviewForm = () => {
                               return 1;
                             return 0;
                           })
-                          .map((template) => ({
-                            value: template._id,
-                            label: (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                  width: "99%",
-                                }}
-                              >
-                                <span>
-                                  {capitalizeFirstLetter(template.title)}
-                                </span>
-                                <span
-                                  className={
-                                    "text-md " +
-                                    (template.type === "custom"
-                                      ? "text-custom-blue"
-                                      : "text-green-600")
-                                  }
+                          .map((template) => {
+                            const titleLabel = capitalizeFirstLetter(
+                              template.title || template.type || "Unnamed Template"
+                            );
+
+                            return {
+                              value: template._id,
+                              label: (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    width: "99%",
+                                  }}
                                 >
-                                  {/* {template.type} */}
-                                  {capitalizeFirstLetter(template.type)}
-                                </span>
-                              </div>
-                            ),
-                          })) || []
+                                  <span>{titleLabel}</span>
+                                  <span
+                                    className={
+                                      "text-md " +
+                                      (template.type === "custom"
+                                        ? "text-custom-blue"
+                                        : "text-green-600")
+                                    }
+                                  >
+                                    {/* {template.type} */}
+                                    {capitalizeFirstLetter(template.type)}
+                                  </span>
+                                </div>
+                              ),
+                              searchLabel: titleLabel,
+                            };
+                          }) || []
                       }
                       onChange={(e) => {
                         const value = e?.target?.value || e?.value;
@@ -618,7 +756,13 @@ const InterviewForm = () => {
                           handleTemplateChange(value);
                         }
                       }}
-                      disabled={templatesLoading}
+                      onInputChange={(inputValue, actionMeta) => {
+                        if (actionMeta?.action === "input-change") {
+                          setTemplateSearch(inputValue || "");
+                        }
+                      }}
+                      onMenuScrollToBottom={handleTemplateMenuScrollToBottom}
+                      //disabled={templatesLoading && !templatesData?.length}
                       loading={templatesLoading}
                       required={false}
                       isMulti={false}

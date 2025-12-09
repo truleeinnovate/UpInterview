@@ -7,7 +7,7 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 Modal.setAppElement("#root");
 
 const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
-  console.log("candidate ", candidate);
+ 
 
   // v1.0.0 <-----------------------------------------------------------
   useScrollLock(true);
@@ -154,12 +154,12 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
                 Skills
               </h4>
               <div className="flex flex-wrap gap-2">
-                {candidate.skills.map((skill, index) => (
+                {candidate?.skills.map((skill, index) => (
                   <span
                     key={index}
                     className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
                   >
-                    {skill.skill}
+                    {skill}
                   </span>
                 ))}
               </div>

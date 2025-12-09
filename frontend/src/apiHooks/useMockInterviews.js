@@ -3,6 +3,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { useEffect, useRef } from "react";
 import { fetchFilterData } from "../api";
 import { config } from "../config";
@@ -46,7 +47,7 @@ export const useMockInterviews = (params = {}) => {
           mockLimit: params?.limit ?? limit ?? Infinity,
         };
 
-        console.log("apiParams", apiParams);
+        //console.log("apiParams", apiParams);
 
         const filteredInterviews = await fetchFilterData(
           "mockinterview",
@@ -160,7 +161,7 @@ export const useMockInterviews = (params = {}) => {
         }));
       }
 
-      console.log("/updateMockInterview/", payload);
+      //"/updateMockInterview/", payload);
 
       const url = isEdit
         ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
@@ -183,7 +184,7 @@ export const useMockInterviews = (params = {}) => {
         }
       }
 
-      console.log("response.data", response);
+      //console.log("response.data", response);
 
       return response.data;
     },
@@ -212,6 +213,41 @@ export const useMockInterviews = (params = {}) => {
     addOrUpdateError: addOrUpdateMockInterview.error,
     addOrUpdateMockInterview: addOrUpdateMockInterview.mutateAsync,
     refetchMockInterviews,
+  };
+};
+
+export const useMockInterviewById = (mockInterviewId) => {
+  const { effectivePermissions } = usePermissions();
+  const hasViewPermission = effectivePermissions?.MockInterviews?.View;
+
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["mockinterview", mockInterviewId],
+    queryFn: async () => {
+      const authToken = Cookies.get("authToken") ?? "";
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+          withCredentials: true,
+        }
+      );
+      return response.data?.data;
+    },
+    enabled: !!mockInterviewId && !!hasViewPermission,
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+  return {
+    mockInterview: data,
+    isLoading,
+    isError,
+    error,
   };
 };
 

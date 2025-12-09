@@ -11,7 +11,7 @@ const VerticalRoundsView = ({
   currentRoundId,
   onChangeRound,
 }) => {
-  console.log("handleEditRound", currentRoundId);
+  
 
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
@@ -46,7 +46,7 @@ const VerticalRoundsView = ({
     );
   }
 
-  console.log("currentRound", currentRound);
+  
 
   return (
     <div className="space-y-4">

@@ -71,6 +71,9 @@ const BasicDetailsTab = ({
   setShowDropdownPosition,
   setShowDropdownDuration,
   positions,
+  positionsLoading,
+  onPositionMenuScrollToBottom,
+  onPositionInputChange,
   errors,
   // v1.0.1 <----------------------------------------
   fieldRefs,
@@ -85,7 +88,7 @@ const BasicDetailsTab = ({
   // Get user token information and check organization field
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const isOrganization = tokenPayload?.organization === true;
-  console.log('isOrganization:-', isOrganization);
+  //console.log('isOrganization:-', isOrganization);
 
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
@@ -204,7 +207,7 @@ const BasicDetailsTab = ({
                 autoComplete="off"
                 placeholder="Enter Number of Questions"
                 error={errors.NumberOfQuestions}
-                onKeyDown={(e) => e.preventDefault()} // 👈 Prevent typing
+                onKeyDown={(e) => e.preventDefault()} // 
               />
             </div>
 
@@ -344,6 +347,9 @@ const BasicDetailsTab = ({
                       setSelectedPosition("");
                     }
                   }}
+                  loading={positionsLoading}
+                  onMenuScrollToBottom={onPositionMenuScrollToBottom}
+                  onInputChange={onPositionInputChange}
                   error={errors.Position}
                   placeholder="Select Position"
                 />

@@ -454,7 +454,7 @@ const ScheduleAssessment = () => {
   const handleResendClick = (schedule) => {
     // Get assessment template ID directly from the row data
     const assessmentTemplateId = getAssessmentTemplateId(schedule);
-    console.log("Debug - Resend Assessment Template ID:", assessmentTemplateId);
+    // console.log("Debug - Resend Assessment Template ID:", assessmentTemplateId);
 
     // Use the same logic as handleActionClick since candidate data is already available
     handleActionClick(schedule, "resend");

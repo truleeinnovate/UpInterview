@@ -26,7 +26,12 @@ import { notify } from "../../services/toastService.js";
 
 const InterviewSlideover = ({ mode }) => {
     const [isCloneMode, setIsCloneMode] = useState(false);
-    const { templatesData, saveTemplate, isMutationLoading } = useInterviewTemplates();
+    const {
+        templatesData,
+        saveTemplate,
+        isMutationLoading,
+        useInterviewtemplateDetails,
+    } = useInterviewTemplates();
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
@@ -58,91 +63,110 @@ const InterviewSlideover = ({ mode }) => {
         format: useRef(null),
     };
 
-    useEffect(() => {
-        if (templatesData) {
-            const isClone = location.pathname.includes("/clone");
-            setIsCloneMode(isClone);
+    const { data: templateById, isLoading: templateLoading } =
+        useInterviewtemplateDetails(id);
 
-            if (id && templatesData.length > 0) {
-                const foundTemplate = templatesData.find((tem) => tem._id === id);
-                if (foundTemplate) {
-                    if (isClone) {
-                        setIsEditMode(false);
-                        const baseName = foundTemplate.name.replace(/_std$/, "");
-                        setNewTemplate({
-                            // v1.0.5 <--------------------------------------------------------
-                            title: `Copy of ${foundTemplate.title || "Untitled Template"}`,
-                            name: `Copy_of_${baseName}`,
-                            // v1.0.5 -------------------------------------------------------->
-                            description: foundTemplate.description || "",
-                            status: "draft",
-                            rounds: Array.isArray(foundTemplate.rounds)
-                                ? foundTemplate.rounds.map((round, index) => ({
-                                      roundTitle: round.roundTitle || `Round ${index + 1}`,
-                                      assessmentId: round.assessmentId || null,
-                                      interviewerViewType: round.interviewerViewType || null,
-                                      duration: round.duration || null,
-                                      instructions: round.instructions || null,
-                                      interviewMode: round.interviewMode || null,
-                                      minimumInterviewers: round.minimumInterviewers || null,
-                                      selectedInterviewers: Array.isArray(round.selectedInterviewers)
-                                          ? round.selectedInterviewers
-                                          : [],
-                                      interviewerType: round.interviewerType || null,
-                                      selectedInterviewersType: round.selectedInterviewersType || null,
-                                      interviewerGroupName: round.interviewerGroupName || null,
-                                      interviewers: Array.isArray(round.interviewers)
-                                          ? round.interviewers
-                                          : [],
-                                      questions: Array.isArray(round.questions)
-                                          ? round.questions.map((question) => ({
-                                                questionId: question.questionId || null,
-                                                snapshot: question.snapshot || {},
-                                            }))
-                                          : [],
-                                      sequence: round.sequence || index + 1,
-                                  }))
-                                : [],
-                            bestFor: foundTemplate.bestFor || "",
-                            format: foundTemplate.format || "",
-                            type: "custom",
-                            nameError: "",
-                        });
-                    } else {
-                        setIsEditMode(true);
-                        setNewTemplate({
-                            title: foundTemplate.title || "",
-                            name: foundTemplate.name || "",
-                            description: foundTemplate.description || "",
-                            status: foundTemplate.status || "draft",
-                            rounds: foundTemplate.rounds || [],
-                            bestFor: foundTemplate.bestFor || "",
-                            format: foundTemplate.format || "",
-                            type: foundTemplate.type || "custom",
-                            nameError: "",
-                        });
-                    }
-                } else {
-                    console.error("Template not found for ID:", id);
-                }
-            } else {
-                setIsEditMode(false);
-                setNewTemplate({
-                    title: "",
-                    name: "",
-                    description: "",
-                    status: "draft",
-                    rounds: [],
-                    bestFor: "",
-                    format: "",
-                    type: "custom",
-                    nameError: "",
-                });
-            }
+    useEffect(() => {
+        const isClone = location.pathname.includes("/clone");
+        setIsCloneMode(isClone);
+
+        // New template (no id)
+        if (!id) {
+            setIsEditMode(false);
+            setNewTemplate({
+                title: "",
+                name: "",
+                description: "",
+                status: "draft",
+                rounds: [],
+                bestFor: "",
+                format: "",
+                type: "custom",
+                nameError: "",
+            });
             setIsLoading(false);
             setFormKey(Date.now());
+            return;
         }
-    }, [id, templatesData, location.pathname]);
+
+        // Edit/clone mode: wait until templateById is loaded
+        if (templateLoading) {
+            return;
+        }
+
+        // For edit/clone we now rely only on the dedicated by-id query
+        const sourceTemplate = templateById;
+
+        if (!sourceTemplate) {
+            console.error("Template not found for ID:", id);
+            setIsLoading(false);
+            return;
+        }
+
+        if (isClone) {
+            setIsEditMode(false);
+            const baseName = sourceTemplate.name.replace(/_std$/, "");
+            setNewTemplate({
+                // v1.0.5 <--------------------------------------------------------
+                title: `Copy of ${sourceTemplate.title || "Untitled Template"}`,
+                name: `Copy_of_${baseName}`,
+                // v1.0.5 -------------------------------------------------------->
+                description: sourceTemplate.description || "",
+                status: "draft",
+                rounds: Array.isArray(sourceTemplate.rounds)
+                    ? sourceTemplate.rounds.map((round, index) => ({
+                          roundTitle: round.roundTitle || `Round ${index + 1}`,
+                          assessmentId: round.assessmentId || null,
+                          interviewerViewType: round.interviewerViewType || null,
+                          duration: round.duration || null,
+                          instructions: round.instructions || null,
+                          interviewMode: round.interviewMode || null,
+                          minimumInterviewers: round.minimumInterviewers || null,
+                          selectedInterviewers: Array.isArray(
+                              round.selectedInterviewers
+                          )
+                              ? round.selectedInterviewers
+                              : [],
+                          interviewerType: round.interviewerType || null,
+                          selectedInterviewersType:
+                              round.selectedInterviewersType || null,
+                          interviewerGroupName:
+                              round.interviewerGroupName || null,
+                          interviewers: Array.isArray(round.interviewers)
+                              ? round.interviewers
+                              : [],
+                          questions: Array.isArray(round.questions)
+                              ? round.questions.map((question) => ({
+                                    questionId: question.questionId || null,
+                                    snapshot: question.snapshot || {},
+                                }))
+                              : [],
+                          sequence: round.sequence || index + 1,
+                      }))
+                    : [],
+                bestFor: sourceTemplate.bestFor || "",
+                format: sourceTemplate.format || "",
+                type: "custom",
+                nameError: "",
+            });
+        } else {
+            setIsEditMode(true);
+            setNewTemplate({
+                title: sourceTemplate.title || "",
+                name: sourceTemplate.name || "",
+                description: sourceTemplate.description || "",
+                status: sourceTemplate.status || "draft",
+                rounds: sourceTemplate.rounds || [],
+                bestFor: sourceTemplate.bestFor || "",
+                format: sourceTemplate.format || "",
+                type: sourceTemplate.type || "custom",
+                nameError: "",
+            });
+        }
+
+        setIsLoading(false);
+        setFormKey(Date.now());
+    }, [id, templateById, templateLoading, location.pathname]);
 
     const validateForm = (fieldToValidate = null) => {
         const templateForValidation = {
@@ -153,9 +177,14 @@ const InterviewSlideover = ({ mode }) => {
             format: newTemplate.format,
         };
 
+        // In edit mode, avoid relying on paginated templatesData; only validate
+        // against the current template by id. For new/clone, still use templatesData
+        // for duplicate-name checks.
+        const allTemplatesForValidation = isEditMode ? null : templatesData;
+
         const { errors: validationErrors } = validateInterviewTemplate(
             templateForValidation,
-            templatesData,
+            allTemplatesForValidation,
             isCloneMode || isEditMode ? id : null,
             fieldToValidate
         );
@@ -194,7 +223,8 @@ const InterviewSlideover = ({ mode }) => {
             }));
         }
 
-        if (formattedValue) {
+        // For edit mode, do not rely on paginated templatesData for duplicate checks.
+        if (!isEditMode && formattedValue) {
             const nameExists = templatesData?.some(
                 (template) =>
                     template.name?.toLowerCase() === formattedValue.toLowerCase() &&
@@ -448,7 +478,7 @@ const InterviewSlideover = ({ mode }) => {
                         <div className="space-y-5 pt-6 pb-5">
                             <InputField
                                 label="Title"
-                                ref={fieldRefs.title}
+                                inputRef={fieldRefs.title}
                                 type="text"
                                 id="title"
                                 name="title"
@@ -482,7 +512,7 @@ const InterviewSlideover = ({ mode }) => {
 
                             <InputField
                                 label="Best For"
-                                ref={fieldRefs.bestFor}
+                                inputRef={fieldRefs.bestFor}
                                 type="text"
                                 id="bestFor"
                                 name="bestFor"

@@ -13,6 +13,63 @@ const {
 } = require("../validations/mockInterviewValidation");
 const mongoose = require("mongoose");
 
+// Get single mock interview with rounds by id
+exports.getMockInterviewDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      actingAsUserId,
+      actingAsTenantId,
+    } = res.locals.auth;
+
+    if (!actingAsUserId || !actingAsTenantId) {
+      return res.status(400).json({ message: "OwnerId or TenantId ID is required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid mock interview id",
+      });
+    }
+
+    const mockInterview = await MockInterview.findById(id).lean();
+
+    if (!mockInterview) {
+      return res.status(404).json({
+        success: false,
+        message: "Mock interview not found",
+      });
+    }
+
+    const rounds = await MockInterviewRound.find({ mockInterviewId: id })
+      .populate({
+        path: "interviewers",
+        model: "Contacts",
+        select: "firstName lastName email",
+      })
+      .lean();
+
+    const data = {
+      ...mockInterview,
+      rounds,
+    };
+
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("Error fetching mock interview details:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch mock interview details",
+      error: error.message,
+    });
+  }
+};
+
 exports.createMockInterview = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Create mock interview with rounds";
