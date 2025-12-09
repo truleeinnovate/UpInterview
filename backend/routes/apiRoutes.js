@@ -2066,7 +2066,7 @@ router.get(
             c.technologyLabel = roleMap[c.Technology] || null;
           });
 
-          console.log("Candidate", candidateData);
+          // console.log("Candidate", candidateData);
 
           // Get total count
           total = await Candidate.countDocuments(query);

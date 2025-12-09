@@ -193,7 +193,7 @@ const TableView = ({
                       >
                         {column.render
                           ? column.render(row[column.key], row)
-                          : row[column.key] || "N/A"}
+                          : row[column.key] || ""}
                       </td>
                     ))}
                     {actions.length > 0 && (

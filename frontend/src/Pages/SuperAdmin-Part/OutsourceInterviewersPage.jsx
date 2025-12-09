@@ -14,11 +14,7 @@ import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
 
 function OutsourceInterviewersPage() {
   const [view, setView] = useState("table");
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [editModeOn, setEditModeOn] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);

@@ -21,10 +21,13 @@ const {
   superAdminLoginAsUser,
   deleteTenantAndAssociatedData,
 } = require("../controllers/organizationLoginController");
-const loggingService = require('../middleware/loggingService.js');
+const loggingService = require("../middleware/loggingService.js");
 
-
-router.post("/Signup", loggingService.internalLoggingMiddleware, registerOrganization);
+router.post(
+  "/Signup",
+  loggingService.internalLoggingMiddleware,
+  registerOrganization
+);
 router.post("/Login", loginOrganization);
 router.post("/reset-password", resetPassword);
 router.post("/new-user-Creation", organizationUserCreation);
@@ -46,9 +49,9 @@ router.get("/verify-email", verifyEmail);
 router.get("/verify-user-email", verifyEmailChange);
 
 // SUPER ADMIN all-organizations added by Ashok ------------------------------->
-router.get("/all-organizations", getAllOrganizations);
+router.get("/all-tenants", getAllOrganizations);
 router.get("/:id", getOrganizationById);
-router.delete('/:tenantId', deleteTenantAndAssociatedData);
+router.delete("/:tenantId", deleteTenantAndAssociatedData);
 
 //ashraf
 
@@ -57,6 +60,9 @@ router.post("/login-as-user", superAdminLoginAsUser);
 // ---------------------------------------------------------------------------->
 
 // Get organization request status
-router.get("/organization-request/:tenantId/:ownerId", getOrganizationRequestStatus);
+router.get(
+  "/organization-request/:tenantId/:ownerId",
+  getOrganizationRequestStatus
+);
 
 module.exports = router;
