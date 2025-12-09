@@ -46,7 +46,7 @@ function TenantDetailsPage() {
   // const [tenant, setTenant] = useState(null);
   // const [loading, setLoading] = useState(true);
 
-  const [viewMode, setViewMode] = useState("collapsed"); // 'collapsed' or 'expanded'
+  const [viewMode, setViewMode] = useState("expanded"); // 'collapsed' or 'expanded'
   const toggleViewMode = () =>
     setViewMode((prev) => (prev === "expanded" ? "collapsed" : "expanded"));
 

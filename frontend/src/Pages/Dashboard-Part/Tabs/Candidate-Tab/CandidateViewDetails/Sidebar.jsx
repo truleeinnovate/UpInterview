@@ -10,7 +10,6 @@ import {
   Building2,
   Pencil,
   Check,
-  X,
   ArrowLeft,
   GraduationCap,
 } from "lucide-react";
@@ -230,7 +229,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
           </h3>
 
           <p className="text-center text-base pt-1 pb-2 text-gray-600">
-            {candidate.CurrentRole || "position"}
+            {candidate.currentRoleLabel || "Not Provided"}
           </p>
         </div>
       </div>

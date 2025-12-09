@@ -13,7 +13,7 @@ import { uploadFile } from "./imageApis";
 export const useMockInterviews = (params = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
-  const initialLoad = useRef(true);
+  // const initialLoad = useRef(true);
 
   // Check if user has permission to view mock interviews
   const hasViewPermission = effectivePermissions?.MockInterviews?.View;

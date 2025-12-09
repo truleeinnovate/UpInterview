@@ -6,11 +6,7 @@ import React, {
   useMemo,
 } from "react";
 import axios from "axios";
-import {
-  Trash2,
-  X,
-  Tag as SkillsIcon,
-} from "lucide-react";
+import { Trash2, X, Tag as SkillsIcon } from "lucide-react";
 import InfoBox from "./InfoBox.jsx";
 import { useMasterData } from "../../../apiHooks/useMasterData.js";
 import InputField from "../../../Components/FormFields/InputField";
@@ -36,7 +32,13 @@ const InterviewDetails = ({
 }) => {
   const [showCustomDiscount, setShowCustomDiscount] = useState(false);
   const [customDiscountValue, setCustomDiscountValue] = useState("");
-  const expYears = parseInt(yearsOfExperience, 10) || 0;
+
+  const sanitizedExp = String(yearsOfExperience).trim();
+
+  // Extract the number only (works for "15+", "15 years", "15-plus", etc.)
+  const expYears = parseInt(sanitizedExp.match(/\d+/)?.[0] || "0", 10);
+
+  // const expYears = parseInt(yearsOfExperience, 10) || 0;
 
   const showJuniorLevel = expYears > 0;
   const showMidLevel = expYears >= 4;
@@ -195,16 +197,18 @@ const InterviewDetails = ({
     skills,
     loadSkills,
     isSkillsFetching,
-    technologies,
-    loadTechnologies,
-    isTechnologiesFetching,
+    // technologies,
+    currentRoles,
+    loadCurrentRoles,
+    isCurrentRolesFetching,
+    // loadTechnologies,
+    // isTechnologiesFetching,
   } = useMasterData({}, pageType);
 
   const [rateCards, setRateCards] = useState([]);
 
   const fetchRateCardsMemoized = useCallback(async (techName) => {
     if (!techName) return;
-    // console.log('1')
 
     try {
       const token = localStorage.getItem("token");
@@ -272,13 +276,13 @@ const InterviewDetails = ({
     if (selectedValue) {
       // console.log('Selected value:', selectedValue);
 
-      const technology = technologies.find(
-        (t) => t.TechnologyMasterName === selectedValue
+      const technology = currentRoles.find(
+        (t) => t.roleLabel === selectedValue
       ) || {
         _id: Math.random().toString(36).substr(2, 9),
-        TechnologyMasterName: selectedValue,
+        roleName: selectedValue,
       };
-      // console.log('Found technology:', technology);
+      // console.log("Found technology:", technology);
 
       setSelectedTechnologyies([technology]);
       // console.log('Updated selectedTechnologyies:', [technology]);
@@ -393,7 +397,7 @@ const InterviewDetails = ({
   // Extract the selected technology name to avoid unnecessary re-renders
   const selectedTechnologyName = useMemo(() => {
     return selectedTechnologyies && selectedTechnologyies.length > 0
-      ? selectedTechnologyies[0].TechnologyMasterName || null
+      ? selectedTechnologyies[0].roleLabel || null
       : null;
   }, [selectedTechnologyies]);
 
@@ -621,9 +625,9 @@ const InterviewDetails = ({
   };
 
   const technologyOptions =
-    technologies?.map((tech) => ({
-      value: tech.TechnologyMasterName,
-      label: tech.TechnologyMasterName,
+    currentRoles?.map((tech) => ({
+      value: tech.roleName,
+      label: tech.roleLabel,
     })) || [];
 
   const filteredSkills =
@@ -676,6 +680,15 @@ const InterviewDetails = ({
     // console.log('Trimmed skill:', trimmedSkill);
     if (!trimmedSkill) {
       // console.log('Empty skill name, returning');
+      return;
+    }
+
+    // Check if max skills limit reached
+    if (selectedSkills.length >= 20) {
+      setErrors((prev) => ({
+        ...prev,
+        skills: "Maximum 20 skills allowed",
+      }));
       return;
     }
 
@@ -743,8 +756,8 @@ const InterviewDetails = ({
             label="Select Your Comfortable Technology"
             name="technology"
             required={true}
-            onMenuOpen={loadTechnologies}
-            loading={isTechnologiesFetching}
+            onMenuOpen={loadCurrentRoles}
+            loading={isCurrentRolesFetching}
             placeholder="Select Your Comfortable Technology"
           />
         </div>

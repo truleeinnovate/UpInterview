@@ -6,6 +6,7 @@ const InterviewAvailability = require("../models/InterviewAvailability");
 const mongoose = require("mongoose");
 const { format, parse, parseISO } = require("date-fns");
 const RolesPermissionObject = require("../models/rolesPermissionObject");
+const { RoleMaster } = require("../models/MasterSchemas/RoleMaster");
 
 // // Controller to fetch all users with populated tenantId
 // const getUsers = async (req, res) => {
@@ -1193,6 +1194,10 @@ const getUniqueUserByOwnerId = async (req, res) => {
       })
       // .populate("availability")
       .lean();
+
+    const role = await RoleMaster.findOne({
+      roleName: contact.technologies,
+    }).lean();
 
     // Combine user data, pulling most fields from Contacts
     const combinedUser = {

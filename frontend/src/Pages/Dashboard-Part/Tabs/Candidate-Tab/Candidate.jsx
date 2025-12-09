@@ -241,6 +241,8 @@ function Candidate({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deleteCandidate, setDeleteCandidate] = useState(null);
 
+  console.log("candidateData ", candidateData);
+
   // <---------------------- v1.0.2
   // Helper function to check if a candidate is cancelled (handles all case variations)
 

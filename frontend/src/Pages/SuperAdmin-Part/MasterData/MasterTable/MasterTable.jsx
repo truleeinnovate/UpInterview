@@ -115,7 +115,7 @@ const MasterTable = ({ permissions = {} }) => {
     loadQualifications,
     loadLocations,
   } = useMasterData(paramsData, "Super Admin", type);
-  console.log("masterData=======",masterData)
+  console.log("masterData=======", masterData);
 
   // Fetch Data
   // useEffect(() => {
@@ -371,7 +371,7 @@ const MasterTable = ({ permissions = {} }) => {
             displayName = row.LocationName;
             break;
           case "roles":
-            displayName = row.RoleName;
+            displayName = row.roleName;
             break;
           case "qualification":
             displayName = row.QualificationName;
@@ -678,7 +678,7 @@ const MasterTable = ({ permissions = {} }) => {
                   row.TechnologyMasterName ||
                   row.SkillName ||
                   row.LocationName ||
-                  row.RoleName ||
+                  row.roleName ||
                   row.QualificationName ||
                   row.University_CollegeName ||
                   row.CompanyName ||

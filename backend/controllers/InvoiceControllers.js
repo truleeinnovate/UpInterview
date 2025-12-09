@@ -2,29 +2,147 @@ const Invoice = require("../models/Invoicemodels.js");
 const mongoose = require("mongoose");
 
 // GET: Fetch invoices by ownerId or tenantId based on isOrganization query param
+// const getInvoice = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { isOrganization } = req.query;
+
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ error: "Invalid ID format" });
+//     }
+
+//     const queryField = isOrganization === "true" ? "tenantId" : "ownerId";
+//     const invoices = await Invoice.find({ [queryField]: id })
+//       .populate("planId")
+//       .populate("ownerId");
+
+//     if (!invoices || invoices.length === 0) {
+//       return res.status(404).json({
+//         message: `No invoices found for this ${
+//           queryField === "tenantId" ? "tenant" : "owner"
+//         }.`,
+//       });
+//     }
+
+//     res.status(200).json(invoices);
+//   } catch (error) {
+//     console.error("Detailed error:", {
+//       message: error.message,
+//       stack: error.stack,
+//       name: error.name,
+//     });
+//     res.status(500).json({
+//       error: "Server error",
+//       details: error.message,
+//     });
+//   }
+// };
+
 const getInvoice = async (req, res) => {
   try {
     const { id } = req.params;
     const { isOrganization } = req.query;
 
+    // Get query parameters for filtering, searching, and pagination
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      status,
+      type,
+      minAmount,
+      maxAmount,
+      sortBy = "updatedAt",
+      sortOrder = "desc",
+    } = req.query;
+
+    // Validate ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: "Invalid ID format" });
     }
 
+    // Determine query field based on organization flag
     const queryField = isOrganization === "true" ? "tenantId" : "ownerId";
-    const invoices = await Invoice.find({ [queryField]: id })
-      .populate("planId")
-      .populate("ownerId");
+
+    // Build the base query
+    let query = { [queryField]: id };
+
+    // Add search functionality
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      query.$or = [
+        { invoiceCode: searchRegex },
+        { status: searchRegex },
+        { "ownerId.Firstname": searchRegex },
+        { "ownerId.Lastname": searchRegex },
+        { "ownerId.Name": searchRegex },
+      ];
+    }
+
+    // Add status filter
+    if (status) {
+      const statusArray = Array.isArray(status) ? status : [status];
+      query.status = { $in: statusArray.map((s) => s.toLowerCase()) };
+    }
+
+    // Add type filter
+    if (type) {
+      const typeArray = Array.isArray(type) ? type : [type];
+      query.type = { $in: typeArray.map((t) => t.toLowerCase()) };
+    }
+
+    // Add amount range filter
+    if (minAmount || maxAmount) {
+      query.totalAmount = {};
+      if (minAmount) query.totalAmount.$gte = parseFloat(minAmount);
+      if (maxAmount) query.totalAmount.$lte = parseFloat(maxAmount);
+    }
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Define sort order
+    const sortDirection = sortOrder === "desc" ? -1 : 1;
+    const sortOptions = { [sortBy]: sortDirection };
+
+    // Execute queries
+    const [invoices, totalCount] = await Promise.all([
+      // Get paginated results
+      Invoice.find(query)
+        .populate("planId")
+        .populate("ownerId")
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(parseInt(limit)),
+
+      // Get total count for pagination
+      Invoice.countDocuments(query),
+    ]);
 
     if (!invoices || invoices.length === 0) {
-      return res.status(404).json({
-        message: `No invoices found for this ${
-          queryField === "tenantId" ? "tenant" : "owner"
-        }.`,
+      return res.status(200).json({
+        invoices: [],
+        pagination: {
+          total: 0,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages: 0,
+        },
       });
     }
 
-    res.status(200).json(invoices);
+    // Calculate total pages
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+    res.status(200).json({
+      invoices,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: totalPages,
+      },
+    });
   } catch (error) {
     console.error("Detailed error:", {
       message: error.message,

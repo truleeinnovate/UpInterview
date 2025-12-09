@@ -84,11 +84,10 @@ const AddCandidateForm = ({
 
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
- 
+
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
   const isOrganization = tokenPayload?.organization === true;
- 
 
   // v1.0.2 <----------------------------------------------------------------
   useScrollLock(true);
@@ -795,8 +794,8 @@ const AddCandidateForm = ({
   const roleOptionsRS = useMemo(
     () =>
       currentRoles?.map((r) => ({
-        value: r?.RoleName,
-        label: r?.RoleName,
+        value: r?.roleName,
+        label: r?.roleName,
       })) || [],
     [currentRoles]
   );
@@ -1066,9 +1065,9 @@ const AddCandidateForm = ({
                     label="Technology"
                     name="technology"
                     value={formData.Technology}
-                    options={technologies.map((t) => ({
-                      value: t.TechnologyMasterName,
-                      label: t.TechnologyMasterName,
+                    options={currentRoles.map((t) => ({
+                      value: t.roleName,
+                      label: t.roleLabel,
                     }))}
                     onChange={(e) => {
                       setFormData((prev) => ({
@@ -1083,8 +1082,8 @@ const AddCandidateForm = ({
                     error={errors.Technology}
                     placeholder="Select Technology"
                     required
-                    onMenuOpen={loadTechnologies}
-                    loading={isTechnologiesFetching}
+                    onMenuOpen={loadCurrentRoles}
+                    loading={isCurrentRolesFetching}
                   />
                 </div>
               </div>

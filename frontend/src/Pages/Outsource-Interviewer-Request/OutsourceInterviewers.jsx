@@ -43,7 +43,7 @@ const OutsourceInterviewers = () => {
     status: [],
     currentStatus: "",
   });
-  const navigate = useNavigate();
+
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
   // const [isLoading, setIsLoading] = useState(true);
@@ -62,7 +62,7 @@ const OutsourceInterviewers = () => {
       search: debouncedSearch,
       status: selectedFilters.status.join(","),
     });
-  console.log("outsourceInterviewers", outsourceInterviewers);
+
   // v1.0.0 <-------------------------------------------------------------------------
   useEffect(() => {
     if (selectedInterviewerId && outsourceInterviewers?.length) {
@@ -247,17 +247,13 @@ const OutsourceInterviewers = () => {
         </span>
       ),
     },
-    // {
-    //   key: "skills",
-    //   header: "Skills",
-    //   render: (value, row) => (
-    //     <span>
-    //       {row?.contactId?.skills?.length
-    //         ? row?.contactId?.skills.join(", ")
-    //         : "N/A"}
-    //     </span>
-    //   ),
-    // },
+    {
+      key: "currentRole",
+      header: "Current Role",
+      render: (value, row) => (
+        <span>{row?.contactId?.currentRole || "N/A"}</span>
+      ),
+    },
     {
       key: "skills",
       header: "Skills",
@@ -292,7 +288,7 @@ const OutsourceInterviewers = () => {
       render: (value, row) => (
         <span>
           {row?.contactId?.yearsOfExperience
-            ? row?.contactId?.yearsOfExperience
+            ? row?.contactId?.yearsOfExperience + " years"
             : "N/A"}
         </span>
       ),
@@ -391,6 +387,36 @@ const OutsourceInterviewers = () => {
   // Kanban Columns Configuration
   const kanbanColumns = [
     {
+      key: "name",
+      header: "Name",
+      render: (vale, row) => (
+        <span>
+          {row?.contactId?.firstName
+            ? row?.contactId?.firstName
+            : row?.contactId?.lastName}
+        </span>
+      ),
+    },
+    {
+      key: "currentRole",
+      header: "Current Role",
+      render: (value, row) => (
+        <span>{row?.contactId?.currentRole || "N/A"}</span>
+      ),
+    },
+
+    {
+      key: "experience",
+      header: "Experience",
+      render: (value, row) => (
+        <span>
+          {row?.contactId?.yearsOfExperience
+            ? row?.contactId?.yearsOfExperience + " years"
+            : "N/A"}
+        </span>
+      ),
+    },
+    {
       key: "hourlyRate",
       header: "Price per hour",
       render: (value, row) => (
@@ -400,6 +426,34 @@ const OutsourceInterviewers = () => {
             : "Not set"}
         </div>
       ),
+    },
+
+    {
+      key: "skills",
+      header: "Skills",
+      render: (value, row) => {
+        const skills = row?.contactId?.skills || [];
+
+        return skills.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {/* First skill badge */}
+            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+              {skills[0]?.length > 12
+                ? skills[0].slice(0, 12) + "..."
+                : skills[0]}
+            </span>
+
+            {/* "+N more" label if more than one skill */}
+            {skills.length > 1 && (
+              <span className="text-gray-500 text-xs">
+                +{skills.length - 1} more
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-gray-400 text-xs">N/A</span>
+        );
+      },
     },
     {
       key: "status",

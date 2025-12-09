@@ -33,7 +33,7 @@ const candidateSchema = new mongoose.Schema(
       contentType: String,
       publicId: String,
       fileSize: Number,
-      uploadDate:  Date,
+      uploadDate: Date,
     },
     resume: {
       filename: String,
@@ -41,7 +41,7 @@ const candidateSchema = new mongoose.Schema(
       contentType: String,
       publicId: String,
       fileSize: Number,
-      uploadDate:  Date,
+      uploadDate: Date,
     },
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
@@ -56,22 +56,20 @@ const candidateSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
 // Add indexes to candidate schema
 candidateSchema.index({ tenantId: 1, createdAt: -1 });
 candidateSchema.index({ tenantId: 1, Email: 1 });
-candidateSchema.index({ tenantId: 1, 'skills.skill': 1 });
+candidateSchema.index({ tenantId: 1, "skills.skill": 1 });
 candidateSchema.index({ tenantId: 1, CurrentExperience: 1 });
 candidateSchema.index({ tenantId: 1, HigherQualification: 1 });
 
 // For text search
 candidateSchema.index({
-  FirstName: 'text',
-  LastName: 'text', 
-  Email: 'text',
-  Phone: 'text'
+  FirstName: "text",
+  LastName: "text",
+  Email: "text",
+  Phone: "text",
 });
-
 
 // // ✅ Indexes to speed up filtering
 // candidateSchema.index({ tenantId: 1 });
@@ -80,6 +78,7 @@ candidateSchema.index({
 // // If you often search by both
 // candidateSchema.index({ tenantId: 1, ownerId: 1 });
 
-const Candidate = mongoose.models.Candidate || mongoose.model("Candidate", candidateSchema);
+const Candidate =
+  mongoose.models.Candidate || mongoose.model("Candidate", candidateSchema);
 
 module.exports = { Candidate };

@@ -60,7 +60,7 @@ export const useTenants = ({
       const response = await axios.get(
         `${
           config.REACT_APP_API_URL
-        }/Organization/all-organizations?${queryParams.toString()}`
+        }/Organization/all-tenants?${queryParams.toString()}`
       );
       return response.data;
     },

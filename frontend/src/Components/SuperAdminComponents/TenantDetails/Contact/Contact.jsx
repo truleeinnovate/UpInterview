@@ -1,12 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
-// import Sidebar from "./CreateContact.jsx";
-// import ContactProfileDetails from "./ContactProfileDetails.jsx";
-// import StatusBadge from "../../common/StatusBadge.jsx";
 
-// import axios from "axios";
-// import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
 import { motion } from "framer-motion";
 
 import Header from "../../../Shared/Header/Header.jsx";
@@ -14,25 +9,13 @@ import Toolbar from "../../../Shared/Toolbar/Toolbar.jsx";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import { useMediaQuery } from "react-responsive";
 import TableView from "../../../../Components/Shared/Table/TableView.jsx";
-// import KanbanView from "../../../Shared/Kanban/KanbanView.jsx";
 import KanbanView from "./KanbanView.jsx";
-import {
-  Eye,
-  // Mail,
-  // UserCircle,
-  Pencil,
-  // Import,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
-// import { config } from "../../../../config.js";
-// import SidebarPopup from "../../../SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
+import { Eye, ChevronUp, ChevronDown } from "lucide-react";
 import { useContacts } from "../../../../apiHooks/superAdmin/useContacts.js";
 
 const Contact = ({ organizationId, viewMode }) => {
-  const { contacts, isLoading, isError, error, refetch } = useContacts(organizationId);
+  const { contacts, isLoading } = useContacts(organizationId);
   const [view, setView] = useState("table");
-  // const [selectedContact, setSelectedContact] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
@@ -44,11 +27,10 @@ const Contact = ({ organizationId, viewMode }) => {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
-  // const [isLoading, setIsLoading] = useState(false);
-  // const [user, setUser] = useState("Admin");
-
+  const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
+  const [selectedCurrentStatus, setCurrentStatus] = useState("active");
   const [selectedContactId, setSelectedContactId] = useState(null);
-  // const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -66,11 +48,6 @@ const Contact = ({ organizationId, viewMode }) => {
         : [...prev, status]
     );
   };
-
-  const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState([]);
-  const [selectedCurrentStatus, setCurrentStatus] = useState("active");
-  // const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   // Reset filters when popup opens
   useEffect(() => {
@@ -218,14 +195,6 @@ const Contact = ({ organizationId, viewMode }) => {
     setCurrentPage(0); // Reset to first page on search
   };
 
-  // if (isLoading) {
-  //   return <Loading />;
-  // }
-
-  // if (!contacts || contacts.length === 0) {
-  //   return <div className="text-center mt-20">No Contacts found.</div>;
-  // }
-
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
@@ -281,16 +250,32 @@ const Contact = ({ organizationId, viewMode }) => {
       key: "experienceYear",
       header: "Years Of Experience",
       render: (value, row) => (
-        <span>{row?.experienceYears ? row.experienceYears : "N/A"}</span>
+        <span>
+          {row?.yearsOfExperience ? row.yearsOfExperience + " years" : "N/A"}
+        </span>
       ),
     },
     {
-      key: "linkedinUrl",
-      header: "Linkedin URL",
+      key: "phone",
+      header: "Phone",
       render: (value, row) => (
-        <span>{row?.linkedinUrl ? row.linkedinUrl : "N/A"}</span>
+        <span>{row?.phone ? row?.countryCode + " " + row.phone : "N/A"}</span>
       ),
     },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <span>{row?.status ? capitalizeFirstLetter(row.status) : "N/A"}</span>
+      ),
+    },
+    // {
+    //   key: "linkedinUrl",
+    //   header: "Linkedin URL",
+    //   render: (value, row) => (
+    //     <span>{row?.linkedinUrl ? row.linkedinUrl : "N/A"}</span>
+    //   ),
+    // },
   ];
 
   // Table Actions Configuration
@@ -356,6 +341,43 @@ const Contact = ({ organizationId, viewMode }) => {
     {
       key: "email",
       header: "Email",
+    },
+    {
+      key: "currentRole",
+      header: "Current Role",
+      render: (value, row) => {
+        return row?.currentRole ? row.currentRole : "N/A";
+      },
+    },
+    {
+      key: "industry",
+      header: "Industry",
+      render: (value, row) => (
+        <span>{row?.industry ? row.industry : "N/A"}</span>
+      ),
+    },
+    {
+      key: "experienceYear",
+      header: "Years Of Experience",
+      render: (value, row) => (
+        <span>
+          {row?.yearsOfExperience ? row.yearsOfExperience + " years" : "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "phone",
+      header: "Phone",
+      render: (value, row) => (
+        <span>{row?.phone ? row?.countryCode + " " + row.phone : "N/A"}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <span>{row?.status ? capitalizeFirstLetter(row.status) : "N/A"}</span>
+      ), // <span>{row?.status ? row.status : "N/A"}</span>,
     },
   ];
 

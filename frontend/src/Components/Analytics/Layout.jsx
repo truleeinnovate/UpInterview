@@ -65,15 +65,29 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { usePermissions } from "../../Context/PermissionsContext";
 
 const Layout = () => {
+    const { effectivePermissions } = usePermissions();
+  console.log("effectivePermissions",effectivePermissions);
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const navigation = [
-    { name: "Dashboard", href: "/analytics", icon: BarChart3 },
-    { name: "Reports", href: "/analytics/reports", icon: FileText },
-    { name: "Trends", href: "/analytics/trends", icon: TrendingUp },
-  ];
+const navigation = [
+  ...(effectivePermissions?.Analytics?.Dashboard
+    ? [{ name: "Dashboard", href: "/analytics", icon: BarChart3 }]
+    : []),
+
+  ...(effectivePermissions?.Analytics?.Reports
+    ? [{ name: "Reports", href: "/analytics/reports", icon: FileText }]
+    : []),
+
+  ...(effectivePermissions?.Analytics?.Trends
+    ? [{ name: "Trends", href: "/analytics/trends", icon: TrendingUp }]
+    : []),
+];
+
+
 
   return (
     <div className="flex bg-gray-50 overflow-hidden">

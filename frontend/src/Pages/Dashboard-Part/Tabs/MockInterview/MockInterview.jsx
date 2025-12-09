@@ -185,6 +185,7 @@ const MockInterview = () => {
       limit: rowsPerPage,
       filters: selectedFilters,
     });
+  console.log("mockinterviewData", mockinterviewData);
 
   // v1.0.2 <--------------------------------------------
   // v1.0.5 <---------------------------------------------------------------

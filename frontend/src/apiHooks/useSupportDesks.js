@@ -266,3 +266,32 @@ export const useSupportTickets = (filters = {}) => {
     submitTicket: submitTicketMutation.mutateAsync,
   };
 };
+
+// ⭐ NEW: Fetch a single ticket by ID
+export const useTicketById = (ticketId) => {
+  const authToken = Cookies.get("authToken") ?? "";
+
+  const fetchTicketById = async () => {
+    if (!ticketId) return null;
+
+    const { data } = await axios.get(
+      `${config.REACT_APP_API_URL}/get-ticket/${ticketId}`,
+      // {
+      //   headers: {
+      //     Authorization: `Bearer ${authToken}`,
+      //   },
+      // }
+    );
+    console.log("data from useTicketById", data);
+
+    return data; // backend returns full ticket object
+  };
+
+  return useQuery({
+    queryKey: ["singleTicket", ticketId],
+    queryFn: fetchTicketById,
+    enabled: !!ticketId, // Runs only when ID exists
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1,
+  });
+};

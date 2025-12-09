@@ -61,7 +61,6 @@ const DropdownWithSearchField = forwardRef(
               inputElement &&
               !inputElement.hasAttribute("data-keyboard-attached")
             ) {
-
               // Strongly discourage browser autofill on this internal input
               inputElement.setAttribute("autocomplete", "new-password");
               // Clear any prefilled value (e.g., email autofill) so default
@@ -155,7 +154,6 @@ const DropdownWithSearchField = forwardRef(
     componentsMap.NoOptionsMessage = NoOptionsMessage;
 
     const handleKeyDown = (e) => {
-
       // Only process Enter key for creatable fields or when allowCreateOnEnter is true
       if (e.key === "Enter" && (creatable || allowCreateOnEnter)) {
         // If this is an input inside the dropdown and we have a value, handle Enter to create

@@ -3,10 +3,10 @@
 // v2.0.2 - Ranjith added the round save proeprly with all condtions
 // v1.0.3  - Ashok - Impproved responsiveness
 
-import { useState, useRef, useEffect, useCallback, forwardRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import Cookies from "js-cookie";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   validatemockForm,
   getErrorMessage,
@@ -81,7 +81,6 @@ const MockSchedulelater = () => {
     currentRoles,
     loadCurrentRoles,
     isCurrentRolesFetching,
-    lcontacts,
   } = useMasterData({}, pageType);
   const { addOrUpdateMockInterview, isMutationLoading } = useMockInterviews();
   const { id } = useParams();
@@ -1697,15 +1696,16 @@ const MockSchedulelater = () => {
                         label="Technology"
                         name="technology"
                         value={formData.technology}
-                        options={technologies.map((t) => ({
-                          value: t.TechnologyMasterName,
-                          label: t.TechnologyMasterName,
+                        options={currentRoles.map((r) => ({
+                          value: r.roleName,
+                          label: r.roleLabel,
                         }))}
                         onChange={(e) => {
                           setFormData((prev) => ({
                             ...prev,
                             technology: e.target.value,
                           }));
+
                           setErrors((prev) => ({
                             ...prev,
                             technology: "",
@@ -1714,8 +1714,8 @@ const MockSchedulelater = () => {
                         error={errors.technology}
                         placeholder="Select Technology"
                         required
-                        onMenuOpen={loadTechnologies}
-                        loading={isTechnologiesFetching}
+                        onMenuOpen={loadCurrentRoles}
+                        loading={isCurrentRolesFetching}
                       />
                       <InputField
                         inputRef={fieldRefs.currentExperience}
@@ -1738,8 +1738,8 @@ const MockSchedulelater = () => {
                         name="Role"
                         value={formData.Role}
                         options={currentRoles.map((r) => ({
-                          value: r.RoleName,
-                          label: r.RoleName,
+                          value: r.roleName,
+                          label: r.roleLabel,
                         }))}
                         onChange={(e) => {
                           setFormData((prev) => ({

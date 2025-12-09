@@ -35,7 +35,7 @@ const additionalDetailsSchema = Joi.object({
   industry: Joi.string().required().messages({
     "string.empty": "Industry is required",
   }),
-  yearsOfExperience: Joi.number().required().messages({
+  yearsOfExperience: Joi.string().required().messages({
     "any.required": "Years of experience is required",
   }),
   location: Joi.string().required().messages({
@@ -59,22 +59,24 @@ const interviewDetailsSchema = Joi.object({
     .messages({
       "any.required": "Previous interview experience is required",
     }),
-      PreviousExperienceConductingInterviewsYears: Joi.alternatives().conditional(
-        "PreviousExperienceConductingInterviews",
-        {
-          is: "yes",
-          then: Joi.string()
-            .pattern(/^\d+$/)
-            .messages({    
-              "string.empty": "Years of Experience is required",
-              "string.pattern.base": "Enter a Number between 1 and 15",
-            }),
-          otherwise: Joi.optional(),
-        }
-      ),
-  interviewFormatWeOffer: Joi.array().items(Joi.string()).min(1).required().messages({
-    "array.min": "At least one interview format is required",
-  }),
+  PreviousExperienceConductingInterviewsYears: Joi.alternatives().conditional(
+    "PreviousExperienceConductingInterviews",
+    {
+      is: "yes",
+      then: Joi.string().pattern(/^\d+$/).messages({
+        "string.empty": "Years of Experience is required",
+        "string.pattern.base": "Enter a Number between 1 and 15",
+      }),
+      otherwise: Joi.optional(),
+    }
+  ),
+  interviewFormatWeOffer: Joi.array()
+    .items(Joi.string())
+    .min(1)
+    .required()
+    .messages({
+      "array.min": "At least one interview format is required",
+    }),
   professionalTitle: Joi.string().trim().min(50).max(100).required().messages({
     "string.empty": "Professional title is required",
     "string.min": "Professional title must be at least 50 characters",
@@ -130,9 +132,14 @@ function validateIndividualSignup(step, data) {
     stepData = {
       skills: data.skills,
       technologies: data.technologies,
-      PreviousExperienceConductingInterviews: data.PreviousExperienceConductingInterviews || data.previousInterviewExperience,
-      PreviousExperienceConductingInterviewsYears: data.PreviousExperienceConductingInterviewsYears || data.previousInterviewExperienceYears,
-      interviewFormatWeOffer: data.InterviewFormatWeOffer || data.interviewFormatWeOffer,
+      PreviousExperienceConductingInterviews:
+        data.PreviousExperienceConductingInterviews ||
+        data.previousInterviewExperience,
+      PreviousExperienceConductingInterviewsYears:
+        data.PreviousExperienceConductingInterviewsYears ||
+        data.previousInterviewExperienceYears,
+      interviewFormatWeOffer:
+        data.InterviewFormatWeOffer || data.interviewFormatWeOffer,
       professionalTitle: data.professionalTitle,
       bio: data.bio,
     };

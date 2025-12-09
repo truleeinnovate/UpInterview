@@ -4,7 +4,7 @@
 // v1.0.3 - Ashok - fixed style related issues
 
 import React, { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import {
   User,
   Plus,
@@ -14,7 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import axios from "axios";
+// import axios from "axios";
 import StatusBadge from "../CommonCode-AllTabs/StatusBadge.jsx";
 import Breadcrumb from "../CommonCode-AllTabs/Breadcrumb.jsx";
 import MoockRoundCard from "./MockInterviewRoundCard.jsx";
@@ -35,8 +35,6 @@ const MockInterviewDetails = () => {
     setSelectedCandidate(candidate);
     setSelectCandidateView(true);
   };
-
-  const navigate = useNavigate();
   const [candidate, setCandidate] = useState([]);
   const [rounds, setRounds] = useState([]);
 
@@ -61,12 +59,12 @@ const MockInterviewDetails = () => {
 
   // v1.0.0 ---------------------------------------------------------------->
 
-  const [activeRound, setActiveRound] = useState(null);
+  // const [activeRound, setActiveRound] = useState(null);
   // const [roundsViewMode, setRoundsViewMode] = useState('vertical');
 
   // Entity details state
-  const [entityDetailsSidebar, setEntityDetailsSidebar] = useState(null);
-  const [entityDetailsModal, setEntityDetailsModal] = useState(null);
+  // const [entityDetailsSidebar, setEntityDetailsSidebar] = useState(null);
+  // const [entityDetailsModal, setEntityDetailsModal] = useState(null);
 
   // useEffect(() => {
   //   if (rounds) {
@@ -143,27 +141,27 @@ const MockInterviewDetails = () => {
 
   // Count internal and external interviewers across all rounds
   const allInterviewerIds = new Set();
-  const internalInterviewerIds = new Set();
+  // const internalInterviewerIds = new Set();
   const externalInterviewerIds = new Set();
 
-  const updateInterviewStatus = async (newStatus, reason = null) => {
-    if (rounds) {
-      const interviewData = {
-        status: newStatus,
-        ...(reason && { completionReason: reason }), // Add reason only if provided
-      };
+  // const updateInterviewStatus = async (newStatus, reason = null) => {
+  //   if (rounds) {
+  //     const interviewData = {
+  //       status: newStatus,
+  //       ...(reason && { completionReason: reason }), // Add reason only if provided
+  //     };
 
-      try {
-        await axios.post(`${config.REACT_APP_API_URL}/interview`, {
-          ...interviewData,
-          interviewId: id,
-          updatingInterviewStatus: true,
-        });
-      } catch (error) {
-        console.error("Error updating interview status:", error);
-      }
-    }
-  };
+  //     try {
+  //       await axios.post(`${config.REACT_APP_API_URL}/interview`, {
+  //         ...interviewData,
+  //         interviewId: id,
+  //         updatingInterviewStatus: true,
+  //       });
+  //     } catch (error) {
+  //       console.error("Error updating interview status:", error);
+  //     }
+  //   }
+  // };
 
   // Call this function for completion with a reason
   // const handleCompleteWithReason = (reason) => {
@@ -189,9 +187,9 @@ const MockInterviewDetails = () => {
   //   navigate(`/interviews/${id}/rounds/new`);
   // };
 
-  const handleSelectRound = (roundId) => {
-    setActiveRound(roundId);
-  };
+  // const handleSelectRound = (roundId) => {
+  //   setActiveRound(roundId);
+  // };
 
   // const toggleViewMode = () => {
   //   setRoundsViewMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
@@ -242,7 +240,7 @@ const MockInterviewDetails = () => {
     totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0;
 
   // Check if all rounds are completed
-  const allRoundsCompleted = totalRounds > 0 && completedRounds === totalRounds;
+  // const allRoundsCompleted = totalRounds > 0 && completedRounds === totalRounds;
 
   // Normalize rounds for calculations
   const normalizedRounds = Array.isArray(rounds)

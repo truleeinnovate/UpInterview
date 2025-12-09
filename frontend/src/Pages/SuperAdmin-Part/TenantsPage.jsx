@@ -9,21 +9,11 @@ import Header from "../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import { useMediaQuery } from "react-responsive";
-import Loading from "../../Components/Loading.js";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "./Tenant/KanbanView.jsx";
 import DropdownSelect from "../../Components/Dropdowns/DropdownSelect.jsx";
-import {
-  Eye,
-  Mail,
-  UserCircle,
-  Pencil,
-  // Import,
-  ChevronUp,
-  ChevronDown,
-  Trash,
-} from "lucide-react";
+import { Eye, Mail, ChevronUp, ChevronDown, Trash } from "lucide-react";
 // import axios from "axios";
 // import { config } from "../../config.js";
 import { usePermissions } from "../../Context/PermissionsContext";
@@ -49,7 +39,7 @@ function TenantsPage() {
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     subscriptionStatus: [],
-    plan: []
+    plan: [],
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -72,10 +62,10 @@ function TenantsPage() {
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     search: debouncedSearch,
-    status: selectedFilters.status.join(','),
-    subscriptionStatus: selectedFilters.subscriptionStatus.join(','),
-    plan: selectedFilters.plan.join(','),
-    type: selectedType === "all" ? "" : selectedType
+    status: selectedFilters.status.join(","),
+    subscriptionStatus: selectedFilters.subscriptionStatus.join(","),
+    plan: selectedFilters.plan.join(","),
+    type: selectedType === "all" ? "" : selectedType,
   });
 
   // Use React Query for data fetching with proper dependency on permissions
@@ -116,10 +106,13 @@ function TenantsPage() {
   };
 
   const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
-  const [isSubscriptionStatusOpen, setIsSubscriptionStatusOpen] = useState(false);
+  const [isSubscriptionStatusOpen, setIsSubscriptionStatusOpen] =
+    useState(false);
   const [isPlanOpen, setIsPlanOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
-  const [selectedSubscriptionStatus, setSelectedSubscriptionStatus] = useState([]);
+  const [selectedSubscriptionStatus, setSelectedSubscriptionStatus] = useState(
+    []
+  );
   const [selectedPlan, setSelectedPlan] = useState([]);
 
   // Reset filters when popup opens
@@ -138,7 +131,7 @@ function TenantsPage() {
     const clearedFilters = {
       status: [],
       subscriptionStatus: [],
-      plan: []
+      plan: [],
     };
     setSelectedStatus([]);
     setSelectedSubscriptionStatus([]);
@@ -153,14 +146,14 @@ function TenantsPage() {
     const filters = {
       status: selectedStatus,
       subscriptionStatus: selectedSubscriptionStatus,
-      plan: selectedPlan
+      plan: selectedPlan,
     };
     setSelectedFilters(filters);
     setCurrentPage(0);
     setIsFilterActive(
-      filters.status.length > 0 || 
-      filters.subscriptionStatus.length > 0 || 
-      filters.plan.length > 0
+      filters.status.length > 0 ||
+        filters.subscriptionStatus.length > 0 ||
+        filters.plan.length > 0
     );
     setFilterPopupOpen(false);
   };
@@ -184,7 +177,8 @@ function TenantsPage() {
   };
 
   const currentFilteredRows = tenants || [];
-  const normalize = (s) => (typeof s === "string" ? s.trim().toLowerCase() : "");
+  const normalize = (s) =>
+    typeof s === "string" ? s.trim().toLowerCase() : "";
   const roleValues = Array.from(
     new Set(
       (currentFilteredRows || [])
@@ -196,13 +190,15 @@ function TenantsPage() {
   const techValues = Array.from(
     new Set(
       (currentFilteredRows || [])
-        .flatMap((r) => Array.isArray(r?.contact?.technologies) ? r.contact.technologies : [])
+        .flatMap((r) =>
+          Array.isArray(r?.contact?.technologies) ? r.contact.technologies : []
+        )
         .filter((v) => typeof v === "string" && v.trim() !== "")
     )
   ).sort();
   const filterValueOptions = [
     ...roleValues.map((v) => ({ value: `role:${v}`, label: v })),
-    ...techValues.map((v) => ({ value: `tech:${v}`, label: v })),
+    // ...techValues.map((v) => ({ value: `tech:${v}`, label: v })),
   ];
   const filteredRows = selectedValueFilter
     ? (() => {
@@ -211,12 +207,16 @@ function TenantsPage() {
         const target = normalize(val);
         if (prefix === "role") {
           return currentFilteredRows.filter(
-            (row) => row?.type !== "organization" && normalize(row?.contact?.currentRole) === target
+            (row) =>
+              row?.type !== "organization" &&
+              normalize(row?.contact?.currentRole) === target
           );
         }
         if (prefix === "tech") {
           return currentFilteredRows.filter((row) => {
-            const techs = Array.isArray(row?.contact?.technologies) ? row.contact.technologies : [];
+            const techs = Array.isArray(row?.contact?.technologies)
+              ? row.contact.technologies
+              : [];
             return techs.some((t) => normalize(t) === target);
           });
         }
@@ -224,13 +224,13 @@ function TenantsPage() {
       })()
     : currentFilteredRows;
   const totalPages = pagination?.totalPages || 0;
-  
+
   const nextPage = () => {
     if (pagination?.hasNext) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
-  
+
   const prevPage = () => {
     if (pagination?.hasPrev) {
       setCurrentPage((prevPage) => prevPage - 1);
@@ -341,10 +341,37 @@ function TenantsPage() {
     },
 
     {
+      key: "type",
+      header: "Type",
+      render: (value, row) => (
+        <span>{capitalizeFirstLetter(row?.type) || "N/A"}</span>
+      ),
+    },
+    selectedType === "organization"
+      ? ""
+      : {
+          key: "isFreelancer",
+          header: "Freelancer",
+          render: (value, row) => (
+            <span>{row?.isFreelancer ? "Yes" : "No" || "-"}</span>
+          ),
+        },
+
+    {
       key: "currentRole",
       header: "Current Role",
+      render: (value, row) => <span>{row?.contact?.currentRole || "N/A"}</span>,
+    },
+
+    {
+      key: "yearsOfExperience",
+      header: "Years of Experience",
       render: (value, row) => (
-        <span>{row?.type === "organization" ? "N/A" : (row?.contact?.currentRole || "N/A")}</span>
+        <span>
+          {row?.contact?.yearsOfExperience
+            ? row?.contact?.yearsOfExperience + " years"
+            : "N/A"}
+        </span>
       ),
     },
 
@@ -357,7 +384,7 @@ function TenantsPage() {
         </span>
       ),
     },
-    
+
     {
       key: "organizations",
       header: "Users",
@@ -443,19 +470,92 @@ function TenantsPage() {
       header: "Email",
     },
     {
-      key: "phone",
-      header: "Phone",
+      key: "type",
+      header: "Type",
+    },
+    selectedType === "organization"
+      ? ""
+      : {
+          key: "isFreelancer",
+          header: "Freelancer",
+          render: (value, row) => {
+            return <span>{row?.isFreelancer ? "Yes" : "No" || "-"}</span>;
+          },
+        },
+    {
+      key: "currentRole",
+      header: "Current Role",
       render: (value, row) => {
-        const tenantPhone = row?.phone;
-        const contactPhone = row?.contact?.phone;
-        const countryCode = row?.contact?.countryCode;
+        const tenantRole = row?.contact?.currentRole || "N/A";
+        return tenantRole;
 
-        const finalPhone = tenantPhone || contactPhone;
-        if (!finalPhone) return "N/A";
-
-        return countryCode ? `${countryCode} ${finalPhone}` : finalPhone;
+        // {row?.type === "organization"
+        //   ? "N/A"
+        //   : row?.contact?.currentRole || "N/A"}
       },
     },
+
+    {
+      key: "yearsOfExperience",
+      header: "Years of Experience",
+      render: (value, row) => {
+        return row?.contact?.yearsOfExperience
+          ? row?.contact?.yearsOfExperience + " years"
+          : "N/A";
+      },
+    },
+
+    {
+      key: "plan",
+      header: "Plan",
+      render: (value, row) => (
+        <span>
+          {row?.subscriptionPlan?.name ? row.subscriptionPlan.name : "N/A"}
+        </span>
+      ),
+    },
+
+    {
+      key: "organizations",
+      header: "Users",
+      render: (value, row) => {
+        return row.usersCount || 0;
+      },
+    },
+    {
+      key: "activeJobs",
+      header: "Active Jobs",
+      render: (value) => value || "0",
+    },
+    {
+      key: "activeUsersCount",
+      header: "Active Candidates",
+      render: (value, row) => {
+        return row?.activeUsersCount ? row.activeUsersCount : "0";
+      },
+    },
+    {
+      key: "lastActivity",
+      header: "Last Activity",
+      render: (value, row) => {
+        return row ? formatDate(row?.updatedAt) : "N/A";
+      },
+    },
+
+    // {
+    //   key: "phone",
+    //   header: "Phone",
+    //   render: (value, row) => {
+    //     const tenantPhone = row?.phone;
+    //     const contactPhone = row?.contact?.phone;
+    //     const countryCode = row?.contact?.countryCode;
+
+    //     const finalPhone = tenantPhone || contactPhone;
+    //     if (!finalPhone) return "N/A";
+
+    //     return countryCode ? `${countryCode} ${finalPhone}` : finalPhone;
+    //   },
+    // },
     {
       key: "status",
       header: "Status",
@@ -549,7 +649,7 @@ function TenantsPage() {
       "expired",
       "halted",
       "cancelled",
-      "pending"
+      "pending",
     ];
 
     const planOptions = [
@@ -558,7 +658,7 @@ function TenantsPage() {
       "Enterprise",
       "Free",
       "Premium",
-      "Expert"
+      "Expert",
     ];
 
     return (
@@ -592,7 +692,7 @@ function TenantsPage() {
                           onChange={() => handleCurrentStatusToggle(status)}
                           className="accent-custom-blue"
                         />
-                        <span>{status.replace('_', ' ')}</span>
+                        <span>{status.replace("_", " ")}</span>
                       </label>
                     ))}
                   </div>
@@ -606,9 +706,13 @@ function TenantsPage() {
         <div>
           <div
             className="flex justify-between items-center cursor-pointer"
-            onClick={() => setIsSubscriptionStatusOpen(!isSubscriptionStatusOpen)}
+            onClick={() =>
+              setIsSubscriptionStatusOpen(!isSubscriptionStatusOpen)
+            }
           >
-            <span className="font-medium text-gray-700">Subscription Status</span>
+            <span className="font-medium text-gray-700">
+              Subscription Status
+            </span>
             {isSubscriptionStatusOpen ? (
               <ChevronUp className="text-xl text-gray-700" />
             ) : (
@@ -628,9 +732,13 @@ function TenantsPage() {
                         <input
                           type="checkbox"
                           checked={selectedSubscriptionStatus.includes(status)}
-                          onChange={() => setSelectedSubscriptionStatus(prev => 
-                            prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
-                          )}
+                          onChange={() =>
+                            setSelectedSubscriptionStatus((prev) =>
+                              prev.includes(status)
+                                ? prev.filter((s) => s !== status)
+                                : [...prev, status]
+                            )
+                          }
                           className="accent-custom-blue"
                         />
                         <span>{status}</span>
@@ -669,9 +777,13 @@ function TenantsPage() {
                         <input
                           type="checkbox"
                           checked={selectedPlan.includes(plan)}
-                          onChange={() => setSelectedPlan(prev => 
-                            prev.includes(plan) ? prev.filter(p => p !== plan) : [...prev, plan]
-                          )}
+                          onChange={() =>
+                            setSelectedPlan((prev) =>
+                              prev.includes(plan)
+                                ? prev.filter((p) => p !== plan)
+                                : [...prev, plan]
+                            )
+                          }
                           className="accent-custom-blue"
                         />
                         <span>{plan}</span>
@@ -742,7 +854,9 @@ function TenantsPage() {
             <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-6 gap-4 px-1.5 w-full">
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Total Tenants</div>
-                <div className="text-xl font-semibold">{pagination?.totalItems || 0}</div>
+                <div className="text-xl font-semibold">
+                  {pagination?.totalItems || 0}
+                </div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Active</div>
@@ -814,9 +928,15 @@ function TenantsPage() {
               startContent={
                 <div className="min-w-[240px]">
                   <DropdownSelect
-                    value={filterValueOptions.find((opt) => opt.value === selectedValueFilter) || null}
+                    value={
+                      filterValueOptions.find(
+                        (opt) => opt.value === selectedValueFilter
+                      ) || null
+                    }
                     onChange={(selectedOption) => {
-                      setSelectedValueFilter(selectedOption ? selectedOption.value : "");
+                      setSelectedValueFilter(
+                        selectedOption ? selectedOption.value : ""
+                      );
                       setCurrentPage(0);
                     }}
                     options={filterValueOptions}
