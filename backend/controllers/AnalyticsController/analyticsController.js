@@ -484,23 +484,50 @@ const generateReport = async (req, res) => {
     );
 
     // 8. FINAL QUERY
-    let finalQuery = { ...permissionQuery };
+   // 8. FINAL QUERY
+let finalQuery = {};
 
-    if (activeFilters.dateRange && activeFilters.dateRange !== "all") {
-      const daysMap = { last7days: 7, last30days: 30, last90days: 90 };
-      const days = daysMap[activeFilters.dateRange] || 30;
-      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-      startDate.setHours(0, 0, 0, 0);
-      finalQuery.createdAt = { $gte: startDate };
-    }
+// VIEW SCOPE: "me" = only user's records, "all" = permission query
+if (activeFilters.viewScope === "me") {
+  finalQuery = {
+    $or: [
+      { createdBy: actingAsUserId },
+      { ownerId: actingAsUserId },
+      { updatedBy: actingAsUserId }
+    ]
+  };
+} else {
+  finalQuery = { ...permissionQuery }; // full access
+}
 
-    Object.keys(activeFilters).forEach(key => {
-      if (["dateRange", "customStartDate", "customEndDate"].includes(key)) return;
-      const value = activeFilters[key];
-      if (value != null && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
-        finalQuery[key] = Array.isArray(value) ? { $in: value } : value;
-      }
-    });
+// DATE RANGE
+if (activeFilters.dateRange === "custom") {
+  if (activeFilters.customStartDate) {
+    const start = new Date(activeFilters.customStartDate);
+    start.setHours(0, 0, 0, 0);
+    finalQuery.createdAt = { ...finalQuery.createdAt, $gte: start };
+  }
+  if (activeFilters.customEndDate) {
+    const end = new Date(activeFilters.customEndDate);
+    end.setHours(23, 59, 59, 999);
+    finalQuery.createdAt = { ...finalQuery.createdAt, $lte: end };
+  }
+} else if (activeFilters.dateRange && activeFilters.dateRange !== "all") {
+  const daysMap = { last7days: 7, last30days: 30, last90days: 90 };
+  const days = daysMap[activeFilters.dateRange] || 30;
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  startDate.setHours(0, 0, 0, 0);
+  finalQuery.createdAt = { $gte: startDate };
+}
+
+// Other filters
+Object.keys(activeFilters).forEach(key => {
+  if (["dateRange", "customStartDate", "customEndDate", "viewScope"].includes(key)) return;
+  const value = activeFilters[key];
+  if (value && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
+    finalQuery[key] = Array.isArray(value) ? { $in: value } : value;
+  }
+});
 
     // 9. PROJECTION
     const projection = responseColumns.reduce(
