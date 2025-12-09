@@ -900,6 +900,29 @@ const getAllOrganizations = async (req, res) => {
       },
     ]).exec();
 
+    // Check if tenant has freelancers
+    const freelancerFlags = await Users.aggregate([
+      {
+        $match: {
+          tenantId: { $in: tenantIds },
+          isFreelancer: "true",
+        },
+      },
+      {
+        $group: {
+          _id: "$tenantId",
+          hasFreelancer: { $sum: 1 }, // if >0 → true
+        },
+      },
+    ]).exec();
+
+    const freelancerFlagMap = {};
+    freelancerFlags.forEach(({ _id, hasFreelancer }) => {
+      if (_id) {
+        freelancerFlagMap[_id.toString()] = hasFreelancer > 0;
+      }
+    });
+
     const activeUserCountMap = {};
     activeUserCounts.forEach(({ _id, activeUserCount }) => {
       if (_id) {
@@ -967,6 +990,8 @@ const getAllOrganizations = async (req, res) => {
         ...org,
         usersCount: userCountMap[orgId] || 0,
         activeUsersCount: activeUserCountMap[orgId] || 0,
+        // 👇 ADD THIS
+        isFreelancer: freelancerFlagMap[orgId],
         subscription,
         subscriptionPlan: plan,
         contact: contactsMap[orgId] || null,

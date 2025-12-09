@@ -347,17 +347,20 @@ function TenantsPage() {
         <span>{capitalizeFirstLetter(row?.type) || "N/A"}</span>
       ),
     },
+    selectedType === "organization"
+      ? ""
+      : {
+          key: "isFreelancer",
+          header: "Freelancer",
+          render: (value, row) => (
+            <span>{row?.isFreelancer ? "Yes" : "No" || "-"}</span>
+          ),
+        },
 
     {
       key: "currentRole",
       header: "Current Role",
-      render: (value, row) => (
-        <span>
-          {row?.type === "organization"
-            ? "N/A"
-            : row?.contact?.currentRole || "N/A"}
-        </span>
-      ),
+      render: (value, row) => <span>{row?.contact?.currentRole || "N/A"}</span>,
     },
 
     {
@@ -365,9 +368,9 @@ function TenantsPage() {
       header: "Years of Experience",
       render: (value, row) => (
         <span>
-          {row?.type === "organization"
-            ? "N/A"
-            : row?.contact?.yearsOfExperience || "N/A"}
+          {row?.contact?.yearsOfExperience
+            ? row?.contact?.yearsOfExperience + " years"
+            : "N/A"}
         </span>
       ),
     },
@@ -470,6 +473,15 @@ function TenantsPage() {
       key: "type",
       header: "Type",
     },
+    selectedType === "organization"
+      ? ""
+      : {
+          key: "isFreelancer",
+          header: "Freelancer",
+          render: (value, row) => {
+            return <span>{row?.isFreelancer ? "Yes" : "No" || "-"}</span>;
+          },
+        },
     {
       key: "currentRole",
       header: "Current Role",

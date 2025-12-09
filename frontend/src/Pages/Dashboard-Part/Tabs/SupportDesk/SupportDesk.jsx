@@ -189,8 +189,6 @@ function SupportDesk() {
     limit: itemsPerPage,
   });
 
-  // console.log("totalCount ---> ", tickets?.totalCount);
-
   const totalPages = Math.ceil(tickets?.totalCount / itemsPerPage);
   const currentFilteredRows = tickets?.tickets || [];
 
@@ -262,20 +260,6 @@ function SupportDesk() {
     if (currentPage > 0) {
       setCurrentPage((prev) => prev - 1);
     }
-  };
-
-  //  formating date
-  const formatDate = (isoString) => {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    return date.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
   };
 
   // Based on priority color shoing data

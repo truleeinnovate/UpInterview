@@ -3,7 +3,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useEffect, useRef } from "react";
 import { fetchFilterData } from "../api";
 import { config } from "../config";
 import { usePermissions } from "../Context/PermissionsContext";
@@ -12,7 +11,7 @@ import { uploadFile } from "./imageApis";
 export const useMockInterviews = (params = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
-  const initialLoad = useRef(true);
+  // const initialLoad = useRef(true);
 
   // Check if user has permission to view mock interviews
   const hasViewPermission = effectivePermissions?.MockInterviews?.View;
@@ -45,8 +44,6 @@ export const useMockInterviews = (params = {}) => {
           ...params,
           mockLimit: params?.limit ?? limit ?? Infinity,
         };
-
-        console.log("apiParams", apiParams);
 
         const filteredInterviews = await fetchFilterData(
           "mockinterview",
@@ -160,8 +157,6 @@ export const useMockInterviews = (params = {}) => {
         }));
       }
 
-      console.log("/updateMockInterview/", payload);
-
       const url = isEdit
         ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
         : `${config.REACT_APP_API_URL}/mockinterview`;
@@ -182,8 +177,6 @@ export const useMockInterviews = (params = {}) => {
           await uploadFile(resume, "resume", "mockInterview", mockInterviewId);
         }
       }
-
-      console.log("response.data", response);
 
       return response.data;
     },

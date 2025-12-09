@@ -11,21 +11,13 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  Minimize,
-  Expand,
-  X,
-  Eye,
-  Info,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
+import { X, Eye, Info } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 import LoadingButton from "../../../../Components/LoadingButton";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import { notify } from "../../../../services/toastService";
 import InfoGuide from "../CommonCode-AllTabs/InfoCards";
 // v1.0.4 <-----------------------------------------------------------------------------------
@@ -34,7 +26,7 @@ import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopu
 import InputField from "../../../../Components/FormFields/InputField";
 import DescriptionField from "../../../../Components/FormFields/DescriptionField";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
-import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError";
+
 // v1.0.3 <-------------------------------------------------------------------------
 const maxDescriptionLen = 1000;
 const maxSubjectLen = 150;
@@ -99,7 +91,6 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [attachmentFileError, setAttachmentFileError] = useState("");
   const [isAttachmentFileRemoved, setIsAttachmentRemoved] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
 
   // v1.0.3 <-------------------------------------------------------------------------
   const issuesData = useMemo(
@@ -177,11 +168,13 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
         const response = await axios.get(
           `${process.env.REACT_APP_API_URL}/users/owner/${ownerId}`
         );
+        console.log("response", response);
         setContact(response.data);
 
         const response2 = await axios.get(
           `${process.env.REACT_APP_API_URL}/Organization/organization-details/${tenantId}`
         );
+        console.log("response2", response2);
         setOrganization(response2.data.company);
       } catch (error) {
         console.error("Error fetching users:", error);

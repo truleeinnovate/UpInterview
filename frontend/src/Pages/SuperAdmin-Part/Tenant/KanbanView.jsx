@@ -85,7 +85,7 @@ const KanbanView = ({
                     >
                       <span className="text-gray-500 text-sm">{header}</span>
                       <span className="truncate font-semibold text-sm">
-                        {render ? render(item[key], item) : item[key] || "N/A"}
+                        {render ? render(item[key], item) : item[key] || ""}
                       </span>
                     </div>
                   ))}
