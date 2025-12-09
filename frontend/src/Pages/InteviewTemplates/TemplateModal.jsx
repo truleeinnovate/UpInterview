@@ -506,7 +506,7 @@ const TechnicalType = ({
       try {
         setLoading(true);
         const response = await axios.get(`${config.REACT_APP_API_URL}/groups`);
-        console.log("Fetched groups:", response.data); // Debug log
+       
         setGroups(response.data);
       } catch (error) {
         console.error("Error fetching groups:", error);
@@ -617,7 +617,7 @@ const TechnicalType = ({
   };
 
   const handleInterviewerSelect = (item) => {
-    console.log("Selected item:", item); // Debug log
+    
     if (formData.selectedInterviewersType === "Individual") {
       const newInterviewer = {
         interviewerId: item._id,

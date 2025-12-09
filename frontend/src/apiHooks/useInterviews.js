@@ -30,7 +30,7 @@ export const useInterviews = (
       type: type,
       upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
     };
-  console.log("params", params);
+  //console.log("params", params);
 
   // ),
   //   [filters, page, limit, type]

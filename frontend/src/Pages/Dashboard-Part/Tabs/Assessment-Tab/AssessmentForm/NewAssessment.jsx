@@ -37,7 +37,10 @@ import AssessmentsTab from "../AssessmentViewDetails/AssessmentViewAssessmentTab
 import PassScore from "./PassScore.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
-import { usePositions } from "../../../../../apiHooks/usePositions";
+import {
+  usePositions,
+  usePositionById,
+} from "../../../../../apiHooks/usePositions";
 import LoadingButton from "../../../../../Components/LoadingButton";
 import { Button } from "@mui/material";
 import { Trash2, X } from "lucide-react";
@@ -69,7 +72,20 @@ const NewAssessment = () => {
     includeTemplates: true,
   });
 
-  const { positionData } = usePositions();
+  const DROPDOWN_LIMIT = 50;
+  const [positionLimit, setPositionLimit] = useState(DROPDOWN_LIMIT);
+  const [positionSearch, setPositionSearch] = useState("");
+  const [debouncedPositionSearch, setDebouncedPositionSearch] = useState("");
+
+  const {
+    positionData,
+    total: totalPositions,
+    isQueryLoading: positionsLoading,
+  } = usePositions({
+    page: 1,
+    limit: positionLimit,
+    ...(debouncedPositionSearch && { searchQuery: debouncedPositionSearch }),
+  });
 
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const userId = tokenPayload?.userId;
@@ -78,11 +94,6 @@ const NewAssessment = () => {
   const [showLinkExpiryDay, setShowLinkExpiryDays] = useState(false);
   const [linkExpiryDays, setLinkExpiryDays] = useState(3);
   // console.log("assessmentById", assessmentById);
-  const isEditing = !!id;
-  const assessment = isEditing
-    ? assessmentById
-    : // assessmentData.find((assessment) => assessment._id === id)
-      null;
   // console.log("assessmentById", assessmentById);
 
   const [activeTab, setActiveTab] = useState("Basicdetails");
@@ -109,6 +120,17 @@ const NewAssessment = () => {
   // console.log('selectedPosition----',selectedPosition);
 
   const [value, setValue] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedPositionSearch(positionSearch.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [positionSearch]);
+
+  useEffect(() => {
+    setPositionLimit(DROPDOWN_LIMIT);
+  }, [debouncedPositionSearch]);
 
   const [matchingSection, setMatchingSection] = useState([]);
   const defaultInstructions = `
@@ -153,6 +175,39 @@ const NewAssessment = () => {
     categoryOrTechnology: "",
     externalId: "",
   });
+
+  const isEditing = !!id;
+  const assessment = isEditing
+    ? assessmentById
+    : // assessmentData.find((assessment) => assessment._id === id)
+      null;
+
+  const selectedPositionId =
+    (formData.Position && formData.Position) ||
+    (isEditing && assessment?.Position) ||
+    "";
+
+  const { position: positionById } = usePositionById(
+    selectedPositionId || null
+  );
+
+  useEffect(() => {
+    if (positionById && positionById._id) {
+      setSelectedPosition(positionById);
+    } else if (!selectedPositionId) {
+      setSelectedPosition("");
+    }
+  }, [positionById, selectedPositionId]);
+
+  const filteredPositionData =
+    positionData?.filter((position) => position.status === "opened") || [];
+
+  const positionsForDropdown =
+    selectedPosition &&
+    selectedPosition._id &&
+    !filteredPositionData.some((p) => p._id === selectedPosition._id)
+      ? [selectedPosition, ...filteredPositionData]
+      : filteredPositionData;
 
   const tenantId = tokenPayload?.tenantId;
   const ownerId = tokenPayload?.userId;
@@ -222,10 +277,6 @@ const NewAssessment = () => {
   // Load basic assessment data
   useEffect(() => {
     if (isEditing && assessment) {
-      const matchedPosition = positionData.find(
-        (pos) => pos._id === assessment?.Position
-      );
-
       // Find category object using assessmentTemplateList ID
       const matchedCategory = assessmentListData.find(
         (item) => item._id === assessment?.assessmentTemplateList?._id
@@ -251,7 +302,6 @@ const NewAssessment = () => {
       setSelectedDifficulty(assessment.DifficultyLevel);
       setInstructions(assessment.Instructions || "");
       setAdditionalNotes(assessment.AdditionalNotes || "");
-      setSelectedPosition(matchedPosition || null);
       setLinkExpiryDays(assessment.linkExpiryDays);
       // Preselect categoryOrTechnology
       if (matchedCategory) {
@@ -284,7 +334,7 @@ const NewAssessment = () => {
 
       setIsPassScoreSubmitted(true); // Enable "Edit Pass Score" button when editing
     }
-  }, [isEditing, assessment, positionData]);
+  }, [isEditing, assessment, assessmentListData]);
 
   // Load assessment questions and section-specific scores
   useEffect(() => {
@@ -1121,6 +1171,19 @@ const NewAssessment = () => {
     }
   };
 
+  const handlePositionMenuScrollToBottom = () => {
+    if (positionsLoading) return;
+    if (!totalPositions || positionLimit >= totalPositions) return;
+
+    setPositionLimit((prev) => prev + DROPDOWN_LIMIT);
+  };
+
+  const handlePositionSearchChange = (inputValue, actionMeta) => {
+    if (actionMeta?.action === "input-change") {
+      setPositionSearch(inputValue || "");
+    }
+  };
+
   const handlePositionSelect = (position) => {
     if (!position?._id) {
       console.error("Invalid position selected");
@@ -1732,7 +1795,10 @@ const NewAssessment = () => {
                           setShowDropdownDifficulty={setShowDropdownDifficulty}
                           setShowDropdownPosition={setShowDropdownPosition}
                           setShowDropdownDuration={setShowDropdownDuration}
-                          positions={positionData}
+                          positions={positionsForDropdown}
+                          positionsLoading={positionsLoading}
+                          onPositionMenuScrollToBottom={handlePositionMenuScrollToBottom}
+                          onPositionInputChange={handlePositionSearchChange}
                           errors={errors}
                           isEditing={isEditing}
                           setActiveTab={setActiveTab}
@@ -1757,9 +1823,9 @@ const NewAssessment = () => {
                           tenantId={tenantId}
                           ownerId={ownerId}
                         />
-                        <p className="flex justify-end">
+                        <div className="flex justify-end">
                           <TabFooter currentTab="Basicdetails" />
-                        </p>
+                        </div>
                       </>
                     )}
 

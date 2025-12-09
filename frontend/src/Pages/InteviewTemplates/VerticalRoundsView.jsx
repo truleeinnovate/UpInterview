@@ -52,7 +52,7 @@ const VerticalRoundsView = ({ rounds, onEditRound, template }) => {
     <div className="space-y-4">
       {sortedRounds.map((round, index) => (
         <div
-          key={round._id}
+          key={round._id || `${round.sequence}-${index}`}
           className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden"
         >
           <div className="flex justify-between items-center p-4 hover:bg-gray-50">

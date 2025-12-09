@@ -19,15 +19,12 @@ import StatusBadge from "../CommonCode-AllTabs/StatusBadge.jsx";
 import Breadcrumb from "../CommonCode-AllTabs/Breadcrumb.jsx";
 import MoockRoundCard from "./MockInterviewRoundCard.jsx";
 import MockCandidateDetails from "./MockinterviewCandidate.jsx";
-// import { config } from "../../../../config.js";
-import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
+import { config } from "../../../../config.js";
+import { useMockInterviewById } from "../../../../apiHooks/useMockInterviews.js";
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
-
-  const { mockinterviewData } = useMockInterviews();
-
-  const mockinterview = mockinterviewData.find((data) => data._id === id);
+  const { mockInterview: mockinterview, isLoading } = useMockInterviewById(id);
 
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -89,6 +86,13 @@ const MockInterviewDetails = () => {
   // }, [rounds]);
 
   // Ensure hooks are always called before any conditional return
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading...
+      </div>
+    );
+  }
   if (!mockinterview) {
     return (
       <div className="flex justify-center items-center h-screen">

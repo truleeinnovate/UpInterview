@@ -42,7 +42,11 @@ export const useAssessments = (filters = {}) => {
     refetch,
   } = useQuery({
     // <---------------------- v1.0.1
-    queryKey: ["AssessmentTemplates", filters],
+    // Use a stable representation of filters in the query key so React Query
+    // does not see a new key on every render when callers pass a freshly
+    // created filters object. JSON.stringify is sufficient here because
+    // filters only contains primitives/arrays/objects (no functions).
+    queryKey: ["AssessmentTemplates", JSON.stringify(filters || {})],
     // ---------------------- v1.0.1 >
     queryFn: async () => {
       const params = filters;
@@ -453,7 +457,16 @@ export const useAssessments = (filters = {}) => {
       error,
       refetch,
     } = useQuery({
-      queryKey: ["AssessmentList", filters],
+      // Use stable primitives (tenantId, ownerId) in the key instead of the
+      // filters object reference to avoid creating a new query on every render
+      // when callers pass a freshly created filters object. This prevents
+      // unnecessary refetches and potential render loops in components that
+      // derive local state from assessmentListData.
+      queryKey: [
+        "AssessmentList",
+        filters?.tenantId || null,
+        filters?.ownerId || null,
+      ],
       queryFn: async () => {
         const data = await fetchFilterData("assessmentlist"); // API endpoint
 

@@ -1,7 +1,7 @@
 // v1.0.0 - Ashok - type based options
 // v1.0.1 - Ashok - hidden create list button when type is standard
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Tooltip from "@mui/material/Tooltip";
 import { createPortal } from "react-dom";
@@ -14,7 +14,6 @@ import { ReactComponent as LuFilter } from "../../../../icons/LuFilter.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FaList } from "../../../../icons/FaList.svg";
 import { useMediaQuery } from "react-responsive";
-import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
@@ -286,6 +285,9 @@ const AssessmentToolbar = ({
   activeTab,
   setActiveTab,
   setSelectedOption,
+  totalCount,
+  useAssessmentList,
+  createAssessmentTemplateList,
 }) => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -294,19 +296,15 @@ const AssessmentToolbar = ({
   const ownerId = tokenPayload?.userId;
 
   const isTablet = useMediaQuery({ maxWidth: 320 });
-  const { assessmentData, useAssessmentList, createAssessmentTemplateList } =
-    useAssessments();
   const hasViewPermission = true; // replace with your actual permission logic
-  const filters = { tenantId, ownerId };
+  // Memoize filters so the object reference is stable between renders
+  const filters = useMemo(
+    () => ({ tenantId, ownerId }),
+    [tenantId, ownerId]
+  );
 
   const { assessmentListData } = useAssessmentList(filters, hasViewPermission);
 
-  // const standardCount =
-  //   assessmentData?.filter((t) => t?.type === "standard")?.length || 0;
-  // const customCount =
-  //   assessmentData?.filter((t) => t?.type === "custom")?.length || 0;
-
-  const totalCount = assessmentData?.length || 0;
   const [selected, setSelected] = useState(null);
 
   const [showPopup, setShowPopup] = useState(false);
@@ -315,67 +313,27 @@ const AssessmentToolbar = ({
     name: "",
   });
   const [error, setError] = useState("");
-  const [options, setOptions] = useState([]);
-
-  useEffect(() => {
-    setSelected(null);
-    setSelectedOption(null);
-  }, [activeTab]);
 
   useScrollLock(showPopup);
 
-  // ⬇Add this block
-  useEffect(() => {
-    const fetchLists = async () => {
-      try {
-        const response = assessmentListData;
-
-        if (response && Array.isArray(response)) {
-          const formatted = response.map((item) => ({
-            categoryOrTechnology: item?.categoryOrTechnology,
-            value: item?.name,
-            _id: item?._id,
-            type: item?.type,
-          }));
-
-          setOptions(formatted);
-        }
-      } catch (error) {
-        console.error("Error fetching lists:", error);
-      }
-    };
-
-    fetchLists();
+  // Derive options directly from assessmentListData to avoid any state updates inside effects
+  const options = useMemo(() => {
+    if (!assessmentListData || !Array.isArray(assessmentListData)) return [];
+    return assessmentListData.map((item) => ({
+      categoryOrTechnology: item?.categoryOrTechnology,
+      value: item?.name,
+      _id: item?._id,
+      type: item?.type,
+    }));
   }, [assessmentListData]);
 
   // Auto-generate and sanitize 'name' field from label
+  // Note: The actual auto-generation logic now lives inside AssessmentListModal,
+  // which owns the form state. This effect is intentionally a no-op here to
+  // avoid duplicating that logic and to guarantee no extra render loops.
   useEffect(() => {
-    if (newList.categoryOrTechnology) {
-      const generatedName = newList.categoryOrTechnology
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, "_") // convert spaces to underscores
-        .replace(/[^a-z0-9_]/g, ""); // remove invalid chars
-
-      // Check if same name already exists (case-insensitive)
-      const isDuplicate = options.some(
-        (opt) => opt.value.toLowerCase() === generatedName.toLowerCase()
-      );
-
-      // Always set generated name (for visibility)
-      setNewList((prev) => ({ ...prev, name: generatedName }));
-
-      // Show or clear error
-      if (isDuplicate) {
-        setError("A list with this name already exists.");
-      } else {
-        setError("");
-      }
-    } else {
-      setNewList((prev) => ({ ...prev, name: "" }));
-      setError("");
-    }
-  }, [newList.categoryOrTechnology, options]);
+    // no-op
+  }, []);
 
   // Handle tab change
   const handleTabChange = (tab) => {
@@ -563,7 +521,6 @@ const AssessmentToolbar = ({
         useAssessmentList={useAssessmentList}
         tenantId={tenantId}
         ownerId={ownerId}
-        setOptions={setOptions}
         setSelected={setSelected}
         selectionType="object"
       />

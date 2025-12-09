@@ -4,6 +4,12 @@ const router = express.Router();
 const mockInterviewController = require("../controllers/mockInterviewController");
 const loggingService = require("../middleware/loggingService");
 
+// GET: Single mock interview with rounds by id
+router.get(
+  "/mockinterview/:id",
+  mockInterviewController.getMockInterviewDetails
+);
+
 // POST: Create mock interview
 router.post(
   "/mockinterview",

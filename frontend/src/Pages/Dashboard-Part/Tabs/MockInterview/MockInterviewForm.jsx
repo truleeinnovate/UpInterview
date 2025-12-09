@@ -17,7 +17,10 @@ import { X, Users, User, Trash2, Clock, Calendar } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 import OutsourcedInterviewerModal from "../Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx";
-import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
+import {
+  useMockInterviews,
+  useMockInterviewById,
+} from "../../../../apiHooks/useMockInterviews.js";
 import LoadingButton from "../../../../Components/LoadingButton";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 
@@ -79,10 +82,10 @@ const MockSchedulelater = () => {
     loadCurrentRoles,
     isCurrentRolesFetching,
   } = useMasterData({}, pageType);
-  const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } =
-    useMockInterviews({ limit: Infinity });
+  const { addOrUpdateMockInterview, isMutationLoading } = useMockInterviews();
   const { id } = useParams();
   const navigate = useNavigate();
+  const { mockInterview } = useMockInterviewById(id);
 
   const [formData, setFormData] = useState({
     skills: [],
@@ -216,14 +219,12 @@ const MockSchedulelater = () => {
 
   // Populate formData for edit mode
   useEffect(() => {
-    if (id && mockinterviewData.length > 0) {
-      // console.log("mockinterviewData", mockinterviewData);
-      const MockEditData = mockinterviewData.find((moc) => moc._id === id);
-      // console.log("MockEditData", MockEditData);
+    if (id && mockInterview) {
+      const MockEditData = mockInterview;
       if (MockEditData) {
         setMockEdit(true);
 
-        console.log("MockEditData", MockEditData);
+        
 
         // Map interviewers to externalInterviewers format
         const formattedInterviewers =
@@ -235,7 +236,7 @@ const MockSchedulelater = () => {
                 interviewer?.lastName || ""
               }`.trim(),
           })) || [];
-        console.log("formattedInterviewers", formattedInterviewers);
+        
 
         setExternalInterviewers(formattedInterviewers);
         // setSelectedInterviewType(formattedInterviewers.length > 0 ? "external" : "scheduled");
@@ -368,10 +369,10 @@ const MockSchedulelater = () => {
         //     skillStrings
         // });
       }
-    } else {
+    } else if (!id) {
       updateTimes(formData.rounds.duration);
     }
-  }, [id, mockinterviewData]);
+  }, [id, mockInterview]);
 
   // console.log("formData", formData);
   // console.log("entries", entries);
