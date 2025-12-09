@@ -30,14 +30,14 @@ import VerticalRoundsViewPosition from "./PositionRound/VerticalRoundsViewPositi
 // import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Activity from "../../Tabs/CommonCode-AllTabs/Activity";
 import Loading from "../../../../Components/Loading";
-import { usePositions } from "../../../../apiHooks/usePositions";
+import { usePositionById } from "../../../../apiHooks/usePositions";
 import Breadcrumb from "../../Tabs/CommonCode-AllTabs/Breadcrumb";
 
 Modal.setAppElement("#root");
 
 const PositionSlideDetails = () => {
   const { id } = useParams();
-  const { positionData } = usePositions();
+  const { position: fetchedPosition, isLoading } = usePositionById(id);
 
   const [rounds, setRounds] = useState([]);
   const [activeRound, setActiveRound] = useState(null);
@@ -87,57 +87,55 @@ const PositionSlideDetails = () => {
   // }, [id, positionData]);
 
   useEffect(() => {
-    const fetchPosition = async () => {
-      try {
-        console.log("started position");
-        const foundPosition = positionData?.find((pos) => pos._id === id);
-        console.log("Found Position:", foundPosition);
+    if (!fetchedPosition) {
+      return;
+    }
 
-        if (foundPosition) {
-          const roundsList = foundPosition.rounds || [];
+    try {
+     
+      const foundPosition = fetchedPosition;
+      
 
-          setPosition(foundPosition);
-          setRounds(roundsList);
-          setActiveRound(roundsList[0]?._id);
+      const roundsList = foundPosition.rounds || [];
 
-          // If only one round exists, switch to vertical view
-          if (roundsList.length === 1) {
-            setRoundsViewMode("vertical");
-          }
+      setPosition(foundPosition);
+      setRounds(roundsList);
+      setActiveRound(roundsList[0]?._id);
 
-          // ✅ Collect interviewer counts
-          const allSet = new Set();
-          const internalSet = new Set();
-          const externalSet = new Set();
-          console.log("roundsList", roundsList);
-
-          roundsList.forEach((round) => {
-            round?.interviewers?.forEach((interviewer) => {
-              if (interviewer?._id) {
-                allSet.add(interviewer._id);
-
-                if (round.interviewerType?.toLowerCase() === "internal") {
-                  internalSet.add(interviewer._id);
-                } else if (
-                  round.interviewerType?.toLowerCase() === "external"
-                ) {
-                  externalSet.add(interviewer._id);
-                }
-              }
-            });
-          });
-
-          setAllInterviewerCount(allSet.size);
-          setInternalInterviewerCount(internalSet.size);
-          setExternalInterviewerCount(externalSet.size);
-        }
-      } catch (error) {
-        console.error("Error fetching template:", error);
+      // If only one round exists, switch to vertical view
+      if (roundsList.length === 1) {
+        setRoundsViewMode("vertical");
       }
-    };
 
-    fetchPosition();
-  }, [id, positionData]);
+      // ✅ Collect interviewer counts
+      const allSet = new Set();
+      const internalSet = new Set();
+      const externalSet = new Set();
+      
+
+      roundsList.forEach((round) => {
+        round?.interviewers?.forEach((interviewer) => {
+          if (interviewer?._id) {
+            allSet.add(interviewer._id);
+
+            if (round.interviewerType?.toLowerCase() === "internal") {
+              internalSet.add(interviewer._id);
+            } else if (
+              round.interviewerType?.toLowerCase() === "external"
+            ) {
+              externalSet.add(interviewer._id);
+            }
+          }
+        });
+      });
+
+      setAllInterviewerCount(allSet.size);
+      setInternalInterviewerCount(internalSet.size);
+      setExternalInterviewerCount(externalSet.size);
+    } catch (error) {
+      console.error("Error fetching template:", error);
+    }
+  }, [fetchedPosition]);
 
   // v1.0.3 ---------------------------------------------------------------------->
 
@@ -190,7 +188,13 @@ const PositionSlideDetails = () => {
     { id: "Activity", name: "Activity", icon: "📊" },
   ];
 
-  // if (!position) return <div className='flex justify-center items-center h-full w-full'><Loading /></div>;
+  if (isLoading || !position) {
+    return (
+      <div className="flex justify-center items-center h-full w-full">
+        <Loading />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

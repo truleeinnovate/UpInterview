@@ -208,7 +208,7 @@ const PositionRoundCard = ({
         `${config.REACT_APP_API_URL}/interview/save-round`,
         payload
       );
-      console.log("Status updated:", response.data);
+      
       // Show success toast
       notify.success(`Round status updated to ${newStatus}`, {});
     } catch (error) {

@@ -19,7 +19,7 @@ const PositionProfileDetails = ({ positionId, onCloseprofile }) => {
     template: "",
   });
 
-  console.log(formData, "formData")
+  
 
   useEffect(() => {
     if (position) {

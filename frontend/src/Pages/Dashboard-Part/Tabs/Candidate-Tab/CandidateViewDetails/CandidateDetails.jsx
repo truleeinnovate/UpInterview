@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useCandidates } from "../../../../../apiHooks/useCandidates";
+import { useCandidateById } from "../../../../../apiHooks/useCandidates";
 // v1.0.2 <------------------------------------------------------------------------
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.2 ------------------------------------------------------------------------->
@@ -34,16 +34,14 @@ import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarP
 Modal.setAppElement("#root");
 
 const CandidateDetails = ({ mode, candidateId, onClose }) => {
-  const { candidateData } = useCandidates({
-    candidateLimit: Infinity,
-  });
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});
   // const { id } = useParams();
   const params = useParams();
 
-  const location = useLocation();
+  useLocation();
   const id = candidateId || params?.id;
+  const { candidate: fetchedCandidate } = useCandidateById(id);
   // v1.0.2 <--------------------------------------------------------------------
   // v1.0.6 <--------------------------------------------------------------------
   // v1.0.7 <--------------------------------------------------------------------
@@ -54,27 +52,10 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
   // v1.0.2 -------------------------------------------------------------------->
 
   useEffect(() => {
-    let isMounted = true; // flag to track component mount status
-
-    const fetchCandidate = async () => {
-      try {
-        const selectedCandidate = candidateData.find(
-          (candidate) => candidate._id === id
-        );
-        if (isMounted && selectedCandidate) {
-          setCandidate(selectedCandidate);
-        }
-      } catch (error) {
-        console.error("Error fetching candidate:", error);
-      }
-    };
-
-    fetchCandidate();
-
-    return () => {
-      isMounted = false; // cleanup function to avoid state updates after unmount
-    };
-  }, [id, candidateData]);
+    if (id && fetchedCandidate) {
+      setCandidate(fetchedCandidate);
+    }
+  }, [id, fetchedCandidate]);
 
   // v1.0.4 <-----------------------------------------------------------------
   // With this:
@@ -414,32 +395,25 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
               <div className="flex flex-wrap gap-3">
                 {candidate?.skills ? (
                   candidate.skills.map((skill, index) => (
-                    <>
-                      {/* <------v1.0.0 ------*/}
-                      <div
-                        key={skill._id || `${skill.skill}-${index}`}
-                        className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full px-3 py-3 bg-custom-bg rounded-lg md:rounded-full lg:rounded-full xl:rounded-full 2xl:rounded-full border border-blue-100"
-                      >
-                        <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
-                          <span className="truncate max-w-full">
-                            {skill.skill}
-                          </span>
+                    // v1.0.0 ------
+                    <div
+                      key={skill._id || `${skill.skill}-${index}`}
+                      className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full px-3 py-3 bg-custom-bg rounded-lg md:rounded-full lg:rounded-full xl:rounded-full 2xl:rounded-full border border-blue-100"
+                    >
+                      <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                        <span className="truncate max-w-full">{skill.skill}</span>
+                      </span>
+                      <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                        <span className="truncate max-w-full">
+                          {skill.experience}
                         </span>
-                        <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
-                          <span className="truncate max-w-full">
-                            {skill.experience}
-                          </span>
+                      </span>
+                      <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                        <span className="truncate max-w-full">
+                          {skill.expertise}
                         </span>
-                        <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
-                          <span className="truncate max-w-full">
-                            {skill.expertise}
-                          </span>
-                        </span>
-                      </div>
-
-                      {/* v1.0.0 ------->*/}
-                      {/* v1.0.4 ----------------------------------------------------------------------------------------------------> */}
-                    </>
+                      </span>
+                    </div>
                   ))
                 ) : (
                   <span>No skills found</span>
