@@ -7,12 +7,10 @@ import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 
 import { X } from "lucide-react";
 import axios from "axios";
-//import { fetchMasterData } from "../../../../../../utils/fetchMasterData";
 import {
   isEmptyObject,
   validateInterviewForm,
 } from "../../../../../../utils/MyProfileValidations";
-import { ReactComponent as FaPlus } from "../../../../../../icons/FaPlus.svg";
 import { useNavigate, useParams } from "react-router-dom";
 import DropdownSelect from "../../../../../../Components/Dropdowns/DropdownSelect";
 import { useMasterData } from "../../../../../../apiHooks/useMasterData";
@@ -22,12 +20,10 @@ import {
 } from "../../../../../../apiHooks/useUsers";
 import { useQueryClient } from "@tanstack/react-query";
 import { notify } from "../../../../../../services/toastService";
-import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
 // v1.0.1 --------------------------------------------------------------------------------->
 // v1.0.2 <-----------------------------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import DropdownWithSearchField from "../../../../../../Components/FormFields/DropdownWithSearchField";
-import IncreaseAndDecreaseField from "../../../../../../Components/FormFields/IncreaseAndDecreaseField";
 import {
   DescriptionField,
   InputField,
@@ -42,10 +38,6 @@ const EditInterviewDetails = ({
   onSuccess,
   yearsOfExperience = 0,
 }) => {
-  // const {
-  //   usersRes
-  // } = useCustomContext();
-  const popupRef = useRef(null);
   const skillsPopupRef = useRef(null);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -60,9 +52,6 @@ const EditInterviewDetails = ({
     // from === "my-profile" ? resolvedId : null
   );
 
-  // Fetch outsource interviewers for "outsource-interviewer" context
-  const { outsourceInterviewers } = useOutsourceInterviewers();
-
   // Get the appropriate profile data based on context
   const profileData = useMemo(() => {
     // if (from === "outsource-interviewer") {
@@ -75,7 +64,7 @@ const EditInterviewDetails = ({
     //   return interviewer?.contactId || null;
     // }
     return userProfile;
-  }, [from, resolvedId, userProfile]);
+  }, [userProfile]);
 
   const updateContactDetail = useUpdateContactDetail();
   const queryClient = useQueryClient();
@@ -189,22 +178,21 @@ const EditInterviewDetails = ({
   const showMidLevel = expYears >= 4;
   const showSeniorLevel = expYears >= 7;
   const pageType = "adminPortal";
-  const { skills, loadSkills, isSkillsFetching, 
-    technologies,
-    loadTechnologies,
-    isTechnologiesFetching, } = useMasterData({}, pageType);
+  const {
+    skills,
+    loadSkills,
+    isSkillsFetching,
+    currentRoles,
+    loadCurrentRoles,
+    isCurrentRolesFetching,
+  } = useMasterData({}, pageType);
 
   // State for form errors and loading
   const [errors, setErrors] = useState({});
   const [isReady, setIsReady] = useState(false);
-
   const [selectedCandidates, setSelectedCandidates] = useState([]);
-
   const [selectedSkills, setSelectedSkills] = useState([]);
-
-  //const [services, setServices] = useState([]);
   const [rateCards, setRateCards] = useState([]);
-  // const [InterviewPreviousExperience, setInterviewPreviousExperience] = useState("");
   const [showCustomDiscount, setShowCustomDiscount] = useState(false);
   const [customDiscountValue, setCustomDiscountValue] = useState("");
 
@@ -227,20 +215,7 @@ const EditInterviewDetails = ({
   const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [initialFormData, setInitialFormData] = useState(null);
-  const bioLength = formData.bio?.length || 0;
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const technologyData = await fetchMasterData("technology");
-  //       setServices(technologyData);
-  //     } catch (error) {
-  //       console.error("Error fetching master data:", error);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
+  // const bioLength = formData.bio?.length || 0;
 
   // Check if form has changes compared to initial data
   const checkForChanges = useCallback(
@@ -367,6 +342,8 @@ const EditInterviewDetails = ({
     const selectedTechs = Array.isArray(profileData?.technologies)
       ? profileData.technologies
       : [];
+
+    console.log("selectedTechs:-", selectedTechs);
     setSelectedCandidates(
       selectedTechs.map((tech) => ({
         TechnologyMasterName: tech,
@@ -396,29 +373,6 @@ const EditInterviewDetails = ({
       ...prevErrors,
       bio: "",
     }));
-  };
-
-  const handleSelectSkill = (skill) => {
-    if (!skill) return;
-
-    // Check if skill is already selected (case-insensitive comparison)
-    const isAlreadySelected = selectedSkills.some(
-      (selectedSkill) =>
-        selectedSkill?.toLowerCase() === skill.SkillName?.toLowerCase()
-    );
-
-    if (!isAlreadySelected) {
-      const newSkill = skill.SkillName;
-      const updatedSkills = [...selectedSkills, newSkill];
-      setSelectedSkills(updatedSkills);
-
-      setFormData((prev) => ({
-        ...prev,
-        skills: updatedSkills,
-      }));
-
-      setErrors((prev) => ({ ...prev, skills: "" }));
-    }
   };
 
   const handleRadioChange = (value) => {
@@ -474,22 +428,25 @@ const EditInterviewDetails = ({
   // };
 
   // Helper function to get rate ranges for a specific level
-  const getRateRanges = (level) => {
-    if (!rateCards.length) return null;
+  const getRateRanges = useCallback(
+    (level) => {
+      if (!rateCards.length) return null;
 
-    // Find the first rate card that has the specified level
-    const rateCard = rateCards.find((card) =>
-      card.levels.some((lvl) => lvl.level === level)
-    );
+      // Find the first rate card that has the specified level
+      const rateCard = rateCards.find((card) =>
+        card.levels.some((lvl) => lvl.level === level)
+      );
 
-    if (!rateCard) return null;
+      if (!rateCard) return null;
 
-    // Find the level data
-    const levelData = rateCard.levels.find((lvl) => lvl.level === level);
-    if (!levelData || !levelData.rateRange) return null;
+      // Find the level data
+      const levelData = rateCard.levels.find((lvl) => lvl.level === level);
+      if (!levelData || !levelData.rateRange) return null;
 
-    return levelData.rateRange;
-  };
+      return levelData.rateRange;
+    },
+    [rateCards]
+  );
 
   // Handle technology selection
   const handleSelectCandidate = (technology) => {
@@ -898,8 +855,8 @@ const EditInterviewDetails = ({
   const handleTechnologyChange = (selectedValue) => {
     if (selectedValue) {
       // Find the technology from services or create a temporary one
-      const technology = technologies.find(
-        (t) => t.TechnologyMasterName === selectedValue
+      const technology = currentRoles.find(
+        (t) => t.roleName === selectedValue
       ) || {
         _id: Math.random().toString(36).substr(2, 9),
         TechnologyMasterName: selectedValue,
@@ -1017,7 +974,7 @@ const EditInterviewDetails = ({
         return { ...prev, rates: newRates };
       });
     }
-  }, [rateCards]);
+  }, [rateCards, getRateRanges]);
 
   return (
     <SidebarPopup title="Edit Interview Details" onClose={handleCloseModal}>
@@ -1038,9 +995,9 @@ const EditInterviewDetails = ({
               <DropdownWithSearchField
                 disabled={from !== "outsource-interviewer"}
                 value={selectedCandidates[0]?.TechnologyMasterName || ""}
-                options={technologies.map((tech) => ({
-                  value: tech.TechnologyMasterName,
-                  label: tech.TechnologyMasterName,
+                options={currentRoles.map((tech) => ({
+                  value: tech.roleName,
+                  label: tech.roleLabel,
                 }))}
                 onChange={(e) => {
                   handleTechnologyChange(e.target.value);
@@ -1049,8 +1006,8 @@ const EditInterviewDetails = ({
                 label="Select Your Comfortable Technology"
                 name="technology"
                 required={true}
-                onMenuOpen={loadTechnologies}
-                loading={isTechnologiesFetching}
+                onMenuOpen={loadCurrentRoles}
+                loading={isCurrentRolesFetching}
               />
             </div>
 

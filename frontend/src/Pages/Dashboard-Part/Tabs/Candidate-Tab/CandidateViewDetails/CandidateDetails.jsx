@@ -158,7 +158,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
               </h3>
 
               <p className="text-gray-600 mt-1 sm:text-sm text-lg">
-                {candidate.CurrentRole || "position"}
+                {candidate.currentRoleLabel || "position"}
               </p>
             </div>
             {/* v1.0.4 --------------------------------------------------------> */}
@@ -368,7 +368,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                       <div>
                         <p className="text-sm text-gray-500">Technology</p>
                         <p className="text-gray-700">
-                          {candidate?.Technology || "N/A"}{" "}
+                          {candidate?.technologyLabel || "N/A"}{" "}
                         </p>
                       </div>
                     </div>

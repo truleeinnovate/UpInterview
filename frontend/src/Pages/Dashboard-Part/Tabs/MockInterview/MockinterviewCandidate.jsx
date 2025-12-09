@@ -1,7 +1,7 @@
 // v1.0.0 - Ashok - fixed z-index at popup
 
 import Modal from "react-modal";
-import { ExternalLink, X, GraduationCap, Building  } from "lucide-react";
+import { ExternalLink, X, GraduationCap, Building } from "lucide-react";
 // import Loading from '../../../../Components/Loading';
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 Modal.setAppElement("#root");
@@ -159,7 +159,7 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
                     key={index}
                     className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
                   >
-                    {skill.skill}
+                    {skill}
                   </span>
                 ))}
               </div>
