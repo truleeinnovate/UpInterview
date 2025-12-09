@@ -3,11 +3,10 @@
 // v1.0.2 - Ashok - Again improved responsiveness
 
 import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
-import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 import AuthCookieManager from "../../../../../../utils/AuthCookieManager/AuthCookieManager";
+import { useMasterData } from "../../../../../../apiHooks/useMasterData";
 
 // Format skill name with proper capitalization
 const formatSkill = (skill) => {
@@ -59,30 +58,21 @@ const InterviewUserDetails = ({
   setInterviewEditOpen,
   externalData = null,
 }) => {
-  // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
   const [contactData, setContactData] = useState({});
+  const pageType = "adminPortal";
+  const {
+    currentRoles,
+    loadCurrentRoles,
+    isCurrentRolesFetching,
+    // loadTechnologies,
+    // isTechnologiesFetching,
+  } = useMasterData({}, pageType);
 
-  // console.log('contact data in interview details', contactData);
-
-  // useEffect(() => {
-  //     console.log('Full contactData:', contactData);
-  //     console.log('contactData.rates:', contactData?.rates);
-  //     console.log('contactData.rates.junior:', contactData?.rates?.junior);
-  //     console.log('contactData.rates.junior.isVisible:', contactData?.rates?.junior?.isVisible);
-  //     console.log('contactData.previousExperienceConductingInterviews:', contactData?.previousExperienceConductingInterviews);
-  // }, [contactData]);
-
-  // const authToken = Cookies.get("authToken");
-  // const tokenPayload = decodeJwt(authToken);
-    // const userId = tokenPayload?.userId;
-  // const ownerId = usersId || userId;
-  
-    const ownerId = AuthCookieManager.getCurrentUserId();
-
+  const ownerId = AuthCookieManager.getCurrentUserId();
 
   // Always call the hook to comply with React rules
-  const { userProfile } = useUserProfile(usersId ? usersId :"");
+  const { userProfile } = useUserProfile(usersId ? usersId : "");
 
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -139,9 +129,10 @@ const InterviewUserDetails = ({
   const showMidLevel = expYears >= 4;
   const showSeniorLevel = expYears >= 7;
 
-
-// With this:
-const formatKey = contactData?.interviewFormatWeOffer ? 'interviewFormatWeOffer' : 'InterviewFormatWeOffer';
+  // With this:
+  const formatKey = contactData?.interviewFormatWeOffer
+    ? "interviewFormatWeOffer"
+    : "InterviewFormatWeOffer";
   return (
     <div className="mx-2">
       <div
@@ -162,12 +153,12 @@ const formatKey = contactData?.interviewFormatWeOffer ? 'interviewFormatWeOffer'
 
             if (mode === "users" || mode === "outsource") {
               setInterviewEditOpen(true);
-            } 
+            }
             // else if (externalData) {
             //   // Navigate to outsource interviewer edit page
             //   navigate(`/outsource-interviewers/edit/interview/${editId}`);
             // }
-             else {
+            else {
               // Navigate to my profile edit page
               navigate(`/account-settings/my-profile/interview-edit/${editId}`);
             }
@@ -181,12 +172,29 @@ const formatKey = contactData?.interviewFormatWeOffer ? 'interviewFormatWeOffer'
       <div className={`bg-white rounded-lg ${mode !== "users" ? "p-4" : ""}`}>
         {/* v1.0.2 <-------------------------------------------------------------------------------------------------------------- */}
         <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4 mb-3">
-        {/* v1.0.2 --------------------------------------------------------------------------------------------------------------> */}
+          {/* v1.0.2 --------------------------------------------------------------------------------------------------------------> */}
           {/* Row 1: Technologies and Skills */}
           <div className="col-span-1 space-y-2">
             <p className="text-sm text-gray-500">Technologies</p>
             <div className="flex flex-wrap gap-2 mt-1">
               {contactData?.technologies?.length > 0 ? (
+                currentRoles
+                  .filter((role) =>
+                    contactData.technologies.includes(role.roleName)
+                  )
+                  .map((matchedRole, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-blue-50 text-custom-blue rounded-full text-xs"
+                    >
+                      {matchedRole.roleLabel}
+                    </span>
+                  ))
+              ) : (
+                <p className="text-gray-500 text-sm">-</p>
+              )}
+
+              {/* {contactData?.technologies?.length > 0 ? (
                 contactData.technologies.map((tech, index) => (
                   <span
                     key={index}
@@ -197,7 +205,7 @@ const formatKey = contactData?.interviewFormatWeOffer ? 'interviewFormatWeOffer'
                 ))
               ) : (
                 <p className="text-gray-500 text-sm">-</p>
-              )}
+              )} */}
             </div>
           </div>
 
@@ -332,7 +340,7 @@ const formatKey = contactData?.interviewFormatWeOffer ? 'interviewFormatWeOffer'
 
         {/* v1.0.2 <-------------------------------------------------------------------------------------------------------------- */}
         <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-        {/* v1.0.2 --------------------------------------------------------------------------------------------------------------> */}
+          {/* v1.0.2 --------------------------------------------------------------------------------------------------------------> */}
           <div className="space-y-1">
             <p className="text-sm text-gray-500">Professional Title</p>
             <p

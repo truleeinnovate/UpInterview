@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2, Upload, ChevronDown } from "lucide-react";
 import Papa from "papaparse";
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const StatusDropdown = ({ value, onChange }) => {
   const [open, setOpen] = useState(false);
@@ -117,7 +118,7 @@ const MasterForm = ({
       case "locations":
         return "LocationName";
       case "roles":
-        return "RoleName";
+        return "roleName";
       case "qualification":
         return "QualificationName";
       case "universitycollege":
@@ -147,6 +148,13 @@ const MasterForm = ({
       base.Category = "";
       base.name = ""; //
     }
+
+    // v1.0.3: Add role-specific fields
+    if (type === "roles") {
+      base.roleLabel = "";
+      base.roleCategory = "";
+    }
+
     if (type === "category") base.isActive = null;
     return { id: Date.now(), data: base };
   };
@@ -315,7 +323,9 @@ const MasterForm = ({
                   >
                     <div>
                       <label className="block text-gray-700 text-sm font-medium mb-1">
-                        Master Name {fields.length > 1 && `#${idx + 1}`}
+                        {/* Master Name */}
+                        {capitalizeFirstLetter(type) || type}
+                        {fields.length > 1 && `#${idx + 1}`}
                       </label>
                       <input
                         type="text"
@@ -326,6 +336,66 @@ const MasterForm = ({
                         required
                       />
                     </div>
+
+                    {/* v1.0.3: Add role-specific fields */}
+                    {type === "roles" && (
+                      <>
+                        <div>
+                          <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Role Label
+                          </label>
+                          <input
+                            type="text"
+                            name="roleLabel"
+                            value={f.data.roleLabel || ""}
+                            onChange={(e) =>
+                              setFields((prev) =>
+                                prev.map((field) =>
+                                  field.id === f.id
+                                    ? {
+                                        ...field,
+                                        data: {
+                                          ...field.data,
+                                          roleLabel: e.target.value,
+                                        },
+                                      }
+                                    : field
+                                )
+                              )
+                            }
+                            className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-custom-blue outline-none"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Role Category
+                          </label>
+                          <input
+                            type="text"
+                            name="roleCategory"
+                            value={f.data.roleCategory || ""}
+                            onChange={(e) =>
+                              setFields((prev) =>
+                                prev.map((field) =>
+                                  field.id === f.id
+                                    ? {
+                                        ...field,
+                                        data: {
+                                          ...field.data,
+                                          roleCategory: e.target.value,
+                                        },
+                                      }
+                                    : field
+                                )
+                              )
+                            }
+                            className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-custom-blue outline-none"
+                            required
+                          />
+                        </div>
+                      </>
+                    )}
 
                     {type === "technology" && (
                       <>
@@ -486,6 +556,48 @@ const MasterForm = ({
                         />
                       </div>
                     </div>
+                  )}
+
+                  {/* v1.0.3: Add role-specific fields for single edit */}
+                  {type === "roles" && (
+                    <>
+                      <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                          Role Label
+                        </label>
+                        <input
+                          type="text"
+                          name="roleLabel"
+                          value={formData.roleLabel || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              roleLabel: e.target.value,
+                            })
+                          }
+                          className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-custom-blue outline-none mb-3"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                          Role Category
+                        </label>
+                        <input
+                          type="text"
+                          name="roleCategory"
+                          value={formData.roleCategory || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              roleCategory: e.target.value,
+                            })
+                          }
+                          className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-custom-blue outline-none mb-3"
+                          required
+                        />
+                      </div>
+                    </>
                   )}
 
                   {type === "category" && (

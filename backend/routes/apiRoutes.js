@@ -52,6 +52,7 @@ const {
 // ------------------------------v1.0.7 >
 
 const { authContextMiddleware } = require("../middleware/authContext.js");
+const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
 
 const modelRequirements = {
   candidate: {
@@ -256,8 +257,6 @@ router.get(
             interviewer: mockInterviewer = [],
           } = req.query;
 
-          console.log("req.query", req.query);
-
           // -------------------------------
           // BASE QUERY FOR MOCKINTERVIEW
           // -------------------------------
@@ -403,6 +402,43 @@ router.get(
               select: "firstName lastName email",
             })
             .lean();
+
+          // const roleLabels = mockInterviews.map((i) => i.Role).filter(Boolean);
+
+          // let roleDocs = [];
+          // if (roleLabels.length > 0) {
+          //   roleDocs = await RoleMaster.find({
+          //     roleName: { $in: roleLabels },
+          //   }).lean();
+          // }
+
+          // // Convert to quick lookup
+          // const roleMap = {};
+          // roleDocs.forEach((r) => {
+          //   roleMap[r.roleLabel] = r;
+          // });
+          // console.log("roleMap", roleMap);
+
+          // let combinedData = mockInterviews.map((interview) => {
+          //   const rounds = mockRounds.filter(
+          //     (r) => r.mockInterviewId.toString() === interview._id.toString()
+          //   );
+
+          //   const roleInfo = roleMap[interview.Role] || null;
+
+          //   return {
+          //     ...interview,
+
+          //     rounds,
+          //     roleDetails: roleInfo
+          //       ? {
+          //           roleName: roleInfo.roleName,
+          //           roleLabel: roleInfo.roleLabel,
+          //           roleCategory: roleInfo.roleCategory,
+          //         }
+          //       : null,
+          //   };
+          // });
 
           // MERGE INTERVIEWS + ROUNDS
           let combinedData = mockInterviews.map((interview) => ({
@@ -560,462 +596,6 @@ router.get(
             });
           }
           break;
-
-        // ------------------------------ v1.0.9 - Backend filtering for Interview Templates
-        // case 'interviewtemplate': {
-        //   const {
-        //     page: reqPage = 1,
-        //     limit: reqLimit = 10,
-        //     search = '',
-        //     status: statusParam,
-        //     format,
-        //     roundsMin,
-        //     roundsMax,
-        //     createdDate: createdDateParam,
-        //     sortBy = 'createdAt',
-        //     sortOrder = 'desc',
-        //     type
-        //   } = req.query;
-
-        //   console.log("req.query", req.query);
-
-        //   const pageNum = Math.max(1, parseInt(reqPage) || 1);
-        //   const limitNum = Math.max(1, Math.min(100, parseInt(reqLimit) || 10));
-        //   const skip = (pageNum - 1) * limitNum;
-
-        //   // Build final query with standard + custom access
-        //   let finalQuery = {
-        //     $or: [
-        //       { type: 'standard' },
-        //       {
-        //         $and: [
-        //           { type: 'custom' },
-        //           query // already has tenantId / ownerId filtering
-        //         ]
-        //       }
-        //     ]
-        //   };
-
-        //   // Search: title, code, description
-        //   if (search && search.trim()) {
-        //     const searchRegex = new RegExp(search.trim(), 'i');
-        //     finalQuery.$and = finalQuery.$and || [];
-        //     finalQuery.$and.push({
-        //       $or: [
-        //         { title: searchRegex },
-        //         { interviewTemplateCode: searchRegex },
-        //         { description: searchRegex }
-        //       ]
-        //     });
-        //   }
-
-        //   // Status filter
-        //   if (statusParam) {
-        //     const statuses = Array.isArray(statusParam) ? statusParam : [statusParam];
-        //     finalQuery.status = { $in: statuses.map(s => s.toLowerCase()) };
-        //   }
-
-        //   // Format filter
-        //   if (format) {
-        //     const formats = Array.isArray(format) ? format : [format];
-        //     finalQuery.format = { $in: formats };
-        //   }
-
-        //   // Rounds range filter
-        //   if (roundsMin || roundsMax) {
-        //     const min = roundsMin ? parseInt(roundsMin) : 0;
-        //     const max = roundsMax ? parseInt(roundsMax) : 100;
-
-        //     finalQuery['rounds.0'] = { $exists: true }; // has at least one round
-        //     finalQuery.$expr = {
-        //       $and: [
-        //         { $gte: [{ $size: '$rounds' }, min] },
-        //         { $lte: [{ $size: '$rounds' }, max] }
-        //       ]
-        //     };
-        //   }
-
-        //   // Created Date filter
-        //   if (createdDateParam) {
-        //     const now = new Date();
-        //     let dateFrom;
-
-        //     switch (createdDateParam) {
-        //       case 'last7':
-        //         dateFrom = new Date(now.setDate(now.getDate() - 7));
-        //         break;
-        //       case 'last30':
-        //         dateFrom = new Date(now.setDate(now.getDate() - 30));
-        //         break;
-        //       case 'last90':
-        //         dateFrom = new Date(now.setDate(now.getDate() - 90));
-        //         break;
-        //       default:
-        //         dateFrom = new Date(createdDateParam);
-        //     }
-
-        //     finalQuery.createdAt = { $gte: dateFrom };
-        //   }
-
-        //   // Sort
-        //   const sortObj = {};
-        //   sortObj[sortBy] = sortOrder === 'asc' ? 1 : -1;
-
-        //   try {
-        //     // Get total count
-        //     const total = await DataModel.countDocuments(finalQuery);
-
-        //     // Get paginated data
-        //     const templates = await DataModel.find(finalQuery)
-        //       .populate({
-        //         path: 'rounds.interviewers',
-        //         model: 'Contacts',
-        //         select: 'firstName lastName email'
-        //       })
-        //       .sort(sortObj)
-        //       .skip(skip)
-        //       .limit(limitNum)
-        //       .lean();
-
-        //     data = {
-        //       data: templates,
-        //       total,
-        //       page: pageNum,
-        //       totalPages: Math.ceil(total / limitNum),
-        //       limit: limitNum
-        //     };
-        //   } catch (err) {
-        //     console.error('InterviewTemplate query error:', err);
-        //     return res.status(500).json({ error: 'Failed to fetch templates' });
-        //   }
-
-        //   break;
-        // }
-
-        //    case 'interviewtemplate': {
-        //   const {
-        //     page: reqPage = 1,
-        //     limit: reqLimit = 10,
-        //     search = '',
-        //     status: statusParam,
-        //     format: formatParam,
-        //     roundsMin,
-        //     roundsMax,
-        //     createdDate: createdDateParam,
-        //     sortBy = 'createdAt',
-        //     sortOrder = 'desc',
-        //     type
-        //   } = req.query;
-
-        //   // console.log("Received type parameter:", type);
-
-        //   const pageNum = Math.max(1, parseInt(reqPage) || 1);
-        //   const limitNum = Math.max(1, Math.min(100, parseInt(reqLimit) || 10));
-        //   const skip = (pageNum - 1) * limitNum;
-
-        //   // Build query based on type
-        //   let typeQuery = {};
-
-        //   if (type === 'standard') {
-        //     typeQuery = { type: 'standard' };
-        //   } else if (type === 'custom') {
-        //     typeQuery = {
-        //       $and: [
-        //         { type: 'custom' },
-        //         query
-        //       ]
-        //     };
-        //   } else {
-        //     typeQuery = {
-        //       $or: [
-        //         { type: 'standard' },
-        //         {
-        //           $and: [
-        //             { type: 'custom' },
-        //             query
-        //           ]
-        //         }
-        //       ]
-        //     };
-        //   }
-
-        //   let finalQuery = { ...typeQuery };
-
-        //   // Search filter
-        //   if (search && search.trim()) {
-        //     const searchRegex = new RegExp(search.trim(), 'i');
-        //     finalQuery.$and = finalQuery.$and || [];
-        //     finalQuery.$and.push({
-        //       $or: [
-        //         { title: searchRegex },
-        //         { interviewTemplateCode: searchRegex },
-        //         { description: searchRegex }
-        //       ]
-        //     });
-        //   }
-
-        //   // Status filter
-        //   if (statusParam) {
-        //     const statuses = Array.isArray(statusParam) ? statusParam : [statusParam];
-        //     finalQuery.status = { $in: statuses.map(s => s.toLowerCase()) };
-        //   }
-
-        //   // Format filter
-        //   if (formatParam) {
-        //     const formats = Array.isArray(formatParam) ? formatParam : [formatParam];
-        //     finalQuery.format = { $in: formats };
-        //   }
-
-        //   // Rounds range filter
-        //   if (roundsMin || roundsMax) {
-        //     const min = roundsMin ? parseInt(roundsMin) : 0;
-        //     const max = roundsMax ? parseInt(roundsMax) : 100;
-
-        //     finalQuery.$and = finalQuery.$and || [];
-        //     finalQuery.$and.push({
-        //       $expr: {
-        //         $and: [
-        //           { $gte: [{ $size: '$rounds' }, min] },
-        //           { $lte: [{ $size: '$rounds' }, max] }
-        //         ]
-        //       }
-        //     });
-        //   }
-
-        //   // Created Date filter
-        //   if (createdDateParam) {
-        //     const now = new Date();
-        //     let dateFrom;
-
-        //     switch (createdDateParam) {
-        //       case 'last7':
-        //         dateFrom = new Date(now.setDate(now.getDate() - 7));
-        //         break;
-        //       case 'last30':
-        //         dateFrom = new Date(now.setDate(now.getDate() - 30));
-        //         break;
-        //       case 'last90':
-        //         dateFrom = new Date(now.setDate(now.getDate() - 90));
-        //         break;
-        //       default:
-        //         dateFrom = new Date(createdDateParam);
-        //         if (isNaN(dateFrom.getTime())) {
-        //           dateFrom = new Date(now.setDate(now.getDate() - 7));
-        //         }
-        //     }
-
-        //     finalQuery.$and = finalQuery.$and || [];
-        //     finalQuery.$and.push({
-        //       createdAt: { $gte: dateFrom }
-        //     });
-        //   }
-
-        //   // Sort
-        //   const sortObj = {};
-        //   sortObj[sortBy] = sortOrder === 'asc' ? 1 : -1;
-
-        //   try {
-        //     const total = await DataModel.countDocuments(finalQuery);
-
-        //     // Only populate Contacts, skip Assessments
-        //     const templates = await DataModel.find(finalQuery)
-        //       .populate({
-        //         path: 'rounds.interviewers',
-        //         model: 'Contacts',
-        //         select: 'firstName lastName email'
-        //       })
-        //       .sort(sortObj)
-        //       .skip(skip)
-        //       .limit(limitNum)
-        //       .lean();
-
-        //     console.log(`Found ${templates.length} templates for type: ${type}, total: ${total}`);
-
-        //     data = {
-        //       data: templates,
-        //       total,
-        //       page: pageNum,
-        //       totalPages: Math.ceil(total / limitNum),
-        //       limit: limitNum
-        //     };
-
-        //   } catch (err) {
-        //     console.error('InterviewTemplate query error:', err);
-        //     return res.status(500).json({
-        //       error: 'Failed to fetch templates',
-        //       details: err.message
-        //     });
-        //   }
-        //   break;
-        // }
-
-        // case "interviewtemplate": {
-        //   const {
-        //     page: reqPage = 1,
-        //     limit: reqLimit = 10,
-        //     search = "",
-        //     status: statusParam,
-        //     format: formatParam,
-        //     roundsMin,
-        //     roundsMax,
-        //     createdDate: createdDateParam,
-        //     sortBy = "createdAt",
-        //     sortOrder = "desc",
-        //     type, // Don't set default here, check if it exists
-        //   } = req.query;
-
-        //   // console.log('Received query params:', req.query);
-        //   // console.log('Type parameter:', type);
-
-        //   const pageNum = Math.max(1, parseInt(reqPage) || 1);
-        //   const limitNum = Math.max(1, Math.min(100, parseInt(reqLimit) || 10));
-        //   const skip = (pageNum - 1) * limitNum;
-
-        //   // Base query - CRITICAL: Standard templates should NOT have tenant filtering
-        //   let baseQuery = {};
-
-        //   if (type === "standard") {
-        //     // Standard templates: Only filter by type, NO tenant filtering
-        //     baseQuery = { type: "standard" };
-        //     // console.log('Building STANDARD template query (no tenant filter)');
-        //   } else {
-        //     // Custom templates (default): Filter by type AND tenantId
-        //     baseQuery = {
-        //       type: "custom",
-        //       tenantId: query.tenantId, // Only for custom templates
-        //     };
-        //     // console.log('Building CUSTOM template query with tenantId:', query.tenantId);
-        //   }
-
-        //   // console.log('Base query:', baseQuery);
-
-        //   let finalQuery = { ...baseQuery };
-
-        //   // Search filter - works for both types
-        //   if (search && search.trim()) {
-        //     const searchRegex = new RegExp(search.trim(), "i");
-        //     finalQuery.$and = finalQuery.$and || [];
-        //     finalQuery.$and.push({
-        //       $or: [
-        //         { title: searchRegex },
-        //         { interviewTemplateCode: searchRegex },
-        //         { description: searchRegex },
-        //         { bestFor: searchRegex },
-        //       ],
-        //     });
-        //   }
-
-        //   // Status filter
-        //   if (statusParam) {
-        //     const statuses = Array.isArray(statusParam)
-        //       ? statusParam
-        //       : statusParam.split(",");
-        //     finalQuery.status = {
-        //       $in: statuses.map((s) => s.toLowerCase()),
-        //     };
-        //   }
-
-        //   // Format filter
-        //   if (formatParam) {
-        //     const formats = Array.isArray(formatParam)
-        //       ? formatParam
-        //       : formatParam.split(",");
-        //     finalQuery.format = { $in: formats };
-        //   }
-
-        //   // Rounds range filter
-        //   if (roundsMin !== undefined || roundsMax !== undefined) {
-        //     const min = roundsMin ? parseInt(roundsMin) : 0;
-        //     const max = roundsMax ? parseInt(roundsMax) : 100;
-
-        //     if (!isNaN(min) && !isNaN(max)) {
-        //       finalQuery.$and = finalQuery.$and || [];
-        //       finalQuery.$and.push({
-        //         $expr: {
-        //           $and: [
-        //             { $gte: [{ $size: { $ifNull: ["$rounds", []] } }, min] },
-        //             { $lte: [{ $size: { $ifNull: ["$rounds", []] } }, max] },
-        //           ],
-        //         },
-        //       });
-        //     }
-        //   }
-
-        //   // Created Date filter
-        //   if (createdDateParam) {
-        //     const now = new Date();
-        //     let dateFrom;
-
-        //     switch (createdDateParam) {
-        //       case "last7":
-        //         dateFrom = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        //         break;
-        //       case "last30":
-        //         dateFrom = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        //         break;
-        //       case "last90":
-        //         dateFrom = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        //         break;
-        //       default:
-        //         dateFrom = null;
-        //     }
-
-        //     if (dateFrom) {
-        //       finalQuery.createdAt = { $gte: dateFrom };
-        //     }
-        //   }
-
-        //   // Sort
-        //   const sortObj = {};
-        //   sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
-
-        //   // console.log('Final query:', JSON.stringify(finalQuery, null, 2));
-
-        //   try {
-        //     // Get total count for the filtered query
-        //     const total = await DataModel.countDocuments(finalQuery);
-
-        //     // console.log(`Total ${type || 'custom'} templates matching filters: ${total}`);
-
-        //     // Fetch templates with pagination
-        //     const templates = await DataModel.find(finalQuery)
-        //       .populate({
-        //         path: "rounds.interviewers",
-        //         model: "Contacts",
-        //         select: "firstName lastName email",
-        //       })
-        //       .populate({
-        //         path: "rounds.selectedInterviewers",
-        //         model: "Contacts",
-        //         select: "firstName lastName email",
-        //       })
-        //       .sort(sortObj)
-        //       .skip(skip)
-        //       .limit(limitNum)
-        //       .lean();
-
-        //     // console.log(`Fetched ${templates.length} ${type || 'custom'} templates for page ${pageNum}`);
-
-        //     data = {
-        //       data: templates,
-        //       total,
-        //       totalItems: total,
-        //       page: pageNum,
-        //       currentPage: pageNum,
-        //       totalPages: Math.ceil(total / limitNum),
-        //       limit: limitNum,
-        //       itemsPerPage: limitNum,
-        //       type: type || "custom", // Include type in response for verification
-        //     };
-        //   } catch (err) {
-        //     console.error("InterviewTemplate query error:", err);
-        //     return res.status(500).json({
-        //       error: "Failed to fetch templates",
-        //       details: err.message,
-        //     });
-        //   }
-        //   break;
-        // }
 
         case "interviewtemplate": {
           const {
@@ -2106,102 +1686,6 @@ router.get(
           data = dataObj;
           break;
 
-        // data = await DataModel.find(query)
-        //   .populate({
-        //     path: 'rounds.interviewers',
-        //     model: 'Contacts',
-        //     select: 'firstName lastName email',
-        //   })
-        //   .lean();
-        // console.log('[33] Found', data.length, 'Position records');
-        // break;
-
-        // case "feedback":
-        //   // console.log('[34] Processing Feedback model with complex logic');
-
-        //   console.log("query feedback", query);
-
-        //   // Get all interviews for the current tenant/owner (using the already filtered query)
-        //   const feedbackInterviews = await Interview.find(query)
-        //     .populate(
-        //       "candidateId",
-        //       "FirstName LastName Email Phone skills CurrentExperience"
-        //     )
-        //     .populate("positionId", "title companyname jobDescription Location")
-        //     .lean();
-
-        //   // console.log('[35] Found', feedbackInterviews.length, 'interviews for feedback lookup');
-
-        //   // Get all interview round IDs from these interviews
-        //   const feedbackInterviewIds = feedbackInterviews.map(
-        //     (interview) => interview._id
-        //   );
-        //   const feedbackInterviewRounds = await InterviewRounds.find({
-        //     interviewId: { $in: feedbackInterviewIds },
-        //   }).lean();
-
-        //   const feedbackRoundIds = feedbackInterviewRounds.map(
-        //     (round) => round._id
-        //   );
-        //   // console.log('[36] Found', feedbackRoundIds.length, 'interview round IDs');
-
-        //   // Get feedback based on round IDs and tenant/owner matching
-        //   // The query already includes tenantId and ownerId filtering from the general logic above
-        //   let feedbackQuery = {
-        //     $or: [
-        //       { interviewRoundId: { $in: feedbackRoundIds } },
-        //       { ...query },
-        //       // { tenantId: query?.tenantId },
-        //     ],
-        //   };
-
-        //   // For non-admin users, also include feedback they own (the general logic already handles this)
-        //   if (
-        //     roleType === "individual" ||
-        //     (roleType === "organization" && roleName !== "Admin")
-        //   ) {
-        //     feedbackQuery.$or.push({ ownerId: userId });
-        //   }
-
-        //   // console.log('[37] Feedback query:', JSON.stringify(feedbackQuery, null, 2));
-
-        //   const feedbacks = await FeedbackModel.find(feedbackQuery)
-        //     .populate(
-        //       "candidateId",
-        //       "FirstName LastName Email Phone skills CurrentExperience"
-        //     )
-        //     .populate("positionId", "title companyname jobDescription Location")
-        //     .populate(
-        //       "interviewRoundId",
-        //       "roundTitle interviewMode interviewType interviewerType duration instructions dateTime status"
-        //     )
-        //     .populate("interviewerId", "firstName lastName email")
-        //     .populate("ownerId", "firstName lastName email")
-        //     .lean();
-
-        //   // console.log('[38] Found', feedbacks.length, 'feedback records');
-
-        //   // Get interview questions for each feedback
-        //   const feedbackWithQuestions = await Promise.all(
-        //     feedbacks.map(async (feedback) => {
-        //       const preSelectedQuestions = await InterviewQuestions.find({
-        //         roundId: feedback.interviewRoundId?._id,
-        //       }).lean();
-
-        //       return {
-        //         ...feedback,
-        //         preSelectedQuestions,
-        //         // Add action buttons based on status
-        //         canEdit: feedback.status === "draft",
-        //         canView: true,
-        //       };
-        //     })
-        //   );
-
-        //   data = feedbackWithQuestions;
-        //   // console.log('[39] Final feedback data prepared with', data.length, 'records');
-        //   break;
-
         // In your feedback route handler
         case "feedback":
           const {
@@ -2485,9 +1969,6 @@ router.get(
           // const candidateSkip =
           //   (parsedCandidatePage - 1) * parsedCandidateLimit;
 
-          console.log("parsedCandidateLimit", parsedCandidateLimit);
-          console.log("candidateSkip", candidateSkip);
-
           // Apply search
           if (candidateSearch) {
             const searchRegex = new RegExp(candidateSearch, "i");
@@ -2566,6 +2047,26 @@ router.get(
             .skip(candidateSkip)
             .limit(parsedCandidateLimit)
             .lean();
+
+          // Fetch role labels for both CurrentRole and Technology
+          const allRoles = await RoleMaster.find(
+            {},
+            { roleName: 1, roleLabel: 1 }
+          ).lean();
+
+          // Map: roleName → roleLabel
+          const roleMap = {};
+          allRoles.forEach((r) => {
+            roleMap[r.roleName] = r.roleLabel;
+          });
+
+          // Attach labels to each candidate
+          candidateData.forEach((c) => {
+            c.currentRoleLabel = roleMap[c.CurrentRole] || null;
+            c.technologyLabel = roleMap[c.Technology] || null;
+          });
+
+          console.log("Candidate", candidateData);
 
           // Get total count
           total = await Candidate.countDocuments(query);
