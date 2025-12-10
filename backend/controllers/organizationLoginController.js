@@ -822,18 +822,18 @@ const getAllOrganizations = async (req, res) => {
       minUsers,
       maxUsers,
       type,
+      valueFilter,
     } = req.query;
 
     const skip = parseInt(page) * parseInt(limit);
     const limitNum = parseInt(limit);
 
-    // Build query efficiently
-    let query = {};
+    // Build match stage for base query
+    const matchStage = {};
 
-    // Search optimization - use regex for text search
     if (search) {
       const searchRegex = new RegExp(search, "i");
-      query.$or = [
+      matchStage.$or = [
         { firstName: searchRegex },
         { lastName: searchRegex },
         { Email: searchRegex },
@@ -842,201 +842,234 @@ const getAllOrganizations = async (req, res) => {
       ];
     }
 
-    // Filter optimizations
-    if (status) {
-      query.status = { $in: status.split(",") };
-    }
-
-    if (type) {
-      query.type = type;
-    }
+    if (type) matchStage.type = type;
+    if (status) matchStage.status = { $in: status.split(",") };
 
     if (createdDate) {
       const date = new Date(createdDate);
       const nextDay = new Date(date);
       nextDay.setDate(nextDay.getDate() + 1);
-      query.createdAt = { $gte: date, $lt: nextDay };
+      matchStage.createdAt = { $gte: date, $lt: nextDay };
     }
 
-    // Get total count for pagination
-    const total = await Tenant.countDocuments(query);
-
-    // Fetch paginated tenants
-    const organizations = await Tenant.find(query)
-      .sort({ _id: -1 })
-      .skip(skip)
-      .limit(limitNum)
-      .lean();
-
-    // Get tenant IDs for aggregation
-    const tenantIds = organizations.map((org) => org._id);
-
-    // Total user count per tenant (only for paginated results)
-    const userCounts = await Users.aggregate([
-      { $match: { tenantId: { $in: tenantIds } } },
+    // Start aggregation pipeline
+    const pipeline = [
+      { $match: matchStage },
+      // Lookup contacts
       {
-        $group: {
-          _id: "$tenantId",
-          userCount: { $sum: 1 },
+        $lookup: {
+          from: "contacts",
+          localField: "_id",
+          foreignField: "tenantId",
+          as: "contact",
         },
       },
-    ]).exec();
-
-    const userCountMap = {};
-    userCounts.forEach(({ _id, userCount }) => {
-      if (_id) {
-        userCountMap[_id.toString()] = userCount;
-      }
-    });
-
-    // Active user count per tenant (only for paginated results)
-    const activeUserCounts = await Users.aggregate([
-      { $match: { status: "active", tenantId: { $in: tenantIds } } },
+      { $unwind: { path: "$contact", preserveNullAndEmptyArrays: true } },
+      // Lookup latest subscription
       {
-        $group: {
-          _id: "$tenantId",
-          activeUserCount: { $sum: 1 },
+        $lookup: {
+          from: "customersubscriptions",
+          let: { tenantId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$tenantId", "$$tenantId"] } } },
+            { $sort: { _id: -1 } },
+            { $limit: 1 },
+          ],
+          as: "subscription",
         },
       },
-    ]).exec();
-
-    // Check if tenant has freelancers
-    const freelancerFlags = await Users.aggregate([
+      { $unwind: { path: "$subscription", preserveNullAndEmptyArrays: true } },
+      // Lookup subscription plan
       {
-        $match: {
-          tenantId: { $in: tenantIds },
-          isFreelancer: "true",
+        $lookup: {
+          from: "subscriptionplans",
+          localField: "subscription.subscriptionPlanId",
+          foreignField: "_id",
+          as: "subscriptionPlan",
         },
       },
       {
-        $group: {
-          _id: "$tenantId",
-          hasFreelancer: { $sum: 1 }, // if >0 → true
+        $unwind: {
+          path: "$subscriptionPlan",
+          preserveNullAndEmptyArrays: true,
         },
       },
-    ]).exec();
+      // Lookup user counts
+      {
+        $lookup: {
+          from: "users",
+          let: { tenantId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$tenantId", "$$tenantId"] } } },
+            {
+              $group: {
+                _id: "$tenantId",
+                usersCount: { $sum: 1 },
+                activeUsersCount: {
+                  $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] },
+                },
+                hasFreelancer: {
+                  $sum: { $cond: [{ $eq: ["$isFreelancer", "true"] }, 1, 0] },
+                },
+              },
+            },
+          ],
+          as: "userStats",
+        },
+      },
+      { $unwind: { path: "$userStats", preserveNullAndEmptyArrays: true } },
+      // Add computed fields
+      {
+        $addFields: {
+          usersCount: { $ifNull: ["$userStats.usersCount", 0] },
+          activeUsersCount: { $ifNull: ["$userStats.activeUsersCount", 0] },
+          isFreelancer: {
+            $cond: [
+              { $gt: [{ $ifNull: ["$userStats.hasFreelancer", 0] }, 0] },
+              true,
+              false,
+            ],
+          },
+        },
+      },
+      // Apply valueFilter in aggregation
+      ...(valueFilter
+        ? [
+            {
+              $match: (() => {
+                const [prefix, ...rest] = valueFilter.split(":");
+                const val = rest.join(":").toLowerCase().trim();
 
-    const freelancerFlagMap = {};
-    freelancerFlags.forEach(({ _id, hasFreelancer }) => {
-      if (_id) {
-        freelancerFlagMap[_id.toString()] = hasFreelancer > 0;
-      }
-    });
-
-    const activeUserCountMap = {};
-    activeUserCounts.forEach(({ _id, activeUserCount }) => {
-      if (_id) {
-        activeUserCountMap[_id.toString()] = activeUserCount;
-      }
-    });
-
-    // Fetch subscriptions only for paginated tenants
-    const allSubscriptions = await CustomerSubscription.find({
-      tenantId: { $in: tenantIds },
-    })
-      .sort({ _id: -1 })
-      .lean();
-
-    // Map latest subscription by tenantId
-    const subscriptionMap = {};
-    allSubscriptions.forEach((subscription) => {
-      const tenantId = subscription.tenantId?.toString();
-      if (tenantId && !subscriptionMap[tenantId]) {
-        subscriptionMap[tenantId] = subscription;
-      }
-    });
-
-    // Fetch contacts only for paginated tenants
-    const contacts = await Contacts.find({
-      tenantId: { $in: tenantIds },
-    }).lean();
-    const contactsMap = {};
-    contacts.forEach((contact) => {
-      if (contact.tenantId) {
-        contactsMap[contact.tenantId.toString()] = contact;
-      }
-    });
-
-    // Get all unique subscriptionPlanIds from subscriptions
-    const subscriptionPlanIds = [
-      ...new Set(
-        Object.values(subscriptionMap)
-          .map((sub) => sub.subscriptionPlanId?.toString())
-          .filter(Boolean)
-      ),
+                if (prefix === "role") {
+                  return {
+                    "contact.currentRole": {
+                      $regex: new RegExp(`^${val}$`, "i"),
+                    },
+                  };
+                } else if (prefix === "tech") {
+                  return {
+                    "contact.technologies": {
+                      $elemMatch: {
+                        $regex: new RegExp(`^${val}$`, "i"),
+                      },
+                    },
+                  };
+                }
+                return {};
+              })(),
+            },
+          ]
+        : []),
+      // Apply other filters
+      ...(subscriptionStatus
+        ? [
+            {
+              $match: {
+                "subscription.status": {
+                  $in: subscriptionStatus.split(","),
+                },
+              },
+            },
+          ]
+        : []),
+      ...(plan
+        ? [
+            {
+              $match: {
+                "subscriptionPlan.name": { $in: plan.split(",") },
+              },
+            },
+          ]
+        : []),
+      // Apply user count filters
+      ...(minUsers || maxUsers
+        ? [
+            {
+              $match: {
+                $and: [
+                  minUsers ? { usersCount: { $gte: parseInt(minUsers) } } : {},
+                  maxUsers ? { usersCount: { $lte: parseInt(maxUsers) } } : {},
+                ],
+              },
+            },
+          ]
+        : []),
+      // Project final fields
+      {
+        $project: {
+          _id: 1,
+          firstName: 1,
+          lastName: 1,
+          Email: 1,
+          Phone: 1,
+          company: 1,
+          type: 1,
+          status: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          usersCount: 1,
+          activeUsersCount: 1,
+          isFreelancer: 1,
+          subscription: 1,
+          subscriptionPlan: 1,
+          contact: 1,
+        },
+      },
     ];
 
-    // Fetch all subscription plans in one query
-    const subscriptionPlans = await SubscriptionPlan.find({
-      _id: { $in: subscriptionPlanIds },
-    }).lean();
+    // Get total count
+    const countPipeline = [...pipeline, { $count: "total" }];
+    const countResult = await Tenant.aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
 
-    const subscriptionPlanMap = {};
-    subscriptionPlans.forEach((plan) => {
-      subscriptionPlanMap[plan._id.toString()] = plan;
-    });
+    // Get paginated data with sorting
+    const dataPipeline = [
+      ...pipeline,
+      { $sort: { _id: -1 } },
+      { $skip: skip },
+      { $limit: limitNum },
+    ];
 
-    // Combine all data
-    const enrichedOrganizations = organizations.map((org) => {
-      const orgId = org._id.toString();
-      const subscription = subscriptionMap[orgId] || null;
-      const plan =
-        subscription?.subscriptionPlanId &&
-        subscriptionPlanMap[subscription.subscriptionPlanId.toString()]
-          ? subscriptionPlanMap[subscription.subscriptionPlanId.toString()]
-          : null;
+    const organizations = await Tenant.aggregate(dataPipeline);
 
-      return {
-        ...org,
-        usersCount: userCountMap[orgId] || 0,
-        activeUsersCount: activeUserCountMap[orgId] || 0,
-        // 👇 ADD THIS
-        isFreelancer: freelancerFlagMap[orgId],
-        subscription,
-        subscriptionPlan: plan,
-        contact: contactsMap[orgId] || null,
-      };
-    });
+    // Calculate stats using another aggregation
+    const statsPipeline = [
+      ...pipeline,
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          activeCount: {
+            $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] },
+          },
+          inactiveCount: {
+            $sum: { $cond: [{ $eq: ["$status", "inactive"] }, 1, 0] },
+          },
+          pendingCount: {
+            $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] },
+          },
+          organizationCount: {
+            $sum: { $cond: [{ $eq: ["$type", "organization"] }, 1, 0] },
+          },
+          individualCount: {
+            $sum: { $cond: [{ $eq: ["$type", "individual"] }, 1, 0] },
+          },
+        },
+      },
+    ];
 
-    // Apply additional filters on enriched data if needed
-    let filteredOrganizations = enrichedOrganizations;
-
-    // Filter by subscription status if provided
-    if (subscriptionStatus) {
-      const statusList = subscriptionStatus.split(",");
-      filteredOrganizations = filteredOrganizations.filter(
-        (org) =>
-          org.subscription && statusList.includes(org.subscription.status)
-      );
-    }
-
-    // Filter by plan if provided (match against SubscriptionPlan.name)
-    if (plan) {
-      const planList = plan
-        .split(",")
-        .map((p) => p.trim())
-        .filter(Boolean);
-
-      if (planList.length > 0) {
-        filteredOrganizations = filteredOrganizations.filter((org) => {
-          const planName = org?.subscriptionPlan?.name;
-          return planName && planList.includes(planName);
-        });
-      }
-    }
-
-    // Filter by user count if provided
-    if (minUsers || maxUsers) {
-      filteredOrganizations = filteredOrganizations.filter((org) => {
-        const userCount = org.usersCount || 0;
-        if (minUsers && userCount < parseInt(minUsers)) return false;
-        if (maxUsers && userCount > parseInt(maxUsers)) return false;
-        return true;
-      });
-    }
+    const statsResult = await Tenant.aggregate(statsPipeline);
+    const stats = statsResult[0] || {
+      total: 0,
+      activeCount: 0,
+      inactiveCount: 0,
+      pendingCount: 0,
+      organizationCount: 0,
+      individualCount: 0,
+    };
 
     return res.status(200).json({
-      data: filteredOrganizations,
+      data: organizations,
       pagination: {
         currentPage: parseInt(page),
         totalPages: Math.ceil(total / limitNum),
@@ -1044,16 +1077,12 @@ const getAllOrganizations = async (req, res) => {
         hasNext: skip + limitNum < total,
         hasPrev: parseInt(page) > 0,
         itemsPerPage: limitNum,
+        ...stats,
       },
       status: true,
     });
   } catch (error) {
-    console.error("Error in getAllOrganizations:", {
-      message: error.message,
-      stack: error.stack,
-      code: error.code,
-      details: error.details,
-    });
+    console.error("Error in getAllOrganizations:", error);
     return res.status(500).json({
       message: "Internal server error",
       error: error.message,
