@@ -404,7 +404,7 @@ exports.getTicketBasedonId = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { actingAsUserId, actingAsTenantId } = res.locals.auth;
+    const { actingAsUserId } = res.locals.auth;
 
     if (!id) {
       //<----v1.0.1----
@@ -420,11 +420,9 @@ exports.getTicketBasedonId = async (req, res) => {
       });
     }
 
-    const query = {
-      id,
-      ownerId: actingAsUserId,
-      tenantId: actingAsTenantId,
-    };
+    if (!actingAsUserId) {
+      return res.status(400).json({ message: "OwnerId is required" });
+    }
 
     // res.locals.loggedByController = true;
     // //<-----v1.0.1---

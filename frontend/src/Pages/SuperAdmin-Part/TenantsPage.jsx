@@ -66,6 +66,7 @@ function TenantsPage() {
     subscriptionStatus: selectedFilters.subscriptionStatus.join(","),
     plan: selectedFilters.plan.join(","),
     type: selectedType === "all" ? "" : selectedType,
+    valueFilter: selectedValueFilter,
   });
 
   // Use React Query for data fetching with proper dependency on permissions
@@ -353,7 +354,14 @@ function TenantsPage() {
           key: "isFreelancer",
           header: "Freelancer",
           render: (value, row) => (
-            <span>{row?.isFreelancer ? "Yes" : "No" || "-"}</span>
+            <span>
+              {row?.type === "organization"
+                ? "-"
+                : row?.isFreelancer
+                ? "Yes"
+                : "No"}
+            </span>
+            // <span>{row?.type === "organization" row?.isFreelancer ? "Yes" : "No" || "-"}</span>
           ),
         },
 
@@ -862,21 +870,24 @@ function TenantsPage() {
                 <div className="text-xs text-gray-500">Active</div>
                 <div className="text-xl font-semibold">
                   {/* {tenants?.filter((t) => t.status === "active").length} */}
-                  {tenantsToShow?.filter((t) => t.status === "active").length}
+                  {/* {tenantsToShow?.filter((t) => t.status === "active").length} */}
+                  {pagination?.activeCount || 0}
                 </div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Inactive</div>
                 <div className="text-xl font-semibold">
                   {/* {tenants?.filter((t) => t.status === "inactive").length} */}
-                  {tenantsToShow?.filter((t) => t.status === "inactive").length}
+                  {/* {tenantsToShow?.filter((t) => t.status === "inactive").length} */}
+                  {pagination?.inactiveCount || 0}
                 </div>
               </div>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                 <div className="text-xs text-gray-500">Pending</div>
                 <div className="text-xl font-semibold">
                   {/* {tenants?.filter((t) => t.status === "pending").length} */}
-                  {tenantsToShow?.filter((t) => t.status === "pending").length}
+                  {/* {tenantsToShow?.filter((t) => t.status === "pending").length} */}
+                  {pagination?.pendingCount || 0}
                 </div>
               </div>
               {selectedType === "all" && (
@@ -884,13 +895,15 @@ function TenantsPage() {
                   <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                     <div className="text-xs text-gray-500">Organizations</div>
                     <div className="text-xl font-semibold">
-                      {tenants?.filter((t) => t.type === "organization").length}
+                      {pagination?.organizationCount || 0}
+                      {/* {tenants?.filter((t) => t.type === "organization").length} */}
                     </div>
                   </div>
                   <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                     <div className="text-xs text-gray-500">Individuals</div>
                     <div className="text-xl font-semibold">
-                      {tenants?.filter((t) => t.type === "individual").length}
+                      {pagination?.individualCount || 0}
+                      {/* {tenants?.filter((t) => t.type === "individual").length} */}
                     </div>
                   </div>
                 </>
