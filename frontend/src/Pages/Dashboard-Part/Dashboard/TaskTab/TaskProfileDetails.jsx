@@ -14,8 +14,9 @@ import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopu
 // v1.0.0 --------------------------------------------------------------->
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
+import { useTaskById } from "../../../../apiHooks/useTasks";
 
-const TaskProfileDetails = ({ task, onClosetask }) => {
+const TaskProfileDetails = ({ task, taskId, onClosetask }) => {
   
   const [isFullScreen, setIsFullScreen] = useState(false);
   const navigate = useNavigate();
@@ -23,15 +24,36 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
   
   const [activeTab, setActiveTab] = useState("details"); // State for active tab
 
+  const { data: fetchedTask, isLoading: isLoadingTask } = useTaskById(taskId);
+
   useEffect(() => {
     document.title = "Task Profile Details";
   }, []);
 
   const handleClose = () => {
-    navigate("/task");
+    if (typeof onClosetask === "function") {
+      onClosetask();
+    } else {
+      navigate("/task");
+    }
   };
 
-  if (!task) return <div>Loading...</div>;
+  const taskData = taskId ? fetchedTask : task;
+
+  if (isLoadingTask && taskId && !taskData) {
+    return (
+      <SidebarPopup title="Task Profile Details" onClose={handleClose}>
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading task details...</p>
+          </div>
+        </div>
+      </SidebarPopup>
+    );
+  }
+
+  if (!taskData) return null;
 
   return (
     <>
@@ -75,7 +97,7 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                   <div className="flex items-center justify-center mb-4">
                     <div className="relative">
                       <div className="sm:w-20 sm:h-20 w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-3xl font-semibold shadow-lg">
-                        {task.title ? task.title.charAt(0).toUpperCase() : ""}
+                        {taskData.title ? taskData.title.charAt(0).toUpperCase() : ""}
                       </div>
                     </div>
                   </div>
@@ -83,10 +105,10 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                   {/* Main Details */}
                   <div className="text-center mb-6">
                     <h3 className="sm:text-xl text-2xl font-bold text-gray-900">
-                      {capitalizeFirstLetter(task?.title) || "N/A"}
+                      {capitalizeFirstLetter(taskData?.title) || "N/A"}
                     </h3>
                     <p className="text-gray-600 mt-1">
-                      {capitalizeFirstLetter(task?.description)}
+                      {capitalizeFirstLetter(taskData?.description)}
                     </p>
                   </div>
 
@@ -118,7 +140,7 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                           <div>
                             <p className="text-sm text-gray-500">Task ID</p>
                             <p className="sm:text-sm text-gray-700">
-                              {task.taskCode}
+                              {taskData.taskCode}
                             </p>
                           </div>
                         </div>
@@ -144,7 +166,7 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                             <p className="sm:text-sm text-gray-700">
                               {
                                 <StatusBadge
-                                  status={capitalizeFirstLetter(task?.status)}
+                                  status={capitalizeFirstLetter(taskData?.status)}
                                 />
                               }
                             </p>
@@ -173,7 +195,7 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                             <p className="sm:text-sm text-gray-700">
                               {
                                 <StatusBadge
-                                  status={capitalizeFirstLetter(task?.priority)}
+                                  status={capitalizeFirstLetter(taskData?.priority)}
                                 />
                               }
                             </p>
@@ -200,7 +222,7 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                           <div>
                             <p className="text-sm text-gray-500">Due Date</p>
                             <p className="sm:text-sm text-gray-700">
-                              {new Date(task.dueDate).toLocaleDateString()}
+                              {new Date(taskData.dueDate).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -216,17 +238,17 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
                             <span className="text-gray-700">
-                              {task.assignedTo
-                                ? task.assignedTo.charAt(0).toUpperCase()
+                              {taskData.assignedTo
+                                ? taskData.assignedTo.charAt(0).toUpperCase()
                                 : "?"}
                             </span>
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Assigned To</p>
                             <p className="sm:text-sm text-gray-700">
-                              {task.assignedTo
-                                ? task.assignedTo.charAt(0).toUpperCase() +
-                                  task.assignedTo.slice(1)
+                              {taskData.assignedTo
+                                ? taskData.assignedTo.charAt(0).toUpperCase() +
+                                  taskData.assignedTo.slice(1)
                                 : "Unassigned"}
                             </p>
                           </div>
@@ -235,8 +257,8 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
                             <span className="sm:text-sm text-gray-700">
-                              {task.relatedTo?.objectName
-                                ? task.relatedTo?.objectName
+                              {taskData.relatedTo?.objectName
+                                ? taskData.relatedTo?.objectName
                                     .charAt(0)
                                     .toUpperCase()
                                 : "?"}
@@ -245,11 +267,11 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                           <div>
                             <p className="text-sm text-gray-500">Related To</p>
                             <p className="sm:text-sm text-gray-700">
-                              {task.relatedTo?.objectName
-                                ? task.relatedTo?.objectName
+                              {taskData.relatedTo?.objectName
+                                ? taskData.relatedTo?.objectName
                                     .charAt(0)
                                     .toUpperCase() +
-                                  task.relatedTo?.objectName.slice(1)
+                                  taskData.relatedTo?.objectName.slice(1)
                                 : "Unassigned"}
                             </p>
                           </div>
@@ -263,17 +285,17 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                     <h4 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
                       Task Comments
                     </h4>
-                    <p className="sm:text-sm text-gray-700">{task.comments}</p>
+                    <p className="sm:text-sm text-gray-700">{taskData.comments}</p>
                   </div>
 
                   {/* Task History - if available */}
-                  {task.history && task.history.length > 0 && (
+                  {taskData.history && taskData.history.length > 0 && (
                     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mt-6">
                       <h4 className="text-lg font-semibold text-gray-800 mb-4">
                         Task History
                       </h4>
                       <div className="space-y-3">
-                        {task.history.map((item, index) => (
+                        {taskData.history.map((item, index) => (
                           <div
                             key={index}
                             className="flex items-center justify-between"
@@ -292,7 +314,7 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
             </>
           ) : (
             <div className="m-2">
-              <Activity parentId={task?._id} />
+              <Activity parentId={taskData?._id} />
             </div>
           )}
           {/* v1.0.1 ------------------------------------------------------> */}

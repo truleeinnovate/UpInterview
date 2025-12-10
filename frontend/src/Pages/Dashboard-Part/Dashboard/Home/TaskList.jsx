@@ -21,7 +21,9 @@ import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/c
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 
 const TaskList = () => {
-  const { data: taskData = [], isLoading } = useTasks();
+  // Fetch first page of tasks for dashboard widget (limit can be tuned as needed)
+  const { data: tasksResponse, isLoading } = useTasks({ page: 0, limit: 50 });
+  const taskData = tasksResponse?.tasks || [];
 
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("all");
