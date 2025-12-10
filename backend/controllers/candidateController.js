@@ -48,7 +48,7 @@ const addCandidatePostCall = async (req, res) => {
       RelevantExperience,
       skills,
       PositionId,
-      Technology,
+      // Technology,
     } = req.body;
 
     // Get ownerId and tenantId from request body
@@ -87,7 +87,7 @@ const addCandidatePostCall = async (req, res) => {
       CurrentExperience, // CurrentExperience is related to total experience in Ui mentioned.
       CurrentRole,
       RelevantExperience,
-      Technology,
+      // Technology,
       skills,
       PositionId,
       ownerId,
@@ -488,20 +488,17 @@ const getCandidateById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const {
-      actingAsUserId,
-      actingAsTenantId,
-    } = res.locals.auth;
+    const { actingAsUserId, actingAsTenantId } = res.locals.auth;
 
     if (!actingAsUserId || !actingAsTenantId) {
-      return res.status(400).json({ message: "OwnerId or TenantId ID is required" });
+      return res
+        .status(400)
+        .json({ message: "OwnerId or TenantId ID is required" });
     }
 
     if (!id) {
       return res.status(400).json({ message: "Candidate ID is required" });
     }
-
-    
 
     let query = { _id: id };
 
@@ -675,7 +672,6 @@ const deleteCandidate = async (req, res) => {
     });
   }
 };
-
 
 module.exports = {
   getCandidates,

@@ -14,7 +14,7 @@ const candidateSchema = new mongoose.Schema(
     CurrentExperience: Number, //  CurrentExperience is related to total experience in Ui mentioned.
     RelevantExperience: Number,
     CurrentRole: String,
-    Technology: String,
+    // Technology: String,
     // PositionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Position' },
     // PositionId: [{
     //     type: mongoose.Schema.Types.ObjectId,
