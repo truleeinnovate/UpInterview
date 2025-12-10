@@ -6,38 +6,65 @@ import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 
-// Fetch all tasks for current user (filters applied client-side similar to existing code)
-export const useTasks = (filters = {}) => {
+// Fetch tasks with server-side pagination, search, and filters
+export const useTasks = (options = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const hasViewPermission = effectivePermissions?.Tasks?.View;
 
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const ownerId = tokenPayload?.userId;
-  const tenantId = tokenPayload?.tenantId; // reserved for future server-side filtering
-  const organization = tokenPayload?.organization; // reserved for future server-side filtering
+
+  const {
+    page = 0,
+    limit = 10,
+    search = '',
+    status = [],
+    priority = [],
+    dueDate = '',
+    assignedToId = '',
+    createdDate = '',
+  } = options;
+
+  // Normalize filters for queryKey (avoid objects/arrays that change identity)
+  const statusKey = Array.isArray(status) ? status.join(',') : String(status || '');
+  const priorityKey = Array.isArray(priority) ? priority.join(',') : String(priority || '');
 
   return useQuery({
-    queryKey: ['tasks', ownerId, tenantId, organization],
+    queryKey: ['tasks', ownerId, { page, limit, search, statusKey, priorityKey, dueDate, assignedToId, createdDate }],
     queryFn: async () => {
-      const res = await axios.get(`${config.REACT_APP_API_URL}/tasks`, {
+      const params = new URLSearchParams();
+      params.append('page', page);
+      params.append('limit', limit);
+      if (search) params.append('search', search);
+      if (statusKey) params.append('status', statusKey);
+      if (priorityKey) params.append('priority', priorityKey);
+      if (dueDate) params.append('dueDate', dueDate);
+      if (assignedToId) params.append('assignedToId', assignedToId);
+      if (createdDate) params.append('createdDate', createdDate);
+
+      const res = await axios.get(`${config.REACT_APP_API_URL}/tasks?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
         withCredentials: true,
       });
-      let tasks = Array.isArray(res.data) ? res.data : [];
-      // match existing behavior: client-side filter by ownerId
-      tasks = tasks.filter((t) => t?.ownerId === ownerId);
 
-      // optional client-side filter by status if provided
-      if (Array.isArray(filters.status) && filters.status.length > 0) {
-        tasks = tasks.filter((t) => filters.status.includes(t?.status));
-      }
-
-      return tasks;
+      const data = res.data || {};
+      return {
+        tasks: Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : [],
+        pagination: data.pagination || {
+          currentPage: page,
+          totalPages: 0,
+          totalItems: 0,
+          hasNext: false,
+          hasPrev: false,
+          itemsPerPage: limit,
+        },
+      };
     },
     enabled: !!ownerId && !!hasViewPermission && (typeof isInitialized === 'boolean' ? isInitialized : true),
+    keepPreviousData: true,
     retry: 1,
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 20,

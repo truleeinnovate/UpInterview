@@ -208,8 +208,32 @@ const Task = () => {
   const [selectedCreatedDate, setSelectedCreatedDate] = useState("");
   const [isAssignedDropdownOpen, setIsAssignedDropdownOpen] = useState(false);
   const [assignedSearch, setAssignedSearch] = useState("");
-  const [selectedTask, setSelectedTask] = useState(null);
-  const { data: taskData = [], isLoading, refetch } = useTasks();
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
+
+  // Server-side pagination & filters
+  const {
+    data: tasksResponse,
+    isLoading,
+    refetch,
+  } = useTasks({
+    page: currentPage,
+    limit: 10,
+    search: searchQuery,
+    status: selectedFilters.status,
+    priority: selectedFilters.priority,
+    dueDate: selectedFilters.dueDate,
+    assignedToId: selectedFilters.assignedToId,
+    createdDate: selectedFilters.createdDate,
+  });
+
+  const taskData = tasksResponse?.tasks || [];
+  const pagination = tasksResponse?.pagination || {
+    currentPage,
+    totalPages: 0,
+    totalItems: 0,
+    hasNext: false,
+    hasPrev: false,
+  };
   //console.log("taskData",taskData);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState(null);
@@ -536,11 +560,11 @@ const Task = () => {
 
   // Action logic
   const handleTaskClick = (task) => {
-    setSelectedTask(task);
+    setSelectedTaskId(task?._id || task?.id || null);
   };
 
   const handleCloseTask = () => {
-    setSelectedTask(null);
+    setSelectedTaskId(null);
   };
 
   const handleAddTaskClick = () => {
@@ -557,9 +581,9 @@ const Task = () => {
   };
 
   // --- START: Dynamic Empty State Messages using Utility ---
-  const isSearchActive = searchQuery.length > 0 || isFilterActive; // We use taskData.length as the initial count here since server-side pagination/filtering isn't used for total count in this component
-  const initialDataCount = taskData?.length || 0;
-  const currentFilteredCount = currentFilteredRows?.length || 0;
+  const isSearchActive = searchQuery.length > 0 || isFilterActive;
+  const initialDataCount = pagination?.totalItems ?? taskData?.length ?? 0;
+  const currentFilteredCount = taskData?.length || 0;
 
   const emptyStateMessage = getEmptyStateMessage(
     isSearchActive,
@@ -755,14 +779,22 @@ const Task = () => {
             setView={setView}
             searchQuery={searchQuery}
             onSearch={handleSearch}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrevPage={prevPage}
-            onNextPage={nextPage}
+            currentPage={pagination.currentPage || currentPage}
+            totalPages={pagination.totalPages || 0}
+            onPrevPage={() => {
+              if (pagination.hasPrev && currentPage > 0) {
+                setCurrentPage((prev) => prev - 1);
+              }
+            }}
+            onNextPage={() => {
+              if (pagination.hasNext) {
+                setCurrentPage((prev) => prev + 1);
+              }
+            }}
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
-            dataLength={taskData?.length}
+            dataLength={pagination.totalItems || taskData?.length || 0}
             searchPlaceholder="Search by Title..."
             filterIconRef={filterIconRef}
           />
@@ -776,7 +808,7 @@ const Task = () => {
               <div className="w-full sm:mt-10 overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                 {/* v1.0.5 <--------------------------------------------------------------------------------------------------- */}
                 <TableView
-                  data={currentFilteredRows}
+                  data={taskData}
                   columns={tableColumns}
                   loading={isLoading}
                   actions={tableActions}
@@ -790,7 +822,7 @@ const Task = () => {
                 {/* v1.0.4 <-------------------------------- */}
                 <TaskKanban
                   loading={isLoading}
-                  data={currentFilteredRows.map((task) => ({
+                  data={taskData.map((task) => ({
                     ...task,
                     id: task._id || task.id,
                     title: task?.taskCode,
@@ -1139,9 +1171,12 @@ const Task = () => {
         </div>
       )}
 
-      {/* Task Details */}
-      {selectedTask && (
-        <TaskProfileDetails task={selectedTask} onClosetask={handleCloseTask} />
+      {/* Task Details - fetch by id for fresh data */}
+      {selectedTaskId && (
+        <TaskProfileDetails
+          taskId={selectedTaskId}
+          onClosetask={handleCloseTask}
+        />
       )}
 
       <DeleteConfirmModal
