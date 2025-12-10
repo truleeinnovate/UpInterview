@@ -50,9 +50,12 @@ const interviewDetailsSchema = Joi.object({
   skills: Joi.array().items(Joi.string().required()).min(1).messages({
     "array.min": "Skills are required",
   }),
-  technologies: Joi.array().items(Joi.string()).min(1).required().messages({
-    "array.min": "Technologies are required",
+  currentRole: Joi.string().required().messages({
+    "string.empty": "Current role is required",
   }),
+  // technologies: Joi.array().items(Joi.string()).min(1).required().messages({
+  //   "array.min": "Technologies are required",
+  // }),
   PreviousExperienceConductingInterviews: Joi.alternatives()
     .try(Joi.boolean(), Joi.string().valid("yes", "no"))
     .required()
@@ -131,7 +134,7 @@ function validateIndividualSignup(step, data) {
     schema = interviewDetailsSchema;
     stepData = {
       skills: data.skills,
-      technologies: data.technologies,
+      currentRole: data.currentRole,
       PreviousExperienceConductingInterviews:
         data.PreviousExperienceConductingInterviews ||
         data.previousInterviewExperience,

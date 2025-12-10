@@ -159,7 +159,7 @@ const AddCandidateForm = ({
     RelevantExperience: useRef(null),
     CurrentRole: useRef(null),
     skills: useRef(null),
-    Technology: useRef(null),
+    // Technology: useRef(null),
   };
 
   // v1.0.3 --------------------------------------------------------------------------->
@@ -178,7 +178,7 @@ const AddCandidateForm = ({
     CountryCode: "+91",
     skills: [],
     CurrentRole: "",
-    Technology: "",
+    // Technology: "",
   });
   const [errors, setErrors] = useState({});
 
@@ -215,7 +215,7 @@ const AddCandidateForm = ({
         resume: selectedCandidate?.resume || null,
         CurrentRole: selectedCandidate?.CurrentRole || "",
         CountryCode: selectedCandidate?.CountryCode || "",
-        Technology: selectedCandidate?.Technology || "",
+        // Technology: selectedCandidate?.Technology || "",
       });
 
       if (selectedCandidate.ImageData?.filename) {
@@ -503,7 +503,7 @@ const AddCandidateForm = ({
       skills: [],
       CurrentRole: "",
       CountryCode: "+91",
-      Technology: "",
+      // Technology: "",
     });
 
     setErrors({});
@@ -609,7 +609,7 @@ const AddCandidateForm = ({
       Date_Of_Birth: formData.Date_Of_Birth,
       skills: filledSkills,
       CurrentRole: formData.CurrentRole,
-      Technology: formData.Technology,
+      // Technology: formData.Technology,
       ownerId: userId,
       tenantId: orgId,
     };
@@ -1053,14 +1053,14 @@ const AddCandidateForm = ({
                     onChange={handleChange}
                     error={errors.CurrentRole}
                     containerRef={fieldRefs.CurrentRole}
-                    label="Current Role"
+                    label="Select Role or Technology"
                     name="CurrentRole"
                     required
                     onMenuOpen={loadCurrentRoles}
                     loading={isCurrentRolesFetching}
                   />
 
-                  <DropdownWithSearchField
+                  {/* <DropdownWithSearchField
                     containerRef={fieldRefs.Technology}
                     label="Technology"
                     name="technology"
@@ -1084,7 +1084,7 @@ const AddCandidateForm = ({
                     required
                     onMenuOpen={loadCurrentRoles}
                     loading={isCurrentRolesFetching}
-                  />
+                  /> */}
                 </div>
               </div>
               <div>

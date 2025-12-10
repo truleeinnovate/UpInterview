@@ -19,7 +19,7 @@ const rateCardSchema = new mongoose.Schema(
         required: true,
       },
     ],
-    name: { type: String, required: true }, // e.g., "FullStackDeveloper"
+    // name: { type: String, required: true }, // e.g., "FullStackDeveloper"
     // v1.0.0 ----------------------------------------------------------------->
     levels: [
       {

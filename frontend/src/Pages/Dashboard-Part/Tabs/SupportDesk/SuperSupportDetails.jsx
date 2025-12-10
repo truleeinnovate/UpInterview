@@ -51,12 +51,12 @@ const getStatusColor = (status) => {
   }
 };
 
-function SupportDetails() {;
+function SupportDetails() {
   const {
-    effectivePermissions,
-    superAdminPermissions,
+    // effectivePermissions,
+    // superAdminPermissions,
     impersonatedUser_roleName,
-    effectivePermissions_RoleName,
+    // effectivePermissions_RoleName,
   } = usePermissions();
 
   const navigate = useNavigate();
@@ -78,7 +78,7 @@ function SupportDetails() {;
   ];
   const [isOwnerEditing, setIsOwnerEditing] = useState(false);
   const [ownerOptions, setOwnerOptions] = useState([]);
-  console.log("ownerOptions---", ownerOptions);
+
   const ownerSelectOptions = ownerOptions.map((user) => ({
     value: user._id,
     label: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
@@ -96,7 +96,7 @@ function SupportDetails() {;
           {
             params: {
               page: 1,
-              limit: Infinity,
+              limit: 100,
             },
           }
         );
@@ -107,11 +107,9 @@ function SupportDetails() {;
 
         const filteredUsers = usersArray.filter(
           (user) =>
-            user.roleName === "Super_Admin" ||
-            user.roleName === "Support_Team"
+            user.roleName === "Super_Admin" || user.roleName === "Support_Team"
         );
 
-        console.log("filteredUsers---", filteredUsers);
         setOwnerOptions(filteredUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -256,8 +254,8 @@ function SupportDetails() {;
     return null;
   }
   // v1.0.2 <--------------------------------------------------------
-  const ticketId = currentTicket?._id?.slice(-5, -1) || "";
-  const statusClass = getStatusColor(currentTicket.status);
+  // const ticketId = currentTicket?._id?.slice(-5, -1) || "";
+  // const statusClass = getStatusColor(currentTicket.status);
   // v1.0.2 --------------------------------------------------------->
 
   const content = (
@@ -271,34 +269,34 @@ function SupportDetails() {;
               Support Ticket Details
             </h2>
             <div className="flex items-center text-center gap-2">
-            <h3 className="text-md font-medium text-custom-blue">
-              {currentTicket?.ticketCode}
-            </h3>
-            <StatusBadge
-              status={currentTicket?.status}
-              text={
-                currentTicket?.status
-                  ? currentTicket?.status.charAt(0).toUpperCase() +
-                    currentTicket?.status.slice(1)
-                  : "Not Provided"
-              }
-            />
-            {/*common status code add by Venkatesh*/}
-            {/*-------v1.0.3------>*/}
-            {/*-------v1.0.1-------------->*/}
-          </div>
+              <h3 className="text-md font-medium text-custom-blue">
+                {currentTicket?.ticketCode}
+              </h3>
+              <StatusBadge
+                status={currentTicket?.status}
+                text={
+                  currentTicket?.status
+                    ? currentTicket?.status.charAt(0).toUpperCase() +
+                      currentTicket?.status.slice(1)
+                    : "Not Provided"
+                }
+              />
+              {/*common status code add by Venkatesh*/}
+              {/*-------v1.0.3------>*/}
+              {/*-------v1.0.1-------------->*/}
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             {(impersonatedUser_roleName === "Super_Admin" ||
-            impersonatedUser_roleName === "Support_Team") && (
-            <button
-              onClick={toggleStatusModal}
-              className="px-1 py-2 mb-1 bg-custom-blue text-xs w-24 whitespace-nowrap text-white hover:bg-custom-blue/90 rounded-md transition-colors"
-              title="Change Status"
-            >
-              Change Status
-            </button>
-          )}
+              impersonatedUser_roleName === "Support_Team") && (
+              <button
+                onClick={toggleStatusModal}
+                className="px-1 py-2 mb-1 bg-custom-blue text-xs w-24 whitespace-nowrap text-white hover:bg-custom-blue/90 rounded-md transition-colors"
+                title="Change Status"
+              >
+                Change Status
+              </button>
+            )}
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
@@ -320,7 +318,6 @@ function SupportDetails() {;
       </div>
 
       <div className="px-4 pb-4">
-        
         <div className="flex justify-between border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {/* <----v1.0.0------Venkatesh------add attachments tab */}
@@ -339,7 +336,6 @@ function SupportDetails() {;
             ))}
             {/* ---v1.0.0------Venkatesh------add attachments tab--> */}
           </nav>
-          
         </div>
 
         {activeTab === "Details" ? (

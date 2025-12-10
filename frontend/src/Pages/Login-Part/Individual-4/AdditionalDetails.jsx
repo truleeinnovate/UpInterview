@@ -122,7 +122,7 @@ const AdditionalDetails = ({
     setResumeName("");
   };
   // v1.0.2 ------------------------------------------------------------------->
-
+  // console.log("currentRoles", currentRoles);
   const handleChange = (selectedOption, meta) => {
     // Handle both select dropdown and regular input changes
     let name, value;
@@ -220,13 +220,13 @@ const AdditionalDetails = ({
       <div className="grid grid-cols-2 gap-x-6 gap-y-8">
         {/* Current Role */}
         <div className="sm:col-span-2 col-span-1">
-          <DropdownWithSearchField
+          {/* <DropdownWithSearchField
             value={additionalDetailsData.currentRole || ""}
             options={[
               // Include the current value in options even if not in the database yet
               ...(additionalDetailsData.currentRole &&
               !currentRoles?.some(
-                (role) => role.RoleName === additionalDetailsData.currentRole
+                (role) => role.roleName === additionalDetailsData.currentRole
               )
                 ? [
                     {
@@ -236,13 +236,46 @@ const AdditionalDetails = ({
                   ]
                 : []),
               ...(currentRoles?.map((role) => ({
-                value: role.RoleName,
-                label: role.RoleName,
+                value: role.roleName,
+                label: role.roleLabel,
               })) || []),
             ]}
             onChange={handleChange}
             error={errors.currentRole}
             label="Current Role"
+            name="currentRole"
+            required
+            onMenuOpen={loadCurrentRoles}
+            loading={isCurrentRolesFetching}
+          /> */}
+          <DropdownWithSearchField
+            value={additionalDetailsData.currentRole || ""}
+            options={[
+              // Include the current value in options even if not in the database yet
+              ...(additionalDetailsData.currentRole &&
+              !currentRoles?.some(
+                (role) => role.roleName === additionalDetailsData.currentRole
+              )
+                ? [
+                    {
+                      value: additionalDetailsData.currentRole,
+                      // Check if we can find a roleLabel for this roleName
+                      label:
+                        currentRoles?.find(
+                          (role) =>
+                            role.roleName === additionalDetailsData.currentRole
+                        )?.roleLabel || additionalDetailsData.currentRole,
+                    },
+                  ]
+                : []),
+              ...(currentRoles?.map((role) => ({
+                value: role.roleName,
+                label: role.roleLabel,
+              })) || []),
+            ]}
+            onChange={handleChange}
+            error={errors.currentRole}
+            label="Select Role / Technology"
             name="currentRole"
             required
             onMenuOpen={loadCurrentRoles}
