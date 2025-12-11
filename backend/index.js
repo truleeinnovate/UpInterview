@@ -122,7 +122,7 @@ const EmailRouter = require("./routes/EmailsRoutes/emailsRoute.js");
 const usersRoutes = require("./routes/usersRoutes.js");
 
 // Add import for agoraRoomRoute
-const agoraRoomRoute = require("./routes/agoraRoomRoute.js");
+// const agoraRoomRoute = require("./routes/agoraRoomRoute.js");
 const feedbackRoute = require("./routes/feedbackRoute.js");
 const usageRoutes = require("./routes/usageRoutes.js");
 const organizationRequestRoutes = require("./routes/organizationRequestRoutes.js");
@@ -457,7 +457,7 @@ app.use((req, res, next) => {
 });
 // app.use(conditionalPermissionMiddleware);
 
-app.use("/api/agora", agoraRoomRoute);
+// app.use("/api/agora", agoraRoomRoute);
 // ------------------------------v1.0.3 >
 // Apply database connection middleware to all API routes except health check
 const apiRoutes = require("./routes/apiRoutes");

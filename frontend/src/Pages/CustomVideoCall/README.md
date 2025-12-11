@@ -1,4 +1,4 @@
-# Custom Video Call Integration
+<!-- # Custom Video Call Integration
 
 This folder contains the custom video call application that has been integrated into the main upinterview application.
 
@@ -57,4 +57,4 @@ The video call functionality will use the `zego-express-engine-webrtc` package. 
 
 ## Styling
 
-The components use Tailwind CSS for styling, maintaining consistency with the main application design. 
+The components use Tailwind CSS for styling, maintaining consistency with the main application design.  -->

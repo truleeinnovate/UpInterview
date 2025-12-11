@@ -487,6 +487,14 @@ const ContactUsPage = lazy(() =>
 // v1.0.8 ------------------------------------------------------------------------------->
 // v1.0.9 ------------------------------------------------------------------------------->
 
+// Video SDK Components
+const VideoSDKDashboard = lazy(() =>
+  import("./VideoSDK/components/Dashboard")
+);
+const VideoSDKJoinInterview = lazy(() =>
+  import("./VideoSDK/components/JoinInterview")
+);
+
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
   <Suspense fallback={<Loading />}>{children}</Suspense>
@@ -508,6 +516,8 @@ const AuthRoutes = () => (
     <Route path="/callback" element={<LinkedInCallback />} />
     <Route path="/oauth2callback" element={<OAuthCallback />} />
     <Route path="/join-meeting" element={<JoinMeeting />} />
+    <Route path="/video-sdk" element={<VideoSDKDashboard />} />
+    <Route path="/video-sdk/join" element={<VideoSDKJoinInterview />} />
     <Route path="/verify-email" element={<VerifyEmail />} />
     <Route path="/verify-user-email" element={<VerifyUserEmail />} />
     <Route path="/resetPassword" element={<ResetPassword />} />
@@ -1473,6 +1483,8 @@ const App = () => {
       "/callback",
       "/oauth2callback",
       "/join-meeting",
+      "/video-sdk",
+      "/video-sdk/join",
     ].some(
       (path) =>
         location.pathname === path ||
