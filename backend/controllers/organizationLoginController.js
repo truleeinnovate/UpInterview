@@ -825,10 +825,11 @@ const getAllOrganizations = async (req, res) => {
       valueFilter,
     } = req.query;
 
+    console.log("req.query", req.query);
+
     const skip = parseInt(page) * parseInt(limit);
     const limitNum = parseInt(limit);
 
-    // Build match stage for base query
     const matchStage = {};
 
     if (search) {
@@ -852,10 +853,10 @@ const getAllOrganizations = async (req, res) => {
       matchStage.createdAt = { $gte: date, $lt: nextDay };
     }
 
-    // Start aggregation pipeline
     const pipeline = [
       { $match: matchStage },
-      // Lookup contacts
+
+      // CONTACT LOOKUP
       {
         $lookup: {
           from: "contacts",
@@ -865,21 +866,23 @@ const getAllOrganizations = async (req, res) => {
         },
       },
       { $unwind: { path: "$contact", preserveNullAndEmptyArrays: true } },
-      // Lookup latest subscription
+
+      // SUBSCRIPTION LOOKUP (replaced "let")
       {
         $lookup: {
           from: "customersubscriptions",
-          let: { tenantId: "$_id" },
-          pipeline: [
-            { $match: { $expr: { $eq: ["$tenantId", "$$tenantId"] } } },
-            { $sort: { _id: -1 } },
-            { $limit: 1 },
-          ],
+          localField: "_id",
+          foreignField: "tenantId",
           as: "subscription",
         },
       },
-      { $unwind: { path: "$subscription", preserveNullAndEmptyArrays: true } },
-      // Lookup subscription plan
+      {
+        $addFields: {
+          subscription: { $arrayElemAt: ["$subscription", -1] },
+        },
+      },
+
+      // SUBSCRIPTION PLAN
       {
         $lookup: {
           from: "subscriptionplans",
@@ -894,45 +897,46 @@ const getAllOrganizations = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-      // Lookup user counts
+
+      // USER STATS LOOKUP (replaced "let + pipeline")
       {
         $lookup: {
           from: "users",
-          let: { tenantId: "$_id" },
-          pipeline: [
-            { $match: { $expr: { $eq: ["$tenantId", "$$tenantId"] } } },
-            {
-              $group: {
-                _id: "$tenantId",
-                usersCount: { $sum: 1 },
-                activeUsersCount: {
-                  $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] },
-                },
-                hasFreelancer: {
-                  $sum: { $cond: [{ $eq: ["$isFreelancer", "true"] }, 1, 0] },
-                },
-              },
-            },
-          ],
+          localField: "_id",
+          foreignField: "tenantId",
           as: "userStats",
         },
       },
-      { $unwind: { path: "$userStats", preserveNullAndEmptyArrays: true } },
-      // Add computed fields
       {
         $addFields: {
-          usersCount: { $ifNull: ["$userStats.usersCount", 0] },
-          activeUsersCount: { $ifNull: ["$userStats.activeUsersCount", 0] },
+          usersCount: { $size: "$userStats" },
+          activeUsersCount: {
+            $size: {
+              $filter: {
+                input: "$userStats",
+                as: "u",
+                cond: { $eq: ["$$u.status", "active"] },
+              },
+            },
+          },
           isFreelancer: {
-            $cond: [
-              { $gt: [{ $ifNull: ["$userStats.hasFreelancer", 0] }, 0] },
-              true,
-              false,
+            $gt: [
+              {
+                $size: {
+                  $filter: {
+                    input: "$userStats",
+                    as: "u",
+                    cond: { $eq: ["$$u.isFreelancer", "true"] },
+                  },
+                },
+              },
+              0,
             ],
           },
         },
       },
-      // Apply valueFilter in aggregation
+
+      // VALUE FILTER
       ...(valueFilter
         ? [
             {
@@ -955,12 +959,14 @@ const getAllOrganizations = async (req, res) => {
                     },
                   };
                 }
+
                 return {};
               })(),
             },
           ]
         : []),
-      // Apply other filters
+
+      // FILTERS
       ...(subscriptionStatus
         ? [
             {
@@ -972,6 +978,7 @@ const getAllOrganizations = async (req, res) => {
             },
           ]
         : []),
+
       ...(plan
         ? [
             {
@@ -981,7 +988,7 @@ const getAllOrganizations = async (req, res) => {
             },
           ]
         : []),
-      // Apply user count filters
+
       ...(minUsers || maxUsers
         ? [
             {
@@ -994,7 +1001,7 @@ const getAllOrganizations = async (req, res) => {
             },
           ]
         : []),
-      // Project final fields
+
       {
         $project: {
           _id: 1,
@@ -1017,12 +1024,12 @@ const getAllOrganizations = async (req, res) => {
       },
     ];
 
-    // Get total count
+    // COUNT
     const countPipeline = [...pipeline, { $count: "total" }];
     const countResult = await Tenant.aggregate(countPipeline);
     const total = countResult[0]?.total || 0;
 
-    // Get paginated data with sorting
+    // PAGINATION
     const dataPipeline = [
       ...pipeline,
       { $sort: { _id: -1 } },
@@ -1032,7 +1039,7 @@ const getAllOrganizations = async (req, res) => {
 
     const organizations = await Tenant.aggregate(dataPipeline);
 
-    // Calculate stats using another aggregation
+    // STATS
     const statsPipeline = [
       ...pipeline,
       {
@@ -1059,6 +1066,7 @@ const getAllOrganizations = async (req, res) => {
     ];
 
     const statsResult = await Tenant.aggregate(statsPipeline);
+    console.log("statsResult", statsResult);
     const stats = statsResult[0] || {
       total: 0,
       activeCount: 0,
@@ -1067,6 +1075,10 @@ const getAllOrganizations = async (req, res) => {
       organizationCount: 0,
       individualCount: 0,
     };
+
+    console.log("stats", stats);
+    console.log("organizations", organizations);
+    console.log("total");
 
     return res.status(200).json({
       data: organizations,
@@ -1090,6 +1102,288 @@ const getAllOrganizations = async (req, res) => {
     });
   }
 };
+
+// const getAllOrganizations = async (req, res) => {
+//   try {
+//     const {
+//       page = 0,
+//       limit = 10,
+//       search = "",
+//       status,
+//       subscriptionStatus,
+//       plan,
+//       createdDate,
+//       minUsers,
+//       maxUsers,
+//       type,
+//       valueFilter,
+//     } = req.query;
+
+//     const skip = parseInt(page) * parseInt(limit);
+//     const limitNum = parseInt(limit);
+
+//     // Build match stage for base query
+//     const matchStage = {};
+
+//     if (search) {
+//       const searchRegex = new RegExp(search, "i");
+//       matchStage.$or = [
+//         { firstName: searchRegex },
+//         { lastName: searchRegex },
+//         { Email: searchRegex },
+//         { Phone: searchRegex },
+//         { company: searchRegex },
+//       ];
+//     }
+
+//     if (type) matchStage.type = type;
+//     if (status) matchStage.status = { $in: status.split(",") };
+
+//     if (createdDate) {
+//       const date = new Date(createdDate);
+//       const nextDay = new Date(date);
+//       nextDay.setDate(nextDay.getDate() + 1);
+//       matchStage.createdAt = { $gte: date, $lt: nextDay };
+//     }
+
+//     // Start aggregation pipeline
+//     const pipeline = [
+//       { $match: matchStage },
+//       // Lookup contacts
+//       {
+//         $lookup: {
+//           from: "contacts",
+//           localField: "_id",
+//           foreignField: "tenantId",
+//           as: "contact",
+//         },
+//       },
+//       { $unwind: { path: "$contact", preserveNullAndEmptyArrays: true } },
+//       // Lookup latest subscription
+//       {
+//         $lookup: {
+//           from: "customersubscriptions",
+//           let: { tenantId: "$_id" },
+//           pipeline: [
+//             { $match: { $expr: { $eq: ["$tenantId", "$$tenantId"] } } },
+//             { $sort: { _id: -1 } },
+//             { $limit: 1 },
+//           ],
+//           as: "subscription",
+//         },
+//       },
+//       { $unwind: { path: "$subscription", preserveNullAndEmptyArrays: true } },
+//       // Lookup subscription plan
+//       {
+//         $lookup: {
+//           from: "subscriptionplans",
+//           localField: "subscription.subscriptionPlanId",
+//           foreignField: "_id",
+//           as: "subscriptionPlan",
+//         },
+//       },
+//       {
+//         $unwind: {
+//           path: "$subscriptionPlan",
+//           preserveNullAndEmptyArrays: true,
+//         },
+//       },
+//       // Lookup user counts
+//       {
+//         $lookup: {
+//           from: "users",
+//           let: { tenantId: "$_id" },
+//           pipeline: [
+//             { $match: { $expr: { $eq: ["$tenantId", "$$tenantId"] } } },
+//             {
+//               $group: {
+//                 _id: "$tenantId",
+//                 usersCount: { $sum: 1 },
+//                 activeUsersCount: {
+//                   $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] },
+//                 },
+//                 hasFreelancer: {
+//                   $sum: { $cond: [{ $eq: ["$isFreelancer", "true"] }, 1, 0] },
+//                 },
+//               },
+//             },
+//           ],
+//           as: "userStats",
+//         },
+//       },
+//       { $unwind: { path: "$userStats", preserveNullAndEmptyArrays: true } },
+//       // Add computed fields
+//       {
+//         $addFields: {
+//           usersCount: { $ifNull: ["$userStats.usersCount", 0] },
+//           activeUsersCount: { $ifNull: ["$userStats.activeUsersCount", 0] },
+//           isFreelancer: {
+//             $cond: [
+//               { $gt: [{ $ifNull: ["$userStats.hasFreelancer", 0] }, 0] },
+//               true,
+//               false,
+//             ],
+//           },
+//         },
+//       },
+//       // Apply valueFilter in aggregation
+//       ...(valueFilter
+//         ? [
+//             {
+//               $match: (() => {
+//                 const [prefix, ...rest] = valueFilter.split(":");
+//                 const val = rest.join(":").toLowerCase().trim();
+
+//                 if (prefix === "role") {
+//                   return {
+//                     "contact.currentRole": {
+//                       $regex: new RegExp(`^${val}$`, "i"),
+//                     },
+//                   };
+//                 } else if (prefix === "tech") {
+//                   return {
+//                     "contact.currentRole": {
+//                       $elemMatch: {
+//                         $regex: new RegExp(`^${val}$`, "i"),
+//                       },
+//                     },
+//                   };
+//                 }
+//                 return {};
+//               })(),
+//             },
+//           ]
+//         : []),
+//       // Apply other filters
+//       ...(subscriptionStatus
+//         ? [
+//             {
+//               $match: {
+//                 "subscription.status": {
+//                   $in: subscriptionStatus.split(","),
+//                 },
+//               },
+//             },
+//           ]
+//         : []),
+//       ...(plan
+//         ? [
+//             {
+//               $match: {
+//                 "subscriptionPlan.name": { $in: plan.split(",") },
+//               },
+//             },
+//           ]
+//         : []),
+//       // Apply user count filters
+//       ...(minUsers || maxUsers
+//         ? [
+//             {
+//               $match: {
+//                 $and: [
+//                   minUsers ? { usersCount: { $gte: parseInt(minUsers) } } : {},
+//                   maxUsers ? { usersCount: { $lte: parseInt(maxUsers) } } : {},
+//                 ],
+//               },
+//             },
+//           ]
+//         : []),
+//       // Project final fields
+//       {
+//         $project: {
+//           _id: 1,
+//           firstName: 1,
+//           lastName: 1,
+//           Email: 1,
+//           Phone: 1,
+//           company: 1,
+//           type: 1,
+//           status: 1,
+//           createdAt: 1,
+//           updatedAt: 1,
+//           usersCount: 1,
+//           activeUsersCount: 1,
+//           isFreelancer: 1,
+//           subscription: 1,
+//           subscriptionPlan: 1,
+//           contact: 1,
+//         },
+//       },
+//     ];
+
+//     // Get total count
+//     const countPipeline = [...pipeline, { $count: "total" }];
+//     const countResult = await Tenant.aggregate(countPipeline);
+//     const total = countResult[0]?.total || 0;
+
+//     // Get paginated data with sorting
+//     const dataPipeline = [
+//       ...pipeline,
+//       { $sort: { _id: -1 } },
+//       { $skip: skip },
+//       { $limit: limitNum },
+//     ];
+
+//     const organizations = await Tenant.aggregate(dataPipeline);
+
+//     // Calculate stats using another aggregation
+//     const statsPipeline = [
+//       ...pipeline,
+//       {
+//         $group: {
+//           _id: null,
+//           total: { $sum: 1 },
+//           activeCount: {
+//             $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] },
+//           },
+//           inactiveCount: {
+//             $sum: { $cond: [{ $eq: ["$status", "inactive"] }, 1, 0] },
+//           },
+//           pendingCount: {
+//             $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] },
+//           },
+//           organizationCount: {
+//             $sum: { $cond: [{ $eq: ["$type", "organization"] }, 1, 0] },
+//           },
+//           individualCount: {
+//             $sum: { $cond: [{ $eq: ["$type", "individual"] }, 1, 0] },
+//           },
+//         },
+//       },
+//     ];
+
+//     const statsResult = await Tenant.aggregate(statsPipeline);
+//     const stats = statsResult[0] || {
+//       total: 0,
+//       activeCount: 0,
+//       inactiveCount: 0,
+//       pendingCount: 0,
+//       organizationCount: 0,
+//       individualCount: 0,
+//     };
+
+//     return res.status(200).json({
+//       data: organizations,
+//       pagination: {
+//         currentPage: parseInt(page),
+//         totalPages: Math.ceil(total / limitNum),
+//         totalItems: total,
+//         hasNext: skip + limitNum < total,
+//         hasPrev: parseInt(page) > 0,
+//         itemsPerPage: limitNum,
+//         ...stats,
+//       },
+//       status: true,
+//     });
+//   } catch (error) {
+//     console.error("Error in getAllOrganizations:", error);
+//     return res.status(500).json({
+//       message: "Internal server error",
+//       error: error.message,
+//       status: false,
+//     });
+//   }
+// };
 
 const deleteTenantAndAssociatedData = async (req, res) => {
   const { tenantId } = req.params;
