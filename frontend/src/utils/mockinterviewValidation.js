@@ -4,8 +4,8 @@ const getErrorMessage = (field, value) => {
     candidateName: "Candidate Name is required",
     higherQualification: "Higher Qualification is required",
     currentExperience: "Experience is required",
-    technology: "Technology is required",
-    Role: "Role is required",
+    // technology: "Technology is required",
+    currentRole: "Current Role is required",
     "rounds.roundTitle": "Round Title is required",
     "rounds.interviewMode": "Interview Mode is required",
 
@@ -31,9 +31,9 @@ const validatePage1 = (formData, entries) => {
   const requiredFields = {
     candidateName: formData.candidateName,
     higherQualification: formData.higherQualification,
-    technology: formData.technology,
+    // technology: formData.technology,
     currentExperience: formData.currentExperience,
-    Role: formData.Role,
+    currentRole: formData.currentRole,
   };
   let formIsValid = true;
   const newErrors = {};
@@ -84,8 +84,8 @@ const validatemockForm = (formData, entries, errors) => {
     candidateName: formData.candidateName,
     higherQualification: formData.higherQualification,
     currentExperience: formData.currentExperience,
-    technology: formData.technology,
-    Role: formData.Role,
+    // technology: formData.technology,
+    currentRole: formData.currentRole,
     "rounds.roundTitle": formData.rounds.roundTitle,
     "rounds.interviewMode": formData.rounds.interviewMode,
   };

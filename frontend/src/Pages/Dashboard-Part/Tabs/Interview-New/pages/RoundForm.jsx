@@ -87,7 +87,7 @@ const RoundFormInterviews = () => {
   // Add useScrollLock hook at the beginning
   const {
     useInterviewDetails,
-    interviewData,
+    // interviewData,
     isMutationLoading,
     saveInterviewRound,
     updateInterviewRound,
@@ -138,7 +138,7 @@ const RoundFormInterviews = () => {
 
   const { interviewId, roundId } = useParams();
   const { data: interviewDetails } = useInterviewDetails(interviewId);
-  const stateisReschedule = useLocation().state;
+  // const stateisReschedule = useLocation().state;
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -147,9 +147,9 @@ const RoundFormInterviews = () => {
   const organization = tokenPayload?.organization;
   const [errors, setErrors] = useState({});
 
-  const interview =
-    interviewDetails ||
-    interviewData?.find((interview) => interview._id === interviewId);
+  const interview = interviewDetails;
+  // ||
+  // interviewData?.find((interview) => interview._id === interviewId);
   const [assessmentTemplate, setAssessmentTemplate] = useState({
     assessmentId: "",
     assessmentName: "",
@@ -692,7 +692,6 @@ const RoundFormInterviews = () => {
   // while editing
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
-  
 
   const editingAssessmentId =
     isEditing && roundEditData && roundEditData.assessmentId
@@ -930,7 +929,7 @@ const RoundFormInterviews = () => {
         setSequence(maxSequence + 1);
       }
     }
-  }, [rounds, roundId, isEditing, editingAssessment, interviewData, groups]);
+  }, [rounds, roundId, isEditing, editingAssessment, groups]);
 
   // Add this useEffect hook after your existing useEffect hooks
   useEffect(() => {

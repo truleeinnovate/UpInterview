@@ -5,7 +5,7 @@
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
 // removed unused lucide-react icons after refactor to shared components
-import classNames from "classnames";
+
 import Modal from "react-modal";
 // import axios from "axios";
 import {
@@ -20,23 +20,15 @@ import {
   useUpdateContactDetail,
   useUserProfile,
 } from "../../../../../../apiHooks/useUsers";
-import {
-  // useQuery,
-  //  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { validateFile } from "../../../../../../utils/FileValidation/FileValidation";
-import { uploadFile } from "../../../../../../apiHooks/imageApis";
-import Loading from "../../../../../../Components/Loading";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { notify } from "../../../../../../services/toastService";
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 // Shared form fields
 import {
-  InputField,
   DropdownWithSearchField,
   IncreaseAndDecreaseField,
 } from "../../../../../../Components/FormFields";
-import { ReactComponent as FaPlus } from "../../../../../../icons/FaPlus.svg";
 import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
 import LoadingButton from "../../../../../../Components/LoadingButton.jsx";
@@ -292,7 +284,7 @@ const EditAdvacedDetails = ({
   const currentRoleOptions = useMemo(
     () =>
       Array.isArray(currentRoles)
-        ? currentRoles.map((r) => ({ value: r.RoleName, label: r.RoleName }))
+        ? currentRoles.map((r) => ({ value: r.roleName, label: r.roleLabel }))
         : [],
     [currentRoles]
   );
@@ -319,7 +311,7 @@ const EditAdvacedDetails = ({
     if (!v) return currentRoleOptions;
     return currentRoleOptions.some((o) => o.value === v)
       ? currentRoleOptions
-      : [{ value: v, label: v }, ...currentRoleOptions];
+      : [{ value: v?.roleName, label: v?.roleLabel }, ...currentRoleOptions];
   }, [currentRoleOptions, formData.currentRole]);
 
   // Handle input changes for text fields
@@ -351,7 +343,7 @@ const EditAdvacedDetails = ({
                 onChange={handleInputChange}
                 error={errors.currentRole}
                 containerRef={fieldRefs.currentRole}
-                label="Current Role"
+                label="Current Role or Technology"
                 required
                 onMenuOpen={loadCurrentRoles}
                 loading={isCurrentRolesFetching}

@@ -190,7 +190,7 @@ const EditInterviewDetails = ({
   // State for form errors and loading
   const [errors, setErrors] = useState({});
   const [isReady, setIsReady] = useState(false);
-  const [selectedCandidates, setSelectedCandidates] = useState([]);
+  const [selectedCandidates, setSelectedCandidates] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [rateCards, setRateCards] = useState([]);
   const [showCustomDiscount, setShowCustomDiscount] = useState(false);
@@ -200,7 +200,7 @@ const EditInterviewDetails = ({
     PreviousExperienceConductingInterviews: "",
     PreviousExperienceConductingInterviewsYears: "",
     mock_interview_discount: "",
-    Technology: [],
+    currentRole: "",
     skills: [],
     professionalTitle: "",
     bio: "",
@@ -300,9 +300,8 @@ const EditInterviewDetails = ({
           ? ""
           : years || 1,
       mock_interview_discount: profileData?.mock_interview_discount || "",
-      Technology: Array.isArray(profileData?.technologies)
-        ? profileData.technologies
-        : [],
+
+      currentRole: profileData?.currentRole ? profileData.currentRole : "",
       skills: Array.isArray(profileData?.skills) ? profileData.skills : [],
       professionalTitle: profileData?.professionalTitle || "",
       bio: profileData?.bio || "",
@@ -339,23 +338,23 @@ const EditInterviewDetails = ({
     setFormData(newFormData);
 
     // Set selected candidates for the UI
-    const selectedTechs = Array.isArray(profileData?.technologies)
-      ? profileData.technologies
-      : [];
+    const selectedTechs = profileData?.currentRole
+      ? profileData.currentRole
+      : "";
 
-    console.log("selectedTechs:-", selectedTechs);
     setSelectedCandidates(
-      selectedTechs.map((tech) => ({
-        TechnologyMasterName: tech,
-        value: tech,
-        label: tech,
-      }))
+      selectedTechs
+      // selectedTechs.map((tech) => ({
+      //   TechnologyMasterName: tech,
+      //   value: tech,
+      //   label: tech,
+      // }))
     );
 
     // Fetch rate cards for selected technologies
-    if (selectedTechs.length > 0) {
+    if (selectedTechs) {
       // Fetch rate cards for the first technology
-      fetchRateCards(selectedTechs[0]);
+      fetchRateCards(selectedTechs);
     }
 
     // Set other UI states
@@ -449,52 +448,52 @@ const EditInterviewDetails = ({
   );
 
   // Handle technology selection
-  const handleSelectCandidate = (technology) => {
-    if (!technology) return;
+  // const handleSelectCandidate = (technology) => {
+  //   if (!technology) return;
 
-    const techName = technology.TechnologyMasterName || technology;
+  //   const techName = technology.TechnologyMasterName || technology;
 
-    if (!selectedCandidates.some((c) => c.TechnologyMasterName === techName)) {
-      const newCandidate = {
-        TechnologyMasterName: techName,
-        _id: Math.random().toString(36).substr(2, 9),
-      };
+  //   if (!selectedCandidates.some((c) => c.TechnologyMasterName === techName)) {
+  //     const newCandidate = {
+  //       TechnologyMasterName: techName,
+  //       _id: Math.random().toString(36).substr(2, 9),
+  //     };
 
-      const updatedCandidates = [...selectedCandidates, newCandidate];
-      setSelectedCandidates(updatedCandidates);
+  //     const updatedCandidates = [...selectedCandidates, newCandidate];
+  //     setSelectedCandidates(updatedCandidates);
 
-      setFormData((prev) => ({
-        ...prev,
-        Technology: updatedCandidates.map((t) => t.TechnologyMasterName),
-      }));
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       Technology: updatedCandidates.map((t) => t.TechnologyMasterName),
+  //     }));
 
-      setErrors((prev) => ({ ...prev, technologies: "" }));
+  //     setErrors((prev) => ({ ...prev, technologies: "" }));
 
-      // Fetch rate cards for the selected technology
-      if (techName) {
-        fetchRateCards(techName).then(() => {
-          // After fetching rate cards, update the form with the first technology's rates
-          if (updatedCandidates.length === 1) {
-            const years =
-              parseInt(formData.PreviousExperienceConductingInterviewsYears) ||
-              0;
-            const shouldShowJunior = years <= 6;
-            const shouldShowMid = years >= 3 && years <= 9;
-            const shouldShowSenior = years >= 6;
+  //     // Fetch rate cards for the selected technology
+  //     if (techName) {
+  //       fetchRateCards(techName).then(() => {
+  //         // After fetching rate cards, update the form with the first technology's rates
+  //         if (updatedCandidates.length === 1) {
+  //           const years =
+  //             parseInt(formData.PreviousExperienceConductingInterviewsYears) ||
+  //             0;
+  //           const shouldShowJunior = years <= 6;
+  //           const shouldShowMid = years >= 3 && years <= 9;
+  //           const shouldShowSenior = years >= 6;
 
-            setFormData((prev) => ({
-              ...prev,
-              rates: {
-                junior: { ...prev.rates?.junior, isVisible: shouldShowJunior },
-                mid: { ...prev.rates?.mid, isVisible: shouldShowMid },
-                senior: { ...prev.rates?.senior, isVisible: shouldShowSenior },
-              },
-            }));
-          }
-        });
-      }
-    }
-  };
+  //           setFormData((prev) => ({
+  //             ...prev,
+  //             rates: {
+  //               junior: { ...prev.rates?.junior, isVisible: shouldShowJunior },
+  //               mid: { ...prev.rates?.mid, isVisible: shouldShowMid },
+  //               senior: { ...prev.rates?.senior, isVisible: shouldShowSenior },
+  //             },
+  //           }));
+  //         }
+  //       });
+  //     }
+  //   }
+  // };
 
   // Handle skill removal
   const handleRemoveSkill = (index) => {
@@ -545,8 +544,6 @@ const EditInterviewDetails = ({
         return;
       }
 
-      // console.log("form", formData, typeof Number(formData.hourlyRate));
-
       const cleanFormData = {
         PreviousExperienceConductingInterviews: String(
           formData.PreviousExperienceConductingInterviews?.trim() || ""
@@ -556,9 +553,8 @@ const EditInterviewDetails = ({
             formData.PreviousExperienceConductingInterviewsYears || "1"
           ).trim(),
         }),
-        technologies: Array.isArray(formData.Technology)
-          ? formData.Technology
-          : [],
+        currentRole: formData.currentRole ? formData.currentRole : "",
+
         skills: Array.isArray(formData.skills) ? formData.skills : [],
         InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
         mock_interview_discount: formData.interviewFormatWeOffer.includes(
@@ -863,7 +859,7 @@ const EditInterviewDetails = ({
       };
 
       // Update selected candidates
-      setSelectedCandidates([technology]);
+      setSelectedCandidates(technology);
 
       // Get the years from the current form data or default to 0
       const years =
@@ -878,7 +874,8 @@ const EditInterviewDetails = ({
       setFormData((prev) => {
         const newFormData = {
           ...prev,
-          Technology: [selectedValue],
+          currentRole: selectedValue,
+          // Technology: selectedValue,
           rates: {
             junior: {
               usd: "",
@@ -921,10 +918,11 @@ const EditInterviewDetails = ({
           console.error("Error fetching rate cards:", error);
         });
     } else {
-      setSelectedCandidates([]);
+      setSelectedCandidates("");
       setFormData((prev) => ({
         ...prev,
-        Technology: [],
+        currentRole: "",
+        // Technology: [],
         rates: {
           junior: { usd: "", inr: "", isVisible: false },
           mid: { usd: "", inr: "", isVisible: false },
@@ -994,7 +992,7 @@ const EditInterviewDetails = ({
             <div className="space-y-4">
               <DropdownWithSearchField
                 disabled={from !== "outsource-interviewer"}
-                value={selectedCandidates[0]?.TechnologyMasterName || ""}
+                value={selectedCandidates || ""}
                 options={currentRoles.map((tech) => ({
                   value: tech.roleName,
                   label: tech.roleLabel,
@@ -1003,8 +1001,8 @@ const EditInterviewDetails = ({
                   handleTechnologyChange(e.target.value);
                 }}
                 error={errors.technologies}
-                label="Select Your Comfortable Technology"
-                name="technology"
+                label="Selected Role or Technology"
+                name="currentRole"
                 required={true}
                 onMenuOpen={loadCurrentRoles}
                 loading={isCurrentRolesFetching}

@@ -101,17 +101,13 @@ const getInvoice = async (req, res) => {
     // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Define sort order
-    const sortDirection = sortOrder === "desc" ? -1 : 1;
-    const sortOptions = { [sortBy]: sortDirection };
-
     // Execute queries
     const [invoices, totalCount] = await Promise.all([
       // Get paginated results
       Invoice.find(query)
         .populate("planId")
         .populate("ownerId")
-        .sort(sortOptions)
+        .sort({ _id: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
 

@@ -24,6 +24,7 @@ import {
 } from "../../apiHooks/superAdmin/useTenants.js";
 import DeleteConfirmModal from "../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
 import { notify } from "../../services/toastService.js";
+import { useMasterData } from "../../apiHooks/useMasterData.js";
 
 function TenantsPage() {
   const [deleteTenant, setDeleteTenant] = useState(null);
@@ -56,6 +57,10 @@ function TenantsPage() {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  const pageType = "adminPortal";
+  const { currentRoles, loadCurrentRoles, isCurrentRolesFetching } =
+    useMasterData({}, pageType);
 
   // Get tenants with pagination and filters
   const { tenants, pagination, isLoading, refetch } = useTenants({
@@ -188,17 +193,21 @@ function TenantsPage() {
         .filter((v) => typeof v === "string" && v.trim() !== "")
     )
   ).sort();
-  const techValues = Array.from(
-    new Set(
-      (currentFilteredRows || [])
-        .flatMap((r) =>
-          Array.isArray(r?.contact?.technologies) ? r.contact.technologies : []
-        )
-        .filter((v) => typeof v === "string" && v.trim() !== "")
-    )
-  ).sort();
+
+  // const techValues = Array.from(
+  //   new Set(
+  //     (currentFilteredRows || [])
+  //       .flatMap((r) =>
+  //         Array.isArray(r?.contact?.technologies) ? r.contact.technologies : []
+  //       )
+  //       .filter((v) => typeof v === "string" && v.trim() !== "")
+  //   )
+  // ).sort();
   const filterValueOptions = [
-    ...roleValues.map((v) => ({ value: `role:${v}`, label: v })),
+    ...currentRoles.map((v) => ({
+      value: `role:${v?.roleName}`,
+      label: v?.roleLabel,
+    })),
     // ...techValues.map((v) => ({ value: `tech:${v}`, label: v })),
   ];
   const filteredRows = selectedValueFilter
@@ -215,9 +224,10 @@ function TenantsPage() {
         }
         if (prefix === "tech") {
           return currentFilteredRows.filter((row) => {
-            const techs = Array.isArray(row?.contact?.technologies)
-              ? row.contact.technologies
-              : [];
+            const techs = row?.contact?.currentRole || "";
+            // Array.isArray(row?.contact?.technologies)
+            //   ? row.contact.technologies
+            //   : [];
             return techs.some((t) => normalize(t) === target);
           });
         }

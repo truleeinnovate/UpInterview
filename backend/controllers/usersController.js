@@ -1080,7 +1080,7 @@ const getUsersByTenant = async (req, res) => {
           contact.PreviousExperienceConductingInterviews || "",
         previousExperienceConductingInterviewsYears:
           contact.PreviousExperienceConductingInterviewsYears || "",
-        technologies: contact.technologies || [],
+        // technologies: contact.technologies || [],
         skills: contact.skills || [],
         timeZone: contact.timeZone || "",
         preferredDuration: contact.preferredDuration || "",
@@ -1196,8 +1196,9 @@ const getUniqueUserByOwnerId = async (req, res) => {
       .lean();
 
     const role = await RoleMaster.findOne({
-      roleName: contact.technologies,
+      roleName: contact.currentRole,
     }).lean();
+    // console.log("role", role);
 
     // Combine user data, pulling most fields from Contacts
     const combinedUser = {
@@ -1222,6 +1223,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
       linkedinUrl: contact.linkedinUrl || "",
       portfolioUrl: contact.portfolioUrl || "",
       currentRole: contact.currentRole || "",
+      currentRoleLabel: role?.roleLabel || "",
       industry: contact.industry || "",
       experienceYears: contact.experienceYears || "",
       location: contact.location || "",
@@ -1234,7 +1236,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
         contact.PreviousExperienceConductingInterviews || "",
       previousExperienceConductingInterviewsYears:
         contact.PreviousExperienceConductingInterviewsYears || "",
-      technologies: contact.technologies || [],
+      // technologies: contact.technologies || [],
       skills: contact.skills || [],
       timeZone: contact.timeZone || "",
       preferredDuration: contact.preferredDuration || "",

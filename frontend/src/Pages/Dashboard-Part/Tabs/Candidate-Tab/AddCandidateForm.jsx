@@ -77,9 +77,6 @@ const AddCandidateForm = ({
     isQualificationsFetching,
     isCollegesFetching,
     isCurrentRolesFetching,
-    technologies,
-    loadTechnologies,
-    isTechnologiesFetching,
   } = useMasterData({}, pageType);
 
   // Get user token information
@@ -608,7 +605,7 @@ const AddCandidateForm = ({
       UniversityCollege: formData.UniversityCollege || "",
       Date_Of_Birth: formData.Date_Of_Birth,
       skills: filledSkills,
-      CurrentRole: formData.CurrentRole,
+      CurrentRole: formData?.CurrentRole,
       // Technology: formData.Technology,
       ownerId: userId,
       tenantId: orgId,
@@ -795,7 +792,7 @@ const AddCandidateForm = ({
     () =>
       currentRoles?.map((r) => ({
         value: r?.roleName,
-        label: r?.roleName,
+        label: r?.roleLabel,
       })) || [],
     [currentRoles]
   );
@@ -1053,7 +1050,7 @@ const AddCandidateForm = ({
                     onChange={handleChange}
                     error={errors.CurrentRole}
                     containerRef={fieldRefs.CurrentRole}
-                    label="Select Role or Technology"
+                    label="Role / Technology"
                     name="CurrentRole"
                     required
                     onMenuOpen={loadCurrentRoles}

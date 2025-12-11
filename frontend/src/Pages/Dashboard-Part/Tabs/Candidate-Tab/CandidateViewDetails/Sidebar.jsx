@@ -229,7 +229,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
           </h3>
 
           <p className="text-center text-base pt-1 pb-2 text-gray-600">
-            {candidate.currentRoleLabel || "Not Provided"}
+            {candidate?.roleDetails?.roleLabel || "Not Provided"}
           </p>
         </div>
       </div>
