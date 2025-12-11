@@ -241,6 +241,8 @@ function Candidate({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deleteCandidate, setDeleteCandidate] = useState(null);
 
+  console.log("candidateData ", candidateData);
+
   // <---------------------- v1.0.2
   // Helper function to check if a candidate is cancelled (handles all case variations)
 
@@ -1457,9 +1459,9 @@ function Candidate({
                       {isQualificationOpen && (
                         <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
                           {qualifications?.length > 0 ? (
-                            qualifications.map((q) => (
+                            qualifications.map((q, index) => (
                               <label
-                                key={q.QualificationName}
+                                key={`${q._id || q.QualificationName || "qualification"}-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -1504,9 +1506,9 @@ function Candidate({
                       {isSkillsOpen && (
                         <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
                           {skills?.length > 0 ? (
-                            skills.map((skill) => (
+                            skills.map((skill, index) => (
                               <label
-                                key={skill.SkillName}
+                                key={`${skill._id || skill.SkillName || "skill"}-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -1660,9 +1662,9 @@ function Candidate({
                       {isRoleOpen && (
                         <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
                           {currentRoles?.length > 0 ? (
-                            currentRoles.map((role) => (
+                            currentRoles.map((role, index) => (
                               <label
-                                key={role.RoleName}
+                                key={`${role._id || role.RoleName || "role"}-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -1703,9 +1705,9 @@ function Candidate({
                       {isUniversityOpen && (
                         <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
                           {colleges?.length > 0 ? (
-                            colleges.map((college) => (
+                            colleges.map((college, index) => (
                               <label
-                                key={college.University_CollegeName}
+                                key={`${college._id || college.University_CollegeName || "college"}-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input

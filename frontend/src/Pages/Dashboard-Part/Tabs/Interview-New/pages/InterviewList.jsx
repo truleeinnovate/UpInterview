@@ -18,6 +18,7 @@ import {
   Pencil,
   ArrowRight,
   Trash,
+  CircleUser,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Tooltip } from "@mantine/core";
@@ -943,32 +944,63 @@ function InterviewList() {
   ];
 
   const kanbanActions = [
-    // View Details
-
-    // Edit (only if not in assessment view)
-    ...(effectivePermissions.Candidates?.Edit
+    ...(effectivePermissions.Interviews?.View
       ? [
           {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (item, e) => {
-              navigate(`edit/${item._id}`);
-            },
+            key: "view",
+            label: "View Interview",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: (item) => handleViewInterview(item),
           },
         ]
       : []),
 
-    // Delete
-    ...(effectivePermissions.Candidates?.Delete
+    ...(effectivePermissions.Candidates?.View
+      ? [
+          {
+            key: "view-candidate",
+            label: "View Candidate",
+            icon: <CircleUser className="w-4 h-4 text-purple-600" />,
+            onClick: (item) =>
+              item.candidateId &&
+              navigate(`/candidate/view-details/${item.candidateId._id}`),
+          },
+        ]
+      : []),
+
+    ...(effectivePermissions.Positions?.View
+      ? [
+          {
+            key: "view-position",
+            label: "View Position",
+            icon: <ExternalLink className="w-4 h-4 text-blue-600" />,
+            onClick: (item) =>
+              item.positionId && handleViewPosition(item.positionId),
+          },
+        ]
+      : []),
+
+    ...(effectivePermissions.Interviews?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit Interview",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (item) => handleEditInterview(item),
+            isVisible: (item) => item.status === "Draft",
+          },
+        ]
+      : []),
+
+    ...(effectivePermissions.Interviews?.Delete
       ? [
           {
             key: "delete",
-            label: "Delete",
+            label: "Delete Interview",
             icon: <Trash className="w-4 h-4 text-red-600" />,
             onClick: (item) => {
-              setShowDeleteConfirmModal(true);
               setDeleteInterview(item);
+              setShowDeleteConfirmModal(true);
             },
           },
         ]

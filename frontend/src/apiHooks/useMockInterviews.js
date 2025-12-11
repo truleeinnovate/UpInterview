@@ -3,6 +3,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { useEffect, useRef } from "react";
 import { fetchFilterData } from "../api";
 import { config } from "../config";
@@ -12,17 +13,18 @@ import { uploadFile } from "./imageApis";
 export const useMockInterviews = (params = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
-  const initialLoad = useRef(true);
+  // const initialLoad = useRef(true);
 
   // Check if user has permission to view mock interviews
   const hasViewPermission = effectivePermissions?.MockInterviews?.View;
 
   // Extract and validate params for API call
-  const { search = "", page = 0, limit = 10, filters = {} } = params;
+  const { search = "", page = 0, limit, filters = {} } = params;
 
-  // Ensure page is at least 0 and limit is positive
-  const validatedPage = Math.max(0, parseInt(page));
-  const validatedLimit = Math.max(1, parseInt(limit));
+  // // Ensure page is at least 0 and limit is positive
+  // const validatedPage = Math.max(0, parseInt(page));
+  // const validatedLimit =
+  //   limit === Infinity ? Infinity : Math.max(1, parseInt(limit));
 
   // Query implementation
   const {
@@ -34,24 +36,24 @@ export const useMockInterviews = (params = {}) => {
   } = useQuery({
     queryKey: [
       "mockinterviews",
-      { search, page: validatedPage, limit: validatedLimit, filters },
+      params,
+      // { search, page: validatedPage, limit: validatedLimit, filters },
     ],
     queryFn: async () => {
       try {
         // Prepare API params for backend filtering
         const apiParams = {
-          search,
-          page: validatedPage + 1, // Backend uses 1-based pagination
-          limit: validatedLimit,
-          ...filters,
+          ...params,
+          mockLimit: params?.limit ?? limit ?? Infinity,
         };
+
+        //console.log("apiParams", apiParams);
 
         const filteredInterviews = await fetchFilterData(
           "mockinterview",
           effectivePermissions,
           apiParams
         );
-        console.log("Raw API response:", filteredInterviews);
         return filteredInterviews;
       } catch (err) {
         console.error("Fetch error:", err);
@@ -69,8 +71,9 @@ export const useMockInterviews = (params = {}) => {
   });
 
   // Extract data and total count from response
-  const mockinterviewData = responseData.data || [];
-  const totalCount = responseData.totalCount || 0;
+  const mockinterviewData = responseData?.data || [];
+  const totalCount = responseData?.totalCount || 0;
+  const totalPages = responseData?.totalPages || 0;
 
   // Add/Update mock interview mutation
   // In useMockInterviews.js - FIXED VERSION
@@ -121,15 +124,17 @@ export const useMockInterviews = (params = {}) => {
       // const status = rounds.length > 0 && rounds[0]?.interviewers?.length > 0 ? "RequestSent" : "Draft";
 
       // Format skills properly
-      const skills = formData.entries
-        ? formData.entries
-            .filter((e) => e.skill || e.experience || e.expertise)
-            .map((e) => ({
-              skill: e.skill,
-              experience: e.experience,
-              expertise: e.expertise,
-            }))
-        : formData.skills || [];
+      // const skills = formData.entries
+      //   ? formData.entries
+      //       .filter((e) => e.skill || e.experience || e.expertise)
+      //       .map((e) => ({
+      //         skill: e.skill,
+      //         experience: e.experience,
+      //         expertise: e.expertise,
+      //       }))
+      //   : formData.skills || [];
+
+      const skills = Array.isArray(formData.skills) ? formData.skills : [];
 
       // Build payload - FIXED: Include rounds only if they exist
       const payload = {
@@ -156,6 +161,8 @@ export const useMockInterviews = (params = {}) => {
         }));
       }
 
+      //"/updateMockInterview/", payload);
+
       const url = isEdit
         ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
         : `${config.REACT_APP_API_URL}/mockinterview`;
@@ -177,6 +184,8 @@ export const useMockInterviews = (params = {}) => {
         }
       }
 
+      //console.log("response.data", response);
+
       return response.data;
     },
     onSuccess: () => {
@@ -194,6 +203,7 @@ export const useMockInterviews = (params = {}) => {
   return {
     mockinterviewData,
     totalCount,
+    totalPages,
     isLoading,
     isQueryLoading,
     isMutationLoading,
@@ -203,6 +213,41 @@ export const useMockInterviews = (params = {}) => {
     addOrUpdateError: addOrUpdateMockInterview.error,
     addOrUpdateMockInterview: addOrUpdateMockInterview.mutateAsync,
     refetchMockInterviews,
+  };
+};
+
+export const useMockInterviewById = (mockInterviewId) => {
+  const { effectivePermissions } = usePermissions();
+  const hasViewPermission = effectivePermissions?.MockInterviews?.View;
+
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["mockinterview", mockInterviewId],
+    queryFn: async () => {
+      const authToken = Cookies.get("authToken") ?? "";
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+          withCredentials: true,
+        }
+      );
+      return response.data?.data;
+    },
+    enabled: !!mockInterviewId && !!hasViewPermission,
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+  return {
+    mockInterview: data,
+    isLoading,
+    isError,
+    error,
   };
 };
 

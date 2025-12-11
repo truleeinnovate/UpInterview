@@ -3,31 +3,24 @@
 // v2.0.2 - Ranjith added the round save proeprly with all condtions
 // v1.0.3  - Ashok - Impproved responsiveness
 
-import { useState, useRef, useEffect, useCallback, forwardRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import Cookies from "js-cookie";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   validatemockForm,
   getErrorMessage,
   validatePage1,
 } from "../../../../utils/mockinterviewValidation.js";
 import { useSingleContact } from "../../../../apiHooks/useUsers";
-import {
-  X,
-  Users,
-  User,
-  Trash2,
-  Clock,
-  Calendar,
-  Search,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { X, Users, User, Trash2, Clock, Calendar } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 import OutsourcedInterviewerModal from "../Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx";
-import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
+import {
+  useMockInterviews,
+  useMockInterviewById,
+} from "../../../../apiHooks/useMockInterviews.js";
 import LoadingButton from "../../../../Components/LoadingButton";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 
@@ -88,14 +81,11 @@ const MockSchedulelater = () => {
     currentRoles,
     loadCurrentRoles,
     isCurrentRolesFetching,
-    lcontacts,
   } = useMasterData({}, pageType);
-  const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } =
-    useMockInterviews();
+  const { addOrUpdateMockInterview, isMutationLoading } = useMockInterviews();
   const { id } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
-  const pageFrom = location.state?.from || "";
+  const { mockInterview } = useMockInterviewById(id);
 
   const [formData, setFormData] = useState({
     skills: [],
@@ -127,13 +117,10 @@ const MockSchedulelater = () => {
   const [mockEdit, setMockEdit] = useState(false);
   const [entries, setEntries] = useState([]);
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
-  const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
-  const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState("");
   const [selectedExp, setSelectedExp] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
-  const [deleteIndex, setDeleteIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -232,12 +219,12 @@ const MockSchedulelater = () => {
 
   // Populate formData for edit mode
   useEffect(() => {
-    if (id && mockinterviewData.length > 0) {
-      // console.log("mockinterviewData", mockinterviewData);
-      const MockEditData = mockinterviewData.find((moc) => moc._id === id);
-      // console.log("MockEditData", MockEditData);
+    if (id && mockInterview) {
+      const MockEditData = mockInterview;
       if (MockEditData) {
         setMockEdit(true);
+
+        
 
         // Map interviewers to externalInterviewers format
         const formattedInterviewers =
@@ -249,7 +236,7 @@ const MockSchedulelater = () => {
                 interviewer?.lastName || ""
               }`.trim(),
           })) || [];
-        console.log("formattedInterviewers", formattedInterviewers);
+        
 
         setExternalInterviewers(formattedInterviewers);
         // setSelectedInterviewType(formattedInterviewers.length > 0 ? "external" : "scheduled");
@@ -382,10 +369,10 @@ const MockSchedulelater = () => {
         //     skillStrings
         // });
       }
-    } else {
+    } else if (!id) {
       updateTimes(formData.rounds.duration);
     }
-  }, [id, mockinterviewData]);
+  }, [id, mockInterview]);
 
   // console.log("formData", formData);
   // console.log("entries", entries);
@@ -646,6 +633,19 @@ const MockSchedulelater = () => {
         return;
       }
 
+      if (response?.data?.mockInterview) {
+        const savedData = response.data.mockInterview;
+        setFormData((prev) => ({
+          ...prev,
+          // Preserve all current form data and update with any changes from server
+          higherQualification:
+            savedData.higherQualification || prev.higherQualification,
+          technology: savedData.technology || prev.technology,
+          Role: savedData.Role || prev.Role,
+          // Keep other fields as they are
+        }));
+      }
+
       // Store the created ID for use in Page 2
       if (!mockEdit && !createdMockInterviewId) {
         setCreatedMockInterviewId(savedMockId);
@@ -678,7 +678,7 @@ const MockSchedulelater = () => {
 
     const { formIsValid, newErrors } = validatemockForm(
       formData,
-      entries,
+      formData.skills,
       errors
     );
     setErrors(newErrors);
@@ -711,7 +711,7 @@ const MockSchedulelater = () => {
     // ✅ FIX: Properly structure the rounds data for Page 2
     const updatedFormData = {
       ...formData,
-      skills: entries, // Ensure skills from entries are included
+      skills: formData.skills, // Ensure skills from formData are included
       rounds: [
         {
           ...formData.rounds,
@@ -1188,7 +1188,6 @@ const MockSchedulelater = () => {
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
   };
-  // console.log("pageFrom", pageFrom);
 
   const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
@@ -1697,15 +1696,16 @@ const MockSchedulelater = () => {
                         label="Technology"
                         name="technology"
                         value={formData.technology}
-                        options={technologies.map((t) => ({
-                          value: t.TechnologyMasterName,
-                          label: t.TechnologyMasterName,
+                        options={currentRoles.map((r) => ({
+                          value: r.roleName,
+                          label: r.roleLabel,
                         }))}
                         onChange={(e) => {
                           setFormData((prev) => ({
                             ...prev,
                             technology: e.target.value,
                           }));
+
                           setErrors((prev) => ({
                             ...prev,
                             technology: "",
@@ -1714,8 +1714,8 @@ const MockSchedulelater = () => {
                         error={errors.technology}
                         placeholder="Select Technology"
                         required
-                        onMenuOpen={loadTechnologies}
-                        loading={isTechnologiesFetching}
+                        onMenuOpen={loadCurrentRoles}
+                        loading={isCurrentRolesFetching}
                       />
                       <InputField
                         inputRef={fieldRefs.currentExperience}
@@ -1738,8 +1738,8 @@ const MockSchedulelater = () => {
                         name="Role"
                         value={formData.Role}
                         options={currentRoles.map((r) => ({
-                          value: r.RoleName,
-                          label: r.RoleName,
+                          value: r.roleName,
+                          label: r.roleLabel,
                         }))}
                         onChange={(e) => {
                           setFormData((prev) => ({
@@ -2704,16 +2704,7 @@ const MockSchedulelater = () => {
             <div className="flex justify-between gap-4 mt-5 mb-4">
               <button
                 className="border border-custom-blue p-3 rounded py-1"
-                onClick={() =>
-                  navigate(
-                    pageFrom
-                      ? `/mock-interview`
-                      : `/mock-interview-details/${id}`
-                    //  id
-                    //   ? `/mock-interview-details/${id}`
-                    //   : `/mock-interview`
-                  )
-                }
+                onClick={() => navigate(-1)}
               >
                 Cancel
               </button>

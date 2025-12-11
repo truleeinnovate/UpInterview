@@ -140,14 +140,14 @@ const VerticalRoundsView = ({
 
   return (
     <div className="space-y-4">
-      {sortedRounds.map((round) => {
+      {sortedRounds.map((round, index) => {
         let roundStatus =
           round.roundTitle === "Assessment"
             ? getAssessmentRoundStatus(round)
             : round?.status;
         return (
           <div
-            key={round._id}
+            key={round._id || `${round.sequence}-${index}`}
             className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden"
           >
             <button

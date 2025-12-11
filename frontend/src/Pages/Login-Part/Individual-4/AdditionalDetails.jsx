@@ -122,7 +122,7 @@ const AdditionalDetails = ({
     setResumeName("");
   };
   // v1.0.2 ------------------------------------------------------------------->
-
+  // console.log("currentRoles", currentRoles);
   const handleChange = (selectedOption, meta) => {
     // Handle both select dropdown and regular input changes
     let name, value;
@@ -220,13 +220,13 @@ const AdditionalDetails = ({
       <div className="grid grid-cols-2 gap-x-6 gap-y-8">
         {/* Current Role */}
         <div className="sm:col-span-2 col-span-1">
-          <DropdownWithSearchField
+          {/* <DropdownWithSearchField
             value={additionalDetailsData.currentRole || ""}
             options={[
               // Include the current value in options even if not in the database yet
               ...(additionalDetailsData.currentRole &&
               !currentRoles?.some(
-                (role) => role.RoleName === additionalDetailsData.currentRole
+                (role) => role.roleName === additionalDetailsData.currentRole
               )
                 ? [
                     {
@@ -236,13 +236,46 @@ const AdditionalDetails = ({
                   ]
                 : []),
               ...(currentRoles?.map((role) => ({
-                value: role.RoleName,
-                label: role.RoleName,
+                value: role.roleName,
+                label: role.roleLabel,
               })) || []),
             ]}
             onChange={handleChange}
             error={errors.currentRole}
             label="Current Role"
+            name="currentRole"
+            required
+            onMenuOpen={loadCurrentRoles}
+            loading={isCurrentRolesFetching}
+          /> */}
+          <DropdownWithSearchField
+            value={additionalDetailsData.currentRole || ""}
+            options={[
+              // Include the current value in options even if not in the database yet
+              ...(additionalDetailsData.currentRole &&
+              !currentRoles?.some(
+                (role) => role.roleName === additionalDetailsData.currentRole
+              )
+                ? [
+                    {
+                      value: additionalDetailsData.currentRole,
+                      // Check if we can find a roleLabel for this roleName
+                      label:
+                        currentRoles?.find(
+                          (role) =>
+                            role.roleName === additionalDetailsData.currentRole
+                        )?.roleLabel || additionalDetailsData.currentRole,
+                    },
+                  ]
+                : []),
+              ...(currentRoles?.map((role) => ({
+                value: role.roleName,
+                label: role.roleLabel,
+              })) || []),
+            ]}
+            onChange={handleChange}
+            error={errors.currentRole}
+            label="Select Role / Technology"
             name="currentRole"
             required
             onMenuOpen={loadCurrentRoles}
@@ -287,7 +320,24 @@ const AdditionalDetails = ({
 
         {/* Experience */}
         <div className="sm:col-span-2 col-span-1">
-          <IncreaseAndDecreaseField
+          <DropdownWithSearchField
+            label="Years of Experience"
+            name="yearsOfExperience"
+            required={true}
+            value={String(additionalDetailsData.yearsOfExperience || "")}
+            error={errors.yearsOfExperience}
+            onChange={handleChange}
+            options={[
+              ...Array.from({ length: 15 }, (_, i) => ({
+                value: (i + 1).toString(),
+                label: `${i + 1} year${i + 1 > 1 ? "s" : ""}`,
+              })),
+              { value: "15+", label: "15+ years" },
+            ]}
+            placeholder="Select Years of Experience"
+          />
+
+          {/* <IncreaseAndDecreaseField
             value={additionalDetailsData.yearsOfExperience}
             onChange={(e) => {
               const value = e.target.value;
@@ -306,7 +356,7 @@ const AdditionalDetails = ({
             required={true}
             min={1}
             max={15}
-          />
+          /> */}
         </div>
 
         {/* Location */}

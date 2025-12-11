@@ -5,7 +5,7 @@ const candidateValidationSchema = Joi.object({
   FirstName: Joi.string().required().messages({
     "string.empty": "First Name is required",
     "any.required": "First Name is required",
-  }), 
+  }),
   LastName: Joi.string().required().messages({
     "string.empty": "Last Name is required",
     "any.required": "Last Name is required",
@@ -22,53 +22,49 @@ const candidateValidationSchema = Joi.object({
       "string.pattern.base": "Invalid Phone number",
       "any.required": "Phone Number is required",
     }),
-    CountryCode: Joi.string().required().messages({
-      "string.empty": "Country Code is required",
-      "any.required": "Country Code is required",
-    }),
+  CountryCode: Joi.string().required().messages({
+    "string.empty": "Country Code is required",
+    "any.required": "Country Code is required",
+  }),
   // Date_Of_Birth: Joi.date().optional(),
   Date_Of_Birth: Joi.date()
-  .optional()       // ✅ Changed to optional
-  .allow(null, ""),
-  Gender: Joi.string().optional().allow("", null)
+    .optional() // ✅ Changed to optional
+    .allow(null, ""),
+  Gender: Joi.string().optional().allow("", null),
   // Gender: Joi.string().optional()
   // .messages({
   //   "string.empty": "Gender is required",
   //   "any.required": "Gender is required",
   // })
-  ,
   HigherQualification: Joi.string().required().messages({
     "string.empty": "Higher Qualification is required",
     "any.required": "Higher Qualification is required",
   }),
-  UniversityCollege: Joi.string().optional().allow(null, "")
+  UniversityCollege: Joi.string().optional().allow(null, ""),
   // .messages({
   //   "string.empty": "University/College is required",
   //   "any.required": "University/College is required",
   // })
-  ,
   CurrentExperience: Joi.number().required().messages({
     "number.base": "Current Experience must be a number",
     "any.required": "Current Experience is required",
   }),
-  RelevantExperience: Joi.number()
-    .required()
-    .messages({
-      "number.base": "Relevant Experience must be a number",
-      "any.required": "Relevant Experience is required",
-    }),
+  RelevantExperience: Joi.number().required().messages({
+    "number.base": "Relevant Experience must be a number",
+    "any.required": "Relevant Experience is required",
+  }),
   CurrentRole: Joi.string().required().messages({
     "string.empty": "Current Role is required",
     "any.required": "Current Role is required",
   }),
-  Technology: Joi.string().required().messages({
-    "string.empty": "Technology is required",
-    "any.required": "Technology is required",
-  }),
-//   PositionId: Joi.string().required().messages({
-//     "string.empty": "Position is required",
-//     "any.required": "Position is required",
-//   }),
+  // Technology: Joi.string().required().messages({
+  //   "string.empty": "Technology is required",
+  //   "any.required": "Technology is required",
+  // }),
+  //   PositionId: Joi.string().required().messages({
+  //     "string.empty": "Position is required",
+  //     "any.required": "Position is required",
+  //   }),
   ownerId: Joi.string().optional().messages({
     "any.required": "OwnerId is required",
   }),
@@ -122,8 +118,8 @@ const validateCandidateData = (data) => {
 
 // For PATCH (partial updates) → same rules but all fields optional
 const candidateUpdateSchema = candidateValidationSchema.fork(
-    Object.keys(candidateValidationSchema.describe().keys),
-    (schema) => schema.optional()
-  );
+  Object.keys(candidateValidationSchema.describe().keys),
+  (schema) => schema.optional()
+);
 
-module.exports = { validateCandidateData,candidateUpdateSchema };
+module.exports = { validateCandidateData, candidateUpdateSchema };

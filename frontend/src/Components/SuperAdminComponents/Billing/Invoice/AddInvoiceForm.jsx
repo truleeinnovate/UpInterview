@@ -150,7 +150,6 @@ const AddInvoiceForm = ({ mode }) => {
 
   const { addOrUpdateCandidate, candidateData } = useCandidates();
 
-
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -533,7 +532,6 @@ const AddInvoiceForm = ({ mode }) => {
       ownerId: userId,
       tenantId: orgId,
     };
-
 
     try {
       // getting the API from the apihooks for add or update candidate (post or patch)

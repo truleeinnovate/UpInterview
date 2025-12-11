@@ -10,23 +10,19 @@
 // v1.0.7 - Ashok - Improved scroll functionality
 // v1.0.8 - Ashok - Fixed style issues
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import AssessmentDetails from "./AssessmentType";
 import TechnicalType from "./TechnicalType";
 import Cookies from "js-cookie";
 import { validateForm } from "../../../../utils/PositionValidation.js";
-import {
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  Info,
-  Search,
-  Users,
-} from "lucide-react";
+
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput.jsx";
-import { usePositions } from "../../../../apiHooks/usePositions";
+import {
+  usePositions,
+  usePositionById,
+} from "../../../../apiHooks/usePositions";
 import LoadingButton from "../../../../Components/LoadingButton";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { useInterviewTemplates } from "../../../../apiHooks/useInterviewTemplates.js";
@@ -38,14 +34,31 @@ import DropdownWithSearchField from "../../../../Components/FormFields/DropdownW
 import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
 import InputField from "../../../../Components/FormFields/InputField";
 import DescriptionField from "../../../../Components/FormFields/DescriptionField";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 // v1.0.1 ---------------------------------------------------------------------------->
 
 const PositionForm = ({ mode, onClose, isModal = false }) => {
-  const { positionData, isMutationLoading, addOrUpdatePosition } =
-    usePositions();
+  const { isMutationLoading, addOrUpdatePosition } = usePositions({
+    limit: 1,
+  });
 
-  const { templatesData, isQueryLoading: isTemplatesFetching } =
-    useInterviewTemplates();
+  const TEMPLATE_DROPDOWN_LIMIT = 50;
+  const [templateLimit, setTemplateLimit] = useState(TEMPLATE_DROPDOWN_LIMIT);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [debouncedTemplateSearch, setDebouncedTemplateSearch] = useState("");
+
+  const {
+    templatesData,
+    totalCount: totalTemplates,
+    isQueryLoading: isTemplatesFetching,
+    useInterviewtemplateDetails,
+  } = useInterviewTemplates({
+    type: "interviewtemplates",
+    page: 1,
+    limit: templateLimit,
+    ...(debouncedTemplateSearch && { search: debouncedTemplateSearch }),
+  });
   const pageType = "adminPortal";
 
   const {
@@ -60,6 +73,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   } = useMasterData({}, pageType);
 
   const { id } = useParams();
+  const { position: selectedPosition } = usePositionById(id);
+
+  // Fetch the position's linked interview template by id instead of
+  // relying on the paginated/filtered templatesData list.
+  const { data: selectedTemplate } = useInterviewtemplateDetails(
+    selectedPosition?.templateId
+  );
   const location = useLocation();
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const userId = tokenPayload?.userId;
@@ -104,6 +124,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     NoofPositions: "",
     Location: "",
     externalId: "",
+    status: "opened",
   });
   const [isEdit, setIsEdit] = useState(false);
   const navigate = useNavigate();
@@ -125,6 +146,19 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [hasMovedToRounds, setHasMovedToRounds] = useState(false);
   const [currentStage, setCurrentStage] = useState("basic");
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
+  const STATUS_OPTIONS = ["opened", "closed", "hold", "cancelled"];
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedTemplateSearch(templateSearch.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [templateSearch]);
+
+  useEffect(() => {
+    // Reset template limit when search query changes
+    setTemplateLimit(TEMPLATE_DROPDOWN_LIMIT);
+  }, [debouncedTemplateSearch]);
 
   // Handle click outside company dropdown
   useEffect(() => {
@@ -162,16 +196,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   }, [currentStage]);
 
   useEffect(() => {
-    if (id) {
-      const selectedPosition = positionData.find((pos) => pos._id === id);
-      setIsEdit(true);
-      console.log("selectedPosition", selectedPosition);
-      const matchingTemplate = templatesData.find(
-        (template) => template?._id === selectedPosition?.templateId
-      );
-      //setPositionId(id);
+    if (!id || !selectedPosition) {
+      return;
+    }
 
-      const companyName = selectedPosition?.companyname || "";
+    setIsEdit(true);
+    
+    const companyName = selectedPosition?.companyname || "";
 
       // Check if the company name exists in the companies list
       // Guard: wait until companies are loaded before deciding custom mode
@@ -192,45 +223,74 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         setIsCustomCompany(true);
       }
 
-      setFormData({
-        title: selectedPosition?.title || "",
-        companyName: companyName,
-        minexperience: selectedPosition?.minexperience || 0,
-        maxexperience: selectedPosition?.maxexperience || 0,
-        minSalary: selectedPosition?.minSalary || "",
-        maxSalary: selectedPosition?.maxSalary || "",
-        jobDescription: selectedPosition?.jobDescription || "",
-        additionalNotes: selectedPosition?.additionalNotes || "",
-        NoofPositions: selectedPosition?.NoofPositions?.toString() || "",
-        Location: selectedPosition?.Location || "",
-        externalId: selectedPosition?.externalId || "",
-        template: matchingTemplate || {},
-        // template: matchingTemplate
-        //   ? {
-        //     ...matchingTemplate
-        //   }
-        //   : {},
-      });
+    setFormData({
+      title: selectedPosition?.title || "",
+      companyName: companyName,
+      minexperience: selectedPosition?.minexperience || 0,
+      maxexperience: selectedPosition?.maxexperience || 0,
+      minSalary: selectedPosition?.minSalary || "",
+      maxSalary: selectedPosition?.maxSalary || "",
+      jobDescription: selectedPosition?.jobDescription || "",
+      additionalNotes: selectedPosition?.additionalNotes || "",
+      NoofPositions: selectedPosition?.NoofPositions?.toString() || "",
+      Location: selectedPosition?.Location || "",
+      externalId: selectedPosition?.externalId || "",
+      template: selectedTemplate || {},
+      status: selectedPosition?.status || "",
+      // rounds: selectedPosition?.rounds || [],
+      // rounds: selectedPosition?.rounds?.map((round) => ({
+      //   ...round,
+      //   _id: round._id || "",
+      // })) || [],
+      // template: matchingTemplate
+      //   ? {
+      //     ...matchingTemplate
+      //   }
+      //   : {},
+    });
 
-      console.log("selectedPosition template", formData?.template);
+     
 
-      const formattedSkills =
-        selectedPosition?.skills?.map((skill) => ({
-          skill: skill.skill || "",
-          experience: skill.experience || "",
-          expertise: skill.expertise || "",
-          _id: skill._id || "",
-        })) || [];
+    const formattedSkills =
+      selectedPosition?.skills?.map((skill) => ({
+        skill: skill.skill || "",
+        experience: skill.experience || "",
+        expertise: skill.expertise || "",
+        _id: skill._id || "",
+      })) || [];
 
-      setEntries(formattedSkills);
-      // setAllSelectedSkills(formattedSkills)
-      setAllSelectedSkills(
-        selectedPosition?.skills?.map((skill) => skill.skill) || []
-      );
-    }
+    setEntries(formattedSkills);
+    // setAllSelectedSkills(formattedSkills)
+    setAllSelectedSkills(
+      selectedPosition?.skills?.map((skill) => skill.skill) || []
+    );
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positionData, id, companies, templatesData]);
+  }, [id, selectedPosition, companies, selectedTemplate]);
+
+  const statusOptions = STATUS_OPTIONS.map((s) => ({
+    value: s,
+    label: capitalizeFirstLetter(s),
+  }));
+
+  // const openStatusModal = (row) => {
+  //   setStatusTargetRow(row);
+  //   setStatusValue(row?.status);
+  //   setIsStatusModalOpen(true);
+  // };
+
+  // const closeStatusModal = () => {
+  //   setIsStatusModalOpen(false);
+  //   setStatusTargetRow(null);
+  // };
+
+  // const confirmStatusUpdate = async () => {
+  //   // if (!statusTargetRow) return;
+  //   // await handleStatusChange(statusTargetRow, statusValue);
+  //   // closeStatusModal();
+  //   formData.status = statusValue;
+  //   // closeStatusModal();
+  // };
 
   const isNextEnabled = () => {
     if (currentStep === 0) {
@@ -267,9 +327,109 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const locationOptionsRS = (locations || [])
     .map((l) => ({ value: l?.LocationName, label: l?.LocationName }))
     .concat([{ value: "__other__", label: "+ Others" }]);
-  const templateOptions = (templatesData || [])
-    .filter((t) => t?.rounds?.length > 0 && t?.status === "active")
-    .map((t) => ({ value: t._id, label: t.title }));
+
+  const templateOptions = useMemo(() => {
+    const baseOptions = (templatesData || [])
+      .filter((t) => t?.rounds?.length > 0 && t?.status === "active")
+      .sort((a, b) => {
+        // custom first, standard after
+        if (a.type === "custom" && b.type === "standard") return -1;
+        if (a.type === "standard" && b.type === "custom") return 1;
+        return 0;
+      })
+      .map((t) => {
+        const titleLabel =
+          t.title
+            ? t.title.charAt(0).toUpperCase() + t.title.slice(1)
+            : t.type
+            ? t.type.charAt(0).toUpperCase() + t.type.slice(1)
+            : "Unnamed Template";
+
+        return {
+          value: t._id,
+          label: (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "98%",
+              }}
+            >
+              <span>{titleLabel}</span>
+              <span
+                className={
+                  "text-md " +
+                  (t.type === "custom"
+                    ? "text-custom-blue"
+                    : "text-green-600")
+                }
+              >
+                {t.type
+                  ? t.type.charAt(0).toUpperCase() + t.type.slice(1)
+                  : ""}
+              </span>
+            </div>
+          ),
+          searchLabel: titleLabel,
+        };
+      });
+
+    // Ensure the edit-mode selected template is always present in options,
+    // even if it's not in the current templatesData page.
+    if (selectedTemplate && selectedTemplate._id) {
+      const exists = baseOptions.some((opt) => opt.value === selectedTemplate._id);
+      if (!exists) {
+        const selectedTitleLabel =
+          selectedTemplate.title
+            ? selectedTemplate.title.charAt(0).toUpperCase() +
+              selectedTemplate.title.slice(1)
+            : selectedTemplate.type
+            ? selectedTemplate.type.charAt(0).toUpperCase() +
+              selectedTemplate.type.slice(1)
+            : "Unnamed Template";
+
+        baseOptions.push({
+          value: selectedTemplate._id,
+          label: (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "98%",
+              }}
+            >
+              <span>{selectedTitleLabel}</span>
+              <span
+                className={
+                  "text-md " +
+                  (selectedTemplate.type === "custom"
+                    ? "text-custom-blue"
+                    : "text-green-600")
+                }
+              >
+                {selectedTemplate.type
+                  ? selectedTemplate.type.charAt(0).toUpperCase() +
+                    selectedTemplate.type.slice(1)
+                  : ""}
+              </span>
+            </div>
+          ),
+          searchLabel: selectedTitleLabel,
+        });
+      }
+    }
+
+    return baseOptions;
+  }, [templatesData, selectedTemplate]);
+
+  const handleTemplateMenuScrollToBottom = () => {
+    if (isTemplatesFetching) return;
+    if (!totalTemplates || templateLimit >= totalTemplates) return;
+
+    setTemplateLimit((prev) => prev + TEMPLATE_DROPDOWN_LIMIT);
+  };
 
   // Generic change handler for shared form fields + live cross-field validation
   const handleChange = (e) => {
@@ -492,8 +652,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         entries || [],
         dataToSubmit.rounds || []
       );
-      console.log("formIsValid", formIsValid);
-      console.log("newErrors", newErrors);
+      
       if (!formIsValid) {
         setErrors(newErrors);
         // v1.0.1 <------------------------------------------------------
@@ -504,7 +663,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }
 
     setErrors({});
-    console.log("dataToSubmit", dataToSubmit);
 
     let basicdetails = {
       // ...dataToSubmit,
@@ -514,6 +672,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         ? parseInt(dataToSubmit?.NoofPositions)
         : null,
       companyname: dataToSubmit.companyName,
+      companyName: dataToSubmit.companyName,
       ...(dataToSubmit.minexperience && {
         minexperience: parseInt(dataToSubmit.minexperience),
       }),
@@ -543,9 +702,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       templateId: dataToSubmit.template?._id || null,
       rounds: dataToSubmit?.template?.rounds || [],
       type: dataToSubmit?.template?.type || "",
+      status: dataToSubmit?.status || "",
+      // rounds: dataToSubmit.rounds || [],
+      // rounds: dataToSubmit?.template?.rounds || [],
     };
-    console.log("basicdetails", basicdetails);
 
+    
     try {
       // let response;
       // if (isEdit && positionId) {
@@ -567,7 +729,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       });
       // Updated Successfully
 
-      console.log("response", response);
+      
       if (response.status === "success") {
         notify.success("Position added successfully");
       } else if (
@@ -623,7 +785,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       }
     } catch (error) {
       // --- MAP BACKEND VALIDATION ERRORS TO FRONTEND ---
-      console.log("error", error);
+      
       // Show error toast
       notify.error(
         error.response?.data?.message ||
@@ -633,7 +795,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
       if (error.response && error.response.status === 400) {
         const backendErrors = error.response.data.errors || {};
-        console.log("backendErrors", backendErrors);
+        
         setErrors(backendErrors);
         scrollToFirstError(backendErrors, fieldRefs);
       } else {
@@ -1332,20 +1494,72 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       />
                     </div>
 
-                    
                     {/* Select Template */}
-                    <div className="grid sm:grid-cols-1 grid-cols-2">
-                      <div className="relative">
+                    <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                      <div>
                         <DropdownWithSearchField
                           value={formData.template?._id || ""}
                           options={templateOptions}
-                          onChange={(e) => {
-                            const selectedTemplate = templatesData.find(
-                              (t) => t._id === e.target.value
+                          onInputChange={(inputValue, actionMeta) => {
+                            if (actionMeta?.action === "input-change") {
+                              setTemplateSearch(inputValue || "");
+                            }
+                          }}
+                          // Try adding this prop if it exists
+                          formatOptionLabel={(option) => {
+                            // If option.label is already JSX, return it
+                            if (option.label) {
+                              return option.label;
+                            }
+
+                            // Otherwise create a styled version
+                            const template = templatesData?.find(
+                              (t) => t._id === option.value
                             );
+                            if (!template) return option.label;
+
+                            return (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  width: "100%",
+                                }}
+                              >
+                                <span>{option.label}</span>
+                                <span
+                                  className={
+                                    "text-xs font-medium " +
+                                    (template.type === "custom"
+                                      ? "text-blue-600"
+                                      : "text-green-600")
+                                  }
+                                >
+                                  {template.type === "custom"
+                                    ? "Custom"
+                                    : "Standard"}
+                                </span>
+                              </div>
+                            );
+                          }}
+                          onChange={(e) => {
+                            const templateId = e.target.value;
+
+                            const fromList = (templatesData || []).find(
+                              (t) => t._id === templateId
+                            );
+
+                            const resolvedTemplate =
+                              fromList ||
+                              (selectedTemplate &&
+                              selectedTemplate._id === templateId
+                                ? selectedTemplate
+                                : null);
+
                             setFormData({
                               ...formData,
-                              template: selectedTemplate || {},
+                              template: resolvedTemplate || {},
                             });
                           }}
                           error={errors?.template}
@@ -1353,6 +1567,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           name="template"
                           required={false}
                           loading={isTemplatesFetching}
+                          onMenuScrollToBottom={handleTemplateMenuScrollToBottom}
                         />
                         {/* //v1.0.5 Ranjith <-----------------------------------> */}
                         {formData.template?._id && (
@@ -1366,8 +1581,52 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           </button>
                         )}
                       </div>
-                      {/* //v1.0.5 Ranjith <-----------------------------------> */}
+
+                      <div>
+                        <h3 className="text-sm font-semibold mb-1">
+                          Change Status
+                        </h3>
+                        <div>
+                          <DropdownSelect
+                            value={statusOptions.find(
+                              (opt) => opt.value === formData.status
+                            )} // match current selection
+                            onChange={(selected) => {
+                              formData.status = selected.value;
+                              setFormData({ ...formData });
+                             
+                            }} // update state with value
+                            // options={statusOptions}
+                            options={statusOptions.map((option) => ({
+                              ...option,
+                              label: capitalizeFirstLetter(option.label),
+                            }))}
+                          />
+                        </div>
+                        {/* <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={closeStatusModal}
+                            className="px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-700"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={confirmStatusUpdate}
+                            disabled={
+                              isMutationLoading ||
+                              (statusTargetRow &&
+                                updatingStatusId === statusTargetRow._id)
+                            }
+                            className="px-3 py-1.5 text-sm rounded bg-custom-blue text-white disabled:opacity-50"
+                          >
+                            Update
+                          </button>
+                        </div> */}
+                      </div>
                     </div>
+
                     {/* v1.0.2 ---------------------------------------------------> */}
                     <DescriptionField
                       value={formData.additionalNotes}

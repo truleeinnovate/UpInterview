@@ -61,7 +61,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   const pageType = "adminPortal";
   // v1.0.1 <------------------------------------------------------
   const [currentMode, setCurrentMode] = useState(mode); // local mode state
-  const { technologies } = useMasterData({}, pageType);
+  const { currentRoles } = useMasterData({}, pageType);
   // v1.0.1 ------------------------------------------------------>
 
   // const categories = [
@@ -71,7 +71,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   //   "QA & Testing",
   //   "Specialized Skills",
   // ];
-  console.log("Technologies Master Data:", technologies);
+  console.log("Technologies Master Data:", currentRoles);
 
   const experienceLevels = ["Junior", "Mid-Level", "Senior"];
   // v1.0.3 <-------------------------------------------------------
@@ -334,14 +334,16 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   // v1.0.0 ------------------------------------------------------>
   // v1.0.4 <----------------------------------------------------------------------
   // Filtered technologies based on selected category
-  const filteredTechnologies = (technologies || []).filter(
-    (t) => (t.Category ?? t.category) === formData.category
+  const filteredTechnologies = (currentRoles || []).filter(
+    (t) => (t.roleCategory ?? t.roleCategory) === formData.category
   );
 
   // Get unique categories from technologies (support both key casings)
   const filteredCategories = [
     ...new Set(
-      (technologies || []).map((t) => t.Category ?? t.category).filter(Boolean)
+      (currentRoles || [])
+        .map((t) => t.roleCategory ?? t.roleCategory)
+        .filter(Boolean)
     ),
   ];
   // v1.0.4 ---------------------------------------------------------------------->
@@ -451,8 +453,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                   label="Technology / Role"
                   name="technology"
                   options={filteredTechnologies.map((t) => ({
-                    value: t.TechnologyMasterName,
-                    label: t.TechnologyMasterName,
+                    value: t.roleName,
+                    label: t.roleLabel,
                   }))}
                   value={formData.technology}
                   onChange={(e) =>

@@ -482,6 +482,9 @@ const QuestionBankManager = lazy(() =>
 const ContactUsPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/ContactUs/ContactUsPage.jsx")
 );
+const ContactUsViewPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/ContactUs/ContactUsViewPage.jsx")
+);
 // v2.0.0 <------------------------------------------------------------------
 // v1.0.7 ------------------------------------------------------------------------------->
 // v1.0.8 ------------------------------------------------------------------------------->
@@ -1440,7 +1443,9 @@ const MainAppRoutes = ({
                   path="/question-bank-manager"
                   element={<QuestionBankManager />}
                 />
-                <Route path="/contact-us" element={<ContactUsPage />} />
+                <Route path="/contact-us" element={<ContactUsPage />}>
+                  <Route path=":id" element={<ContactUsViewPage />} />
+                </Route>
                 {/* v2.0.0 -------------------------------------------------> */}
                 {/* v1.0.7 ---------------------------------------------------------------> */}
                 {/* v1.0.8 ---------------------------------------------------------------------> */}

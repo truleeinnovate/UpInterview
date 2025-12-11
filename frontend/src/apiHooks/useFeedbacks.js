@@ -7,7 +7,10 @@ import toast from "react-hot-toast";
 export const useFeedbacks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const hasViewPermission = effectivePermissions?.Feedback?.View;
-  const params = filters;
+  const params = {
+    ...filters,
+    type: filters.type ? filters.type : "feedback",
+  };
 
   return useQuery({
     queryKey: ["feedbacks", filters],
@@ -17,14 +20,16 @@ export const useFeedbacks = (filters = {}) => {
         effectivePermissions,
         params
       );
-      return data.reverse();
+
+      return data;
     },
     enabled: !!hasViewPermission && isInitialized,
     retry: 1,
     staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
     gcTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    // refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnMount: "always",
     refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 };

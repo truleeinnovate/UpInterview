@@ -151,13 +151,22 @@ export const makeStickyOptionMenuList = (stickyValue = "__other__") => {
 // Generic sticky footer MenuList (keeps a special option like "__other__" fixed at bottom)
 export const StickyFooterMenuList = makeStickyOptionMenuList("__other__");
 
-// Helper filter that never hides the sticky option (e.g. "__other__")
+// Helper filter that never hides the sticky option (e.g. "__other__").
+// Safely handles options where label is JSX by preferring a plain-text
+// searchLabel stored on option.data.searchLabel when available.
 export const preserveStickyOptionFilter = (stickyValue = "__other__") =>
   (option, input) => {
     if (option?.data?.value === stickyValue) return true;
     if (!input) return true;
-    const label = option?.label || "";
-    return label.toLowerCase().includes((input || "").toLowerCase());
+
+    const rawLabel =
+      typeof option?.data?.searchLabel === "string"
+        ? option.data.searchLabel
+        : typeof option?.label === "string"
+        ? option.label
+        : "";
+
+    return rawLabel.toLowerCase().includes((input || "").toLowerCase());
   };
 
 // Reusable Select wrapper with default styles and easy error state

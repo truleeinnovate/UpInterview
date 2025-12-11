@@ -153,79 +153,16 @@ const InvoiceTab = () => {
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
   const ownerId = tokenPayload?.userId;
-
-  const fetchInvoiceData = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Determine the ID and query parameter based on organization flag
-      const id = organization ? tenantId : ownerId;
-      const endpoint = `${config.REACT_APP_API_URL}/invoices/get-invoice/${id}?isOrganization=${organization}`;
-
-      // Fetch invoice data from API
-      const Invoice_res = await axios.get(endpoint, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-
-      const invoiceData = Invoice_res?.data || [];
-      // Transform the data into a more usable structure
-      const formattedData = invoiceData.map((invoice) => {
-        const paymentId =
-          invoice.paymentId ||
-          `PMT-${invoice._id.toString().substring(18, 24)}-${Date.now()
-            .toString()
-            .substring(8)}`;
-        return {
-          id: invoice._id,
-          paymentId,
-          invoiceNumber: invoice.invoiceCode,
-          customer: invoice.ownerId
-            ? {
-                id: invoice.ownerId._id,
-                name:
-                  invoice.ownerId.Name ||
-                  `${invoice.ownerId.Firstname} ${
-                    invoice.ownerId.Lastname || ""
-                  }`.trim(),
-                userId: invoice.ownerId.UserId,
-              }
-            : null,
-          plan: invoice.planName,
-          amount: {
-            total: invoice.totalAmount,
-            paid: invoice.amountPaid,
-            outstanding: invoice.outstandingAmount,
-            discount: invoice.discount,
-          },
-          dates: {
-            createdAt: new Date(invoice.updatedAt),
-            startDate: invoice.startDate ? new Date(invoice.startDate) : null,
-            endDate: invoice.endDate ? new Date(invoice.endDate) : null,
-            dueDate: invoice.dueDate ? new Date(invoice.dueDate) : null,
-          },
-          status: invoice.status || "N/A",
-          type: invoice.type || "N/A",
-          comments: invoice.comments || "",
-          lineItems: invoice.lineItems || [],
-          tenantId: invoice.tenantId,
-        };
-      });
-
-      setBillingData(formattedData.reverse());
-    } catch (error) {
-      console.error("Error fetching invoice data:", error);
-    }
-    setLoading(false);
-  }, [ownerId, tenantId, organization, authToken]);
-
-  useEffect(() => {
-    fetchInvoiceData();
-  }, [fetchInvoiceData]);
+  // Add this near your other useState declarations
+  const [paginationData, setPaginationData] = useState({
+    total: 0,
+    currentPage: 0,
+    totalPages: 1,
+    limit: 10,
+  });
+  const rowsPerPage = 10; // Keep this as default
 
   const [searchQuery, setSearchQuery] = useState("");
-  const handleSearchInputChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
-
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(true);
   const [isTypeOpen, setIsTypeOpen] = useState(true);
@@ -240,6 +177,188 @@ const InvoiceTab = () => {
     type: [],
     amount: { min: "", max: "" },
   });
+
+  // const fetchInvoiceData = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     // Determine the ID and query parameter based on organization flag
+  //     const id = organization ? tenantId : ownerId;
+  //     const endpoint = `${config.REACT_APP_API_URL}/invoices/get-invoice/${id}?isOrganization=${organization}`;
+
+  //     // Fetch invoice data from API
+  //     const Invoice_res = await axios.get(endpoint, {
+  //       headers: { Authorization: `Bearer ${authToken}` },
+  //     });
+
+  //     const invoiceData = Invoice_res?.data || [];
+  //     // Transform the data into a more usable structure
+  //     const formattedData = invoiceData.map((invoice) => {
+  //       const paymentId =
+  //         invoice.paymentId ||
+  //         `PMT-${invoice._id.toString().substring(18, 24)}-${Date.now()
+  //           .toString()
+  //           .substring(8)}`;
+  //       return {
+  //         id: invoice._id,
+  //         paymentId,
+  //         invoiceNumber: invoice.invoiceCode,
+  //         customer: invoice.ownerId
+  //           ? {
+  //               id: invoice.ownerId._id,
+  //               name:
+  //                 invoice.ownerId.Name ||
+  //                 `${invoice.ownerId.Firstname} ${
+  //                   invoice.ownerId.Lastname || ""
+  //                 }`.trim(),
+  //               userId: invoice.ownerId.UserId,
+  //             }
+  //           : null,
+  //         plan: invoice.planName,
+  //         amount: {
+  //           total: invoice.totalAmount,
+  //           paid: invoice.amountPaid,
+  //           outstanding: invoice.outstandingAmount,
+  //           discount: invoice.discount,
+  //         },
+  //         dates: {
+  //           createdAt: new Date(invoice.updatedAt),
+  //           startDate: invoice.startDate ? new Date(invoice.startDate) : null,
+  //           endDate: invoice.endDate ? new Date(invoice.endDate) : null,
+  //           dueDate: invoice.dueDate ? new Date(invoice.dueDate) : null,
+  //         },
+  //         status: invoice.status || "N/A",
+  //         type: invoice.type || "N/A",
+  //         comments: invoice.comments || "",
+  //         lineItems: invoice.lineItems || [],
+  //         tenantId: invoice.tenantId,
+  //       };
+  //     });
+
+  //     setBillingData(formattedData.reverse());
+  //   } catch (error) {
+  //     console.error("Error fetching invoice data:", error);
+  //   }
+  //   setLoading(false);
+  // }, [ownerId, tenantId, organization, authToken]);
+
+  const fetchInvoiceData = useCallback(
+    async (page = 1, appliedFilters = {}) => {
+      setLoading(true);
+      try {
+        // Determine the ID and query parameter based on organization flag
+        const id = organization ? tenantId : ownerId;
+
+        // Build query parameters
+        const queryParams = new URLSearchParams({
+          isOrganization: organization,
+          page: page,
+          limit: rowsPerPage,
+          ...(searchQuery && { search: searchQuery }),
+          ...(appliedFilters.status?.length > 0 && {
+            status: appliedFilters.status.join(","),
+          }),
+          ...(appliedFilters.type?.length > 0 && {
+            type: appliedFilters.type.join(","),
+          }),
+          ...(appliedFilters.amount?.min && {
+            minAmount: appliedFilters.amount.min,
+          }),
+          ...(appliedFilters.amount?.max && {
+            maxAmount: appliedFilters.amount.max,
+          }),
+        });
+
+        const endpoint = `${config.REACT_APP_API_URL}/invoices/get-invoice/${id}?${queryParams}`;
+
+        // Fetch invoice data from API
+        const Invoice_res = await axios.get(endpoint, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        const { invoices: invoiceData, pagination } = Invoice_res?.data || {};
+
+        console.log("Invoice Data:", invoiceData, pagination);
+
+        // Transform the data into a more usable structure
+        const formattedData = invoiceData.map((invoice) => {
+          const paymentId =
+            invoice.paymentId ||
+            `PMT-${invoice._id.toString().substring(18, 24)}-${Date.now()
+              .toString()
+              .substring(8)}`;
+          return {
+            id: invoice._id,
+            paymentId,
+            invoiceNumber: invoice.invoiceCode,
+            customer: invoice.ownerId
+              ? {
+                  id: invoice.ownerId._id,
+                  name:
+                    invoice.ownerId.Name ||
+                    `${invoice.ownerId.Firstname} ${
+                      invoice.ownerId.Lastname || ""
+                    }`.trim(),
+                  userId: invoice.ownerId.UserId,
+                }
+              : null,
+            plan: invoice.planName,
+            amount: {
+              total: invoice.totalAmount,
+              paid: invoice.amountPaid,
+              outstanding: invoice.outstandingAmount,
+              discount: invoice.discount,
+            },
+            dates: {
+              createdAt: new Date(invoice.updatedAt),
+              startDate: invoice.startDate ? new Date(invoice.startDate) : null,
+              endDate: invoice.endDate ? new Date(invoice.endDate) : null,
+              dueDate: invoice.dueDate ? new Date(invoice.dueDate) : null,
+            },
+            status: invoice.status || "N/A",
+            type: invoice.type || "N/A",
+            comments: invoice.comments || "",
+            lineItems: invoice.lineItems || [],
+            tenantId: invoice.tenantId,
+          };
+        });
+
+        setBillingData(formattedData);
+
+        // Update pagination state
+        setPaginationData({
+          total: pagination?.total || 0,
+          currentPage: pagination?.page || 1,
+          totalPages: pagination?.totalPages || 1,
+          limit: pagination?.limit || rowsPerPage,
+        });
+      } catch (error) {
+        console.error("Error fetching invoice data:", error);
+        setBillingData([]);
+        setPaginationData({
+          total: 0,
+          currentPage: 1,
+          totalPages: 1,
+          limit: rowsPerPage,
+        });
+      }
+      setLoading(false);
+    },
+    [ownerId, tenantId, organization, authToken, searchQuery]
+  );
+  useEffect(() => {
+    // Reset to page 1 when filters or search changes
+    fetchInvoiceData(1, selectedFilters);
+  }, [fetchInvoiceData, selectedFilters]);
+
+  // Remove or modify the existing fetchInvoiceData useEffect
+
+  // useEffect(() => {
+  //   fetchInvoiceData();
+  // }, [fetchInvoiceData]);
+
+  const handleSearchInputChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
 
   useEffect(() => {
     if (isFilterPopupOpen) {
@@ -301,6 +420,9 @@ const InvoiceTab = () => {
         filters.amount.max
     );
     setFilterPopupOpen(false);
+
+    // Reset to first page and fetch with new filters
+    fetchInvoiceData(1, filters);
   };
 
   const handleFilterIconClick = () => {
@@ -333,61 +455,82 @@ const InvoiceTab = () => {
   const [isFilterActive, setIsFilterActive] = useState(false);
   const filterIconRef = useRef(null);
 
-  const FilteredData = () => {
-    if (!Array.isArray(billingData)) return [];
+  // const FilteredData = () => {
+  //   if (!Array.isArray(billingData)) return [];
 
-    return billingData.filter((invoice) => {
-      const matchesStatus =
-        selectedFilters.status.length === 0 ||
-        selectedFilters.status.includes(invoice.status?.toLowerCase());
+  //   return billingData.filter((invoice) => {
+  //     const matchesStatus =
+  //       selectedFilters.status.length === 0 ||
+  //       selectedFilters.status.includes(invoice.status?.toLowerCase());
 
-      const matchesType =
-        selectedFilters.type.length === 0 ||
-        selectedFilters.type.includes(invoice.type?.toLowerCase());
+  //     const matchesType =
+  //       selectedFilters.type.length === 0 ||
+  //       selectedFilters.type.includes(invoice.type?.toLowerCase());
 
-      const matchesAmount =
-        (!selectedFilters.amount.min ||
-          invoice.amount.total >= parseFloat(selectedFilters.amount.min)) &&
-        (!selectedFilters.amount.max ||
-          invoice.amount.total <= parseFloat(selectedFilters.amount.max));
+  //     const matchesAmount =
+  //       (!selectedFilters.amount.min ||
+  //         invoice.amount.total >= parseFloat(selectedFilters.amount.min)) &&
+  //       (!selectedFilters.amount.max ||
+  //         invoice.amount.total <= parseFloat(selectedFilters.amount.max));
 
-      const matchesSearch =
-        !searchQuery ||
-        invoice.paymentId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        invoice.invoiceNumber
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        invoice.status?.toLowerCase().includes(searchQuery.toLowerCase());
+  //     const matchesSearch =
+  //       !searchQuery ||
+  //       invoice.paymentId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //       invoice.invoiceNumber
+  //         ?.toLowerCase()
+  //         .includes(searchQuery.toLowerCase()) ||
+  //       invoice.status?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      return matchesStatus && matchesType && matchesAmount && matchesSearch;
-    });
-  };
+  //     return matchesStatus && matchesType && matchesAmount && matchesSearch;
+  //   });
+  // };
 
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
-  const [currentPage, setCurrentPage] = useState(0);
+  // const rowsPerPage = 10;
+  // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
+  // const [currentPage, setCurrentPage] = useState(0);
 
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData().length) {
-      setCurrentPage(currentPage + 1);
+    if (paginationData.currentPage < paginationData.totalPages) {
+      const nextPageNum = paginationData.currentPage + 1;
+      fetchInvoiceData(nextPageNum, selectedFilters);
     }
   };
 
   const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
+    if (paginationData.currentPage > 1) {
+      const prevPageNum = paginationData.currentPage - 1;
+      fetchInvoiceData(prevPageNum, selectedFilters);
     }
   };
 
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
-  const currentFilteredRows = FilteredData()
-    .slice(startIndex, endIndex)
-    .sort((a, b) => {
-      const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
-      const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
-      return dateB - dateA;
-    });
+  // const nextPage = () => {
+  //   if ((currentPage + 1) * rowsPerPage < FilteredData().length) {
+  //     setCurrentPage(currentPage + 1);
+  //   }
+  // };
+
+  // const prevPage = () => {
+  //   if (currentPage > 0) {
+  //     setCurrentPage(currentPage - 1);
+  //   }
+  // };
+
+  // const startIndex = currentPage * rowsPerPage;
+  // const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
+  // const currentFilteredRows = FilteredData()
+  //   .slice(startIndex, endIndex)
+  //   .sort((a, b) => {
+  //     const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
+  //     const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
+  //     return dateB - dateA;
+  //   });
+
+  // Remove this entire function:
+
+  // Update the component to use billingData directly:
+  const totalPages = paginationData.totalPages;
+  // const currentPage = paginationData.currentPage - 1; // For display purposes
+  const currentFilteredRows = billingData; // Use billingData directly
 
   // v1.0.6 <----------------------------------------------------------------------------------
   // const formatDate = (isoString) => {
@@ -558,14 +701,15 @@ const InvoiceTab = () => {
               setView={(newView) => setViewMode(newView)}
               searchQuery={searchQuery}
               onSearch={handleSearchInputChange}
-              currentPage={currentPage}
-              totalPages={totalPages}
+              currentPage={paginationData.currentPage - 1}
+              totalPages={paginationData.totalPages}
               onPrevPage={prevPage}
               onNextPage={nextPage}
               onFilterClick={handleFilterIconClick}
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
-              dataLength={billingData.length}
+              // dataLength={billingData.length}
+              dataLength={paginationData.total}
               searchPlaceholder="Search by Status, Inv..."
               filterIconRef={filterIconRef}
             />

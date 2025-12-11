@@ -31,6 +31,7 @@ import {
 // v1.0.1 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
+import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 // v1.0.1 ------------------------------------------------------------------------->
 
 const getStatusColor = (status) => {
@@ -50,12 +51,12 @@ const getStatusColor = (status) => {
   }
 };
 
-function SupportDetails() {;
+function SupportDetails() {
   const {
-    effectivePermissions,
-    superAdminPermissions,
+    // effectivePermissions,
+    // superAdminPermissions,
     impersonatedUser_roleName,
-    effectivePermissions_RoleName,
+    // effectivePermissions_RoleName,
   } = usePermissions();
 
   const navigate = useNavigate();
@@ -77,7 +78,11 @@ function SupportDetails() {;
   ];
   const [isOwnerEditing, setIsOwnerEditing] = useState(false);
   const [ownerOptions, setOwnerOptions] = useState([]);
-  console.log("ownerOptions---", ownerOptions);
+
+  const ownerSelectOptions = ownerOptions.map((user) => ({
+    value: user._id,
+    label: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+  }));
 
   // v1.0.1 <-------------------------------------------------------------------------
   useScrollLock(true);
@@ -87,18 +92,24 @@ function SupportDetails() {;
     const fetchUsers = async () => {
       try {
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/users/super-admins`
+          `${config.REACT_APP_API_URL}/users/super-admins`,
+          {
+            params: {
+              page: 1,
+              limit: 100,
+            },
+          }
         );
 
-        const filteredUsers = Array.isArray(response.data)
-          ? response.data.filter(
-              (user) =>
-                user.roleName === "Super_Admin" ||
-                user.roleName === "Support_Team"
-            )
+        const usersArray = Array.isArray(response.data?.users)
+          ? response.data.users
           : [];
 
-        console.log("filteredUsers---", filteredUsers);
+        const filteredUsers = usersArray.filter(
+          (user) =>
+            user.roleName === "Super_Admin" || user.roleName === "Support_Team"
+        );
+
         setOwnerOptions(filteredUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -171,14 +182,16 @@ function SupportDetails() {;
     [closeStatusModal]
   );
 
-  const handleOwnerChange = (e) => {
-    const selectedUserId = e.target.value;
+  const handleOwnerChange = (option) => {
+    const selectedUserId = option?.value || "";
     const selectedUser = ownerOptions.find(
       (user) => user._id === selectedUserId
     );
 
     if (selectedUser) {
-      setSelectedOwner(selectedUser.firstName + " " + selectedUser.lastName);
+      setSelectedOwner(
+        `${selectedUser.firstName || ""} ${selectedUser.lastName || ""}`.trim()
+      );
       setSelectedOwnerId(selectedUser._id);
     } else {
       setSelectedOwner("");
@@ -241,8 +254,8 @@ function SupportDetails() {;
     return null;
   }
   // v1.0.2 <--------------------------------------------------------
-  const ticketId = currentTicket?._id?.slice(-5, -1) || "";
-  const statusClass = getStatusColor(currentTicket.status);
+  // const ticketId = currentTicket?._id?.slice(-5, -1) || "";
+  // const statusClass = getStatusColor(currentTicket.status);
   // v1.0.2 --------------------------------------------------------->
 
   const content = (
@@ -256,34 +269,34 @@ function SupportDetails() {;
               Support Ticket Details
             </h2>
             <div className="flex items-center text-center gap-2">
-            <h3 className="text-md font-medium text-custom-blue">
-              {currentTicket?.ticketCode}
-            </h3>
-            <StatusBadge
-              status={currentTicket?.status}
-              text={
-                currentTicket?.status
-                  ? currentTicket?.status.charAt(0).toUpperCase() +
-                    currentTicket?.status.slice(1)
-                  : "Not Provided"
-              }
-            />
-            {/*common status code add by Venkatesh*/}
-            {/*-------v1.0.3------>*/}
-            {/*-------v1.0.1-------------->*/}
-          </div>
+              <h3 className="text-md font-medium text-custom-blue">
+                {currentTicket?.ticketCode}
+              </h3>
+              <StatusBadge
+                status={currentTicket?.status}
+                text={
+                  currentTicket?.status
+                    ? currentTicket?.status.charAt(0).toUpperCase() +
+                      currentTicket?.status.slice(1)
+                    : "Not Provided"
+                }
+              />
+              {/*common status code add by Venkatesh*/}
+              {/*-------v1.0.3------>*/}
+              {/*-------v1.0.1-------------->*/}
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             {(impersonatedUser_roleName === "Super_Admin" ||
-            impersonatedUser_roleName === "Support_Team") && (
-            <button
-              onClick={toggleStatusModal}
-              className="px-1 py-2 mb-1 bg-custom-blue text-xs w-24 whitespace-nowrap text-white hover:bg-custom-blue/90 rounded-md transition-colors"
-              title="Change Status"
-            >
-              Change Status
-            </button>
-          )}
+              impersonatedUser_roleName === "Support_Team") && (
+              <button
+                onClick={toggleStatusModal}
+                className="px-1 py-2 mb-1 bg-custom-blue text-xs w-24 whitespace-nowrap text-white hover:bg-custom-blue/90 rounded-md transition-colors"
+                title="Change Status"
+              >
+                Change Status
+              </button>
+            )}
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
@@ -305,7 +318,6 @@ function SupportDetails() {;
       </div>
 
       <div className="px-4 pb-4">
-        
         <div className="flex justify-between border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {/* <----v1.0.0------Venkatesh------add attachments tab */}
@@ -324,7 +336,6 @@ function SupportDetails() {;
             ))}
             {/* ---v1.0.0------Venkatesh------add attachments tab--> */}
           </nav>
-          
         </div>
 
         {activeTab === "Details" ? (
@@ -460,60 +471,57 @@ function SupportDetails() {;
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
                     <User className="w-5 h-5 text-custom-blue" />
                   </div>
-                  <div className="flex items-start gap-16">
-                    <div className="flex flex-col items-start">
-                      <p className="text-sm text-gray-500">Owner</p>
-                      {isOwnerEditing ? (
-                        <div className="flex items-center gap-2">
-                          <select
-                            className="border border-gray-300 rounded-md p-1 text-sm"
-                            value={selectedOwnerId}
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <p className="text-sm text-gray-500">Owner</p>
+                    {isOwnerEditing ? (
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <div className="flex-1 min-w-[180px] max-w-xs">
+                          <DropdownSelect
+                            value={
+                              ownerSelectOptions.find(
+                                (opt) => opt.value === selectedOwnerId
+                              ) || null
+                            }
                             onChange={handleOwnerChange}
-                            disabled={isUpdatingOwner}
-                          >
-                            <option value="" hidden>
-                              Select Owner
-                            </option>
-                            {ownerOptions?.map((user) => (
-                              <option key={user._id} value={user._id}>
-                                {user.firstName + " " + user.lastName}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={updateOwner}
-                            className="text-green-600 hover:text-green-800 p-1"
-                            disabled={isUpdatingOwner}
-                          >
-                            {isUpdatingOwner ? (
-                              <span>Saving...</span>
-                            ) : (
-                              <CheckCircle className="w-5 h-5" />
-                            )}
-                          </button>
-                          <button
-                            onClick={toggleOwnerEdit}
-                            className="text-red-600 hover:text-red-800 p-1"
-                            disabled={isUpdatingOwner}
-                          >
-                            <XCircle className="w-5 h-5" />
-                          </button>
+                            options={ownerSelectOptions}
+                            placeholder="Select Owner"
+                            isSearchable={true}
+                            isDisabled={isUpdatingOwner}
+                          />
                         </div>
-                      ) : (
+                        <button
+                          onClick={updateOwner}
+                          className="text-green-600 hover:text-green-800 p-1"
+                          disabled={isUpdatingOwner}
+                        >
+                          {isUpdatingOwner ? (
+                            <span>Saving...</span>
+                          ) : (
+                            <CheckCircle className="w-5 h-5" />
+                          )}
+                        </button>
+                        <button
+                          onClick={toggleOwnerEdit}
+                          className="text-red-600 hover:text-red-800 p-1"
+                          disabled={isUpdatingOwner}
+                        >
+                          <XCircle className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-1 flex items-center gap-2">
                         <p className="text-gray-700 whitespace-nowrap">
                           {currentTicket?.assignedTo || "N/A"}
                         </p>
-                      )}
-                    </div>
-                    {impersonatedUser_roleName === "Super_Admin" && (
-                      <div className="flex items-center justify-center w-full">
-                        <button
-                          onClick={toggleOwnerEdit}
-                          className="p-1 text-custom-blue hover:bg-blue-50 rounded-full transition-colors"
-                          title="Change Owner"
-                        >
-                          <Repeat className="w-5 h-5 text-custom-blue" />
-                        </button>
+                        {impersonatedUser_roleName === "Super_Admin" && (
+                          <button
+                            onClick={toggleOwnerEdit}
+                            className="p-1 text-custom-blue hover:bg-blue-50 rounded-full transition-colors"
+                            title="Change Owner"
+                          >
+                            <Repeat className="w-5 h-5 text-custom-blue" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

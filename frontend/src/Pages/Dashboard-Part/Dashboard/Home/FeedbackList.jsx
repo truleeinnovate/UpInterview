@@ -19,7 +19,10 @@ const FeedbackList = () => {
   const navigate = useNavigate();
   //<-------v1.0.0--------
   // Fetch all feedbacks and take the latest 3 (useFeedbacks already returns newest first)
-  const { data: feedbacksData, isLoading, error } = useFeedbacks();
+  const { data: feedbacksResponse, isLoading, error } = useFeedbacks();
+
+  const feedbacksData = feedbacksResponse?.feedbacks || [];
+
   const recentFeedbacks = (feedbacksData || []).slice(0, 3);
 
   // Helpers

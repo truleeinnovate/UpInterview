@@ -86,13 +86,31 @@ const formatDateTime = (date, showDate = true) => {
 const RoundFormInterviews = () => {
   // Add useScrollLock hook at the beginning
   const {
+    useInterviewDetails,
     interviewData,
     isMutationLoading,
     saveInterviewRound,
     updateInterviewRound,
     // updateRoundWithMeetingLinks,
   } = useInterviews();
-  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+
+  const ASSESSMENT_DROPDOWN_LIMIT = 50;
+  const [assessmentLimit, setAssessmentLimit] = useState(
+    ASSESSMENT_DROPDOWN_LIMIT
+  );
+  const [assessmentSearch, setAssessmentSearch] = useState("");
+
+  const {
+    assessmentData,
+    totalCount: totalAssessments,
+    isQueryLoading: isAssessmentQueryLoading,
+    fetchAssessmentQuestions,
+    useAssessmentById,
+  } = useAssessments({
+    page: 0,
+    limit: assessmentLimit,
+    ...(assessmentSearch && { search: assessmentSearch.trim() }),
+  });
   // const { groups } = useCustomContext();
   // Get groups data and mutations from TanStack Query
   const { data: groups = [] } = useGroupsQuery();
@@ -119,6 +137,7 @@ const RoundFormInterviews = () => {
   // v1.0.2 <-----------------------------------------
 
   const { interviewId, roundId } = useParams();
+  const { data: interviewDetails } = useInterviewDetails(interviewId);
   const stateisReschedule = useLocation().state;
 
   const authToken = Cookies.get("authToken");
@@ -128,9 +147,9 @@ const RoundFormInterviews = () => {
   const organization = tokenPayload?.organization;
   const [errors, setErrors] = useState({});
 
-  const interview = interviewData?.find(
-    (interview) => interview._id === interviewId
-  );
+  const interview =
+    interviewDetails ||
+    interviewData?.find((interview) => interview._id === interviewId);
   const [assessmentTemplate, setAssessmentTemplate] = useState({
     assessmentId: "",
     assessmentName: "",
@@ -150,6 +169,13 @@ const RoundFormInterviews = () => {
   const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
   const queryClient = useQueryClient();
 
+  const handleAssessmentMenuScrollToBottom = () => {
+    if (isAssessmentQueryLoading) return;
+    if (!totalAssessments || assessmentLimit >= totalAssessments) return;
+
+    setAssessmentLimit((prev) => prev + ASSESSMENT_DROPDOWN_LIMIT);
+  };
+
   useEffect(() => {
     const fetchOwnerData = async () => {
       if (!organization && userId) {
@@ -168,14 +194,14 @@ const RoundFormInterviews = () => {
   }, [organization, userId]);
 
   useEffect(() => {
-    if (interviewData) {
+    if (interview) {
       setCandidate(interview?.candidateId || null);
       setPosition(interview?.positionId || null);
       setRounds(interview?.rounds || []);
       setSelectedMeetingPlatform(data?.data?.defaultProvider);
       // setTemplate(interview?.templateId || null)
     }
-  }, [interviewData, interview, data]);
+  }, [interview, data]);
 
   const navigate = useNavigate();
   const [roundTitle, setRoundTitle] = useState("");
@@ -248,6 +274,7 @@ const RoundFormInterviews = () => {
     interviewMode: useRef(null),
     sequence: useRef(null),
     assessmentTemplate: useRef(null),
+    instructions: useRef(null),
   };
   // v1.0.1 ------------------------------------------------------------------------->
 
@@ -665,7 +692,111 @@ const RoundFormInterviews = () => {
   // while editing
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
-  console.log("roundEditData", roundEditData);
+  
+
+  const editingAssessmentId =
+    isEditing && roundEditData && roundEditData.assessmentId
+      ? roundEditData.assessmentId
+      : null;
+
+  const { assessmentById: editingAssessment } = useAssessmentById(
+    editingAssessmentId,
+    {}
+  );
+
+  const assessmentOptions = React.useMemo(() => {
+    const baseOptions = Array.isArray(assessmentData)
+      ? assessmentData.map((a) => {
+          const titleLabel = a.AssessmentTitle || "Untitled Assessment";
+          const typeLabel = a.type
+            ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
+            : "";
+
+          return {
+            value: a._id,
+            label: (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "98%",
+                }}
+              >
+                <span>{titleLabel}</span>
+                {typeLabel && (
+                  <span
+                    className={
+                      "text-md " +
+                      (a.type === "custom"
+                        ? "text-custom-blue"
+                        : "text-green-600")
+                    }
+                  >
+                    {typeLabel}
+                  </span>
+                )}
+              </div>
+            ),
+            searchLabel: titleLabel,
+          };
+        })
+      : [];
+
+    if (editingAssessmentId && editingAssessment) {
+      const exists = baseOptions.some(
+        (opt) => opt.value === editingAssessmentId
+      );
+
+      if (!exists) {
+        const editingTitleLabel =
+          editingAssessment.AssessmentTitle ||
+          assessmentTemplate?.assessmentName ||
+          "Untitled Assessment";
+
+        const editingTypeLabel = editingAssessment.type
+          ? editingAssessment.type.charAt(0).toUpperCase() +
+            editingAssessment.type.slice(1)
+          : "";
+
+        baseOptions.push({
+          value: editingAssessmentId,
+          label: (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "98%",
+              }}
+            >
+              <span>{editingTitleLabel}</span>
+              {editingTypeLabel && (
+                <span
+                  className={
+                    "text-md " +
+                    (editingAssessment.type === "custom"
+                      ? "text-custom-blue"
+                      : "text-green-600")
+                  }
+                >
+                  {editingTypeLabel}
+                </span>
+              )}
+            </div>
+          ),
+          searchLabel: editingTitleLabel,
+        });
+      }
+    }
+
+    return baseOptions;
+  }, [
+    assessmentData,
+    editingAssessmentId,
+    editingAssessment,
+    assessmentTemplate?.assessmentName,
+  ]);
 
   useEffect(() => {
     if (isEditing && roundEditData) {
@@ -675,13 +806,11 @@ const RoundFormInterviews = () => {
         (g) => g?._id === roundEditData?.interviewerGroupId
       );
 
-      // Find full assessment object
+      // Find full assessment object by id instead of relying on paginated list
       const fullAssessment =
         roundEditData?.roundTitle === "Assessment" &&
         roundEditData?.assessmentId
-          ? assessmentData?.find(
-              (a) => a._id === roundEditData?.assessmentId
-            ) || null
+          ? editingAssessment || null
           : null;
 
       const newAssessmentTemplate =
@@ -690,9 +819,9 @@ const RoundFormInterviews = () => {
           ? {
               assessmentId: roundEditData?.assessmentId,
               assessmentName:
-                assessmentData?.find(
-                  (a) => a._id === roundEditData?.assessmentId
-                )?.AssessmentTitle || "",
+                editingAssessment?.AssessmentTitle ||
+                assessmentTemplate?.assessmentName ||
+                "",
             }
           : { assessmentId: "", assessmentName: "" };
       if (
@@ -801,7 +930,7 @@ const RoundFormInterviews = () => {
         setSequence(maxSequence + 1);
       }
     }
-  }, [rounds, roundId, isEditing, assessmentData, interviewData, groups]);
+  }, [rounds, roundId, isEditing, editingAssessment, interviewData, groups]);
 
   // Add this useEffect hook after your existing useEffect hooks
   useEffect(() => {
@@ -1961,7 +2090,7 @@ const RoundFormInterviews = () => {
                         id="sequence"
                         name="sequence"
                         min={1}
-                        ref={fieldRefs.sequence}
+                        inputRef={fieldRefs.sequence}
                         value={sequence}
                         onChange={(e) => {
                           setSequence(parseInt(e.target.value));
@@ -2027,10 +2156,16 @@ const RoundFormInterviews = () => {
                             required
                             name="assessmentTemplate"
                             value={assessmentTemplate.assessmentId || ""}
-                            options={(assessmentData || []).map((a) => ({
-                              value: a._id,
-                              label: a.AssessmentTitle,
-                            }))}
+                            options={assessmentOptions}
+                            loading={isAssessmentQueryLoading}
+                            onInputChange={(inputValue, { action }) => {
+                              if (action === "input-change") {
+                                setAssessmentSearch(inputValue || "");
+                              }
+                            }}
+                            onMenuScrollToBottom={
+                              handleAssessmentMenuScrollToBottom
+                            }
                             onChange={(e) => {
                               const id = e.target.value;
                               const selected = (assessmentData || []).find(

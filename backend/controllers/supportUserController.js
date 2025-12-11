@@ -184,14 +184,10 @@ exports.getTicket = async (req, res) => {
       // impersonatedUser_roleName,
     } = req.query;
 
-    const {
-      effectivePermissions_RoleType,
-      impersonatedUser_roleType,
-    } = res.locals;
+    const { effectivePermissions_RoleType, impersonatedUser_roleType } =
+      res.locals;
     console.log("effectivePermissions_RoleType", effectivePermissions_RoleType);
     console.log("impersonatedUser_roleType", impersonatedUser_roleType);
-
-
 
     /* ============================================================
     EXACT ROLE FILTER LOGIC (1:1 with your previous conditions)
@@ -204,12 +200,10 @@ exports.getTicket = async (req, res) => {
        ===================================================== */
     if (impersonatedUser_roleType === "internal") {
       // NO FILTER — super admin / support → read all tickets
-    }
-
-    /* =====================================================
+    } else {
+      /* =====================================================
        2️⃣ EFFECTIVE ROLE CHECK (Only if impersonation ≠ Internal)
        ===================================================== */
-    else {
       if (effectivePermissions_RoleType === "organization") {
         // Organization Level User → See tenant data
         if (tenantId) {
@@ -280,7 +274,6 @@ exports.getTicket = async (req, res) => {
     if (searchConditions.length > 0) {
       finalQuery = { $and: [query, ...searchConditions] };
     }
-
 
     /* --------------------------------------------------------------------- */
     /*  🔢 Pagination + Fetch                                                */
@@ -410,22 +403,25 @@ exports.getTicket = async (req, res) => {
 exports.getTicketBasedonId = async (req, res) => {
   try {
     const { id } = req.params;
+
+    const { actingAsUserId } = res.locals.auth;
+
     if (!id) {
       //<----v1.0.1----
-      return res
-        .status(400)
-        .json({
-          message: "Validation failed",
-          errors: { id: "Ticket id is required" },
-        });
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: { id: "Ticket id is required" },
+      });
     }
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({
-          message: "Validation failed",
-          errors: { id: "Invalid ticket id" },
-        });
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: { id: "Invalid ticket id" },
+      });
+    }
+
+    if (!actingAsUserId) {
+      return res.status(400).json({ message: "OwnerId is required" });
     }
 
     // res.locals.loggedByController = true;
@@ -650,12 +646,10 @@ exports.updateTicketById = async (req, res) => {
     } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({
-          message: "Validation failed",
-          errors: { id: "Invalid ticket id" },
-        });
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: { id: "Invalid ticket id" },
+      });
     }
 
     const { errors, isValid } = validateUpdateSupportTicket(req.body);
@@ -792,12 +786,10 @@ exports.updateSupportTicket = async (req, res) => {
 
     //<----v1.0.1----
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({
-          message: "Validation failed",
-          errors: { id: "Invalid ticket id" },
-        });
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: { id: "Invalid ticket id" },
+      });
     }
     const { errors, isValid } = validateStatusUpdate(req.body);
     if (!isValid) {

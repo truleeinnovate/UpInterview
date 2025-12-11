@@ -34,6 +34,7 @@ const AssessmentListModal = ({
     const fetchLists = async () => {
       try {
         const response = assessmentListData;
+
         if (response && Array.isArray(response)) {
           const formatted = response.map((item) => ({
             categoryOrTechnology: item?.categoryOrTechnology,
@@ -62,10 +63,22 @@ const AssessmentListModal = ({
         (opt) => opt.value.toLowerCase() === generatedName.toLowerCase()
       );
 
-      setNewList((prev) => ({ ...prev, name: generatedName }));
+      // Only update when generated name actually changes to avoid re-render loops
+      setNewList((prev) => {
+        if (prev.name === generatedName) {
+          return prev;
+        }
+        return { ...prev, name: generatedName };
+      });
       setError(isDuplicate ? "A list with this name already exists." : "");
     } else {
-      setNewList((prev) => ({ ...prev, name: "" }));
+      // Reset name only if needed to prevent unnecessary state updates
+      setNewList((prev) => {
+        if (!prev.name) {
+          return prev;
+        }
+        return { ...prev, name: "" };
+      });
       setError("");
     }
   }, [newList.categoryOrTechnology, options]);

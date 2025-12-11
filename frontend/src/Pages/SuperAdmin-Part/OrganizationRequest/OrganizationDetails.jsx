@@ -289,8 +289,8 @@ const OrganizationDetails = ({ organization, onClose, onStatusUpdate }) => {
                                 </p>
                             </div>
                         </div>
-                        <StatusBadge status={organization.status} size="lg">
-                            {formatStatus(organization.status)}
+                        <StatusBadge status={formatStatus(organization.status)} size="lg">
+                            
                         </StatusBadge>
                     </div>
                 </div>

@@ -6,11 +6,7 @@ import React, {
   useMemo,
 } from "react";
 import axios from "axios";
-import {
-  Trash2,
-  X,
-  Tag as SkillsIcon,
-} from "lucide-react";
+import { Trash2, X, Tag as SkillsIcon } from "lucide-react";
 import InfoBox from "./InfoBox.jsx";
 import { useMasterData } from "../../../apiHooks/useMasterData.js";
 import InputField from "../../../Components/FormFields/InputField";
@@ -22,8 +18,9 @@ import DropdownWithSearchField from "../../../Components/FormFields/DropdownWith
 const InterviewDetails = ({
   errors,
   setErrors,
-  selectedTechnologyies,
-  setSelectedTechnologyies,
+  additionalDetailsData,
+  // selectedTechnologyies,
+  // setSelectedTechnologyies,
   interviewDetailsData,
   setInterviewDetailsData,
   selectedSkills,
@@ -33,10 +30,18 @@ const InterviewDetails = ({
   isMockInterviewSelected,
   setIsMockInterviewSelected,
   yearsOfExperience = 0,
+  setAdditionalDetailsData,
 }) => {
   const [showCustomDiscount, setShowCustomDiscount] = useState(false);
   const [customDiscountValue, setCustomDiscountValue] = useState("");
-  const expYears = parseInt(yearsOfExperience, 10) || 0;
+  const [exchangeRate, setExchangeRate] = useState(""); // Default fallback rate
+  const [isRateLoading, setIsRateLoading] = useState(false);
+  const sanitizedExp = String(yearsOfExperience).trim();
+
+  // Extract the number only (works for "15+", "15 years", "15-plus", etc.)
+  const expYears = parseInt(sanitizedExp.match(/\d+/)?.[0] || "0", 10);
+
+  // const expYears = parseInt(yearsOfExperience, 10) || 0;
 
   const showJuniorLevel = expYears > 0;
   const showMidLevel = expYears >= 4;
@@ -93,16 +98,14 @@ const InterviewDetails = ({
       }));
       setSelectedSkills(initialSkills);
     }
-  }, [
-    interviewDetailsData,
-    selectedSkills,
-    setSelectedSkills,
-    showJuniorLevel,
-    showMidLevel,
-    showSeniorLevel,
-  ]);
-  const [exchangeRate, setExchangeRate] = useState(""); // Default fallback rate
-  const [isRateLoading, setIsRateLoading] = useState(false);
+  }, [interviewDetailsData]);
+
+  // selectedSkills,
+  // setSelectedSkills,
+  // showJuniorLevel,
+  // showMidLevel,
+  // showSeniorLevel,
+
   // const [lastRateUpdate, setLastRateUpdate] = useState("");
 
   // Fetch current exchange rate
@@ -144,16 +147,21 @@ const InterviewDetails = ({
     }
 
     if (
-      interviewDetailsData.technologies &&
-      interviewDetailsData.technologies.length > 0
+      interviewDetailsData.currentRole
+      // &&
+      // interviewDetailsData.currentRole.length > 0
     ) {
-      const techsToSet = interviewDetailsData.technologies
-        .filter((tech) => tech)
-        .map((tech) => ({
-          _id: Math.random().toString(36).substr(2, 9),
-          TechnologyMasterName: tech,
-        }));
-      setSelectedTechnologyies(techsToSet);
+      const techsToSet = interviewDetailsData?.currentRole;
+      // .filter((tech) => tech)
+      // .map((tech) => ({
+      //   _id: Math.random().toString(36).substr(2, 9),
+      //   TechnologyMasterName: tech,
+      // }));
+      setInterviewDetailsData((prev) => ({
+        ...prev,
+        currentRole: techsToSet,
+      }));
+      // setSelectedTechnologyies(techsToSet);
     }
 
     if (interviewDetailsData.previousInterviewExperience) {
@@ -169,7 +177,7 @@ const InterviewDetails = ({
     if (interviewDetailsData.mock_interview_discount) {
       setCustomDiscountValue(interviewDetailsData.mock_interview_discount);
     }
-  }, [interviewDetailsData]);
+  }, []);
 
   useEffect(() => {
     setInterviewDetailsData((prev) => ({
@@ -189,22 +197,25 @@ const InterviewDetails = ({
         },
       },
     }));
-  }, [yearsOfExperience, expYears, setInterviewDetailsData]);
+  }, [yearsOfExperience, expYears]);
+
   const pageType = "adminPortal";
   const {
     skills,
     loadSkills,
     isSkillsFetching,
-    technologies,
-    loadTechnologies,
-    isTechnologiesFetching,
+    // technologies,
+    currentRoles,
+    loadCurrentRoles,
+    isCurrentRolesFetching,
+    // loadTechnologies,
+    // isTechnologiesFetching,
   } = useMasterData({}, pageType);
 
   const [rateCards, setRateCards] = useState([]);
 
   const fetchRateCardsMemoized = useCallback(async (techName) => {
     if (!techName) return;
-    // console.log('1')
 
     try {
       const token = localStorage.getItem("token");
@@ -272,15 +283,26 @@ const InterviewDetails = ({
     if (selectedValue) {
       // console.log('Selected value:', selectedValue);
 
-      const technology = technologies.find(
-        (t) => t.TechnologyMasterName === selectedValue
-      ) || {
-        _id: Math.random().toString(36).substr(2, 9),
-        TechnologyMasterName: selectedValue,
-      };
-      // console.log('Found technology:', technology);
-
-      setSelectedTechnologyies([technology]);
+      // const technologyRole = currentRoles.find(
+      //   (t) => t.roleLabel === selectedValue
+      // ) || {
+      //   _id: Math.random().toString(36).substr(2, 9),
+      //   roleName: selectedValue,
+      // };
+      // console.log("Found technology:", technology);
+      setInterviewDetailsData((prev) => ({
+        ...prev,
+        currentRole: selectedValue,
+      }));
+      setAdditionalDetailsData((prev) => ({
+        ...prev,
+        currentRole: selectedValue,
+      }));
+      // setInterviewDetailsData((prev) => ({
+      //   ...prev,
+      //   currentRole: [technology],
+      // }));
+      // setSelectedTechnologyies([technology]);
       // console.log('Updated selectedTechnologyies:', [technology]);
 
       try {
@@ -329,7 +351,8 @@ const InterviewDetails = ({
 
           const newFormData = {
             ...prev,
-            technologies: [selectedValue],
+            currentRole: selectedValue,
+            // technologies: [selectedValue],
             rates: ratesUpdate,
           };
 
@@ -337,10 +360,11 @@ const InterviewDetails = ({
           return newFormData;
         });
       } catch (error) {
-        console.error("Error fetching rate cards:", error);
+        // console.error("Error fetching rate cards:", error);
         setInterviewDetailsData((prev) => ({
           ...prev,
-          technologies: [selectedValue],
+          currentRole: selectedValue,
+          // technologies: [selectedValue],
           rates: {
             junior: { usd: 0, inr: 0, isVisible: showJuniorLevel },
             mid: { usd: 0, inr: 0, isVisible: showMidLevel },
@@ -351,7 +375,8 @@ const InterviewDetails = ({
 
       setErrors((prev) => ({
         ...prev,
-        technologies: "",
+        currentRole: "",
+        // technologies: "",
         junior_usd: "",
         junior_inr: "",
         mid_usd: "",
@@ -361,10 +386,13 @@ const InterviewDetails = ({
       }));
     } else {
       // console.log('No value selected, clearing selection');
-      setSelectedTechnologyies([]);
+      // setSelectedTechnologyies([]);
+
       setInterviewDetailsData((prev) => ({
         ...prev,
-        technologies: [],
+
+        currentRole: "",
+        // technologies: [],
         rates: {
           junior: { usd: 0, inr: 0, isVisible: false },
           mid: { usd: 0, inr: 0, isVisible: false },
@@ -373,7 +401,8 @@ const InterviewDetails = ({
       }));
       setErrors((prev) => ({
         ...prev,
-        technologies: "Please select a technology",
+        currentRole: "Please select a current role",
+        // technologies: "Please select a technology",
       }));
     }
   };
@@ -392,10 +421,10 @@ const InterviewDetails = ({
 
   // Extract the selected technology name to avoid unnecessary re-renders
   const selectedTechnologyName = useMemo(() => {
-    return selectedTechnologyies && selectedTechnologyies.length > 0
-      ? selectedTechnologyies[0].TechnologyMasterName || null
+    return additionalDetailsData?.currentRole
+      ? additionalDetailsData?.currentRole || null
       : null;
-  }, [selectedTechnologyies]);
+  }, [additionalDetailsData]);
 
   // to re-fetch rate cards on mount if a technology is already selected (e.g., after refresh)
   useEffect(() => {
@@ -621,9 +650,9 @@ const InterviewDetails = ({
   };
 
   const technologyOptions =
-    technologies?.map((tech) => ({
-      value: tech.TechnologyMasterName,
-      label: tech.TechnologyMasterName,
+    currentRoles?.map((tech) => ({
+      value: tech.roleName,
+      label: tech.roleLabel,
     })) || [];
 
   const filteredSkills =
@@ -676,6 +705,15 @@ const InterviewDetails = ({
     // console.log('Trimmed skill:', trimmedSkill);
     if (!trimmedSkill) {
       // console.log('Empty skill name, returning');
+      return;
+    }
+
+    // Check if max skills limit reached
+    if (selectedSkills.length >= 20) {
+      setErrors((prev) => ({
+        ...prev,
+        skills: "Maximum 20 skills allowed",
+      }));
       return;
     }
 
@@ -736,16 +774,16 @@ const InterviewDetails = ({
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-x-6 gap-y-8">
         <div className="col-span-2 w-[50%] sm:col-span-6" ref={techPopupRef}>
           <DropdownWithSearchField
-            value={selectedTechnologyies[0]?.TechnologyMasterName || ""}
+            value={additionalDetailsData?.currentRole || ""}
             options={technologyOptions}
             onChange={handleTechnologyChange}
-            error={errors.technologies}
-            label="Select Your Comfortable Technology"
-            name="technology"
+            error={errors.currentRole}
+            label="Selected Role / Technology"
+            name="currentRole"
             required={true}
-            onMenuOpen={loadTechnologies}
-            loading={isTechnologiesFetching}
-            placeholder="Select Your Comfortable Technology"
+            onMenuOpen={loadCurrentRoles}
+            loading={isCurrentRolesFetching}
+            placeholder="Selected Role or Technology"
           />
         </div>
 

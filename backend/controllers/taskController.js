@@ -7,143 +7,134 @@ const { hasPermission } = require('../middleware/permissionMiddleware');
 const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 
 
-// Get all tasks
+// Get tasks with server-side search, filters, and pagination
 const getTasks = async (req, res) => {
   try {
     res.locals.loggedByController = true;
-    //<-----v1.0.1---
-    // Permission: Tasks.Create (or super admin override)
-    // const canCreate =
-    //   await hasPermission(res.locals?.effectivePermissions?.Tasks, 'View')
-    // if (!canCreate) {
-    //   return res.status(403).json({ message: 'Forbidden: missing Tasks.View permission' });
-    // }
-    //-----v1.0.1--->
 
-    const tasks = await Task.find().sort({ _id: -1 }).lean();
-    res.json(tasks);
+    const {
+      page = 0, // zero-based for frontend convenience
+      limit = 10,
+      search,
+      status,
+      priority,
+      dueDate, // "overdue" | "today" | "thisWeek"
+      assignedToId,
+      createdDate, // "last7" | "last30"
+    } = req.query;
+
+    // Use ownerId from auth middleware (res.locals.userId)
+    const { userId } = res.locals || {};
+    const ownerFilter = userId ? { ownerId: String(userId) } : {};
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = pageNum * limitNum;
+
+    // Build filter object
+    const filter = { ...ownerFilter };
+
+    // Text search on title, description, taskCode, assignedTo
+    if (search) {
+      const regex = { $regex: search, $options: "i" };
+      filter.$or = [
+        { title: regex },
+        { taskCode: regex },
+        { description: regex },
+        { assignedTo: regex },
+      ];
+    }
+
+    // Status filter (array or single)
+    if (status) {
+      const statusArr = Array.isArray(status) ? status : String(status).split(",").filter(Boolean);
+      if (statusArr.length) {
+        filter.status = { $in: statusArr };
+      }
+    }
+
+    // Priority filter
+    if (priority) {
+      const priorityArr = Array.isArray(priority) ? priority : String(priority).split(",").filter(Boolean);
+      if (priorityArr.length) {
+        filter.priority = { $in: priorityArr };
+      }
+    }
+
+    // Assigned To (only when provided and meaningful)
+    if (assignedToId && assignedToId !== "null" && assignedToId !== "undefined") {
+      filter.assignedToId = assignedToId;
+    }
+
+    // Due Date Filters
+    if (dueDate) {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+      if (dueDate === "overdue") {
+        filter.dueDate = { $lt: new Date() };
+      } else if (dueDate === "today") {
+        filter.dueDate = { $gte: todayStart, $lte: todayEnd };
+      } else if (dueDate === "thisWeek") {
+        const startOfWeek = new Date(todayStart);
+        // Monday as start of week
+        const day = startOfWeek.getDay();
+        const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+        startOfWeek.setDate(diff);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+        filter.dueDate = { $gte: startOfWeek, $lte: endOfWeek };
+      }
+    }
+
+    // Created Date Filters
+    if (createdDate) {
+      const now = new Date();
+      if (createdDate === "last7") {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        filter.createdAt = { $gte: sevenDaysAgo };
+      } else if (createdDate === "last30") {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(now.getDate() - 30);
+        filter.createdAt = { $gte: thirtyDaysAgo };
+      }
+    }
+
+    // Execute queries in parallel
+    const [tasks, total] = await Promise.all([
+      Task.find(filter)
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+
+      Task.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: tasks,
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum) || 0,
+        totalItems: total,
+        hasNext: pageNum + 1 < Math.ceil(total / limitNum),
+        hasPrev: pageNum > 0,
+        itemsPerPage: limitNum,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Error fetching tasks:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
-
-// GET /api/tasks - with search, filters, pagination
-// const getTasks = async (req, res) => {
-//   try {
-//     const {
-//       page = 1,
-//       limit = 10,
-//       search,
-//       status,
-//       priority,
-//       dueDate, // "overdue" | "today" | "thisWeek"
-//       assignedToId,
-//       createdDate, // "last7" | "last30"
-//       sortBy = "createdAt",
-//       sortOrder = "desc",
-//       ownerId
-//     } = req.query;
-//     let {  userId } = res.locals;
-//     const ownerId = userId;
-
-//     const pageNum = parseInt(page);
-//     const limitNum = parseInt(limit);
-//     const skip = (pageNum - 1) * limitNum;
-
-//     // Build filter object
-//     const filter =  ownerId ; // from JWT middleware
-// console.log("filter filter",filter )
-//     // Text search on title, description, taskCode
-//     if (search) {
-//       filter.$or = [
-//         { title: { $regex: search, $options: "i" } },
-//         { taskCode: { $regex: search, $options: "i" } },
-//         { description: { $regex: search, $options: "i" } },
-//         { assignedTo: { $regex: search, $options: "i" } }
-//       ];
-//     }
-
-//     // Status filter (array or single)
-//     if (status) {
-//       const statusArr = Array.isArray(status) ? status : [status];
-//       filter.status = { $in: statusArr };
-//     }
-
-//     // Priority filter
-//     if (priority) {
-//       const priorityArr = Array.isArray(priority) ? priority : [priority];
-//       filter.priority = { $in: priorityArr };
-//     }
-
-//     // Assigned To
-//     if (assignedToId && assignedToId !== "null" && assignedToId !== "undefined") {
-//       filter.assignedToId = assignedToId;
-//     }
-
-//     // Due Date Filters
-//     if (dueDate) {
-//       const now = new Date();
-//       const todayStart = new Date(now.setHours(0, 0, 0, 0));
-//       const todayEnd = new Date(now.setHours(23, 59, 59, 999));
-
-//       if (dueDate === "overdue") {
-//         filter.dueDate = { $lt: new Date() };
-//       } else if (dueDate === "today") {
-//         filter.dueDate = { $gte: todayStart, $lte: todayEnd };
-//       } else if (dueDate === "thisWeek") {
-//         const startOfWeek = new Date(todayStart);
-//         startOfWeek.setDate(todayStart.getDate() - todayStart.getDay() + 1); // Monday
-//         const endOfWeek = new Date(startOfWeek);
-//         endOfWeek.setDate(startOfWeek.getDate() + 6);
-//         filter.dueDate = { $gte: startOfWeek, $lte: endOfWeek };
-//       }
-//     }
-
-//     // Created Date Filters
-//     if (createdDate) {
-//       const now = new Date();
-//       if (createdDate === "last7") {
-//         const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
-//         filter.createdAt = { $gte: sevenDaysAgo };
-//       } else if (createdDate === "last30") {
-//         const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
-//         filter.createdAt = { $gte: thirtyDaysAgo };
-//       }
-//     }
-
-//     // Execute queries in parallel
-//     const [tasks, total] = await Promise.all([
-//       Task.find(filter)
-//         .sort({ [sortBy]: sortOrder === "desc" ? -1 : 1 })
-//         .skip(skip)
-//         .limit(limitNum)
-//         .lean(),
-
-//       Task.countDocuments(filter)
-//     ]);
-
-//     res.json({
-//       success: true,
-//       data: tasks,
-//       pagination: {
-//         current: pageNum,
-//         pages: Math.ceil(total / limitNum),
-//         total,
-//         hasNext: pageNum < Math.ceil(total / limitNum),
-//         hasPrev: pageNum > 1
-//       }
-//     });
-
-//   } catch (err) {
-//     console.error("Error fetching tasks:", err);
-//     res.status(500).json({ success: false, message: err.message });
-//   }
-// };
 
 
 // Create a new task
 const createTask = async (req, res) => {
-
   res.locals.loggedByController = true;
   res.locals.processName = "Create Task";
   //<-----v1.0.1---

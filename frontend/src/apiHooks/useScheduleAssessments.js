@@ -118,20 +118,26 @@ export const useScheduleAssessments = (arg) => {
   const hasViewPermission = effectivePermissions?.Assessments?.View;
   // const initialLoad = useRef(true);
 
-  // Determine call mode
-  const isOptionsMode = arg && typeof arg === "object" && !Array.isArray(arg);
-  // const legacyAssessmentId = !isOptionsMode ? arg : undefined;
+  // Determine call mode: either new options object or legacy assessmentId string
+  const isOptionsMode =
+    arg && typeof arg === "object" && !Array.isArray(arg);
+  const legacyAssessmentId =
+    !isOptionsMode && typeof arg === "string" ? arg : undefined;
 
-  // console.log("legacyAssessmentId", legacyAssessmentId);
-
+  // Normalized options object for advanced querying
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const options = isOptionsMode ? arg || {} : {};
 
   const params = useMemo(() => {
-    // if (!isOptionsMode) {
-    //   // Legacy behavior: only optional assessmentId
-    //   return legacyAssessmentId ? { assessmentId: legacyAssessmentId } : {};
-    // }
+    // Legacy mode: hook called with a single assessmentId string
+    if (!isOptionsMode) {
+      if (legacyAssessmentId) {
+        // Default type for legacy callers is scheduled assessments
+        return { assessmentId: legacyAssessmentId, type: "scheduled" };
+      }
+      // No assessment context → don't send any params
+      return {};
+    }
 
     const {
       assessmentId,
@@ -163,6 +169,7 @@ export const useScheduleAssessments = (arg) => {
     }
 
     if (Array.isArray(templates) && templates.length) {
+      // Backend expects comma-separated assessment template ids
       p.assessmentIds = templates.join(",");
     }
 
@@ -181,11 +188,7 @@ export const useScheduleAssessments = (arg) => {
     }
 
     return p;
-  }, [
-    isOptionsMode,
-    // legacyAssessmentId,
-    options,
-  ]);
+  }, [isOptionsMode, legacyAssessmentId, options]);
 
   /* -------------------------------------------------------------------------- */
   /*                               QUERY: LIST                                  */
@@ -233,7 +236,7 @@ export const useScheduleAssessments = (arg) => {
         responseAssessmentDashBoard: response?.assessmentsCompleted,
       };
     },
-    enabled: !!hasViewPermission,
+    enabled: !!hasViewPermission && (isOptionsMode || !!legacyAssessmentId),
     retry: 1,
     staleTime: 1000 * 60 * 5, // 5 minutes
     keepPreviousData: true,

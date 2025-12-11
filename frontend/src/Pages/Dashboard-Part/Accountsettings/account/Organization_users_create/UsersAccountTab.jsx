@@ -86,7 +86,7 @@ const UsersAccountTab = () => {
       selectedFilters.roles && selectedFilters.roles.length > 0
         ? selectedFilters.roles.join(",")
         : "",
-    page: currentPage, // API expects 1-based, we use 0-based internally
+    page: currentPage + 1, // backend expects 1-based page
     limit: 10,
   });
 
@@ -103,16 +103,18 @@ const UsersAccountTab = () => {
       selectedFilters.roles && selectedFilters.roles.length > 0
         ? selectedFilters.roles.join(",")
         : "",
-    page: currentPage, // API expects 1-based, we use 0-based internally
+    page: currentPage + 1, // backend expects 1-based page
     limit: 10,
   });
 
   const users = usersRes?.users || [];
-  // const pagination = usersRes?.pagination || {};
+  const userPagination = usersRes?.pagination || {};
   const superAdminUsers = superAdminData?.users || [];
   const superAdminPagination = superAdminData?.pagination || {};
   const pagination =
-    userType === "superAdmin" ? superAdminPagination : usersRes?.pagination;
+    userType === "superAdmin" ? superAdminPagination : userPagination;
+
+  console.log("superAdminUsers", superAdminUsers);
 
   // Select data and loading state based on type
   const dataSource = userType === "superAdmin" ? superAdminUsers : users;
@@ -423,12 +425,18 @@ const UsersAccountTab = () => {
     {
       key: "phone",
       header: "Phone",
-      render: (value) => value || "Not Provided",
+      render: (value, row) => {
+        if (row?.countryCode && row?.phone) {
+          return `${row.countryCode} ${row.phone}`;
+        }
+        return row?.phone || "Not Provided";
+      },
     },
     { key: "label", header: "Role", render: (value) => value || "Not Found" },
     {
       key: "status",
       header: "Status",
+
       render: (value) => {
         return value ? (
           <StatusBadge status={capitalizeFirstLetter(value)} />

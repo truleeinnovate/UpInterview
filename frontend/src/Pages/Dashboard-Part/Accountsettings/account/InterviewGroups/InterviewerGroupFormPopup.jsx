@@ -104,16 +104,12 @@ const InterviewerGroupFormPopup = () => {
   // <------------------- v.0.0.1 by Ranjith
   // getting only internal and admin only filtering data based for organization only
   useEffect(() => {
-    const interviewersArray =
-      interviewers?.data && Array.isArray(interviewers.data)
-        ? interviewers.data
-        : [];
+    const interviewersArray = Array.isArray(interviewers) ? interviewers : [];
 
-
-    if (interviewersArray) {
+    if (interviewersArray && interviewersArray.length > 0) {
       const filteredInterviewers = interviewersArray
         .filter((interviewer) => {
-          // Only include internal interviewers who are NOT admins
+          // Only include internal interviewers and admins
           return (
             interviewer.type === "internal" || interviewer.roleLabel === "Admin"
           );
@@ -126,7 +122,7 @@ const InterviewerGroupFormPopup = () => {
     } else {
       setUsers([]);
     }
-  }, [tenantId, interviewers?.data]);
+  }, [tenantId, interviewers]);
   // ----------------------------------->
 
   //<-----v1.0.2------

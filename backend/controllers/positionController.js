@@ -11,6 +11,7 @@ const {
   validateRoundDataStandard,
 } = require("../validations/positionValidation.js");
 const { hasPermission } = require("../middleware/permissionMiddleware");
+const { Users } = require("../models/Users");
 const { Interview } = require("../models/Interview/Interview.js");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
 
@@ -93,6 +94,7 @@ const createPosition = async (req, res) => {
       externalId: req.body.externalId || undefined,
       createdBy: req.body.ownerId, // Fixed: use req.body.ownerId instead of undefined ownerId
       positionCode, // Custom code added
+      status: req.body.status,
     };
 
     // Handle rounds if template exists
@@ -185,8 +187,24 @@ const updatePosition = async (req, res) => {
   const positionId = req.params.id;
   const { tenantId, ownerId, ...updateFields } = req.body;
 
+  // Determine if this is a standard template, in which case round
+  // fields should be optional/relaxed like in createPosition.
+  const isStandardType =
+    req.body.type === "standard" || req.body?.template?.type === "standard";
+
+  let schemaToUse = positionPatchValidationSchema;
+
+  // For standard templates, make rounds optional and use the relaxed
+  // round schema so we don't require assessmentId/interviewerType/
+  // interviewers when switching templates.
+  if (isStandardType) {
+    schemaToUse = positionPatchValidationSchema.fork(["rounds"], (field) =>
+      field.items(validateRoundDataStandard).optional()
+    );
+  }
+
   // Validate incoming PATCH data
-  const { error } = positionPatchValidationSchema.validate(req.body, {
+  const { error } = schemaToUse.validate(req.body, {
     abortEarly: false,
   });
   if (error) {
@@ -451,19 +469,34 @@ const deletePosition = async (req, res) => {
 };
 
 const getPositionById = async (req, res) => {
-  const { id } = req.params; // Position ID from URL params
-  const { tenantId } = req.query; // Optional tenant ID from query string
-
+  
   try {
-    // Build query - if tenantId provided, use it for filtering
-    const query = { _id: id };
-    if (tenantId) {
-      query.tenantId = tenantId;
+    const { id } = req.params; // Position ID from URL params
+    const {
+      actingAsUserId,
+      actingAsTenantId,
+    } = res.locals.auth;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: "Position ID is required",
+      });
     }
 
-    // Find position by ID (and optionally tenantId)
+    if (!actingAsUserId || !actingAsTenantId) {
+      return res.status(400).json({ message: "OwnerId or TenantId ID is required" });
+    }
+
+    const query = { _id: id };
+
+
     const position = await Position.findOne(query)
-      .populate("rounds") // Populate rounds if needed
+      .populate({
+        path: "rounds.interviewers",
+        model: "Contacts",
+        select: "firstName lastName email",
+      })
       .populate("skills") // Populate skills if needed
       .lean(); // Convert to plain JS object for performance
 

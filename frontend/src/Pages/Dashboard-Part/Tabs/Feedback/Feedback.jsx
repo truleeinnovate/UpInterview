@@ -44,7 +44,7 @@ import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyS
 const Feedback = () => {
   const navigate = useNavigate();
   useScrollLock(true);
-  const { interviewData, isLoading: interviewsLoading } = useInterviews();
+  // const { interviewData, isLoading: interviewsLoading } = useInterviews();
 
   // console.log("[Feedback] Debug:", {
   //   interviewData: !!interviewData,
@@ -57,9 +57,6 @@ const Feedback = () => {
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const organization = tokenPayload?.organization;
-  const tenantId = tokenPayload?.tenantId;
-  const ownerId = tokenPayload?.userId;
 
   // Get context data (removed unused variables)
   // const { user } = useCustomContext();

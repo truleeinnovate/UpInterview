@@ -9,6 +9,7 @@ const DragDropDashboard = ({
   onLayoutChange,
   customSettings,
   onSettingsChange,
+  isLoading = false,
 }) => {
   const [dashboardLayout, setDashboardLayout] = useState({
     kpiCards: [],
@@ -16,16 +17,6 @@ const DragDropDashboard = ({
   });
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDragDisabled, setIsDragDisabled] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (
-      dashboardLayout.kpiCards.length > 0 ||
-      dashboardLayout.charts.length > 0
-    ) {
-      setIsLoading(false);
-    }
-  }, [dashboardLayout]);
 
   useEffect(() => {
     // Initialize layout from props
@@ -270,7 +261,7 @@ const DragDropDashboard = ({
     );
   };
 
-  const LoadingView = () => (
+  const LoadingViewKPIs = () => (
     <div
       className={`grid gap-6 transition-colors ${
         customSettings.layout === "grid"
@@ -283,12 +274,40 @@ const DragDropDashboard = ({
       {Array.from({ length: 6 }).map((_, index) => (
         <div
           key={index}
-          className="animate-pulse bg-white rounded-xl shadow p-5 flex flex-col gap-4"
+          className="bg-white rounded-xl shadow p-5 flex flex-col gap-4"
         >
-          <div className="h-6 w-32 bg-gray-200 rounded"></div>
-          <div className="h-10 w-24 bg-gray-200 rounded"></div>
-          <div className="h-4 w-full bg-gray-200 rounded"></div>
-          <div className="h-4 w-2/3 bg-gray-200 rounded"></div>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="h-6 w-32 bg-gray-200 rounded shimmer mb-2"></div>
+              <div className="h-10 w-24 bg-gray-200 rounded shimmer"></div>
+            </div>
+            <div className="h-12 w-12 bg-gray-200 rounded shimmer"></div>
+          </div>
+          <div className="h-4 w-2/3 bg-gray-200 rounded shimmer"></div>
+          <div className="h-4 w-full bg-gray-200 rounded shimmer"></div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const LoadingViewCharts = () => (
+    <div
+      className={`grid gap-6 transition-colors mt-6 ${
+        customSettings.layout === "grid"
+          ? "sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-2"
+          : customSettings.layout === "list"
+          ? "grid-cols-1"
+          : "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+      } ${isEditMode ? "bg-gray-50 rounded-lg p-4" : ""}`}
+    >
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div
+          key={index}
+          className="bg-white rounded-xl shadow p-5 flex flex-col gap-4"
+        >
+          <div className="flex items-center justify-between">
+            <div className="h-80 w-full bg-gray-200 rounded shimmer mb-2"></div>
+          </div>
         </div>
       ))}
     </div>
@@ -331,7 +350,7 @@ const DragDropDashboard = ({
 
       {/* KPI Cards Section */}
       {isLoading ? (
-        <LoadingView />
+        <LoadingViewKPIs />
       ) : (
         <div
           className={`grid gap-6 transition-colors ${
@@ -349,19 +368,23 @@ const DragDropDashboard = ({
       )}
 
       {/* Charts Section */}
-      <div
-        className={`grid gap-6 transition-colors ${
-          customSettings.layout === "grid"
-            ? "grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-            : customSettings.layout === "list"
-            ? "grid-cols-1"
-            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
-        } ${isEditMode ? "bg-gray-50 rounded-lg p-4" : ""}`}
-      >
-        {dashboardLayout.charts
-          .filter((item) => item.visible || isEditMode)
-          .map((item, index) => renderChart(item, index))}
-      </div>
+      {isLoading ? (
+        <LoadingViewCharts />
+      ) : (
+        <div
+          className={`grid gap-6 transition-colors ${
+            customSettings.layout === "grid"
+              ? "grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+              : customSettings.layout === "list"
+              ? "grid-cols-1"
+              : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
+          } ${isEditMode ? "bg-gray-50 rounded-lg p-4" : ""}`}
+        >
+          {dashboardLayout.charts
+            .filter((item) => item.visible || isEditMode)
+            .map((item, index) => renderChart(item, index))}
+        </div>
+      )}
     </div>
   );
 };

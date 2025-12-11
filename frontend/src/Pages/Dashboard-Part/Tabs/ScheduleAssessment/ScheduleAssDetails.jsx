@@ -22,36 +22,26 @@ function ScheduleAssDetails() {
   const { state } = useLocation();
   const schedule = state?.schedule;
   //console.log('schedule--', schedule);
-  console.log('SCHEDULE ============================================>', schedule);
+  
 
-  const {
-    fetchScheduledAssessments,
-    assessmentData,
-    fetchAssessmentQuestions,
-  } = useAssessments();
+  const { fetchAssessmentQuestions, useAssessmentById } = useAssessments();
   const [candidates, setCandidates] = useState(schedule?.candidates || []);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("candidate");
-  const [assessment, setAssessment] = useState(null);
   const [toggleStates, setToggleStates] = useState([]);
   const [assessmentQuestions, setAssessmentQuestions] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(true);
 
-  console.log("SCHEDULE ASSESSMENTS ============================> ", fetchScheduledAssessments);
-  console.log("ASSESSMENT ===========================> ", assessment)
+  const normalizedAssessmentId =
+    schedule?.assessmentId &&
+    typeof schedule.assessmentId === "object" &&
+    schedule.assessmentId._id
+      ? schedule.assessmentId._id
+      : schedule?.assessmentId;
 
-  useEffect(() => {
-    const loadData = async () => {
-      const foundAssessment = assessmentData?.find(
-        (a) => a._id === schedule?.assessmentId
-      );
-      if (foundAssessment) {
-        setAssessment(foundAssessment);
-        // setIsModalOpen(true);
-      }
-    };
-    loadData();
-  }, [schedule, assessmentData]);
+  const { assessmentById: assessment } = useAssessmentById(
+    normalizedAssessmentId
+  );
 
   useEffect(() => {
     if (assessment) {

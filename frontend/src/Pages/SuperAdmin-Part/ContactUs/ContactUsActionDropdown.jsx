@@ -6,7 +6,7 @@ const ContactUsActionDropdown = ({ row, onView, onEdit, onDelete, permissions })
   const menuRef = useRef(null);
 
   const handleView = useCallback(() => {
-    onView(row?._id || 'unknown');
+    onView(row);
     setIsOpen(false);
   }, [onView, row]);
 

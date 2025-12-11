@@ -12,8 +12,8 @@
 import Cookies from "js-cookie";
 import { Outlet, useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
-import { useGroupsQuery } from "../../../../../apiHooks/useInterviewerGroups";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { usePaginatedGroups } from "../../../../../apiHooks/useInterviewerGroups";
+import { useEffect, useRef, useState } from "react";
 import Toolbar from "../../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../../Components/Shared/Table/TableView";
 import KanbanView from "../../../../../Components/Shared/KanbanCommon/KanbanCommon";
@@ -131,14 +131,8 @@ const InterviewerGroups = () => {
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload.tenantId;
 
-  // <------------------------- v1.0.0
-  const {
-    data: groups = [],
-    isLoading: groupsLoading,
-    error: groupError,
-  } = useGroupsQuery();
-
-  // v1.0.0 -------------------------->
+  // Page size for server-side pagination
+  const ITEMS_PER_PAGE = 10;
   const navigate = useNavigate();
   // const [selectedGroup, setSelectedGroup] = useState(null)
   // const [editingGroup, setEditingGroup] = useState(null)
@@ -177,9 +171,6 @@ const InterviewerGroups = () => {
   // For simplicity and focus, I'm omitting the filter state/logic for now,
   // but the Toolbar is ready to accept these props.
 
-  // Pagination Constants - Assuming a fixed page size for local filtering demo
-  const pageSize = 9; // Display 9 groups per "page" in the UI
-
   // 1. ADD FILTER STATES 👇
   const filterIconRef = useRef(null);
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
@@ -196,42 +187,23 @@ const InterviewerGroups = () => {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   // 1. END ADD FILTER STATES 👆
 
-  // 3. Filter and Search Logic
-  const filteredAndSearchedGroups = useMemo(() => {
-    let result = groups;
+  // Server-side groups with pagination & filters
+  const {
+    groups,
+    pagination,
+    isLoading: groupsLoading,
+  } = usePaginatedGroups({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: searchQuery,
+    status: selectedFilters.status.join(","),
+  });
 
-    // 1. Search Filtering (Case-insensitive)
-    if (searchQuery) {
-      result = result.filter(
-        (group) =>
-          group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          group.usersNames.some((name) =>
-            name.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-      );
-    }
+  const totalItems = pagination?.totalItems || 0;
+  const totalPages = pagination?.totalPages || 0;
 
-    // 2. Filter by Status 👇
-    if (selectedFilters.status.length > 0) {
-      result = result.filter((group) =>
-        selectedFilters.status.includes(group.status)
-      );
-    }
-    // 2. Filter by Status 👆
-
-    return result;
-  }, [groups, searchQuery, selectedFilters]); // 👈 Add selectedFilters dependency
-
-  // Pagination Calculation
-  const totalItems = filteredAndSearchedGroups.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-
-  // Slice data for the current page
-  const startIndex = currentPage * pageSize;
-  const currentGroups = filteredAndSearchedGroups.slice(
-    startIndex,
-    startIndex + pageSize
-  );
+  // Current page data comes directly from the API
+  const currentGroups = groups || [];
 
   // Handlers for Toolbar
   const handleSearch = (event) => {
@@ -240,13 +212,13 @@ const InterviewerGroups = () => {
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 0) {
+    if (pagination?.hasPrev) {
       setCurrentPage((prev) => prev - 1);
     }
   };
 
   const handleNextPage = () => {
-    if (currentPage < totalPages - 1) {
+    if (pagination?.hasNext) {
       setCurrentPage((prev) => prev + 1);
     }
   };
@@ -291,7 +263,7 @@ const InterviewerGroups = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (groups.length !== 0) {
+    if (totalItems !== 0) {
       // Check initial data length
       setIsFilterPopupOpen((prev) => !prev);
     }
@@ -451,8 +423,8 @@ const InterviewerGroups = () => {
   // ---------------------- Dynamic Empty State Messages using Utility ------------------------
   const isSearchActive = searchQuery.length > 0; // Assuming no separate filters implemented yet
   // Use the total count before search filtering
-  const initialDataCount = groups?.length || 0;
-  const currentFilteredCount = filteredAndSearchedGroups.length || 0;
+  const initialDataCount = totalItems || 0;
+  const currentFilteredCount = currentGroups.length || 0;
 
   const emptyStateMessage = getEmptyStateMessage(
     isSearchActive,

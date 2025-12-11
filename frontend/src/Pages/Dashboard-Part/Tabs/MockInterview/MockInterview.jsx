@@ -178,12 +178,13 @@ const MockInterview = () => {
   const [cancelSchedule, setCancelSchedule] = useState(false);
   const filterIconRef = useRef(null);
 
-  const { mockinterviewData, isLoading, totalCount } = useMockInterviews({
-    search: searchQuery,
-    page: currentPage, // This is 0-based, will be converted to 1-based in hook
-    limit: rowsPerPage,
-    filters: selectedFilters,
-  });
+  const { mockinterviewData, isLoading, totalCount, totalPages } =
+    useMockInterviews({
+      search: searchQuery,
+      page: currentPage, // This is 0-based, will be converted to 1-based in hook
+      limit: rowsPerPage,
+      filters: selectedFilters,
+    });
   console.log("mockinterviewData", mockinterviewData);
 
   // v1.0.2 <--------------------------------------------
@@ -403,7 +404,7 @@ const MockInterview = () => {
   // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
   // const startIndex = currentPage * rowsPerPage;
 
-  const totalPages = Math.ceil(totalCount / rowsPerPage);
+  // const totalPages = Math.ceil(totalCount / rowsPerPage);
   // const startIndex = currentPage * rowsPerPage;
 
   // const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
@@ -709,7 +710,7 @@ const MockInterview = () => {
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
-              dataLength={totalCount}
+              dataLength={totalPages}
               searchPlaceholder="Search by Title, Technology..."
               filterIconRef={filterIconRef}
             />

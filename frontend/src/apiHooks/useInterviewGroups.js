@@ -3,12 +3,19 @@ import axios from "axios";
 
 import { config } from "../config";
 import { usePermissions } from "../Context/PermissionsContext";
+import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
+
+const getTenantId = () => {
+  const authToken = AuthCookieManager.getAuthToken();
+  return authToken ? JSON.parse(atob(authToken.split(".")[1])).tenantId : null;
+};
 
 export const useInterviewGroups = () => {
   const queryClient = useQueryClient();
   const { sharingPermissionscontext = {} } = usePermissions() || {};
   const interviewGroupPermissions =
     sharingPermissionscontext?.interviewGroup || {};
+  const tenantId = getTenantId();
 
   const {
     data: interviewGroupData = [],
@@ -16,12 +23,17 @@ export const useInterviewGroups = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["interviewGroups", interviewGroupPermissions],
+    queryKey: ["interviewGroups", interviewGroupPermissions, tenantId],
     queryFn: async () => {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/groups`);
-      return response.data.reverse();
+      if (!tenantId) return [];
+
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/groups/data`,
+        { params: { tenantId } }
+      );
+      return Array.isArray(response.data) ? response.data.reverse() : [];
     },
-    enabled: !!interviewGroupPermissions,
+    enabled: !!interviewGroupPermissions && !!tenantId,
     retry: 1,
     staleTime: 1000 * 60 * 5,
   });
@@ -48,7 +60,9 @@ export const useInterviewGroups = () => {
   const isLoading = isQueryLoading || isMutationLoading;
 
   return {
+    // Full list of groups for the tenant (used in Round forms, templates, etc.)
     interviewGroupData,
+    groups: interviewGroupData,
     isLoading,
     isQueryLoading,
     isMutationLoading,

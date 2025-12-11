@@ -143,7 +143,8 @@ const MultiStepForm = () => {
   // Interview Details
   const [interviewDetails, setInterviewDetails] = useState({
     skills: [],
-    technologies: [],
+    // technologies: [],
+    currentRole: "",
     rates: {
       junior: { usd: 0, inr: 0, isVisible: true },
       mid: { usd: 0, inr: 0, isVisible: false },
@@ -251,14 +252,12 @@ const MultiStepForm = () => {
   const { isProfileCompleteStateOrg, roleName, contactEmailFromOrg } =
     location.state || {};
   const type = "individual";
-  const { matchedContact, loading: contactLoading } = useIndividualLogin(
-    {
+  const { matchedContact, loading: contactLoading } = useIndividualLogin({
     type,
     linkedIn_email,
     isProfileCompleteStateOrg,
-    contactEmailFromOrg
-  }
-  );
+    contactEmailFromOrg,
+  });
   const [formLoading, setFormLoading] = useState(false);
   useEffect(() => {
     setFormLoading(contactLoading);
@@ -309,7 +308,8 @@ const MultiStepForm = () => {
   });
   const [interviewDetailsData, setInterviewDetailsData] = useState({
     skills: [],
-    technologies: [],
+    currentRole: "",
+    // technologies: [],
     previousInterviewExperience: "",
     previousInterviewExperienceYears: "",
     interviewFormatWeOffer: [],
@@ -353,7 +353,8 @@ const MultiStepForm = () => {
       });
       setInterviewDetailsData({
         skills: matchedContact.skills || [],
-        technologies: matchedContact.technologies || [],
+        currentRole: matchedContact.currentRole || "",
+        // technologies: matchedContact.currentRole || [],
         previousInterviewExperience:
           matchedContact.previousInterviewExperience || "",
         previousInterviewExperienceYears:
@@ -435,6 +436,29 @@ const MultiStepForm = () => {
     }, 1000); // check every second (or use context instead)
     return () => clearInterval(interval);
   }, [authToken]);
+
+  // Add this useEffect to sync currentRole when user goes from step 1 to step 2
+  useEffect(() => {
+    // Sync from AdditionalDetails to InterviewDetails when going forward
+    if (currentStep === 2 && additionalDetailsData.currentRole) {
+      setInterviewDetailsData((prev) => ({
+        ...prev,
+        currentRole: additionalDetailsData.currentRole,
+      }));
+    }
+
+    // Sync from InterviewDetails to AdditionalDetails when going back
+    if (currentStep === 1 && interviewDetailsData.currentRole) {
+      setAdditionalDetailsData((prev) => ({
+        ...prev,
+        currentRole: interviewDetailsData.currentRole,
+      }));
+    }
+  }, [
+    currentStep,
+    additionalDetailsData.currentRole,
+    interviewDetailsData.currentRole,
+  ]);
 
   const [rateCards, setRateCards] = useState([]);
 
@@ -617,8 +641,11 @@ const MultiStepForm = () => {
           interviewDetailsData.skills?.filter((skill) => skill !== null) || [];
         if (validSkills.length === 0)
           currentErrors.skills = "Skills are required";
-        if (!interviewDetailsData.technologies?.length)
-          currentErrors.technologies = "Technologies are required";
+        if (!interviewDetailsData.currentRole)
+          currentErrors.currentRole = "Current role is required";
+
+        // if (!interviewDetailsData.technologies?.length)
+        //   currentErrors.technologies = "Technologies are required";
         if (!interviewDetailsData.previousInterviewExperience) {
           currentErrors.previousInterviewExperience =
             "Previous interview experience is required";
@@ -931,7 +958,10 @@ const MultiStepForm = () => {
         }),
         ...(currentStep >= 2 && {
           skills: interviewDetailsData.skills,
-          technologies: interviewDetailsData.technologies,
+          currentRole:
+            interviewDetailsData.currentRole ||
+            additionalDetailsData.currentRole,
+          // currentRole: interviewDetailsData.currentRole,
           previousInterviewExperience:
             interviewDetailsData.previousInterviewExperience,
           previousInterviewExperienceYears:
@@ -1004,7 +1034,8 @@ const MultiStepForm = () => {
         skills: (interviewDetailsData.skills || []).filter(
           (skill) => skill !== null
         ),
-        technologies: interviewDetailsData.technologies || [],
+        currentRole: interviewDetailsData.currentRole,
+        // technologies: interviewDetailsData.technologies || [],
         previousInterviewExperience:
           interviewDetailsData.previousInterviewExperience,
         previousInterviewExperienceYears:
@@ -1046,7 +1077,8 @@ const MultiStepForm = () => {
           ...contactData,
           // Map frontend field names to backend field names
           skills: interviewDetails.skills,
-          technologies: interviewDetails.technologies,
+          // currentRole: interviewDetails.currentRole,
+          // technologies: interviewDetails.technologies,
           PreviousExperienceConductingInterviews:
             interviewDetails.previousInterviewExperience,
           PreviousExperienceConductingInterviewsYears:
@@ -1069,6 +1101,7 @@ const MultiStepForm = () => {
         ownerId: matchedContact.ownerId,
         tenantData,
       };
+
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/Individual/Signup`,
         requestData,
@@ -1251,7 +1284,7 @@ const MultiStepForm = () => {
       selectedSkills,
       previousInterviewExperience,
       isMockInterviewSelected,
-      selectedTechnologyies,
+      // selectedTechnologyies,
       yearsOfExperience,
       // File metadata only (names/paths, not File objects)
       filePreview, // URL string
@@ -1281,7 +1314,7 @@ const MultiStepForm = () => {
     selectedSkills,
     previousInterviewExperience,
     isMockInterviewSelected,
-    selectedTechnologyies,
+    // selectedTechnologyies,
     yearsOfExperience,
     filePreview,
     resumeFile,
@@ -1340,8 +1373,8 @@ const MultiStepForm = () => {
       if (parsed.selectedSkills) setSelectedSkills(parsed.selectedSkills);
       // if (parsed.previousInterviewExperience) setPreviousInterviewExperience(parsed.previousInterviewExperience);
       // if (parsed.isMockInterviewSelected) setIsMockInterviewSelected(parsed.isMockInterviewSelected);
-      if (parsed.selectedTechnologyies)
-        setSelectedTechnologyies(parsed.selectedTechnologyies);
+      // if (parsed.selectedTechnologyies)
+      //   setSelectedTechnologyies(parsed.selectedTechnologyies);
       if (parsed.yearsOfExperience !== undefined)
         setYearsOfExperience(parsed.yearsOfExperience);
       if (parsed.filePreview) setFilePreview(parsed.filePreview);
@@ -1435,8 +1468,9 @@ const MultiStepForm = () => {
                       <InterviewDetails
                         errors={errors}
                         setErrors={setErrors}
-                        selectedTechnologyies={selectedTechnologyies}
-                        setSelectedTechnologyies={setSelectedTechnologyies}
+                        additionalDetailsData={additionalDetailsData}
+                        // selectedTechnologyies={selectedTechnologyies}
+                        // setSelectedTechnologyies={setSelectedTechnologyies}
                         interviewDetailsData={interviewDetailsData}
                         setInterviewDetailsData={setInterviewDetailsData}
                         selectedSkills={selectedSkills}
@@ -1455,6 +1489,7 @@ const MultiStepForm = () => {
                         key={`interview-details-${
                           additionalDetailsData?.yearsOfExperience || 0
                         }`}
+                        setAdditionalDetailsData={setAdditionalDetailsData} // <-- Add this
                       />
                     )}
                     {currentStep === 3 && (

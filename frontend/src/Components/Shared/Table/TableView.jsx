@@ -187,11 +187,13 @@ const TableView = ({
                     {columns.map((column) => (
                       <td
                         key={`${row._id}-${column.key}`}
-                        className="px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis"
+                        className={`px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis ${
+                          column.cellClassName || ""
+                        }`}
                       >
                         {column.render
                           ? column.render(row[column.key], row)
-                          : row[column.key] || "N/A"}
+                          : row[column.key] || ""}
                       </td>
                     ))}
                     {actions.length > 0 && (

@@ -8,12 +8,13 @@ import {
   Calendar,
   User,
   Briefcase,
+  Pencil,
+  Trash2,
   Clock,
   ArrowRight,
   ExternalLink,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-// import StatusBadge from "../../CommonCode-AllTabs/StatusBadge";
 import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
 import {
   Card,
@@ -31,6 +32,7 @@ import StatusBadge from "../../../../../Components/SuperAdminComponents/common/S
 function InterviewCard({
   interview,
   onView,
+  kanbanActions = [],
   onViewPosition,
   onViewInterview,
   onEditInterview,
@@ -52,8 +54,25 @@ function InterviewCard({
   }, [interview]);
   // const { getCandidateById, getPositionById, getInterviewerById } = useInterviewContext();
 
-  const [entityDetailsSidebar, setEntityDetailsSidebar] = useState(null);
-  const [entityDetailsModal, setEntityDetailsModal] = useState(null);
+  // const visibleActions = kanbanActions.filter((action) => {
+  //   if (action.isVisible && !action.isVisible(interview)) return false;
+  //   return true;
+  // });
+
+  // const visibleActions = kanbanActions
+  //   .filter((action) => ["edit", "delete"].includes(action.key)) // Keep only edit & delete
+  //   .filter((action) => {
+  //     if (action.isVisible && !action.isVisible(interview)) return false;
+  //     return true;
+  //   });
+
+  // Get Edit & Delete actions from kanbanActions
+  const editAction = kanbanActions.find((a) => a.key === "edit");
+  const deleteAction = kanbanActions.find((a) => a.key === "delete");
+
+  const isDraft = interview?.status === "Draft";
+  const showEdit = editAction && isDraft;
+  const showDelete = !!deleteAction;
 
   // const candidate = getCandidateById(interview.candidateId);
   // const position = getPositionById(interview.positionId);
@@ -108,8 +127,38 @@ function InterviewCard({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="w-full"
+        className="w-full relative group"
       >
+        {/* DIRECT EDIT & DELETE BUTTONS - TOP RIGHT */}
+        {(showEdit || showDelete) && (
+          <div className="absolute top-3 right-3 flex gap-2 z-10">
+            {showEdit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  editAction.onClick(interview);
+                }}
+                className="p-2 rounded-md bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 transition-colors"
+                title="Edit Interview"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            )}
+            {showDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteAction.onClick(interview);
+                }}
+                className="p-2 rounded-md bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition-colors"
+                title="Delete Interview"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        )}
+
         <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300 gradient-card shadow-card">
           <CardContent className="p-3 sm:p-5">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0">

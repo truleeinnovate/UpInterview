@@ -461,28 +461,30 @@ const ColumnManager = ({
   };
 
   const handleDrop = (e, targetIndex, targetType) => {
-    e.preventDefault();
-    if (!draggedItem || draggedItem.item.locked) return;
+  e.preventDefault();
+  if (!draggedItem || draggedItem.item.locked) return;
 
-    const { item, sourceType } = draggedItem;
+  const { item, sourceType } = draggedItem;
 
-    if (sourceType === "available" && targetType === "active") {
-      const newCol = {
-        ...item,
-        id: item.key,
-        visible: true,
-        width: item.width || "180px",
-        order: targetIndex,
-        locked: false,
-      };
+  if (sourceType === "available" && targetType === "active") {
+    const newCol = {
+      ...item,
+      id: item.key,
+      visible: true,
+      width: item.width || "180px",
+      order: targetIndex,
+      locked: false,
+      // Preserve label & type from original availableColumns
+      label: item.label,
+      type: item.type || "text",
+    };
 
-      const newActive = [...activeColumns];
-      newActive.splice(targetIndex, 0, newCol);
-      const reordered = newActive.map((c, i) => ({ ...c, order: i }));
-      setActiveColumns(reordered);
+    const newActive = [...activeColumns];
+    newActive.splice(targetIndex, 0, newCol);
+    setActiveColumns(newActive.map((c, i) => ({ ...c, order: i })));
 
-      setAvailableToAdd((prev) => prev.filter((c) => c.key !== item.key));
-    }
+    setAvailableToAdd(prev => prev.filter(c => c.key !== item.key));
+  }
 
     if (sourceType === "active" && targetType === "active") {
       const fromIndex = activeColumns.findIndex((c) => c.id === item.id);

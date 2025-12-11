@@ -659,6 +659,7 @@ const ReportDetail = () => {
   const [chartData, setChartData] = useState({}); // Chart datasets
   const [kpis, setKpis] = useState([]); // KPI config
   const [charts, setCharts] = useState([]); // Chart config
+  const [isLoading, setIsLoading] = useState(false);
 
   const [reportMeta, setReportMeta] = useState({
     title: "",
@@ -815,6 +816,7 @@ const ReportDetail = () => {
     if (!force && lastFetchedId.current === reportIdParam) return;
 
     try {
+      setIsLoading(true);
       const response = await generateReportMutation.mutateAsync(reportIdParam);
       if (!response) return;
 
@@ -866,6 +868,8 @@ const ReportDetail = () => {
       lastFetchedId.current = reportIdParam;
     } catch (error) {
       console.error("Failed to fetch report:", error);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -881,20 +885,18 @@ const ReportDetail = () => {
   // Handle Column Change & Save
   const handleColumnsChange = useCallback(
     async (newColumns) => {
-      // 1. Update UI immediately (Optimistic update)
       setColumns(newColumns);
 
       try {
-        // 2. Format payload for backend (clean up unnecessary UI props if needed)
         const formattedColumns = newColumns.map((c) => ({
           key: c.key,
-          label: c.label,
+          label: c.label, // ← SEND LABEL
+          type: c.type || "text", // ← SEND TYPE
           visible: c.visible ?? true,
-          order: c.order ?? 0,
-          width: c.width,
+          order: c.order ?? 999,
+          width: c.width || "180px",
         }));
 
-        // 3. Call the API hook
         await saveColumnConfig.mutateAsync({
           templateId: reportId,
           selectedColumns: formattedColumns,
@@ -902,8 +904,8 @@ const ReportDetail = () => {
 
         notify.success("Column layout saved!");
       } catch (err) {
-        console.error("Failed to save columns:", err);
-        notify.error("Failed to save column layout.");
+        notify.error("Failed to save columns");
+        console.error(err);
       }
     },
     [reportId, saveColumnConfig]
@@ -1035,10 +1037,20 @@ const ReportDetail = () => {
       return;
     }
 
-    // 1. Initialize jsPDF
+    // Capitalize headers
+    const formattedHeaders = headers.map((h) => capitalizeFirstLetter(h));
+
+    // Capitalize every cell in body rows
+    const formattedRows = rows.map((row) =>
+      row.map((cell) =>
+        typeof cell === "string" ? capitalizeFirstLetter(cell) : cell
+      )
+    );
+
+    // Initialize jsPDF
     const doc = new jsPDF();
 
-    // 2. Add Title
+    // Add Title
     doc.setFontSize(18);
     doc.text(reportMeta.title || "Report Export", 14, 22);
 
@@ -1049,14 +1061,14 @@ const ReportDetail = () => {
     // 3. Generate Table
     autoTable(doc, {
       startY: 40,
-      head: [headers],
-      body: rows,
+      head: [formattedHeaders],
+      body: formattedRows,
       theme: "grid",
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [33, 121, 137] }, // Adjust to your brand blue if needed
+      headStyles: { fillColor: [33, 121, 137] },
     });
 
-    // 4. Save
+    // Save
     doc.save(
       `${reportMeta.title || "report"}_${
         new Date().toISOString().split("T")[0]
@@ -1064,7 +1076,125 @@ const ReportDetail = () => {
     );
   };
 
-  console.log("COLUMNS ===============================> ", columns);
+  const LoadingView = () => (
+    <div className="space-y-6 animate-fade-in p-6">
+      <div className="flex sm:flex-col md:flex-col lg:flex-col xl:items-center 2xl:items-center sm:gap-4 md:gap-4 lg:gap-4 justify-between">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigate("/analytics/reports")}
+            className="p-2 rounded-lg border text-custom-blue border-gray-300 hover:bg-gray-50 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center text-2xl font-semibold text-custom-blue gap-2 mb-3">
+              <div className="h-8 w-80 bg-gray-200 rounded shimmer"></div>
+              <div className="h-8 w-32 bg-gray-200 rounded shimmer"></div>
+            </div>
+            <div className="h-6 w-32 bg-gray-200 rounded shimmer"></div>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          {/* YOUR ORIGINAL BUTTONS + NEW SAVE BUTTON */}
+          <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            <Settings className="w-4 h-4" />
+            <span>Columns</span>
+          </button>
+          {/* <button
+            className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:opacity-90"
+          >
+            <Save className="w-4 h-4" />
+            <span>Apply & Save</span>
+          </button> */}
+
+          <button className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+            <Download className="w-4 h-4" />
+            <span>Export PDF</span>
+          </button>
+          <button className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg">
+            <Download className="w-4 h-4" />
+            <span>Export CSV</span>
+          </button>
+        </div>
+      </div>
+      <div className="flex items-center">
+        <Tooltip title="Dashboard">
+          <span className="cursor-pointer">
+            <LayoutDashboard
+              className={`text-xl mr-4 ${
+                activeView === "dashboard"
+                  ? "text-custom-blue"
+                  : "text-gray-500"
+              }`}
+            />
+          </span>
+        </Tooltip>
+        <Tooltip title="Table">
+          <span className="cursor-pointer">
+            <Table
+              className={`text-xl ${
+                activeView === "table" ? "text-custom-blue" : "text-gray-500"
+              }`}
+            />
+          </span>
+        </Tooltip>
+      </div>
+      <div className="mb-6 border rounded-lg bg-white">
+        {/* Header shimmer */}
+        <div className="flex items-center justify-between p-6">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold text-custom-blue">Filters</h3>
+            <div className="h-4 w-12 bg-gray-200 rounded shimmer"></div>
+          </div>
+          <div className="h-9 w-28 bg-gray-300 rounded shimmer"></div>
+        </div>
+
+        {/* Fields shimmer grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 p-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <div className="h-4 w-32 bg-gray-200 rounded shimmer"></div>
+              <div className="h-10 w-full bg-gray-200 rounded shimmer"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* KPI Cards */}
+      <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-xl shadow px-4 py-8 flex flex-col gap-4"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="h-6 w-32 bg-gray-200 rounded shimmer mb-2"></div>
+                <div className="h-10 w-24 bg-gray-200 rounded shimmer"></div>
+              </div>
+              <div className="h-12 w-12 bg-gray-200 rounded shimmer"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-xl shadow p-5 flex flex-col gap-4"
+          >
+            <div className="flex items-center justify-between">
+              <div className="h-80 w-full bg-gray-200 rounded shimmer mb-2"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (isLoading) {
+    return <LoadingView />;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in p-6">

@@ -38,13 +38,44 @@ const ShareAssessment = ({
   // v1.0.5 <--------------------------------------------------------------------
   useScrollLock(isOpen);
   // v1.0.5 -------------------------------------------------------------------->
+  const DROPDOWN_LIMIT = 50;
+
+  // Server-side search + infinite scroll state for assessment templates
+  const [assessmentLimit, setAssessmentLimit] = useState(DROPDOWN_LIMIT);
+  const [assessmentSearch, setAssessmentSearch] = useState("");
+  const [debouncedAssessmentSearch, setDebouncedAssessmentSearch] =
+    useState("");
+
+  // Server-side search + infinite scroll state for candidates
+  const [candidateLimit, setCandidateLimit] = useState(DROPDOWN_LIMIT);
+  const [candidateSearch, setCandidateSearch] = useState("");
+  const [debouncedCandidateSearch, setDebouncedCandidateSearch] =
+    useState("");
+
   // <---------------------- v1.0.1
-  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  const {
+    assessmentData,
+    totalCount: totalAssessments,
+    isQueryLoading: assessmentsLoading,
+    fetchAssessmentQuestions,
+  } = useAssessments({
+    page: 0,
+    limit: assessmentLimit,
+    ...(debouncedAssessmentSearch && { search: debouncedAssessmentSearch }),
+  });
+  // {
+  // type: "allData",
+  // }
   const {
     candidateData,
-    loading,
+    totalCandidates,
+    isQueryLoading: candidatesLoading,
     refetch: refetchCandidates,
-  } = useCandidates();
+  } = useCandidates({
+    page: 1,
+    limit: candidateLimit,
+    ...(debouncedCandidateSearch && { search: debouncedCandidateSearch }),
+  });
   const queryClient = useQueryClient();
   // <---------------------- v1.0.1 >
 
@@ -161,6 +192,30 @@ const ShareAssessment = ({
     }
   };
 
+  // Debounce assessment and candidate search inputs
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedAssessmentSearch(assessmentSearch.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [assessmentSearch]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedCandidateSearch(candidateSearch.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [candidateSearch]);
+
+  // Reset limits when debounced search terms change
+  useEffect(() => {
+    setAssessmentLimit(DROPDOWN_LIMIT);
+  }, [debouncedAssessmentSearch]);
+
+  useEffect(() => {
+    setCandidateLimit(DROPDOWN_LIMIT);
+  }, [debouncedCandidateSearch]);
+
   //
   useEffect(() => {
     if (fromscheduleAssessment) {
@@ -206,6 +261,18 @@ const ShareAssessment = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleAssessmentMenuScrollToBottom = () => {
+    if (assessmentsLoading) return;
+    if (!totalAssessments || assessmentLimit >= totalAssessments) return;
+    setAssessmentLimit((prev) => prev + DROPDOWN_LIMIT);
+  };
+
+  const handleAssessmentSearchChange = (inputValue, actionMeta) => {
+    if (actionMeta?.action === "input-change") {
+      setAssessmentSearch(inputValue || "");
+    }
+  };
 
   // Assessment selection handlers
   const handleAssessmentInputChange = (e) => {
@@ -295,22 +362,17 @@ const ShareAssessment = ({
     }
     setShowDropdownAssessment(false);
   };
-  // <---------------------- v1.0.1 >
 
-  const handleCandidateInputChange = (e) => {
-    const inputValue = e.target.value;
-    setCandidateInput(inputValue);
+  const handleCandidateMenuScrollToBottom = () => {
+    if (candidatesLoading) return;
+    if (!totalCandidates || candidateLimit >= totalCandidates) return;
+    setCandidateLimit((prev) => prev + DROPDOWN_LIMIT);
+  };
 
-    const filtered = candidateData.filter(
-      (candidate) =>
-        `${candidate.FirstName} ${candidate.LastName}`
-          .toLowerCase()
-          .includes(inputValue.toLowerCase()) ||
-        candidate.Email.toLowerCase().includes(inputValue.toLowerCase())
-    );
-
-    setFilteredCandidates(filtered);
-    setShowDropdownCandidate(true);
+  const handleCandidateSearchChange = (inputValue, actionMeta) => {
+    if (actionMeta?.action === "input-change") {
+      setCandidateSearch(inputValue || "");
+    }
   };
 
   const handleDropdownToggle = () => {
@@ -439,6 +501,23 @@ const ShareAssessment = ({
     setIsLoading(false);
   };
 
+  const assessmentsForDropdown =
+    selectedAssessment &&
+    selectedAssessment._id &&
+    !(assessmentData || []).some((a) => a._id === selectedAssessment._id)
+      ? [selectedAssessment, ...(assessmentData || [])]
+      : assessmentData || [];
+
+  const candidatesForDropdown =
+    selectedCandidates.length > 0
+      ? [
+          ...selectedCandidates.filter(
+            (sel) => !(candidateData || []).some((c) => c._id === sel._id)
+          ),
+          ...(candidateData || []),
+        ]
+      : candidateData || [];
+
   // <-------------------------------v1.0.3 >
   if (!isOpen) return null;
 
@@ -512,7 +591,7 @@ const ShareAssessment = ({
                     name="Assessment"
                     value={selectedAssessment?._id || ""}
                     options={
-                      assessmentData?.map((assessment) => ({
+                      assessmentsForDropdown?.map((assessment) => ({
                         value: assessment._id,
                         label: `${assessment.AssessmentTitle} (${
                           assessment.type === "standard" ? "Standard" : "Custom"
@@ -520,16 +599,20 @@ const ShareAssessment = ({
                       })) || []
                     }
                     onChange={(e) => {
-                      const assessmentId = e?.target?.value;
+                      const assessmentId = e?.target?.value || e?.value;
                       if (assessmentId) {
-                        const assessment = assessmentData.find(
-                          (a) => a._id === assessmentId
-                        );
-                        if (assessment) {
-                          handleAssessmentSelect(assessment);
+                        const selected =
+                          assessmentsForDropdown.find(
+                            (a) => a._id === assessmentId
+                          ) || null;
+                        if (selected) {
+                          handleAssessmentSelect(selected);
                         }
                       }
                     }}
+                    onInputChange={handleAssessmentSearchChange}
+                    onMenuScrollToBottom={handleAssessmentMenuScrollToBottom}
+                    loading={assessmentsLoading}
                     error={errors.Assessment}
                     placeholder="Search assessment templates..."
                     isSearchable={true}
@@ -566,7 +649,7 @@ const ShareAssessment = ({
                   name="Candidate"
                   value={selectedCandidates.map((c) => c._id)}
                   options={
-                    candidateData?.map((candidate) => ({
+                    candidatesForDropdown?.map((candidate) => ({
                       value: candidate._id,
                       label: `${candidate.FirstName} ${candidate.LastName}`,
                       subLabel: candidate.Email,
@@ -590,7 +673,9 @@ const ShareAssessment = ({
 
                     // Add new selections
                     addedIds.forEach((id) => {
-                      const candidate = candidateData.find((c) => c._id === id);
+                      const candidate = candidatesForDropdown.find(
+                        (c) => c._id === id
+                      );
                       if (candidate) {
                         setSelectedCandidates((prev) => [...prev, candidate]);
                       }
@@ -608,11 +693,13 @@ const ShareAssessment = ({
                       setErrors({ ...errors, Candidate: "" });
                     }
                   }}
+                  onInputChange={handleCandidateSearchChange}
+                  onMenuScrollToBottom={handleCandidateMenuScrollToBottom}
                   error={errors.Candidate}
                   placeholder="Search by name or email..."
                   isSearchable={true}
                   isMulti={true}
-                  loading={loading}
+                  loading={candidatesLoading}
                 />
 
                 {/* Select All checkbox outside dropdown */}
@@ -635,9 +722,11 @@ const ShareAssessment = ({
                           setSelectedCandidates([]);
                         }
                       }}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-custom-blue focus:ring-custom-blue/80 border-gray-300 rounded"
                       disabled={
-                        !candidateData || candidateData.length === 0 || loading
+                        !candidateData ||
+                        candidateData.length === 0 ||
+                        candidatesLoading
                       }
                     />
                     <span className="text-sm font-medium text-gray-700">
@@ -667,7 +756,7 @@ const ShareAssessment = ({
                               {candidate.LastName}
                             </span>
                             {candidate.Email && (
-                              <span className="ml-1 text-xs text-blue-600">
+                              <span className="ml-1 text-xs text-custom-blue">
                                 ({candidate.Email})
                               </span>
                             )}

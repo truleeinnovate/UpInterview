@@ -148,7 +148,9 @@ const AddSupportForm = ({ mode }) => {
     // addOrUpdateCandidate
   } = useCustomContext();
 
-  const { addOrUpdateCandidate, candidateData } = useCandidates();
+  const { addOrUpdateCandidate, candidateData } = useCandidates({
+    candidateLimit: Infinity,
+  });
 
   console.log("currentRole", currentRole);
 
@@ -915,7 +917,7 @@ const AddSupportForm = ({ mode }) => {
                 </div>
                 {/* Phone */}
                 <div>
-                <PhoneField
+                  <PhoneField
                     countryCodeValue={formData.CountryCode}
                     onCountryCodeChange={handleChange}
                     countryCodeError={errors.CountryCode}

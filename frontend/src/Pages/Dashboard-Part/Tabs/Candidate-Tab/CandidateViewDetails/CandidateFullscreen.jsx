@@ -16,40 +16,15 @@ import {
   Edit,
   FileText,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCandidates } from "../../../../../apiHooks/useCandidates";
+import { useCandidateById } from "../../../../../apiHooks/useCandidates";
 
 Modal.setAppElement("#root");
 
 const CandidateFullscreen = () => {
-  const { candidateData, isQueryLoading } = useCandidates();
   const navigate = useNavigate();
-  const [candidate, setCandidate] = useState({});
   const { id } = useParams();
-
-  useEffect(() => {
-    let isMounted = true; // flag to track component mount status
-
-    const fetchCandidate = async () => {
-      try {
-        const selectedCandidate = candidateData.find(
-          (candidate) => candidate._id === id
-        );
-        if (isMounted && selectedCandidate) {
-          setCandidate(selectedCandidate);
-        }
-      } catch (error) {
-        console.error("Error fetching candidate:", error);
-      }
-    };
-
-    fetchCandidate();
-
-    return () => {
-      isMounted = false; // cleanup function to avoid state updates after unmount
-    };
-  }, [id, candidateData]);
+  const { candidate, isLoading } = useCandidateById(id);
 
   const CandidateLoadingView = () => (
     <div className="h-full flex flex-col">
@@ -229,7 +204,7 @@ const CandidateFullscreen = () => {
     </div>
   );
 
-  if (isQueryLoading) {
+  if (isLoading || !candidate) {
     return <CandidateLoadingView />;
   }
 

@@ -24,6 +24,8 @@ const DropdownWithSearchField = forwardRef(
       label,
       required = false,
       onMenuOpen,
+      onMenuClose,
+      menuIsOpen,
       isMulti = false,
       loading = false,
       onKeyDown,
@@ -31,6 +33,8 @@ const DropdownWithSearchField = forwardRef(
       creatable = false,
       allowCreateOnEnter = false, // New prop to control create on enter behavior
       autoComplete,
+      onInputChange,
+      onMenuScrollToBottom,
     },
     ref
   ) => {
@@ -57,7 +61,6 @@ const DropdownWithSearchField = forwardRef(
               inputElement &&
               !inputElement.hasAttribute("data-keyboard-attached")
             ) {
-
               // Strongly discourage browser autofill on this internal input
               inputElement.setAttribute("autocomplete", "new-password");
               // Clear any prefilled value (e.g., email autofill) so default
@@ -151,7 +154,6 @@ const DropdownWithSearchField = forwardRef(
     componentsMap.NoOptionsMessage = NoOptionsMessage;
 
     const handleKeyDown = (e) => {
-
       // Only process Enter key for creatable fields or when allowCreateOnEnter is true
       if (e.key === "Enter" && (creatable || allowCreateOnEnter)) {
         // If this is an input inside the dropdown and we have a value, handle Enter to create
@@ -250,6 +252,11 @@ const DropdownWithSearchField = forwardRef(
               allowCreateOnEnter={allowCreateOnEnter}
               onKeyDown={handleKeyDown}
               onMenuOpen={onMenuOpen}
+              onMenuClose={onMenuClose}
+              menuIsOpen={menuIsOpen}
+              onInputChange={onInputChange}
+              onMenuScrollToBottom={onMenuScrollToBottom}
+              closeMenuOnScroll={false}
               isLoading={loading}
             />
           </div>

@@ -44,13 +44,7 @@ const StandardTemplateTableView = ({ templatesData }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   // v1.0.0 <------------------------------------------------------------
-  const handleDelete = (template) => {
-    console.log("Deleting:", template);
-  };
 
-  const handleDetails = (template) => {
-    console.log("Viewing details:", template);
-  };
 
   const [menuOpen, setMenuOpen] = useState(null);
   const [menuDirection, setMenuDirection] = useState("down");
@@ -101,7 +95,7 @@ const StandardTemplateTableView = ({ templatesData }) => {
   const renderRounds = (rounds) => {
     if (!Array.isArray(rounds) || rounds.length === 0) return "No rounds";
     return rounds.map((item, index) => (
-      <span key={index}>
+      <span key={item._id || `${item.roundTitle || "round"}-${index}`}>
         {item.roundTitle}
         {index !== rounds.length - 1 && " → "}
       </span>
@@ -272,7 +266,7 @@ const StandardTemplateTableView = ({ templatesData }) => {
                           {/* Templates under this format */}
                           {templates.map((template) => (
                             <tr
-                              key={template.id}
+                              key={template._id || template.id}
                               className="hover:bg-gray-50 cursor-pointer"
                             >
                               {/* Template column */}

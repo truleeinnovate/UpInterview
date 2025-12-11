@@ -295,8 +295,9 @@ const reportTemplateSchema = new Schema({
       filters: {
         default: { type: Schema.Types.Mixed },
         available: [{
+          order: Number,
           label: String,
-          key: String, label: String,
+          key: String,
           type: { type: String, enum: ["select", "multiselect", "date", "text", "user"] },
           options: [{ label: String, value: String }],
           required: { type: Boolean, default: false },
@@ -373,21 +374,31 @@ const TenantReportAccessSchema = new mongoose.Schema({
   },
 
   // SINGLE ACCESS OBJECT — ROLES + USERS IN ONE PLACE
-  access: {
-    roles: [{
-      type: String,
-    }],
-    users: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Users'
-    }]
-  },
+access: {
+  roles: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Role'  // or whatever your role model is called
+  }],
+  users: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Users'
+  }]
+},
+// Add this inside TenantReportAccessSchema
+// schedule: {
+//   enabled: { type: Boolean, default: false },
+//   frequency: {
+//     type: String,
+//     enum: ['never', 'daily', 'weekly', 'monthly'],
+//     default: 'never'
+//   }
+// },
 
-  // LAST GENERATED — per tenant
-  lastGenerated: {
-    at: { type: Date },
-    by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' }
-  },
+//   // LAST GENERATED — per tenant
+//   lastGenerated: {
+//     at: { type: Date },
+//     by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' }
+//   },
 
   // Who shared it
   sharedBy: {
@@ -405,6 +416,45 @@ const TenantReportAccessSchema = new mongoose.Schema({
 
 // One rule per tenant + template
 TenantReportAccessSchema.index({ tenantId: 1, templateId: 1 }, { unique: true });
+
+
+// models/ReportUsage.js
+const ReportUsageSchema = new mongoose.Schema({
+  tenantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tenant',
+    required: true,
+  },
+
+  templateId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ReportTemplate',
+    required: true,
+  },
+
+  usage: {
+    generationCount: {
+      type: Number,
+      default: 0,
+    },
+    lastGeneratedAt: {
+      type: Date,
+      default: null,
+    },
+    lastGeneratedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Users',
+      default: null,
+    },
+  },
+
+}, {
+  timestamps: true
+});
+
+// Unique per tenant + template
+ReportUsageSchema.index({ tenantId: 1, templateId: 1 }, { unique: true });
+
 
 
 // =============================================================================
@@ -895,6 +945,7 @@ trendsConfigSchema.index({ tenantId: 1, configId: 1 }, { unique: true });
 module.exports = {
   ReportTemplate: mongoose.model("ReportTemplate", reportTemplateSchema),
   TenantReportAccess: mongoose.model("TenantReportAccess", TenantReportAccessSchema),
+  ReportUsage: mongoose.model("ReportUsage", ReportUsageSchema),
   // DashboardConfig: mongoose.model("DashboardConfig", dashboardConfigSchema),
   TrendsConfig: mongoose.model("TrendsConfig", trendsConfigSchema),
   // SavedQuery: mongoose.model("SavedQuery", savedQuerySchema),

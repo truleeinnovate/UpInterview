@@ -1,64 +1,370 @@
 // v1.0.0 - Ashok - fixed ShareReportPopup.
+// v1.0.1 - Ashok - changed UI
 
 // components/ShareReportPopup.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useMemo } from "react";
 import { X, Users, Shield, Check, Search } from "lucide-react";
 import { useUsers } from "../../../../apiHooks/useUsers.js";
 import { useRolesQuery } from "../../../../apiHooks/useRoles.js";
-import {
-  useShareReport,
-  useReportAccess,
-} from "../../../../apiHooks/useReportTemplates.js";
+import { useShareReport } from "../../../../apiHooks/useReportTemplates.js";
+import { useAllReportAccess } from "../../../../apiHooks/useReportTemplates.js"; // ← NEW: Tenant-wide access
 import { notify } from "../../../../services/toastService.js";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { useUserProfile } from "../../../../apiHooks/useUsers.js";
+import { usePermissions } from "../../../../Context/PermissionsContext";
+import { ChevronDown } from "lucide-react";
+
+const DropdownWithSearchField = forwardRef(
+  (
+    {
+      value,
+      options = [],
+      name,
+      onChange,
+      error,
+      isCustomName = false,
+      setIsCustomName = undefined,
+      containerRef,
+      disabled = false,
+      isSearchable = true, // Default is true
+      label,
+      required = false,
+      isMulti = false,
+      loading = false,
+      placeholder,
+    },
+    ref
+  ) => {
+    // Internal State
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const internalContainerRef = useRef(null);
+    const inputRef = useRef(null);
+
+    // Forward ref
+    useEffect(() => {
+      if (ref) {
+        if (typeof ref === "function") ref(inputRef.current);
+        else if (ref && "current" in ref) ref.current = inputRef.current;
+      }
+    }, [ref]);
+
+    // Click Outside to Close
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (
+          internalContainerRef.current &&
+          !internalContainerRef.current.contains(event.target)
+        ) {
+          setIsOpen(false);
+          setSearchTerm(""); // Clear search when closing
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Flatten options
+    const flattenOptions = (opts) => {
+      if (!Array.isArray(opts)) return [];
+      const flat = [];
+      opts.forEach((item) => {
+        if (item && Array.isArray(item.options)) {
+          item.options.forEach((child) => flat.push(child));
+        } else if (item) {
+          flat.push(item);
+        }
+      });
+      return flat;
+    };
+
+    const flatOptions = flattenOptions(options);
+
+    // Filter options based on search term (ONLY if searchable)
+    const filteredOptions = isSearchable
+      ? flatOptions.filter((opt) =>
+          opt.label?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : flatOptions;
+
+    // Handle Option Selection
+    const handleSelect = (optionValue) => {
+      if (disabled) return;
+
+      if (isMulti) {
+        const currentValues = Array.isArray(value) ? value : [];
+        let newValues;
+        if (currentValues.includes(optionValue)) {
+          newValues = currentValues.filter((v) => v !== optionValue);
+        } else {
+          newValues = [...currentValues, optionValue];
+        }
+        onChange({ target: { name: name, value: newValues } });
+      } else {
+        onChange({ target: { name: name, value: optionValue } });
+        setIsOpen(false);
+        setSearchTerm("");
+      }
+    };
+
+    // Handle "Other / Custom" selection
+    const handleSwitchToCustom = () => {
+      if (typeof setIsCustomName === "function") {
+        setIsCustomName(true);
+        onChange({ target: { name: name, value: "" } });
+        setIsOpen(false);
+      }
+    };
+
+    // Determine Display Value
+    const getDisplayValue = () => {
+      if (isSearchable && isOpen) return searchTerm; // Show typing when searching
+
+      if (isMulti) {
+        const selectedCount = Array.isArray(value) ? value.length : 0;
+        return selectedCount > 0 ? `${selectedCount} selected` : "";
+      }
+
+      // Single Select
+      const selectedOption = flatOptions.find((o) => o.value === value);
+      return selectedOption ? selectedOption.label : "";
+    };
+
+    return (
+      <div className="w-full" ref={containerRef}>
+        {label && (
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {label} {required && <span className="text-red-500">*</span>}
+          </label>
+        )}
+
+        {/* --- MODE 1: CUSTOM TEXT INPUT --- */}
+        {isCustomName ? (
+          <div className="relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                onChange({ target: { name: name, value: newValue } });
+                if (newValue === "" && typeof setIsCustomName === "function") {
+                  setIsCustomName(false);
+                }
+              }}
+              placeholder={placeholder || `Enter Custom ${label}`}
+              className={`block w-full rounded-md shadow-sm h-10 px-3 border outline-none
+                ${
+                  error
+                    ? "border-red-500 focus:ring-1 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-1 focus:ring-custom-blue"
+                }`}
+            />
+            <button
+              title="Close Custom Input"
+              type="button"
+              onClick={() => {
+                onChange({ target: { name, value: "" } });
+                if (typeof setIsCustomName === "function")
+                  setIsCustomName(false);
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-100 p-1 rounded-full hover:bg-gray-200"
+            >
+              <X className="h-4 w-4 text-gray-500" />
+            </button>
+          </div>
+        ) : (
+          /* --- MODE 2: DROPDOWN (Searchable or Standard) --- */
+          <div className="relative" ref={internalContainerRef}>
+            <div
+              className="relative cursor-pointer"
+              onClick={() => !disabled && setIsOpen(true)}
+            >
+              {/* Only show Search Icon if it IS searchable */}
+              {isSearchable && (
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
+              )}
+
+              <input
+                type="text"
+                readOnly={!isSearchable} // Blocks typing on mobile/desktop
+                placeholder={
+                  isOpen && isSearchable
+                    ? "Type to search..."
+                    : placeholder || `Select ${label || "Option"}`
+                }
+                // If not searchable, ALWAYS show display value. If searchable + open, show search term.
+                value={
+                  !isSearchable || !isOpen ? getDisplayValue() : searchTerm
+                }
+                onChange={(e) => {
+                  if (!isSearchable) return; // Prevent search updates if disabled
+                  setSearchTerm(e.target.value);
+                  if (!isOpen) setIsOpen(true);
+                }}
+                onFocus={() => setIsOpen(true)}
+                disabled={disabled}
+                className={`w-full py-2.5 border rounded-md outline-none transition-shadow
+                    ${isSearchable ? "pl-10" : "pl-4"} pr-10
+                    ${error ? "border-red-500" : "border-gray-300"}
+                    ${
+                      isOpen
+                        ? "ring-2 ring-custom-blue border-custom-blue"
+                        : "focus:ring-2 focus:ring-custom-blue"
+                    }
+                    ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
+                    ${!isSearchable ? "cursor-pointer caret-transparent" : ""} 
+                `}
+                // caret-transparent hides the blinking cursor if it's not searchable
+              />
+
+              <ChevronDown
+                className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-transform ${
+                  isOpen ? "rotate-180" : ""
+                }`}
+              />
+            </div>
+
+            {/* Dropdown List */}
+            {isOpen && !disabled && (
+              <div className="absolute z-[9999] w-full bg-white border border-gray-100 rounded-md shadow-xl mt-1 max-h-60 overflow-y-auto">
+                {loading && (
+                  <div className="p-3 text-center text-gray-400 text-sm">
+                    Loading...
+                  </div>
+                )}
+
+                {!loading && filteredOptions.length === 0 && (
+                  <div className="p-3 text-center text-gray-400 text-sm">
+                    No options found
+                  </div>
+                )}
+
+                {!loading &&
+                  filteredOptions.map((option) => {
+                    const isSelected = isMulti
+                      ? Array.isArray(value) && value.includes(option.value)
+                      : value === option.value;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleSelect(option.value)}
+                        className={`w-full flex justify-between items-center px-4 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors
+                        ${
+                          isSelected
+                            ? "bg-blue-50 font-medium text-custom-blue"
+                            : "text-gray-700"
+                        }
+                      `}
+                      >
+                        <span>{option.label}</span>
+                        {isSelected && (
+                          <Check className="w-4 h-4 text-custom-blue" />
+                        )}
+                      </button>
+                    );
+                  })}
+
+                {setIsCustomName && (
+                  <div className="border-t border-gray-100 p-1 sticky bottom-0 bg-white">
+                    <button
+                      type="button"
+                      onClick={handleSwitchToCustom}
+                      className="w-full text-left px-4 py-2 text-sm text-custom-blue hover:bg-blue-50 rounded-lg font-medium transition-colors flex items-center gap-2"
+                    >
+                      <span className="text-lg">+</span> Enter Custom Name
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {error && <p className="text-red-500 text-xs pt-1 ml-1">{error}</p>}
+      </div>
+    );
+  }
+);
 
 const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = useState("roles"); // "roles" | "users"
+
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: accessData, isLoading: accessLoading } =
-    useReportAccess(templateId);
-  const shareMutation = useShareReport();
-
+  // Global hooks
+  const { userProfile } = useUserProfile();
+  const { effectivePermissions_RoleName } = usePermissions();
   const { usersRes } = useUsers({ limit: 1000 });
   const { data: allRoles } = useRolesQuery({ fetchAllRoles: true });
-  console.log("USERS ========================================> ", usersRes);
 
-  // Normalize roles — your API returns different structures
+  const dropdownRef = useRef(null);
+
+  // ONE API CALL: Get access for ALL reports in tenant
+  const { data: accessMap = {}, isLoading: accessLoading } =
+    useAllReportAccess();
+
+  // Current access for this specific template
+  // const currentAccess = accessMap[templateId] || { roles: [], users: [] };
+  
+  const currentAccess = useMemo(() => {
+    return accessMap[templateId] || { roles: [], users: [] };
+  }, [accessMap, templateId]);
+
+  const shareMutation = useShareReport();
+
+  // Load current sharing when popup opens
+  useEffect(() => {
+    if (!isOpen || accessLoading) return;
+
+    const roleIds =
+      currentAccess?.roles?.map((r) => r?._id?.toString() || r) || [];
+    const userIds =
+      currentAccess?.users?.map((u) => u?._id?.toString() || u) || [];
+
+    setSelectedRoles(roleIds);
+    setSelectedUsers(userIds);
+  }, [currentAccess, isOpen, accessLoading]);
+
+  // Normalize roles (hide current user's role + organization only)
   const organizationRoles = (allRoles || [])
     .filter((role) => role.roleType === "organization")
     .map((role) => ({
       _id: role._id,
       name: role.label || role.roleName || role.name || "Unnamed Role",
+      label: role.label || role.roleName || role.name || "Unnamed Role",
       usersCount: role.usersCount || role.users?.length || 0,
-    }));
+    }))
+    .filter((role) => role.name !== effectivePermissions_RoleName); // Hide own role
 
-  // Normalize users
-  const usersList = (usersRes?.users || []).map((user) => ({
-    _id: user?._id,
-    name: user?.firstName + " " + user?.lastName,
-    email: user?.email,
-    role: user?.roleName,
-    status: user?.status,
-  }));
+  // Normalize users (exclude current user)
+  const usersList = (usersRes?.users || [])
+    .filter((user) => user?._id !== userProfile?._id)
+    .map((user) => {
+      const roleObj = allRoles?.find((r) => r._id === user.roleId);
+      return {
+        _id: user._id,
+        name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        email: user.email,
+        role: roleObj?.label || roleObj?.name || user?.roleName || "No Role",
+        status: user.status,
+      };
+    });
 
-  // Filter users by search
+  // Search filter
   const filteredUsers = usersList.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Load current sharing
-  useEffect(() => {
-    if (accessData && isOpen) {
-      setSelectedRoles(accessData.roles?.map((r) => r._id || r) || []);
-      setSelectedUsers(accessData.users?.map((u) => u._id || u) || []);
-    }
-  }, [accessData, isOpen]);
-
+  // Toggle handlers
   const toggleRole = (roleId) => {
     setSelectedRoles((prev) =>
       prev.includes(roleId)
@@ -93,199 +399,132 @@ const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
     );
   };
 
+  // Detect changes
+  const hasChanges =
+    JSON.stringify(currentAccess.roles?.map((r) => r._id).sort() || []) !==
+      JSON.stringify(selectedRoles.sort()) ||
+    JSON.stringify(currentAccess.users?.map((u) => u._id).sort() || []) !==
+      JSON.stringify(selectedUsers.sort());
+
   if (!isOpen) return null;
+
+  // --------------- Left and right and Search + dropdown ----------------------
+  const roleOptions = organizationRoles.map((role) => ({
+    label: role.name,
+    value: role._id,
+  }));
+
+  const userOptions = filteredUsers.map((user) => ({
+    label: user.name,
+    value: user._id,
+  }));
+
+  const handleSelectionChange = (e) => {
+    const { value } = e.target;
+
+    if (activeTab === "roles") {
+      setSelectedRoles(value);
+    } else {
+      setSelectedUsers(value);
+    }
+  };
+
+  const tabOptions = [
+    { label: "Role", value: "roles" },
+    { label: "Users", value: "users" },
+  ];
+  // ------------------------------------------------------
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-2 sticky top-0 bg-white z-10">
-          <h2 className="sm:text-lg md:text-xl lg:text-xl xl:text-2xl 2xl:text-2xl font-bold text-custom-blue">
+        <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white">
+          <h2 className="sm:text-xl md:text-xl lg:text-xl xl:text-2xl 2xl:text-2xl font-bold text-custom-blue">
             Share Report
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition"
+            className="p-2 hover:bg-gray-100 rounded-full"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
+        <div className="px-6 py-3 mt-4 mx-6 text-custom-blue text-sm border-b bg-custom-blue/10 font-medium mb-6">
+          Select who can access this report — you can share it with specific
+          roles or individual users.
+        </div>
+        <div className="flex sm:flex-col md:flex-col sm:justify-start md:justify-start justify-between items-center gap-4 mb-6 px-6 w-full">
+          {/* SEARCH + DROPDOWN COMBINED */}
+          <div className="w-[70%]">
+            <DropdownWithSearchField
+              name={activeTab}
+              placeholder={
+                activeTab === "roles"
+                  ? "Search Role"
+                  : "Search Username, Email"
+              }
+              value={activeTab === "roles" ? selectedRoles : selectedUsers}
+              options={activeTab === "roles" ? roleOptions : userOptions}
+              onChange={handleSelectionChange}
+              isMulti={true}
+              isSearchable={true}
+              ref={dropdownRef}
+            />
+          </div>
+
+          {/* DROPDOWN SELECTOR */}
+          <div className="w-[30%] md:w-40">
+            <DropdownWithSearchField
+              value={activeTab}
+              options={tabOptions}
+              onChange={(e) => setActiveTab(e.target.value)}
+              isSearchable={false}
+              isMulti={false}
+              placeholder="Select Type"
+            />
+          </div>
+        </div>
 
         <div className="p-8 space-y-8">
-          {accessLoading ? (
-            <div className="text-center py-20">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-custom-blue border-t-transparent"></div>
+          {(selectedRoles.length > 0 || selectedUsers.length > 0) && (
+            <div className="bg-gradient-to-r from-custom-blue/10 to-green-500/10 px-4 py-2 rounded-xl border-2 border-custom-blue/30">
+              <p className="font-bold text-custom-blue mb-4 text-md">
+                Report will be shared with:
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {selectedRoles.map((id) => {
+                  const role = organizationRoles.find((r) => r._id === id);
+                  return (
+                    <span
+                      key={id}
+                      className="bg-custom-blue text-white px-4 py-2 rounded-full font-medium text-xs"
+                    >
+                      Role: {role?.name}
+                    </span>
+                  );
+                })}
+                {selectedUsers.map((id) => {
+                  const user = usersList.find((u) => u._id === id);
+                  return (
+                    <span
+                      key={id}
+                      className="bg-green-600 text-white px-4 py-2 rounded-full font-medium text-xs"
+                    >
+                      User: {user?.name}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
-          ) : (
-            <>
-              {/* ROLES */}
-              <div>
-                <div className="flex items-center gap-3 mb-5">
-                  <Shield className="w-6 h-6 text-custom-blue" />
-                  <h3 className="text-lg font-semibold">
-                    Roles ({selectedRoles.length} selected)
-                  </h3>
-                </div>
-
-                <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                  {organizationRoles.map((role) => {
-                    const isSelected = selectedRoles.includes(role._id);
-                    return (
-                      <button
-                        key={role._id}
-                        onClick={() => toggleRole(role._id)}
-                        className={`
-                          px-5 py-3 rounded-xl border-2 text-left transition-all duration-200
-                          ${
-                            isSelected
-                              ? "border-custom-blue bg-custom-blue/10 shadow-lg ring-2 ring-custom-blue/20"
-                              : "border-gray-200 hover:border-gray-300 bg-gray-50"
-                          }
-                        `}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              {role.name}
-                            </p>
-                            {/* <p className="text-xs text-gray-500 mt-1">
-                              {role.usersCount}{" "}
-                              {role.usersCount === 1 ? "user" : "users"}
-                            </p> */}
-                          </div>
-                          {isSelected && (
-                            <Check className="w-5 h-5 text-custom-blue mt-1" />
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="h-px bg-gray-200" />
-
-              {/* USERS */}
-              <div>
-                <div className="flex items-center gap-3 mb-5">
-                  <Users className="w-6 h-6 text-green-600" />
-                  <h3 className="text-lg font-semibold">
-                    Users ({selectedUsers.length} selected)
-                  </h3>
-                </div>
-
-                {/* Search */}
-                <div className="relative mb-4">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search users by name or email..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-custom-blue focus:border-transparent"
-                  />
-                </div>
-
-                <div className="max-h-96 overflow-y-auto border-2 border-gray-200 rounded-xl bg-gray-50">
-                  {filteredUsers.length === 0 ? (
-                    <p className="text-center py-12 text-gray-500">
-                      No users found
-                    </p>
-                  ) : (
-                    <div className="p-4 space-y-3">
-                      {filteredUsers.map((user) => {
-                        const isSelected = selectedUsers.includes(user._id);
-                        console.log(
-                          "USERS ========================================> ",
-                          user
-                        );
-
-                        return (
-                          <button
-                            key={user._id}
-                            onClick={() => toggleUser(user._id)}
-                            className={`
-                              w-full p-4 rounded-lg text-left transition-all duration-200 border-2
-                              ${
-                                isSelected
-                                  ? "border-green-500 bg-green-50 shadow-sm"
-                                  : "border-transparent hover:bg-white hover:shadow"
-                              }
-                            `}
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center justify-between w-full">
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <p className="font-medium text-gray-900">
-                                      {capitalizeFirstLetter(user?.name)}
-                                    </p>
-                                    <p className="text-sm text-custom-blue font-semibold">
-                                      ({capitalizeFirstLetter(user?.role)})
-                                    </p>
-                                  </div>
-                                  <p className="text-sm text-gray-600">
-                                    {user?.email}
-                                  </p>
-                                </div>
-
-                                <StatusBadge
-                                  status={capitalizeFirstLetter(user?.status)}
-                                />
-                              </div>
-                              {isSelected && (
-                                <Check className="w-6 h-6 text-green-600" />
-                              )}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Preview */}
-              {(selectedRoles.length > 0 || selectedUsers.length > 0) && (
-                <div className="bg-gradient-to-r from-custom-blue/10 to-green-500/10 p-6 rounded-xl border-2 border-custom-blue/30">
-                  <p className="font-bold text-custom-blue mb-4 text-lg">
-                    Report will be shared with:
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    {selectedRoles.map((id) => {
-                      const role = organizationRoles.find((r) => r._id === id);
-                      return (
-                        <span
-                          key={id}
-                          className="bg-custom-blue text-white px-4 py-2 rounded-full font-medium shadow"
-                        >
-                          Role: {role?.name}
-                        </span>
-                      );
-                    })}
-                    {selectedUsers.map((id) => {
-                      const user = usersList.find((u) => u._id === id);
-                      return (
-                        <span
-                          key={id}
-                          className="bg-green-600 text-white px-4 py-2 rounded-full font-medium shadow"
-                        >
-                          {user?.name}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-4 px-6 py-3 bg-gray-50 rounded-b-2xl">
+        <div className="flex justify-end gap-4 px-6 py-4 rounded-b-2xl mb-4">
           <button
             onClick={onClose}
-            className="px-6 py-2 text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition"
+            className="px-6 py-2.5 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-medium"
           >
             Cancel
           </button>
@@ -293,9 +532,10 @@ const ShareReportPopup = ({ templateId, isOpen, onClose }) => {
             onClick={handleShare}
             disabled={
               shareMutation.isPending ||
+              !hasChanges ||
               (selectedRoles.length === 0 && selectedUsers.length === 0)
             }
-            className="px-6 py-2 bg-custom-blue text-white font-bold rounded-xl hover:bg-custom-blue/90 disabled:opacity-50 shadow-lg transition"
+            className="px-6 py-2.5 bg-custom-blue text-white font-bold rounded-xl hover:bg-custom-blue/90 disabled:opacity-50 shadow-lg transition"
           >
             {shareMutation.isPending ? "Sharing..." : "Share Report"}
           </button>

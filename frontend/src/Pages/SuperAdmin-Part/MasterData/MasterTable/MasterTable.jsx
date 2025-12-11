@@ -115,6 +115,7 @@ const MasterTable = ({ permissions = {} }) => {
     loadQualifications,
     loadLocations,
   } = useMasterData(paramsData, "Super Admin", type);
+  console.log("masterData=======", masterData);
 
   // Fetch Data
   // useEffect(() => {
@@ -285,10 +286,20 @@ const MasterTable = ({ permissions = {} }) => {
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
+  const getPageTitle = (t) => {
+    if (!t) return "Master";
+    switch (t) {
+      case "technology":
+        return "Technologies";
+      case "universitycollege":
+        return "Colleges";
+      default:
+        return capitalizeFirstLetter(t);
+    }
+  };
+
   useEffect(() => {
-    document.title = `${
-      type ? capitalizeFirstLetter(type) : "Master"
-    } | Admin Portal`;
+    document.title = `${getPageTitle(type)} | Admin Portal`;
   }, [type]);
 
   // Search & Filter
@@ -360,7 +371,7 @@ const MasterTable = ({ permissions = {} }) => {
             displayName = row.LocationName;
             break;
           case "roles":
-            displayName = row.RoleName;
+            displayName = row.roleName;
             break;
           case "qualification":
             displayName = row.QualificationName;
@@ -512,23 +523,6 @@ const MasterTable = ({ permissions = {} }) => {
   // v1.0.1 ------------------------------------------------------------>
 
   const kanbanColumns = [
-    // {
-    //   key: "name",
-    //   header: "Master Name",
-    //   render: (value, row) => (
-    //     <div className="font-medium">
-    //       {row.IndustryName ||
-    //         row.TechnologyMasterName ||
-    //         row.SkillName ||
-    //         row.LocationName ||
-    //         row.RoleName ||
-    //         row.QualificationName ||
-    //         row.University_CollegeName ||
-    //         row.CompanyName ||
-    //         "N/A"}
-    //     </div>
-    //   ),
-    // },
     ...(type === "technology"
       ? [
           {
@@ -556,9 +550,11 @@ const MasterTable = ({ permissions = {} }) => {
     {
       key: "createdAt",
       header: "Created Date",
-      render: (value, row) => (
-        <span>{new Date(row.createdAt).toLocaleDateString() || "N/A"}</span>
-      ),
+      render: (value, row) => {
+        if (!row?.createdAt) return "N/A";
+        const d = new Date(row.createdAt);
+        return Number.isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
+      },
     },
     {
       key: "updatedBy",
@@ -681,6 +677,12 @@ const MasterTable = ({ permissions = {} }) => {
                   row.IndustryName ||
                   row.TechnologyMasterName ||
                   row.SkillName ||
+                  row.LocationName ||
+                  row.roleName ||
+                  row.QualificationName ||
+                  row.University_CollegeName ||
+                  row.CompanyName ||
+                  row.CategoryName ||
                   "N/A",
                 // subtitle: row.status || "Unknown",
               }))}

@@ -78,6 +78,12 @@ const StandardTemplates = ({ handleClone }) => {
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedFormats, setSelectedFormats] = useState([]);
   const [createdDatePreset, setCreatedDatePreset] = useState("");
+  // Selected filters state
+  const [selectedFilters, setSelectedFilters] = useState({
+    status: [],
+    formats: [],
+    createdDate: "",
+  });
 
   // UI states for dropdowns
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -105,10 +111,12 @@ const StandardTemplates = ({ handleClone }) => {
     deleteInterviewTemplate,
   } = useInterviewTemplates({
     search: searchQuery,
-    status: selectedStatus,
-    formats: selectedFormats,
+    // IMPORTANT: use applied filters (selectedFilters) so changes inside
+    // the popup only affect the API when the user clicks Apply.
+    status: selectedFilters.status,
+    formats: selectedFilters.formats,
     // rounds: roundsRange,
-    createdDate: createdDatePreset,
+    createdDate: selectedFilters.createdDate,
     page: currentPage,
     limit: itemsPerPage,
     type: activeTab,
@@ -118,12 +126,12 @@ const StandardTemplates = ({ handleClone }) => {
   const normalizedTemplates = templatesData;
   // Keep URL in sync with tab state
   useEffect(() => {
-    console.log("Current active tab:", activeTab);
+    
     const params = new URLSearchParams(window.location.search);
 
     // Only update URL if it doesn't match the current tab
     if (params.get("tab") !== activeTab) {
-      console.log("Updating URL to match active tab:", activeTab);
+     
       params.set("tab", activeTab);
       navigate({ search: params.toString() }, { replace: true });
     }
@@ -134,17 +142,17 @@ const StandardTemplates = ({ handleClone }) => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const tabFromUrl = params.get("tab");
-      console.log("URL changed, tab from URL:", tabFromUrl);
+     
 
       if (
         tabFromUrl &&
         (tabFromUrl === "standard" || tabFromUrl === "custom")
       ) {
-        console.log("Updating active tab from URL:", tabFromUrl);
+        
         setActiveTab(tabFromUrl);
       } else if (!tabFromUrl) {
         // If no tab in URL, set default and update URL
-        console.log("No tab in URL, setting to default");
+        
         setActiveTab("standard");
         params.set("tab", "standard");
         navigate({ search: params.toString() }, { replace: true });
@@ -163,12 +171,7 @@ const StandardTemplates = ({ handleClone }) => {
   }, [navigate]);
   // v1.0.1 ---------------------------------------------------------------------->
 
-  // Selected filters state
-  const [selectedFilters, setSelectedFilters] = useState({
-    status: [],
-    formats: [],
-    createdDate: "",
-  });
+  
 
   const normalizeSpaces = (str) =>
     str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
@@ -307,6 +310,22 @@ const StandardTemplates = ({ handleClone }) => {
       setFilterPopupOpen((prev) => !prev);
     }
   };
+
+  // When opening the filter popup, reset the draft filter state from
+  // the currently applied filters so that checkboxes/radios reflect
+  // what is actually applied. Changes inside the popup do NOT affect
+  // the API until Apply is clicked.
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedStatus(selectedFilters.status || []);
+      setSelectedFormats(selectedFilters.formats || []);
+      setCreatedDatePreset(selectedFilters.createdDate || "");
+
+      setIsStatusOpen(false);
+      setIsFormatOpen(false);
+      setIsCreatedDateOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
 
   // Filter handler functions are already defined above
   // Removed duplicate function declarations

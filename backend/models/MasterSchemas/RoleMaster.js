@@ -5,7 +5,9 @@ const mongoose = require("mongoose");
 
 const RoleMasterSchema = new mongoose.Schema(
   {
-    RoleName: { type: String, required: true },
+    roleName: { type: String, required: true },
+    roleLabel: { type: String, required: true },
+    roleCategory: { type: String, required: true },
     // v1.0.0 <-------------------------------------------------------
     // CreatedDate: { type: Date, default: Date.now },
     // CreatedBy: String,

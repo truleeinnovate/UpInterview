@@ -69,7 +69,7 @@ const ContactsSchema = new mongoose.Schema(
       },
     },
     lead_rate: { type: Number },
-    technologies: [String],
+    // technologies: [String],
     isReadyForMockInterviews: String, //this feild have to check from login page this feild data is not getting properly
     skills: [String],
     contactType: String,
@@ -122,7 +122,7 @@ const ContactsSchema = new mongoose.Schema(
       type: Number,
       min: 0,
       max: 10,
-      default: null
+      default: null,
     },
   },
   { timestamps: true }

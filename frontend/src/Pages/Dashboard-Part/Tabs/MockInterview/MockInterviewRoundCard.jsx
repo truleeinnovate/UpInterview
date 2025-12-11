@@ -66,7 +66,7 @@ const MoockRoundCard = ({
   };
 
 
-  console.log("mock interview",mockinterview);
+  
   const handleStatusChange = async (newStatus, reason = null) => {
     const roundData = {
       ...round,
@@ -76,7 +76,7 @@ const MoockRoundCard = ({
       completedDate: newStatus === "Completed",
       rejectionReason: reason || null,
     };
-    console.log("newStatus",newStatus);
+   
     
 
 
@@ -116,7 +116,7 @@ const MoockRoundCard = ({
        const savedMockId = response?.data?.mockInterview?._id || response?._id || response?.data?._id;
 
 
-       console.log("Status updated:", response.data);
+       
        // Show success toast
        if (savedMockId) {
         notify.success(`Round status updated to ${newStatus}`, {

@@ -6,8 +6,14 @@ import { Minimize, Expand, X } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { useUserProfile, useSingleContact } from "../../../../apiHooks/useUsers.js";
+import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 
 const statusOptions = ["New", "Assigned", "Inprogress", "Resolved", "Close"];
+
+const statusSelectOptions = statusOptions.map((status) => ({
+  value: status,
+  label: status,
+}));
 
 function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -106,8 +112,8 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
     updateTicketStatus();
   }, [updateTicketStatus]);
 
-  const handleStatusChange = useCallback((e) => {
-    setNewStatus(e.target.value);
+  const handleStatusChange = useCallback((option) => {
+    setNewStatus(option?.value || "");
     setError("");
   }, []);
 
@@ -180,22 +186,16 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
             >
               Select New Status <span className="text-red-500">*</span>
             </label>
-            <select
-              id="status"
-              value={newStatus}
+            <DropdownSelect
+              inputId="status"
+              value={
+                statusSelectOptions.find((opt) => opt.value === newStatus) || null
+              }
               onChange={handleStatusChange}
-              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue"
-              aria-required="true"
-            >
-              <option value="" hidden>
-                Select a status
-              </option>
-              {statusOptions.map((status) => (
-                <option key={status} value={status} className="text-gray-700">
-                  {status}
-                </option>
-              ))}
-            </select>
+              options={statusSelectOptions}
+              placeholder="Select a status"
+              isSearchable={false}
+            />
           </div>
 
           <div className="mb-2">

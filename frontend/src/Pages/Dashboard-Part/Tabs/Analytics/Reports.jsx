@@ -541,9 +541,11 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import {
   useReportTemplates,
-  useGenerateReport,
+  useReportUsage,
 } from "../../../../apiHooks/useReportTemplates.js";
 // import { generateAndNavigateReport } from "../../../../Components/Analytics/utils/handleGenerateReport";
+import { formatDateTime } from "../../../../utils/dateFormatter.js";
+import ShareReportPopup from "./ShareReportPopup.jsx";
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -553,11 +555,29 @@ const Reports = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
 
+  const [shareReport, setShareReport] = useState(null);
+
   const { data, isLoading, error } = useReportTemplates();
   const [allTemplates, setAllTemplates] = useState([]);
 
   const [loadingId, setLoadingId] = useState(null);
-  const generateReportMutation = useGenerateReport();
+  const { data: usageData = [], isLoading: usageLoading } = useReportUsage();
+
+  // Create a map: templateId → usage info
+  const usageMap = React.useMemo(() => {
+    const map = new Map();
+    if (usageData && Array.isArray(usageData)) {
+      usageData.forEach((item) => {
+        if (item.templateId) {
+          map.set(item.templateId.toString(), {
+            lastGeneratedAt: item.lastGeneratedAt,
+            generationCount: item.generationCount || 0,
+          });
+        }
+      });
+    }
+    return map;
+  }, [usageData]);
 
   // Load real templates
   useEffect(() => {
@@ -635,13 +655,35 @@ const Reports = () => {
         <StatusBadge status={capitalizeFirstLetter(status || "active")} />
       ),
     },
-    {
-      key: "frequency",
-      label: "Frequency",
-    },
+    // {
+    //   key: "frequency",
+    //   label: "Frequency",
+    // },
     {
       key: "lastGenerated",
       label: "Last Generated",
+      render: (_, row) => {
+        const usage = usageMap.get(row.id); // row.id is templateId
+        const lastGen = usage?.lastGeneratedAt;
+
+        return (
+          <div className="text-sm">
+            {lastGen ? (
+              <span className="text-gray-700 font-medium">
+                {formatDateTime(lastGen)}
+              </span>
+            ) : (
+              <span className="text-gray-400 italic">Never</span>
+            )}
+            {usage?.generationCount > 0 && (
+              <div className="text-xs text-gray-500 mt-1">
+                Used {usage.generationCount}{" "}
+                {usage.generationCount === 1 ? "time" : "times"}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     // {
     //   key: "category",
@@ -662,16 +704,9 @@ const Reports = () => {
     // },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading reports...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleShare = (template) => {
+    setShareReport(template);
+  };
 
   if (error) {
     return (
@@ -682,18 +717,32 @@ const Reports = () => {
   }
 
   const handleGenerateReport = (template) => {
-    // console.log(
-    //   "Generating report  ============================> : ",
-    //   template
-    // );
-    // generateAndNavigateReport({
-    //   template,
-    //   generateReportMutation,
-    //   navigate,
-    //   setLoadingId,
-    // });
     navigate(`/analytics/reports/${template.id}`);
   };
+
+  const LoadingViewTable = () => (
+    <>
+      {/* Header shimmer */}
+      <div className="rounded-t-xl w-full flex items-center gap-6 p-6 bg-white shadow-sm border border-gray-200">
+        <div className="h-5 w-32 bg-gray-200 rounded shimmer"></div>
+      </div>
+
+      {/* Rows shimmer */}
+      {Array.from({ length: 6 }).map((_, idx) => (
+        <div
+          key={idx}
+          className="w-full flex items-center gap-6 p-6 bg-white shadow-sm rounded-sm border border-gray-200"
+        >
+          <div className="h-4 w-full bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
+          <div className="h-4 w-full bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
+          <div className="h-4 w-full bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
+          <div className="h-4 w-full bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
+          <div className="h-4 w-full bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
+          <div className="h-4 w-32 bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
+        </div>
+      ))}
+    </>
+  );
 
   return (
     <div>
@@ -727,53 +776,69 @@ const Reports = () => {
           }
           dataLength={totalItems}
           searchPlaceholder="Search reports..."
+          showFilter={false}
         />
       </div>
 
       {/* TABS - Real Categories */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8 overflow-x-auto px-4">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  setCurrentPage(0);
-                }}
-                className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? "border-custom-blue text-custom-blue"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                {tab.name}
-              </button>
-            );
-          })}
+          {isLoading ? (
+            <>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="py-4 px-1">
+                  <div className="flex items-center gap-2 animate-pulse">
+                    <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                    <div className="w-32 h-4 bg-gray-300 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setCurrentPage(0);
+                  }}
+                  className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                    activeTab === tab.id
+                      ? "border-custom-blue text-custom-blue"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  {tab.name}
+                </button>
+              );
+            })
+          )}
         </nav>
       </div>
 
       {/* CONTENT */}
       <div className="px-6 pt-6">
-        {paginatedTemplates.length > 0 ? (
+        {isLoading ? (
+          <LoadingViewTable />
+        ) : paginatedTemplates.length > 0 ? (
           viewMode === "table" ? (
-            <div>
-              <ReportsTable
-                data={paginatedTemplates}
-                columns={reportTemplateColumns}
-                type="templates"
-                onGenerate={handleGenerateReport}
-                loadingId={loadingId}
-              />
-            </div>
+            <ReportsTable
+              data={paginatedTemplates}
+              columns={reportTemplateColumns}
+              type="templates"
+              onGenerate={handleGenerateReport}
+              onShare={(item) => handleShare(item)}
+              loadingId={loadingId}
+            />
           ) : (
             <KanbanBoard
               data={paginatedTemplates}
               onGenerate={handleGenerateReport}
               loadingId={loadingId}
+              onShare={(item) => handleShare(item)}
             />
           )
         ) : (
@@ -790,6 +855,11 @@ const Reports = () => {
           </div>
         )}
       </div>
+      <ShareReportPopup
+        templateId={shareReport?.id}
+        isOpen={!!shareReport}
+        onClose={() => setShareReport(null)}
+      />
     </div>
   );
 };

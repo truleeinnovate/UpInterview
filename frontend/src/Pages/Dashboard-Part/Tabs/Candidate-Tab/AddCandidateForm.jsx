@@ -24,7 +24,10 @@ import {
 import Cookies from "js-cookie";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
-import { useCandidates } from "../../../../apiHooks/useCandidates";
+import {
+  useCandidates,
+  useCandidateById,
+} from "../../../../apiHooks/useCandidates";
 import LoadingButton from "../../../../Components/LoadingButton";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
@@ -81,11 +84,10 @@ const AddCandidateForm = ({
 
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
-  console.log('tokenPayload:-', tokenPayload);
+
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
   const isOrganization = tokenPayload?.organization === true;
-  console.log('isOrganization:-', isOrganization);
 
   // v1.0.2 <----------------------------------------------------------------
   useScrollLock(true);
@@ -93,7 +95,7 @@ const AddCandidateForm = ({
   const formRef = useRef(null);
   // v1.0.2 ----------------------------------------------------------------->
   const {
-    candidateData,
+    // candidateData is no longer used here; edits now rely on useCandidateById
     isLoading: _isLoading,
     isQueryLoading: _isQueryLoading,
     isMutationLoading,
@@ -102,6 +104,7 @@ const AddCandidateForm = ({
     addOrUpdateCandidate,
   } = useCandidates();
   const { id } = useParams();
+  const { candidate: selectedCandidate } = useCandidateById(id);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -156,7 +159,7 @@ const AddCandidateForm = ({
     RelevantExperience: useRef(null),
     CurrentRole: useRef(null),
     skills: useRef(null),
-    Technology: useRef(null),
+    // Technology: useRef(null),
   };
 
   // v1.0.3 --------------------------------------------------------------------------->
@@ -175,7 +178,7 @@ const AddCandidateForm = ({
     CountryCode: "+91",
     skills: [],
     CurrentRole: "",
-    Technology: "",
+    // Technology: "",
   });
   const [errors, setErrors] = useState({});
 
@@ -191,10 +194,6 @@ const AddCandidateForm = ({
   // const userId = tokenPayload?.userId;
 
   useEffect(() => {
-    const selectedCandidate = candidateData.find(
-      (candidate) => candidate._id === id
-    );
-
     if (id && selectedCandidate) {
       const dob = selectedCandidate.Date_Of_Birth;
 
@@ -216,7 +215,7 @@ const AddCandidateForm = ({
         resume: selectedCandidate?.resume || null,
         CurrentRole: selectedCandidate?.CurrentRole || "",
         CountryCode: selectedCandidate?.CountryCode || "",
-        Technology: selectedCandidate?.Technology || "",
+        // Technology: selectedCandidate?.Technology || "",
       });
 
       if (selectedCandidate.ImageData?.filename) {
@@ -255,7 +254,7 @@ const AddCandidateForm = ({
       // setAllSelectedExperiences(selectedCandidate.skills?.map(skill => skill.experience) || []);
       // setAllSelectedExpertises(selectedCandidate.skills?.map(skill => skill.expertise) || []);
     }
-  }, [id, candidateData]);
+  }, [id, selectedCandidate]);
 
   // Ensure form starts with 3 default skill rows when in Add mode
   useEffect(() => {
@@ -504,7 +503,7 @@ const AddCandidateForm = ({
       skills: [],
       CurrentRole: "",
       CountryCode: "+91",
-      Technology: "",
+      // Technology: "",
     });
 
     setErrors({});
@@ -610,7 +609,7 @@ const AddCandidateForm = ({
       Date_Of_Birth: formData.Date_Of_Birth,
       skills: filledSkills,
       CurrentRole: formData.CurrentRole,
-      Technology: formData.Technology,
+      // Technology: formData.Technology,
       ownerId: userId,
       tenantId: orgId,
     };
@@ -795,8 +794,8 @@ const AddCandidateForm = ({
   const roleOptionsRS = useMemo(
     () =>
       currentRoles?.map((r) => ({
-        value: r?.RoleName,
-        label: r?.RoleName,
+        value: r?.roleName,
+        label: r?.roleName,
       })) || [],
     [currentRoles]
   );
@@ -1054,21 +1053,21 @@ const AddCandidateForm = ({
                     onChange={handleChange}
                     error={errors.CurrentRole}
                     containerRef={fieldRefs.CurrentRole}
-                    label="Current Role"
+                    label="Select Role or Technology"
                     name="CurrentRole"
                     required
                     onMenuOpen={loadCurrentRoles}
                     loading={isCurrentRolesFetching}
                   />
 
-                  <DropdownWithSearchField
+                  {/* <DropdownWithSearchField
                     containerRef={fieldRefs.Technology}
                     label="Technology"
                     name="technology"
                     value={formData.Technology}
-                    options={technologies.map((t) => ({
-                      value: t.TechnologyMasterName,
-                      label: t.TechnologyMasterName,
+                    options={currentRoles.map((t) => ({
+                      value: t.roleName,
+                      label: t.roleLabel,
                     }))}
                     onChange={(e) => {
                       setFormData((prev) => ({
@@ -1083,9 +1082,9 @@ const AddCandidateForm = ({
                     error={errors.Technology}
                     placeholder="Select Technology"
                     required
-                    onMenuOpen={loadTechnologies}
-                    loading={isTechnologiesFetching}
-                  />
+                    onMenuOpen={loadCurrentRoles}
+                    loading={isCurrentRolesFetching}
+                  /> */}
                 </div>
               </div>
               <div>

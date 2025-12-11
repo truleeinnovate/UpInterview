@@ -57,7 +57,9 @@ const InterviewProgress = ({
           const isLast = index === sortedRounds.length - 1;
           
           return (
-            <React.Fragment key={round._id}>
+            <React.Fragment
+              key={round._id || `${round.roundTitle || "round"}-${index}`}
+            >
               <button 
                 //onClick={() => onSelectRound(round._id)}
                 className={`flex items-center px-3 py-2 rounded-md border ${getStatusColor(round, /*isCurrent*/)} transition-colors duration-200 hover:bg-opacity-80`}

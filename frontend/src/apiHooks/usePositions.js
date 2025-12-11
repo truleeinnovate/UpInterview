@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { fetchFilterData } from "../api";
 import { config } from "../config";
 import { usePermissions } from "../Context/PermissionsContext";
@@ -11,6 +12,8 @@ export const usePositions = (filters = {}) => {
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Positions?.View;
   const hasDeletePermission = effectivePermissions?.Positions?.Delete;
+
+  // console.log("filters", filters);
 
   const {
     data: responseData = {},
@@ -35,7 +38,8 @@ export const usePositions = (filters = {}) => {
     staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
     cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    // refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnMount: "always",
     refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
@@ -80,6 +84,9 @@ export const usePositions = (filters = {}) => {
 
       // Invalidate to ensure consistency
       queryClient.invalidateQueries(["positions"]);
+      if (variables?.id) {
+        queryClient.invalidateQueries(["position", variables.id]);
+      }
     },
     onError: (error) => {
       console.error("Error adding/updating position:", error);
@@ -236,5 +243,40 @@ export const usePositions = (filters = {}) => {
     deleteRoundMutation: deleteRoundMutation.mutateAsync,
     deletePositionMutation: deleteMutation.mutateAsync,
     refetch,
+  };
+};
+
+export const usePositionById = (positionId) => {
+  const { effectivePermissions } = usePermissions();
+  const hasViewPermission = effectivePermissions?.Positions?.View;
+
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["position", positionId],
+    queryFn: async () => {
+      const authToken = Cookies.get("authToken") ?? "";
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/position/details/${positionId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+          withCredentials: true,
+        }
+      );
+      return response.data;
+    },
+    enabled: !!positionId && !!hasViewPermission,
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+  return {
+    position: data,
+    isLoading,
+    isError,
+    error,
   };
 };

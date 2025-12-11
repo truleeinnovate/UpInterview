@@ -142,10 +142,12 @@ const InterviewTemplates = () => {
     deleteInterviewTemplate,
   } = useInterviewTemplates({
     search: searchQuery,
-    status: selectedStatus,
-    formats: selectedFormats,
-    rounds: roundsRange,
-    createdDate: createdDatePreset,
+    // IMPORTANT: use applied filters (selectedFilters) so changes in the
+    // popup only take effect when the user clicks Apply.
+    status: selectedFilters.status,
+    formats: selectedFilters.formats,
+    rounds: selectedFilters.rounds,
+    createdDate: selectedFilters.createdDate,
     page: currentPage,
     limit: itemsPerPage,
     type: activeTab,
@@ -268,6 +270,24 @@ const InterviewTemplates = () => {
       setFilterPopupOpen((prev) => !prev);
     }
   };
+
+  // When opening the filter popup, reset the draft filter state
+  // from the currently applied filters so that checkboxes/radios
+  // reflect what is actually applied. Changes inside the popup
+  // do NOT affect the API until Apply is clicked.
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedStatus(selectedFilters.status || []);
+      setSelectedFormats(selectedFilters.formats || []);
+      setRoundsRange(selectedFilters.rounds || { min: "", max: "" });
+      setModifiedDatePreset(selectedFilters.modifiedDate || "");
+      setCreatedDatePreset(selectedFilters.createdDate || "");
+
+      setIsStatusOpen(false);
+      setIsFormatOpen(false);
+      setIsCreatedDateOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
 
   // Helper function to normalize spaces for better search
   // const normalizeSpaces = (str) =>

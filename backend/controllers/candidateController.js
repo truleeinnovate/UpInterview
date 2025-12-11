@@ -6,12 +6,13 @@ const {
   validateCandidateData,
   candidateUpdateSchema,
 } = require("../validations/candidateValidation.js");
-// const { hasPermission } = require("../middleware/permissionMiddleware");
+const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Candidate } = require("../models/candidate.js");
 const { Interview } = require("../models/Interview/Interview.js");
 const {
   CandidateAssessment,
 } = require("../models/Assessment/candidateAssessment.js");
+const { Users } = require("../models/Users");
 
 // Add a new Candidate
 const addCandidatePostCall = async (req, res) => {
@@ -47,7 +48,7 @@ const addCandidatePostCall = async (req, res) => {
       RelevantExperience,
       skills,
       PositionId,
-      Technology,
+      // Technology,
     } = req.body;
 
     // Get ownerId and tenantId from request body
@@ -86,7 +87,7 @@ const addCandidatePostCall = async (req, res) => {
       CurrentExperience, // CurrentExperience is related to total experience in Ui mentioned.
       CurrentRole,
       RelevantExperience,
-      Technology,
+      // Technology,
       skills,
       PositionId,
       ownerId,
@@ -487,82 +488,27 @@ const getCandidateById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    const { actingAsUserId, actingAsTenantId } = res.locals.auth;
+
+    if (!actingAsUserId || !actingAsTenantId) {
+      return res
+        .status(400)
+        .json({ message: "OwnerId or TenantId ID is required" });
+    }
+
     if (!id) {
       return res.status(400).json({ message: "Candidate ID is required" });
     }
 
-    res.locals.loggedByController = true;
+    let query = { _id: id };
 
-    //<-----v1.0.1---
-    // Permission: Tasks.Create (or super admin override)
-    //   const canCreate =
-    //   await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
-    //  //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
-    //   if (!canCreate) {
-    //     return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
-    //   }
-    //-----v1.0.1--->
-
-    const candidate = await Candidate.findById(id).lean();
+    const candidate = await Candidate.findOne(query).lean();
 
     if (!candidate) {
       return res.status(404).json({ message: "Candidate not found" });
     }
 
-    const candidatePositions = await CandidatePosition.aggregate([
-      {
-        $match: { candidateId: new mongoose.Types.ObjectId(id) },
-      },
-      {
-        $lookup: {
-          from: "positions",
-          localField: "positionId",
-          foreignField: "_id",
-          as: "positionDetails",
-        },
-      },
-      {
-        $unwind: {
-          path: "$positionDetails",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-    ]);
-
-    const positionDetails = candidatePositions.map((pos) => ({
-      positionId: pos.positionId,
-      status: pos.status,
-      interviewId: pos.interviewId,
-      interviewRound: pos.interviewRound,
-      interviewFeedback: pos.interviewFeedback,
-      offerDetails: pos.offerDetails,
-      applicationDate: pos.applicationDate,
-      updatedAt: pos.updatedAt,
-      positionInfo: pos.positionDetails
-        ? {
-            title: pos.positionDetails.title || "",
-            companyname: pos.positionDetails.companyname || "",
-            jobdescription: pos.positionDetails.jobdescription || "",
-            minexperience: pos.positionDetails.minexperience || 0,
-            maxexperience: pos.positionDetails.maxexperience || 0,
-            skills: pos.positionDetails.skills || [],
-            additionalnotes: pos.positionDetails.additionalnotes || "",
-            rounds: pos.positionDetails.rounds || [],
-            createdBy: pos.positionDetails.CreatedBy || "",
-            lastModifiedById: pos.positionDetails.LastModifiedById || "",
-            ownerId: pos.positionDetails.ownerId || "",
-            tenantId: pos.positionDetails.tenantId || "",
-            createdDate: pos.positionDetails.createdDate || "",
-          }
-        : null,
-    }));
-
-    const response = {
-      ...candidate,
-      appliedPositions: positionDetails || [],
-    };
-
-    res.status(200).json(response);
+    res.status(200).json(candidate);
   } catch (error) {
     console.error("🔥 [getCandidateById] Error:", error);
     res
@@ -570,6 +516,94 @@ const getCandidateById = async (req, res) => {
       .json({ message: "Error fetching candidate", error: error.message });
   }
 };
+
+// const getCandidatePositionById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     if (!id) {
+//       return res.status(400).json({ message: "Candidate ID is required" });
+//     }
+
+//     res.locals.loggedByController = true;
+
+//     //<-----v1.0.1---
+//     // Permission: Tasks.Create (or super admin override)
+//     //   const canCreate =
+//     //   await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
+//     //  //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
+//     //   if (!canCreate) {
+//     //     return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
+//     //   }
+//     //-----v1.0.1--->
+
+//     const candidate = await Candidate.findById(id).lean();
+
+//     if (!candidate) {
+//       return res.status(404).json({ message: "Candidate not found" });
+//     }
+
+//     const candidatePositions = await CandidatePosition.aggregate([
+//       {
+//         $match: { candidateId: new mongoose.Types.ObjectId(id) },
+//       },
+//       {
+//         $lookup: {
+//           from: "positions",
+//           localField: "positionId",
+//           foreignField: "_id",
+//           as: "positionDetails",
+//         },
+//       },
+//       {
+//         $unwind: {
+//           path: "$positionDetails",
+//           preserveNullAndEmptyArrays: true,
+//         },
+//       },
+//     ]);
+
+//     const positionDetails = candidatePositions.map((pos) => ({
+//       positionId: pos.positionId,
+//       status: pos.status,
+//       interviewId: pos.interviewId,
+//       interviewRound: pos.interviewRound,
+//       interviewFeedback: pos.interviewFeedback,
+//       offerDetails: pos.offerDetails,
+//       applicationDate: pos.applicationDate,
+//       updatedAt: pos.updatedAt,
+//       positionInfo: pos.positionDetails
+//         ? {
+//             title: pos.positionDetails.title || "",
+//             companyname: pos.positionDetails.companyname || "",
+//             jobdescription: pos.positionDetails.jobdescription || "",
+//             minexperience: pos.positionDetails.minexperience || 0,
+//             maxexperience: pos.positionDetails.maxexperience || 0,
+//             skills: pos.positionDetails.skills || [],
+//             additionalnotes: pos.positionDetails.additionalnotes || "",
+//             rounds: pos.positionDetails.rounds || [],
+//             createdBy: pos.positionDetails.CreatedBy || "",
+//             lastModifiedById: pos.positionDetails.LastModifiedById || "",
+//             ownerId: pos.positionDetails.ownerId || "",
+//             tenantId: pos.positionDetails.tenantId || "",
+//             createdDate: pos.positionDetails.createdDate || "",
+//           }
+//         : null,
+//     }));
+
+//     const response = {
+//       ...candidate,
+//       appliedPositions: positionDetails || [],
+//     };
+
+//     res.status(200).json(response);
+//   } catch (error) {
+//     console.error("🔥 [getCandidatePositionById] Error:", error);
+//     res
+//       .status(500)
+//       .json({ message: "Error fetching candidate", error: error.message });
+//   }
+// };
 
 // Delete candidate by ID
 const deleteCandidate = async (req, res) => {
@@ -639,7 +673,6 @@ const deleteCandidate = async (req, res) => {
   }
 };
 
-
 module.exports = {
   getCandidates,
   addCandidatePostCall,
@@ -647,5 +680,6 @@ module.exports = {
   searchCandidates,
   getCandidatesData,
   getCandidateById,
+  //getCandidatePositionById,
   deleteCandidate,
 };

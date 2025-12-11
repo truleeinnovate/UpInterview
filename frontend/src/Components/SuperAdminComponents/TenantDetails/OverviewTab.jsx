@@ -45,7 +45,9 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
       </div>
       <div>
         <span className="text-gray-500">{label}</span>
-        <p className="font-medium mt-0.5 text-gray-800">{children || "N/A"}</p>
+        <div className="font-medium mt-0.5 text-gray-800">
+          {children || "N/A"}
+        </div>
       </div>
     </div>
   );

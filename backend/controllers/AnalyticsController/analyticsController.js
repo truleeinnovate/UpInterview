@@ -4,7 +4,7 @@
 const mongoose = require("mongoose");
 const ReportCategory = require("../../models/AnalyticSchemas/reportCategory");
 const {
-  ReportTemplate,
+  ReportTemplate, TenantReportAccess, ReportUsage
 } = require("../../models/AnalyticSchemas/reportSchemas");
 const { FilterPreset } = require("../../models/AnalyticSchemas/filterSchemas");
 const {
@@ -15,8 +15,10 @@ const { buildPermissionQuery } = require("../../utils/buildPermissionQuery");
 const { Candidate } = require("../../models/Candidate");
 const { Position } = require("../../models/Position/position");
 const { Interview } = require("../../models/Interview/Interview");
-const Assessment = require("../../models/Assessment/assessmentsSchema");
+const ScheduledAssessment = require("../../models/Assessment/assessmentsSchema");
+const {CandidateAssessment} = require("../../models/Assessment/candidateAssessment");
 const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
+const RolesPermissionObject = require('../../models/rolesPermissionObject');
 
 // const generateReport = async (req, res) => {
 //   try {
@@ -324,10 +326,7 @@ const generateReport = async (req, res) => {
     }).lean();
 
     if (!template) {
-      console.log("[ERROR] Template not found");
-      return res
-        .status(404)
-        .json({ success: false, message: "Report template not found" });
+      return res.status(404).json({ success: false, message: "Report template not found" });
     }
 
     console.log("[SUCCESS] Template:", template.label);
@@ -341,45 +340,41 @@ const generateReport = async (req, res) => {
     } = template.configuration || {};
 
     if (!dataSource?.collections?.length) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No data source defined" });
+      return res.status(400).json({ success: false, message: "No data source defined" });
     }
 
     const collectionName = dataSource.collections[0].toLowerCase();
+
     const ModelMap = {
       candidates: Candidate,
       positions: Position,
       interviews: Interview,
       interviewrounds: InterviewRounds,
-      assessments: Assessment,
+      scheduledassessments: ScheduledAssessment,
     };
 
     const Model = ModelMap[collectionName];
     if (!Model) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Unsupported collection: ${collectionName}`,
-        });
+      return res.status(400).json({
+        success: false,
+        message: `Unsupported collection: ${collectionName}`,
+      });
     }
 
-    // 2. FETCH LATEST FILTER PRESET (ONLY 1 QUERY)
+    // 2. FETCH LATEST FILTER PRESET — COSMOS DB SAFE (NO .sort())
     let filterPreset = null;
-
     if (actingAsTenantId) {
-      filterPreset = await FilterPreset.findOne({
+      const presets = await FilterPreset.find({
         templateId,
         tenantId: actingAsTenantId,
-      })
-        .sort({ updatedAt: -1 })
-        .lean();
+      }).lean();
 
-      if (filterPreset) {
-        console.log(
-          `[FILTERS] Using latest saved preset: "${filterPreset.name}"`
+      if (presets.length > 0) {
+        // Pick latest using JavaScript (safe)
+        filterPreset = presets.reduce((latest, current) =>
+          new Date(current.updatedAt) > new Date(latest.updatedAt) ? current : latest
         );
+        console.log(`[FILTERS] Using latest saved preset: "${filterPreset.name}"`);
       } else {
         console.log("[FILTERS] No saved preset → using template defaults");
       }
@@ -411,7 +406,7 @@ const generateReport = async (req, res) => {
         if (col.key && !lockedColumns.some((l) => l.key === col.key)) {
           userMap.set(col.key, {
             key: col.key,
-            label: col.label || col.key,
+            label: col.label,
             width: col.width || "180px",
             visible: col.visible !== false,
             locked: false,
@@ -443,19 +438,15 @@ const generateReport = async (req, res) => {
       ...lockedColumns.map((col) => ({
         key: col.key,
         label: col.label,
-        type:
-          columnConfig?.available?.find((a) => a.key === col.key)?.type ||
-          "text",
+        type: columnConfig?.available?.find((a) => a.key === col.key)?.type || "text",
         locked: true,
         selected: true,
       })),
       ...(columnConfig?.available || []).map((col) => {
-        const isVisible = responseColumns.some(
-          (c) => c.key === col.key && c.visible
-        );
+        const isVisible = responseColumns.some((c) => c.key === col.key && c.visible);
         return {
           key: col.key,
-          label: col.label || col.key,
+          label: col.label,
           type: col.type || "text",
           locked: false,
           selected: isVisible,
@@ -467,33 +458,23 @@ const generateReport = async (req, res) => {
       new Map(availableColumns.map((c) => [c.key, c])).values()
     );
 
-    // 6. ACTIVE FILTERS — PRESET WINS
+    // 6. ACTIVE FILTERS
     let activeFilters = {};
 
     if (filterPreset?.filters?.length > 0) {
       const firstFilter = filterPreset.filters[0];
-
-      // OLD FORMAT: flat object { dateRange: "...", status: "..." }
       if (firstFilter && !firstFilter.key && !firstFilter.value) {
         activeFilters = { ...firstFilter };
-        console.log(
-          "[FILTERS] Applied saved filters (old format) →",
-          activeFilters
+      } else {
+        activeFilters = Object.fromEntries(
+          filterPreset.filters.map(f => [f.key, f.value])
         );
-      }
-      // NEW FORMAT: array of { key, value }
-      else {
-         activeFilters = Object.fromEntries(
-    filterPreset.filters.map(f => [f.key, f.value])
-  );
-        console.log("[FILTERS] Applied saved filters (new format) →", activeFilters);
       }
     } else {
       activeFilters = { ...(filterConfig?.default || {}) };
-      console.log("[FILTERS] Using template defaults →", activeFilters);
     }
 
-    // 7. PERMISSIONS — DYNAMIC & SECURE
+    // 7. PERMISSIONS
     const permissionQuery = await buildPermissionQuery(
       actingAsUserId,
       actingAsTenantId,
@@ -502,32 +483,51 @@ const generateReport = async (req, res) => {
       res.locals.effectivePermissions_RoleName
     );
 
-    console.log(
-      "[PERMISSIONS] Query →",
-      JSON.stringify(permissionQuery, null, 2)
-    );
-
     // 8. FINAL QUERY
-    let finalQuery = { ...permissionQuery };
+   // 8. FINAL QUERY
+let finalQuery = {};
 
-    if (activeFilters.dateRange && activeFilters.dateRange !== "all") {
-      const daysMap = { last7days: 7, last30days: 30, last90days: 90 };
-      const days = daysMap[activeFilters.dateRange] || 30;
-      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-      startDate.setHours(0, 0, 0, 0);
-      finalQuery.createdAt = { $gte: startDate };
-    }
+// VIEW SCOPE: "me" = only user's records, "all" = permission query
+if (activeFilters.viewScope === "me") {
+  finalQuery = {
+    $or: [
+      { createdBy: actingAsUserId },
+      { ownerId: actingAsUserId },
+      { updatedBy: actingAsUserId }
+    ]
+  };
+} else {
+  finalQuery = { ...permissionQuery }; // full access
+}
 
-   Object.keys(activeFilters).forEach(key => {
-  if (["dateRange", "customStartDate", "customEndDate"].includes(key)) return;
+// DATE RANGE
+if (activeFilters.dateRange === "custom") {
+  if (activeFilters.customStartDate) {
+    const start = new Date(activeFilters.customStartDate);
+    start.setHours(0, 0, 0, 0);
+    finalQuery.createdAt = { ...finalQuery.createdAt, $gte: start };
+  }
+  if (activeFilters.customEndDate) {
+    const end = new Date(activeFilters.customEndDate);
+    end.setHours(23, 59, 59, 999);
+    finalQuery.createdAt = { ...finalQuery.createdAt, $lte: end };
+  }
+} else if (activeFilters.dateRange && activeFilters.dateRange !== "all") {
+  const daysMap = { last7days: 7, last30days: 30, last90days: 90 };
+  const days = daysMap[activeFilters.dateRange] || 30;
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  startDate.setHours(0, 0, 0, 0);
+  finalQuery.createdAt = { $gte: startDate };
+}
+
+// Other filters
+Object.keys(activeFilters).forEach(key => {
+  if (["dateRange", "customStartDate", "customEndDate", "viewScope"].includes(key)) return;
   const value = activeFilters[key];
-  if (value != null && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
+  if (value && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
     finalQuery[key] = Array.isArray(value) ? { $in: value } : value;
   }
 });
-
-
-    console.log("[QUERY] Final Query →", JSON.stringify(finalQuery, null, 2));
 
     // 9. PROJECTION
     const projection = responseColumns.reduce(
@@ -535,37 +535,78 @@ const generateReport = async (req, res) => {
       { _id: 1, createdAt: 1 }
     );
 
-    // 10. FETCH DATA — FULLY SECURE (permissionQuery applied)
+    // 10. FETCH DATA — NO .sort() ANYWHERE (COSMOS DB SAFE)
     let rawData = [];
 
     if (collectionName === "interviewrounds") {
-      const interviews = await Interview.find(permissionQuery, {
-        _id: 1,
-      }).lean();
-      const interviewIds = interviews.map((i) => i._id);
+      const interviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
+      const interviewIds = interviews.map(i => i._id);
       if (interviewIds.length > 0) {
         rawData = await InterviewRounds.find(
           { interviewId: { $in: interviewIds }, ...finalQuery },
           projection
-        )
-          .limit(2000)
-          .lean();
+        ).lean();
       }
-    } else {
+    }
+    else if (collectionName === "scheduledassessments") {
+      const scheduled = await ScheduledAssessment.find(
+        { ...permissionQuery, ...finalQuery },
+        { _id: 1 }
+      ).lean();
+
+      const scheduledIds = scheduled.map(s => s._id);
+      if (scheduledIds.length === 0) {
+        rawData = [];
+      } else {
+        rawData = await CandidateAssessment.find(
+          { scheduledAssessmentId: { $in: scheduledIds } },
+          { ...projection, candidateId: 1, totalScore: 1, status: 1, startedAt: 1, endedAt: 1, progress: 1 }
+        )
+          .populate({ path: "candidateId", select: "FirstName LastName Email" })
+          .populate({
+            path: "scheduledAssessmentId",
+            select: "assessmentId expiryAt",
+            populate: { path: "assessmentId", select: "AssessmentTitle" }
+          })
+          .lean();
+
+        rawData = rawData.map(ca => {
+          const c = ca.candidateId || {};
+          const s = ca.scheduledAssessmentId || {};
+          const a = s.assessmentId || {};
+          return {
+            _id: ca._id,
+            id: ca._id.toString(),
+            candidateName: `${c.FirstName || ""} ${c.LastName || ""}`.trim() || "Unknown",
+            candidateEmail: c.Email || "",
+            assessmentTitle: a.AssessmentTitle || "Unknown",
+            score: ca.totalScore || 0,
+            status: ca.status,
+            scheduledAt: s.createdAt,
+            expiryAt: s.expiryAt,
+            startedAt: ca.startedAt,
+            completedAt: ca.endedAt,
+            progress: ca.progress || 0,
+            createdAt: ca.createdAt,
+          };
+        });
+      }
+    }
+    else {
       rawData = await Model.find(
-        { ...permissionQuery, ...finalQuery }, // SECURE: permissionQuery included
+        { ...permissionQuery, ...finalQuery },
         projection
-      )
-        .limit(2000)
-        .lean();
+      ).lean();
     }
 
-    console.log(`[DATA] Fetched ${rawData.length} records`);
+    // ALWAYS SORT IN JAVASCRIPT — COSMOS DB SAFE
+    const sortedData = rawData
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 2000);
 
-    const sortedData = rawData.sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
-    const mappedData = sortedData.map((d) => ({ id: d._id.toString(), ...d }));
+    const mappedData = sortedData.map((d) => ({ id: d._id?.toString() || d.id, ...d }));
+    console.log("mappedData", mappedData);
+    
 
     // 11. KPI + CHARTS
     const aggregates = {
@@ -617,6 +658,19 @@ const generateReport = async (req, res) => {
         .map(([name, value]) => ({ name, value })),
     };
 
+    await ReportUsage.findOneAndUpdate(
+      { tenantId: actingAsTenantId, templateId },
+      {
+        $inc: { "usage.generationCount": 1 },
+        $set: {
+          "usage.lastGeneratedAt": new Date(),
+          "usage.lastGeneratedBy": actingAsUserId,
+        },
+        $setOnInsert: { tenantId: actingAsTenantId, templateId }
+      },
+      { upsert: true }
+    );
+
     // 12. FINAL RESPONSE — UX PERFECT
     console.log(
       "[SUCCESS] Report generated successfully\n========== [END] ==========\n"
@@ -639,8 +693,8 @@ const generateReport = async (req, res) => {
       defaultFilters:
         filterPreset?.filters?.length > 0
           ? Object.fromEntries(
-              filterPreset.filters.map((f) => [f.key, f.value])
-            )
+            filterPreset.filters.map((f) => [f.key, f.value])
+          )
           : filterConfig?.default || {},
 
       kpis: templateKpis,
@@ -717,12 +771,12 @@ const getReportTemplates = async (req, res) => {
 
       category: t.category
         ? {
-            id: t.category._id.toString(),
-            name: t.category.name,
-            label: t.category.label,
-            icon: t.category.icon,
-            color: t.category.color,
-          }
+          id: t.category._id.toString(),
+          name: t.category.name,
+          label: t.category.label,
+          icon: t.category.icon,
+          color: t.category.color,
+        }
         : null, // ← AZURE SAFE
 
       configuration: t.configuration || {},
@@ -839,62 +893,89 @@ const saveFilterPreset = async (req, res) => {
   }
 };
 
+// controllers/analytics/reportController.js
 const saveColumnConfig = async (req, res) => {
   try {
-    // const { templateId } = req.params;
-    // const tenantId = req.user.tenantId;
     const { templateId } = req.params;
     const tenantId = res.locals.auth.actingAsTenantId;
     const { selectedColumns } = req.body;
 
+    // Validate: must have key + label
+    if (!Array.isArray(selectedColumns)) {
+      return res.status(400).json({ success: false, message: "Invalid columns" });
+    }
+
     const config = await ColumnConfiguration.findOneAndUpdate(
       { templateId, tenantId },
-      { selectedColumns, tenantId, templateId },
-      { upsert: true, new: true }
+      {
+        selectedColumns: selectedColumns.map(col => ({
+          key: col.key,
+          label: col.label,    // ← SAVE LABEL!
+          type: col.type || "text",       // ← SAVE TYPE!
+          visible: col.visible !== false,
+          order: col.order ?? 999,
+          width: col.width || "180px",
+        })),
+        tenantId,
+        templateId,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    res.json({ success: true, config });
+    res.json({ success: true, config: config.selectedColumns });
   } catch (error) {
+    console.error("Save column config failed:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 //sharing report apis
 
-const getReportAccess = async (req, res) => {
+const getAllReportAccess = async (req, res) => {
   try {
-    const { templateId } = req.params;
     const tenantId = res.locals.auth.actingAsTenantId;
 
-    const accessDoc = await TenantReportAccess.findOne({ tenantId, templateId })
-      .populate("access.users", "name email")
-      .populate("access.roles")
+    const accessDocs = await TenantReportAccess.find({ tenantId })
+      .populate("access.users", "firstName lastName email")
       .lean();
 
-    if (!accessDoc) {
-      return res.json({
-        success: true,
-        access: { roles: [], users: [] },
-      });
+    if (!accessDocs.length) {
+      return res.json({ success: true, accessMap: {} });
     }
 
-    return res.json({
-      success: true,
-      access: {
-        roles: accessDoc.access.roles.map((r) => ({
-          _id: r._id,
-          name: r.name,
-        })),
-        users: accessDoc.access.users.map((u) => ({
-          _id: u._id,
-          name: u.name,
-          email: u.email,
-        })),
-      },
-      sharedBy: accessDoc.sharedBy,
-      sharedAt: accessDoc.sharedAt,
+    // Get all role IDs
+    const allRoleIds = [...new Set(accessDocs.flatMap(doc => doc.access.roles || []))];
+    const rolesMap = allRoleIds.length > 0
+      ? await RolesPermissionObject.find({ _id: { $in: allRoleIds } })
+        .select("label name")
+        .lean()
+        .then(roles => Object.fromEntries(roles.map(r => [r._id.toString(), r])))
+      : {};
+
+    const accessMap = {};
+
+    accessDocs.forEach(doc => {
+      const templateId = doc.templateId.toString();
+
+      const roles = (doc.access.roles || []).map(id => {
+        const role = rolesMap[id];
+        return {
+          _id: id,
+          name: role?.label || role?.name || "Unknown Role"
+        };
+      });
+
+      const users = (doc.access.users || []).map(u => ({
+        _id: u._id.toString(),
+        name: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
+        email: u.email,
+      }));
+
+      accessMap[templateId] = { roles, users };
     });
+
+    return res.json({ success: true, accessMap });
   } catch (error) {
-    console.error(error);
+    console.error("Get all access failed:", error);
     return res.status(500).json({ success: false });
   }
 };
@@ -920,12 +1001,10 @@ const shareReport = async (req, res) => {
       {
         tenantId,
         templateId,
-        "access.roles": roleIds,
-        "access.users": userIds.map((id) => new mongoose.Types.ObjectId(id)),
+        "access.roles": roleIds.map(id => new mongoose.Types.ObjectId(id)),
+        "access.users": userIds.map(id => new mongoose.Types.ObjectId(id)),
         sharedBy,
         sharedAt: new Date(),
-        "lastGenerated.at": null,
-        "lastGenerated.by": null,
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
@@ -946,6 +1025,46 @@ const shareReport = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to share report",
+    });
+  }
+};
+//report usage
+
+const getReportUsageStats = async (req, res) => {
+  try {
+    const tenantId = res.locals.auth.actingAsTenantId;
+
+    // Fetch usage + populate template label/name
+    const usageRecords = await ReportUsage.find({ tenantId })
+      .populate({
+        path: 'templateId',
+        select: 'label name isSystemTemplate',
+      })
+      .sort({ 'usage.lastGeneratedAt': -1 }) // Most recent first
+      .lean();
+
+    // Format response exactly how frontend expects
+    const usage = usageRecords.map(record => ({
+      templateId: record.templateId?._id?.toString(),
+      label: record.templateId?.label || record.templateId?.name || 'Unknown Report',
+      name: record.templateId?.name,
+      isSystemTemplate: record.templateId?.isSystemTemplate || false,
+      generationCount: record.usage.generationCount || 0,
+      lastGeneratedAt: record.usage.lastGeneratedAt || null,
+      lastGeneratedBy: record.usage.lastGeneratedBy || null,
+    }));
+
+    return res.json({
+      success: true,
+      usage, // Array of usage objects
+      totalReports: usage.length,
+    });
+
+  } catch (error) {
+    console.error('[ERROR] Get report usage failed:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch report usage stats',
     });
   }
 };
@@ -995,8 +1114,9 @@ module.exports = {
   generateReport,
   saveFilterPreset,
   saveColumnConfig,
-  getReportAccess,
+  getAllReportAccess,
   shareReport,
+  getReportUsageStats,
   createCategory,
   createTemplate,
 };

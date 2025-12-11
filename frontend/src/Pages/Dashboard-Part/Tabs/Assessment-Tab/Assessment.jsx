@@ -159,6 +159,8 @@ const Assessment = () => {
     isLoading,
     fetchAssessmentQuestions,
     deleteAssessment,
+    useAssessmentList,
+    createAssessmentTemplateList,
   } = useAssessments({
     search: searchQuery, // ← Must match backend param name
     difficultyLevel: selectedFilters.difficultyLevel,
@@ -171,6 +173,8 @@ const Assessment = () => {
     limit: 10,
     selectedOptionId: selectedOption?._id || null,
   });
+
+  const totalCount = assessmentData?.length || 0;
 
   // <---------------------- v1.0.0
   useEffect(() => {
@@ -398,11 +402,6 @@ const Assessment = () => {
   // };
 
   const handleView = (assessment) => {
-    console.log("view assessment", assessment);
-    console.log(
-      "view assessment",
-      effectivePermissions.AssessmentTemplates?.View
-    );
     if (effectivePermissions.AssessmentTemplates?.View) {
       navigate(`/assessment-template-details/${assessment?._id}`);
       // navigate(`/assessment-template-details/${assessment?._id}`);
@@ -724,6 +723,9 @@ const Assessment = () => {
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               setSelectedOption={setSelectedOption}
+              totalCount={totalCount}
+              useAssessmentList={useAssessmentList}
+              createAssessmentTemplateList={createAssessmentTemplateList}
             />
           </div>
         </main>

@@ -1349,323 +1349,72 @@
 // export default AdvancedFilters;
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Filter,
-  Plus,
-  X,
-  Save,
-  RotateCcw,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Settings,
-} from "lucide-react";
+import { Calendar } from "lucide-react";
 
 const AdvancedFilters = ({
   availableFields = [],
   initialFilters = {},
   onFiltersChange,
-  showAdvancedFilters = false,
 }) => {
-  // --- 1. Basic Filter State ---
   const [localFilters, setLocalFilters] = useState({});
 
-  // --- 2. Advanced Filter State ---
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const [advancedFilters, setAdvancedFilters] = useState([]);
-  const [savedFilters, setSavedFilters] = useState([]);
-  const [filterName, setFilterName] = useState("");
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState([]);
-
-  // --- 3. Constants & Options ---
-  const operators = {
-    text: [
-      { value: "contains", label: "Contains" },
-      { value: "equals", label: "Equals" },
-      { value: "starts_with", label: "Starts with" },
-      { value: "ends_with", label: "Ends with" },
-    ],
-    number: [
-      { value: "equals", label: "Equals" },
-      { value: "greater_than", label: "Greater than" },
-      { value: "less_than", label: "Less than" },
-      { value: "between", label: "Between" },
-    ],
-    select: [
-      { value: "equals", label: "Equals" },
-      { value: "not_equals", label: "Not equals" },
-    ],
-    date: [
-      { value: "equals", label: "On" },
-      { value: "after", label: "After" },
-      { value: "before", label: "Before" },
-      { value: "between", label: "Between" },
-    ],
-  };
-
-  // --- 4. Initialization Effects ---
-useEffect(() => {
-  if (Object.keys(initialFilters).length > 0) {
-    setLocalFilters(initialFilters);
-  }
-}, [initialFilters]);
-
   useEffect(() => {
-    const saved = localStorage.getItem("savedFilters");
-    if (saved) {
-      try {
-        setSavedFilters(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse saved filters", e);
-      }
+    if (Object.keys(initialFilters).length > 0) {
+      setLocalFilters(initialFilters);
     }
+  }, [initialFilters]);
+
+  const handleFilterChange = useCallback((key, value) => {
+    setLocalFilters((prev) => {
+      const newFilters = { ...prev };
+      if (value === "" || value === null || (Array.isArray(value) && value.length === 0)) {
+        delete newFilters[key];
+      } else {
+        newFilters[key] = value;
+      }
+      return newFilters;
+    });
   }, []);
 
-  // --- 5. UPDATED: Basic Filter Handlers ---
-  const handleFilterChange = useCallback(
-    (key, value) => {
-      setLocalFilters((prev) => {
-        const newFilters = { ...prev, [key]: value };
-
-        // Remove empty values
-        if (
-          value === null ||
-          value === "" ||
-          (Array.isArray(value) && value.length === 0)
-        ) {
-          delete newFilters[key];
-        }
-
-        // REMOVED: onFiltersChange call
-        // We now only update local state here.
-        // The parent is NOT notified until the button is clicked.
-
-        return newFilters;
-      });
-    },
-    [] // Removed onFiltersChange dependency as it's no longer called here
-  );
-
-  // --- 6. Helper Functions ---
-  const getFieldType = (fieldKey) => {
-    const field = availableFields.find((f) => f.key === fieldKey);
-    return field?.type || "text";
-  };
-
-  const getFieldOptions = (fieldKey) => {
-    const field = availableFields.find((f) => f.key === fieldKey);
-    return field?.options || [];
-  };
-
-  const hasBasicChanges = () => {
-    return Object.keys(localFilters).length > 0;
-  };
-
-  const hasAdvancedChanges =
-    advancedFilters.length > 0 &&
-    JSON.stringify(advancedFilters) !== JSON.stringify(appliedFilters);
-
-  // --- 7. UPDATED: Apply Logic (Consolidated) ---
-
-  // Renamed this to generic 'applyFilters' since it handles basic AND advanced
   const applyFilters = () => {
-    // 1. Start with Basic Filters
-    const filterObject = { ...localFilters };
-
-    // 2. Merge Advanced Filters
-    advancedFilters.forEach((filter) => {
-      if (filter.field && filter.value) {
-        filterObject[filter.field] = {
-          operator: filter.operator,
-          value: filter.value,
-          logic: filter.logic,
-        };
-      }
-    });
-
-    setAppliedFilters([...advancedFilters]);
-
-    // 3. THIS IS THE ONLY PLACE onFiltersChange IS CALLED
-    onFiltersChange(filterObject);
-  };
-
-  const addAdvancedFilter = () => {
-    const newFilter = {
-      id: Date.now() + Math.random(),
-      field: availableFields[0]?.key || "",
-      operator: "equals",
-      value: "",
-      logic: advancedFilters.length > 0 ? "AND" : "",
-    };
-    setAdvancedFilters([...advancedFilters, newFilter]);
-  };
-
-  const removeAdvancedFilter = (id) => {
-    const newFilters = advancedFilters.filter((f) => f.id !== id);
-    setAdvancedFilters(newFilters);
-  };
-
-  const updateAdvancedFilter = (id, field, value) => {
-    const newFilters = advancedFilters.map((f) =>
-      f.id === id ? { ...f, [field]: value } : f
-    );
-    setAdvancedFilters(newFilters);
-  };
-
-  const clearAllFilters = () => {
-    setLocalFilters({});
-    setAdvancedFilters([]);
-    setAppliedFilters([]);
-    // Optionally: You can auto-apply the clear, or wait for user to click Apply.
-    // For "Clear" buttons, users usually expect immediate results, so we leave this here.
-    // If you want STRICT apply-only logic, remove the line below.
-    onFiltersChange({});
-  };
-
-  // --- 8. Preset Management ---
-  const saveFilterPreset = () => {
-    if (!filterName.trim()) return;
-
-    const newPreset = {
-      id: Date.now(),
-      name: filterName,
-      basicFilters: localFilters,
-      advancedFilters: advancedFilters,
-      createdAt: new Date().toISOString(),
-    };
-
-    const updatedSaved = [...savedFilters, newPreset];
-    setSavedFilters(updatedSaved);
-    localStorage.setItem("savedFilters", JSON.stringify(updatedSaved));
-
-    setFilterName("");
-    setShowSaveDialog(false);
-  };
-
-  const loadFilterPreset = (preset) => {
-    if (preset.basicFilters) {
-      setLocalFilters(preset.basicFilters);
-      // NOTE: We do NOT auto-apply here if you want strict "Click Apply" logic.
-      // If you want presets to load immediately, uncomment the line below:
-      // onFiltersChange(preset.basicFilters);
-    }
-    if (preset.advancedFilters) {
-      setAdvancedFilters(preset.advancedFilters);
-      setAppliedFilters(preset.advancedFilters);
-    }
-  };
-
-  const deleteFilterPreset = (id) => {
-    const updatedSaved = savedFilters.filter((f) => f.id !== id);
-    setSavedFilters(updatedSaved);
-    localStorage.setItem("savedFilters", JSON.stringify(updatedSaved));
-  };
-
-  // --- 9. Render Helpers ---
-  const renderValueInput = (filter) => {
-    // ... (Your existing renderValueInput code remains exactly the same) ...
-    const fieldType = getFieldType(filter.field);
-    const fieldOptions = getFieldOptions(filter.field);
-
-    if (fieldType === "select" || fieldType === "multiselect") {
-      return (
-        <select
-          value={filter.value}
-          onChange={(e) =>
-            updateAdvancedFilter(filter.id, "value", e.target.value)
-          }
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
-        >
-          <option value="">Select...</option>
-          {fieldOptions.map((option) => (
-            <option key={option.value || option} value={option.value || option}>
-              {option.label || option}
-            </option>
-          ))}
-        </select>
-      );
-    }
-
-    if (filter.operator === "between") {
-      return (
-        <div className="flex space-x-2">
-          <input
-            type={fieldType === "date" ? "date" : "number"}
-            value={filter.value?.from || ""}
-            onChange={(e) =>
-              updateAdvancedFilter(filter.id, "value", {
-                ...filter.value,
-                from: e.target.value,
-              })
-            }
-            placeholder="From"
-            className="px-3 py-2 border border-gray-300 rounded-lg w-24 focus:ring-2 focus:ring-custom-blue"
-          />
-          <input
-            type={fieldType === "date" ? "date" : "number"}
-            value={filter.value?.to || ""}
-            onChange={(e) =>
-              updateAdvancedFilter(filter.id, "value", {
-                ...filter.value,
-                to: e.target.value,
-              })
-            }
-            placeholder="To"
-            className="px-3 py-2 border border-gray-300 rounded-lg w-24 focus:ring-2 focus:ring-custom-blue"
-          />
-        </div>
-      );
-    }
-
-    return (
-      <input
-        type={
-          fieldType === "date"
-            ? "date"
-            : fieldType === "number"
-            ? "number"
-            : "text"
-        }
-        value={filter.value}
-        onChange={(e) =>
-          updateAdvancedFilter(filter.id, "value", e.target.value)
-        }
-        placeholder="Enter value..."
-        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
-      />
-    );
+    onFiltersChange({ ...localFilters });
   };
 
   if (availableFields.length === 0) return null;
 
+  const sortedFields = [...availableFields].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+  const activeCount = Object.keys(localFilters).filter(
+    (key) => !["customStartDate", "customEndDate"].includes(key)
+  ).length;
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-6 mb-6">
+      {/* Header */}
       <div className="flex items-center justify-between mb-6 px-6">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold text-custom-blue">Filters</h3>
-          {Object.keys(localFilters).length > 0 && (
-            <span className="bg-custom-blue/10 text-custom-blue text-xs px-3 py-1 rounded-full">
-              {Object.keys(localFilters).length} Active
+          {activeCount > 0 && (
+            <span className="bg-custom-blue/10 text-custom-blue text-xs px-3 py-1 rounded-full font-medium">
+              {activeCount} Active
             </span>
           )}
         </div>
-
-        {/* UPDATED: Added onClick to the main Apply button */}
         <button
           onClick={applyFilters}
-          className="text-white bg-custom-blue px-6 py-2 rounded-lg hover:bg-custom-blue/90 transition-colors"
+          className="px-6 py-2.5 bg-custom-blue text-white font-medium rounded-lg hover:bg-custom-blue/90 transition"
         >
           Apply Filters
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-6">
-        {/* ... (Your existing Fields mapping code remains exactly the same) ... */}
-        {availableFields.map((field) => {
+      {/* Filters Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 px-6">
+        {sortedFields.map((field) => {
           const value = localFilters[field.key];
 
-          if (field.type === "select" || field.type === "multiselect") {
+          // DATE RANGE
+          if (field.key === "dateRange") {
             return (
               <div key={field.key}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1673,11 +1422,85 @@ useEffect(() => {
                 </label>
                 <select
                   value={value || ""}
+                  onChange={(e) => handleFilterChange("dateRange", e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-transparent"
+                >
+                  {field.options?.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Custom Calendar */}
+                {value === "custom" && (
+                  <div className="mt-4 grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border">
+                    <div>
+                      <label className="text-xs text-gray-600 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" /> From
+                      </label>
+                      <input
+                        type="date"
+                        value={localFilters.customStartDate || ""}
+                        onChange={(e) => handleFilterChange("customStartDate", e.target.value)}
+                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-600 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" /> To
+                      </label>
+                      <input
+                        type="date"
+                        value={localFilters.customEndDate || ""}
+                        onChange={(e) => handleFilterChange("customEndDate", e.target.value)}
+                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          // VIEW SCOPE
+          if (field.key === "viewScope") {
+            return (
+              <div key={field.key}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {field.label}
+                </label>
+                <select
+                  value={value || "all"}
+                  onChange={(e) => handleFilterChange("viewScope", e.target.value || "all")}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-transparent"
+                  >
+                  {field.options?.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          }
+
+          // ALL OTHER SELECT / MULTISELECT
+          if (field.type === "select" || field.type === "multiselect") {
+            return (
+              <div key={field.key}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {field.label}
+                </label>
+                <select
+                  multiple={field.type === "multiselect"}
+                  value={Array.isArray(value) ? value : value ? [value] : []}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    handleFilterChange(field.key, val === "" ? null : val);
+                    const selected = Array.from(e.target.selectedOptions, (opt) => opt.value);
+                    const finalValue = field.type === "multiselect" ? selected : selected[0] || null;
+                    handleFilterChange(field.key, finalValue);
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-transparent"
                 >
                   <option value="">All {field.label}</option>
                   {field.options?.map((opt) => (
@@ -1690,6 +1513,7 @@ useEffect(() => {
             );
           }
 
+          // TEXT INPUT
           if (field.type === "text") {
             return (
               <div key={field.key}>
@@ -1699,11 +1523,9 @@ useEffect(() => {
                 <input
                   type="text"
                   value={value || ""}
-                  onChange={(e) =>
-                    handleFilterChange(field.key, e.target.value || null)
-                  }
+                  onChange={(e) => handleFilterChange(field.key, e.target.value || null)}
                   placeholder={`Search ${field.label.toLowerCase()}...`}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
                 />
               </div>
             );
@@ -1712,219 +1534,6 @@ useEffect(() => {
           return null;
         })}
       </div>
-
-      {/* {Object.keys(localFilters).length > 0 && (
-        <div className="mt-2 px-6">
-          <button
-            onClick={clearAllFilters}
-            className="text-sm text-red-600 hover:text-red-700 font-medium"
-          >
-            Clear all filters
-          </button>
-        </div>
-      )} */}
-
-      {/* ... (The rest of your Advanced Filters UI matches your original code) ... */}
-      {showAdvancedFilters && (
-        <div className="border-t border-gray-200 mt-6">
-          <div
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-            onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-          >
-            <div className="flex items-center space-x-3">
-              {isAdvancedOpen ? (
-                <ChevronDown className="w-5 h-5 text-gray-400" />
-              ) : (
-                <ChevronRight className="w-5 h-5 text-gray-400" />
-              )}
-              <Settings className="w-5 h-5 text-custom-blue" />
-              <h4 className="text-md font-medium text-custom-blue">
-                Advanced Filters
-              </h4>
-              {advancedFilters.length > 0 && (
-                <span className="bg-primary-500 text-white text-xs px-2 py-1 rounded-full">
-                  {advancedFilters.length}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {isAdvancedOpen && (
-            <div className="px-4 pb-4 border-t border-gray-200">
-              {savedFilters.length > 0 && (
-                <div className="mb-6 pt-4">
-                  <h5 className="text-sm font-medium text-gray-700 mb-2">
-                    Saved Filter Presets
-                  </h5>
-                  <div className="flex flex-wrap gap-2">
-                    {savedFilters.map((preset) => (
-                      <div
-                        key={preset.id}
-                        className="flex items-center bg-gray-100 rounded-lg"
-                      >
-                        <button
-                          onClick={() => loadFilterPreset(preset)}
-                          className="px-3 py-1 text-sm text-gray-700 hover:text-primary-600"
-                        >
-                          {preset.name}
-                        </button>
-                        <button
-                          onClick={() => deleteFilterPreset(preset.id)}
-                          className="px-2 py-1 text-gray-400 hover:text-red-600"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-
-              <div className="space-y-3 mb-4">
-                {advancedFilters.map((filter, index) => (
-                  <div
-                    key={filter.id}
-                    className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
-                  >
-
-                    {index > 0 && (
-                      <select
-                        value={filter.logic}
-                        onChange={(e) =>
-                          updateAdvancedFilter(
-                            filter.id,
-                            "logic",
-                            e.target.value
-                          )
-                        }
-                        className="px-2 py-1 border border-gray-300 rounded text-sm"
-                      >
-                        <option value="AND">AND</option>
-                        <option value="OR">OR</option>
-                      </select>
-                    )}
-
-      
-                    <select
-                      value={filter.field}
-                      onChange={(e) =>
-                        updateAdvancedFilter(filter.id, "field", e.target.value)
-                      }
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    >
-                      <option value="">Select field...</option>
-                      {availableFields.map((field) => (
-                        <option key={field.key} value={field.key}>
-                          {field.label}
-                        </option>
-                      ))}
-                    </select>
-
-                    <select
-                      value={filter.operator}
-                      onChange={(e) =>
-                        updateAdvancedFilter(
-                          filter.id,
-                          "operator",
-                          e.target.value
-                        )
-                      }
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    >
-                      {operators[getFieldType(filter.field)]?.map((op) => (
-                        <option key={op.value} value={op.value}>
-                          {op.label}
-                        </option>
-                      ))}
-                    </select>
-
-                    {renderValueInput(filter)}
-
-                    <button
-                      onClick={() => removeAdvancedFilter(filter.id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={addAdvancedFilter}
-                    className="flex items-center space-x-2 px-3 py-2 bg-custom-blue text-white rounded-lg hover:bg-primary-600"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Add Rule</span>
-                  </button>
-
-                  <button
-                    onClick={clearAllFilters}
-                    className="flex items-center space-x-2 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    <span>Clear All</span>
-                  </button>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  {/* UPDATED: Changed logic to show Apply if ANY filter exists */}
-                  {(hasBasicChanges() ||
-                    hasAdvancedChanges ||
-                    advancedFilters.length > 0) && (
-                    <button
-                      onClick={applyFilters} // UPDATED function name
-                      className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                    >
-                      <Check className="w-4 h-4" />
-                      <span>Apply</span>
-                    </button>
-                  )}
-
-                  {(hasBasicChanges() || advancedFilters.length > 0) && (
-                    <button
-                      onClick={() => setShowSaveDialog(true)}
-                      className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-primary-600 transition-colors"
-                    >
-                      <Save className="w-4 h-4" />
-                      <span>Save Preset</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {showSaveDialog && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="text"
-                      value={filterName}
-                      onChange={(e) => setFilterName(e.target.value)}
-                      placeholder="Enter filter preset name..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    />
-                    <button
-                      onClick={saveFilterPreset}
-                      className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-primary-600"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setShowSaveDialog(false)}
-                      className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };

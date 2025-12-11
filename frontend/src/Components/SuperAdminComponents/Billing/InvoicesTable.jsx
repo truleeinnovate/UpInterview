@@ -132,54 +132,6 @@ function InvoicesTable({ organizationId, viewMode }) {
     setFilterPopupOpen(false);
   };
 
-  // Invoices API Call
-  // useEffect(() => {
-  //   const getInvoices = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const endpoint = organizationId
-  //         ? `${config.REACT_APP_API_URL}/invoices/${organizationId}`
-  //         : `${config.REACT_APP_API_URL}/invoices`;
-
-  //       const response = await axios.get(endpoint);
-  //       setInvoices(response.data.invoices);
-  //     } catch (error) {
-  //       console.error("Error fetching invoices:", error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   getInvoices();
-  // }, [organizationId]);
-
-  // Get invoice by ID
-  // useEffect(() => {
-  //   const getInvoice = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const response = await axios.get(
-  //         `${config.REACT_APP_API_URL}/invoices/invoice/${selectedInvoiceId}`
-  //       );
-  //       setSelectedInvoice(response.data);
-  //     } catch (error) {
-  //       console.error("Error fetching invoice:", error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-  //   if (selectedInvoiceId) {
-  //     getInvoice();
-  //   }
-  // }, [selectedInvoiceId]);
-
-  // useEffect(() => {
-  //   if (isTablet) {
-  //     setView("kanban");
-  //   } else {
-  //     setView("table");
-  //   }
-  // }, [isTablet]);
 
   useEffect(() => {
     if (viewMode === "collapsed") {
@@ -336,30 +288,13 @@ function InvoicesTable({ organizationId, viewMode }) {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         setSelectedInvoiceId(row._id);
         setIsPopupOpen(true);
       },
     },
-    // {
-    //   key: "360-view",
-    //   label: "360° View",
-    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-    //   onClick: (row) => row?._id && navigate(`/admin-billing/${row._id}`),
-    // },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
-    // {
-    //   key: "resend-link",
-    //   label: "Resend Link",
-    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
-    //   disabled: (row) => row.status === "completed",
-    // },
+    
   ];
 
   // Kanban Columns Configuration
@@ -388,24 +323,13 @@ function InvoicesTable({ organizationId, viewMode }) {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         setSelectedInvoiceId(row._id);
         setIsPopupOpen(true);
       },
     },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
-    // {
-    //   key: "login-as-user",
-    //   label: "Login as User",
-    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
-    //   onClick: (row) => handleLoginAsUser(row._id),
-    // },
+    
   ];
 
   // Render Actions for Kanban
@@ -418,7 +342,7 @@ function InvoicesTable({ organizationId, viewMode }) {
             e.stopPropagation();
             action.onClick(item);
           }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
           title={action.label}
         >
           {action.icon}

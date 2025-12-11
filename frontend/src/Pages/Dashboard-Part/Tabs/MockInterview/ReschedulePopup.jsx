@@ -21,7 +21,7 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
     interviewer: useRef(null),
   };
 
-  console.log("MockEditData", MockEditData);
+  
 
   // date and duration
   const getTodayDate = () => {
@@ -94,7 +94,7 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
 
   useEffect(() => {
     if (MockEditData) {
-      console.log("MockEditData in useEffect:", MockEditData);
+      
       
       // Handle rounds as array or single object
       const roundData = Array.isArray(MockEditData.rounds) 
@@ -165,7 +165,7 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
         await fetchMockInterviewData();
       }
       
-      console.log("Mock interview updated:", response.data);
+      
     } catch (error) {
       console.error("Error updating mock interview:", error);
       // Set error message if needed

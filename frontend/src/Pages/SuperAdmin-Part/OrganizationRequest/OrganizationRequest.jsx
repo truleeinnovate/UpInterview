@@ -493,7 +493,7 @@ const OrganizationRequest = () => {
                         onChange={() => handleStatusFilter(st)}
                         className="accent-custom-blue"
                       />
-                      <span>{st.replace(/_/g,' ')}</span>
+                      <span>{formatStatus(st)}</span>
                     </label>
                   ))}
                 </div>

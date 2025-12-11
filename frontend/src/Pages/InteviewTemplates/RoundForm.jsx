@@ -43,9 +43,31 @@ import { useInterviewGroups } from "../../apiHooks/useInterviewGroups.js";
 
 
 function RoundFormTemplates() {
-  const { templatesData, isMutationLoading, addOrUpdateRound, saveTemplate } =
-    useInterviewTemplates();
-  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  const {
+    templatesData,
+    isMutationLoading,
+    addOrUpdateRound,
+    saveTemplate,
+    useInterviewtemplateDetails,
+  } = useInterviewTemplates();
+
+    const ASSESSMENT_DROPDOWN_LIMIT = 50;
+    const [assessmentLimit, setAssessmentLimit] = useState(
+      ASSESSMENT_DROPDOWN_LIMIT
+    );
+    const [assessmentSearch, setAssessmentSearch] = useState("");
+  
+    const {
+      assessmentData,
+      totalCount: totalAssessments,
+      isQueryLoading: isAssessmentQueryLoading,
+      fetchAssessmentQuestions,
+      useAssessmentById,
+    } = useAssessments({
+      page: 0,
+      limit: assessmentLimit,
+      ...(assessmentSearch && { search: assessmentSearch.trim() }),
+    });
   // const { groups } = useCustomContext();
   const { groups } = useInterviewGroups();
 
@@ -53,6 +75,7 @@ function RoundFormTemplates() {
 
   // const { resolveInterviewerDetails } = useInterviewerDetails();
   const { id } = useParams();
+  const { data: templateById, isLoading: templateLoading } = useInterviewtemplateDetails(id);
   const dropdownRef = useRef(null);
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
   const navigate = useNavigate();
@@ -92,12 +115,21 @@ function RoundFormTemplates() {
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
 
+  const isEditing = !!roundId;
+
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const tenantId = tokenPayload?.tenantId;
   const ownerId = tokenPayload?.userId;
   const organization = tokenPayload?.organization;
 
   const [ownerData, setOwnerData] = useState(null);
+
+  const handleAssessmentMenuScrollToBottom = () => {
+    if (isAssessmentQueryLoading) return;
+    if (!totalAssessments || assessmentLimit >= totalAssessments) return;
+
+    setAssessmentLimit((prev) => prev + ASSESSMENT_DROPDOWN_LIMIT);
+  };
 
   // v1.0.2 <------------------------------------------------------------
   const fieldRefs = {
@@ -115,6 +147,7 @@ function RoundFormTemplates() {
   const formRef = useRef(null);
   // v1.0.4 ---------------------------------------------------------------->
 
+  // Fetch the template and, if editing, the round data for this roundId
   useEffect(() => {
     const fetchOwnerData = async () => {
       if (!organization && ownerId) {
@@ -147,11 +180,14 @@ function RoundFormTemplates() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // templates
-        const response = templatesData.find((template) => template._id === id);
-        // console.log("response", response);
+        // In edit/new round mode, rely on dedicated by-id template fetch,
+        // not on the paginated templatesData list.
+        if (!id) return;
+        if (templateLoading) return;
 
-        if (response && response) {
+        const response = templateById;
+
+        if (response) {
           const rounds_res = response;
           setTemplate(response);
           if (roundId) {
@@ -198,12 +234,9 @@ function RoundFormTemplates() {
                   round?.roundTitle === "Assessment" && round?.assessmentId
                     ? {
                       assessmentId: round.assessmentId,
-                      assessmentName:
-                        assessmentData?.find(
-                          (a) => a._id === round?.assessmentId
-                        )?.AssessmentTitle || "",
+                      assessmentName: "",
                     }
-                    : {},
+                    : { assessmentId: "", assessmentName: "" },
 
                 interviewQuestionsList: round?.questions || [],
                 interviewerViewType:
@@ -246,7 +279,19 @@ function RoundFormTemplates() {
       }
     };
     fetchData();
-  }, [id, roundId, templatesData, groups]);
+  }, [id, roundId, templateById, templateLoading, groups]);
+
+  // Derive the editing assessment id from the loaded template/round when in edit mode
+  const editingAssessmentId =
+    isEditing && template?.rounds?.length
+      ? template.rounds.find((r) => r._id === roundId)?.assessmentId || null
+      : null;
+
+  // Fetch full assessment details by id so we are not limited by any local lists
+  const { assessmentById: editingAssessment } = useAssessmentById(
+    editingAssessmentId,
+    {}
+  );
 
   const [filteredAssessments, setFilteredAssessments] = useState([]);
   const [hasFiltered, setHasFiltered] = useState(false);
@@ -298,6 +343,125 @@ function RoundFormTemplates() {
       filterAssessmentsWithQuestions();
     }
   }, [template, assessmentData, fetchAssessmentQuestions, id]);
+
+  // Build assessment dropdown options with Custom/Standard badge and ensure
+  // the editing assessment is always present in options by id.
+  const assessmentOptions = (() => {
+    const baseOptions = Array.isArray(filteredAssessments)
+      ? filteredAssessments.map((a) => {
+          const titleLabel = a.AssessmentTitle || "Untitled Assessment";
+          const typeLabel = a.type
+            ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
+            : "";
+
+          return {
+            value: a._id,
+            label: (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "98%",
+                }}
+              >
+                <span>{titleLabel}</span>
+                {typeLabel && (
+                  <span
+                    className={
+                      "text-md " +
+                      (a.type === "custom"
+                        ? "text-custom-blue"
+                        : "text-green-600")
+                    }
+                  >
+                    {typeLabel}
+                  </span>
+                )}
+              </div>
+            ),
+            searchLabel: titleLabel,
+          };
+        })
+      : [];
+
+    // In edit mode, ensure the current assessment (by id) is available in options
+    if (isEditing && editingAssessmentId && editingAssessment) {
+      const exists = baseOptions.some((opt) => opt.value === editingAssessmentId);
+
+      if (!exists) {
+        const editingTitleLabel =
+          editingAssessment.AssessmentTitle ||
+          formData.assessmentTemplate?.assessmentName ||
+          "Untitled Assessment";
+
+        const editingTypeLabel = editingAssessment.type
+          ? editingAssessment.type.charAt(0).toUpperCase() +
+            editingAssessment.type.slice(1)
+          : "";
+
+        baseOptions.push({
+          value: editingAssessmentId,
+          label: (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "98%",
+              }}
+            >
+              <span>{editingTitleLabel}</span>
+              {editingTypeLabel && (
+                <span
+                  className={
+                    "text-md " +
+                    (editingAssessment.type === "custom"
+                      ? "text-custom-blue"
+                      : "text-green-600")
+                  }
+                >
+                  {editingTypeLabel}
+                </span>
+              )}
+            </div>
+          ),
+          searchLabel: editingTitleLabel,
+        });
+      }
+    }
+
+    return baseOptions;
+  })();
+
+  // When editing an Assessment round, once full assessment details are
+  // fetched by id, update the stored assessmentTemplate name if needed.
+  useEffect(() => {
+    if (!isEditing || !editingAssessmentId || !editingAssessment) return;
+
+    setFormData((prev) => {
+      if (prev.roundTitle !== "Assessment") return prev;
+      if (prev.assessmentTemplate?.assessmentId !== editingAssessmentId)
+        return prev;
+
+      const newName =
+        editingAssessment.AssessmentTitle ||
+        prev.assessmentTemplate?.assessmentName ||
+        "";
+
+      if (!newName || newName === prev.assessmentTemplate?.assessmentName) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        assessmentTemplate: {
+          ...prev.assessmentTemplate,
+          assessmentName: newName,
+        },
+      };
+    });
+  }, [isEditing, editingAssessmentId, editingAssessment]);
 
   // console.log("assessmentData",assessmentData);
 
@@ -744,7 +908,7 @@ function RoundFormTemplates() {
 
       const res = await addOrUpdateRound({ id, roundData, roundId, template });
 
-      console.log("Navigation to template detail page...", res);
+      
       if (res.status === "success") {
         //   if(!isAddRound){
 
@@ -758,7 +922,7 @@ function RoundFormTemplates() {
           templateData,
           isEditMode,
         });
-        console.log("UpdatedTemplate", UpdatedTemplate);
+        
 
         if (isAddNewRound) {
           // Reset form for new round with incremented sequence
@@ -997,15 +1161,26 @@ function RoundFormTemplates() {
                     required
                     name="assessmentTemplate"
                     value={formData.assessmentTemplate.assessmentId || ""}
-                    options={(filteredAssessments || []).map((a) => ({
-                      value: a._id,
-                      label: a.AssessmentTitle,
-                    }))}
+                    options={assessmentOptions}
+                    loading={isAssessmentQueryLoading}
+                    onInputChange={(inputValue, { action }) => {
+                      if (action === "input-change") {
+                        setAssessmentSearch(inputValue || "");
+                      }
+                    }}
+                    onMenuScrollToBottom={handleAssessmentMenuScrollToBottom}
                     onChange={(e) => {
                       const id = e.target.value;
-                      const selected = (filteredAssessments || []).find(
-                        (a) => a._id === id
-                      );
+                      const selected =
+                        (filteredAssessments || []).find(
+                          (a) => a._id === id
+                        ) ||
+                        (editingAssessmentId &&
+                          editingAssessmentId === id &&
+                          editingAssessment
+                          ? editingAssessment
+                          : null);
+
                       if (selected) {
                         handleAssessmentSelect(selected);
                       } else {

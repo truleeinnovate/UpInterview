@@ -26,15 +26,15 @@ import { config } from "../../../../../config.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import { notify } from "../../../../../services/toastService.js";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
+
 function AssessmentsTab({ assessment }) {
   // <-------------------------------v1.0.3
-  const { fetchAssessmentQuestions } =
-    useAssessments();
-  const {
-    scheduleData,
-    isLoading,
-  } = useScheduleAssessments(assessment._id);
+  const { fetchAssessmentQuestions } = useAssessments();
 
+  const { scheduleData, isLoading } = useScheduleAssessments({
+    assessmentId: assessment?._id,
+    type: "scheduled",
+  });
 
   // ------------------------------v1.0.3 >
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -110,7 +110,6 @@ function AssessmentsTab({ assessment }) {
         toast.error("Invalid candidate assessment ID");
         return;
       }
-
 
       if (!userId || !organizationId) {
         console.error("Missing userId or organizationId:", {
@@ -197,8 +196,8 @@ function AssessmentsTab({ assessment }) {
           ? assessment.passScoreBy === "Each Section"
             ? "N/A"
             : candidate.totalScore >= (assessment?.passScore || 0)
-              ? "pass"
-              : "fail"
+            ? "pass"
+            : "fail"
           : null,
       Phone: candidate.candidateId?.Phone || "N/A",
       HigherQualification: candidate.candidateId?.HigherQualification || "N/A",
@@ -227,8 +226,7 @@ function AssessmentsTab({ assessment }) {
         </div>
         {/* <---------------------- v1.0.1 > */}
         <div className="space-y-4">
-          {Array.isArray(scheduleData) &&
-            scheduleData.length > 0 ? (
+          {Array.isArray(scheduleData) && scheduleData.length > 0 ? (
             scheduleData.map((schedule) => (
               // v1.0.5 <-----------------------------------------------------------------
               <div
@@ -253,10 +251,11 @@ function AssessmentsTab({ assessment }) {
                     </span> */}
                       {/* //<---------------------- v1.0.0 */}
                       <span
-                        className={`px-2.5 py-1 text-xs font-medium rounded-full ${schedule.status === "scheduled"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                          }`}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                          schedule.status === "scheduled"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
                       >
                         {schedule.status.charAt(0).toUpperCase() +
                           schedule.status.slice(1)}
@@ -273,10 +272,11 @@ function AssessmentsTab({ assessment }) {
                         }
                       }}
                       disabled={shouldDisableActionButtons(schedule)}
-                      className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${shouldDisableActionButtons(schedule)
-                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                        : "text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500"
-                        }`}
+                      className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                        shouldDisableActionButtons(schedule)
+                          ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                          : "text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500"
+                      }`}
                       title={
                         shouldDisableActionButtons(schedule)
                           ? "Action not available for this status"
@@ -294,10 +294,11 @@ function AssessmentsTab({ assessment }) {
                         }
                       }}
                       disabled={shouldDisableActionButtons(schedule)}
-                      className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${shouldDisableActionButtons(schedule)
-                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                        : "text-red-700 bg-red-100 hover:bg-red-200 focus:ring-red-500"
-                        }`}
+                      className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                        shouldDisableActionButtons(schedule)
+                          ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                          : "text-red-700 bg-red-100 hover:bg-red-200 focus:ring-red-500"
+                      }`}
                       title={
                         shouldDisableActionButtons(schedule)
                           ? "Action not available for this status"
@@ -358,8 +359,8 @@ function AssessmentsTab({ assessment }) {
           isOpen={isShareOpen}
           onCloseshare={() => setIsShareOpen(false)}
           assessment={assessment}
-        // AssessmentTitle={assessment?.AssessmentTitle}
-        // assessmentId={assessment._id}
+          // AssessmentTitle={assessment?.AssessmentTitle}
+          // assessmentId={assessment._id}
         />
       )}
       {/* <---------------------- v1.0.3 */}

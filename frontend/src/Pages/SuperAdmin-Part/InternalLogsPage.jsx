@@ -329,7 +329,7 @@ function InternalLogsPage() {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => {
               setSelectedLogId(row._id);
               setIsPopupOpen(true);
@@ -338,16 +338,7 @@ function InternalLogsPage() {
         ]
       : []),
 
-    // ...(superAdminPermissions?.InternalLogs?.View
-    //   ? [
-    //       {
-    //         key: "360-view",
-    //         label: "360° View",
-    //         icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-    //         onClick: (row) => setSelectedLogId(row._id),
-    //       },
-    //     ]
-    //   : []),
+   
   ];
 
   // Kanban Columns Configuration
@@ -377,7 +368,7 @@ function InternalLogsPage() {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => {
               setSelectedLogId(row._id);
               setIsPopupOpen(true);
@@ -386,22 +377,7 @@ function InternalLogsPage() {
         ]
       : []),
 
-    ...(superAdminPermissions?.InternalLogs?.Edit
-      ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => navigate(`edit/${row._id}`),
-          },
-        ]
-      : []),
-    // {
-    //   key: "login-as-user",
-    //   label: "Login as User",
-    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
-    //   onClick: (row) => handleLoginAsUser(row._id),
-    // },
+    
   ];
 
   // Render Actions for Kanban
@@ -414,7 +390,7 @@ function InternalLogsPage() {
             e.stopPropagation();
             action.onClick(item);
           }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
           title={action.label}
         >
           {action.icon}
@@ -516,9 +492,9 @@ function InternalLogsPage() {
                     {log?.logId ? log.logId : "N/A"}
                   </h3>
 
-                  <p className="text-gray-600 mt-1">
+                  {/* <p className="text-gray-600 mt-1">
                     {log?.position || "position"}
-                  </p>
+                  </p> */}
                 </div>
               </div>
 

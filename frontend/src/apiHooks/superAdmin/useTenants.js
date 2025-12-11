@@ -17,6 +17,7 @@ export const useTenants = ({
   minUsers = "",
   maxUsers = "",
   type = "",
+  valueFilter = "",
 } = {}) => {
   const queryClient = useQueryClient();
   const { superAdminPermissions, isInitialized } = usePermissions();
@@ -41,6 +42,7 @@ export const useTenants = ({
   if (minUsers) queryParams.append("minUsers", minUsers);
   if (maxUsers) queryParams.append("maxUsers", maxUsers);
   if (type) queryParams.append("type", type);
+  if (valueFilter) queryParams.append("valueFilter", valueFilter);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: [
@@ -55,12 +57,13 @@ export const useTenants = ({
       minUsers,
       maxUsers,
       type,
+      valueFilter,
     ],
     queryFn: async () => {
       const response = await axios.get(
         `${
           config.REACT_APP_API_URL
-        }/Organization/all-organizations?${queryParams.toString()}`
+        }/Organization/all-tenants?${queryParams.toString()}`
       );
       return response.data;
     },

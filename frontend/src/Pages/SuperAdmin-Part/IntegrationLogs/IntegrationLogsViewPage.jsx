@@ -3,6 +3,17 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { integrationLogService } from '../../services/integrationLogService';
 
+const formatMessageValue = (value) => {
+  if (!value) return 'N/A';
+  if (typeof value === 'string') return value;
+  if (value && typeof value.message === 'string') return value.message;
+  try {
+    return JSON.stringify(value);
+  } catch (e) {
+    return String(value);
+  }
+};
+
 export default function IntegrationLogsViewPage() {
   const { id } = useParams();
   const [logDetails, setLogDetails] = useState(null);
@@ -120,7 +131,7 @@ export default function IntegrationLogsViewPage() {
             </div>
             <div className="flex gap-x-24">
               <span className="text-gray-700 font-medium w-32">Message</span>
-              <span className=" text-gray-600">{logDetails.message}</span>
+              <span className=" text-gray-600">{formatMessageValue(logDetails.message)}</span>
             </div>
           </div>
         </div>
@@ -158,11 +169,11 @@ export default function IntegrationLogsViewPage() {
             </div>
             <div className="flex gap-x-24">
               <span className="text-gray-700 font-medium w-32">Error</span>
-              <span className=" text-gray-600">{logDetails.responseError}</span>
+              <span className=" text-gray-600">{formatMessageValue(logDetails.responseError)}</span>
             </div>
             <div className="flex gap-x-24">
               <span className="text-gray-700 font-medium w-32">Message</span>
-              <span className=" text-gray-600">{logDetails.responseMessage}</span>
+              <span className=" text-gray-600">{formatMessageValue(logDetails.responseMessage)}</span>
             </div>
             <div className="flex gap-x-24">
               <span className="text-gray-700 font-medium w-32">Response</span>

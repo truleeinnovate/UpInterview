@@ -6,8 +6,8 @@
 // v1.0.5 - Ashok  - Fixed style issues
 
 /* eslint-disable react/prop-types */
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import {
   Eye,
   Ticket,
@@ -18,7 +18,6 @@ import {
   History,
   Info,
 } from "lucide-react";
-import { format, parseISO, isValid } from "date-fns";
 // v1.0.0 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
@@ -30,46 +29,45 @@ import Activity from "../CommonCode-AllTabs/Activity";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { formatDateTime } from "../../../../utils/dateFormatter";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { useTicketById } from "../../../../apiHooks/useSupportDesks";
 
 const SupportViewPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const ticketData = location.state?.ticketData;
-  console.log("lastModifiedBy:", ticketData.updatedByUserId);
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  //const [openForm, setOpenForm] = useState(false);
-  const [activeTab, setActiveTab] = useState("details");
+  // const location = useLocation();
 
+  // const ticketData = location.state?.ticketData;
+  // console.log("lastModifiedBy:", ticketData.updatedByUserId);
+  const [activeTab, setActiveTab] = useState("details");
+  const { id } = useParams();
+
+  console.log("SupportViewPage Ticket ID:", id);
+
+  const { data: ticket, isLoading, isError } = useTicketById(id);
+
+  const ticketData = ticket?.ticket || {};
   console.log("ticketData", ticketData);
+  // console.log("lastModifiedBy:", ticketData.updatedByUserId);
 
   useEffect(() => {
     document.title = "Support Ticket Details";
   }, []);
 
-  const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
-  };
-
-  // v1.0.0 <-------------------------------------------------------------------------
   useScrollLock(true);
-  // v1.0.0 ------------------------------------------------------------------------->
 
-  const formatDate = useCallback((dateString) => {
-    if (!dateString) return "N/A";
-    const date = parseISO(dateString);
-    return isValid(date) ? format(date, "MMM dd, yyyy") : "N/A";
-  }, []);
+  if (isLoading)
+    return (
+      <SidebarPopup title="Support Ticket Details">
+        <div className="p-6">Loading...</div>
+      </SidebarPopup>
+    );
 
-  // const reopenStatus = validReopenStatus.includes(ticketData?.status?.toLowerCase());
+  if (isError)
+    return (
+      <SidebarPopup title="Support Ticket Details">
+        <div className="p-6 text-red-500">Failed to load ticket</div>
+      </SidebarPopup>
+    );
 
-  // const toggleForm = useCallback(() => {
-  //   setOpenForm(prev => !prev);
-  // }, []);
-
-  // if (!ticketData) {
-  //   navigate('/support-desk');
-  //   return null;
-  // }
   const content = (
     <div>
       {/* Sub tabs Navigation */}
@@ -204,7 +202,7 @@ const SupportViewPage = () => {
             </div>
           </div>
 
-          {ticketData.resolution && (
+          {ticketData?.resolution && (
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
               <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
                 Resolution
