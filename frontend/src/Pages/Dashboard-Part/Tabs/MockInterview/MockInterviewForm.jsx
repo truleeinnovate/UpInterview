@@ -72,9 +72,9 @@ const MockSchedulelater = () => {
     qualifications,
     loadQualifications,
     isQualificationsFetching,
-    technologies,
-    loadTechnologies,
-    isTechnologiesFetching,
+    // technologies,
+    // loadTechnologies,
+    // isTechnologiesFetching,
     skills,
     loadSkills,
     isSkillsFetching,
@@ -92,9 +92,9 @@ const MockSchedulelater = () => {
     candidateName: "",
     higherQualification: "",
     currentExperience: "",
-    technology: "",
+    // technology: "",
     jobDescription: "",
-    Role: "",
+    currentRole: "",
     rounds: {
       roundTitle: "Technical Round",
       interviewMode: "Virtual",
@@ -142,7 +142,7 @@ const MockSchedulelater = () => {
   const fieldRefs = {
     candidateName: useRef(null),
     higherQualification: useRef(null),
-    technology: useRef(null),
+    // technology: useRef(null),
     currentExperience: useRef(null),
     relevantExperience: useRef(null),
     currentRole: useRef(null),
@@ -181,9 +181,9 @@ const MockSchedulelater = () => {
   //   role.RoleName.toLowerCase().includes(searchRoleText.toLowerCase())
   // );
 
-  const filteredSkills = skills.filter((skill) =>
-    skill.SkillName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredSkills = skills.filter((skill) =>
+  //   skill.SkillName.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   // Close role dropdown when clicking outside - no longer needed with DropdownWithSearchField
   // useEffect(() => {
@@ -210,8 +210,8 @@ const MockSchedulelater = () => {
         }`.trim(),
         higherQualification: contact.HigherQualification || "",
         currentExperience: contact.yearsOfExperience || "",
-        technology: contact.technologies?.[0] || "",
-        Role: contact.currentRole || "",
+        // technology: contact.technologies?.[0] || "",
+        currentRole: contact.currentRole || "",
         skills: contact.skills || [],
       }));
     }
@@ -224,8 +224,6 @@ const MockSchedulelater = () => {
       if (MockEditData) {
         setMockEdit(true);
 
-        
-
         // Map interviewers to externalInterviewers format
         const formattedInterviewers =
           MockEditData.rounds?.[0]?.interviewers?.map((interviewer) => ({
@@ -236,7 +234,6 @@ const MockSchedulelater = () => {
                 interviewer?.lastName || ""
               }`.trim(),
           })) || [];
-        
 
         setExternalInterviewers(formattedInterviewers);
         // setSelectedInterviewType(formattedInterviewers.length > 0 ? "external" : "scheduled");
@@ -246,9 +243,9 @@ const MockSchedulelater = () => {
           candidateName: MockEditData.candidateName || "",
           higherQualification: MockEditData.higherQualification || "",
           currentExperience: MockEditData.currentExperience || "",
-          technology: MockEditData.technology || "",
+          // technology: MockEditData.technology || "",
           jobDescription: MockEditData.jobDescription || "",
-          Role: MockEditData.Role || "",
+          currentRole: MockEditData.currentRole || "",
           rounds: {
             roundTitle: MockEditData.rounds?.[0]?.roundTitle || "",
             interviewMode: MockEditData.rounds?.[0]?.interviewMode || "Virtual",
@@ -589,15 +586,16 @@ const MockSchedulelater = () => {
         candidateName: formData.candidateName,
         higherQualification: formData.higherQualification,
         currentExperience: formData.currentExperience,
-        technology: formData.technology,
+        // technology: formData.technology,
         jobDescription: formData.jobDescription,
-        Role: formData.Role,
+        currentRole: formData.currentRole,
         ownerId: userId,
         tenantId: organizationId,
         createdById: userId,
         lastModifiedById: userId,
         // ✅ Don't include rounds for Page 1
       };
+      console.log("page1Data", page1Data);
 
       // If editing existing mock interview, use that ID
       const mockIdToUse = mockEdit ? id : createdMockInterviewId;
@@ -640,8 +638,8 @@ const MockSchedulelater = () => {
           // Preserve all current form data and update with any changes from server
           higherQualification:
             savedData.higherQualification || prev.higherQualification,
-          technology: savedData.technology || prev.technology,
-          Role: savedData.Role || prev.Role,
+          // technology: savedData.technology || prev.technology,
+          currentRole: savedData.currentRole || prev.currentRole,
           // Keep other fields as they are
         }));
       }
@@ -996,9 +994,9 @@ const MockSchedulelater = () => {
         candidateName: "",
         higherQualification: "",
         currentExperience: "",
-        technology: "",
+        // technology: "",
         jobDescription: "",
-        Role: "",
+        currentRole: "",
         rounds: {
           roundTitle: "",
           interviewMode: "",
@@ -1691,7 +1689,7 @@ const MockSchedulelater = () => {
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
-                      <DropdownWithSearchField
+                      {/* <DropdownWithSearchField
                         containerRef={fieldRefs.technology}
                         label="Technology"
                         name="technology"
@@ -1716,7 +1714,7 @@ const MockSchedulelater = () => {
                         required
                         onMenuOpen={loadCurrentRoles}
                         loading={isCurrentRolesFetching}
-                      />
+                      /> */}
                       <InputField
                         inputRef={fieldRefs.currentExperience}
                         type="number"
@@ -1734,9 +1732,9 @@ const MockSchedulelater = () => {
                       />
                       <DropdownWithSearchField
                         containerRef={fieldRefs.currentRole}
-                        label="Role"
-                        name="Role"
-                        value={formData.Role}
+                        label="currentRole"
+                        name="currentRole"
+                        value={formData.currentRole}
                         options={currentRoles.map((r) => ({
                           value: r.roleName,
                           label: r.roleLabel,
@@ -1744,15 +1742,15 @@ const MockSchedulelater = () => {
                         onChange={(e) => {
                           setFormData((prev) => ({
                             ...prev,
-                            Role: e.target.value,
+                            currentRole: e.target.value,
                           }));
                           setErrors((prev) => ({
                             ...prev,
-                            Role: "",
+                            currentRole: "",
                           }));
                         }}
-                        error={errors.Role}
-                        placeholder="Select Role"
+                        error={errors.currentRole}
+                        placeholder="Current Role or Technology"
                         required
                         onMenuOpen={loadCurrentRoles}
                         loading={isCurrentRolesFetching}
@@ -2779,7 +2777,7 @@ const MockSchedulelater = () => {
           dateTime={combinedDateTime}
           onProceed={handleExternalInterviewerSelect}
           skills={formData?.skills}
-          technology={formData.technology}
+          technology={formData.currentRole}
           navigatedfrom="mock-interview"
           candidateExperience={formData?.currentExperience}
           isMockInterview={true} // Correctly passes true for mock interviews

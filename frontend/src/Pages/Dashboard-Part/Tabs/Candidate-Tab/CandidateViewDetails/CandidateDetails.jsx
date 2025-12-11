@@ -42,14 +42,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
   useLocation();
   const id = candidateId || params?.id;
   const { candidate: fetchedCandidate } = useCandidateById(id);
-  // v1.0.2 <--------------------------------------------------------------------
-  // v1.0.6 <--------------------------------------------------------------------
-  // v1.0.7 <--------------------------------------------------------------------
-  // useScrollLock(true);
+
   useScrollLock(!!id);
-  // v1.0.7 -------------------------------------------------------------------->
-  // v1.0.6 -------------------------------------------------------------------->
-  // v1.0.2 -------------------------------------------------------------------->
 
   useEffect(() => {
     if (id && fetchedCandidate) {
@@ -57,22 +51,6 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
     }
   }, [id, fetchedCandidate]);
 
-  // v1.0.4 <-----------------------------------------------------------------
-  // With this:
-  // const getFromPath = () => {
-  //   // if (mode === "Assessment") {
-  //   //   // If coming from assessment, go back to assessment details
-  //   //   return `/assessment-details/${location.state?.assessmentId}`;
-  //   // }
-  //   if (mode === "Assessment") return -1;
-  //   if (mode === "Interview") return null;
-  //   // Default to candidate list or use the stored from path
-  //   return location.state?.from || "/candidate";
-  // };
-
-  // const fromPath = getFromPath();
-
-  // if (!candidate || loading) return <Loading />
   const content = (
     <div>
       <div className="flex-1">
@@ -139,7 +117,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
               </h3>
 
               <p className="text-gray-600 mt-1 sm:text-sm text-lg">
-                {candidate.currentRoleLabel || "position"}
+                {candidate?.roleDetails?.roleLabel || "position"}
               </p>
             </div>
             {/* v1.0.4 --------------------------------------------------------> */}
@@ -342,7 +320,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                   </div> */}
                   <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
                     {/* <div className="flex items-center justify-between gap-3 w-full"> */}
-                    <div className="flex items-center gap-3">
+                    {/* <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
                         <Briefcase className="w-5 h-5" />
                       </div>
@@ -352,7 +330,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                           {candidate?.technologyLabel || "N/A"}{" "}
                         </p>
                       </div>
-                    </div>
+                    </div> */}
 
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
@@ -401,7 +379,9 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                       className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full px-3 py-3 bg-custom-bg rounded-lg md:rounded-full lg:rounded-full xl:rounded-full 2xl:rounded-full border border-blue-100"
                     >
                       <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
-                        <span className="truncate max-w-full">{skill.skill}</span>
+                        <span className="truncate max-w-full">
+                          {skill.skill}
+                        </span>
                       </span>
                       <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
                         <span className="truncate max-w-full">

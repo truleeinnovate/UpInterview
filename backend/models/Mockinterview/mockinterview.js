@@ -2,22 +2,18 @@
 const mongoose = require("mongoose");
 const mockInterviewSchema = new mongoose.Schema(
   {
-
-    // <------------------------------- v1.0.0 
+    // <------------------------------- v1.0.0
     mockInterviewCode: { type: String },
     // ------------------------------ v1.0.0 >
-    skills: [
-       String
-      
-    ],
+    skills: [String],
 
     jobDescription: String,
-    Role: String,
+    currentRole: String,
     candidateName: String,
     higherQualification: String,
     currentExperience: String,
-    technology: String,
- 
+    // technology: String,
+
     resume: {
       // Added by Ashok
       filename: String,

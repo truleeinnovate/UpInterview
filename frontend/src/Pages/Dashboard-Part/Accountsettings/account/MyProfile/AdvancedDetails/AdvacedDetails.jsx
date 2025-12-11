@@ -2,35 +2,29 @@
 // v1.0.1  -  Ashok   - Improved responsiveness
 
 import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
-import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 import AuthCookieManager from "../../../../../../utils/AuthCookieManager/AuthCookieManager";
 
-const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type,  }) => {
-
+const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
   const navigate = useNavigate();
 
   const [contactData, setContactData] = useState({});
 
   const ownerId = AuthCookieManager.getCurrentUserId();
 
-
   // Always call the hook to comply with React rules
-  const { userProfile } = useUserProfile(usersId ? usersId :"");
-
+  const { userProfile } = useUserProfile(usersId ? usersId : "");
 
   useEffect(() => {
     // Use external data if provided, otherwise use userProfile from hook
     // if (externalData) {
     //   setContactData(externalData);
-    // } 
-     if (userProfile) {
+    // }
+    if (userProfile) {
       setContactData(userProfile);
     }
-  }, [userProfile,usersId, mode]);
-
+  }, [userProfile, usersId, mode]);
 
   return (
     // v1.0.1 <----------------------------------------------------------------------------------
@@ -52,13 +46,13 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type,  }) => {
 
             if (mode === "users" || mode === "outsource") {
               setAdvacedEditOpen(true);
-            }  else {
+            } else {
               // Navigate to my profile edit page
               navigate(`/account-settings/my-profile/advanced-edit/${editId}`);
             }
           }}
           // ------------------------------ v1.0.0 >
-          
+
           className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg"
         >
           Edit
@@ -73,16 +67,16 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type,  }) => {
         {/* v1.0.1 <--------------------------------------------------------------------------------------------- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-gray-500">Current Role</p>
+            <p className="text-sm text-gray-500">Current Role or Technology</p>
             <p className="font-medium sm:text-sm">
-              {contactData.currentRole || "Not Provided"}
+              {contactData?.currentRoleLabel || "Not Provided"}
             </p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Industry</p>
             <p className="font-medium sm:text-sm">
-              {contactData.industry || "Not Provided"}
+              {contactData?.industry || "Not Provided"}
             </p>
           </div>
         </div>

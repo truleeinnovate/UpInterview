@@ -18,13 +18,12 @@ exports.getMockInterviewDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const {
-      actingAsUserId,
-      actingAsTenantId,
-    } = res.locals.auth;
+    const { actingAsUserId, actingAsTenantId } = res.locals.auth;
 
     if (!actingAsUserId || !actingAsTenantId) {
-      return res.status(400).json({ message: "OwnerId or TenantId ID is required" });
+      return res
+        .status(400)
+        .json({ message: "OwnerId or TenantId ID is required" });
     }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -73,9 +72,10 @@ exports.getMockInterviewDetails = async (req, res) => {
 exports.createMockInterview = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Create mock interview with rounds";
-
+  console.log("req.body", req.body);
   try {
     const validation = validateMockInterview(req.body);
+    console.log("validation", validation);
     if (!validation.isValid) {
       return res.status(400).json({
         status: "error",
@@ -91,8 +91,8 @@ exports.createMockInterview = async (req, res) => {
       candidateName,
       higherQualification,
       currentExperience,
-      technology,
-      Role,
+      // technology,
+      currentRole,
       jobDescription,
       rounds,
       createdById,
@@ -111,11 +111,11 @@ exports.createMockInterview = async (req, res) => {
     // Create mock interview
     const mockInterview = new MockInterview({
       skills,
-      Role,
+      currentRole,
       candidateName,
       higherQualification,
       currentExperience,
-      technology,
+      // technology,
       jobDescription,
       ownerId,
       tenantId,
@@ -251,8 +251,8 @@ exports.updateMockInterview = async (req, res) => {
       candidateName,
       higherQualification,
       currentExperience,
-      technology,
-      Role,
+      // technology,
+      currentRole,
       jobDescription,
       rounds,
       createdById,
@@ -289,8 +289,8 @@ exports.updateMockInterview = async (req, res) => {
       candidateName,
       higherQualification,
       currentExperience,
-      technology,
-      Role,
+      // technology,
+      currentRole,
       jobDescription,
     };
 

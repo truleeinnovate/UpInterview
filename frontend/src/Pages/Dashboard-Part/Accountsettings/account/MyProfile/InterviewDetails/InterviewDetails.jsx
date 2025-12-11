@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 import AuthCookieManager from "../../../../../../utils/AuthCookieManager/AuthCookieManager";
-import { useMasterData } from "../../../../../../apiHooks/useMasterData";
+// import { useMasterData } from "../../../../../../apiHooks/useMasterData";
 
 // Format skill name with proper capitalization
 const formatSkill = (skill) => {
@@ -60,14 +60,6 @@ const InterviewUserDetails = ({
 }) => {
   const navigate = useNavigate();
   const [contactData, setContactData] = useState({});
-  const pageType = "adminPortal";
-  const {
-    currentRoles,
-    loadCurrentRoles,
-    isCurrentRolesFetching,
-    // loadTechnologies,
-    // isTechnologiesFetching,
-  } = useMasterData({}, pageType);
 
   const ownerId = AuthCookieManager.getCurrentUserId();
 
@@ -121,8 +113,6 @@ const InterviewUserDetails = ({
     }
   }, [userProfile, ownerId, externalData]);
 
-  // console.log("contactData?.contactId", contactData);
-
   const expYears = parseInt(contactData?.yearsOfExperience || 0, 10);
 
   const showJuniorLevel = expYears > 0;
@@ -175,12 +165,14 @@ const InterviewUserDetails = ({
           {/* v1.0.2 --------------------------------------------------------------------------------------------------------------> */}
           {/* Row 1: Technologies and Skills */}
           <div className="col-span-1 space-y-2">
-            <p className="text-sm text-gray-500">Technologies</p>
+            <p className="text-sm text-gray-500">
+              Selected Role or Technology{" "}
+            </p>
             <div className="flex flex-wrap gap-2 mt-1">
-              {contactData?.technologies?.length > 0 ? (
+              {/* {contactData?.currentRole ? (
                 currentRoles
                   .filter((role) =>
-                    contactData.technologies.includes(role.roleName)
+                    contactData.currentRole.includes(role.roleName)
                   )
                   .map((matchedRole, index) => (
                     <span
@@ -192,7 +184,10 @@ const InterviewUserDetails = ({
                   ))
               ) : (
                 <p className="text-gray-500 text-sm">-</p>
-              )}
+              )} */}
+              <span className="px-2 py-1 bg-blue-50 text-custom-blue rounded-full text-xs">
+                {contactData?.currentRoleLabel || "Not Provided"}
+              </span>
 
               {/* {contactData?.technologies?.length > 0 ? (
                 contactData.technologies.map((tech, index) => (

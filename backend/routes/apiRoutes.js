@@ -2168,7 +2168,7 @@ async function handleInterviewFiltering(options) {
       .populate({
         path: "candidateId",
         select:
-          "FirstName LastName Email Technology skills CurrentExperience ImageData",
+          "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
         model: "Candidate",
       })
       .populate({
@@ -2201,6 +2201,7 @@ async function handleInterviewFiltering(options) {
             c.FirstName,
             c.LastName,
             c.Email,
+            c.CurrentRole,
             p.title,
             p.companyname,
             i.interviewCode,

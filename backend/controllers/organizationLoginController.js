@@ -948,7 +948,7 @@ const getAllOrganizations = async (req, res) => {
                   };
                 } else if (prefix === "tech") {
                   return {
-                    "contact.technologies": {
+                    "contact.currentRole": {
                       $elemMatch: {
                         $regex: new RegExp(`^${val}$`, "i"),
                       },

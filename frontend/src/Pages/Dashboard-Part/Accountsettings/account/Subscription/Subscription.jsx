@@ -20,6 +20,7 @@ import ContactSalesForm from "../../../../../Components/common/EnterpriseContact
 // import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField";
 import { validateWorkEmail } from "../../../../../utils/workEmailValidation";
 import { config } from "../../../../../config";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 
 // Helper function to format date as dd-mm-yy
 const formatDate = (dateStr) => {
@@ -112,10 +113,8 @@ const SubscriptionPlansSkeleton = () => {
 };
 
 const Subscription = () => {
-  const { checkPermission, isInitialized } = usePermissionCheck();
-  const { effectivePermissions } = usePermissions();
   const location = useLocation();
-  const isUpgrading = location.state?.isUpgrading || false;
+  // const isUpgrading = location.state?.isUpgrading || false;
   const {
     subscriptionData,
     plans,
@@ -138,7 +137,7 @@ const Subscription = () => {
   const navigate = useNavigate();
   const toggleBilling = () => setIsAnnual(!isAnnual);
   const loading = isSubscriptionLoading || isPlansLoading;
-  const isBusy = isMutationLoading;
+  // const isBusy = isMutationLoading;
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
   const [selectedPlanForUpgrade, setSelectedPlanForUpgrade] = useState(null);
@@ -409,14 +408,14 @@ const Subscription = () => {
     additionalDetails: "",
   });
 
-  const companySizeOptions = [
-    { value: "1-10", label: "1-10" },
-    { value: "11-50", label: "11-50" },
-    { value: "51-200", label: "51-200" },
-    { value: "201-500", label: "201-500" },
-    { value: "501-1000", label: "501-1000" },
-    { value: "1000+", label: "1000+" },
-  ];
+  // const companySizeOptions = [
+  //   { value: "1-10", label: "1-10" },
+  //   { value: "11-50", label: "11-50" },
+  //   { value: "51-200", label: "51-200" },
+  //   { value: "201-500", label: "201-500" },
+  //   { value: "501-1000", label: "501-1000" },
+  //   { value: "1000+", label: "1000+" },
+  // ];
 
   const [errors, setErrors] = useState({});
 
@@ -568,8 +567,14 @@ const Subscription = () => {
                     : "Plan Name Not Available"
                 } (${
                   subscriptionData?.selectedBillingCycle
-                    ? subscriptionData?.selectedBillingCycle
-                    : "Billing Cycle Not Available"
+                    ? capitalizeFirstLetter(
+                        subscriptionData?.selectedBillingCycle
+                      )
+                    : // subscriptionData?.selectedBillingCycle
+                      //   .charAt(0)
+                      //   .toUpperCase() +
+                      // subscriptionData?.selectedBillingCycle.slice(1)
+                      "Billing Cycle Not Available"
                 })`}</h3>
                 <p className="text-gray-600 mt-1 sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base">
                   {/* v1.0.2 <------------------------------------------------------- */}

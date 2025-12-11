@@ -1,10 +1,9 @@
 // v1.0.0 - Ashraf - added sending interview email link update in rounds api
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { config } from "../config";
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
 import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
 

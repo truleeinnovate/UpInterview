@@ -139,11 +139,11 @@ export const useMockInterviews = (params = {}) => {
       // Build payload - FIXED: Include rounds only if they exist
       const payload = {
         skills,
-        Role: formData.Role || "",
+        currentRole: formData.currentRole || "",
         candidateName: formData.candidateName || "",
         higherQualification: formData.higherQualification || "",
         currentExperience: formData.currentExperience || "",
-        technology: formData.technology || "",
+        // technology: formData.technology || "",
         jobDescription: formData.jobDescription || "",
         createdById: userId,
         lastModifiedById: userId,

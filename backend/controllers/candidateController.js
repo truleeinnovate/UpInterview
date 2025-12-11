@@ -13,6 +13,7 @@ const {
   CandidateAssessment,
 } = require("../models/Assessment/candidateAssessment.js");
 const { Users } = require("../models/Users");
+const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
 
 // Add a new Candidate
 const addCandidatePostCall = async (req, res) => {
@@ -502,7 +503,17 @@ const getCandidateById = async (req, res) => {
 
     let query = { _id: id };
 
-    const candidate = await Candidate.findOne(query).lean();
+    const candidate = await Candidate.findOne(query)
+      // .populate("CurrentRole", "roleName roleLabel")
+      .lean();
+
+    const role = await RoleMaster.findOne({ roleName: candidate.CurrentRole })
+      .select("roleName roleLabel")
+      .lean();
+
+    candidate.roleDetails = role || null;
+
+    // console.log("candidate", candidate);
 
     if (!candidate) {
       return res.status(404).json({ message: "Candidate not found" });

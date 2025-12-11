@@ -13,7 +13,10 @@ const candidateSchema = new mongoose.Schema(
     UniversityCollege: String,
     CurrentExperience: Number, //  CurrentExperience is related to total experience in Ui mentioned.
     RelevantExperience: Number,
-    CurrentRole: String,
+    //  mongoose.Schema.Types.ObjectId
+    CurrentRole: { type: String, ref: "rolemasters" }, // ✅ UPDATED
+
+    // CurrentRole: String,
     // Technology: String,
     // PositionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Position' },
     // PositionId: [{

@@ -22,7 +22,7 @@ import { AnimatePresence } from "framer-motion";
 import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
 import InterviewerAvatar from "../../../CommonCode-AllTabs/InterviewerAvatar.jsx";
 import InterviewerDetailsModal from "../Internal-Or-Outsource/OutsourceInterviewerDetail.jsx";
-import { useCustomContext } from "../../../../../../Context/Contextfetch.js";
+// import { useCustomContext } from "../../../../../../Context/Contextfetch.js";
 // import Wallet from "../../../../Accountsettings/account/wallet/Wallet.jsx";
 import { useWallet } from "../../../../../../apiHooks/useWallet"; //<----v1.0.1-----
 import { Toaster } from "react-hot-toast"; //<----v1.0.1-----
@@ -439,11 +439,11 @@ function OutsourcedInterviewerModal({
             (interviewer) => {
               console.log(
                 "Interviewer Technology:",
-                interviewer.contact?.technology
+                interviewer.contact?.currentRole
               );
               console.log("mock Technology:", technology);
               const interviewerTech =
-                interviewer.contact?.technology?.toLowerCase()?.trim() || "";
+                interviewer.contact?.currentRole?.toLowerCase()?.trim() || "";
               const candidateTech = technology?.toLowerCase()?.trim() || "";
 
               // If no technology is specified for either, consider it a match
@@ -455,7 +455,7 @@ function OutsourcedInterviewerModal({
 
           const nonTechMatchedInterviewers = availableInterviewers.filter(
             (interviewer) => {
-              const interviewerTech = interviewer.contact?.technology
+              const interviewerTech = interviewer.contact?.currentRole
                 ?.toLowerCase()
                 ?.trim();
               const candidateTech = technology?.toLowerCase()?.trim();
@@ -795,7 +795,7 @@ function OutsourcedInterviewerModal({
         // Split into two groups: tech-matched and non-tech-matched
         const techMatchedInterviewers = availableInterviewers.filter(
           (interviewer) => {
-            const interviewerTech = interviewer.contact?.technology
+            const interviewerTech = interviewer?.contact?.currentRole
               ?.toLowerCase()
               ?.trim();
             const candidateTech = candidateTechnology?.toLowerCase()?.trim();
@@ -911,7 +911,7 @@ function OutsourcedInterviewerModal({
           combinedInterviewers.map((i) => ({
             name: i.contact?.firstName || "Unknown",
             matchedSkills: i.matchedSkills,
-            technology: i.contact?.technology,
+            technology: i.contact?.currentRole,
           }))
         );
 
@@ -971,7 +971,7 @@ function OutsourcedInterviewerModal({
       positionData?.skills,
       positionData?.minexperience,
       positionData?.maxexperience,
-      candidateData?.Technology
+      candidateData?.CurrentRole
     );
     requestSentRef.current = true;
   }, [positionData, dateTime, navigatedfrom, interviewers, skills]);

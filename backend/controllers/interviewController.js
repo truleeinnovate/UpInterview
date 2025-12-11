@@ -1793,7 +1793,7 @@ const getInterviewDataforOrg = async (req, res) => {
       .populate({
         path: "candidateId",
         select:
-          "FirstName LastName Email Technology skills CurrentExperience ImageData",
+          "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
         model: "Candidate",
       })
       .populate({

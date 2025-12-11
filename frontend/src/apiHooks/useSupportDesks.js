@@ -276,13 +276,12 @@ export const useTicketById = (ticketId) => {
 
     const { data } = await axios.get(
       `${config.REACT_APP_API_URL}/get-ticket/${ticketId}`,
-      // {
-      //   headers: {
-      //     Authorization: `Bearer ${authToken}`,
-      //   },
-      // }
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
     );
-    console.log("data from useTicketById", data);
 
     return data; // backend returns full ticket object
   };
