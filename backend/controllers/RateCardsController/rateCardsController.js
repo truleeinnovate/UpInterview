@@ -50,7 +50,8 @@ const createRateCard = async (req, res) => {
       // Single insert
       const {
         category,
-        technology,
+        // technology,
+        roleName,
         levels,
         defaultCurrency,
         isActive,
@@ -59,7 +60,8 @@ const createRateCard = async (req, res) => {
 
       const newCard = new RateCard({
         category,
-        technology,
+        // technology,
+        roleName,
         levels,
         discountMockInterview,
         defaultCurrency,
