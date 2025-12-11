@@ -10,11 +10,19 @@ exports.getApiKeys = asyncHandler(async (req, res) => {
   const startTime = Date.now();
 
   try {
+    // Debug: Check authentication context
+    console.log(`[${requestId}] Auth context:`, {
+      hasAuth: !!res.locals.auth,
+      auth: res.locals.auth,
+      headers: req.headers
+    });
+
     const apiKeys = await ApiKey.find({}) // Remove createdBy filter - get all API keys
-      .sort({ createdAt: -1 })
       .select("-__v");
 
     const duration = Date.now() - startTime;
+
+    console.log(`[${requestId}] Found ${apiKeys.length} API keys`);
 
     res.status(200).json({
       success: true,
@@ -26,6 +34,7 @@ exports.getApiKeys = asyncHandler(async (req, res) => {
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`[${requestId}] Error fetching API keys:`, error);
+    console.error(`[${requestId}] Error stack:`, error.stack);
 
     res.status(500).json({
       success: false,
