@@ -34,9 +34,13 @@ const KanbanView = ({
           <div className="text-center py-10 text-gray-500">{emptyState}</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full">
-            {data.map((item, index) => (
+            {data.map((item, index) => {
+              const baseId = item.id || item._id || "card";
+              const cardKey = `${baseId}-${index}`;
+
+              return (
               <motion.div
-                key={item.id || item._id || index}
+                key={cardKey}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
@@ -91,7 +95,8 @@ const KanbanView = ({
                   ))}
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

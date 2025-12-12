@@ -301,23 +301,47 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
     filterCategory === "all" ? categories : [filterCategory];
 
   const getRateCardsByCategory = (category) => {
-    return rateCards.filter((card) => card.category === category);
+    return rateCards?.filter((card) => card?.category === category);
   };
 
   const formatCurrency = (amount, currency) => {
     const symbol = currency === "USD" ? "$" : "₹";
-    return `${symbol}${amount.toLocaleString()}`;
+    return `${symbol}${amount?.toLocaleString()}`;
   };
 
-  const getRateRangeDisplay = (levels, currency) => {
-    const juniorRate = levels.find((l) => l.level === "Junior");
-    const seniorRate = levels.find((l) => l.level === "Senior");
+  // const getRateRangeDisplay = (levels, currency) => {
+  //   const juniorRate = levels?.find((l) => l?.level === "Junior");
+  //   const seniorRate = levels?.find((l) => l?.level === "Senior");
+
+  //   if (!juniorRate || !seniorRate) return "N/A";
+
+  //   const currencyKey = currency.toLowerCase();
+  //   const minRate = juniorRate?.rateRange[currencyKey]?.min;
+  //   const maxRate = seniorRate?.rateRange[currencyKey]?.max;
+
+  //   return `${formatCurrency(minRate, currency)} - ${formatCurrency(
+  //     maxRate,
+  //     currency
+  //   )}`;
+  // };
+
+  const getRateRangeDisplay = (levels = [], currency = "INR") => {
+    const juniorRate = levels?.find((l) => l?.level === "Junior");
+    const seniorRate = levels?.find((l) => l?.level === "Senior");
 
     if (!juniorRate || !seniorRate) return "N/A";
 
-    const currencyKey = currency.toLowerCase();
-    const minRate = juniorRate.rateRange[currencyKey].min;
-    const maxRate = seniorRate.rateRange[currencyKey].max;
+    const currencyKey = currency?.toLowerCase?.();
+
+    const juniorCurrency = juniorRate?.rateRange?.[currencyKey];
+    const seniorCurrency = seniorRate?.rateRange?.[currencyKey];
+
+    if (!juniorCurrency || !seniorCurrency) return "N/A";
+
+    const minRate = juniorCurrency?.min;
+    const maxRate = seniorCurrency?.max;
+
+    if (minRate == null || maxRate == null) return "N/A";
 
     return `${formatCurrency(minRate, currency)} - ${formatCurrency(
       maxRate,
@@ -334,13 +358,13 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
             {rateCard.technology}
           </h4> */}
           <h4 className="font-medium text-gray-900 text-sm leading-tight mb-1 truncate">
-            {rateCard.technology && rateCard.technology.length > 0 ? (
+            {rateCard?.technology && rateCard?.technology?.length > 0 ? (
               <>
-                {rateCard.technology[0]}
-                {rateCard.technology.length > 1 && (
+                {rateCard?.technology[0]}
+                {rateCard?.technology?.length > 1 && (
                   <span className="text-gray-500">
                     {" "}
-                    +{rateCard.technology.length - 1} more
+                    +{rateCard?.technology?.length - 1} more
                   </span>
                 )}
               </>
@@ -351,11 +375,11 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
           {/* v1.0.2 --------------------------------------------------------------------> */}
           <div className="flex items-center space-x-2">
             <StatusBadge
-              status={rateCard.isActive ? "active" : "inactive"}
-              text={rateCard.isActive ? "Active" : "Inactive"}
+              status={rateCard?.isActive ? "active" : "inactive"}
+              text={rateCard?.isActive ? "Active" : "Inactive"}
             />
             <span className="text-xs text-gray-500 font-mono">
-              {rateCard.defaultCurrency}
+              {rateCard?.defaultCurrency}
             </span>
           </div>
         </div>
@@ -392,7 +416,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
         <div>
           <div className="text-xs text-gray-500">Rate Range</div>
           <div className="text-sm font-medium text-gray-900">
-            {getRateRangeDisplay(rateCard.levels, rateCard.defaultCurrency)}
+            {getRateRangeDisplay(rateCard?.levels, rateCard?.defaultCurrency)}
           </div>
           <div className="text-xs text-gray-500">per hour</div>
         </div>
@@ -400,12 +424,12 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
         <div>
           <div className="text-xs text-gray-500 mb-1">Experience Levels</div>
           <div className="flex flex-wrap gap-1">
-            {rateCard.levels.map((level, index) => (
+            {rateCard?.levels?.map((level, index) => (
               <span
                 key={index}
                 className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-teal-100 text-teal-800"
               >
-                {level.level}
+                {level?.level}
               </span>
             ))}
           </div>
@@ -421,7 +445,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
           </div> */}
           {/* v1.0.0 ----------------------------------------------------> */}
           <div className="text-xs text-gray-400">
-            {new Date(rateCard.createdAt).toLocaleDateString()}
+            {new Date(rateCard?.createdAt)?.toLocaleDateString()}
           </div>
         </div>
       </div>
@@ -487,7 +511,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {categoryCards?.length > 0 ? (
                   categoryCards?.map((rateCard) => (
-                    <RateCard key={rateCard._id} rateCard={rateCard} />
+                    <RateCard key={rateCard?._id} rateCard={rateCard} />
                   ))
                 ) : (
                   <div className="text-center py-8 text-gray-500">

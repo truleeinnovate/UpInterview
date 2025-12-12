@@ -235,15 +235,39 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
     return `${symbol}${amount.toLocaleString()}`;
   };
 
-  const getRateRangeDisplay = (levels, currency) => {
-    const juniorRate = levels.find((l) => l.level === "Junior");
-    const seniorRate = levels.find((l) => l.level === "Senior");
+  // const getRateRangeDisplay = (levels, currency) => {
+  //   const juniorRate = levels.find((l) => l.level === "Junior");
+  //   const seniorRate = levels.find((l) => l.level === "Senior");
+
+  //   if (!juniorRate || !seniorRate) return "N/A";
+
+  //   const currencyKey = currency.toLowerCase();
+  //   const minRate = juniorRate.rateRange[currencyKey].min;
+  //   const maxRate = seniorRate.rateRange[currencyKey].max;
+
+  //   return `${formatCurrency(minRate, currency)} - ${formatCurrency(
+  //     maxRate,
+  //     currency
+  //   )}`;
+  // };
+
+  const getRateRangeDisplay = (levels = [], currency = "INR") => {
+    const juniorRate = levels?.find((l) => l?.level === "Junior");
+    const seniorRate = levels?.find((l) => l?.level === "Senior");
 
     if (!juniorRate || !seniorRate) return "N/A";
 
-    const currencyKey = currency.toLowerCase();
-    const minRate = juniorRate.rateRange[currencyKey].min;
-    const maxRate = seniorRate.rateRange[currencyKey].max;
+    const currencyKey = currency?.toLowerCase?.();
+
+    const juniorCurrency = juniorRate?.rateRange?.[currencyKey];
+    const seniorCurrency = seniorRate?.rateRange?.[currencyKey];
+
+    if (!juniorCurrency || !seniorCurrency) return "N/A";
+
+    const minRate = juniorCurrency?.min;
+    const maxRate = seniorCurrency?.max;
+
+    if (minRate == null || maxRate == null) return "N/A";
 
     return `${formatCurrency(minRate, currency)} - ${formatCurrency(
       maxRate,

@@ -6,19 +6,357 @@
 // v1.0.3 - Ashok - changed dropdowns data from static to dynamic and disabled buttons based on mode
 // v1.0.6 - Ashok - modified code as based number of technologies in selected category create number of rates
 
-import { useState, useEffect } from "react";
-import { Minimize, Expand, X, Plus, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import {
+  Minimize,
+  Expand,
+  X,
+  Plus,
+  Trash2,
+  Upload,
+  FileText,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 // v1.0.0 <--------------------------------------
 import axios from "axios";
 import { config } from "../../../config";
-import toast from "react-hot-toast";
+import { notify } from "../../../services/toastService";
 // v1.0.0 -------------------------------------->
 // v1.0.1 <-------------------------------------------------------
 import { useMasterData } from "../../../apiHooks/useMasterData";
 import { ReactComponent as FaEdit } from "../../../icons/FaEdit.svg";
 import DropdownWithSearchField from "../../../Components/FormFields/DropdownWithSearchField";
 import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect";
+import Papa from "papaparse";
 // v1.0.1 ------------------------------------------------------->
+
+function BulkUploadRateCardModal({ onClose, onSuccess }) {
+  const [file, setFile] = useState(null);
+  const [parsedData, setParsedData] = useState([]);
+  const [errors, setErrors] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // --- Drag & Drop Handlers ---
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const droppedFile = e.dataTransfer.files[0];
+    validateAndParse(droppedFile);
+  };
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    validateAndParse(selectedFile);
+  };
+
+  const validateAndParse = (selectedFile) => {
+    if (!selectedFile) return;
+
+    // Validate CSV Type
+    if (
+      selectedFile.type !== "text/csv" &&
+      !selectedFile.name.endsWith(".csv")
+    ) {
+      notify.error("Please upload a valid CSV file.");
+      return;
+    }
+
+    setFile(selectedFile);
+    parseCSV(selectedFile);
+  };
+
+  // --- CSV Parsing Logic ---
+  const parseCSV = (file) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        if (results.errors.length > 0) {
+          setErrors(results.errors.map((e) => `Row ${e.row}: ${e.message}`));
+          return;
+        }
+
+        // 1. Normalize Keys (Lowercase + remove spaces)
+        const normalizedData = results.data.map((row) => {
+          const fixed = {};
+          Object.keys(row).forEach((key) => {
+            const cleanedKey = key.trim().toLowerCase().replace(/\s+/g, "");
+            fixed[cleanedKey] = row[key]?.trim?.() || row[key];
+          });
+          return fixed;
+        });
+
+        processData(normalizedData);
+      },
+      error: (err) => {
+        notify.error("Error parsing CSV: " + err.message);
+      },
+    });
+  };
+
+  // Helper to find value from multiple possible header names
+  const getKey = (row, keys) => {
+    for (let k of keys) {
+      if (row[k] !== undefined && row[k] !== "") return row[k];
+    }
+    return null;
+  };
+
+  const processData = (rawData) => {
+    const processedMap = new Map();
+    const validationErrors = [];
+    const VALID_LEVELS = ["Junior", "Mid-Level", "Senior"];
+
+    rawData.forEach((row, index) => {
+      const rowNum = index + 1;
+
+      // Extract fields using flexible headers
+      const category = getKey(row, ["category"]);
+      const role = getKey(row, [
+        "role",
+        "roleName",
+        "technology",
+        "defaultCurrency",
+      ]);
+      const level = getKey(row, ["level"]);
+
+      // 1. Check Required Fields
+      if (!category || !role || !level) {
+        validationErrors.push(
+          `Row ${rowNum}: Missing Category, Role, or Level.`
+        );
+        return;
+      }
+
+      // 2. Validate Level Enum
+      // Case-insensitive check for level, then formatted to Title Case
+      const formattedLevel = VALID_LEVELS.find(
+        (l) => l.toLowerCase() === level.toLowerCase()
+      );
+
+      if (!formattedLevel) {
+        validationErrors.push(
+          `Row ${rowNum}: Invalid Level "${level}". Allowed: ${VALID_LEVELS.join(
+            ", "
+          )}.`
+        );
+        return;
+      }
+
+      // 3. Numeric Validation
+      const inrMin = parseFloat(row.inrmin) || 0;
+      const inrMax = parseFloat(row.inrmax) || 0;
+      const usdMin = parseFloat(row.usdmin) || 0;
+      const usdMax = parseFloat(row.usdmax) || 0;
+
+      if (inrMin < 0 || inrMax < 0 || usdMin < 0 || usdMax < 0) {
+        validationErrors.push(`Row ${rowNum}: Rates cannot be negative.`);
+        return;
+      }
+
+      // 4. Grouping Logic (Category + Role)
+      const key = `${category.trim()}-${role.trim()}`;
+
+      if (!processedMap.has(key)) {
+        processedMap.set(key, {
+          category: category.trim(),
+          roleName: [role.trim()], // Pushing as single-item array per schema
+          levels: [],
+          defaultCurrency:
+            row.defaultcurrency?.trim().toUpperCase() === "USD" ? "USD" : "INR",
+          isActive: true,
+        });
+      }
+
+      const entry = processedMap.get(key);
+
+      // 5. Prevent Duplicate Levels for same Role
+      // If "Junior" exists, update it; otherwise push new
+      const existingLevelIndex = entry.levels.findIndex(
+        (l) => l.level === formattedLevel
+      );
+
+      const newLevelData = {
+        level: formattedLevel,
+        rateRange: {
+          inr: { min: inrMin, max: inrMax },
+          usd: { min: usdMin, max: usdMax },
+        },
+      };
+
+      if (existingLevelIndex >= 0) {
+        // Overwrite existing level
+        entry.levels[existingLevelIndex] = newLevelData;
+      } else {
+        entry.levels.push(newLevelData);
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors);
+      setParsedData([]);
+    } else {
+      setErrors([]);
+      setParsedData([...processedMap.values()]);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (parsedData.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      const response = await axios.post(`/rate-cards/bulk`, {
+        rateCards: parsedData,
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        notify.success(
+          `Successfully processed ${parsedData.length} rate cards!`
+        );
+        if (onSuccess) onSuccess();
+        onClose();
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      const errMsg =
+        error.response?.data?.message || "Failed to upload rate cards.";
+      notify.error(errMsg);
+      setErrors([errMsg]);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg w-full max-w-2xl p-6 relative shadow-xl">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <X size={24} />
+        </button>
+
+        <h2 className="text-2xl font-bold text-blue-600 mb-2">
+          Bulk Upload Rate Cards
+        </h2>
+        <p className="text-gray-500 mb-6 text-sm">
+          Upload a CSV file. Rows with the same Category and Role will be
+          merged.
+        </p>
+
+        {/* Drop Zone */}
+        <div
+          className={`border-2 border-dashed rounded-lg p-8 flex flex-col
+            items-center justify-center text-center transition-colors cursor-pointer
+            ${
+              file
+                ? "border-green-400 bg-green-50"
+                : isDragging
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-300 hover:border-blue-400"
+            }`}
+          onClick={() => fileInputRef.current.click()}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".csv"
+            className="hidden"
+          />
+
+          {file ? (
+            <div className="flex flex-col items-center">
+              <FileText size={48} className="text-green-500 mb-2" />
+              <span className="font-medium text-gray-900">{file.name}</span>
+              <span className="text-sm text-gray-500">
+                {(file.size / 1024).toFixed(2)} KB
+              </span>
+              <span className="text-xs text-green-600 mt-2 flex items-center">
+                <CheckCircle size={12} className="mr-1" />
+                Ready to process
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center">
+              <Upload size={48} className="text-gray-400 mb-2" />
+              <span className="font-medium text-gray-700">
+                Click to upload CSV
+              </span>
+              <span className="text-sm text-gray-400 mt-1">
+                or drag and drop file here
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Validation Errors */}
+        {errors.length > 0 && (
+          <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-4 max-h-40 overflow-y-auto">
+            <div className="flex items-center mb-2 text-red-700 font-medium">
+              <AlertCircle size={18} className="mr-2" />
+              Validation Errors
+            </div>
+            <ul className="list-disc pl-5 text-sm text-red-600 space-y-1">
+              {errors.map((err, idx) => (
+                <li key={idx}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Valid Data Preview */}
+        {parsedData.length > 0 && errors.length === 0 && (
+          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-md p-3">
+            <p className="text-sm text-blue-800">
+              <strong>Summary:</strong> Ready to create/update{" "}
+              <strong>{parsedData.length}</strong> Rate Cards.
+            </p>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="flex justify-end space-x-3 mt-8">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpload}
+            disabled={!file || errors.length > 0 || isUploading}
+            className={`px-6 py-2 rounded-md text-white font-medium transition-colors ${
+              !file || errors.length > 0 || isUploading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {isUploading ? "Uploading..." : "Upload Data"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // v1.0.3 <-------------------------------------------------------------------------------
 // v1.0.2 <----------------------------------------------------------------------------
@@ -29,7 +367,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   const [formData, setFormData] = useState({
     category: "",
     // v1.0.3 <------------------------
-    technology: [],
+    // technology: [],
+    roleName: [],
     // v1.0.3 <------------------------
     levels: [
       {
@@ -64,6 +403,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   const { currentRoles } = useMasterData({}, pageType);
   // v1.0.1 ------------------------------------------------------>
 
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+
   // const categories = [
   //   "Software Development",
   //   "Data & AI",
@@ -76,23 +417,62 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   const experienceLevels = ["Junior", "Mid-Level", "Senior"];
   // v1.0.3 <-------------------------------------------------------
   // v1.0.0 <-------------------------------------------------------
+  // useEffect(() => {
+  //   if (rateCard) {
+  //     setFormData({
+  //       _id: rateCard._id,
+  //       category: rateCard.category,
+  //       // technology: Array.isArray(rateCard.technology)
+  //       //   ? rateCard.technology
+  //       //   : rateCard.technology
+  //       //   ? [rateCard.technology]
+  //       //   : [],
+  //       roleName: Array.isArray(rateCard.roleName)
+  //         ? rateCard.roleName
+  //         : rateCard.roleName
+  //         ? [rateCard.roleName]
+  //         : [],
+  //       levels: rateCard.levels,
+  //       discountMockInterview: rateCard.discountMockInterview,
+  //       defaultCurrency: rateCard.defaultCurrency,
+  //       isActive: rateCard.isActive,
+  //     });
+  //   }
+  // }, [rateCard]);
+
   useEffect(() => {
     if (rateCard) {
+      const sanitizedLevels = (rateCard.levels || []).map((lvl) => ({
+        level: lvl.level || "Custom",
+
+        rateRange: {
+          inr: {
+            min: lvl?.rateRange?.inr?.min ?? 0,
+            max: lvl?.rateRange?.inr?.max ?? 0,
+          },
+          usd: {
+            min: lvl?.rateRange?.usd?.min ?? 0,
+            max: lvl?.rateRange?.usd?.max ?? 0,
+          },
+        },
+      }));
+
       setFormData({
         _id: rateCard._id,
         category: rateCard.category,
-        technology: Array.isArray(rateCard.technology)
-          ? rateCard.technology
-          : rateCard.technology
-          ? [rateCard.technology]
+        roleName: Array.isArray(rateCard.roleName)
+          ? rateCard.roleName
+          : rateCard.roleName
+          ? [rateCard.roleName]
           : [],
-        levels: rateCard.levels,
+        levels: sanitizedLevels,
         discountMockInterview: rateCard.discountMockInterview,
         defaultCurrency: rateCard.defaultCurrency,
         isActive: rateCard.isActive,
       });
     }
   }, [rateCard]);
+
   // v1.0.0 <-------------------------------------------------------
   // v1.0.3 <-------------------------------------------------------
 
@@ -175,8 +555,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
     }
 
     // Technology validation (must select at least one)
-    if (!formData.technology || formData.technology.length === 0) {
-      errors.technology = "At least one technology is required";
+    if (!formData.roleName || formData.roleName.length === 0) {
+      errors.roleName = "At least one technology is required";
     }
 
     // Levels validation
@@ -273,6 +653,66 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   //   }
   // };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   console.log("Form data before submission:", formData);
+
+  //   const errors = validateRateCard(formData);
+  //   if (Object.keys(errors).length > 0) {
+  //     notify.error(Object.values(errors)[0]);
+  //     console.log("Validation errors:", errors);
+  //     return;
+  //   }
+
+  //   try {
+  //     let response;
+
+  //     // Transform technologies into multiple objects
+  //     const payloads = formData.technology.map((tech) => ({
+  //       category: formData.category,
+  //     technology: tech,
+  //       levels: formData.levels,
+  //       discountMockInterview: formData.discountMockInterview,
+  //       defaultCurrency: formData.defaultCurrency,
+  //       isActive: formData.isActive,
+  //     }));
+
+  //     if (formData._id) {
+  //       // If editing, always update only one card
+  //       response = await axios.put(
+  //         `${config.REACT_APP_API_URL}/rate-cards/${formData._id}`,
+  //         payloads[0]
+  //       );
+  //     } else {
+  //       if (payloads.length === 1) {
+  //         // Single technology → single create
+  //         response = await axios.post(
+  //           `${config.REACT_APP_API_URL}/rate-cards`,
+  //           payloads[0]
+  //         );
+  //       } else {
+  //         // Multiple technologies → bulk create
+  //         response = await axios.post(
+  //           `${config.REACT_APP_API_URL}/rate-cards`,
+  //           { rateCards: payloads }
+  //         );
+  //       }
+  //     }
+
+  //     console.log("Form submitted successfully:", response.data);
+
+  //     if (response.status === 200 || response.status === 201) {
+  //       notify.success(
+  //         response.data.message || "Rate Cards saved successfully"
+  //       );
+  //       onClose();
+  //     }
+  //   } catch (error) {
+  //     notify.error(error.message);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -280,7 +720,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
 
     const errors = validateRateCard(formData);
     if (Object.keys(errors).length > 0) {
-      toast.error(Object.values(errors)[0]);
+      notify.error(Object.values(errors)[0]);
       console.log("Validation errors:", errors);
       return;
     }
@@ -288,48 +728,41 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
     try {
       let response;
 
-      // Transform technologies into multiple objects
-      const payloads = formData.technology.map((tech) => ({
+      // Create single payload with roleName array
+      const payload = {
         category: formData.category,
-        technology: tech,
+        roleName: formData.roleName, // ✔ send array directly
         levels: formData.levels,
         discountMockInterview: formData.discountMockInterview,
         defaultCurrency: formData.defaultCurrency,
         isActive: formData.isActive,
-      }));
+      };
 
       if (formData._id) {
-        // If editing, always update only one card
+        // Update single card
         response = await axios.put(
           `${config.REACT_APP_API_URL}/rate-cards/${formData._id}`,
-          payloads[0]
+          payload
         );
       } else {
-        if (payloads.length === 1) {
-          // Single technology → single create
-          response = await axios.post(
-            `${config.REACT_APP_API_URL}/rate-cards`,
-            payloads[0]
-          );
-        } else {
-          // Multiple technologies → bulk create
-          response = await axios.post(
-            `${config.REACT_APP_API_URL}/rate-cards`,
-            { rateCards: payloads }
-          );
-        }
+        // Create single card
+        response = await axios.post(
+          `${config.REACT_APP_API_URL}/rate-cards`,
+          payload
+        );
       }
 
       console.log("Form submitted successfully:", response.data);
 
       if (response.status === 200 || response.status === 201) {
-        toast.success(response.data.message || "Rate Cards saved successfully");
+        notify.success(response.data.message || "Rate Card saved successfully");
         onClose();
       }
     } catch (error) {
-      toast.error(error.message);
+      notify.error(error.message);
     }
   };
+
   // v1.0.6 ------------------------------------------------------------------------>
   // v1.0.0 ------------------------------------------------------>
   // v1.0.4 <----------------------------------------------------------------------
@@ -423,6 +856,19 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
           {/* Basic Information */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Upload CSV
+            </h3>
+            <button
+              type="button"
+              onClick={() => setIsBulkModalOpen(true)}
+              className="bg-custom-blue text-white px-4 py-2 rounded hover:bg-custom-blue/90 flex items-center"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Bulk Upload
+            </button>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
               Basic Information
             </h3>
 
@@ -456,9 +902,11 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                     value: t.roleName,
                     label: t.roleLabel,
                   }))}
-                  value={formData.technology}
+                  // value={formData.technology}
+                  value={formData.roleName}
                   onChange={(e) =>
-                    handleInputChange("technology", e.target.value)
+                    // handleInputChange("technology", e.target.value)
+                    handleInputChange("roleName", e.target.value)
                   }
                   disabled={currentMode === "view"}
                   isMulti
@@ -768,6 +1216,15 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
           {/* v1.0.0 <-------------------------------------------------------------- */}
         </form>
       </div>
+      {isBulkModalOpen && (
+        <BulkUploadRateCardModal
+          onClose={() => setIsBulkModalOpen(false)}
+          onSuccess={() => {
+            // Function to refresh your grid/table data
+            // fetchRateCards();
+          }}
+        />
+      )}
     </div>
   );
 }
