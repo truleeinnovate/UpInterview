@@ -339,6 +339,7 @@ const EditAdvacedDetails = ({
               <DropdownWithSearchField
                 value={formData.currentRole}
                 options={currentRoleOptionsWithCurrent}
+                disabled={from !== "outsource-interviewer"}
                 name="currentRole"
                 onChange={handleInputChange}
                 error={errors.currentRole}
