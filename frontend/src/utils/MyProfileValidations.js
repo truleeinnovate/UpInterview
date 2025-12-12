@@ -96,9 +96,10 @@ export const validateInterviewForm = (formData, isReady) => {
   const errors = {};
 
   // Technology validation - checks if at least one technology is selected
-  if (!formData.Technology || formData.Technology.length === 0) {
-    errors.technologies = "At least one technology is required";
-  }
+  // if (!formData.Technology || formData.Technology.length === 0) {
+  //   errors.technologies = "At least one technology is required";
+  // }
+  
 
   // Skills validation - checks if at least one skill is selected
   if (!formData.skills || formData.skills.length === 0) {

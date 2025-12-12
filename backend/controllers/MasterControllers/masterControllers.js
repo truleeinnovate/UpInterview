@@ -306,11 +306,25 @@ const getAllMasters = async (req, res) => {
         },
       });
     } else {
+      const sortFields = {
+        industries: "IndustryName",
+        universitycollege: "University_CollegeName",
+        company: "CompanyName",
+        category: "CategoryName",
+        qualification: "QualificationName",
+        locations: "LocationName",
+        roles: "roleName",
+        skills: "SkillName",
+        technology: "TechnologyMasterName",
+      };
+      const sortField = sortFields[type] || "_id";
+
       const Model = await getModel(type)
         .find({})
         .populate("ownerId", "firstName lastName email -password")
         .populate("createdBy", "firstName lastName email -password")
         .populate("updatedBy", "firstName lastName email -password")
+        .sort({ [sortField]: 1 })
         .lean();
       res.json(Model);
     }
