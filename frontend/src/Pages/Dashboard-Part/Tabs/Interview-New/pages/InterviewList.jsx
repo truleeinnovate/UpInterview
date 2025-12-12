@@ -21,8 +21,6 @@ import {
   CircleUser,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Tooltip } from "@mantine/core";
-import Loading from "../../../../../Components/Loading.js";
 import PositionSlideDetails from "../../Position-Tab/PositionSlideDetails.jsx";
 import Header from "../../../../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../../../../Components/Shared/Toolbar/Toolbar.jsx";
@@ -69,8 +67,6 @@ function InterviewList() {
   const {
     interviewData,
     total,
-    // currentPage: currentPage + 1,
-    // totalPages: serverTotalPages,
     isLoading,
     deleteInterviewMutation,
   } = useInterviews(
@@ -372,14 +368,6 @@ function InterviewList() {
     setFilterPopupOpen((prev) => !prev);
   };
 
-  // Auto-reset page if it exceeds available pages
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil((total || 0) / rowsPerPage));
-    if (currentPage >= totalPages) {
-      setCurrentPage(Math.max(0, totalPages - 1));
-    }
-  }, [total, rowsPerPage, currentPage]);
-
   const toggleRowExpansion = (interviewId) => {
     setExpandedRows((prev) => ({
       ...prev,
@@ -548,10 +536,8 @@ function InterviewList() {
   //   });
   // };
 
-  // const totalPages = Math.ceil(interviewData?.length / rowsPerPage);
-  // Use server-side pagination values
-  // const totalPages = serverTotalPages || 1;
-  const totalPages = Math.ceil(total / rowsPerPage);
+  // Derive total pages from total count (same pattern as Candidate/Position tabs)
+  const totalPages = total > 0 ? Math.ceil(total / rowsPerPage) : 0;
   // const nextPage = () => {
   //   if (currentPage < totalPages - 1) {
   //     setCurrentPage((prev) => prev + 1);
@@ -565,7 +551,7 @@ function InterviewList() {
   // };
 
   const nextPage = () => {
-    if (currentPage < totalPages - 1) {
+    if (currentPage + 1 < totalPages) {
       setCurrentPage((prev) => prev + 1);
     }
   };
@@ -622,64 +608,43 @@ function InterviewList() {
       render: (value, row) => {
         const candidate = row.candidateId;
         return (
-          <Tooltip
-            label={`${candidate?.FirstName || ""} ${candidate?.LastName || ""}`}
-          >
-            <div className="flex items-center">
-              <div className="flex-shrink-0 h-8 w-8">
-                {candidate?.ImageData ? (
-                  <img
-                    src={candidate?.ImageData?.path}
-                    alt={candidate?.LastName}
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                    {candidate?.LastName
-                      ? candidate?.LastName?.charAt(0).toUpperCase()
-                      : "?"}
-                  </div>
-                )}
+          <div className="flex items-center">
+            <div className="flex-shrink-0 h-8 w-8">
+              {candidate?.ImageData ? (
+                <img
+                  src={candidate?.ImageData?.path}
+                  alt={candidate?.LastName}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
+                  {candidate?.LastName
+                    ? candidate?.LastName?.charAt(0).toUpperCase()
+                    : "?"}
+                </div>
+              )}
+            </div>
+            <div className="ml-3 max-w-[120px]">
+              <div
+                className="text-sm font-medium text-custom-blue cursor-pointer truncate block"
+                onClick={() => handleView(candidate)}
+                title={`${capitalizeFirstLetter(
+                  candidate?.FirstName || ""
+                )} ${capitalizeFirstLetter(candidate?.LastName || "")}`}
+              >
+                {`${capitalizeFirstLetter(
+                  candidate?.FirstName || ""
+                )} ${capitalizeFirstLetter(candidate?.LastName || "")}`}
               </div>
-              {/* <div className="ml-3 truncate max-w-[120px]">
-                <div
-                  className="text-sm font-medium text-custom-blue cursor-pointer truncate"
-                  onClick={() => handleView(candidate)}
-                >
-                  {(candidate?.FirstName
-                    ? capitalizeFirstLetter(candidate.FirstName)
-                    : "") +
-                    " " +
-                    (candidate?.LastName
-                      ? capitalizeFirstLetter(candidate.LastName)
-                      : "")}
-                </div>
-                <div className="text-sm text-gray-500 truncate">
-                  {candidate?.Email || "No Email"}
-                </div>
-              </div> */}
-              <div className="ml-3 max-w-[120px]">
-                <div
-                  className="text-sm font-medium text-custom-blue cursor-pointer truncate block"
-                  onClick={() => handleView(candidate)}
-                  title={`${capitalizeFirstLetter(
-                    candidate?.FirstName || ""
-                  )} ${capitalizeFirstLetter(candidate?.LastName || "")}`}
-                >
-                  {`${capitalizeFirstLetter(
-                    candidate?.FirstName || ""
-                  )} ${capitalizeFirstLetter(candidate?.LastName || "")}`}
-                </div>
 
-                <div
-                  className="text-sm text-gray-500 truncate block cursor-default"
-                  title={candidate?.Email}
-                >
-                  {candidate?.Email || "No Email"}
-                </div>
+              <div
+                className="text-sm text-gray-500 truncate block cursor-default"
+                title={candidate?.Email}
+              >
+                {candidate?.Email || "No Email"}
               </div>
             </div>
-          </Tooltip>
+          </div>
         );
       },
     },
@@ -690,30 +655,24 @@ function InterviewList() {
       render: (value, row) => {
         const position = row.positionId;
         return (
-          <Tooltip
-            label={`${position?.title || "Unknown"} • ${
-              position?.companyname || "No Company"
-            } • ${position?.Location || "No location"}`}
-          >
-            <div className="truncate max-w-[120px]">
-              <div
-                className="text-sm font-medium text-custom-blue cursor-pointer truncate"
-                onClick={() => handleViewPosition(position)}
-                title={position?.title}
-              >
-                {position?.title
-                  ? capitalizeFirstLetter(position.title)
-                  : "Unknown"}
-              </div>
-              <div
-                className="text-sm text-gray-500 truncate cursor-default"
-                title={position?.companyname}
-              >
-                {capitalizeFirstLetter(position?.companyname) || "No Company"} •{" "}
-                {capitalizeFirstLetter(position?.Location) || "No location"}
-              </div>
+          <div className="truncate max-w-[120px]">
+            <div
+              className="text-sm font-medium text-custom-blue cursor-pointer truncate"
+              onClick={() => handleViewPosition(position)}
+              title={position?.title}
+            >
+              {position?.title
+                ? capitalizeFirstLetter(position.title)
+                : "Unknown"}
             </div>
-          </Tooltip>
+            <div
+              className="text-sm text-gray-500 truncate cursor-default"
+              title={position?.companyname}
+            >
+              {capitalizeFirstLetter(position?.companyname) || "No Company"} •{" "}
+              {capitalizeFirstLetter(position?.Location) || "No location"}
+            </div>
+          </div>
         );
       },
     },
@@ -851,36 +810,28 @@ function InterviewList() {
             // )
             .sort((a, b) => a.sequence - b.sequence)[1] || null;
         return (
-          <Tooltip
-            label={
-              nextRound
-                ? `${nextRound.roundTitle} (${nextRound.interviewType})`
-                : "No upcoming rounds"
-            }
-          >
-            <div className="truncate max-w-[120px]">
-              {nextRound ? (
-                <>
-                  <div
-                    className="text-sm font-medium text-gray-700 truncate cursor-default"
-                    title={`${nextRound.roundTitle} (${nextRound.interviewType})`}
-                  >
-                    {nextRound.roundTitle}
-                  </div>
-                  <div className="flex items-center mt-1">
-                    <StatusBadge
-                      status={capitalizeFirstLetter(nextRound?.status)}
-                    />
-                    <span className="ml-2 text-xs text-gray-500 truncate">
-                      {nextRound.interviewType}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <span className="text-sm text-gray-500">None</span>
-              )}
-            </div>
-          </Tooltip>
+          <div className="truncate max-w-[120px]">
+            {nextRound ? (
+              <>
+                <div
+                  className="text-sm font-medium text-gray-700 truncate cursor-default"
+                  title={`${nextRound.roundTitle} (${nextRound.interviewType})`}
+                >
+                  {nextRound.roundTitle}
+                </div>
+                <div className="flex items-center mt-1">
+                  <StatusBadge
+                    status={capitalizeFirstLetter(nextRound?.status)}
+                  />
+                  <span className="ml-2 text-xs text-gray-500 truncate">
+                    {nextRound.interviewType}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <span className="text-sm text-gray-500">None</span>
+            )}
+          </div>
         );
       },
     },

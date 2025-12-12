@@ -78,11 +78,11 @@ export const useInterviews = (
     keepPreviousData: true,
   });
 
-  // Extract data and total from response
+  // Extract data and pagination info from response
   const interviewData = responseData?.data?.data || [];
-  const total = responseData?.data?.total || 0;
-  const currentPage = responseData?.data?.page || 1;
-  const totalPages = responseData?.data?.totalPages || 1;
+  const total = responseData?.data?.total ?? 0;
+  const currentPage = responseData?.data?.page ?? 1;
+  const totalPages = responseData?.data?.totalPages ?? 0;
 
   const responseDashBoard = responseData?.data || {};
 
