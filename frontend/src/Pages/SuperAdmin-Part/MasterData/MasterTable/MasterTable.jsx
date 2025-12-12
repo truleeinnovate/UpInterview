@@ -371,7 +371,7 @@ const MasterTable = ({ permissions = {} }) => {
             displayName = row.LocationName;
             break;
           case "roles":
-            displayName = row.roleName;
+            displayName = row.roleLabel;
             break;
           case "qualification":
             displayName = row.QualificationName;
@@ -390,7 +390,10 @@ const MasterTable = ({ permissions = {} }) => {
         }
 
         return (
-          <span className={`font-medium text-gray-900"}`}>
+          <span
+            className={`block font-medium text-gray-900 truncate cursor-default max-w-[160px]`}
+            title={capitalizeFirstLetter(displayName)}
+          >
             {capitalizeFirstLetter(displayName) || "N/A"}
           </span>
         );
@@ -398,6 +401,17 @@ const MasterTable = ({ permissions = {} }) => {
     },
     ...(type === "technology"
       ? [
+          {
+            key: "name",
+            header: "Name",
+            render: (value, row) => (
+              <span>
+                {row.name
+                  ? capitalizeFirstLetter(row.TechnologyMasterName)
+                  : "N/A"}
+              </span>
+            ),
+          },
           {
             key: "Category",
             header: "Category",
@@ -409,13 +423,59 @@ const MasterTable = ({ permissions = {} }) => {
           },
         ]
       : []),
-    ...(type === "technology"
+    ...(type === "category"
       ? [
           {
-            key: "name",
-            header: "Name",
+            key: "isActive",
+            header: "Status",
             render: (value, row) => (
-              <span>{row.name ? capitalizeFirstLetter(row.name) : "N/A"}</span>
+              <span>
+                {row.isActive !== undefined && row.isActive !== null
+                  ? capitalizeFirstLetter(row.isActive.toString())
+                  : "N/A"}
+              </span>
+            ),
+          },
+        ]
+      : []),
+    ...(type === "roles"
+      ? [
+          {
+            key: "roleName",
+            header: "Role",
+            render: (value, row) => (
+              <span
+                className="block truncate cursor-default max-w-[160px]"
+                title={capitalizeFirstLetter(row?.roleName)}
+              >
+                {row.roleName ? capitalizeFirstLetter(row.roleName) : "N/A"}
+              </span>
+            ),
+          },
+          {
+            key: "roleLabel",
+            header: "Label",
+            render: (value, row) => (
+              <span
+                className="block truncate cursor-default max-w-[160px]"
+                title={capitalizeFirstLetter(row?.roleLabel)}
+              >
+                {row.roleLabel ? capitalizeFirstLetter(row.roleLabel) : "N/A"}
+              </span>
+            ),
+          },
+          {
+            key: "roleCategory",
+            header: "Category",
+            render: (value, row) => (
+              <span
+                className="block truncate cursor-default max-w-[160px]"
+                title={row?.roleCategory}
+              >
+                {row.roleCategory
+                  ? capitalizeFirstLetter(row.roleCategory)
+                  : "N/A"}
+              </span>
             ),
           },
         ]
@@ -468,21 +528,6 @@ const MasterTable = ({ permissions = {} }) => {
         );
       },
     },
-    ...(type === "category"
-      ? [
-          {
-            key: "isActive",
-            header: "Status",
-            render: (value, row) => (
-              <span>
-                {row.isActive !== undefined && row.isActive !== null
-                  ? capitalizeFirstLetter(row.isActive.toString())
-                  : "N/A"}
-              </span>
-            ),
-          },
-        ]
-      : []),
   ];
   // v1.0.3 ------------------------------------------------------------>
   // v1.0.2 ------------------------------------------------------------>
@@ -530,6 +575,48 @@ const MasterTable = ({ permissions = {} }) => {
             header: "Name",
             render: (value, row) => (
               <span>{row.name ? capitalizeFirstLetter(row.name) : "N/A"}</span>
+            ),
+          },
+        ]
+      : []),
+    ...(type === "roles"
+      ? [
+          {
+            key: "roleName",
+            header: "Role",
+            render: (value, row) => (
+              <span
+                className="block truncate cursor-default max-w-[160px]"
+                title={capitalizeFirstLetter(row?.roleName)}
+              >
+                {row.roleName ? capitalizeFirstLetter(row.roleName) : "N/A"}
+              </span>
+            ),
+          },
+          {
+            key: "roleLabel",
+            header: "Label",
+            render: (value, row) => (
+              <span
+                className="block truncate cursor-default max-w-[160px]"
+                title={capitalizeFirstLetter(row?.roleLabel)}
+              >
+                {row.roleLabel ? capitalizeFirstLetter(row.roleLabel) : "N/A"}
+              </span>
+            ),
+          },
+          {
+            key: "roleCategory",
+            header: "Category",
+            render: (value, row) => (
+              <span
+                className="block truncate cursor-default max-w-[160px]"
+                title={row?.roleCategory}
+              >
+                {row.roleCategory
+                  ? capitalizeFirstLetter(row.roleCategory)
+                  : "N/A"}
+              </span>
             ),
           },
         ]

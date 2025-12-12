@@ -220,15 +220,12 @@ const InterviewDetails = ({
     try {
       const token = localStorage.getItem("token");
       const baseUrl = process.env.REACT_APP_API_URL || "";
-      // const encodedTech = encodeURIComponent(techName);
-      // Derive the 'name' slug from TechnologyMasterName (e.g., "Help Desk Technician" -> "HelpDeskTechnician")
-      const slug = techName
-        .replace(/\s+/g, "") // Remove spaces
-        .replace(/[^a-zA-Z0-9]/g, ""); // Remove special chars if any (optional, adjust as needed)
+      
+      // Fetch all rate cards instead of searching by specific technology name
+      // This allows us to filter client-side for roleName array matching
+      const apiUrl = `${baseUrl}/rate-cards`;
 
-      const encodedSlug = encodeURIComponent(slug);
-
-      const apiUrl = `${baseUrl}/rate-cards/technology/${encodedSlug}`;
+      console.log('Fetching all rate cards from:', apiUrl);
 
       const response = await axios.get(apiUrl, {
         withCredentials: true,
@@ -242,7 +239,50 @@ const InterviewDetails = ({
         const rateCardsData = Array.isArray(response.data)
           ? response.data
           : [response.data];
-        setRateCards(rateCardsData);
+        
+        console.log('Total rate cards fetched:', rateCardsData.length);
+        
+        // Filter rate cards to match the selected technology/role
+        // Only use the new structure (roleName array)
+        const filteredRateCards = rateCardsData.filter(card => {
+          const normalizeString = (str) => {
+            return str.toLowerCase()
+              .replace(/\s+/g, '') // Remove all spaces
+              .replace(/[^a-zA-Z0-9]/g, ''); // Remove special characters
+          };
+          
+          const normalizedSelectedValue = normalizeString(techName);
+          
+          // Debug logging
+          console.log('Matching techName:', techName, 'normalized:', normalizedSelectedValue);
+          console.log('Card data:', {
+            roleName: card.roleName,
+            category: card.category
+          });
+          
+          // Check new structure (roleName array)
+          if (card.roleName && Array.isArray(card.roleName)) {
+            const match = card.roleName.some(role => {
+              const normalizedRole = normalizeString(role);
+              const isMatch = normalizedRole === normalizedSelectedValue ||
+                     normalizedRole.includes(normalizedSelectedValue) ||
+                     normalizedSelectedValue.includes(normalizedRole);
+              console.log('Checking role:', role, 'normalized:', normalizedRole, 'match:', isMatch);
+              return isMatch;
+            });
+            if (match) {
+              console.log('Found match in roleName array for:', techName);
+              return true;
+            }
+          }
+          
+          return false;
+        });
+        
+        console.log('Filtered rate cards:', filteredRateCards);
+        console.log('Total rate cards before filtering:', rateCardsData.length, 'after filtering:', filteredRateCards.length);
+        
+        setRateCards(filteredRateCards);
       }
     } catch (error) {
       console.error("Error fetching rate cards:", {
@@ -264,32 +304,55 @@ const InterviewDetails = ({
   const getRateRanges = (level) => {
     if (!rateCards.length) return null;
 
+    console.log('Getting rate ranges for level:', level, 'from', rateCards.length, 'rate cards');
+
     const rateCard = rateCards.find((card) =>
       card.levels.some((lvl) => lvl.level === level)
     );
 
-    if (!rateCard) return null;
+    if (!rateCard) {
+      console.log('No rate card found for level:', level);
+      return null;
+    }
+
+    console.log('Found rate card:', rateCard);
 
     const levelData = rateCard.levels.find((lvl) => lvl.level === level);
-    if (!levelData || !levelData.rateRange) return null;
+    if (!levelData) {
+      console.log('No level data found for level:', level);
+      return null;
+    }
 
-    return levelData.rateRange;
+    console.log('Level data found:', levelData);
+
+    // Handle new data structure (direct properties) or fallback to old structure (nested rateRange)
+    if (levelData.inrMin !== undefined && levelData.inrMax !== undefined && 
+        levelData.usdMin !== undefined && levelData.usdMax !== undefined) {
+      // New data structure
+      const rates = {
+        inr: { min: levelData.inrMin, max: levelData.inrMax },
+        usd: { min: levelData.usdMin, max: levelData.usdMax }
+      };
+      console.log('Using new data structure, rates:', rates);
+      return rates;
+    } else if (levelData.rateRange) {
+      // Old data structure (fallback)
+      console.log('Using old data structure (rateRange):', levelData.rateRange);
+      return levelData.rateRange;
+    }
+
+    console.log('No valid rate structure found in level data');
+    return null;
   };
 
   const handleTechnologyChange = async (event) => {
     const selectedValue = event.target.value;
-    // console.log('handleTechnologyChange called with:', selectedValue);
+    
+    // Console log the selected technology
+    console.log('=== TECHNOLOGY SELECTION ===');
+    console.log('Selected Technology/Role:', selectedValue);
 
     if (selectedValue) {
-      // console.log('Selected value:', selectedValue);
-
-      // const technologyRole = currentRoles.find(
-      //   (t) => t.roleLabel === selectedValue
-      // ) || {
-      //   _id: Math.random().toString(36).substr(2, 9),
-      //   roleName: selectedValue,
-      // };
-      // console.log("Found technology:", technology);
       setInterviewDetailsData((prev) => ({
         ...prev,
         currentRole: selectedValue,
@@ -298,17 +361,15 @@ const InterviewDetails = ({
         ...prev,
         currentRole: selectedValue,
       }));
-      // setInterviewDetailsData((prev) => ({
-      //   ...prev,
-      //   currentRole: [technology],
-      // }));
-      // setSelectedTechnologyies([technology]);
-      // console.log('Updated selectedTechnologyies:', [technology]);
 
       try {
-        const rateCards = await fetchRateCards(selectedValue);
-        const hasValidRates = rateCards && rateCards.length > 0;
-
+        // Fetch rate cards for the selected technology/role
+        console.log('Fetching rate cards for:', selectedValue);
+        await fetchRateCards(selectedValue);
+        
+        // The rate cards state will be updated, and the rates will be applied in the next render cycle
+        // This ensures we have the latest rate data before updating the rates
+        
         setInterviewDetailsData((prev) => {
           let ratesUpdate = {
             junior: { usd: 0, inr: 0, isVisible: showJuniorLevel },
@@ -316,55 +377,22 @@ const InterviewDetails = ({
             senior: { usd: 0, inr: 0, isVisible: showSeniorLevel },
           };
 
-          if (hasValidRates) {
-            const juniorRange = getRateRanges("Junior") || {
-              usd: { min: 0 },
-              inr: { min: 0 },
-            };
-            const midRange = getRateRanges("Mid-Level") || {
-              usd: { min: 0 },
-              inr: { min: 0 },
-            };
-            const seniorRange = getRateRanges("Senior") || {
-              usd: { min: 0 },
-              inr: { min: 0 },
-            };
-
-            ratesUpdate = {
-              junior: {
-                usd: juniorRange.usd.min || 0,
-                inr: juniorRange.inr.min || 0,
-                isVisible: showJuniorLevel,
-              },
-              mid: {
-                usd: midRange.usd.min || 0,
-                inr: midRange.inr.min || 0,
-                isVisible: showMidLevel,
-              },
-              senior: {
-                usd: seniorRange.usd.min || 0,
-                inr: seniorRange.inr.min || 0,
-                isVisible: showSeniorLevel,
-              },
-            };
-          }
-
-          const newFormData = {
+          // We'll apply the rates after fetchRateCards completes and rateCards state is updated
+          // This is handled by the useEffect that watches for rateCards changes
+          
+          console.log('Initial rates set to:', ratesUpdate);
+          
+          return {
             ...prev,
             currentRole: selectedValue,
-            // technologies: [selectedValue],
             rates: ratesUpdate,
           };
-
-          // console.log('Updated interviewDetailsData:', newFormData);
-          return newFormData;
         });
       } catch (error) {
-        // console.error("Error fetching rate cards:", error);
+        console.error("Error fetching rate cards:", error);
         setInterviewDetailsData((prev) => ({
           ...prev,
           currentRole: selectedValue,
-          // technologies: [selectedValue],
           rates: {
             junior: { usd: 0, inr: 0, isVisible: showJuniorLevel },
             mid: { usd: 0, inr: 0, isVisible: showMidLevel },
@@ -376,7 +404,6 @@ const InterviewDetails = ({
       setErrors((prev) => ({
         ...prev,
         currentRole: "",
-        // technologies: "",
         junior_usd: "",
         junior_inr: "",
         mid_usd: "",
@@ -385,14 +412,10 @@ const InterviewDetails = ({
         senior_inr: "",
       }));
     } else {
-      // console.log('No value selected, clearing selection');
-      // setSelectedTechnologyies([]);
-
+      console.log('Technology selection cleared');
       setInterviewDetailsData((prev) => ({
         ...prev,
-
         currentRole: "",
-        // technologies: [],
         rates: {
           junior: { usd: 0, inr: 0, isVisible: false },
           mid: { usd: 0, inr: 0, isVisible: false },
@@ -402,7 +425,6 @@ const InterviewDetails = ({
       setErrors((prev) => ({
         ...prev,
         currentRole: "Please select a current role",
-        // technologies: "Please select a technology",
       }));
     }
   };
@@ -432,6 +454,59 @@ const InterviewDetails = ({
       fetchRateCards(selectedTechnologyName);
     }
   }, [selectedTechnologyName, fetchRateCards]);
+
+  // Apply rates when rateCards are updated
+  // useEffect(() => {
+  //   if (rateCards.length > 0 && additionalDetailsData?.currentRole) {
+  //     console.log('=== APPLYING RATES ===');
+  //     console.log('Current Role:', additionalDetailsData.currentRole);
+  //     console.log('Rate Cards Found:', rateCards.length);
+      
+  //     const juniorRange = getRateRanges("Junior") || {
+  //       usd: { min: 0 },
+  //       inr: { min: 0 },
+  //     };
+  //     const midRange = getRateRanges("Mid-Level") || {
+  //       usd: { min: 0 },
+  //       inr: { min: 0 },
+  //     };
+  //     const seniorRange = getRateRanges("Senior") || {
+  //       usd: { min: 0 },
+  //       inr: { min: 0 },
+  //     };
+
+  //     console.log('Rate Ranges Extracted:');
+  //     console.log('Junior Range:', juniorRange);
+  //     console.log('Mid-Level Range:', midRange);
+  //     console.log('Senior Range:', seniorRange);
+
+  //     const newRates = {
+  //       junior: {
+  //         usd: juniorRange.usd?.min || 0,
+  //         inr: juniorRange.inr?.min || 0,
+  //         isVisible: showJuniorLevel,
+  //       },
+  //       mid: {
+  //         usd: midRange.usd?.min || 0,
+  //         inr: midRange.inr?.min || 0,
+  //         isVisible: showMidLevel,
+  //       },
+  //       senior: {
+  //         usd: seniorRange.usd?.min || 0,
+  //         inr: seniorRange.inr?.min || 0,
+  //         isVisible: showSeniorLevel,
+  //       },
+  //     };
+
+  //     console.log('FINAL RATES BEING SET:', newRates);
+  //     console.log('========================');
+
+  //     setInterviewDetailsData((prev) => ({
+  //       ...prev,
+  //       rates: newRates,
+  //     }));
+  //   }
+  // }, [rateCards, additionalDetailsData?.currentRole]);
 
   const handleRemoveSkill = (skillId) => {
     // console.log('Removing skill with ID:', skillId);
