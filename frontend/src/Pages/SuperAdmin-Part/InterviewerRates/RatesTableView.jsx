@@ -235,6 +235,11 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
     return `${symbol}${amount.toLocaleString()}`;
   };
 
+  console.log(
+    "FILTERED RATE CARDS ===============================> ",
+    filteredRateCards
+  );
+
   // const getRateRangeDisplay = (levels, currency) => {
   //   const juniorRate = levels.find((l) => l.level === "Junior");
   //   const seniorRate = levels.find((l) => l.level === "Senior");
@@ -301,25 +306,24 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
       render: (row) => (
         <div>
           <div
-            className="font-medium text-gray-900 truncate max-w-[200px]"
+            className="font-medium text-gray-900 truncate max-w-[200px] cursor-default"
             title={
-              Array.isArray(row?.technology)
-                ? row.technology.join(", ")
-                : row?.technology
+              Array.isArray(row?.roleName)
+                ? row?.roleName?.join(", ")
+                : row?.roleName
             }
           >
-            {Array.isArray(row?.technology) && row.technology.length > 0 ? (
+            {Array.isArray(row?.roleName) && row?.roleName?.length > 0 ? (
               <>
-                {row.technology[0]}
-                {row.technology.length > 1 && (
+                {row?.roleName[0]}
+                {row?.roleName?.length > 1 && (
                   <span className="text-gray-500">
-                    {" "}
-                    +{row.technology.length - 1} more
+                    +{row?.roleName?.length - 1} more
                   </span>
                 )}
               </>
             ) : (
-              row?.technology || "—"
+              row?.roleName || "—"
             )}
           </div>
           <div className="text-sm text-gray-500">{row?.category || "—"}</div>
@@ -480,7 +484,10 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
                 Are you sure you want to delete{" "}
                 {/* v1.0.2 <-------------------------------------------------------- */}
                 <span className="font-medium">
-                  {deleteTarget?.technology[0]}
+                  {/* {deleteTarget?.technology[0]} */}
+                  {Array.isArray(deleteTarget?.technology)
+                    ? deleteTarget.technology[0]
+                    : deleteTarget?.technology}
                 </span>
                 ?
                 {/* v1.0.2 --------------------------------------------------------> */}

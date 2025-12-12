@@ -292,9 +292,9 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
   const categories = [
     "Software Development",
     "Data & AI",
-    "DevOps & Cloud",
-    "QA & Testing",
-    "Specialized Skills",
+    "Cloud & DevOps",
+    "Testing & Quality",
+    "Specialized",
   ];
 
   const filteredCategories =
@@ -353,18 +353,21 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
     <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
-          {/* v1.0.2 <-------------------------------------------------------------------- */}
-          {/* <h4 className="font-medium text-gray-900 text-sm leading-tight mb-1">
-            {rateCard.technology}
-          </h4> */}
-          <h4 className="font-medium text-gray-900 text-sm leading-tight mb-1 truncate">
-            {rateCard?.technology && rateCard?.technology?.length > 0 ? (
+          <h4
+            className="font-medium text-gray-900 text-sm leading-tight mb-1 truncate cursor-default"
+            title={
+              Array.isArray(rateCard?.roleName)
+                ? rateCard?.roleName?.join(", ")
+                : rateCard?.roleName
+            }
+          >
+            {rateCard?.roleName && rateCard?.roleName?.length > 0 ? (
               <>
-                {rateCard?.technology[0]}
-                {rateCard?.technology?.length > 1 && (
+                {rateCard?.roleName[0]}
+                {rateCard?.roleName?.length > 1 && (
                   <span className="text-gray-500">
                     {" "}
-                    +{rateCard?.technology?.length - 1} more
+                    +{rateCard?.roleName?.length - 1} more
                   </span>
                 )}
               </>
@@ -536,10 +539,12 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
                 Confirm Delete
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                Are you sure you want to delete{" "}
+                Are you sure you want to delete
                 {/* v1.0.2 <-------------------------------------------------------------- */}
                 <span className="font-medium">
-                  {deleteTarget?.technology[0]}
+                  {Array.isArray(deleteTarget?.technology)
+                    ? deleteTarget.technology[0]
+                    : deleteTarget?.technology}
                 </span>
                 ?
                 {/* v1.0.2 --------------------------------------------------------------> */}
