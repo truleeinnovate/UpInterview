@@ -1017,12 +1017,7 @@ const getAllOrganizations = async (req, res) => {
       },
     ];
 
-    // Get total count
-    const countPipeline = [...pipeline, { $count: "total" }];
-    const countResult = await Tenant.aggregate(countPipeline);
-    const total = countResult[0]?.total || 0;
-
-    // Get paginated data with sorting
+    // Get paginated data with sorting (primary aggregation)
     const dataPipeline = [
       ...pipeline,
       { $sort: { _id: -1 } },
@@ -1030,43 +1025,128 @@ const getAllOrganizations = async (req, res) => {
       { $limit: limitNum },
     ];
 
-    const organizations = await Tenant.aggregate(dataPipeline);
+    let organizations = [];
+    try {
+      organizations = await Tenant.aggregate(dataPipeline);
+    } catch (dataErr) {
+      console.warn(
+        "getAllOrganizations data aggregation failed, falling back to simple find():",
+        dataErr?.message
+      );
 
-    // Calculate stats using another aggregation
-    const statsPipeline = [
-      ...pipeline,
-      {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          activeCount: {
-            $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] },
-          },
-          inactiveCount: {
-            $sum: { $cond: [{ $eq: ["$status", "inactive"] }, 1, 0] },
-          },
-          pendingCount: {
-            $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] },
-          },
-          organizationCount: {
-            $sum: { $cond: [{ $eq: ["$type", "organization"] }, 1, 0] },
-          },
-          individualCount: {
-            $sum: { $cond: [{ $eq: ["$type", "individual"] }, 1, 0] },
-          },
-        },
-      },
-    ];
+      // Fallback: basic query without lookups/joins
+      organizations = await Tenant.find(matchStage)
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean();
+    }
 
-    const statsResult = await Tenant.aggregate(statsPipeline);
-    const stats = statsResult[0] || {
-      total: 0,
+    // Get total count with aggregation first, then fall back to countDocuments
+    let total = 0;
+    try {
+      const countPipeline = [...pipeline, { $count: "total" }];
+      const countResult = await Tenant.aggregate(countPipeline);
+      total = countResult[0]?.total || 0;
+    } catch (countErr) {
+      console.warn(
+        "getAllOrganizations count aggregation failed, using countDocuments() fallback:",
+        countErr?.message
+      );
+      try {
+        total = await Tenant.countDocuments(matchStage);
+      } catch (simpleCountErr) {
+        console.warn(
+          "getAllOrganizations countDocuments fallback failed, using page length as total:",
+          simpleCountErr?.message
+        );
+        total = organizations.length;
+      }
+    }
+
+    // Calculate stats using aggregation, with countDocuments fallback
+    let stats = {
+      total: total,
       activeCount: 0,
       inactiveCount: 0,
       pendingCount: 0,
       organizationCount: 0,
       individualCount: 0,
     };
+
+    try {
+      const statsPipeline = [
+        ...pipeline,
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            activeCount: {
+              $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] },
+            },
+            inactiveCount: {
+              $sum: { $cond: [{ $eq: ["$status", "inactive"] }, 1, 0] },
+            },
+            pendingCount: {
+              $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] },
+            },
+            organizationCount: {
+              $sum: { $cond: [{ $eq: ["$type", "organization"] }, 1, 0] },
+            },
+            individualCount: {
+              $sum: { $cond: [{ $eq: ["$type", "individual"] }, 1, 0] },
+            },
+          },
+        },
+      ];
+
+      const statsResult = await Tenant.aggregate(statsPipeline);
+      if (statsResult[0]) {
+        stats = {
+          total: statsResult[0].total,
+          activeCount: statsResult[0].activeCount,
+          inactiveCount: statsResult[0].inactiveCount,
+          pendingCount: statsResult[0].pendingCount,
+          organizationCount: statsResult[0].organizationCount,
+          individualCount: statsResult[0].individualCount,
+        };
+      }
+    } catch (statsErr) {
+      console.warn(
+        "getAllOrganizations stats aggregation failed, using countDocuments() fallback:",
+        statsErr?.message
+      );
+
+      try {
+        const [
+          activeCount,
+          inactiveCount,
+          pendingCount,
+          organizationCount,
+          individualCount,
+        ] = await Promise.all([
+          Tenant.countDocuments({ ...matchStage, status: "active" }),
+          Tenant.countDocuments({ ...matchStage, status: "inactive" }),
+          Tenant.countDocuments({ ...matchStage, status: "pending" }),
+          Tenant.countDocuments({ ...matchStage, type: "organization" }),
+          Tenant.countDocuments({ ...matchStage, type: "individual" }),
+        ]);
+
+        stats = {
+          total,
+          activeCount,
+          inactiveCount,
+          pendingCount,
+          organizationCount,
+          individualCount,
+        };
+      } catch (statsFallbackErr) {
+        console.warn(
+          "getAllOrganizations stats countDocuments fallback failed:",
+          statsFallbackErr?.message
+        );
+      }
+    }
 
     return res.status(200).json({
       data: organizations,

@@ -182,20 +182,23 @@ const TableView = ({
                   </td>
                 </tr>
               ) : (
-                data?.map((row) => (
-                  <tr key={row._id} className="hover:bg-gray-50">
-                    {columns.map((column) => (
-                      <td
-                        key={`${row._id}-${column.key}`}
-                        className={`px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis ${
-                          column.cellClassName || ""
-                        }`}
-                      >
-                        {column.render
-                          ? column.render(row[column.key], row)
-                          : row[column.key] || ""}
-                      </td>
-                    ))}
+                data?.map((row, index) => {
+                  const baseRowId = row.id || row._id || "row";
+                  const rowKey = `${baseRowId}-${index}`;
+                  return (
+                    <tr key={rowKey} className="hover:bg-gray-50">
+                      {columns.map((column) => (
+                        <td
+                          key={`${rowKey}-${column.key}`}
+                          className={`px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis ${
+                            column.cellClassName || ""
+                          }`}
+                        >
+                          {column.render
+                            ? column.render(row[column.key], row)
+                            : row[column.key] || ""}
+                        </td>
+                      ))}
                     {actions.length > 0 && (
                       <td className="px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-visible">
                         <Menu as="div" className="relative">
@@ -267,8 +270,9 @@ const TableView = ({
                         </Menu>
                       </td>
                     )}
-                  </tr>
-                ))
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
