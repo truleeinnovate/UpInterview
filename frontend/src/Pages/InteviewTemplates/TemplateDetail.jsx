@@ -258,6 +258,7 @@ const TemplateDetail = ({ templateId, onClose, mode }) => {
                   <h3 className="sm:text-md md:text-md lg:text-xl xl:text-xl 2xl:text-xl mb-4 leading-6 font-medium text-gray-900">
                     Interview Details
                   </h3>
+                  {template?.type !== "standard" && (
                   <button
                     onClick={() =>
                       navigate(`/interview-templates/${template._id}/edit`)
@@ -266,6 +267,7 @@ const TemplateDetail = ({ templateId, onClose, mode }) => {
                   >
                     Edit Template
                   </button>
+                  )}
                 </div>
                 {/* v1.0.4 -----------------------------------------------------------------> */}
                 <h1 className="sm:text-md md:text-md lg:text-md xl:text-lg 2xl:text-lg text-lg font-semibold bg-gradient-to-r from-custom-blue to-custom-blue/80 bg-clip-text text-transparent mb-4 sm:mb-6">
@@ -402,6 +404,7 @@ const TemplateDetail = ({ templateId, onClose, mode }) => {
                       </button>
                     )}
                     {/* v1.0.1 ------------------------------------------------------------------------------------> */}
+                    {template?.type !== "standard" && (
                     <button
                       onClick={handleAddRound}
                       className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
@@ -410,6 +413,7 @@ const TemplateDetail = ({ templateId, onClose, mode }) => {
 
                       <span className="sm:hidden inline">Add Round</span>
                     </button>
+                    )}
                   </div>
                   // v1.0.5 ------------------------------------------------------------------------->
                 )}
@@ -442,6 +446,8 @@ const TemplateDetail = ({ templateId, onClose, mode }) => {
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <p className="text-gray-500">No Rounds added yet.</p>
 
+                {template?.type !== "standard" && (
+
                 <button
                   onClick={handleAddRound}
                   className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue focus:outline-none focus:ring-2 focus:ring-offset-2 "
@@ -449,6 +455,7 @@ const TemplateDetail = ({ templateId, onClose, mode }) => {
                   <Plus className="h-4 w-4 mr-1" />
                   Add First Round
                 </button>
+                )}
               </div>
             )}
           </div>
