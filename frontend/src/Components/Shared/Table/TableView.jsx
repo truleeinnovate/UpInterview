@@ -61,11 +61,10 @@ const TableView = ({
     setShowEmptyState(!loading && data.length === 0);
   }, [loading, data]);
 
-  const handleMenuOpen = (row, e) => {
+  const handleMenuOpen = (rowId, e) => {
     e.stopPropagation();
     e.preventDefault();
 
-    const rowId = row.id || row._id || JSON.stringify(row);
     setOpenMenuIndex(openMenuIndex === rowId ? null : rowId);
 
     const container = scrollContainerRef.current;
@@ -185,6 +184,7 @@ const TableView = ({
                 data?.map((row, index) => {
                   const baseRowId = row.id || row._id || "row";
                   const rowKey = `${baseRowId}-${index}`;
+                  const menuRowId = rowKey;
                   return (
                     <tr key={rowKey} className="hover:bg-gray-50">
                       {columns.map((column) => (
@@ -204,17 +204,14 @@ const TableView = ({
                         <Menu as="div" className="relative">
                           <Menu.Button
                             ref={(el) => {
-                              const rowId =
-                                row.id || row._id || JSON.stringify(row);
-                              menuButtonRefs.current[rowId] = el;
+                              menuButtonRefs.current[menuRowId] = el;
                             }}
-                            onClick={(e) => handleMenuOpen(row, e)}
+                            onClick={(e) => handleMenuOpen(menuRowId, e)}
                             className="p-1 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                           >
                             <FiMoreHorizontal className="w-5 h-5 text-gray-600" />
                           </Menu.Button>
-                          {openMenuIndex ===
-                            (row.id || row._id || JSON.stringify(row)) && (
+                          {openMenuIndex === menuRowId && (
                             <Menu.Items
                               static
                               className="absolute left-0 w-48 bg-white rounded-lg shadow-xl border border-gray-300 outline-none py-1 z-50"
@@ -228,9 +225,7 @@ const TableView = ({
                                   : { top: "100%", marginTop: "0.25rem" }),
                               }}
                               ref={(el) => {
-                                const rowId =
-                                  row.id || row._id || JSON.stringify(row);
-                                menuRefs.current[rowId] = el;
+                                menuRefs.current[menuRowId] = el;
                               }}
                             >
                               {actions
