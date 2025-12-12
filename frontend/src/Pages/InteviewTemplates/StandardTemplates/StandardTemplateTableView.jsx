@@ -35,7 +35,7 @@ const formatOptions = [
 // v1.0.3 ---------------------------------------------------------->
 // v1.0.2 ---------------------------------------------------------->
 
-const StandardTemplateTableView = ({ templatesData }) => {
+const StandardTemplateTableView = ({ templatesData, emptyState }) => {
   const navigate = useNavigate();
   const handleCloneClick = (template) => {
     navigate(`/interview-templates/${template._id}/clone`);
@@ -44,7 +44,6 @@ const StandardTemplateTableView = ({ templatesData }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   // v1.0.0 <------------------------------------------------------------
-
 
   const [menuOpen, setMenuOpen] = useState(null);
   const [menuDirection, setMenuDirection] = useState("down");
@@ -213,6 +212,10 @@ const StandardTemplateTableView = ({ templatesData }) => {
           <div className="h-[calc(100vh-12.6rem)] overflow-y-auto pb-6 scrollbar-thin category-section">
             {loading ? (
               <LoadingView />
+            ) : templatesData.length === 0 && emptyState ? (
+              <div className="flex items-center justify-center p-20 text-center text-gray-500">
+                <p className="text-sm font-semibold">{emptyState}</p>
+              </div>
             ) : (
               <table className="min-w-full divide-y divide-gray-200 table-fixed">
                 {/* Single fixed header */}

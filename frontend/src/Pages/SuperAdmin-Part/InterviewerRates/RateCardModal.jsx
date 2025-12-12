@@ -126,12 +126,10 @@ function BulkUploadRateCardModal({ onClose, onSuccess }) {
       // Extract fields using flexible headers
       const category = getKey(row, ["category"]);
       const role = getKey(row, [
-        "role",
         "roleName",
-        "technology",
         "defaultCurrency",
       ]);
-      const level = getKey(row, ["level"]);
+      const level = getKey(row, ["levels"]);
 
       // 1. Check Required Fields
       if (!category || !role || !level) {

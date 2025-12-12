@@ -240,7 +240,8 @@ const InterviewTemplates = () => {
         filters.rounds.min !== "" ||
         filters.rounds.max !== "" ||
         filters.modifiedDate !== "" ||
-        filters.createdDate !== ""
+        filters.createdDate !== "" ||
+        filters.formats.length > 0
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -799,6 +800,8 @@ const InterviewTemplates = () => {
                     effectivePermissions={effectivePermissions}
                     onView={handleView}
                     onEdit={handleEdit}
+                    handleDelete={handleDelete}
+                    emptyState={emptyStateMessage}
                   />
                 ) : (
                   <div className="overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">

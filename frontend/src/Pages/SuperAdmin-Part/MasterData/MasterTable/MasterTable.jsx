@@ -352,66 +352,103 @@ const MasterTable = ({ permissions = {} }) => {
   // v1.0.2 <------------------------------------------------------------
   // v1.0.3 <------------------------------------------------------------
   const tableColumns = [
-    {
-      key: "name",
-      header: "Master Name",
-      render: (value, row) => {
-        let displayName;
-        switch (type) {
-          case "industries":
-            displayName = row.IndustryName;
-            break;
-          case "technology":
-            displayName = row.TechnologyMasterName;
-            break;
-          case "skills":
-            displayName = row.SkillName;
-            break;
-          case "locations":
-            displayName = row.LocationName;
-            break;
-          case "roles":
-            displayName = row.roleLabel;
-            break;
-          case "qualification":
-            displayName = row.QualificationName;
-            break;
-          case "universitycollege":
-            displayName = row.University_CollegeName;
-            break;
-          case "company":
-            displayName = row.CompanyName;
-            break;
-          case "category":
-            displayName = row.CategoryName;
-            break;
-          default:
-            displayName = null;
-        }
+    // {
+    //   key: "name",
+    //   header: "Name",
+    //   render: (value, row) => {
+    //     let displayName;
+    //     switch (type) {
+    //       case "industries":
+    //         displayName = row.IndustryName;
+    //         break;
+    //       case "technology":
+    //         displayName = row.TechnologyMasterName;
+    //         break;
+    //       case "skills":
+    //         displayName = row.SkillName;
+    //         break;
+    //       case "locations":
+    //         displayName = row.LocationName;
+    //         break;
+    //       case "roles":
+    //         displayName = row.roleLabel;
+    //         break;
+    //       case "qualification":
+    //         displayName = row.QualificationName;
+    //         break;
+    //       case "universitycollege":
+    //         displayName = row.University_CollegeName;
+    //         break;
+    //       case "company":
+    //         displayName = row.CompanyName;
+    //         break;
+    //       case "category":
+    //         displayName = row.CategoryName;
+    //         break;
+    //       default:
+    //         displayName = null;
+    //     }
 
-        return (
-          <span
-            className={`block font-medium text-gray-900 truncate cursor-default max-w-[160px]`}
-            title={capitalizeFirstLetter(displayName)}
-          >
-            {capitalizeFirstLetter(displayName) || "N/A"}
-          </span>
-        );
-      },
-    },
-    ...(type === "technology"
+    //     return (
+    //       <span
+    //         className={`block font-medium text-gray-900 truncate cursor-default max-w-[160px]`}
+    //         title={capitalizeFirstLetter(displayName)}
+    //       >
+    //         {capitalizeFirstLetter(displayName) || "N/A"}
+    //       </span>
+    //     );
+    //   },
+    // },
+    ...(type !== "roles"
       ? [
           {
             key: "name",
-            header: "Name",
-            render: (value, row) => (
-              <span>
-                {row.name
-                  ? capitalizeFirstLetter(row.TechnologyMasterName)
-                  : "N/A"}
-              </span>
-            ),
+            header: "Master Name",
+            render: (value, row) => {
+              let displayName;
+              switch (type) {
+                case "industries":
+                  displayName = row.IndustryName;
+                  break;
+                case "technology":
+                  displayName = row.TechnologyMasterName;
+                  break;
+                case "skills":
+                  displayName = row.SkillName;
+                  break;
+                case "locations":
+                  displayName = row.LocationName;
+                  break;
+                case "qualification":
+                  displayName = row.QualificationName;
+                  break;
+                case "universitycollege":
+                  displayName = row.University_CollegeName;
+                  break;
+                case "company":
+                  displayName = row.CompanyName;
+                  break;
+                case "category":
+                  displayName = row.CategoryName;
+                  break;
+                default:
+                  displayName = null;
+              }
+
+              return (
+                <span
+                  className="block font-medium text-gray-900 truncate cursor-default max-w-[160px]"
+                  title={capitalizeFirstLetter(displayName)}
+                >
+                  {capitalizeFirstLetter(displayName) || "N/A"}
+                </span>
+              );
+            },
           },
+        ]
+      : []),
+    ...(type === "technology"
+      ? [
           {
             key: "Category",
             header: "Category",
@@ -441,18 +478,6 @@ const MasterTable = ({ permissions = {} }) => {
     ...(type === "roles"
       ? [
           {
-            key: "roleName",
-            header: "Role",
-            render: (value, row) => (
-              <span
-                className="block truncate cursor-default max-w-[160px]"
-                title={capitalizeFirstLetter(row?.roleName)}
-              >
-                {row.roleName ? capitalizeFirstLetter(row.roleName) : "N/A"}
-              </span>
-            ),
-          },
-          {
             key: "roleLabel",
             header: "Label",
             render: (value, row) => (
@@ -461,6 +486,18 @@ const MasterTable = ({ permissions = {} }) => {
                 title={capitalizeFirstLetter(row?.roleLabel)}
               >
                 {row.roleLabel ? capitalizeFirstLetter(row.roleLabel) : "N/A"}
+              </span>
+            ),
+          },
+          {
+            key: "roleLabel",
+            header: "Name",
+            render: (value, row) => (
+              <span
+                className="block truncate cursor-default max-w-[160px]"
+                title={capitalizeFirstLetter(row?.roleName)}
+              >
+                {row.roleName ? capitalizeFirstLetter(row.roleName) : "N/A"}
               </span>
             ),
           },
