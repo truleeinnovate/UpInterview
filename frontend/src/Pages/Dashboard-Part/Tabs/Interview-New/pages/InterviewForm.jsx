@@ -26,6 +26,7 @@ import DropdownWithSearchField from "../../../../../Components/FormFields/Dropdo
 // v1.0.3 <-----------------------------------------------------------
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
 import { notify } from "../../../../../services/toastService.js";
+import { Info } from "lucide-react";
 import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 // v1.0.3 ----------------------------------------------------------->
@@ -80,6 +81,21 @@ const InterviewForm = () => {
   const [candidateLimit, setCandidateLimit] = useState(DROPDOWN_LIMIT);
   const [positionLimit, setPositionLimit] = useState(DROPDOWN_LIMIT);
   const [templateLimit, setTemplateLimit] = useState(DROPDOWN_LIMIT);
+  
+  // State for tooltip visibility
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Close tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showTooltip && !event.target.closest('.tooltip-container')) {
+        setShowTooltip(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTooltip]);
 
   const [candidateSearch, setCandidateSearch] = useState("");
   const [positionSearch, setPositionSearch] = useState("");
@@ -667,20 +683,31 @@ const InterviewForm = () => {
                   {/* External ID Field - Only show for organization users */}
                   {isOrganization && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        External ID
-                      </label>
+                      <div className="flex items-center gap-2 mb-1 relative">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          External ID
+                        </label>
+                        <div className="relative tooltip-container">
+                          <Info 
+                            className="w-4 h-4 text-gray-400 cursor-pointer" 
+                            onClick={() => setShowTooltip(!showTooltip)}
+                          />
+                          {showTooltip && (
+                            <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
+                              External System Reference Id
+                              <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                       <input
                         type="text"
                         name="externalId"
                         value={externalId}
                         onChange={(e) => setExternalId(e.target.value)}
-                        placeholder="external system identifier"
+                        placeholder="External System Reference Id"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
-                      <div className="text-xs text-gray-500 mt-1">
-                        external system reference id
-                      </div>
                     </div>
                   )}
 

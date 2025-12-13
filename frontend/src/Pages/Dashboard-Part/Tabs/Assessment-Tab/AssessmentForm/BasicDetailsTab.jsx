@@ -15,7 +15,7 @@ import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
-import { X } from "lucide-react";
+import { X, Info } from "lucide-react";
 import { notify } from "../../../../../services/toastService.js";
 import AssessmentListModal from "../AssessmentListModal/AssessmentListModal.jsx";
 import DropdownSelect, {
@@ -98,6 +98,21 @@ const BasicDetailsTab = ({
   const durationRef = useRef(null);
   const categoryOrTechnologyRef = useRef(null);
 
+  // State for tooltip visibility
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Close tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showTooltip && !event.target.closest('.tooltip-container')) {
+        setShowTooltip(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTooltip]);
+
   const [isPositionModalOpen, setIsPositionModalOpen] = useState(false);
 
   useScrollLock(isCategoryModalOpen || isPositionModalOpen);
@@ -156,7 +171,7 @@ const BasicDetailsTab = ({
 
   return (
     // v1.0.2 <------------------------------------------------------------------------------
-    <div className="pb-16">
+    <div className="pb-4">
       <form>
         {/* // <---------------------- v1.0.0 */}
 
@@ -512,11 +527,11 @@ const BasicDetailsTab = ({
                 value={
                   selected
                     ? {
-                        value: selected,
-                        label:
-                          categories?.find((c) => c._id === selected)
-                            ?.categoryOrTechnology || "Select List",
-                      }
+                      value: selected,
+                      label:
+                        categories?.find((c) => c._id === selected)
+                          ?.categoryOrTechnology || "Select List",
+                    }
                     : null
                 }
                 options={[
@@ -588,10 +603,27 @@ const BasicDetailsTab = ({
           {/* External ID Field - Only show for organization users */}
           {isOrganization && (
             <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-              <div className="mt-4">
+              <div className="">
+                <div className="flex items-center gap-2 mb-1 relative">
+                  <label className="text-sm font-medium text-gray-700">
+                    External ID
+                  </label>
+                  <div className="relative tooltip-container">
+                    <Info 
+                      className="w-4 h-4 text-gray-400 cursor-pointer" 
+                      onClick={() => setShowTooltip(!showTooltip)}
+                    />
+                    {showTooltip && (
+                      <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
+                        External System Reference Id
+                        <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <InputField
                   ref={fieldRefs.externalId}
-                  label="External ID"
+                  label=""
                   type="text"
                   name="externalId"
                   id="externalId"
@@ -599,13 +631,10 @@ const BasicDetailsTab = ({
                   onChange={(e) =>
                     handleInputChange("externalId", e.target.value)
                   }
-                  placeholder="external system identifier"
+                  placeholder="External System Reference Id"
                   autoComplete="off"
                   error={errors.externalId}
                 />
-                <div className="text-xs text-gray-500 mt-1">
-                  external system reference id
-                </div>
               </div>
             </div>
           )}
