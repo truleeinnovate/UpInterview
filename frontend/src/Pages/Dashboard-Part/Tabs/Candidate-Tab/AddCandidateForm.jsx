@@ -551,7 +551,8 @@ const AddCandidateForm = ({
         navigate(`/candidate/${id}`);
         break;
       default:
-        navigate("/candidate");
+        // navigate("/candidate");
+        navigate(-1);
     }
   };
 

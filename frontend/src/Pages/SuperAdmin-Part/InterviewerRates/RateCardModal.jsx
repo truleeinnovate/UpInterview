@@ -28,333 +28,264 @@ import { useMasterData } from "../../../apiHooks/useMasterData";
 import { ReactComponent as FaEdit } from "../../../icons/FaEdit.svg";
 import DropdownWithSearchField from "../../../Components/FormFields/DropdownWithSearchField";
 import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect";
-import Papa from "papaparse";
+import Papa from "papaparse"; // Import PapaParse
 // v1.0.1 ------------------------------------------------------->
 
-function BulkUploadRateCardModal({ onClose, onSuccess }) {
-  const [file, setFile] = useState(null);
-  const [parsedData, setParsedData] = useState([]);
-  const [errors, setErrors] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
+// const CsvDropZone = ({ onDataLoad }) => {
+//   const [dragActive, setDragActive] = useState(false);
+//   const [fileName, setFileName] = useState(null);
 
-  // --- Drag & Drop Handlers ---
-  const handleDragOver = (e) => {
+//   const handleDrag = (e) => {
+//     e.preventDefault();
+//     e.stopPropagation();
+//     if (e.type === "dragenter" || e.type === "dragover") {
+//       setDragActive(true);
+//     } else if (e.type === "dragleave") {
+//       setDragActive(false);
+//     }
+//   };
+
+//   const processFile = (file) => {
+//     if (file.type === "text/csv") {
+//       setFileName(file.name);
+//       Papa.parse(file, {
+//         header: true,
+//         skipEmptyLines: true,
+//         complete: (results) => {
+//           // Send the parsed data up to the parent component
+//           onDataLoad(results.data);
+//         },
+//         error: (error) => {
+//           console.error("CSV Parsing Error:", error);
+//           alert("Error parsing CSV file.");
+//         },
+//       });
+//     } else {
+//       alert("Only .csv files are supported!");
+//     }
+//     setDragActive(false);
+//   };
+
+//   const handleDrop = (e) => {
+//     e.preventDefault();
+//     e.stopPropagation();
+//     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+//       processFile(e.dataTransfer.files[0]);
+//     }
+//   };
+
+//   const handleFileUpload = (e) => {
+//     const file = e.target.files[0];
+//     if (file) {
+//       processFile(file);
+//     }
+//   };
+
+//   return (
+//     <div className="mt-4">
+//       <label className="block text-gray-700 text-sm font-medium mb-2">
+//         Pre-fill from CSV (Optional)
+//       </label>
+//       <div
+//         className={`flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl cursor-pointer transition p-6 text-center
+//           ${
+//             dragActive
+//               ? "border-green-500 bg-green-50"
+//               : "border-custom-blue bg-custom-blue/5 hover:bg-custom-blue/10"
+//           }`}
+//         onDragEnter={handleDrag}
+//         onDragLeave={handleDrag}
+//         onDragOver={handleDrag}
+//         onDrop={handleDrop}
+//       >
+//         <label
+//           htmlFor="csv-prefill-upload"
+//           className="flex flex-col items-center justify-center w-full"
+//         >
+//           <Upload size={30} className="text-custom-blue mb-2" />
+//           <span className="text-sm text-custom-blue font-medium">
+//             {fileName ? fileName : "Drag & Drop CSV here or Click to upload"}
+//           </span>
+//           <span className="text-xs text-gray-500 mt-1">
+//             CSV should contain headers: **Category, RoleName, Level, InrMin,
+//             InrMax, UsdMin, UsdMax**
+//           </span>
+//         </label>
+//         <input
+//           id="csv-prefill-upload"
+//           type="file"
+//           accept=".csv"
+//           onChange={handleFileUpload}
+//           className="hidden"
+//         />
+//       </div>
+//       {fileName && (
+//         <button
+//           type="button"
+//           onClick={() => {
+//             setFileName(null);
+//             onDataLoad(null);
+//           }}
+//           className="mt-2 text-xs font-medium text-red-600 hover:text-red-800"
+//         >
+//           Clear File
+//         </button>
+//       )}
+//     </div>
+//   );
+// };
+
+const CsvDropZone = ({ onDataLoad }) => {
+  const [dragActive, setDragActive] = useState(false);
+  const [fileName, setFileName] = useState(null);
+  const [csvData, setCsvData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleDrag = (e) => {
     e.preventDefault();
-    setIsDragging(true);
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
   };
 
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
+  const processFile = (file) => {
+    if (file.type === "text/csv") {
+      setFileName(file.name);
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          setCsvData(results.data); // Save parsed data
+          onDataLoad(results.data); // Send data to parent
+        },
+        error: (error) => {
+          console.error("CSV Parsing Error:", error);
+          alert("Error parsing CSV file.");
+        },
+      });
+    } else {
+      alert("Only .csv files are supported!");
+    }
+    setDragActive(false);
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
-    setIsDragging(false);
-    const droppedFile = e.dataTransfer.files[0];
-    validateAndParse(droppedFile);
-  };
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    validateAndParse(selectedFile);
-  };
-
-  const validateAndParse = (selectedFile) => {
-    if (!selectedFile) return;
-
-    // Validate CSV Type
-    if (
-      selectedFile.type !== "text/csv" &&
-      !selectedFile.name.endsWith(".csv")
-    ) {
-      notify.error("Please upload a valid CSV file.");
-      return;
+    e.stopPropagation();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processFile(e.dataTransfer.files[0]);
     }
-
-    setFile(selectedFile);
-    parseCSV(selectedFile);
   };
 
-  // --- CSV Parsing Logic ---
-  const parseCSV = (file) => {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        if (results.errors.length > 0) {
-          setErrors(results.errors.map((e) => `Row ${e.row}: ${e.message}`));
-          return;
-        }
-
-        // 1. Normalize Keys (Lowercase + remove spaces)
-        const normalizedData = results.data.map((row) => {
-          const fixed = {};
-          Object.keys(row).forEach((key) => {
-            const cleanedKey = key.trim().toLowerCase().replace(/\s+/g, "");
-            fixed[cleanedKey] = row[key]?.trim?.() || row[key];
-          });
-          return fixed;
-        });
-
-        processData(normalizedData);
-      },
-      error: (err) => {
-        notify.error("Error parsing CSV: " + err.message);
-      },
-    });
-  };
-
-  // Helper to find value from multiple possible header names
-  const getKey = (row, keys) => {
-    for (let k of keys) {
-      if (row[k] !== undefined && row[k] !== "") return row[k];
-    }
-    return null;
-  };
-
-  const processData = (rawData) => {
-    const processedMap = new Map();
-    const validationErrors = [];
-    const VALID_LEVELS = ["Junior", "Mid-Level", "Senior"];
-
-    rawData.forEach((row, index) => {
-      const rowNum = index + 1;
-
-      // Extract fields using flexible headers
-      const category = getKey(row, ["category"]);
-      const role = getKey(row, [
-        "roleName",
-        "defaultCurrency",
-      ]);
-      const level = getKey(row, ["levels"]);
-
-      // 1. Check Required Fields
-      if (!category || !role || !level) {
-        validationErrors.push(
-          `Row ${rowNum}: Missing Category, Role, or Level.`
-        );
-        return;
-      }
-
-      // 2. Validate Level Enum
-      // Case-insensitive check for level, then formatted to Title Case
-      const formattedLevel = VALID_LEVELS.find(
-        (l) => l.toLowerCase() === level.toLowerCase()
-      );
-
-      if (!formattedLevel) {
-        validationErrors.push(
-          `Row ${rowNum}: Invalid Level "${level}". Allowed: ${VALID_LEVELS.join(
-            ", "
-          )}.`
-        );
-        return;
-      }
-
-      // 3. Numeric Validation
-      const inrMin = parseFloat(row.inrmin) || 0;
-      const inrMax = parseFloat(row.inrmax) || 0;
-      const usdMin = parseFloat(row.usdmin) || 0;
-      const usdMax = parseFloat(row.usdmax) || 0;
-
-      if (inrMin < 0 || inrMax < 0 || usdMin < 0 || usdMax < 0) {
-        validationErrors.push(`Row ${rowNum}: Rates cannot be negative.`);
-        return;
-      }
-
-      // 4. Grouping Logic (Category + Role)
-      const key = `${category.trim()}-${role.trim()}`;
-
-      if (!processedMap.has(key)) {
-        processedMap.set(key, {
-          category: category.trim(),
-          roleName: [role.trim()], // Pushing as single-item array per schema
-          levels: [],
-          defaultCurrency:
-            row.defaultcurrency?.trim().toUpperCase() === "USD" ? "USD" : "INR",
-          isActive: true,
-        });
-      }
-
-      const entry = processedMap.get(key);
-
-      // 5. Prevent Duplicate Levels for same Role
-      // If "Junior" exists, update it; otherwise push new
-      const existingLevelIndex = entry.levels.findIndex(
-        (l) => l.level === formattedLevel
-      );
-
-      const newLevelData = {
-        level: formattedLevel,
-        rateRange: {
-          inr: { min: inrMin, max: inrMax },
-          usd: { min: usdMin, max: usdMax },
-        },
-      };
-
-      if (existingLevelIndex >= 0) {
-        // Overwrite existing level
-        entry.levels[existingLevelIndex] = newLevelData;
-      } else {
-        entry.levels.push(newLevelData);
-      }
-    });
-
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
-      setParsedData([]);
-    } else {
-      setErrors([]);
-      setParsedData([...processedMap.values()]);
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      processFile(file);
     }
   };
 
   const handleUpload = async () => {
-    if (parsedData.length === 0) return;
+    console.log("CSV DATA =====================================> ", csvData);
+    if (!csvData) {
+      alert("No CSV data to upload!");
+      return;
+    }
+    setLoading(true);
 
-    setIsUploading(true);
+    const payload = {
+      rateCards: csvData, // This now matches the server's expectation (req.body.rateCards)
+    };
     try {
-      const response = await axios.post(`/rate-cards/bulk`, {
-        rateCards: parsedData,
-      });
-
-      if (response.status === 200 || response.status === 201) {
-        notify.success(
-          `Successfully processed ${parsedData.length} rate cards!`
-        );
-        if (onSuccess) onSuccess();
-        onClose();
-      }
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/rate-cards`,
+        payload
+      );
+      if (!response.ok) throw new Error("Upload failed");
+      const result = await response.json();
+      alert("CSV uploaded successfully!");
+      console.log("Server response:", result);
     } catch (error) {
-      console.error("Upload error:", error);
-      const errMsg =
-        error.response?.data?.message || "Failed to upload rate cards.";
-      notify.error(errMsg);
-      setErrors([errMsg]);
+      console.error("Upload Error:", error);
+      alert("Error uploading CSV.");
     } finally {
-      setIsUploading(false);
+      setLoading(false);
     }
   };
 
+  const handleCancel = () => {
+    setFileName(null);
+    setCsvData(null);
+    onDataLoad(null);
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-2xl p-6 relative shadow-xl">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+    <div className="mt-4">
+      <label className="block text-gray-700 text-sm font-medium mb-2">
+        Pre-fill from CSV (Optional)
+      </label>
+      <div
+        className={`flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl cursor-pointer transition p-6 text-center 
+          ${
+            dragActive
+              ? "border-green-500 bg-green-50"
+              : "border-custom-blue bg-custom-blue/5 hover:bg-custom-blue/10"
+          }`}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+      >
+        <label
+          htmlFor="csv-prefill-upload"
+          className="flex flex-col items-center justify-center w-full"
         >
-          <X size={24} />
-        </button>
+          <Upload size={30} className="text-custom-blue mb-2" />
+          <span className="text-sm text-custom-blue font-medium">
+            {fileName ? fileName : "Drag & Drop CSV here or Click to upload"}
+          </span>
+          <span className="text-xs text-gray-500 mt-1">
+            CSV should contain headers: **Category, RoleName, Level, InrMin,
+            InrMax, UsdMin, UsdMax**
+          </span>
+        </label>
+        <input
+          id="csv-prefill-upload"
+          type="file"
+          accept=".csv"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+      </div>
 
-        <h2 className="text-2xl font-bold text-blue-600 mb-2">
-          Bulk Upload Rate Cards
-        </h2>
-        <p className="text-gray-500 mb-6 text-sm">
-          Upload a CSV file. Rows with the same Category and Role will be
-          merged.
-        </p>
-
-        {/* Drop Zone */}
-        <div
-          className={`border-2 border-dashed rounded-lg p-8 flex flex-col
-            items-center justify-center text-center transition-colors cursor-pointer
-            ${
-              file
-                ? "border-green-400 bg-green-50"
-                : isDragging
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 hover:border-blue-400"
-            }`}
-          onClick={() => fileInputRef.current.click()}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept=".csv"
-            className="hidden"
-          />
-
-          {file ? (
-            <div className="flex flex-col items-center">
-              <FileText size={48} className="text-green-500 mb-2" />
-              <span className="font-medium text-gray-900">{file.name}</span>
-              <span className="text-sm text-gray-500">
-                {(file.size / 1024).toFixed(2)} KB
-              </span>
-              <span className="text-xs text-green-600 mt-2 flex items-center">
-                <CheckCircle size={12} className="mr-1" />
-                Ready to process
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center">
-              <Upload size={48} className="text-gray-400 mb-2" />
-              <span className="font-medium text-gray-700">
-                Click to upload CSV
-              </span>
-              <span className="text-sm text-gray-400 mt-1">
-                or drag and drop file here
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Validation Errors */}
-        {errors.length > 0 && (
-          <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-4 max-h-40 overflow-y-auto">
-            <div className="flex items-center mb-2 text-red-700 font-medium">
-              <AlertCircle size={18} className="mr-2" />
-              Validation Errors
-            </div>
-            <ul className="list-disc pl-5 text-sm text-red-600 space-y-1">
-              {errors.map((err, idx) => (
-                <li key={idx}>{err}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Valid Data Preview */}
-        {parsedData.length > 0 && errors.length === 0 && (
-          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-md p-3">
-            <p className="text-sm text-blue-800">
-              <strong>Summary:</strong> Ready to create/update{" "}
-              <strong>{parsedData.length}</strong> Rate Cards.
-            </p>
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="flex justify-end space-x-3 mt-8">
+      {fileName && (
+        <div className="mt-2 flex gap-2">
           <button
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium"
+            type="button"
+            onClick={handleCancel}
+            className="px-4 py-1 text-sm font-medium text-gray-700 border border-gray-300 rounded hover:bg-gray-100"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleUpload}
-            disabled={!file || errors.length > 0 || isUploading}
-            className={`px-6 py-2 rounded-md text-white font-medium transition-colors ${
-              !file || errors.length > 0 || isUploading
+            disabled={loading}
+            className={`px-4 py-1 text-sm font-medium text-white rounded ${
+              loading
                 ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+                : "bg-custom-blue hover:bg-custom-blue-dark"
             }`}
           >
-            {isUploading ? "Uploading..." : "Upload Data"}
+            {loading ? "Uploading..." : "Upload"}
           </button>
         </div>
-      </div>
+      )}
     </div>
   );
-}
+};
 
 // v1.0.3 <-------------------------------------------------------------------------------
 // v1.0.2 <----------------------------------------------------------------------------
@@ -401,7 +332,43 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   const { currentRoles } = useMasterData({}, pageType);
   // v1.0.1 ------------------------------------------------------>
 
-  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  // ... (original state declarations)
+  // v1.0.7: Add state for CSV loaded data
+  const [csvLoadData, setCsvLoadData] = useState(null);
+  // ... (original hook and handler definitions)
+
+  // v1.0.7: New Handler to apply CSV data for pre-fill
+  const handleCsvDataLoad = (data) => {
+    setCsvLoadData(data);
+    if (!data || data.length === 0) return;
+
+    // Assuming CSV data provides one Rate Card's structure across multiple rows (one row per level)
+    const firstRow = data[0];
+    const newLevels = data.map((item) => ({
+      level: item.Level || "Custom",
+      rateRange: {
+        inr: {
+          min: parseFloat(item.InrMin) || 0,
+          max: parseFloat(item.InrMax) || 0,
+        },
+        usd: {
+          min: parseFloat(item.UsdMin) || 0,
+          max: parseFloat(item.UsdMax) || 0,
+        },
+      },
+    }));
+
+    // Apply to form data, keeping the existing discount/status defaults
+    setFormData((prev) => ({
+      ...prev,
+      category: firstRow.Category || prev.category,
+      // Assuming roles are space/comma separated in the RoleName column if multiple are provided
+      roleName: firstRow.RoleName
+        ? firstRow.RoleName.split(/,\s*|\s+/).filter(Boolean)
+        : prev.roleName,
+      levels: newLevels.length > 0 ? newLevels : prev.levels,
+    }));
+  };
 
   // const categories = [
   //   "Software Development",
@@ -851,20 +818,11 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* v1.0.7: Add CSV Dropzone for pre-fill if in 'create' mode */}
+          {currentMode === "create" && (
+            <CsvDropZone onDataLoad={handleCsvDataLoad} />
+          )}
           {/* Basic Information */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Upload CSV
-            </h3>
-            <button
-              type="button"
-              onClick={() => setIsBulkModalOpen(true)}
-              className="bg-custom-blue text-white px-4 py-2 rounded hover:bg-custom-blue/90 flex items-center"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Bulk Upload
-            </button>
-          </div>
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
               Basic Information
@@ -1214,15 +1172,6 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
           {/* v1.0.0 <-------------------------------------------------------------- */}
         </form>
       </div>
-      {isBulkModalOpen && (
-        <BulkUploadRateCardModal
-          onClose={() => setIsBulkModalOpen(false)}
-          onSuccess={() => {
-            // Function to refresh your grid/table data
-            // fetchRateCards();
-          }}
-        />
-      )}
     </div>
   );
 }
