@@ -1492,6 +1492,56 @@ const CombinedNavbar = React.memo(() => {
                       </NavLink>
                     )}
 
+                    {getRequestsDropdownItems().filter((item) =>
+                      enhancedCheckPermission(item.permissionKey)
+                    ).length > 0 && (
+                      <div className="relative" ref={requestsRef}>
+                        <button
+                          className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
+                            getRequestsDropdownItems().some((item) =>
+                              isActive(item.path)
+                            )
+                              ? "bg-gray-100 text-custom-blue font-bold"
+                              : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                          onClick={toggleRequestsDropdown}
+                        >
+                          <span>Requests</span>
+                          {dropdownState.requestsDropdown ? (
+                            <ChevronUp className="h-5 w-5" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5" />
+                          )}
+                        </button>
+                        {dropdownState.requestsDropdown && (
+                          <div className="mt-1 ml-4 space-y-1">
+                            {getRequestsDropdownItems().map(
+                              ({ path, label, permissionKey }) =>
+                                enhancedCheckPermission(permissionKey) && (
+                                  <NavLink
+                                    key={path}
+                                    to={path}
+                                    className={`block px-4 py-2 rounded-md ${
+                                      isActive(path)
+                                        ? "bg-gray-100 text-custom-blue"
+                                        : "text-gray-600 hover:bg-gray-100"
+                                    }`}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      closeAllDropdowns();
+                                      toggleSidebar();
+                                      navigate(path);
+                                    }}
+                                  >
+                                    {label}
+                                  </NavLink>
+                                )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {enhancedCheckPermission("InterviewRequest") && (
                       <NavLink
                         to="/interviewer-requests"
@@ -1566,6 +1616,107 @@ const CombinedNavbar = React.memo(() => {
                       >
                         Billing
                       </NavLink>
+                    )}
+                    {enhancedCheckPermission("InternalLogs") && (
+                      <NavLink
+                        to="/internal-logs"
+                        className={`block px-4 py-3 rounded-md ${
+                          isActive("/internal-logs")
+                            ? "bg-gray-100 text-custom-blue font-bold"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          closeAllDropdowns();
+                          toggleSidebar();
+                          navigate("/internal-logs");
+                        }}
+                      >
+                        Internal Logs
+                      </NavLink>
+                    )}
+
+                    {enhancedCheckPermission("Interviews") && (
+                      <NavLink
+                        to="/admin-interviews"
+                        className={`block px-4 py-3 rounded-md ${
+                          isActive("/admin-interviews")
+                            ? "bg-gray-100 text-custom-blue font-bold"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          closeAllDropdowns();
+                          toggleSidebar();
+                          navigate("/admin-interviews");
+                        }}
+                      >
+                        Interviews
+                      </NavLink>
+                    )}
+
+                    {enhancedCheckPermission("QuestionBankManager") && (
+                      <NavLink
+                        to="/question-bank-manager"
+                        className={`block px-4 py-3 rounded-md ${
+                          isActive("/question-bank-manager")
+                            ? "bg-gray-100 text-custom-blue font-bold"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          closeAllDropdowns();
+                          toggleSidebar();
+                          navigate("/question-bank-manager");
+                        }}
+                      >
+                        Question Bank
+                      </NavLink>
+                    )}
+                    {getMoreDropdownItems().length > 0 && (
+                      <div className="relative" ref={moreRef}>
+                        <button
+                          className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
+                            getMoreDropdownItems().some((item) =>
+                              isActive(item.path)
+                            )
+                              ? "bg-gray-100 text-custom-blue font-bold"
+                              : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                          onClick={toggleMoreDropdown}
+                        >
+                          <span>More</span>
+                          {dropdownState.moreDropdown ? (
+                            <ChevronUp className="h-5 w-5" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5" />
+                          )}
+                        </button>
+
+                        {dropdownState.moreDropdown && (
+                          <div className="mt-1 ml-4 space-y-1">
+                            {getMoreDropdownItems().map(({ path, label }) => (
+                              <NavLink
+                                key={path}
+                                to={path}
+                                className={`block px-4 py-2 rounded-md ${
+                                  isActive(path)
+                                    ? "bg-gray-100 text-custom-blue"
+                                    : "text-gray-600 hover:bg-gray-100"
+                                }`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  closeAllDropdowns();
+                                  toggleSidebar();
+                                  navigate(path);
+                                }}
+                              >
+                                {label}
+                              </NavLink>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </>
                 )}

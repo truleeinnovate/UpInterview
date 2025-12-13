@@ -57,6 +57,7 @@ import { logger } from "../../../../utils/logger.js";
 // v1.0.6 ------------------------------------------------------------------->
 import { formatDateTime } from "../../../../utils/dateFormatter.js";
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 
 // v2.0.1 <-----------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -699,37 +700,43 @@ function Candidate({
               </div>
             )}
           </div>
-          <div className="ml-3" title={`${row?.FirstName} ${row?.LastName}`}>
-            <div
-              // v1.0.9 <------------------------------------------------------------------------------
-              className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
-              // v1.0.9 ------------------------------------------------------------------------------>
-              onClick={
-                () =>
-                  navigate(
-                    isAssessmentView
-                      ? `/assessment/${row?.assessmentId}/view-details/${row?._id}`
-                      : // `/assessments/candidate-details/${row._id}`
-                        effectivePermissions.Candidates?.View &&
-                          `view-details/${row._id}`,
-                    {
-                      state: isAssessmentView
-                        ? {
-                            from: `/assessment-details/${row?.assessmentId}`,
-                            assessmentId: row?.assessmentId,
-                          }
-                        : { from: "/candidate" },
-                    }
-                  )
+          <div className="flex flex-col ml-3">
+            <div title={`${row?.FirstName} ${row?.LastName}`}>
+              <div
+                // v1.0.9 <------------------------------------------------------------------------------
+                className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
+                // v1.0.9 ------------------------------------------------------------------------------>
+                onClick={
+                  () =>
+                    navigate(
+                      isAssessmentView
+                        ? `/assessment/${row?.assessmentId}/view-details/${row?._id}`
+                        : // `/assessments/candidate-details/${row._id}`
+                          effectivePermissions.Candidates?.View &&
+                            `view-details/${row._id}`,
+                      {
+                        state: isAssessmentView
+                          ? {
+                              from: `/assessment-details/${row?.assessmentId}`,
+                              assessmentId: row?.assessmentId,
+                            }
+                          : { from: "/candidate" },
+                      }
+                    )
 
-                //  effectivePermissions.Candidates?.View && navigate(`view-details/${row._id}`)
-              }
+                  //  effectivePermissions.Candidates?.View && navigate(`view-details/${row._id}`)
+                }
+              >
+                {capitalizeFirstLetter(row?.FirstName) +
+                  " " +
+                  capitalizeFirstLetter(row.LastName)}
+              </div>
+            </div>
+            <div
+              title={capitalizeFirstLetter(row?.currentRoleLabel)}
+              className="text-xs cursor-default truncate max-w-[140px]"
             >
-              {(row?.FirstName.charAt(0).toUpperCase() +
-                row.FirstName.slice(1) || "") +
-                " " +
-                (row.LastName.charAt(0).toUpperCase() + row.LastName.slice(1) ||
-                  "")}
+              {capitalizeFirstLetter(row?.currentRoleLabel)}
             </div>
           </div>
         </div>

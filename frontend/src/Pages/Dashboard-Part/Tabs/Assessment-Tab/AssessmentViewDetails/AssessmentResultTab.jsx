@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import ScheduledAssessmentResultView from "./ScheduledAssessmentResultView";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 
 function AssessmentResultsTab({
   assessment,
@@ -275,7 +276,7 @@ function AssessmentResultsTab({
                                       : "bg-red-100 text-red-800"
                                   }`}
                                 >
-                                  {candidate.result}
+                                  {capitalizeFirstLetter(candidate?.result)}
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
