@@ -341,10 +341,18 @@ function TenantsPage() {
                 }
               }}
             >
-              {capitalizeFirstLetter(row.firstName) || "N/A"}
-              <div className="text-custom-blue">
-                {capitalizeFirstLetter(row.lastName) || "N/A"}
+              {capitalizeFirstLetter(row.firstName) || "N/A"}{" "}
+              {capitalizeFirstLetter(row.lastName) || "N/A"}
+              {/* capitalizeFirstLetter(row.lastName) */}
+              <div className="text-xs text-gray-500">
+                {currentRoles.find(
+                  (role) => role.roleName === row?.contact?.currentRole
+                )?.roleLabel || "N/A"}
+                {/* {currentRoles.includes(row?.contact?.currentRole) || "N/A"} */}
               </div>
+              {/* <span >
+               
+              </span> */}
             </div>
           </div>
         </div>
@@ -375,11 +383,11 @@ function TenantsPage() {
           ),
         },
 
-    {
-      key: "currentRole",
-      header: "Current Role",
-      render: (value, row) => <span>{row?.contact?.currentRole || "N/A"}</span>,
-    },
+    // {
+    //   key: "currentRole",
+    //   header: "Current Role",
+    //   render: (value, row) => <span>{row?.contact?.currentRole || "N/A"}</span>,
+    // },
 
     {
       key: "yearsOfExperience",
@@ -387,7 +395,7 @@ function TenantsPage() {
       render: (value, row) => (
         <span>
           {row?.contact?.yearsOfExperience
-            ? row?.contact?.yearsOfExperience + " years"
+            ? row?.contact?.yearsOfExperience + " Years"
             : "N/A"}
         </span>
       ),
@@ -504,13 +512,20 @@ function TenantsPage() {
       key: "currentRole",
       header: "Current Role",
       render: (value, row) => {
-        const tenantRole = row?.contact?.currentRole || "N/A";
-        return tenantRole;
-
-        // {row?.type === "organization"
-        //   ? "N/A"
-        //   : row?.contact?.currentRole || "N/A"}
+        return (
+          currentRoles.find(
+            (role) => role.roleName === row?.contact?.currentRole
+          )?.roleLabel || "N/A"
+        );
       },
+      // render: (value, row) => {
+      //   const tenantRole = row?.contact?.currentRole || "N/A";
+      //   return tenantRole;
+
+      //   // {row?.type === "organization"
+      //   //   ? "N/A"
+      //   //   : row?.contact?.currentRole || "N/A"}
+      // },
     },
 
     {

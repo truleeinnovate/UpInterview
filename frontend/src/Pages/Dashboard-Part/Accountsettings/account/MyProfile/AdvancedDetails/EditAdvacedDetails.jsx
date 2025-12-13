@@ -344,7 +344,7 @@ const EditAdvacedDetails = ({
                 onChange={handleInputChange}
                 error={errors.currentRole}
                 containerRef={fieldRefs.currentRole}
-                label="Current Role or Technology"
+                label="Select Role / Technology"
                 required
                 onMenuOpen={loadCurrentRoles}
                 loading={isCurrentRolesFetching}

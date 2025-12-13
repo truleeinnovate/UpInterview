@@ -51,6 +51,17 @@ const sortByAlphabet = (data, field) => {
   );
 };
 
+const maybeSortByAlphabet = (data, field, shouldSort) => {
+  if (!Array.isArray(data)) return [];
+  if (!shouldSort) return data;
+
+  return [...data].sort((a, b) =>
+    (a?.[field] || "").localeCompare(b?.[field] || "", "en", {
+      sensitivity: "base",
+    })
+  );
+};
+
 export const useMasterData = (paramsData, pageType, type) => {
   const queryClient = useQueryClient();
   const staleTime = ONE_WEEK; // 7 days - master data rarely changes
@@ -167,19 +178,39 @@ export const useMasterData = (paramsData, pageType, type) => {
   //   category: categoryQ?.data || categoryQ.data || [],
   // };
 
-  const masterData = {
-    locations: sortByAlphabet(locationsQ?.data, "LocationName"),
-    industries: sortByAlphabet(industriesQ?.data, "IndustryName"),
-    currentRoles: sortByAlphabet(rolesQ?.data, "roleName"),
-    skills: sortByAlphabet(skillsQ?.data, "SkillName"),
-    technologies: sortByAlphabet(technologiesQ?.data, "TechnologyMasterName"),
-    qualifications: sortByAlphabet(qualificationsQ?.data, "QualificationName"),
-    colleges: sortByAlphabet(collegesQ?.data, "University_CollegeName"),
-    companies: sortByAlphabet(companiesQ?.data, "CompanyName"),
-    category: sortByAlphabet(categoryQ?.data, "CategoryName"),
-  };
+  const shouldSort = pageType === "adminPortal" ? true : false;
 
-  // console.log("masterData in useMasterData:", masterData);
+  const masterData = {
+    locations: shouldSort
+      ? sortByAlphabet(locationsQ?.data, "LocationName")
+      : locationsQ?.data || [],
+
+    industries: shouldSort
+      ? sortByAlphabet(industriesQ?.data, "IndustryName")
+      : industriesQ?.data || [],
+    currentRoles: shouldSort
+      ? sortByAlphabet(rolesQ?.data, "roleName")
+      : rolesQ?.data || [],
+    skills: shouldSort
+      ? sortByAlphabet(skillsQ?.data, "SkillName")
+      : skillsQ?.data || [],
+
+    technologies: shouldSort
+      ? sortByAlphabet(technologiesQ?.data, "TechnologyMasterName")
+      : technologiesQ?.data || [],
+    qualifications: shouldSort
+      ? sortByAlphabet(qualificationsQ?.data, "QualificationName")
+      : qualificationsQ?.data || [],
+    colleges: shouldSort
+      ? sortByAlphabet(collegesQ?.data, "University_CollegeName")
+      : collegesQ?.data || [],
+    companies: shouldSort
+      ? maybeSortByAlphabet(companiesQ?.data, "CompanyName", shouldSort)
+      : companiesQ?.data || [],
+    category: shouldSort
+      ? sortByAlphabet(categoryQ?.data, "CategoryName")
+      : categoryQ?.data || [],
+  };
 
   const isMasterDataLoading = [
     locationsQ.isFetching,
