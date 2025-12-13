@@ -17,6 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 import axios from "axios";
 import { config } from "../../../../../config";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const AssessmentTestPage1 = ({
   scheduledAssessmentId,
@@ -168,9 +169,11 @@ const AssessmentTestPage1 = ({
                     {
                       icon: AcademicCapIcon,
                       value: calculatedScores
-                        ? `${calculatedScores.passScore}${
-                            calculatedScores.showPercentage ? "%" : ""
-                          } Pass Score`
+                        ? calculatedScores.passScore != null
+                          ? `${calculatedScores.passScore}${
+                              calculatedScores.showPercentage ? "%" : ""
+                            } Pass Score`
+                          : "N/A Pass Score"
                         : "Loading...",
                     },
                   ].map((stat, index) => (
@@ -187,14 +190,14 @@ const AssessmentTestPage1 = ({
                 {/* v1.0.0 <---------------------------------------------------------------------------------------------------------------------------------- */}
                 <h1 className="sm:text-md md:text-md lg:text-xl xl:text-sl 2xl:text-xl text-xl font-bold text-white tracking-tight leading-tight mb-2">
                   {/* v1.0.0 ----------------------------------------------------------------------------------------------------------------------------------> */}
-                  {assessment?.assessmentId?.AssessmentTitle}
+                  {capitalizeFirstLetter(assessment?.assessmentId?.AssessmentTitle)}
                 </h1>
                 {assessment?.assessmentId?.Position && (
                   <p className="text-blue-100 text-sm font-light">
                     Position:{" "}
                     <span className="font-medium text-white">
                       {typeof assessment?.assessmentId?.Position === "object" &&
-                        (assessment.assessmentId.Position.title ||
+                        (capitalizeFirstLetter(assessment.assessmentId.Position.title) ||
                           "Position Title Not Available")}
                     </span>
                   </p>

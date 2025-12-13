@@ -366,9 +366,9 @@ const Assessment = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (assessmentData?.length !== 0) {
+    // if (assessmentData?.length !== 0) {
       setFilterPopupOpen((prev) => !prev);
-    }
+    // }
   };
 
   // Helper function to normalize spaces for better search

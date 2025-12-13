@@ -19,6 +19,7 @@ import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { notify } from "../../../../services/toastService.js";
 import AssessmentListModal from "./AssessmentListModal/AssessmentListModal.jsx";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const ToolbarDropdown = ({
   options,
@@ -42,7 +43,11 @@ const ToolbarDropdown = ({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target) &&
+        (!menuRef.current || !menuRef.current.contains(e.target))
+      ) {
         setIsOpen(false);
         setSearchTerm("");
       }
@@ -110,7 +115,9 @@ const ToolbarDropdown = ({
 
   // Filtered options based on search term
   const filteredOptions = options.filter((opt) =>
-    opt.categoryOrTechnology.toLowerCase().includes(searchTerm.toLowerCase())
+    (opt.categoryOrTechnology || "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -141,7 +148,9 @@ const ToolbarDropdown = ({
               selected ? "text-black font-medium" : "text-gray-400"
             }`}
           >
-            {selected ? selected.categoryOrTechnology : placeholder}
+            {selected
+              ? capitalizeFirstLetter(selected.categoryOrTechnology)
+              : placeholder}
           </span>
         )}
 
@@ -210,7 +219,7 @@ const ToolbarDropdown = ({
                         : "hover:bg-[#2179891A] hover:text-[#217989] text-gray-800"
                     }`}
                   >
-                    {opt.categoryOrTechnology}
+                    {capitalizeFirstLetter(opt.categoryOrTechnology)}
                   </li>
                 ))
               )}
@@ -503,10 +512,10 @@ const AssessmentToolbar = ({
             <span
               ref={filterIconRef} // Attach ref to filter icon
               onClick={onFilterClick}
-              style={{
-                opacity: dataLength === 0 ? 0.2 : 1,
-                pointerEvents: dataLength === 0 ? "none" : "auto",
-              }}
+              // style={{
+              //   opacity: dataLength === 0 ? 0.2 : 1,
+              //   pointerEvents: dataLength === 0 ? "none" : "auto",
+              // }}
               className="cursor-pointer text-xl border rounded-md p-2"
             >
               {isFilterPopupOpen ? <LuFilterX /> : <LuFilter />}
