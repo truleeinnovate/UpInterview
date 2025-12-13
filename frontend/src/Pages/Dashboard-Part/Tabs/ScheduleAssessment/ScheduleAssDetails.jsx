@@ -22,7 +22,6 @@ function ScheduleAssDetails() {
   const { state } = useLocation();
   const schedule = state?.schedule;
   //console.log('schedule--', schedule);
-  
 
   const { fetchAssessmentQuestions, useAssessmentById } = useAssessments();
   const [candidates, setCandidates] = useState(schedule?.candidates || []);
@@ -134,6 +133,7 @@ function ScheduleAssDetails() {
           candidate.status === "completed"
             ? candidate.totalScore ?? null
             : null,
+        CountryCode: candidate?.candidateId?.CountryCode || "N/A",
         Phone: candidate.candidateId?.Phone || "N/A",
         HigherQualification:
           candidate.candidateId?.HigherQualification || "N/A",
@@ -214,7 +214,7 @@ function ScheduleAssDetails() {
               Loading Candidates...
             </div>
           ) : activeTab === "candidate" ? (
-            <div>
+            <div className="bg-red-500">
               <Candidate
                 candidates={formattedCandidates(candidates)}
                 onResendLink={handleResendLink}

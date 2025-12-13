@@ -179,6 +179,7 @@ function AssessmentsTab({ assessment }) {
     return <div className="p-4 text-gray-600">Loading Assessments...</div>;
 
   const formattedCandidates = (candidates) =>
+
     (Array.isArray(candidates) ? candidates : []).map((candidate) => ({
       id: candidate._id,
       _id: candidate.candidateId._id,
@@ -200,6 +201,7 @@ function AssessmentsTab({ assessment }) {
             : "fail"
           : null,
       Phone: candidate.candidateId?.Phone || "N/A",
+      CountryCode: candidate.candidateId?.CountryCode || "N/A",
       HigherQualification: candidate.candidateId?.HigherQualification || "N/A",
       CurrentExperience: candidate.candidateId?.CurrentExperience || "N/A",
       skills: candidate.candidateId?.skills || [],

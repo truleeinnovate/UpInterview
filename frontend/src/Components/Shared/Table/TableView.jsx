@@ -9,6 +9,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Menu } from "@headlessui/react";
 import { ReactComponent as FiMoreHorizontal } from "../../../icons/FiMoreHorizontal.svg";
+import { createPortal } from "react-dom";
 
 const TableView = ({
   data = [],
@@ -110,6 +111,36 @@ const TableView = ({
 
   // v1.0.2 <----------------------------------------------------------------------------------
 
+  const getMenuPosition = (rowId, openUpwards) => {
+    const button = menuButtonRefs.current[rowId];
+    if (!button) return {};
+
+    const buttonRect = button.getBoundingClientRect();
+    const menuWidth = 192; // w-48 = 12rem = 192px
+    const padding = 8;
+
+    let left = buttonRect.right - menuWidth; // align right edge
+    let top = openUpwards
+      ? buttonRect.top - padding
+      : buttonRect.bottom + padding;
+
+    // Prevent right overflow
+    if (left + menuWidth > window.innerWidth) {
+      left = window.innerWidth - menuWidth - padding;
+    }
+
+    // Prevent left overflow
+    if (left < padding) {
+      left = padding;
+    }
+
+    return {
+      left,
+      top,
+      transform: openUpwards ? "translateY(-100%)" : "none",
+    };
+  };
+
   return (
     <motion.div
       className="w-full"
@@ -199,19 +230,19 @@ const TableView = ({
                             : row[column.key] || ""}
                         </td>
                       ))}
-                    {actions.length > 0 && (
-                      <td className="px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-visible">
-                        <Menu as="div" className="relative">
-                          <Menu.Button
-                            ref={(el) => {
-                              menuButtonRefs.current[menuRowId] = el;
-                            }}
-                            onClick={(e) => handleMenuOpen(menuRowId, e)}
-                            className="p-1 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
-                          >
-                            <FiMoreHorizontal className="w-5 h-5 text-gray-600" />
-                          </Menu.Button>
-                          {openMenuIndex === menuRowId && (
+                      {actions.length > 0 && (
+                        <td className="px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-visible">
+                          <Menu as="div" className="relative">
+                            <Menu.Button
+                              ref={(el) => {
+                                menuButtonRefs.current[menuRowId] = el;
+                              }}
+                              onClick={(e) => handleMenuOpen(menuRowId, e)}
+                              className="p-1 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
+                            >
+                              <FiMoreHorizontal className="w-5 h-5 text-gray-600" />
+                            </Menu.Button>
+                            {/* {openMenuIndex === menuRowId && (
                             <Menu.Items
                               static
                               className="absolute left-0 w-48 bg-white rounded-lg shadow-xl border border-gray-300 outline-none py-1 z-50"
@@ -261,10 +292,53 @@ const TableView = ({
                                   </Menu.Item>
                                 ))}
                             </Menu.Items>
-                          )}
-                        </Menu>
-                      </td>
-                    )}
+                          )} */}
+                            {openMenuIndex === menuRowId &&
+                              createPortal(
+                                <Menu.Items
+                                  static
+                                  className="w-48 bg-white rounded-lg shadow-xl border border-gray-300 outline-none py-1 z-[9999]"
+                                  style={{
+                                    position: "fixed",
+                                    ...getMenuPosition(menuRowId, openUpwards),
+                                  }}
+                                  ref={(el) => {
+                                    menuRefs.current[menuRowId] = el;
+                                  }}
+                                >
+                                  {actions
+                                    .filter((action) =>
+                                      action.show ? action.show(row) : true
+                                    )
+                                    .map((action) => (
+                                      <Menu.Item key={action.key}>
+                                        {({ active }) => (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              action.onClick(row);
+                                              setOpenMenuIndex(null);
+                                            }}
+                                            className={`${
+                                              active ? "bg-gray-50" : ""
+                                            } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
+                                          >
+                                            {typeof action.icon === "function"
+                                              ? action.icon(row)
+                                              : action.icon}
+                                            {typeof action.label === "function"
+                                              ? action.label(row)
+                                              : action.label}
+                                          </button>
+                                        )}
+                                      </Menu.Item>
+                                    ))}
+                                </Menu.Items>,
+                                document.body
+                              )}
+                          </Menu>
+                        </td>
+                      )}
                     </tr>
                   );
                 })
