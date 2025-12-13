@@ -50,9 +50,9 @@ const buildPermissionQuery = async (userId, tenantId,
     }
 
     // Always restrict to tenant (safety net)
-    if (tenantId && roleType !== "individual") {
-        query.tenantId = tenantId;
-    }
+    // if (tenantId && roleType !== "individual") {
+    //     query.tenantId = tenantId;
+    // }
 
     return query;
 };

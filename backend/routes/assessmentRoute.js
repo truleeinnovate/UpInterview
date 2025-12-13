@@ -14,6 +14,7 @@ const {
   getAssessmentById,
   // getLists,
 } = require("../controllers/assessmentController");
+const {permissionMiddleware} = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
@@ -34,7 +35,7 @@ router.get("/:assessmentId/candidates", getAssignedCandidates);
 
 // above code is created by sashak now we have changes assesment logic so wee need to check wich one is working or not
 // from here this is new code created by ashraf
-router.get("/:assessmentId/results", getAssessmentResults);
+router.get("/:assessmentId/results",permissionMiddleware, getAssessmentResults);
 router.get("/:id", getAssessmentById);
 
 router.post("/create-list", createList);

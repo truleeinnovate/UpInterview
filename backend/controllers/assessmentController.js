@@ -445,7 +445,7 @@ exports.updateAssessment = async (req, res) => {
       error: error.message,
     });
   }
-};
+}; 
 
 // from here this is new code created by ashraf
 
@@ -453,11 +453,37 @@ exports.updateAssessment = async (req, res) => {
 exports.getAssessmentResults = async (req, res) => {
   try {
     const { assessmentId } = req.params;
+    console.log("[ASSESSMENT] res.locals.auth:", res.locals.auth);
+    const {
+      actingAsUserId,
+      actingAsTenantId,
+    } = res.locals.auth;
+    console.log("[ASSESSMENT] actingAsUserId:", actingAsUserId);
+    console.log("[ASSESSMENT] actingAsTenantId:", actingAsTenantId);
+
+    const {
+      effectivePermissions,
+      inheritedRoleIds,
+      effectivePermissions_RoleType,
+      effectivePermissions_RoleName,
+    } = res.locals;
+
+    const permissionQuery = await buildPermissionQuery(
+      actingAsUserId,
+      actingAsTenantId,
+      inheritedRoleIds || [],
+      effectivePermissions_RoleType,
+      effectivePermissions_RoleName
+    );
+    let query = { ...permissionQuery };
+
 
     // Fetch the assessment to get passScoreBy and passScore
-    const assessment = await Assessment.findById(assessmentId).select(
-      "passScoreBy passScore totalScore"
-    );
+    const assessment = await Assessment.findOne({
+      _id: assessmentId,
+      ...query,
+    }).select("passScoreBy passScore totalScore");
+
     if (!assessment) {
       return res.status(404).json({ message: "Assessment not found" });
     }

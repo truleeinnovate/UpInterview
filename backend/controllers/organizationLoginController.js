@@ -1828,7 +1828,7 @@ const registerOrganization = async (req, res) => {
       email,
       phone,
       profileId,
-      jobTitle,
+      // jobTitle,
       company: company,
       employees: employees,
       countryCode: countryCode,
