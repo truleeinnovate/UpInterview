@@ -13,6 +13,7 @@ const KanbanView = ({
   renderActions = () => null,
   emptyState = "No Data Found",
 }) => {
+  console.log("KanbanView - data:", data);
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -39,62 +40,64 @@ const KanbanView = ({
               const cardKey = `${baseId}-${index}`;
 
               return (
-              <motion.div
-                key={cardKey}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col"
-              >
-                {/* Header: Avatar, Title, Subtitle */}
-                <div className="flex justify-between items-start mb-4 gap-2">
-                  <div className="flex items-start gap-3">
-                    {item?.avatar ? (
-                      <img
-                        src={item.avatar}
-                        alt="Avatar"
-                        className="w-10 h-10 rounded-full object-cover cursor-pointer"
-                        title={item?.title}
-                      />
-                    ) : (
-                      <div
-                        className="w-10 h-10 rounded-full bg-custom-blue text-white flex items-center justify-center font-semibold text-base cursor-pointer select-none"
-                        title={item?.title || "Unnamed"}
-                      >
-                        {(item?.title || "?").charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                <motion.div
+                  key={cardKey}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col"
+                >
+                  {/* Header: Avatar, Title, Subtitle */}
+                  <div className="flex justify-between items-start mb-4 gap-2">
+                    <div className="flex items-start gap-3">
+                      {item?.avatar ? (
+                        <img
+                          src={item.avatar}
+                          alt="Avatar"
+                          className="w-10 h-10 rounded-full object-cover cursor-pointer"
+                          title={item?.title}
+                        />
+                      ) : (
+                        <div
+                          className="w-10 h-10 rounded-full bg-custom-blue text-white flex items-center justify-center font-semibold text-base cursor-pointer select-none"
+                          title={item?.title || "Unnamed"}
+                        >
+                          {(item?.title || "?").charAt(0).toUpperCase()}
+                        </div>
+                      )}
 
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-custom-blue truncate">
-                        {capitalizeFirstLetter(item?.title) || "N/A"}
-                      </h4>
-                      <p className="text-sm text-gray-600 truncate">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-bold text-custom-blue truncate">
+                          {capitalizeFirstLetter(item?.title) +
+                            " " +
+                            capitalizeFirstLetter(item?.subtitle) || "N/A"}
+                        </h4>
+                        {/* <p className="text-sm text-gray-600 truncate">
                         {item?.subtitle || "N/A"}
-                      </p>
+                      </p> */}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-1 flex-shrink-0">
+                      {renderActions(item)}
                     </div>
                   </div>
 
-                  <div className="flex gap-1 flex-shrink-0">
-                    {renderActions(item)}
+                  {/* Dynamic Columns */}
+                  <div className="mt-auto space-y-2 text-sm">
+                    {columns.map(({ key, header, render }) => (
+                      <div
+                        key={key}
+                        className="grid grid-cols-2 items-center text-gray-600"
+                      >
+                        <span className="text-gray-500 text-sm">{header}</span>
+                        <span className="truncate font-semibold text-sm">
+                          {render ? render(item[key], item) : item[key] || ""}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                </div>
-
-                {/* Dynamic Columns */}
-                <div className="mt-auto space-y-2 text-sm">
-                  {columns.map(({ key, header, render }) => (
-                    <div
-                      key={key}
-                      className="grid grid-cols-2 items-center text-gray-600"
-                    >
-                      <span className="text-gray-500 text-sm">{header}</span>
-                      <span className="truncate font-semibold text-sm">
-                        {render ? render(item[key], item) : item[key] || ""}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
+                </motion.div>
               );
             })}
           </div>

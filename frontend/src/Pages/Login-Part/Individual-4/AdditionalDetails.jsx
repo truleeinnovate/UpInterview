@@ -275,7 +275,7 @@ const AdditionalDetails = ({
             ]}
             onChange={handleChange}
             error={errors.currentRole}
-            label="Select Role / Technology"
+            label="Current Role / Technology"
             name="currentRole"
             required
             onMenuOpen={loadCurrentRoles}

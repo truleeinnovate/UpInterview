@@ -35,6 +35,7 @@ const {
 } = require("../validations/assessmentValidation");
 const selectedAssessmentquestions = require("../models/Assessment/selectedAssessmentquestions.js");
 const AssessmentList = require("../models/Assessment/AssessmentList.js");
+const { buildPermissionQuery } = require("../utils/buildPermissionQuery.js");
 
 // Delete an assessment
 // exports.deleteAssessment = async (req, res) => {
@@ -445,7 +446,7 @@ exports.updateAssessment = async (req, res) => {
       error: error.message,
     });
   }
-}; 
+};
 
 // from here this is new code created by ashraf
 
@@ -453,13 +454,7 @@ exports.updateAssessment = async (req, res) => {
 exports.getAssessmentResults = async (req, res) => {
   try {
     const { assessmentId } = req.params;
-    console.log("[ASSESSMENT] res.locals.auth:", res.locals.auth);
-    const {
-      actingAsUserId,
-      actingAsTenantId,
-    } = res.locals.auth;
-    console.log("[ASSESSMENT] actingAsUserId:", actingAsUserId);
-    console.log("[ASSESSMENT] actingAsTenantId:", actingAsTenantId);
+    const { actingAsUserId, actingAsTenantId } = res.locals.auth;
 
     const {
       effectivePermissions,
@@ -475,13 +470,15 @@ exports.getAssessmentResults = async (req, res) => {
       effectivePermissions_RoleType,
       effectivePermissions_RoleName
     );
-    let query = { ...permissionQuery };
 
+    // let query = { ...permissionQuery };
+
+    // conosle.log("[ASSESSMENT] query:", query);
 
     // Fetch the assessment to get passScoreBy and passScore
-    const assessment = await Assessment.findOne({
+    const assessment = await Assessment.find({
       _id: assessmentId,
-      ...query,
+      // ...permissionQuery,
     }).select("passScoreBy passScore totalScore");
 
     if (!assessment) {
@@ -491,6 +488,7 @@ exports.getAssessmentResults = async (req, res) => {
     // Find all active scheduled assessments for this assessment ID
     const scheduledAssessments = await ScheduleAssessment.find({
       assessmentId,
+      ...permissionQuery,
       isActive: true,
     }).select("_id order expiryAt status");
 
