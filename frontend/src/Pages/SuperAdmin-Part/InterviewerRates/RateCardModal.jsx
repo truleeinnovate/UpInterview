@@ -188,54 +188,52 @@ const CsvDropZone = ({ onDataLoad }) => {
     }
   };
 
- const handleUpload = async () => {
-  if (!csvData) {
-    notify.error("No CSV data to upload!");
-    return;
-  }
+  const handleUpload = async () => {
+    if (!csvData) {
+      notify.error("No CSV data to upload!");
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
 
-  // 🔥 TRANSFORM CSV STRINGS → REAL TYPES
-  const transformedRateCards = csvData.map((row) => ({
-    category: row.category || row.Category,
+    // 🔥 TRANSFORM CSV STRINGS → REAL TYPES
+    const transformedRateCards = csvData.map((row) => ({
+      category: row.category || row.Category,
 
-    // roleName comes as string → parse JSON
-    roleName: Array.isArray(row.roleName)
-      ? row.roleName
-      : JSON.parse(row.roleName),
+      // roleName comes as string → parse JSON
+      roleName: Array.isArray(row.roleName)
+        ? row.roleName
+        : JSON.parse(row.roleName),
 
-    // levels comes as string → parse JSON
-    levels: typeof row.levels === "string"
-      ? JSON.parse(row.levels)
-      : row.levels,
+      // levels comes as string → parse JSON
+      levels:
+        typeof row.levels === "string" ? JSON.parse(row.levels) : row.levels,
 
-    defaultCurrency: row.defaultCurrency || "INR",
+      defaultCurrency: row.defaultCurrency || "INR",
 
-    // "True"/"False" → boolean
-    isActive:
-      row.isActive === true ||
-      row.isActive === "true" ||
-      row.isActive === "True",
+      // "True"/"False" → boolean
+      // isActive:
+      //   row.isActive === true ||
+      //   row.isActive === "true" ||
+      //   row.isActive === "True",
+      isActive: String(row.isActive).trim().toLowerCase() === "true",
+    }));
 
-  }));
+    try {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/rate-cards`,
+        { rateCards: transformedRateCards }
+      );
 
-  try {
-    const response = await axios.post(
-      `${config.REACT_APP_API_URL}/rate-cards`,
-      { rateCards: transformedRateCards }
-    );
-
-    notify.success("CSV uploaded successfully!");
-    console.log("Server response:", response.data);
-  } catch (error) {
-    console.error("Upload Error:", error.response?.data || error);
-    notify.error("Error uploading CSV.");
-  } finally {
-    setLoading(false);
-  }
-};
-
+      notify.success("CSV uploaded successfully!");
+      console.log("Server response:", response.data);
+    } catch (error) {
+      console.error("Upload Error:", error.response?.data || error);
+      notify.error("Error uploading CSV.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCancel = () => {
     setFileName(null);
