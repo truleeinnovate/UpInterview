@@ -32,4 +32,11 @@ router.post(
   mockInterviewController.validateMockInterview
 );
 
+router.patch(
+  "/mockinterview/:mockInterviewId/round/:roundId/cancel",
+  // loggingService.internalLoggingMiddleware,
+  // loggingService.FeedsMiddleware,
+  mockInterviewController.deleteMockInterview
+);
+
 module.exports = router;

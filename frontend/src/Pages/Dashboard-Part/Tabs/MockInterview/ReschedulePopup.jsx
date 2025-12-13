@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { useCustomContext } from "../../../../Context/Contextfetch.js";
+// import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../config.js";
@@ -12,16 +12,14 @@ import InputField from "../../../../Components/FormFields/InputField";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 
 const ReschedulePopup = ({ onClose, MockEditData }) => {
-  const { fetchMockInterviewData } = useCustomContext();
-  
+  // const { fetchMockInterviewData } = useCustomContext();
+
   // Field refs for form field components
   const fieldRefs = {
     dateTime: useRef(null),
     duration: useRef(null),
     interviewer: useRef(null),
   };
-
-  
 
   // date and duration
   const getTodayDate = () => {
@@ -31,7 +29,6 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
     const day = String(today.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
-
 
   const [dateTime, setDateTime] = useState("");
   const [dateTimeLocal, setDateTimeLocal] = useState("");
@@ -63,20 +60,20 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
       const minutes = String(now.getMinutes()).padStart(2, "0");
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
-    
+
     // Parse DD-MM-YYYY HH:mm format
     const parts = displayDateTime.split(" ");
     if (parts.length >= 2) {
       const datePart = parts[0];
       const timePart = parts[1];
-      
+
       if (datePart && datePart.includes("-")) {
         const [day, month, year] = datePart.split("-");
         const time = timePart || "00:00";
         return `${year}-${month}-${day}T${time}`;
       }
     }
-    
+
     return "";
   };
 
@@ -94,21 +91,19 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
 
   useEffect(() => {
     if (MockEditData) {
-      
-      
       // Handle rounds as array or single object
-      const roundData = Array.isArray(MockEditData.rounds) 
-        ? MockEditData.rounds[0] 
+      const roundData = Array.isArray(MockEditData.rounds)
+        ? MockEditData.rounds[0]
         : MockEditData.rounds;
-      
+
       if (roundData && roundData.dateTime) {
         setDateTime(roundData.dateTime);
         setDuration(roundData.duration || "60 minutes");
-        
+
         // Convert the dateTime to datetime-local format
         const datetimeLocalValue = formatForDatetimeLocal(roundData.dateTime);
         setDateTimeLocal(datetimeLocalValue);
-        
+
         setInterviewer(roundData.interviewer || MockEditData.interviewer || "");
       } else {
         // Set default values if no round data
@@ -128,16 +123,16 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Clear previous errors
     setErrors({});
-    
+
     // Validate required fields
     const newErrors = {};
     if (!dateTime) newErrors.dateTime = "Date & Time is required";
     if (!duration) newErrors.duration = "Duration is required";
     if (!interviewer) newErrors.interviewer = "Interviewer is required";
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -159,17 +154,17 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
         `${config.REACT_APP_API_URL}/updateMockInterview/${MockEditData._id}`,
         payload
       );
-      
+
       if (response?.data) {
         onClose?.();
-        await fetchMockInterviewData();
+        // await fetchMockInterviewData();
       }
-      
-      
     } catch (error) {
       console.error("Error updating mock interview:", error);
       // Set error message if needed
-      setErrors({ general: "Failed to update mock interview. Please try again." });
+      setErrors({
+        general: "Failed to update mock interview. Please try again.",
+      });
     }
   };
 
@@ -198,7 +193,8 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
                 {/* Date & Time */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Scheduled Date & Time <span className="text-red-500">*</span>
+                    Scheduled Date & Time{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="datetime-local"
@@ -210,10 +206,18 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
                     }}
                     min={`${getTodayDate()}T00:00`}
                     className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${errors.dateTime ? "border-red-500 focus:ring-red-500 focus:outline-red-300" : "border-gray-300 focus:ring-blue-500 focus:outline-blue-300"}
+                      border ${
+                        errors.dateTime
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-blue-500 focus:outline-blue-300"
+                      }
                       focus:outline-gray-300`}
                   />
-                  {errors.dateTime && <p className="text-red-500 text-xs pt-1">{errors.dateTime}</p>}
+                  {errors.dateTime && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.dateTime}
+                    </p>
+                  )}
                 </div>
 
                 {/* Duration */}

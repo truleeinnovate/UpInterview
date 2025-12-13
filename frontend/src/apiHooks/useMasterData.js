@@ -41,6 +41,16 @@ const useOnDemandQuery = (
     networkMode: "online",
   });
 
+const sortByAlphabet = (data, field) => {
+  if (!Array.isArray(data)) return [];
+
+  return [...data].sort((a, b) =>
+    (a?.[field] || "").localeCompare(b?.[field] || "", "en", {
+      sensitivity: "base",
+    })
+  );
+};
+
 export const useMasterData = (paramsData, pageType, type) => {
   const queryClient = useQueryClient();
   const staleTime = ONE_WEEK; // 7 days - master data rarely changes
@@ -145,17 +155,30 @@ export const useMasterData = (paramsData, pageType, type) => {
   );
 
   // Aggregate helpers (backward compatible fields and combined states)
+  // const masterData = {
+  //   locations: locationsQ?.data || locationsQ?.data || [],
+  //   industries: industriesQ?.data || industriesQ?.data || [],
+  //   currentRoles: rolesQ?.data || rolesQ?.data || [],
+  //   skills: skillsQ?.data || skillsQ?.data || [],
+  //   technologies: technologiesQ?.data || technologiesQ?.data || [],
+  //   qualifications: qualificationsQ?.data || qualificationsQ?.data || [],
+  //   colleges: collegesQ?.data || collegesQ.data || [],
+  //   companies: companiesQ?.data || companiesQ.data || [],
+  //   category: categoryQ?.data || categoryQ.data || [],
+  // };
+
   const masterData = {
-    locations: locationsQ?.data || locationsQ?.data || [],
-    industries: industriesQ?.data || industriesQ?.data || [],
-    currentRoles: rolesQ?.data || rolesQ?.data || [],
-    skills: skillsQ?.data || skillsQ?.data || [],
-    technologies: technologiesQ?.data || technologiesQ?.data || [],
-    qualifications: qualificationsQ?.data || qualificationsQ?.data || [],
-    colleges: collegesQ?.data || collegesQ.data || [],
-    companies: companiesQ?.data || companiesQ.data || [],
-    category: categoryQ?.data || categoryQ.data || [],
+    locations: sortByAlphabet(locationsQ?.data, "LocationName"),
+    industries: sortByAlphabet(industriesQ?.data, "IndustryName"),
+    currentRoles: sortByAlphabet(rolesQ?.data, "roleName"),
+    skills: sortByAlphabet(skillsQ?.data, "SkillName"),
+    technologies: sortByAlphabet(technologiesQ?.data, "TechnologyMasterName"),
+    qualifications: sortByAlphabet(qualificationsQ?.data, "QualificationName"),
+    colleges: sortByAlphabet(collegesQ?.data, "University_CollegeName"),
+    companies: sortByAlphabet(companiesQ?.data, "CompanyName"),
+    category: sortByAlphabet(categoryQ?.data, "CategoryName"),
   };
+
   // console.log("masterData in useMasterData:", masterData);
 
   const isMasterDataLoading = [

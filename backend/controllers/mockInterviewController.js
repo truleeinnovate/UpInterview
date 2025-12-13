@@ -536,6 +536,45 @@ exports.updateMockInterview = async (req, res) => {
   }
 };
 
+// DELETE mock interview by ID
+exports.deleteMockInterview = async (req, res) => {
+  try {
+    const { mockInterviewId, roundId } = req.params;
+
+    // Check if mock interview exists
+    const interview = await MockInterview.findById(mockInterviewId);
+    if (!interview) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Mock interview not found" });
+    }
+
+    // Check if round exists
+    const round = await MockInterviewRound.findById(roundId);
+    if (!round) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Mock interview round not found" });
+    }
+
+    // Update status to cancelled
+    round.status = "Cancelled";
+    await round.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Round cancelled successfully",
+      round,
+    });
+  } catch (error) {
+    console.error("Cancel round error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while cancelling round",
+    });
+  }
+};
+
 exports.validateMockInterview = async (req, res) => {
   try {
     const { page } = req.params; // For page-wise validation

@@ -66,7 +66,6 @@ const formatToCustomDateTime = (date) => {
 
 const MockSchedulelater = () => {
   const { singleContact } = useSingleContact();
-  // console.log("singleContact===", singleContact);
   const pageType = "adminPortal";
   const {
     qualifications,
@@ -264,7 +263,6 @@ const MockSchedulelater = () => {
         //     MockEditData.rounds?.[0]?.dateTime,
         //     MockEditData.rounds?.[0]?.duration
         // );
-        // console.log("formattedInterviewers", formattedInterviewers);
 
         setFileName(MockEditData?.resume?.filename);
 
@@ -330,10 +328,10 @@ const MockSchedulelater = () => {
         //     setAllSelectedSkills(skillEntries.map((entry) => entry.skill));
         // }
 
-        const skillEntries = MockEditData.skills.map((skill) => ({
-          skill:
-            typeof skill === "object" ? skill.skill || skill.SkillName : skill,
-        }));
+        // const skillEntries = MockEditData.skills.map((skill) => ({
+        //   skill:
+        //     typeof skill === "object" ? skill.skill || skill.SkillName : skill,
+        // }));
 
         // Set allSelectedSkills as objects
         const skillObjects = MockEditData.skills.map((skill) => {
@@ -360,20 +358,11 @@ const MockSchedulelater = () => {
           ...prev,
           skills: skillStrings,
         }));
-
-        // console.log("Edit mode skills initialized:", {
-        //     skillObjects,
-        //     skillStrings
-        // });
       }
     } else if (!id) {
       updateTimes(formData.rounds.duration);
     }
   }, [id, mockInterview]);
-
-  // console.log("formData", formData);
-  // console.log("entries", entries);
-  // console.log("allSelectedSkills", allSelectedSkills);
 
   // useEffect(() => {
   //     if (id && mockinterviewData.length > 0) {
@@ -595,7 +584,6 @@ const MockSchedulelater = () => {
         lastModifiedById: userId,
         // ✅ Don't include rounds for Page 1
       };
-      console.log("page1Data", page1Data);
 
       // If editing existing mock interview, use that ID
       const mockIdToUse = mockEdit ? id : createdMockInterviewId;
@@ -727,15 +715,8 @@ const MockSchedulelater = () => {
       lastModifiedById: userId,
     };
 
-    // console.log("Page 2 submission data:", {
-    //     formData: updatedFormData,
-    //     id: mockIdToUse,
-    //     isEdit: mockEdit || !!createdMockInterviewId
-    // });
-
     try {
       // 🔹 STEP 1: Save the mock interview with rounds
-      // console.log("🔹 STEP 1: Saving mock interview with rounds...");
       let mockInterviewResponse = await addOrUpdateMockInterview({
         formData: updatedFormData,
         id: mockIdToUse,
@@ -759,8 +740,6 @@ const MockSchedulelater = () => {
         return;
       }
 
-      // console.log("✅ STEP 1 COMPLETE: Mock interview saved successfully", mockInterviewResponse);
-
       // 🔹 STEP 2: Get the created mock interview ID and round data
       const mockInterviewId =
         mockInterviewResponse?.data?.mockInterview?._id ||
@@ -771,8 +750,6 @@ const MockSchedulelater = () => {
       const roundData =
         mockInterviewResponse?.data?.rounds?.[0] ||
         mockInterviewResponse?.rounds?.[0];
-
-      // console.log("Extracted IDs:", { mockInterviewId, roundData });
 
       if (!mockInterviewId) {
         notify.error("Failed to get interview details after saving");
@@ -787,8 +764,6 @@ const MockSchedulelater = () => {
         roundData
       ) {
         try {
-          // console.log("Creating outsource requests for interviewers:", selectedInterviewers.length);
-
           for (const interviewer of selectedInterviewers) {
             const outsourceRequestData = {
               roundId: roundData._id, // Use the actual round ID from response
@@ -807,8 +782,6 @@ const MockSchedulelater = () => {
               ).toISOString(),
             };
 
-            // console.log("Sending outsource request:", outsourceRequestData);
-
             await axios.post(
               `${config.REACT_APP_API_URL}/interviewrequest`,
               outsourceRequestData,
@@ -824,7 +797,6 @@ const MockSchedulelater = () => {
           // Send outsource interview request emails
           if (selectedInterviewers.length > 0) {
             try {
-              // console.log("=== Sending outsource interview request emails ===");
               const interviewerIds = selectedInterviewers.map(
                 (interviewer) => interviewer.contact?._id || interviewer._id
               );
@@ -846,7 +818,6 @@ const MockSchedulelater = () => {
               );
 
               if (emailResponse.data.success) {
-                // console.log(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
                 if (emailResponse.data.data.failedEmails > 0) {
                   console.warn(
                     `${emailResponse.data.data.failedEmails} emails failed to send`
@@ -948,8 +919,6 @@ const MockSchedulelater = () => {
 
           // Update the round with meeting link
           if (meetingLink) {
-            // console.log("🔹 Updating round with meeting link...");
-
             const updateRoundData = {
               _id: roundData._id, // Include round ID for update
               sequence: roundData.sequence,
@@ -1148,44 +1117,44 @@ const MockSchedulelater = () => {
   //     resetForm();
   // };
 
-  const resetForm = () => {
-    setSelectedSkill("");
-    setSelectedExp("");
-    setSelectedLevel("");
-    setCurrentStep(0);
-    setIsModalOpen(false);
-  };
+  // const resetForm = () => {
+  //   setSelectedSkill("");
+  //   setSelectedExp("");
+  //   setSelectedLevel("");
+  //   setCurrentStep(0);
+  //   setIsModalOpen(false);
+  // };
 
-  const isNextEnabled = () => {
-    if (currentStep === 0) {
-      if (editingIndex !== null) {
-        const currentSkill = entries[editingIndex]?.skill;
-        return (
-          selectedSkill !== "" &&
-          selectedExp !== "" &&
-          selectedLevel !== "" &&
-          (selectedSkill === currentSkill ||
-            !allSelectedSkills.includes(selectedSkill))
-        );
-      } else {
-        return (
-          selectedSkill !== "" &&
-          selectedExp !== "" &&
-          selectedLevel !== "" &&
-          !allSelectedSkills.includes(selectedSkill)
-        );
-      }
-    } else if (currentStep === 1) {
-      return selectedExp !== "";
-    } else if (currentStep === 2) {
-      return selectedLevel !== "";
-    }
-    return false;
-  };
+  // const isNextEnabled = () => {
+  //   if (currentStep === 0) {
+  //     if (editingIndex !== null) {
+  //       const currentSkill = entries[editingIndex]?.skill;
+  //       return (
+  //         selectedSkill !== "" &&
+  //         selectedExp !== "" &&
+  //         selectedLevel !== "" &&
+  //         (selectedSkill === currentSkill ||
+  //           !allSelectedSkills.includes(selectedSkill))
+  //       );
+  //     } else {
+  //       return (
+  //         selectedSkill !== "" &&
+  //         selectedExp !== "" &&
+  //         selectedLevel !== "" &&
+  //         !allSelectedSkills.includes(selectedSkill)
+  //       );
+  //     }
+  //   } else if (currentStep === 1) {
+  //     return selectedExp !== "";
+  //   } else if (currentStep === 2) {
+  //     return selectedLevel !== "";
+  //   }
+  //   return false;
+  // };
 
-  const skillpopupcancelbutton = () => {
-    setIsModalOpen(false);
-  };
+  // const skillpopupcancelbutton = () => {
+  //   setIsModalOpen(false);
+  // };
 
   const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
@@ -1257,9 +1226,6 @@ const MockSchedulelater = () => {
   const [endTime, setEndTime] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [showPopup, setShowPopup] = useState(false);
-  // console.log("startTime", startTime);
-  // console.log("duration", formData.rounds.duration);
-  // console.log("endTime", endTime);
 
   useEffect(() => {
     const calculatedEndTime = calculateEndTime(
@@ -1309,7 +1275,6 @@ const MockSchedulelater = () => {
     const [year, month, day] = dateString.split("-");
     return `${day}-${month}-${year}`;
   };
-  // console.log("formData.rounds.duration", endTime);
 
   // Technology dropdown states - no longer needed with DropdownWithSearchField
   // const [showDropdownTechnology, setShowDropdownTechnology] = useState(false);
@@ -1483,7 +1448,6 @@ const MockSchedulelater = () => {
   }, [scheduledDate, formData.rounds.duration, interviewType]);
 
   const handleExternalInterviewerSelect = (newInterviewers) => {
-    // console.log("newInterviewers", newInterviewers);
     const formattedInterviewers = newInterviewers.map((interviewer) => ({
       _id: interviewer?.contact?._id,
       name:
@@ -1536,11 +1500,9 @@ const MockSchedulelater = () => {
   };
 
   const addSkill = (skillName) => {
-    // console.log("addSkill called with:", skillName);
     const trimmedSkill = skillName.trim();
-    // console.log("Trimmed skill:", trimmedSkill);
+
     if (!trimmedSkill) {
-      // console.log("Empty skill name, returning");
       return;
     }
 
@@ -1552,8 +1514,6 @@ const MockSchedulelater = () => {
           : existingSkill;
       return existingSkillName.toLowerCase() === trimmedSkill.toLowerCase();
     });
-
-    // console.log("Skill exists check:", skillExists, "Current skills:", allSelectedSkills);
 
     if (!skillExists) {
       const newSkillObj = {
@@ -1575,9 +1535,6 @@ const MockSchedulelater = () => {
       }));
 
       setErrors((prev) => ({ ...prev, skills: "" }));
-      // console.log("Skill added successfully");
-      // console.log("Updated allSelectedSkills:", updatedAllSkills);
-      // console.log("Updated formData.skills:", updatedFormSkills);
     } else {
       notify.error("Skill already exists");
     }
@@ -1598,10 +1555,6 @@ const MockSchedulelater = () => {
   // Handle skill removal - PROPERLY FIXED VERSION
 
   const handleRemoveSkill = (index) => {
-    // console.log("Removing skill at index:", index);
-    // console.log("Current allSelectedSkills:", allSelectedSkills);
-    // console.log("Current formData.skills:", formData.skills);
-
     // Create new arrays without mutating the original
     const updatedAllSkills = [...allSelectedSkills];
     const updatedFormSkills = [...formData.skills];
@@ -1616,9 +1569,6 @@ const MockSchedulelater = () => {
       ...prev,
       skills: updatedFormSkills,
     }));
-
-    // console.log("After removal - allSelectedSkills:", updatedAllSkills);
-    // console.log("After removal - formData.skills:", updatedFormSkills);
   };
 
   return (
@@ -1732,7 +1682,7 @@ const MockSchedulelater = () => {
                       />
                       <DropdownWithSearchField
                         containerRef={fieldRefs.currentRole}
-                        label="currentRole"
+                        label="Current Role"
                         name="currentRole"
                         value={formData.currentRole}
                         options={currentRoles.map((r) => ({
@@ -2487,7 +2437,8 @@ const MockSchedulelater = () => {
                                 htmlFor="scheduledDate"
                                 className="block text-sm font-medium text-gray-700"
                               >
-                                Scheduled Date & Time
+                                Scheduled Date & Time{" "}
+                                <span className="text-red-500">*</span>
                               </label>
                               <input
                                 ref={fieldRefs.scheduledDate}
