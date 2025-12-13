@@ -1161,7 +1161,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   return (
     <div className="flex items-center  justify-center w-full">
       {/* v1.0.4 <------------------------------------------------------- */}
-      <div className="bg-white rounded-lg w-full flex flex-col mb-10">
+      <div className="bg-white w-full flex flex-col pb-20">
         {/* v1.0.4 -------------------------------------------------------> */}
         {/* Modal Header */}
         <div className="mt-4">

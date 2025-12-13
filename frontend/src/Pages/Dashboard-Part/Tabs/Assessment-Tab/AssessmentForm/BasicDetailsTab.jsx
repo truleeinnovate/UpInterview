@@ -100,7 +100,7 @@ const BasicDetailsTab = ({
 
   const [isPositionModalOpen, setIsPositionModalOpen] = useState(false);
 
-  useScrollLock(isCategoryModalOpen);
+  useScrollLock(isCategoryModalOpen || isPositionModalOpen);
 
   // Close all dropdowns except the one specified
   const closeAllDropdowns = (except = null) => {
@@ -207,7 +207,7 @@ const BasicDetailsTab = ({
                 autoComplete="off"
                 placeholder="Enter Number of Questions"
                 error={errors.NumberOfQuestions}
-                onKeyDown={(e) => e.preventDefault()} // 
+                onKeyDown={(e) => e.preventDefault()} //
               />
             </div>
 
@@ -635,7 +635,7 @@ const BasicDetailsTab = ({
       )}
 
       {/* Position Modal */}
-      {isPositionModalOpen && (
+      {/* {isPositionModalOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
           onClick={(e) => handleModalBackdropClick(e, "position")}
@@ -645,6 +645,20 @@ const BasicDetailsTab = ({
             onClose={handlePositionCreated}
             isModal={true}
           />
+        </div>
+      )} */}
+      {isPositionModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-[9999] overflow-y-auto flex items-start justify-center min-h-screen"
+          onClick={(e) => handleModalBackdropClick(e, "position")}
+        >
+          <div className="w-full">
+            <PositionForm
+              mode="new"
+              onClose={handlePositionCreated}
+              isModal={true}
+            />
+          </div>
         </div>
       )}
     </div>
