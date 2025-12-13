@@ -650,11 +650,13 @@ const InvoiceTab = () => {
     {
       key: "duration",
       header: "Total Amount",
-      render: (value, row) => (
-        <span className="text-gray-800 font-medium truncate">
-          {value && value.total ? `₹${value.total}` : `0`}
-        </span>
-      ),
+      render: (value, row) => {
+        return (
+          <span className="text-gray-800 font-medium truncate">
+            {row?.amount?.total ? `₹${row?.amount?.total}` : `0`}
+          </span>
+        );
+      },
     },
     {
       key: "status",
@@ -766,7 +768,7 @@ const InvoiceTab = () => {
           onApply={handleApplyFilters}
           onClearAll={handleClearAll}
           filterIconRef={filterIconRef}
-          customHeight="h-[calc(100vh-12rem)]"
+          customHeight="h-[calc(100vh-16rem)]"
         >
           <div className="space-y-3 p-4">
             <div>

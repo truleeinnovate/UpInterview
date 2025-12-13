@@ -83,6 +83,21 @@ const MasterForm = ({
     }
   };
 
+  const isValidCsvRow = (row) => {
+    if (type === "roles") {
+      return (
+        row.roleName?.trim() &&
+        row.roleLabel?.trim() &&
+        row.roleCategory?.trim()
+      );
+    }
+
+    // default validation for other masters
+    return Object.values(row).some(
+      (val) => val && val.toString().trim() !== ""
+    );
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -95,7 +110,9 @@ const MasterForm = ({
           header: true,
           skipEmptyLines: true,
           complete: (results) => {
-            setCsvData(results.data);
+            // setCsvData(results.data);
+            const filteredData = results.data.filter(isValidCsvRow);
+            setCsvData(filteredData);
           },
         });
       } else {
@@ -197,7 +214,9 @@ const MasterForm = ({
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
-          setCsvData(results.data);
+          // setCsvData(results.data);
+          const filteredData = results.data.filter(isValidCsvRow);
+          setCsvData(filteredData);
         },
       });
     }
