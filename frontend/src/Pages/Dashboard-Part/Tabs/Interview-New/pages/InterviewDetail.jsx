@@ -25,6 +25,7 @@ import {
   ExternalLink,
   Users,
   UserX,
+  IdCard,
 } from "lucide-react";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
 import InterviewProgress from "../components/InterviewProgress";
@@ -761,6 +762,19 @@ const InterviewDetail = () => {
                   </dd>
                 </div>
               </div>
+
+              {/* External ID Field - Only show for organization users */}
+              {interview?.externalId && (
+                <div className="sm:col-span-1 mt-4">
+                  <dt className="text-sm font-medium text-gray-500 flex items-center">
+                    <IdCard className="h-5 w-5 mr-1" />
+                    External ID
+                  </dt>
+                  <dd className="mt-1 text-sm text-gray-900">
+                    <div className="font-medium">{interview?.externalId}</div>
+                  </dd>
+                </div>
+              )}
 
               {/* Interviewers summary */}
               <div className="mt-6 mb-2 bg-gray-50 p-4 rounded-lg border border-gray-200">

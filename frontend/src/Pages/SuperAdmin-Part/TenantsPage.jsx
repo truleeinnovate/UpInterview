@@ -61,6 +61,7 @@ function TenantsPage() {
   const pageType = "adminPortal";
   const { currentRoles, loadCurrentRoles, isCurrentRolesFetching } =
     useMasterData({}, pageType);
+    
 
   // Get tenants with pagination and filters
   const { tenants, pagination, isLoading, refetch } = useTenants({
@@ -73,6 +74,7 @@ function TenantsPage() {
     type: selectedType === "all" ? "" : selectedType,
     valueFilter: selectedValueFilter,
   });
+  
 
   // Use React Query for data fetching with proper dependency on permissions
   // const {
@@ -273,6 +275,16 @@ function TenantsPage() {
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
+
+  const formatRole = (role) => {
+    if (!role || typeof role !== "string") return "N/A";
+
+    return role
+      .replace(/[_\s-]+/g, " ")
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
 
   const handleDeleteTenant = async () => {
     try {

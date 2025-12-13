@@ -11,6 +11,8 @@ const VerticalRoundsView = ({
   currentRoundId,
   onChangeRound,
 }) => {
+  console.log("template",template);
+  
   
 
   // Sort rounds by sequence

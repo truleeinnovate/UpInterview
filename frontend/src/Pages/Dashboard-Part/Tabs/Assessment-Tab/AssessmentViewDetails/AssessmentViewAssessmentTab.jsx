@@ -263,69 +263,67 @@ function AssessmentsTab({ assessment }) {
                     </div>
                   </div>
                   {/* ------------------------------v1.0.3 > */}
-                  <div className="flex items-center space-x-2 mr-10 sm:mt-4">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!shouldDisableActionButtons(schedule)) {
-                          handleActionClick(schedule, "extend");
+                  <div className="flex items-center">
+                    <div className="flex items-center space-x-2 mr-10 sm:mt-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!shouldDisableActionButtons(schedule)) {
+                            handleActionClick(schedule, "extend");
+                          }
+                        }}
+                        disabled={shouldDisableActionButtons(schedule)}
+                        className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                          shouldDisableActionButtons(schedule)
+                            ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                            : "text-custom-blue bg-blue-100 hover:bg-custom-blue/10 focus:ring-custom-blue"
+                        }`}
+                        title={
+                          shouldDisableActionButtons(schedule)
+                            ? "Action not available for this status"
+                            : "Extend Assessment"
                         }
-                      }}
-                      disabled={shouldDisableActionButtons(schedule)}
-                      className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                        shouldDisableActionButtons(schedule)
-                          ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                          : "text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500"
-                      }`}
-                      title={
-                        shouldDisableActionButtons(schedule)
-                          ? "Action not available for this status"
-                          : "Extend Assessment"
-                      }
-                    >
-                      <CalendarIcon className="w-4 h-4 mr-1" />
-                      Extend
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!shouldDisableActionButtons(schedule)) {
-                          handleActionClick(schedule, "cancel");
+                      >
+                        <CalendarIcon className="w-4 h-4 mr-1" />
+                        Extend
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!shouldDisableActionButtons(schedule)) {
+                            handleActionClick(schedule, "cancel");
+                          }
+                        }}
+                        disabled={shouldDisableActionButtons(schedule)}
+                        className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                          shouldDisableActionButtons(schedule)
+                            ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                            : "text-red-700 bg-red-100 hover:bg-red-200 focus:ring-red-500"
+                        }`}
+                        title={
+                          shouldDisableActionButtons(schedule)
+                            ? "Action not available for this status"
+                            : "Cancel Assessment"
                         }
-                      }}
-                      disabled={shouldDisableActionButtons(schedule)}
-                      className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                        shouldDisableActionButtons(schedule)
-                          ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                          : "text-red-700 bg-red-100 hover:bg-red-200 focus:ring-red-500"
-                      }`}
-                      title={
-                        shouldDisableActionButtons(schedule)
-                          ? "Action not available for this status"
-                          : "Cancel Assessment"
-                      }
-                    >
-                      <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
-                      Cancel
-                    </button>
-                    {/* ------------------------------v1.0.3 > */}
-                  </div>
-                  <div className="absolute right-5 top-5">
-                    {openSchedules[schedule._id] ? (
-                      <ChevronUpIcon className="w-5 h-5 text-gray-500" />
-                    ) : (
-                      <ChevronDownIcon className="w-5 h-5 text-gray-500" />
-                    )}
+                      >
+                        <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
+                        Cancel
+                      </button>
+                      {/* ------------------------------v1.0.3 > */}
+                    </div>
+                    <div>
+                      {openSchedules[schedule._id] ? (
+                        <ChevronUpIcon className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <ChevronDownIcon className="w-5 h-5 text-gray-500" />
+                      )}
+                    </div>
                   </div>
                 </div>
                 {openSchedules[schedule._id] && (
                   <div className="border-t border-gray-200">
-                    <div className="overflow-auto max-h-[400px] ">
-                      {" "}
-                      {/* Added padding */}
-                      <div className="min-w-[800px] ">
-                        {" "}
-                        {/* Added padding */}
+                    <div className="overflow-auto max-h-[400px]">
+                      <div className="min-w-[800px]">
                         <Candidate
                           candidates={formattedCandidates(schedule.candidates)}
                           onResendLink={handleResendLink}

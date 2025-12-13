@@ -15,6 +15,7 @@ import {
   MessageCircleQuestion,
   Trophy,
   Star,
+  IdCard,
 } from "lucide-react";
 
 function DetailsTab({ assessment, assessmentQuestions }) {
@@ -409,6 +410,21 @@ function DetailsTab({ assessment, assessmentQuestions }) {
                 )}
               </div>
             </div>
+
+            {/* External ID Field - Only show for organization users */}
+            {assessment?.externalId && (
+              <div>
+                <div className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <div className="p-2 bg-custom-bg rounded-lg">
+                    <IdCard className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <h4>External ID</h4>
+                </div>
+                <div className="text-sm text-gray-700 bg-custom-bg p-4 rounded-lg break-words">
+                  {assessment.externalId}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

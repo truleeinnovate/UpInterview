@@ -11,6 +11,7 @@ import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup"
 import { useInterviewTemplates } from "../../../apiHooks/useInterviewTemplates.js";
 import { usePermissions } from "../../../Context/PermissionsContext";
 import { useNavigate } from "react-router-dom";
+import { getEmptyStateMessage } from "../../../utils/EmptyStateMessage/emptyStateMessage.js";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -126,12 +127,10 @@ const StandardTemplates = ({ handleClone }) => {
   const normalizedTemplates = templatesData;
   // Keep URL in sync with tab state
   useEffect(() => {
-    
     const params = new URLSearchParams(window.location.search);
 
     // Only update URL if it doesn't match the current tab
     if (params.get("tab") !== activeTab) {
-     
       params.set("tab", activeTab);
       navigate({ search: params.toString() }, { replace: true });
     }
@@ -142,17 +141,15 @@ const StandardTemplates = ({ handleClone }) => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const tabFromUrl = params.get("tab");
-     
 
       if (
         tabFromUrl &&
         (tabFromUrl === "standard" || tabFromUrl === "custom")
       ) {
-        
         setActiveTab(tabFromUrl);
       } else if (!tabFromUrl) {
         // If no tab in URL, set default and update URL
-        
+
         setActiveTab("standard");
         params.set("tab", "standard");
         navigate({ search: params.toString() }, { replace: true });
@@ -170,8 +167,6 @@ const StandardTemplates = ({ handleClone }) => {
     };
   }, [navigate]);
   // v1.0.1 ---------------------------------------------------------------------->
-
-  
 
   const normalizeSpaces = (str) =>
     str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
@@ -336,6 +331,17 @@ const StandardTemplates = ({ handleClone }) => {
     }
   };
 
+  // ------------ Dynamic Empty State Messages using Utility -----------------
+  const isSearchActive = searchQuery.length > 0 || isFilterActive; // For Standard Templates, use standardCount for initial data check
+  const initialDataCount = standardCount || 0;
+  const currentFilteredCount = normalizedTemplates?.length || 0;
+
+  const emptyStateMessage = getEmptyStateMessage(
+    isSearchActive,
+    currentFilteredCount,
+    initialDataCount,
+    "standard interview templates" // Entity Name
+  ); // ------------ Dynamic Empty State Messages using Utility -----------------
   return (
     <>
       <div className="sm:px-4 px-6">
@@ -479,6 +485,7 @@ const StandardTemplates = ({ handleClone }) => {
               <StandardTemplateTableView
                 templatesData={normalizedTemplates}
                 handleClone={handleClone}
+                emptyState={emptyStateMessage}
               />
             </ErrorBoundary>
           </div>
@@ -492,6 +499,7 @@ const StandardTemplates = ({ handleClone }) => {
                 onView={handleView}
                 // onEdit={handleEdit}
                 handleClone={handleClone}
+                emptyState={emptyStateMessage}
               />
             </ErrorBoundary>
           </div>

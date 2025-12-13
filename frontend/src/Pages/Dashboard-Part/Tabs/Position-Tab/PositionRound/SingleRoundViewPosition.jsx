@@ -75,14 +75,13 @@ const SingleRoundViewPosition = ({
         <button
           onClick={goToNext}
           disabled={!hasNext}
-          className={`inline-flex items-center px-3 py-2   shadow-sm text-sm font-medium rounded-md ${
+          className={`inline-flex items-center px-3 py-2 shadow-sm border border-gray-300 text-sm font-medium rounded-md gap-1 ${
             hasNext
               ? "text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 "
               : "text-gray-400 bg-gray-100 cursor-not-allowed"
           }`}
         >
           <span className="sm:hidden inline">Next Round</span>
-          {/* <ArrowRight className="h-4 w-4 ml-1" /> */}
           <ArrowRight className="sm:h-5 sm:w-5 h-4 w-4 sm:mr-0 mr-1" />
         </button>
       </div>

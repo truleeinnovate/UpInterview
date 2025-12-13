@@ -292,7 +292,7 @@ function AssessmentResultsTab({
                                   onClick={() =>
                                     handleViewResult(candidate, schedule)
                                   }
-                                  className="text-blue-600 hover:text-blue-900"
+                                  className="text-custom-blue hover:text-custom-blue/90"
                                 >
                                   View
                                 </button>

@@ -18,6 +18,8 @@ const KanbanView = ({
   onView,
   onEdit,
   // handleClone,
+  emptyState,
+  handleDelete,
 }) => {
   const navigate = useNavigate();
   const handleCloneClick = (template) => {
@@ -241,6 +243,7 @@ const KanbanView = ({
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
                               // onClick={() => onDelete(template)}
+                              onClick={() => handleDelete(template)}
                               className="text-red-500 hover:bg-red-50 p-2 rounded-lg"
                               title="Delete"
                             >
@@ -337,7 +340,7 @@ const KanbanView = ({
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <p className="text-gray-500">No Templates Found</p>
+          {emptyState && <p className="text-gray-500">{emptyState}</p>}
         </motion.div>
       )}
     </motion.div>

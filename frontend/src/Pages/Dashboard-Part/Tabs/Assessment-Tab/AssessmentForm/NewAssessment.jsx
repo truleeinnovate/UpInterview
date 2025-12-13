@@ -297,6 +297,7 @@ const NewAssessment = () => {
         passScoreBy: assessment.passScoreBy || "Overall",
         passScore: assessment.passScore || "",
         linkExpiryDays: assessment.linkExpiryDays || "",
+        externalId: assessment.externalId || "",
       });
       setQuestionsLimit(assessment.NumberOfQuestions || "");
       setSelectedDifficulty(assessment.DifficultyLevel);

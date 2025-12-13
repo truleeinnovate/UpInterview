@@ -21,6 +21,7 @@ import {
   Edit,
   Users,
   ArrowLeft,
+  IdCard,
 } from "lucide-react";
 import Modal from "react-modal";
 import InterviewProgress from "../Interview-New/components/InterviewProgress";
@@ -444,6 +445,21 @@ const PositionSlideDetails = () => {
               </div>
               {/* v1.0.4 ----------------------------------------------------------------------------------> */}
             </div>
+
+            {/* External ID Field - Only show for organization users */}
+            {position?.externalId && (
+              <div className="bg-white rounded-xl sm:shadow-none shadow-sm sm:border-none border border-gray-100 sm:p-0 p-6 mt-6">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                  External ID
+                </h4>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-custom-bg rounded-lg">
+                    <IdCard className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <span className="text-gray-700">{position?.externalId}</span>
+                </div>
+              </div>
+            )}
 
             {/* Interviewers summary */}
             <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">

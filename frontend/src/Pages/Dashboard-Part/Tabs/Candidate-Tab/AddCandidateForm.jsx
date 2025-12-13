@@ -48,6 +48,7 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 // v1.0.3 ----------------------------------------------------------------------------------->
 
 import { notify } from "../../../../services/toastService";
+import { Info } from "lucide-react";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import InfoGuide from "../CommonCode-AllTabs/InfoCards";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
@@ -109,10 +110,24 @@ const AddCandidateForm = ({
   const resumeInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedResume, setSelectedResume] = useState(null);
-
   const [selectedImage, setSelectedImage] = useState(null);
   // const [imageFile, setImageFile] = useState(null);
   // const [resumeFile, setResumeFile] = useState(null);
+
+  // State for tooltip visibility
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Close tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showTooltip && !event.target.closest('.tooltip-container')) {
+        setShowTooltip(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTooltip]);
 
   // Initialize with 3 default empty skill rows
   const [entries, setEntries] = useState([
@@ -551,7 +566,8 @@ const AddCandidateForm = ({
         navigate(`/candidate/${id}`);
         break;
       default:
-        navigate("/candidate");
+        // navigate("/candidate");
+        navigate(-1);
     }
   };
 
@@ -1175,19 +1191,33 @@ const AddCandidateForm = ({
               {/* External ID Field - Only show for organization users */}
               {isOrganization && (
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <div className="-mt-2">
+                  <div className="-mt-5 mb-3">
+                    <div className="flex items-center gap-2 mb-1 relative">
+                      <label className="text-sm font-medium text-gray-700">
+                        External ID
+                      </label>
+                      <div className="relative tooltip-container">
+                        <Info 
+                          className="w-4 h-4 text-gray-400 cursor-pointer" 
+                          onClick={() => setShowTooltip(!showTooltip)}
+                        />
+                        {showTooltip && (
+                          <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
+                            External System Reference Id
+                            <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     <InputField
                       value={formData.externalId}
                       onChange={handleChange}
                       inputRef={fieldRefs.externalId}
                       error={errors.externalId}
-                      label="External ID"
+                      label=""
                       name="externalId"
-                      placeholder="external system identifier"
+                      placeholder="External System Reference Id"
                     />
-                    <div className="text-xs text-gray-500 mt-1">
-                      external system reference id
-                    </div>
                   </div>
                 </div>
               )}
