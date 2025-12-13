@@ -209,9 +209,9 @@ const AssessmentTest = () => {
           throw new Error("Failed to load assessment details");
         }
 
-        // Fetch candidate details
+        // Fetch candidate details via public assessment endpoint (no auth required)
         const candidateResponse = await axios.get(
-          `${config.REACT_APP_API_URL}/candidate/details/${candidateId}`
+          `${config.REACT_APP_API_URL}/candidate-assessment/public-candidate/${decryptedId}`
         );
         const candidateData = candidateResponse?.data || null;
         console.log("Candidate Data:", candidateData);

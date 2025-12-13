@@ -1,7 +1,7 @@
 // v1.0.0  -  Ashraf  -  added extend,cancel,schedule status api code based on policy
 const express = require('express')
 // <-------------------------------v1.0.0
-const { getCandidateAssessmentBasedOnId, verifyOtp, sendOtp, submitCandidateAssessment, extendCandidateAssessment, cancelCandidateAssessments, checkAndUpdateExpiredAssessments, updateScheduleStatus, updateAllScheduleStatuses } = require('../controllers/candidateAssessmentController')
+const { getCandidateAssessmentBasedOnId, verifyOtp, sendOtp, submitCandidateAssessment, extendCandidateAssessment, cancelCandidateAssessments, checkAndUpdateExpiredAssessments, updateScheduleStatus, updateAllScheduleStatuses, getPublicCandidateDetailsByAssessmentId } = require('../controllers/candidateAssessmentController')
 // ------------------------------v1.0.0 >
 
 
@@ -25,6 +25,7 @@ const router = express.Router()
 
 
 router.get('/details/:id',getCandidateAssessmentBasedOnId)
+router.get('/public-candidate/:candidateAssessmentId', getPublicCandidateDetailsByAssessmentId)
 router.post('/verify-otp',verifyOtp)
 router.post('/submit', submitCandidateAssessment);
 // <-------------------------------v1.0.0

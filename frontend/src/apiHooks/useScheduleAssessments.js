@@ -164,8 +164,11 @@ export const useScheduleAssessments = (arg) => {
     }
 
     if (Array.isArray(status) && status.length) {
-      // Backend expects exact status strings as stored (Scheduled, Completed, ...)
-      p.status = status.join(",");
+      // Normalize status values to lowercase to match backend enum
+      const normalizedStatuses = status.map((s) =>
+        typeof s === "string" ? s.toLowerCase() : s
+      );
+      p.status = normalizedStatuses.join(",");
     }
 
     if (Array.isArray(templates) && templates.length) {

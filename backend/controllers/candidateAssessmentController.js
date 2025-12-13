@@ -2,6 +2,7 @@
 const {
   CandidateAssessment,
 } = require("../models/Assessment/candidateAssessment");
+const { Candidate } = require("../models/candidate.js");
 const { generateOTP } = require("../utils/generateOtp");
 const Otp = require("../models/Otp");
 const mongoose = require("mongoose");
@@ -180,6 +181,74 @@ exports.getCandidateAssessmentBasedOnId = async (req, res) => {
     res.status(500).send({
       success: false,
       message: "Failed to get candidate assessment details",
+      error: error.message,
+    });
+  }
+};
+
+// Public endpoint used by the Assessment Test page to fetch minimal
+// candidate details (name, email, phone, image) by candidateAssessmentId
+// for public assessment links, without requiring authenticated access
+exports.getPublicCandidateDetailsByAssessmentId = async (req, res) => {
+  try {
+    const { candidateAssessmentId } = req.params;
+
+    if (!candidateAssessmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "Candidate assessment ID is required",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(candidateAssessmentId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid candidate assessment ID format",
+      });
+    }
+
+    const candidateAssessment = await CandidateAssessment.findById(
+      candidateAssessmentId
+    ).select("candidateId");
+
+    if (!candidateAssessment) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate assessment not found",
+      });
+    }
+
+    const candidate = await Candidate.findById(
+      candidateAssessment.candidateId
+    )
+      .select("FirstName LastName Email Phone ImageData")
+      .lean();
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate not found",
+      });
+    }
+
+    const publicCandidate = {
+      _id: candidate._id,
+      FirstName: candidate.FirstName,
+      LastName: candidate.LastName,
+      Email: candidate.Email,
+      Phone: candidate.Phone,
+      ImageData: candidate.ImageData || null,
+    };
+
+    return res.status(200).json(publicCandidate);
+  } catch (error) {
+    console.error(
+      "[CandidateAssessment] Error fetching public candidate details:",
+      error
+    );
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch candidate details",
       error: error.message,
     });
   }
