@@ -6,7 +6,6 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import Modal from "react-modal";
 import axios from "axios";
-import { ReactComponent as FaPlus } from "../../../../../../icons/FaPlus.svg";
 import {
   isEmptyObject,
   validateFormMyProfile,
@@ -18,15 +17,15 @@ import {
   checkEmailExists,
 } from "../../../../../../utils/workEmailValidation.js";
 import { validateProfileId } from "../../../../../../utils/OrganizationSignUpValidation.js";
-import Cookies from "js-cookie";
+
 import {
   useRequestEmailChange,
   useUpdateContactDetail,
   useUserProfile,
 } from "../../../../../../apiHooks/useUsers.js";
-import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
-import { toast } from "react-hot-toast";
-import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode.js";
+// import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
+import Cookies from "js-cookie";
+
 import { useCallback } from "react";
 import { validateFile } from "../../../../../../utils/FileValidation/FileValidation.js";
 import { uploadFile } from "../../../../../../apiHooks/imageApis.js";
@@ -44,6 +43,7 @@ import {
   ProfilePhotoUpload,
 } from "../../../../../../Components/FormFields";
 import LoadingButton from "../../../../../../Components/LoadingButton.jsx";
+import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode.js";
 Modal.setAppElement("#root");
 
 const BasicDetailsEditPage = ({
@@ -54,6 +54,8 @@ const BasicDetailsEditPage = ({
   basePath,
 }) => {
   const { data: organizationRoles } = useRolesQuery();
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -70,12 +72,10 @@ const BasicDetailsEditPage = ({
   const [originalProfileId, setOriginalProfileId] = useState("");
 
   // Fetch user profile for "my-profile" context
-  const { userProfile, isLoading } = useUserProfile(
-    resolvedId
-  );
+  const { userProfile, isLoading } = useUserProfile(resolvedId);
 
   // Fetch outsource interviewers for "outsource-interviewer" context
-  const { outsourceInterviewers } = useOutsourceInterviewers();
+  // const { outsourceInterviewers } = useOutsourceInterviewers();
 
   // Get the appropriate profile data based on context
   const profileData = useMemo(() => {
@@ -347,8 +347,6 @@ const BasicDetailsEditPage = ({
     }
   };
 
-
-
   const handleProfileIdValidation = async (profileId) => {
     // console.log("profileId", profileId);
     if (profileId !== originalProfileId) {
@@ -456,8 +454,6 @@ const BasicDetailsEditPage = ({
       scrollToFirstError(validationErrors, fieldRefs);
       return;
     }
-
-
 
     const cleanFormData = {
       email: formData.email.trim() || "",
@@ -624,7 +620,6 @@ const BasicDetailsEditPage = ({
           return;
         }
 
-
         const response = await updateContactDetail.mutateAsync({
           resolvedId: updateId,
           data: cleanFormData,
@@ -776,8 +771,6 @@ const BasicDetailsEditPage = ({
   // v1.0.2 <------------------------------------------------------------------------------------
   // derive the selected image object to pass to child
 
-
-
   const displaySelectedImage =
     !isProfileRemoved && !filePreview ? profileData?.imageData ?? null : null;
   // v1.0.2 ------------------------------------------------------------------------------------>
@@ -901,7 +894,11 @@ const BasicDetailsEditPage = ({
               containerRef={fieldRefs.roleId}
               label="Role"
               required
-              disabled={from !== "users"}
+              disabled={
+                from !== "users" ||
+                (tokenPayload?.organization &&
+                  profileData?.roleLabel === "Admin")
+              }
               loading={isLoading}
             />
 
@@ -914,8 +911,8 @@ const BasicDetailsEditPage = ({
                 label="LinkedIn"
                 name="linkedinUrl"
                 required
-              // disabled={true}
-              // className="bg-gray-100"
+                // disabled={true}
+                // className="bg-gray-100"
               />
             </div>
 
@@ -940,14 +937,11 @@ const BasicDetailsEditPage = ({
 
             <LoadingButton
               type="submit"
-             
-              isLoading={loading }
+              isLoading={loading}
               loadingText="updating..."
             >
-               Save Changes
+              Save Changes
             </LoadingButton>
-
-           
           </div>
         </form>
       </div>

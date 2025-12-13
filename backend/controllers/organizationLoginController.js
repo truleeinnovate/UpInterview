@@ -871,11 +871,20 @@ const getAllOrganizations = async (req, res) => {
       {
         $lookup: {
           from: "customersubscriptions",
-          localField: "_id",
+          localField: "tenantIdStr",
           foreignField: "tenantId",
           as: "subscription",
         },
       },
+
+      // {
+      //   $lookup: {
+      //     from: "customersubscriptions",
+      //     localField: "_id",
+      //     foreignField: "tenantId",
+      //     as: "subscription",
+      //   },
+      // },
       {
         $addFields: {
           subscription: { $arrayElemAt: ["$subscription", -1] },

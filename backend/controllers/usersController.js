@@ -1178,6 +1178,10 @@ const getUniqueUserByOwnerId = async (req, res) => {
     // Fetch user and populate role
     const users = await Users.findOne({ _id: ownerId })
       .populate({ path: "roleId", select: "_id label roleName status" })
+      .populate({
+        path: "tenantId",
+        select: "company industry jobTitle location status type",
+      })
       .lean();
 
     // Fetch user and populate availability (use latest contact by _id)

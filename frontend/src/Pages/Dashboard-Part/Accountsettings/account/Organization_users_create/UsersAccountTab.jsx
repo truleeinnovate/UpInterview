@@ -114,8 +114,6 @@ const UsersAccountTab = () => {
   const pagination =
     userType === "superAdmin" ? superAdminPagination : userPagination;
 
-  console.log("superAdminUsers", superAdminUsers);
-
   // Select data and loading state based on type
   const dataSource = userType === "superAdmin" ? superAdminUsers : users;
   const loading = userType === "superAdmin" ? superAdminLoading : usersLoading;

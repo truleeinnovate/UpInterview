@@ -9,8 +9,6 @@ import { selectBaseStyles } from "../../../../../../Components/Dropdowns/Dropdow
 
 // import "react-datepicker/dist/react-datepicker.css";
 import "react-datepicker/dist/react-datepicker.css";
-
-import { ReactComponent as FaPlus } from "../../../../../../icons/FaPlus.svg";
 import Modal from "react-modal";
 import {
   isEmptyObject,
@@ -71,7 +69,6 @@ const EditAvailabilityDetails = ({
 
   // Get the appropriate profile data based on context
   const profileData = useMemo(() => {
-  
     return userProfile;
   }, [from, resolvedId, userProfile]);
 
@@ -89,8 +86,7 @@ const EditAvailabilityDetails = ({
   //   Saturday: [{ startTime: null, endTime: null }],
   //   Sunday: [{ startTime: null, endTime: null }],
   // };
-  
-  
+
   const [times, setTimes] = useState({
     Sun: [{ startTime: null, endTime: null }],
     Mon: [{ startTime: null, endTime: null }],
@@ -137,7 +133,6 @@ const EditAvailabilityDetails = ({
 
         // If we have availability data from props/navigation, use it
         if (availabilityDataFromProps) {
-
           if (availabilityDataFromProps.times) {
             updatedTimes = { ...availabilityDataFromProps.times };
           }
@@ -158,7 +153,7 @@ const EditAvailabilityDetails = ({
           }
 
           if (availabilityDataFromProps.selectedOption) {
-            durationData = availabilityDataFromProps.selectedOption ;
+            durationData = availabilityDataFromProps.selectedOption;
           }
         } else {
           // Fallback to original logic
@@ -188,7 +183,7 @@ const EditAvailabilityDetails = ({
       }
     };
     fetchData();
-  }, [resolvedId,from, userProfile, availabilityDataFromProps]);
+  }, [resolvedId, from, userProfile, availabilityDataFromProps]);
 
   const handleOptionClick = (option) => {
     setFormData((prev) => ({
@@ -353,7 +348,7 @@ const EditAvailabilityDetails = ({
   return (
     <SidebarPopup title="Edit Availability Details" onClose={handleCloseModal}>
       {/* v1.0.3 <----------------------------------------------------------------------------------------------- */}
-  
+
       {/* v1.0.3 <----------------------------------------------------------------------------------------------- */}
       <div className="sm:p-0 p-6">
         <div className="flex flex-col md:flex-col lg:flex-col xl:flex-col 2xl:flex-col md:gap-10 lg:gap-10 xl:gap-12 2xl:gap-12">
@@ -456,14 +451,14 @@ const EditAvailabilityDetails = ({
           >
             Cancel
           </button>
-           <LoadingButton
-                        type="submit"
-                        onClick={handleSave}
-                        isLoading={loading }
-                        loadingText="updating..."
-                      >
-                          Save Changes
-                      </LoadingButton>
+          <LoadingButton
+            type="submit"
+            onClick={handleSave}
+            isLoading={loading}
+            loadingText="updating..."
+          >
+            Save Changes
+          </LoadingButton>
           {/* <button
             onClick={handleSave}
             className="px-4 py-2 bg-custom-blue text-white rounded-lg "

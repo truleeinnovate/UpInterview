@@ -61,7 +61,6 @@ function TenantsPage() {
   const pageType = "adminPortal";
   const { currentRoles, loadCurrentRoles, isCurrentRolesFetching } =
     useMasterData({}, pageType);
-    
 
   // Get tenants with pagination and filters
   const { tenants, pagination, isLoading, refetch } = useTenants({
@@ -74,7 +73,8 @@ function TenantsPage() {
     type: selectedType === "all" ? "" : selectedType,
     valueFilter: selectedValueFilter,
   });
-  
+
+  // console.log("tenants", tenants);
 
   // Use React Query for data fetching with proper dependency on permissions
   // const {
