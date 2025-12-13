@@ -13,6 +13,7 @@ const ContactsSchema = new mongoose.Schema(
     linkedinUrl: String,
     portfolioUrl: String,
     currentRole: String,
+    jobTitle: String,//only for org admin this field is used
     industry: { type: String },
     gender: String,
     imageData: {

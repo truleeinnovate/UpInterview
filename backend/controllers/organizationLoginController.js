@@ -1819,7 +1819,7 @@ const registerOrganization = async (req, res) => {
       email,
       phone,
       profileId,
-      currentRole: jobTitle,
+      jobTitle,
       company: company,
       employees: employees,
       countryCode: countryCode,
