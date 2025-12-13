@@ -29,6 +29,7 @@ import { useInterviewTemplates } from "../../../../apiHooks/useInterviewTemplate
 // v1.0.1 <----------------------------------------------------------------------------
 import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { notify } from "../../../../services/toastService.js";
+import { Info } from "lucide-react";
 import InfoGuide from "../CommonCode-AllTabs/InfoCards.jsx";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
@@ -47,6 +48,21 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [templateLimit, setTemplateLimit] = useState(TEMPLATE_DROPDOWN_LIMIT);
   const [templateSearch, setTemplateSearch] = useState("");
   const [debouncedTemplateSearch, setDebouncedTemplateSearch] = useState("");
+  
+  // State for tooltip visibility
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Close tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showTooltip && !event.target.closest('.tooltip-container')) {
+        setShowTooltip(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTooltip]);
 
   const {
     templatesData,
@@ -1646,20 +1662,34 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
                     {/* External ID Field - Only show for organization users */}
                     {isOrganization && (
-                      <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                      <div className="grid grid-cols-2 sm:grid-cols-1">
                         <div>
+                          <div className="flex items-center gap-2 mb-1 relative">
+                            <label className="text-sm font-medium text-gray-700">
+                              External ID
+                            </label>
+                            <div className="relative tooltip-container">
+                              <Info 
+                                className="w-4 h-4 text-gray-400 cursor-pointer" 
+                                onClick={() => setShowTooltip(!showTooltip)}
+                              />
+                              {showTooltip && (
+                                <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
+                                  External System Reference Id
+                                  <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                           <InputField
                             value={formData.externalId}
                             onChange={handleChange}
                             inputRef={fieldRefs.externalId}
                             error={errors.externalId}
-                            label="External ID"
+                            label=""
                             name="externalId"
-                            placeholder="external system identifier"
+                            placeholder="External System Reference Id"
                           />
-                          <div className="text-xs text-gray-500 mt-1">
-                            external system reference id
-                          </div>
                         </div>
                       </div>
                     )}
