@@ -18,6 +18,7 @@ export const useMockInterviews = (params = {}) => {
   // Check if user has permission to view mock interviews
   const hasViewPermission = effectivePermissions?.MockInterviews?.View;
 
+  console.log("params", params);
   // Extract and validate params for API call
   const { search = "", page = 0, limit, filters = {} } = params;
 
@@ -54,6 +55,7 @@ export const useMockInterviews = (params = {}) => {
           effectivePermissions,
           apiParams
         );
+        console.log("filteredInterviews", filteredInterviews);
         return filteredInterviews;
       } catch (err) {
         console.error("Fetch error:", err);
@@ -65,15 +67,24 @@ export const useMockInterviews = (params = {}) => {
     staleTime: 1000 * 60 * 10,
     cacheTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,
-    refetchOnMount: "always",
-    // refetchOnMount: false,
-    refetchOnReconnect: false,
+    // refetchOnMount: "always",
+
+    refetchOnMount: false,
+    refetchOnReconnect: true,
+    // refetchOnReconnect: false,
   });
 
   // Extract data and total count from response
   const mockinterviewData = responseData?.data || [];
   const totalCount = responseData?.totalCount || 0;
   const totalPages = responseData?.totalPages || 0;
+  // const loading = isQueryLoading;
+  const loading = isQueryLoading && responseData?.data === undefined;
+
+  // const loading = isQueryLoading && !responseData?.data?.length;
+
+  // const loading = isQueryLoading && !responseData?.data?.length;
+  console.log("mockinterviewData", mockinterviewData);
 
   // Add/Update mock interview mutation
   // In useMockInterviews.js - FIXED VERSION
@@ -205,6 +216,7 @@ export const useMockInterviews = (params = {}) => {
     totalCount,
     totalPages,
     isLoading,
+    loading,
     isQueryLoading,
     isMutationLoading,
     isError,
@@ -249,6 +261,33 @@ export const useMockInterviewById = (mockInterviewId) => {
     isError,
     error,
   };
+};
+
+export const useCancelRound = () => {
+  const queryClient = useQueryClient();
+  // const authToken = Cookies.get("authToken");
+
+  return useMutation({
+    mutationFn: async ({ mockInterviewId, roundId }) => {
+      return (
+        await axios.patch(
+          `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}/cancel`,
+          {}
+          // {
+          //   headers: {
+          //     Authorization: `Bearer ${authToken}`,
+          //   },
+          //   withCredentials: true,
+          // }
+        )
+      ).data;
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries(["mockinterview"]);
+      queryClient.invalidateQueries(["mockinterviews"]);
+    },
+  });
 };
 
 // // v1.0.0  -  mansoor  -  changes to save the mock interview

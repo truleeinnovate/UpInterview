@@ -241,8 +241,6 @@ function Candidate({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deleteCandidate, setDeleteCandidate] = useState(null);
 
-  console.log("candidateData ", candidateData);
-
   // <---------------------- v1.0.2
   // Helper function to check if a candidate is cancelled (handles all case variations)
 
@@ -271,7 +269,6 @@ function Candidate({
   //  Ranjith added delete Candidate functionality
   const handleDeleteCandidate = async () => {
     try {
-      // console.log("deleteCandidate", deleteCandidate);
       let res = await deleteCandidateData(
         deleteCandidate?._id || deleteCandidate?.id || "N/A"
       );
@@ -285,7 +282,6 @@ function Candidate({
         notify.warning(res?.data?.message || "Unable to delete candidate");
       }
     } catch (error) {
-      // console.error("Error deleting candidate:", error);
       setShowDeleteConfirmModal(false);
       // ✅ Extract backend message if available
       const backendMessage =
@@ -683,7 +679,6 @@ function Candidate({
       key: "name",
       header: "Candidate Name",
       render: (value, row) => (
-        // console.log("row ",row,value),
         <div
           className="flex items-center"
           title={`${row?.FirstName} ${row?.LastName}`}
@@ -1461,7 +1456,11 @@ function Candidate({
                           {qualifications?.length > 0 ? (
                             qualifications.map((q, index) => (
                               <label
-                                key={`${q._id || q.QualificationName || "qualification"}-${index}`}
+                                key={`${
+                                  q._id ||
+                                  q.QualificationName ||
+                                  "qualification"
+                                }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -1508,7 +1507,9 @@ function Candidate({
                           {skills?.length > 0 ? (
                             skills.map((skill, index) => (
                               <label
-                                key={`${skill._id || skill.SkillName || "skill"}-${index}`}
+                                key={`${
+                                  skill._id || skill.SkillName || "skill"
+                                }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -1664,20 +1665,24 @@ function Candidate({
                           {currentRoles?.length > 0 ? (
                             currentRoles.map((role, index) => (
                               <label
-                                key={`${role._id || role.RoleName || "role"}-${index}`}
+                                key={`${
+                                  role._id || role.roleName || "role"
+                                }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
                                   type="checkbox"
                                   checked={selectedRoles.includes(
-                                    role.RoleName
+                                    role.roleName
                                   )}
                                   onChange={() =>
-                                    handleRoleToggle(role.RoleName)
+                                    handleRoleToggle(role.roleName)
                                   }
                                   className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
                                 />
-                                <span className="text-sm">{role.RoleName}</span>
+                                <span className="text-sm">
+                                  {role.roleLabel}
+                                </span>
                               </label>
                             ))
                           ) : (
@@ -1707,7 +1712,11 @@ function Candidate({
                           {colleges?.length > 0 ? (
                             colleges.map((college, index) => (
                               <label
-                                key={`${college._id || college.University_CollegeName || "college"}-${index}`}
+                                key={`${
+                                  college._id ||
+                                  college.University_CollegeName ||
+                                  "college"
+                                }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input

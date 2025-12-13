@@ -176,16 +176,16 @@ const MockInterview = () => {
   const [mockinterviewDataView, setmockinterviewDataView] = useState(false);
   const [reschedule, setReschedule] = useState(false);
   const [cancelSchedule, setCancelSchedule] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
   const filterIconRef = useRef(null);
 
-  const { mockinterviewData, isLoading, totalCount, totalPages } =
+  const { mockinterviewData, loading, totalCount, totalPages } =
     useMockInterviews({
       search: searchQuery,
       page: currentPage, // This is 0-based, will be converted to 1-based in hook
       limit: rowsPerPage,
       filters: selectedFilters,
     });
-  console.log("mockinterviewData", mockinterviewData);
 
   // v1.0.2 <--------------------------------------------
   // v1.0.5 <---------------------------------------------------------------
@@ -309,103 +309,14 @@ const MockInterview = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (mockinterviewData?.length !== 0) {
-      setFilterPopupOpen((prev) => !prev);
-    }
+    // if (mockinterviewData?.length !== 0) {
+    setFilterPopupOpen((prev) => !prev);
+    // }
   };
 
   // Helper function to normalize spaces for better search
-  const normalizeSpaces = (str) =>
-    str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
-
-  // const FilteredData = () => {
-  //   if (!Array.isArray(mockinterviewData)) return [];
-  //   return mockinterviewData.filter((interview) => {
-  //     // Enhanced search across multiple fields
-  //     const normalizedQuery = normalizeSpaces(searchQuery);
-  //     const fieldsToSearch = [
-  //       interview?.mockInterviewCode,
-  //       interview?.rounds?.[0]?.roundTitle,
-  //       interview?.technology,
-  //       interview?.candidateName,
-  //       interview?.Role,
-  //       interview?.rounds?.[0]?.status,
-  //       interview?.interviewer,
-  //     ].filter(Boolean);
-
-  //     const matchesSearchQuery =
-  //       searchQuery === "" ||
-  //       fieldsToSearch.some((field) =>
-  //         normalizeSpaces(field).includes(normalizedQuery)
-  //       );
-
-  //     // Status filter
-  //     const matchesStatus =
-  //       selectedFilters.status.length === 0 ||
-  //       selectedFilters.status.includes(interview.rounds?.[0]?.status);
-
-  //     // Technology filter
-  //     const matchesTechnology =
-  //       selectedFilters.technology.length === 0 ||
-  //       selectedFilters.technology.includes(interview.technology);
-
-  //     // Duration filter
-  //     const duration = parseInt(interview?.rounds?.[0]?.duration) || 0;
-  //     const matchesDuration =
-  //       (selectedFilters.duration.min === "" ||
-  //         duration >= Number(selectedFilters.duration.min)) &&
-  //       (selectedFilters.duration.max === "" ||
-  //         duration <= Number(selectedFilters.duration.max));
-
-  //     // Created date filter
-  //     const matchesCreatedDate = () => {
-  //       if (!selectedFilters.createdDate) return true;
-  //       if (!interview.createdAt) return false;
-  //       const createdAt = new Date(interview.createdAt);
-  //       const now = new Date();
-  //       const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-
-  //       switch (selectedFilters.createdDate) {
-  //         case "last7":
-  //           return daysDiff <= 7;
-  //         case "last30":
-  //           return daysDiff <= 30;
-  //         case "last90":
-  //           return daysDiff <= 90;
-  //         default:
-  //           return true;
-  //       }
-  //     };
-
-  //     // Interviewer filter
-  //     const matchesInterviewer = () => {
-  //       if (selectedFilters.interviewer.length === 0) return true;
-  //       const interviewers = interview?.rounds?.[0]?.interviewers || [];
-  //       return interviewers.some((interviewer) => {
-  //         const contact = interviewer?.contact;
-  //         const name =
-  //           contact?.Name ||
-  //           `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim();
-  //         return selectedFilters.interviewer.includes(name);
-  //       });
-  //     };
-
-  //     return (
-  //       matchesSearchQuery &&
-  //       matchesStatus &&
-  //       matchesTechnology &&
-  //       matchesDuration &&
-  //       matchesCreatedDate() &&
-  //       matchesInterviewer()
-  //     );
-  //   });
-  // };
-
-  // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
-  // const startIndex = currentPage * rowsPerPage;
-
-  // const totalPages = Math.ceil(totalCount / rowsPerPage);
-  // const startIndex = currentPage * rowsPerPage;
+  // const normalizeSpaces = (str) =>
+  //   str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
 
   // const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
   // const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
@@ -427,7 +338,8 @@ const MockInterview = () => {
     setReschedule(mockinterview);
   };
 
-  const onCancelClick = () => {
+  const onCancelClick = (row) => {
+    setSelectedRow(row);
     setCancelSchedule(true);
   };
 
@@ -435,9 +347,9 @@ const MockInterview = () => {
     setReschedule(false);
   };
 
-  const closepopup = () => {
-    setCancelSchedule(false);
-  };
+  // const closepopup = () => {
+  //   setCancelSchedule(false);
+  // };
 
   // v1.0.5 <-------------------------------------------------------------
   // const formatDate = (isoString) => {
@@ -490,9 +402,9 @@ const MockInterview = () => {
       ),
     },
     {
-      key: "technology",
-      header: "Technology",
-      render: (value) => value || "Not Provided",
+      key: "CurrentRole",
+      header: "Current Role",
+      render: (value, row) => row?.roleDetails?.roleLabel || "Not Provided",
     },
     {
       key: "status",
@@ -577,17 +489,51 @@ const MockInterview = () => {
     },
   ];
 
+  // const tableActions = [
+  //   {
+  //     key: "view",
+  //     label: "View Details",
+  //     icon: <Eye className="w-4 h-4 text-custom-blue" />,
+  //     onClick: (row) => navigate(`/mock-interview-details/${row._id}`),
+  //   },
+  //   {
+  //     key: "edit",
+  //     label: "Edit",
+  //     icon: <Pencil className="w-4 h-4 text-green-600" />,
+  //     onClick: (row) =>
+  //       navigate(`/mock-interview/${row._id}/edit`, {
+  //         state: { from: "tableMode" },
+  //       }),
+  //   },
+  //   {
+  //     key: "reschedule",
+  //     label: "Reschedule",
+  //     icon: <Timer className="w-4 h-4 text-custom-blue" />,
+  //     onClick: (row) => onRescheduleClick(row),
+  //   },
+  //   {
+  //     key: "cancel",
+  //     label: "Cancel",
+  //     icon: <XCircle className="w-4 h-4 text-red-500" />,
+  //     onClick: (row) => onCancelClick(row),
+  //   },
+  // ];
+
+  // v1.0.5 <----------------------------------------------------------------------------------
+
   const tableActions = [
     {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-custom-blue" />,
+      show: (row) => true, // always show
       onClick: (row) => navigate(`/mock-interview-details/${row._id}`),
     },
     {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
+      show: (row) => row?.rounds?.[0]?.status === "Draft",
       onClick: (row) =>
         navigate(`/mock-interview/${row._id}/edit`, {
           state: { from: "tableMode" },
@@ -597,17 +543,29 @@ const MockInterview = () => {
       key: "reschedule",
       label: "Reschedule",
       icon: <Timer className="w-4 h-4 text-custom-blue" />,
-      onClick: (row) => onRescheduleClick(row),
+      show: (row) =>
+        !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(
+          row?.rounds?.[0]?.status
+        ),
+      onClick: (row) =>
+        navigate(`/mock-interview/${row._id}/edit`, {
+          state: { from: location.pathname },
+        }),
+
+      // onClick: (row) => onRescheduleClick(row),
     },
     {
       key: "cancel",
       label: "Cancel",
       icon: <XCircle className="w-4 h-4 text-red-500" />,
-      onClick: () => onCancelClick(),
+      show: (row) =>
+        !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(
+          row?.rounds?.[0]?.status
+        ),
+      onClick: (row) => onCancelClick(row),
     },
   ];
 
-  // v1.0.5 <----------------------------------------------------------------------------------
   const kanbanColumns = [
     {
       key: "technology",
@@ -652,11 +610,45 @@ const MockInterview = () => {
     },
   ];
 
-  const kanbanActions = () => [
+  // const kanbanActions = () => [
+  //   {
+  //     key: "view",
+  //     label: "View Details",
+  //     icon: <Eye className="w-4 h-4 text-custom-blue" />,
+  //     onClick: (row) =>
+  //       navigate(`/mock-interview-details/${row._id}`, {
+  //         state: { from: location.pathname },
+  //       }),
+  //   },
+  //   {
+  //     key: "edit",
+  //     label: "Edit",
+  //     icon: <Pencil className="w-4 h-4 text-green-600" />,
+  //     onClick: (row) =>
+  //       navigate(`/mock-interview/${row._id}/edit`, {
+  //         state: { from: location.pathname },
+  //       }),
+  //   },
+  //   {
+  //     key: "reschedule",
+  //     label: "Reschedule",
+  //     icon: <Timer className="w-4 h-4 text-custom-blue" />,
+  //     onClick: (row) => onRescheduleClick(row),
+  //   },
+  //   {
+  //     key: "cancel",
+  //     label: "Cancel",
+  //     icon: <XCircle className="w-4 h-4 text-red-500" />,
+  //     onClick: (row) => onCancelClick(row),
+  //   },
+  // ];
+
+  const kanbanActions = [
     {
       key: "view",
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-custom-blue" />,
+      show: (row) => true, // always show
       onClick: (row) =>
         navigate(`/mock-interview-details/${row._id}`, {
           state: { from: location.pathname },
@@ -666,6 +658,7 @@ const MockInterview = () => {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
+      show: (row) => row?.rounds?.[0]?.status === "Draft",
       onClick: (row) =>
         navigate(`/mock-interview/${row._id}/edit`, {
           state: { from: location.pathname },
@@ -675,15 +668,29 @@ const MockInterview = () => {
       key: "reschedule",
       label: "Reschedule",
       icon: <Timer className="w-4 h-4 text-custom-blue" />,
-      onClick: (row) => onRescheduleClick(row),
+      show: (row) =>
+        !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(
+          row?.rounds?.[0]?.status
+        ),
+      onClick: (row) =>
+        navigate(`/mock-interview/${row._id}/edit`, {
+          state: { from: location.pathname },
+        }),
+
+      // onClick: (row) => onRescheduleClick(row),
     },
     {
       key: "cancel",
       label: "Cancel",
       icon: <XCircle className="w-4 h-4 text-red-500" />,
-      onClick: (row) => onCancelClick(),
+      show: (row) =>
+        !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(
+          row?.rounds?.[0]?.status
+        ),
+      onClick: (row) => onCancelClick(row),
     },
   ];
+
   // v1.0.5 ---------------------------------------------------------------------------------->
 
   return (
@@ -710,7 +717,7 @@ const MockInterview = () => {
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
-              dataLength={totalPages}
+              dataLength={totalPages > 0 ? totalPages : 1}
               searchPlaceholder="Search by Title, Technology..."
               filterIconRef={filterIconRef}
             />
@@ -725,7 +732,7 @@ const MockInterview = () => {
             {viewMode === "kanban" ? (
               // v1.0.5 <-----------------------------------------------------------
               <MockInterviewKanban
-                loading={isLoading}
+                loading={loading}
                 data={currentFilteredRows.map((interview) => ({
                   ...interview,
                   id: interview?._id,
@@ -751,7 +758,7 @@ const MockInterview = () => {
                   data={currentFilteredRows}
                   columns={tableColumns}
                   actions={tableActions}
-                  loading={isLoading}
+                  loading={loading}
                   emptyState={emptyStateMessage}
                   className="table-fixed w-full"
                 />
@@ -1020,7 +1027,12 @@ const MockInterview = () => {
           onCloseprofile={() => setmockinterviewDataView(false)}
         />
       )}
-      {cancelSchedule && <CancelPopup onClose={closepopup} />}
+      {cancelSchedule && (
+        <CancelPopup
+          row={selectedRow}
+          onClose={() => setCancelSchedule(false)}
+        />
+      )}
       {reschedule && (
         <ReschedulePopup
           onClose={closeschedulepopup}

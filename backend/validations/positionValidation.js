@@ -84,13 +84,29 @@ const validateRoundData = Joi.object({
       }),
     }),
 
-  interviewers: Joi.when("roundTitle", {
-    is: "Assessment",
-    then: Joi.array().optional(),
-    otherwise: Joi.array().min(1).messages({
-      "array.min": "At least one interviewer is required",
+  // interviewers: Joi.when("roundTitle", {
+  //   is: "Assessment",
+  //   then: Joi.array().optional(),
+  //   otherwise: Joi.array().min(1).messages({
+  //     "array.min": "At least one interviewer is required",
+  //   }),
+  // }),
+
+  interviewers: Joi.array()
+    .when("roundTitle", {
+      is: "Assessment",
+      then: Joi.optional(), // Assessment does NOT require interviewer
+    })
+    .when("interviewerType", {
+      is: "External",
+      then: Joi.optional(), // External → interviewer OPTIONAL
+    })
+    .when("interviewerType", {
+      not: "External",
+      then: Joi.array().min(1).messages({
+        "array.min": "At least one interviewer is required",
+      }),
     }),
-  }),
 
   interviewerGroupId: Joi.string().allow(""),
 

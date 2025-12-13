@@ -245,17 +245,31 @@ router.get(
 
       let data;
       switch (model.toLowerCase()) {
+        // API Route Handler Code
         case "mockinterview":
           const {
             search: mockSearch,
             page: mockPage = 1,
             limit: mockLimit,
-            status: mockStatus = [],
-            technology: mockTechnology = [],
-            duration: mockDuration = {},
-            createdDate: mockCreatedDate = "",
+            filters = {}, // Extract filters object
+            currentRole,
             interviewer: mockInterviewer = [],
           } = req.query;
+
+          console.log("req.query", req.query);
+
+          // Extract filters from the filters object
+          const {
+            status: mockStatus = [],
+            duration: mockDuration = {},
+            createdDate: mockCreatedDate = "",
+          } = filters;
+
+          console.log("Extracted filters:", {
+            mockStatus,
+            mockDuration,
+            mockCreatedDate,
+          });
 
           // -------------------------------
           // BASE QUERY FOR MOCKINTERVIEW
@@ -266,15 +280,14 @@ router.get(
           if (mockSearch) {
             mockQuery.$or = [
               { mockInterviewCode: { $regex: mockSearch, $options: "i" } },
-              { technology: { $regex: mockSearch, $options: "i" } },
+              { currentRole: { $regex: mockSearch, $options: "i" } },
               { candidateName: { $regex: mockSearch, $options: "i" } },
-              { Role: { $regex: mockSearch, $options: "i" } },
             ];
           }
 
-          // Technology filter
-          if (mockTechnology.length > 0) {
-            mockQuery.technology = { $in: mockTechnology };
+          // Technology filter (currentRole)
+          if (currentRole) {
+            mockQuery.currentRole = currentRole;
           }
 
           // Created Date filter
@@ -308,31 +321,61 @@ router.get(
           const roundFilters = {};
 
           // STATUS filter (from MockInterviewRound)
-          if (mockStatus.length > 0) {
-            roundFilters.status = {
-              $in: mockStatus.map((s) =>
-                s === "Requests Sent" ? "RequestSent" : s
-              ),
-            };
+          if (mockStatus && mockStatus.length > 0) {
+            // Map frontend status values to backend schema values
+            const mappedStatus = mockStatus.map((s) => {
+              switch (s) {
+                case "Requests Sent":
+                  return "RequestSent";
+                case "In Progress":
+                  return "InProgress";
+                case "Not Completed":
+                  return "InCompleted"; // Based on your schema
+                case "InCompleted":
+                  return "InCompleted";
+                case "No Show":
+                  return "NoShow";
+                default:
+                  return s;
+              }
+            });
+
+            roundFilters.status = { $in: mappedStatus };
+
+            console.log("Status filter applied:", {
+              original: mockStatus,
+              mapped: mappedStatus,
+              roundFilters: roundFilters.status,
+            });
           }
 
           // DURATION filter (from MockInterviewRound)
-          if (mockDuration.min || mockDuration.max) {
+          if (mockDuration && (mockDuration.min || mockDuration.max)) {
             roundFilters.duration = {};
-            if (mockDuration.min)
+            if (mockDuration.min && mockDuration.min !== "")
               roundFilters.duration.$gte = parseInt(mockDuration.min);
-            if (mockDuration.max)
+            if (mockDuration.max && mockDuration.max !== "")
               roundFilters.duration.$lte = parseInt(mockDuration.max);
           }
 
           // If any round filters exist → fetch matching mockInterviewIds
           if (Object.keys(roundFilters).length > 0) {
+            console.log(
+              "Applying round filters to MockInterviewRound:",
+              roundFilters
+            );
+
             const roundDocs = await MockInterviewRound.find(roundFilters)
               .select("mockInterviewId")
               .lean();
 
             roundFilteredInterviewIds = roundDocs.map((r) =>
               r.mockInterviewId.toString()
+            );
+
+            console.log(
+              "Found interview IDs from round filters:",
+              roundFilteredInterviewIds.length
             );
 
             // No interview matches → return empty response
@@ -357,12 +400,6 @@ router.get(
           // PAGINATION VALUES
           // ---------------------------------------------------------------
           const pageNum = Math.max(1, parseInt(mockPage));
-          // const limitNum =
-          //   mockLimit === Infinity
-          //     ? Infinity
-          //     : Math.max(1, parseInt(mockLimit));
-          // const skip = (pageNum - 1) * limitNum;
-
           let limitNum = mockLimit;
 
           // Convert Infinity (string or number) → 0 because MongoDB uses 0 = unlimited
@@ -377,18 +414,35 @@ router.get(
           // Count BEFORE pagination
           const totalCount = await MockInterview.countDocuments(mockQuery);
           const totalPages =
-            totalCount > 0 ? Math.ceil(totalCount / limitNum) : 0;
+            limitNum > 0 ? Math.ceil(totalCount / limitNum) : 1;
 
           // ---------------------------------------------------------------
           // FETCH MOCK INTERVIEWS
           // ---------------------------------------------------------------
           const mockInterviews = await MockInterview.find(mockQuery)
             .sort({ _id: -1 })
-            // .skip(skip)
             .limit(limitNum)
             .lean();
 
           const interviewIds = mockInterviews.map((i) => i._id);
+
+          const roleNames = mockInterviews
+            .map((i) => i.currentRole)
+            .filter(Boolean);
+
+          let roleDocs = [];
+
+          if (roleNames.length > 0) {
+            roleDocs = await RoleMaster.find({
+              roleName: { $in: roleNames },
+            }).lean();
+          }
+
+          const roleMaps = {};
+
+          roleDocs.forEach((r) => {
+            roleMaps[r.roleName] = r;
+          });
 
           // ---------------------------------------------------------------
           // FETCH ROUNDS (JOIN)
@@ -403,60 +457,37 @@ router.get(
             })
             .lean();
 
-          // const roleLabels = mockInterviews.map((i) => i.Role).filter(Boolean);
-
-          // let roleDocs = [];
-          // if (roleLabels.length > 0) {
-          //   roleDocs = await RoleMaster.find({
-          //     roleName: { $in: roleLabels },
-          //   }).lean();
-          // }
-
-          // // Convert to quick lookup
-          // const roleMap = {};
-          // roleDocs.forEach((r) => {
-          //   roleMap[r.roleLabel] = r;
-          // });
-          // console.log("roleMap", roleMap);
-
-          // let combinedData = mockInterviews.map((interview) => {
-          //   const rounds = mockRounds.filter(
-          //     (r) => r.mockInterviewId.toString() === interview._id.toString()
-          //   );
-
-          //   const roleInfo = roleMap[interview.Role] || null;
-
-          //   return {
-          //     ...interview,
-
-          //     rounds,
-          //     roleDetails: roleInfo
-          //       ? {
-          //           roleName: roleInfo.roleName,
-          //           roleLabel: roleInfo.roleLabel,
-          //           roleCategory: roleInfo.roleCategory,
-          //         }
-          //       : null,
-          //   };
-          // });
-
-          // MERGE INTERVIEWS + ROUNDS
-          let combinedData = mockInterviews.map((interview) => ({
-            ...interview,
-            rounds: mockRounds.filter(
+          // Combine interviews with rounds and role details
+          let combinedData = mockInterviews.map((interview) => {
+            const rounds = mockRounds.filter(
               (r) => r.mockInterviewId.toString() === interview._id.toString()
-            ),
-          }));
+            );
+
+            const roleInfo = roleMaps[interview.currentRole] || null;
+
+            return {
+              ...interview,
+              rounds,
+              roleDetails: roleInfo
+                ? {
+                    roleName: roleInfo.roleName,
+                    roleLabel: roleInfo.roleLabel,
+                    roleCategory: roleInfo.roleCategory,
+                  }
+                : null,
+            };
+          });
 
           // ---------------------------------------------------------------
           // INTERVIEWER FILTER AFTER JOIN
           // ---------------------------------------------------------------
-          if (mockInterviewer.length > 0) {
+          if (mockInterviewer && mockInterviewer.length > 0) {
             combinedData = combinedData.filter((interview) => {
               const interviewers =
                 interview.rounds?.flatMap((r) => r.interviewers) || [];
 
               return interviewers.some((int) => {
+                if (!int) return false;
                 const fullName = `${int.firstName || ""} ${
                   int.lastName || ""
                 }`.trim();
@@ -478,6 +509,280 @@ router.get(
           };
 
           break;
+        // case "mockinterview":
+        //   const {
+        //     search: mockSearch,
+        //     page: mockPage = 1,
+        //     limit: mockLimit,
+        //     status: mockStatus = [],
+        //     currentRole: currentRole,
+        //     duration: mockDuration = {},
+        //     createdDate: mockCreatedDate = "",
+        //     interviewer: mockInterviewer = [],
+        //   } = req.query;
+
+        //   console.log("req.query", req.query);
+
+        //   // -------------------------------
+        //   // BASE QUERY FOR MOCKINTERVIEW
+        //   // -------------------------------
+        //   let mockQuery = { ...query };
+
+        //   // Full text search
+        //   if (mockSearch) {
+        //     mockQuery.$or = [
+        //       { mockInterviewCode: { $regex: mockSearch, $options: "i" } },
+        //       { currentRole: { $regex: mockSearch, $options: "i" } },
+        //       { candidateName: { $regex: mockSearch, $options: "i" } },
+        //       { Role: { $regex: mockSearch, $options: "i" } },
+        //     ];
+        //   }
+
+        //   // Technology filter
+        //   if (currentRole) {
+        //     mockQuery.currentRole = { $in: currentRole };
+        //   }
+
+        //   // Created Date filter
+        //   if (mockCreatedDate) {
+        //     const now = new Date();
+        //     let startDate = new Date();
+
+        //     switch (mockCreatedDate) {
+        //       case "last7":
+        //         startDate.setDate(now.getDate() - 7);
+        //         break;
+        //       case "last30":
+        //         startDate.setDate(now.getDate() - 30);
+        //         break;
+        //       case "last90":
+        //         startDate.setDate(now.getDate() - 90);
+        //         break;
+        //       default:
+        //         startDate = null;
+        //     }
+
+        //     if (startDate) {
+        //       mockQuery.createdAt = { $gte: startDate };
+        //     }
+        //   }
+
+        //   // ------------------------------------------------------------------
+        //   // ⭐ ROUND FILTERS (status + duration) – FROM MockInterviewRound
+        //   // ------------------------------------------------------------------
+        //   let roundFilteredInterviewIds = null;
+        //   const roundFilters = {};
+
+        //   // STATUS filter (from MockInterviewRound)
+        //   if (mockStatus.length > 0) {
+        //     roundFilters.status = {
+        //       $in: mockStatus.map((s) =>
+        //         s === "Requests Sent" ? "RequestSent" : s
+        //       ),
+        //     };
+        //   }
+
+        //   // DURATION filter (from MockInterviewRound)
+        //   if (mockDuration.min || mockDuration.max) {
+        //     roundFilters.duration = {};
+        //     if (mockDuration.min)
+        //       roundFilters.duration.$gte = parseInt(mockDuration.min);
+        //     if (mockDuration.max)
+        //       roundFilters.duration.$lte = parseInt(mockDuration.max);
+        //   }
+
+        //   // If any round filters exist → fetch matching mockInterviewIds
+        //   if (Object.keys(roundFilters).length > 0) {
+        //     const roundDocs = await MockInterviewRound.find(roundFilters)
+        //       .select("mockInterviewId")
+        //       .lean();
+
+        //     roundFilteredInterviewIds = roundDocs.map((r) =>
+        //       r.mockInterviewId.toString()
+        //     );
+
+        //     // No interview matches → return empty response
+        //     if (roundFilteredInterviewIds.length === 0) {
+        //       return {
+        //         data: [],
+        //         totalCount: 0,
+        //         totalPages: 0,
+        //         filteredCount: 0,
+        //         currentPage: 1,
+        //         limit: mockLimit,
+        //       };
+        //     }
+        //   }
+
+        //   // Apply ROUND FILTER to main query
+        //   if (roundFilteredInterviewIds) {
+        //     mockQuery._id = { $in: roundFilteredInterviewIds };
+        //   }
+
+        //   // ---------------------------------------------------------------
+        //   // PAGINATION VALUES
+        //   // ---------------------------------------------------------------
+        //   const pageNum = Math.max(1, parseInt(mockPage));
+        //   // const limitNum =
+        //   //   mockLimit === Infinity
+        //   //     ? Infinity
+        //   //     : Math.max(1, parseInt(mockLimit));
+        //   // const skip = (pageNum - 1) * limitNum;
+
+        //   let limitNum = mockLimit;
+
+        //   // Convert Infinity (string or number) → 0 because MongoDB uses 0 = unlimited
+        //   if (
+        //     mockLimit === "Infinity" ||
+        //     mockLimit === Infinity ||
+        //     isNaN(limitNum)
+        //   ) {
+        //     limitNum = 0;
+        //   }
+
+        //   // Count BEFORE pagination
+        //   const totalCount = await MockInterview.countDocuments(mockQuery);
+        //   const totalPages =
+        //     totalCount > 0 ? Math.ceil(totalCount / limitNum) : 0;
+
+        //   // ---------------------------------------------------------------
+        //   // FETCH MOCK INTERVIEWS
+        //   // ---------------------------------------------------------------
+        //   const mockInterviews = await MockInterview.find(mockQuery)
+        //     .sort({ _id: -1 })
+        //     // .skip(skip)
+        //     .limit(limitNum)
+        //     .lean();
+
+        //   const interviewIds = mockInterviews.map((i) => i._id);
+
+        //   const roleNames = mockInterviews
+        //     .map((i) => i.currentRole)
+        //     .filter(Boolean);
+
+        //   let roleDocs = [];
+
+        //   if (roleNames.length > 0) {
+        //     roleDocs = await RoleMaster.find({
+        //       roleName: { $in: roleNames },
+        //     }).lean();
+        //   }
+
+        //   const roleMaps = {};
+
+        //   roleDocs.forEach((r) => {
+        //     roleMaps[r.roleName] = r;
+        //   });
+
+        //   // ---------------------------------------------------------------
+        //   // FETCH ROUNDS (JOIN)
+        //   // ---------------------------------------------------------------
+        //   const mockRounds = await MockInterviewRound.find({
+        //     mockInterviewId: { $in: interviewIds },
+        //   })
+        //     .populate({
+        //       path: "interviewers",
+        //       model: "Contacts",
+        //       select: "firstName lastName email",
+        //     })
+        //     .lean();
+
+        //   // const roleLabels = mockInterviews.map((i) => i.Role).filter(Boolean);
+
+        //   // let roleDocs = [];
+        //   // if (roleLabels.length > 0) {
+        //   //   roleDocs = await RoleMaster.find({
+        //   //     roleName: { $in: roleLabels },
+        //   //   }).lean();
+        //   // }
+
+        //   // // Convert to quick lookup
+        //   // const roleMap = {};
+        //   // roleDocs.forEach((r) => {
+        //   //   roleMap[r.roleLabel] = r;
+        //   // });
+        //   // console.log("roleMap", roleMap);
+
+        //   // let combinedData = mockInterviews.map((interview) => {
+        //   //   const rounds = mockRounds.filter(
+        //   //     (r) => r.mockInterviewId.toString() === interview._id.toString()
+        //   //   );
+
+        //   //   const roleInfo = roleMap[interview.Role] || null;
+
+        //   //   return {
+        //   //     ...interview,
+
+        //   //     rounds,
+        //   //     roleDetails: roleInfo
+        //   //       ? {
+        //   //           roleName: roleInfo.roleName,
+        //   //           roleLabel: roleInfo.roleLabel,
+        //   //           roleCategory: roleInfo.roleCategory,
+        //   //         }
+        //   //       : null,
+        //   //   };
+        //   // });
+
+        //   // MERGE INTERVIEWS + ROUNDS
+        //   // let combinedData = mockInterviews.map((interview) => ({
+        //   //   ...interview,
+        //   //     roleDetails: roleInfo,
+        //   //   rounds: mockRounds.filter(
+        //   //     (r) => r.mockInterviewId.toString() === interview._id.toString()
+        //   //   ),
+        //   // }));
+
+        //   let combinedData = mockInterviews.map((interview) => {
+        //     const rounds = mockRounds.filter(
+        //       (r) => r.mockInterviewId.toString() === interview._id.toString()
+        //     );
+
+        //     const roleInfo = roleMaps[interview.currentRole] || null;
+
+        //     return {
+        //       ...interview,
+        //       rounds,
+        //       roleDetails: roleInfo
+        //         ? {
+        //             roleName: roleInfo.roleName,
+        //             roleLabel: roleInfo.roleLabel,
+        //             roleCategory: roleInfo.roleCategory,
+        //           }
+        //         : null,
+        //     };
+        //   });
+
+        //   // ---------------------------------------------------------------
+        //   // INTERVIEWER FILTER AFTER JOIN
+        //   // ---------------------------------------------------------------
+        //   if (mockInterviewer.length > 0) {
+        //     combinedData = combinedData.filter((interview) => {
+        //       const interviewers =
+        //         interview.rounds?.flatMap((r) => r.interviewers) || [];
+
+        //       return interviewers.some((int) => {
+        //         const fullName = `${int.firstName || ""} ${
+        //           int.lastName || ""
+        //         }`.trim();
+        //         return mockInterviewer.includes(fullName);
+        //       });
+        //     });
+        //   }
+
+        //   // ---------------------------------------------------------------
+        //   // FINAL RESPONSE
+        //   // ---------------------------------------------------------------
+        //   data = {
+        //     data: combinedData,
+        //     totalCount,
+        //     filteredCount: combinedData.length,
+        //     currentPage: pageNum,
+        //     totalPages,
+        //     limit: limitNum,
+        //   };
+
+        //   break;
 
         case "tenantquestions":
           //<--------v1.0.8-----
@@ -614,8 +919,6 @@ router.get(
             const pageNum = Math.max(1, parseInt(reqPage) || 1);
             const limitNum = Math.max(1, Math.min(100, parseInt(reqLimit)));
             const skip = (pageNum - 1) * limitNum;
-
-            console.log("query interview templaets", query);
 
             // Base query - CRITICAL: Standard templates should NOT have tenant or owner filtering
             let baseQuery = {};
@@ -1085,8 +1388,6 @@ router.get(
         case "scheduleassessment": {
           console.log("req?.query?.type", req?.query);
 
-          console.log("query", query);
-
           if (req?.query?.type !== "analytics") {
             const {
               assessmentId,
@@ -1351,8 +1652,6 @@ router.get(
             console.log("In scheduleassessment scheduled type", req?.query);
             // const assessmentId = req?.query?.assessmentId;
             const { assessmentId } = req.query;
-
-            console.log("assessmentId", assessmentId);
 
             const baseQuery = {
               ...query,

@@ -324,7 +324,7 @@ const getAllMasters = async (req, res) => {
         .populate("ownerId", "firstName lastName email -password")
         .populate("createdBy", "firstName lastName email -password")
         .populate("updatedBy", "firstName lastName email -password")
-        .sort({ [sortField]: 1 })
+        // .sort({ [sortField]: 1 })
         .lean();
       res.json(Model);
     }
