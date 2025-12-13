@@ -29,6 +29,7 @@ import { ReactComponent as FaEdit } from "../../../icons/FaEdit.svg";
 import DropdownWithSearchField from "../../../Components/FormFields/DropdownWithSearchField";
 import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect";
 import Papa from "papaparse"; // Import PapaParse
+
 // v1.0.1 ------------------------------------------------------->
 
 // const CsvDropZone = ({ onDataLoad }) => {
@@ -163,11 +164,11 @@ const CsvDropZone = ({ onDataLoad }) => {
         },
         error: (error) => {
           console.error("CSV Parsing Error:", error);
-          alert("Error parsing CSV file.");
+          notify.error("Error parsing CSV file.");
         },
       });
     } else {
-      alert("Only .csv files are supported!");
+      notify.error("Only .csv files are supported!");
     }
     setDragActive(false);
   };
@@ -187,33 +188,54 @@ const CsvDropZone = ({ onDataLoad }) => {
     }
   };
 
-  const handleUpload = async () => {
-    console.log("CSV DATA =====================================> ", csvData);
-    if (!csvData) {
-      alert("No CSV data to upload!");
-      return;
-    }
-    setLoading(true);
+ const handleUpload = async () => {
+  if (!csvData) {
+    notify.error("No CSV data to upload!");
+    return;
+  }
 
-    const payload = {
-      rateCards: csvData, // This now matches the server's expectation (req.body.rateCards)
-    };
-    try {
-      const response = await axios.post(
-        `${config.REACT_APP_API_URL}/rate-cards`,
-        payload
-      );
-      if (!response.ok) throw new Error("Upload failed");
-      const result = await response.json();
-      alert("CSV uploaded successfully!");
-      console.log("Server response:", result);
-    } catch (error) {
-      console.error("Upload Error:", error);
-      alert("Error uploading CSV.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+
+  // 🔥 TRANSFORM CSV STRINGS → REAL TYPES
+  const transformedRateCards = csvData.map((row) => ({
+    category: row.category || row.Category,
+
+    // roleName comes as string → parse JSON
+    roleName: Array.isArray(row.roleName)
+      ? row.roleName
+      : JSON.parse(row.roleName),
+
+    // levels comes as string → parse JSON
+    levels: typeof row.levels === "string"
+      ? JSON.parse(row.levels)
+      : row.levels,
+
+    defaultCurrency: row.defaultCurrency || "INR",
+
+    // "True"/"False" → boolean
+    isActive:
+      row.isActive === true ||
+      row.isActive === "true" ||
+      row.isActive === "True",
+
+  }));
+
+  try {
+    const response = await axios.post(
+      `${config.REACT_APP_API_URL}/rate-cards`,
+      { rateCards: transformedRateCards }
+    );
+
+    notify.success("CSV uploaded successfully!");
+    console.log("Server response:", response.data);
+  } catch (error) {
+    console.error("Upload Error:", error.response?.data || error);
+    notify.error("Error uploading CSV.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleCancel = () => {
     setFileName(null);
