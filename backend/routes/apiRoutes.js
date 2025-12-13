@@ -53,6 +53,8 @@ const {
 
 const { authContextMiddleware } = require("../middleware/authContext.js");
 const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
+const { buildPermissionQuery } = require("../utils/buildPermissionQuery");
+
 
 const modelRequirements = {
   candidate: {
@@ -214,34 +216,42 @@ router.get(
       // let query = model.toLowerCase() === 'scheduleassessment' ? { organizationId: tenantId } : { tenantId };
       // console.log('[11] Initial query with tenantId:', query);
 
-      let query = {};
+      const permissionQuery = await buildPermissionQuery(
+        userId,
+        tenantId,
+        inheritedRoleIds || [],
+        effectivePermissions_RoleType,
+        effectivePermissions_RoleName
+      );
+
+      let query = { ...permissionQuery };
       const roleType = effectivePermissions_RoleType;
       const roleName = effectivePermissions_RoleName;
 
-      if (roleType === "individual") {
-        query.ownerId = userId;
-      } else if (roleType === "organization" && roleName !== "Admin") {
-        if (inheritedRoleIds?.length > 0) {
-          const accessibleUsers = await Users.find({
-            tenantId,
-            roleId: { $in: inheritedRoleIds },
-          }).select("_id");
+      // if (roleType === "individual") {
+      //   query.ownerId = userId;
+      // } else if (roleType === "organization" && roleName !== "Admin") {
+      //   if (inheritedRoleIds?.length > 0) {
+      //     const accessibleUsers = await Users.find({
+      //       tenantId,
+      //       roleId: { $in: inheritedRoleIds },
+      //     }).select("_id");
 
-          const userIds = accessibleUsers.map((user) => user._id);
+      //     const userIds = accessibleUsers.map((user) => user._id);
 
-          // ✅ Include current user's own ID as well
-          userIds.push(userId);
+      //     // ✅ Include current user's own ID as well
+      //     userIds.push(userId);
 
-          // ✅ Remove duplicates just in case
-          query.ownerId = {
-            $in: [...new Set(userIds.map((id) => id.toString()))],
-          };
-        } else {
-          query.ownerId = userId;
-        }
-      } else if (roleType === "organization" && roleName === "Admin") {
-        query.tenantId = tenantId;
-      }
+      //     // ✅ Remove duplicates just in case
+      //     query.ownerId = {
+      //       $in: [...new Set(userIds.map((id) => id.toString()))],
+      //     };
+      //   } else {
+      //     query.ownerId = userId;
+      //   }
+      // } else if (roleType === "organization" && roleName === "Admin") {
+      //   query.tenantId = tenantId;
+      // }
 
       let data;
       switch (model.toLowerCase()) {
@@ -470,10 +480,10 @@ router.get(
               rounds,
               roleDetails: roleInfo
                 ? {
-                    roleName: roleInfo.roleName,
-                    roleLabel: roleInfo.roleLabel,
-                    roleCategory: roleInfo.roleCategory,
-                  }
+                  roleName: roleInfo.roleName,
+                  roleLabel: roleInfo.roleLabel,
+                  roleCategory: roleInfo.roleCategory,
+                }
                 : null,
             };
           });
@@ -488,9 +498,8 @@ router.get(
 
               return interviewers.some((int) => {
                 if (!int) return false;
-                const fullName = `${int.firstName || ""} ${
-                  int.lastName || ""
-                }`.trim();
+                const fullName = `${int.firstName || ""} ${int.lastName || ""
+                  }`.trim();
                 return mockInterviewer.includes(fullName);
               });
             });
@@ -1304,8 +1313,8 @@ router.get(
                 createdDate === "last7"
                   ? 7
                   : createdDate === "last30"
-                  ? 30
-                  : 90;
+                    ? 30
+                    : 90;
               const date = new Date();
               date.setDate(date.getDate() - days);
               Basequery.createdAt = { $gte: date };
@@ -2690,8 +2699,8 @@ async function handleInterviewFiltering(options) {
     const roundIds = rounds.map((r) => r._id);
     const questions = roundIds.length
       ? await InterviewQuestions.find({ roundId: { $in: roundIds } })
-          .select("roundId snapshot")
-          .lean()
+        .select("roundId snapshot")
+        .lean()
       : [];
 
     const questionsMap = questions.reduce((acc, q) => {
@@ -2860,17 +2869,17 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     monthlyData.lastMonthCount === 0
       ? "up"
       : monthlyData.currentMonthCount >= monthlyData.lastMonthCount
-      ? "up"
-      : "down";
+        ? "up"
+        : "down";
 
   const totalTrendValue =
     monthlyData.lastMonthCount === 0
       ? "+100% vs last month"
       : `${(
-          ((monthlyData.currentMonthCount - monthlyData.lastMonthCount) /
-            monthlyData.lastMonthCount) *
-          100
-        ).toFixed(1)}% vs last month`;
+        ((monthlyData.currentMonthCount - monthlyData.lastMonthCount) /
+          monthlyData.lastMonthCount) *
+        100
+      ).toFixed(1)}% vs last month`;
 
   // --------------------------------------------------------------------
   // OUTSOURCED INTERVIEWS
@@ -2930,17 +2939,17 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     outsourcedData.lastMonthCount === 0
       ? "up"
       : outsourcedData.currentMonthCount >= outsourcedData.lastMonthCount
-      ? "up"
-      : "down";
+        ? "up"
+        : "down";
 
   const outsourcedTrendValue =
     outsourcedData.lastMonthCount === 0
       ? "+100% vs last month"
       : `${(
-          ((outsourcedData.currentMonthCount - outsourcedData.lastMonthCount) /
-            outsourcedData.lastMonthCount) *
-          100
-        ).toFixed(1)}% vs last month`;
+        ((outsourcedData.currentMonthCount - outsourcedData.lastMonthCount) /
+          outsourcedData.lastMonthCount) *
+        100
+      ).toFixed(1)}% vs last month`;
 
   // --------------------------------------------------------------------
   // UPCOMING INTERVIEWS (with safe date parsing)
@@ -3061,17 +3070,17 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     upcomingData.lastWeekCount === 0
       ? "up"
       : upcomingData.currentWeekCount >= upcomingData.lastWeekCount
-      ? "up"
-      : "down";
+        ? "up"
+        : "down";
 
   const upcomingTrendValue =
     upcomingData.lastWeekCount === 0
       ? "+100% vs last week"
       : `${(
-          ((upcomingData.currentWeekCount - upcomingData.lastWeekCount) /
-            upcomingData.lastWeekCount) *
-          100
-        ).toFixed(1)}% vs last week`;
+        ((upcomingData.currentWeekCount - upcomingData.lastWeekCount) /
+          upcomingData.lastWeekCount) *
+        100
+      ).toFixed(1)}% vs last week`;
   console.log("upcomingData", {
     matchInterview,
     now,

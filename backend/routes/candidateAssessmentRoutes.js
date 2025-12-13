@@ -19,9 +19,9 @@ const router = express.Router()
 // router.patch('/:candidateAssessmentId/sections/:sectionIndex/questions/:questionId',updateAnswersToDb)
 //we are using this in asessment test
 // router.patch('/:candidateAssessmentId/save-progress',autoSaveAnswers)
-//we are using this in asessment test
+//we are using this in asessment test 
 
-
+ 
 
 
 router.get('/details/:id',getCandidateAssessmentBasedOnId)
