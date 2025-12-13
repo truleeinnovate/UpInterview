@@ -450,7 +450,7 @@ const { authContextMiddleware } = require("./middleware/authContext.js");
 
 // Apply authContextMiddleware to all routes except API key validation
 app.use((req, res, next) => {
-  if (req.path === '/api/apikeys/validate') {
+  if (req.path === "/api/apikeys/validate") {
     return next(); // Skip auth for validation endpoint
   }
   return authContextMiddleware(req, res, next);
@@ -1236,10 +1236,6 @@ const rolesPermissionRoutes = require("./routes/rolesPermissionRoutes");
 app.use("/permissions", rolesPermissionRoutes);
 app.use("/", rolesRoutes);
 
-// <------------------------Assessment Templates
-const candidateAssessmentRouter = require("./routes/candidateAssessmentRoutes.js");
-app.use("/candidate-assessment", candidateAssessmentRouter);
-
 const AssessmentRouter = require("./routes/assessmentRoute.js");
 app.use("/assessments", AssessmentRouter);
 
@@ -1421,6 +1417,10 @@ app.get("/sharing-rules-objects", async (req, res) => {
     });
   }
 });
+
+// <------------------------Assessment Templates
+const candidateAssessmentRouter = require("./routes/candidateAssessmentRoutes.js");
+app.use("/candidate-assessment", candidateAssessmentRouter);
 
 //notifications
 const notificationRoutes = require("./routes/notificationRoutes.js");
@@ -1726,7 +1726,6 @@ app.post("/api/create-meeting", async (req, res) => {
       },
     };
 
-
     const create = await axios.post(
       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
       body,
@@ -1770,7 +1769,6 @@ app.use("/external", externalRoutes);
 const analyticsRoutes = require("./routes/AnalyticsRoutes/analytics.js");
 app.use("/analytics", analyticsRoutes);
 
-
 // Create meeting endpoint
 // app.post('/api/create-meeting', async (req, res) => {
 //   try {
@@ -1809,7 +1807,6 @@ app.use("/analytics", analyticsRoutes);
 //         participant_video: false
 //       }
 //     };
-
 
 //     const create = await axios.post(
 //       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
@@ -1861,7 +1858,6 @@ app.use("/analytics", analyticsRoutes);
 //       body,
 //       { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
 //     );
-
 
 //     return res.json({
 //       join_url: create.data.join_url,

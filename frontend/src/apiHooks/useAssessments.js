@@ -18,6 +18,8 @@ import { usePermissions } from "../Context/PermissionsContext";
 // <---------------------- v1.0.5
 import toast from "react-hot-toast";
 import { notify } from "../services/toastService";
+import Cookies from "js-cookie";
+
 // ------------------------------ v1.0.5 >
 import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
 import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
@@ -328,9 +330,17 @@ export const useAssessments = (filters = {}) => {
   }, []);
 
   const fetchAssessmentResults = async (assessmentId) => {
+    const authToken = Cookies.get("authToken") ?? "";
+
     try {
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/assessments/${assessmentId}/results`
+        `${config.REACT_APP_API_URL}/assessments/${assessmentId}/results`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+          withCredentials: true,
+        }
       );
       if (response.data.success) {
         return { data: response.data.data, error: null };

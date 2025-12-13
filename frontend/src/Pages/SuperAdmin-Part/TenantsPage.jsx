@@ -503,13 +503,16 @@ function TenantsPage() {
 
   // Kanban Columns Configuration
   const kanbanColumns = [
-    {
-      key: "email",
-      header: "Email",
-    },
+    // {
+    //   key: "email",
+    //   header: "Email",
+    // },
     {
       key: "type",
       header: "Type",
+      render: (value, row) => {
+        return <span>{capitalizeFirstLetter(row?.type)}</span>;
+      },
     },
     selectedType === "organization"
       ? ""
