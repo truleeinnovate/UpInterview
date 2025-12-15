@@ -825,7 +825,7 @@ const getAllOrganizations = async (req, res) => {
       valueFilter,
     } = req.query;
 
-    console.log("req.query", req.query);
+    // console.log("req.query", req.query);
 
     const skip = parseInt(page) * parseInt(limit);
     const limitNum = parseInt(limit);
@@ -868,12 +868,25 @@ const getAllOrganizations = async (req, res) => {
       { $unwind: { path: "$contact", preserveNullAndEmptyArrays: true } },
 
       // SUBSCRIPTION LOOKUP (replaced "let")
+      // {
+      //   $lookup: {
+      //     from: "customersubscriptions",
+      //     localField: "tenantIdStr",
+      //     foreignField: "tenantId",
+      //     as: "subscription",
+      //   },
+      // },
       {
         $lookup: {
           from: "customersubscriptions",
           localField: "tenantIdStr",
           foreignField: "tenantId",
           as: "subscription",
+        },
+      },
+      {
+        $addFields: {
+          subscription: { $arrayElemAt: ["$subscription", -1] },
         },
       },
 
@@ -885,13 +898,23 @@ const getAllOrganizations = async (req, res) => {
       //     as: "subscription",
       //   },
       // },
-      {
-        $addFields: {
-          subscription: { $arrayElemAt: ["$subscription", -1] },
-        },
-      },
 
       // SUBSCRIPTION PLAN
+      // {
+      //   $lookup: {
+      //     from: "subscriptionplans",
+      //     localField: "subscription.subscriptionPlanId",
+      //     foreignField: "_id",
+      //     as: "subscriptionPlan",
+      //   },
+      // },
+      // {
+      //   $unwind: {
+      //     path: "$subscriptionPlan",
+      //     preserveNullAndEmptyArrays: true,
+      //   },
+      // },
+
       {
         $lookup: {
           from: "subscriptionplans",
@@ -901,9 +924,8 @@ const getAllOrganizations = async (req, res) => {
         },
       },
       {
-        $unwind: {
-          path: "$subscriptionPlan",
-          preserveNullAndEmptyArrays: true,
+        $addFields: {
+          planName: { $arrayElemAt: ["$subscriptionPlan.name", 0] },
         },
       },
 
@@ -992,7 +1014,7 @@ const getAllOrganizations = async (req, res) => {
         ? [
             {
               $match: {
-                "subscriptionPlan.name": { $in: plan.split(",") },
+                planName: { $in: plan.split(",") },
               },
             },
           ]
@@ -1026,8 +1048,10 @@ const getAllOrganizations = async (req, res) => {
           usersCount: 1,
           activeUsersCount: 1,
           isFreelancer: 1,
-          subscription: 1,
-          subscriptionPlan: 1,
+          planName: 1,
+
+          // subscription: 1,
+          // subscriptionPlan: 1,
           contact: 1,
         },
       },
