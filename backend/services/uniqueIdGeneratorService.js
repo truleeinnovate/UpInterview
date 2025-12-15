@@ -438,22 +438,29 @@ async function getMaxExistingNumber(
   };
   if (tenantId) query.tenantId = tenantId;
 
-  const sortQuery = { [fieldName]: -1 };
-  const lastDoc = await Model.findOne(query)
-    .sort(sortQuery)
-    .select(fieldName)
-    .lean();
+  const docs = await Model.find(query).select(fieldName).lean();
 
-  if (lastDoc?.[fieldName]) {
-    const regex = new RegExp(`${prefix}-(\\d+)`);
-    const match = lastDoc[fieldName].match(regex);
+  if (!docs || !docs.length) {
+    return (startNumber ?? 1) - 1;
+  }
+
+  const regex = new RegExp(`${prefix}-(\\d+)`);
+  let maxNumber = (startNumber ?? 1) - 1;
+
+  for (const doc of docs) {
+    const code = doc?.[fieldName];
+    if (!code || typeof code !== "string") continue;
+
+    const match = code.match(regex);
     if (match) {
-      const lastNumber = parseInt(match[1], 10) || 0;
-      return Math.max(lastNumber, (startNumber ?? 1) - 1);
+      const num = parseInt(match[1], 10) || 0;
+      if (num > maxNumber) {
+        maxNumber = num;
+      }
     }
   }
 
-  return (startNumber ?? 1) - 1;
+  return maxNumber;
 }
 
 module.exports = {

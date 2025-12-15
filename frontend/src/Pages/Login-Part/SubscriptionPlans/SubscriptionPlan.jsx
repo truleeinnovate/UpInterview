@@ -82,6 +82,7 @@ const SubscriptionPlan = () => {
   const [isAnnual, setIsAnnual] = useState(false);
   const [hoveredPlan, setHoveredPlan] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingPlanId, setSubmittingPlanId] = useState(null);
 
   // 1. Log lifecycle/auth token changes
   // useEffect(() => {
@@ -171,6 +172,7 @@ const SubscriptionPlan = () => {
     // console.log("payload ----", payload);
     try {
       setIsSubmitting(true);
+      setSubmittingPlanId(plan.planId);
       const subscriptionResponse = await createCustomerSubscription(payload);
 
       // console.log(
@@ -213,6 +215,7 @@ const SubscriptionPlan = () => {
       console.error("Error submitting subscription:", error);
     } finally {
       setIsSubmitting(false);
+      setSubmittingPlanId(null);
     }
   };
 
@@ -697,14 +700,6 @@ const SubscriptionPlan = () => {
                           ? handleContactSales
                           : () => !isEnterprise && submitPlans(plan)
                       }
-                      isLoading={
-                        subscriptionData.subscriptionPlanId === plan.planId &&
-                        isSubmitting
-                      }
-                      loadingText={
-                        subscriptionData.subscriptionPlanId === plan.planId &&
-                        "Processing..."
-                      }
                       className={`w-full font-semibold py-2.5 mt-auto rounded-lg text-sm
                 ${
                   isHighlighted(plan)
@@ -722,8 +717,7 @@ const SubscriptionPlan = () => {
                         subscriptionData.status === "active"
                       }
                     >
-                      {subscriptionData.subscriptionPlanId === plan.planId &&
-                      isSubmitting ? (
+                      {submittingPlanId === plan.planId && isSubmitting ? (
                         <span className="flex items-center justify-center">
                           <svg
                             className="animate-spin h-5 w-5 mr-2"

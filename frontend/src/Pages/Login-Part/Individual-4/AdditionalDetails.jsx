@@ -330,9 +330,9 @@ const AdditionalDetails = ({
             options={[
               ...Array.from({ length: 15 }, (_, i) => ({
                 value: (i + 1).toString(),
-                label: `${i + 1} year${i + 1 > 1 ? "s" : ""}`,
+                label: `${i + 1} Year${i + 1 > 1 ? "s" : ""}`,
               })),
-              { value: "15+", label: "15+ years" },
+              { value: "15+", label: "15+ Years" },
             ]}
             placeholder="Select Years of Experience"
           />
