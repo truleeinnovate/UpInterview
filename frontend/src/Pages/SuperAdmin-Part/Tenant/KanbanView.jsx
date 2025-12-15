@@ -1,9 +1,7 @@
 // v1.0.0 - Ashok - fixed style issues
 
 import { motion } from "framer-motion";
-
-const capitalizeFirstLetter = (str) =>
-  str?.charAt(0)?.toUpperCase() + str?.slice(1);
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const KanbanView = ({
   data = [],
@@ -67,7 +65,7 @@ const KanbanView = ({
                       )}
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-custom-blue truncate">
+                        <h4 className="text-sm font-bold text-custom-blue truncate max-w-[140px]">
                           {capitalizeFirstLetter(item?.title) +
                             " " +
                             capitalizeFirstLetter(item?.subtitle) || "N/A"}
