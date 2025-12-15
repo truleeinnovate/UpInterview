@@ -468,6 +468,9 @@ const createSubscriptionControllers = async (req, res) => {
         await existingInvoice.save();
       }
 
+      // Safely derive invoiceId (may be null if no existing invoice was found)
+      const updatedInvoiceId = existingInvoice ? existingInvoice._id : null;
+
       // Add log data for subscription update
       res.locals.logData = {
         tenantId: userDetails?.tenantId || "",
@@ -478,7 +481,7 @@ const createSubscriptionControllers = async (req, res) => {
         message: "Subscription updated successfully",
         responseBody: {
           subscription: existingSubscription,
-          invoiceId: existingInvoice?._id,
+          invoiceId: updatedInvoiceId,
         },
         changes: subscriptionChanges,
       };
@@ -486,7 +489,7 @@ const createSubscriptionControllers = async (req, res) => {
       return res.status(200).json({
         message: "Subscription and invoice successfully updated.",
         subscription: existingSubscription,
-        invoiceId: existingInvoice._id,
+        invoiceId: updatedInvoiceId,
       });
     }
 
