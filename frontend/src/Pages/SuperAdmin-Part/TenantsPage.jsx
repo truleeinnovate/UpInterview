@@ -417,9 +417,7 @@ function TenantsPage() {
       key: "plan",
       header: "Plan",
       render: (value, row) => (
-        <span>
-          {row?.subscriptionPlan?.name ? row.subscriptionPlan.name : "N/A"}
-        </span>
+        <span>{row?.planName ? row?.planName : "N/A"}</span>
       ),
     },
 
@@ -432,11 +430,11 @@ function TenantsPage() {
         </div>
       ),
     },
-    {
-      key: "activeJobs",
-      header: "Active Jobs",
-      render: (value) => value || "0",
-    },
+    // {
+    //   key: "activeJobs",
+    //   header: "Active Jobs",
+    //   render: (value) => value || "0",
+    // },
     {
       key: "activeUsersCount",
       header: "Active Candidates",
@@ -557,9 +555,7 @@ function TenantsPage() {
       key: "plan",
       header: "Plan",
       render: (value, row) => (
-        <span>
-          {row?.subscriptionPlan?.name ? row.subscriptionPlan.name : "N/A"}
-        </span>
+        <span>{row?.planName ? row?.planName : "N/A"}</span>
       ),
     },
 
@@ -570,11 +566,11 @@ function TenantsPage() {
         return row.usersCount || 0;
       },
     },
-    {
-      key: "activeJobs",
-      header: "Active Jobs",
-      render: (value) => value || "0",
-    },
+    // {
+    //   key: "activeJobs",
+    //   header: "Active Jobs",
+    //   render: (value) => value || "0",
+    // },
     {
       key: "activeUsersCount",
       header: "Active Candidates",
