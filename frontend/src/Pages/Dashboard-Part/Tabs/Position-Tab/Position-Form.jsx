@@ -126,6 +126,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
   // v1.0.1 ---------------------------------------------------------------------->
 
+  const hasInitializedFormRef = useRef(false);
+
   const [formData, setFormData] = useState({
     title: "",
     companyName: "",
@@ -216,28 +218,29 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       return;
     }
 
-    setIsEdit(true);
-    
     const companyName = selectedPosition?.companyname || "";
 
-      // Check if the company name exists in the companies list
-      // Guard: wait until companies are loaded before deciding custom mode
-      if (companyName && Array.isArray(companies) && companies.length > 0) {
-        const companyExists = companies.some(
-          (company) => company.CompanyName === companyName
-        );
-        if (!companyExists) {
-          setIsCustomCompany(true);
-        } else {
-          setIsCustomCompany(false);
-        }
-      } else if (
-        companyName &&
-        (!Array.isArray(companies) || companies.length === 0)
-      ) {
-        // Defer decision; will re-run when companies update
+    if (companyName && Array.isArray(companies) && companies.length > 0) {
+      const companyExists = companies.some(
+        (company) => company.CompanyName === companyName
+      );
+      if (!companyExists) {
         setIsCustomCompany(true);
+      } else {
+        setIsCustomCompany(false);
       }
+    } else if (
+      companyName &&
+      (!Array.isArray(companies) || companies.length === 0)
+    ) {
+      setIsCustomCompany(true);
+    }
+
+    if (hasInitializedFormRef.current) {
+      return;
+    }
+
+    setIsEdit(true);
 
     setFormData({
       title: selectedPosition?.title || "",
@@ -253,19 +256,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       externalId: selectedPosition?.externalId || "",
       template: selectedTemplate || {},
       status: selectedPosition?.status || "",
-      // rounds: selectedPosition?.rounds || [],
-      // rounds: selectedPosition?.rounds?.map((round) => ({
-      //   ...round,
-      //   _id: round._id || "",
-      // })) || [],
-      // template: matchingTemplate
-      //   ? {
-      //     ...matchingTemplate
-      //   }
-      //   : {},
     });
-
-     
 
     const formattedSkills =
       selectedPosition?.skills?.map((skill) => ({
@@ -276,10 +267,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       })) || [];
 
     setEntries(formattedSkills);
-    // setAllSelectedSkills(formattedSkills)
     setAllSelectedSkills(
       selectedPosition?.skills?.map((skill) => skill.skill) || []
     );
+
+    hasInitializedFormRef.current = true;
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, selectedPosition, companies, selectedTemplate]);

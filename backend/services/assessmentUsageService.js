@@ -7,6 +7,22 @@ const {
 const ScheduleAssessment = require("../models/Assessment/assessmentsSchema");
 const Assessment = require("../models/Assessment/assessmentTemplates");
 
+async function findLatestUsageForTenant(tenantId) {
+  const allUsages = await Usage.find({ tenantId });
+  if (!allUsages || allUsages.length === 0) {
+    return null;
+  }
+
+  let latest = allUsages[0];
+  for (let i = 1; i < allUsages.length; i++) {
+    if (allUsages[i].toDate > latest.toDate) {
+      latest = allUsages[i];
+    }
+  }
+
+  return latest;
+}
+
 /**
  * Updates usage count for assessments
  * @param {string} tenantId - Tenant ID
@@ -40,7 +56,7 @@ async function updateAssessmentUsage(
 
     // If no current period, find the latest one
     if (!usage) {
-      usage = await Usage.findOne({ tenantId }).sort({ toDate: -1 });
+      usage = await findLatestUsageForTenant(tenantId);
     }
 
     if (!usage) {
@@ -255,7 +271,7 @@ async function recalculateAssessmentUsage(tenantId) {
 
     // If no current period, find the latest one
     if (!usage) {
-      usage = await Usage.findOne({ tenantId }).sort({ toDate: -1 });
+      usage = await findLatestUsageForTenant(tenantId);
     }
 
     if (!usage) {
@@ -327,7 +343,7 @@ async function getAssessmentUsageStats(tenantId, ownerId) {
 
     // If no current period, find the latest one
     if (!usage) {
-      usage = await Usage.findOne({ tenantId }).sort({ toDate: -1 });
+      usage = await findLatestUsageForTenant(tenantId);
     }
 
     if (!usage) {
@@ -396,7 +412,7 @@ async function checkAssessmentUsageLimit(tenantId) {
       toDate: { $gte: now },
     });
     if (!usage) {
-      usage = await Usage.findOne({ tenantId }).sort({ toDate: -1 });
+      usage = await findLatestUsageForTenant(tenantId);
     }
     if (!usage) {
       return {
