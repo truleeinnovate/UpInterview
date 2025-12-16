@@ -59,11 +59,10 @@ function JoinAsModal({ interview, onClose, onJoin }) {
             <button
               type="button"
               onClick={() => setRole('interviewer')}
-              className={`p-4 rounded-lg border-2 transition ${
-                role === 'interviewer'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
+              className={`p-4 rounded-lg border-2 transition ${role === 'interviewer'
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-300 hover:border-gray-400'
+                }`}
             >
               <div className="flex flex-col items-center">
                 <Users className={`w-6 h-6 mb-2 ${role === 'interviewer' ? 'text-blue-600' : 'text-gray-600'}`} />
@@ -76,11 +75,10 @@ function JoinAsModal({ interview, onClose, onJoin }) {
             <button
               type="button"
               onClick={() => setRole('candidate')}
-              className={`p-4 rounded-lg border-2 transition ${
-                role === 'candidate'
-                  ? 'border-green-500 bg-green-50'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
+              className={`p-4 rounded-lg border-2 transition ${role === 'candidate'
+                ? 'border-green-500 bg-green-50'
+                : 'border-gray-300 hover:border-gray-400'
+                }`}
             >
               <div className="flex flex-col items-center">
                 <Video className={`w-6 h-6 mb-2 ${role === 'candidate' ? 'text-green-600' : 'text-gray-600'}`} />
@@ -190,11 +188,12 @@ export default function Dashboard() {
       <nav className="border-b bg-white shadow-sm" style={{ borderColor: 'rgb(33, 121, 137, 0.2)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgb(33, 121, 137)' }}>
-                <Video className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-800">Interview Platform</h1>
+            <div className="flex items-center">
+              <img
+                src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp"
+                alt="UpInterview Logo"
+                className="w-24"
+              />
             </div>
 
             <div className="flex items-center space-x-4">

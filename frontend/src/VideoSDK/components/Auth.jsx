@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Video } from 'lucide-react';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -35,14 +34,12 @@ export default function Auth() {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="flex items-center justify-center mb-8">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgb(33, 121, 137)' }}>
-              <Video className="w-8 h-8 text-white" />
-            </div>
+            <img
+              src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp"
+              alt="UpInterview Logo"
+              className="w-32"
+            />
           </div>
-
-          <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">
-            Interview Platform
-          </h2>
           <p className="text-center text-gray-600 mb-8">
             {isLogin ? 'Sign in to your account' : 'Create a new account'}
           </p>

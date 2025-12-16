@@ -51,21 +51,14 @@ export function TranscriptViewer({ transcripts, interimTranscript, isTranscribin
           <span className="px-2 py-0.5 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
             {transcripts.length} messages
           </span>
-          {isTranscribing && (
-            <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-red-700 bg-red-100 rounded-full">
-              <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-              Recording
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={onToggleTranscription}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-              isTranscribing
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isTranscribing
                 ? 'text-red-600 bg-red-50 hover:bg-red-100'
                 : 'text-green-600 bg-green-50 hover:bg-green-100'
-            }`}
+              }`}
           >
             {isTranscribing ? (
               <>
@@ -112,11 +105,10 @@ export function TranscriptViewer({ transcripts, interimTranscript, isTranscribin
 
         {transcripts.map((transcript, index) => (
           <div key={transcript.id || index} className="flex gap-3 animate-fadeIn">
-            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-              transcript.speaker_role === 'interviewer'
+            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${transcript.speaker_role === 'interviewer'
                 ? 'bg-blue-100 text-blue-600'
                 : 'bg-green-100 text-green-600'
-            }`}>
+              }`}>
               {transcript.speaker_role === 'interviewer' ? (
                 <Briefcase className="w-4 h-4" />
               ) : (
@@ -125,9 +117,8 @@ export function TranscriptViewer({ transcripts, interimTranscript, isTranscribin
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2 mb-1">
-                <span className={`font-medium text-sm ${
-                  transcript.speaker_role === 'interviewer' ? 'text-blue-900' : 'text-green-900'
-                }`}>
+                <span className={`font-medium text-sm ${transcript.speaker_role === 'interviewer' ? 'text-blue-900' : 'text-green-900'
+                  }`}>
                   {transcript.speaker_name}
                 </span>
                 <span className="text-xs text-gray-400">
@@ -148,11 +139,10 @@ export function TranscriptViewer({ transcripts, interimTranscript, isTranscribin
 
         {interimTranscript && (
           <div className="flex gap-3 opacity-60">
-            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-              interimTranscript.speaker_role === 'interviewer'
+            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${interimTranscript.speaker_role === 'interviewer'
                 ? 'bg-blue-100 text-blue-600'
                 : 'bg-green-100 text-green-600'
-            }`}>
+              }`}>
               {interimTranscript.speaker_role === 'interviewer' ? (
                 <Briefcase className="w-4 h-4" />
               ) : (
@@ -161,9 +151,8 @@ export function TranscriptViewer({ transcripts, interimTranscript, isTranscribin
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2 mb-1">
-                <span className={`font-medium text-sm ${
-                  interimTranscript.speaker_role === 'interviewer' ? 'text-blue-900' : 'text-green-900'
-                }`}>
+                <span className={`font-medium text-sm ${interimTranscript.speaker_role === 'interviewer' ? 'text-blue-900' : 'text-green-900'
+                  }`}>
                   {interimTranscript.speaker_name}
                 </span>
                 <span className="text-xs text-gray-400">Speaking...</span>

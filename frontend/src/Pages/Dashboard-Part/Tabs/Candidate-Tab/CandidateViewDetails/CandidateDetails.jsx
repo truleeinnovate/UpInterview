@@ -31,6 +31,8 @@ import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock"
 // v1.0.2 ------------------------------------------------------------------------->
 // v1.0.4 <-------------------------------------------------------------------------
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import Cookies from "js-cookie";
 // v1.0.4 ------------------------------------------------------------------------->
 Modal.setAppElement("#root");
 
@@ -51,6 +53,10 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
       setCandidate(fetchedCandidate);
     }
   }, [id, fetchedCandidate]);
+
+  // Get user token information and check organization field
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const isOrganization = tokenPayload?.organization === true;
 
   const content = (
     <div>
@@ -73,7 +79,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                   // v1.0.5 <--------------------------------------------------------------------------------------------
                   // className="sm:w-20 sm:h-20 w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                   className="sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-24 xl:h-24 2xl:w-24 2xl:h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                  // v1.0.5 -------------------------------------------------------------------------------------------->
+                // v1.0.5 -------------------------------------------------------------------------------------------->
                 />
               ) : (
                 // v1.0.4 <-----------------------------------------------------------------------------------------------------------------------------------
@@ -109,11 +115,11 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                 {/* v1.0.5 ---------------------------------------------------------------------> */}
                 {candidate?.FirstName
                   ? candidate.FirstName.charAt(0).toUpperCase() +
-                    candidate.FirstName.slice(1)
+                  candidate.FirstName.slice(1)
                   : ""}{" "}
                 {candidate?.LastName
                   ? candidate.LastName.charAt(0).toUpperCase() +
-                    candidate.LastName.slice(1)
+                  candidate.LastName.slice(1)
                   : ""}
               </h3>
 
@@ -148,11 +154,11 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                         >
                           {candidate?.FirstName
                             ? candidate.FirstName.charAt(0).toUpperCase() +
-                              candidate.FirstName.slice(1)
+                            candidate.FirstName.slice(1)
                             : "N/A"}{" "}
                           {candidate?.LastName
                             ? candidate.LastName.charAt(0).toUpperCase() +
-                              candidate.LastName.slice(1)
+                            candidate.LastName.slice(1)
                             : "N/A"}
                         </p>
                       </div>
@@ -425,7 +431,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
             )}
 
             {/* External ID Field - Only show for organization users */}
-            {candidate?.externalId && (
+            {candidate?.externalId && isOrganization && (
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">
                   External ID

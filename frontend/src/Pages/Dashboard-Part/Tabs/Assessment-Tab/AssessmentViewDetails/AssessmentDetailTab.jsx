@@ -5,6 +5,7 @@
 
 import { format } from "date-fns";
 import { usePositions } from "../../../../../apiHooks/usePositions";
+import Cookies from "js-cookie";
 import {
   BriefcaseIcon,
   CalendarDaysIcon,
@@ -17,6 +18,7 @@ import {
   Star,
   IdCard,
 } from "lucide-react";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 
 function DetailsTab({ assessment, assessmentQuestions }) {
   const { positionData } = usePositions();
@@ -33,17 +35,21 @@ function DetailsTab({ assessment, assessmentQuestions }) {
   const isEachSection = assessment.passScoreBy === "Each Section";
   const scoringData = isEachSection
     ? assessmentQuestions.sections?.map((section, idx) => ({
-        sectionName: `Section ${idx + 1}: ${section.sectionName}`,
-        totalScore: section.totalScore || "-",
-        passScore: section.passScore || "-",
-      })) || []
+      sectionName: `Section ${idx + 1}: ${section.sectionName}`,
+      totalScore: section.totalScore || "-",
+      passScore: section.passScore || "-",
+    })) || []
     : [
-        {
-          sectionName: "Overall",
-          totalScore: assessment.totalScore || "-",
-          passScore: assessment.passScore || "-",
-        },
-      ];
+      {
+        sectionName: "Overall",
+        totalScore: assessment.totalScore || "-",
+        passScore: assessment.passScore || "-",
+      },
+    ];
+
+  // Get user token information and check organization field
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const isOrganization = tokenPayload?.organization === true;
 
   return (
     // v1.0.2 <-------------------------------------------------------------------------------
@@ -254,7 +260,7 @@ function DetailsTab({ assessment, assessmentQuestions }) {
                   <p className="text-gray-700">
                     {matchedPosition?.title
                       ? matchedPosition.title.charAt(0).toUpperCase() +
-                        matchedPosition.title.slice(1)
+                      matchedPosition.title.slice(1)
                       : "-"}
                   </p>
                 </div>
@@ -306,11 +312,10 @@ function DetailsTab({ assessment, assessmentQuestions }) {
               {scoringData.map((score, idx) => (
                 <div
                   key={idx}
-                  className={`${
-                    isEachSection
+                  className={`${isEachSection
                       ? "pb-4 mb-4 border-b border-gray-100 last:border-0 last:mb-0 last:pb-0"
                       : ""
-                  }`}
+                    }`}
                 >
                   <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     {score.sectionName}
@@ -412,7 +417,7 @@ function DetailsTab({ assessment, assessmentQuestions }) {
             </div>
 
             {/* External ID Field - Only show for organization users */}
-            {assessment?.externalId && (
+            {assessment?.externalId && isOrganization && (
               <div>
                 <div className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                   <div className="p-2 bg-custom-bg rounded-lg">
