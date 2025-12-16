@@ -217,11 +217,12 @@ export default function JoinInterview() {
       <nav className="border-b bg-white shadow-sm" style={{ borderColor: 'rgb(33, 121, 137, 0.2)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgb(33, 121, 137)' }}>
-                <Video className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-800">Interview Platform</h1>
+            <div className="flex items-center">
+              <img
+                src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp"
+                alt="UpInterview Logo"
+                className="w-24"
+              />
             </div>
           </div>
         </div>

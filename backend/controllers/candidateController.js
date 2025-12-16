@@ -17,21 +17,28 @@ const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
 
 // Add a new Candidate
 const addCandidatePostCall = async (req, res) => {
+  console.log("🚀 [addCandidatePostCall] Starting candidate creation process");
+  
   // Mark that logging will be handled by the controller
   res.locals.loggedByController = true;
   res.locals.processName = "Create Candidate";
   let newCandidate = null;
 
   try {
+    console.log("📝 [addCandidatePostCall] Validating request body:", req.body);
+    
     // Joi validation
     const { isValid, errors } = validateCandidateData(req.body);
     if (!isValid) {
+      console.log("❌ [addCandidatePostCall] Validation failed:", errors);
       return res.status(400).json({
         status: "error",
         message: "Validation failed",
         errors,
       });
     }
+    
+    console.log("✅ [addCandidatePostCall] Validation passed");
 
     const {
       FirstName,
@@ -53,15 +60,20 @@ const addCandidatePostCall = async (req, res) => {
     } = req.body;
 
     // Get ownerId and tenantId from request body
+    console.log("🔍 [addCandidatePostCall] Extracting ownerId and tenantId");
     const ownerId = req.body.ownerId;
     const tenantId = req.body.tenantId;
+    console.log("📋 [addCandidatePostCall] OwnerId:", ownerId, "TenantId:", tenantId);
 
     if (!ownerId) {
+      console.log("❌ [addCandidatePostCall] Missing ownerId");
       return res.status(400).json({
         error: "OwnerId field is required in the request body",
         context: "Missing owner identification",
       });
     }
+    
+    console.log("✅ [addCandidatePostCall] Owner validation passed");
 
     //res.locals.loggedByController = true;
     //<-----v1.0.1---
@@ -98,6 +110,8 @@ const addCandidatePostCall = async (req, res) => {
 
     await newCandidate.save();
 
+    console.log('✅ [addCandidatePostCall] Candidate saved successfully');
+
     // Generate feed
     res.locals.feedData = {
       tenantId,
@@ -114,6 +128,8 @@ const addCandidatePostCall = async (req, res) => {
       message: `Candidate was created successfully`,
     };
 
+    console.log("✅ [addCandidatePostCall] Feed generated successfully");
+
     // Generate logs
     res.locals.logData = {
       tenantId,
@@ -125,12 +141,16 @@ const addCandidatePostCall = async (req, res) => {
       responseBody: newCandidate,
     };
 
+    console.log("✅ [addCandidatePostCall] Log generated successfully");
+
     // Send response
     res.status(201).json({
       status: "success",
       message: "Candidate created successfully",
       data: newCandidate,
     });
+
+    console.log("✅ [addCandidatePostCall] Response sent successfully");
   } catch (error) {
     // Generate logs for the error
     res.locals.logData = {
@@ -142,12 +162,16 @@ const addCandidatePostCall = async (req, res) => {
       status: "error",
     };
 
+    console.log("❌ [addCandidatePostCall] Error generated successfully");
+
     // Send error response
     res.status(500).json({
       status: "error",
       message: "Failed to create candidate. Please try again later.",
       data: { error: error.message },
     });
+
+    console.log("❌ [addCandidatePostCall] Error response sent successfully");
   }
 };
 

@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { MeetingProvider, useMeeting, useParticipant } from '@videosdk.live/react-sdk';
 import { supabase } from '../lib/supabase';
 import VideoSDKSetup from './VideoSDKSetup';
 import { getProctoringService } from '../lib/proctoring';
-import { AlertCircle } from 'lucide-react';
 import { getTranscriptionService } from '../lib/transcription';
 import { ProctoringAlerts, ProctoringPanel } from './ProctoringAlerts';
 import { TranscriptViewer } from './TranscriptViewer';
@@ -20,9 +19,7 @@ import {
   FileText,
   UserCircle,
   ClipboardList,
-  Circle,
   StickyNote,
-  Briefcase,
   Shield,
 } from 'lucide-react';
 import { config } from '../../config';
@@ -34,20 +31,7 @@ function ParticipantView({ participantId, isScreenShare = false, onVideoReady })
   const screenTrackRef = useRef(null);
   const webcamTrackRef = useRef(null);
 
-  // Debug: Log participant info
-  useEffect(() => {
-    console.log('ParticipantView rendered:', {
-      participantId,
-      isLocal,
-      displayName,
-      hasWebcamStream: !!webcamStream,
-      hasMicStream: !!micStream,
-      webcamOn,
-      micOn,
-      hasOnVideoReady: !!onVideoReady
-    });
-  }, [participantId, isLocal, displayName, webcamStream, micStream, webcamOn, micOn, onVideoReady]);
-
+  
   useEffect(() => {
     if (isScreenShare && screenShareStream && screenRef.current) {
       const track = screenShareStream.track;
@@ -67,7 +51,7 @@ function ParticipantView({ participantId, isScreenShare = false, onVideoReady })
       const videoTrack = webcamStream.track;
       if (videoTrack && videoTrack !== webcamTrackRef.current) {
         webcamTrackRef.current = videoTrack;
-        
+
         // Create media stream with both video and audio tracks
         const tracks = [videoTrack];
         if (micStream && micStream.track) {
@@ -76,7 +60,7 @@ function ParticipantView({ participantId, isScreenShare = false, onVideoReady })
         } else {
           console.log('No audio track available for:', displayName);
         }
-        
+
         const mediaStream = new MediaStream(tracks);
         console.log('MediaStream created with', tracks.length, 'tracks for:', displayName);
         videoRef.current.srcObject = mediaStream;
@@ -103,7 +87,7 @@ function ParticipantView({ participantId, isScreenShare = false, onVideoReady })
       videoRef.current.srcObject = null;
       webcamTrackRef.current = null;
     }
-  }, [webcamStream, micStream, isScreenShare, isLocal, onVideoReady]);
+  }, [webcamStream, micStream, isScreenShare, isLocal, onVideoReady, displayName]);
 
   const hasScreenShare = screenShareOn;
 
@@ -186,9 +170,8 @@ function MeetingControls() {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => toggleMic()}
-            className={`p-3 rounded-full transition ${
-              localMicOn ? 'bg-gray-100 hover:bg-gray-200' : 'bg-red-500 hover:bg-red-600'
-            }`}
+            className={`p-3 rounded-full transition ${localMicOn ? 'bg-gray-100 hover:bg-gray-200' : 'bg-red-500 hover:bg-red-600'
+              }`}
           >
             {localMicOn ? (
               <Mic className="w-5 h-5 text-gray-700" />
@@ -199,9 +182,8 @@ function MeetingControls() {
 
           <button
             onClick={() => toggleWebcam()}
-            className={`p-3 rounded-full transition ${
-              localWebcamOn ? 'bg-gray-100 hover:bg-gray-200' : 'bg-red-500 hover:bg-red-600'
-            }`}
+            className={`p-3 rounded-full transition ${localWebcamOn ? 'bg-gray-100 hover:bg-gray-200' : 'bg-red-500 hover:bg-red-600'
+              }`}
           >
             {localWebcamOn ? (
               <Video className="w-5 h-5 text-gray-700" />
@@ -212,11 +194,10 @@ function MeetingControls() {
 
           <button
             onClick={() => toggleScreenShare()}
-            className={`p-3 rounded-full transition ${
-              localScreenShareOn
+            className={`p-3 rounded-full transition ${localScreenShareOn
                 ? 'text-white'
                 : 'bg-gray-100 hover:bg-gray-200'
-            }`}
+              }`}
             style={localScreenShareOn ? { backgroundColor: 'rgb(33, 121, 137)' } : {}}
           >
             {localScreenShareOn ? (
@@ -274,7 +255,7 @@ function CandidateProfile({ interview }) {
       </div>
       <div>
         <h4 className="font-semibold mb-2">Resume</h4>
-        <a href="#" className="text-blue-600 hover:underline text-sm">View Resume (PDF)</a>
+        <button className="text-blue-600 hover:underline text-sm text-left">View Resume (PDF)</button>
       </div>
       <div>
         <h4 className="font-semibold mb-2">Identity Verification</h4>
@@ -314,11 +295,10 @@ function QuestionBank({ interview }) {
         <div key={q.id} className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer">
           <div className="flex items-start justify-between mb-2">
             <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded">{q.category}</span>
-            <span className={`text-xs font-medium px-2 py-1 rounded ${
-              q.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
-              q.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-              'bg-red-100 text-red-700'
-            }`}>{q.difficulty}</span>
+            <span className={`text-xs font-medium px-2 py-1 rounded ${q.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
+                q.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                  'bg-red-100 text-red-700'
+              }`}>{q.difficulty}</span>
           </div>
           <p className="text-sm text-gray-800">{q.text}</p>
         </div>
@@ -342,7 +322,7 @@ function FeedbackForm({ interview }) {
         <label className="block text-sm font-medium mb-2">Technical Skills</label>
         <textarea
           value={feedback.technical}
-          onChange={(e) => setFeedback({...feedback, technical: e.target.value})}
+          onChange={(e) => setFeedback({ ...feedback, technical: e.target.value })}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           rows="3"
           placeholder="Evaluate candidate's technical knowledge..."
@@ -352,7 +332,7 @@ function FeedbackForm({ interview }) {
         <label className="block text-sm font-medium mb-2">Communication Skills</label>
         <textarea
           value={feedback.communication}
-          onChange={(e) => setFeedback({...feedback, communication: e.target.value})}
+          onChange={(e) => setFeedback({ ...feedback, communication: e.target.value })}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           rows="3"
           placeholder="Assess communication and clarity..."
@@ -362,7 +342,7 @@ function FeedbackForm({ interview }) {
         <label className="block text-sm font-medium mb-2">Problem Solving</label>
         <textarea
           value={feedback.problemSolving}
-          onChange={(e) => setFeedback({...feedback, problemSolving: e.target.value})}
+          onChange={(e) => setFeedback({ ...feedback, problemSolving: e.target.value })}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           rows="3"
           placeholder="Evaluate problem-solving approach..."
@@ -372,7 +352,7 @@ function FeedbackForm({ interview }) {
         <label className="block text-sm font-medium mb-2">Overall Feedback</label>
         <textarea
           value={feedback.overall}
-          onChange={(e) => setFeedback({...feedback, overall: e.target.value})}
+          onChange={(e) => setFeedback({ ...feedback, overall: e.target.value })}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           rows="4"
           placeholder="Provide overall assessment..."
@@ -382,7 +362,7 @@ function FeedbackForm({ interview }) {
         <label className="block text-sm font-medium mb-2">Recommendation</label>
         <select
           value={feedback.recommendation}
-          onChange={(e) => setFeedback({...feedback, recommendation: e.target.value})}
+          onChange={(e) => setFeedback({ ...feedback, recommendation: e.target.value })}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="pending">Pending</option>
@@ -418,9 +398,15 @@ function NotesPanel({ interview }) {
 }
 
 function ChatPanel() {
-  const { localParticipant } = useMeeting();
+  const { localParticipant, participants } = useMeeting();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+
+  // Listen for incoming messages from other participants
+  useEffect(() => {
+    // This would be enhanced with VideoSDK pub/sub for real messaging
+    // For now, we'll simulate receiving messages
+  }, []);
 
   const sendMessage = () => {
     if (newMessage.trim() && localParticipant) {
@@ -430,68 +416,89 @@ function ChatPanel() {
         senderName: localParticipant.displayName,
         text: newMessage.trim(),
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isLocal: true
+        timestamp: Date.now()
       };
-      
+
       setMessages(prev => [...prev, message]);
       setNewMessage('');
-      
-      // Here you would also send the message through VideoSDK pub/sub
-      // For now, we'll just add it locally
+
+      // TODO: Send message through VideoSDK pub/sub to other participants
+      // For demo purposes, simulate receiving from another user after delay
+      if (newMessage.toLowerCase().includes('hello')) {
+        setTimeout(() => {
+          const otherMessage = {
+            id: Date.now() + 1,
+            senderId: 'other-user',
+            senderName: participants.size > 1 ? Array.from(participants.values())[0].displayName : 'Other User',
+            text: 'Hello! How are you doing?',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            timestamp: Date.now()
+          };
+          setMessages(prev => [...prev, otherMessage]);
+        }, 1000);
+      }
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.map((msg) => (
-          <div 
-            key={msg.id} 
-            className={`flex ${msg.isLocal ? 'justify-end' : 'justify-start'}`}
-          >
-            <div className={`max-w-xs lg:max-w-md ${
-              msg.isLocal 
-                ? 'bg-blue-600 text-white rounded-l-lg rounded-tr-lg' 
-                : 'bg-gray-100 text-gray-800 rounded-r-lg rounded-tl-lg'
-            } p-3 shadow-sm`}>
-              <div className="flex flex-col">
-                <span className={`text-xs font-medium mb-1 ${
-                  msg.isLocal ? 'text-blue-100' : 'text-gray-600'
-                }`}>
-                  {msg.isLocal ? 'You' : msg.senderName}
-                </span>
-                <p className="text-sm break-words">{msg.text}</p>
-                <span className={`text-xs mt-1 ${
-                  msg.isLocal ? 'text-blue-200' : 'text-gray-500'
-                }`}>
-                  {msg.time}
-                </span>
+        {messages.length === 0 ? (
+          <div className="text-center text-gray-500 py-8">
+            <MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+            <p className="text-sm">No messages yet. Start a conversation!</p>
+          </div>
+        ) : (
+          messages.map((msg) => {
+            const isLocalMessage = msg.senderId === localParticipant?.id;
+            return (
+              <div
+                key={msg.id}
+                className={`flex ${isLocalMessage ? 'justify-end' : 'justify-start'}`}
+              >
+                <div className={`max-w-xs lg:max-w-md ${isLocalMessage
+                    ? 'bg-blue-600 text-white rounded-l-lg rounded-tr-lg'
+                    : 'bg-gray-100 text-gray-800 rounded-r-lg rounded-tl-lg'
+                  } p-3 shadow-sm`}>
+                  <div className="flex flex-col">
+                    <span className={`text-xs font-medium mb-1 ${isLocalMessage ? 'text-blue-100' : 'text-gray-600'
+                      }`}>
+                      {isLocalMessage ? 'You' : msg.senderName}
+                    </span>
+                    <p className="text-sm break-words">{msg.text}</p>
+                    <span className={`text-xs mt-1 ${isLocalMessage ? 'text-blue-200' : 'text-gray-500'
+                      }`}>
+                      {msg.time}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
-        
-        {messages.length === 0 && (
-          <div className="text-center text-gray-500 text-sm py-8">
-            No messages yet. Start a conversation!
-          </div>
+            );
+          })
         )}
       </div>
       
-      <div className="p-4 border-t bg-white">
+      <div className="border-t border-gray-200 p-4">
         <div className="flex gap-2">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+            onKeyPress={handleKeyPress}
             placeholder="Type a message..."
-            className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <button
             onClick={sendMessage}
             disabled={!newMessage.trim()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             Send
           </button>
@@ -500,6 +507,7 @@ function ChatPanel() {
     </div>
   );
 }
+
 
 function ParticipantListItem({ participantId }) {
   const { micOn, webcamOn, displayName, isLocal } = useParticipant(participantId);
@@ -558,12 +566,12 @@ function PeoplePanel({ participants, interview }) {
         </div>
         <button
           onClick={generateInviteLink}
-          className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          className="px-3 py-1 text-sm bg-custom-blue text-white rounded-lg hover:bg-custom-blue transition"
         >
           Invite
         </button>
       </div>
-      
+
       {participantList.map((participantId) => (
         <ParticipantListItem key={participantId} participantId={participantId} />
       ))}
@@ -584,15 +592,13 @@ function PeoplePanel({ participants, interview }) {
               />
               <button
                 onClick={copyToClipboard}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+                className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue transition text-sm"
               >
                 {copied ? 'Copied!' : 'Copy'}
               </button>
-            </div>
-            <div className="flex justify-end">
               <button
                 onClick={() => setShowInviteModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition"
+                className="px-4 py-2 rounded-lg transition text-sm border rounded-lg"
               >
                 Close
               </button>
@@ -615,17 +621,30 @@ function MeetingView({ interview, onLeave, participantRole, participantName }) {
   const [interimTranscript, setInterimTranscript] = useState(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcriptionEnabled, setTranscriptionEnabled] = useState(false);
+  // const [connectionError, setConnectionError] = useState(''); // Connection error UI disabled
   const videoElementRef = useRef(null);
 
-  // Only enable proctoring for candidates
-  const proctoringEnabled = participantRole === 'candidate';
+  // Enable proctoring for all participants
+  const proctoringEnabled = true;
+
+  const [connectionRetries, setConnectionRetries] = useState(0);
+  const maxRetries = 3;
+  const retryDelay = 2000; // 2 seconds
 
   const { join, participants, localParticipant, presenterId: meetingPresenterId } = useMeeting({
     onMeetingJoined: () => {
       console.log('Meeting joined successfully');
+      // setConnectionError(''); // Connection error UI disabled
+      setConnectionRetries(0); // Reset retries on success
     },
     onParticipantJoined: (participant) => {
       console.log('Participant joined:', participant.displayName, 'Total participants:', participants.size + 1);
+      
+      // Limit participants to prevent performance issues
+      if (participants.size >= 10) {
+        console.warn('Maximum participant limit reached, new participant may cause performance issues');
+        // setConnectionError('Too many participants in meeting. Some participants may not be displayed correctly.'); // Connection error UI disabled
+      }
     },
     onParticipantLeft: (participant) => {
       console.log('Participant left:', participant.displayName);
@@ -645,10 +664,65 @@ function MeetingView({ interview, onLeave, participantRole, participantName }) {
       });
       setPresenterId(newPresenterId);
     },
+    onError: (error) => {
+      console.error('VideoSDK connection error:', error);
+      
+      // Handle insufficient resources error with retry logic
+      if (error.message?.includes('Insufficient resources') && connectionRetries < maxRetries) {
+        console.log(`Retrying connection (${connectionRetries + 1}/${maxRetries}) in ${retryDelay/1000} seconds...`);
+        setConnectionRetries(prev => prev + 1);
+        
+        setTimeout(() => {
+          join();
+        }, retryDelay * (connectionRetries + 1)); // Exponential backoff
+      } else {
+        // setConnectionError('Connection to video service failed. Please check your internet connection and try again.'); // Connection error UI disabled
+        console.error('Max retries reached or non-retryable error');
+      }
+    },
   });
 
+  // Initialize proctoring session
+  const initializeProctoring = useCallback(async () => {
+    try {
+      // First, end any active sessions for this interview
+      const { data: activeSessions } = await supabase
+        .from('proctoring_sessions')
+        .select('id')
+        .eq('interview_id', interview.id)
+        .is('ended_at', null);
+
+      if (activeSessions && activeSessions.length > 0) {
+        console.log(`Ending ${activeSessions.length} active session(s) before creating new one`);
+        await supabase
+          .from('proctoring_sessions')
+          .update({ ended_at: new Date().toISOString() })
+          .eq('interview_id', interview.id)
+          .is('ended_at', null);
+      }
+
+      // Create new proctoring session in database
+      const { data, error } = await supabase
+        .from('proctoring_sessions')
+        .insert([{
+          interview_id: interview.id,
+          started_at: new Date().toISOString(),
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      setSessionId(data.id);
+      console.log('Proctoring session created:', data.id);
+      return data.id;
+    } catch (error) {
+      console.error('Failed to create proctoring session:', error);
+      return null;
+    }
+  }, [interview.id]);
+
   // Initialize proctoring with video element
-  const handleVideoReady = async (videoElement) => {
+  const handleVideoReady = useCallback(async (videoElement) => {
     console.log('handleVideoReady called:', {
       proctoringEnabled,
       participantRole,
@@ -663,8 +737,6 @@ function MeetingView({ interview, onLeave, participantRole, participantName }) {
     }
 
     // Check if we have at least 2 participants (interviewer + candidate)
-    // Since proctoring is only enabled for candidates, if we're here and have 2+ participants,
-    // that means at least one other person (interviewer) has joined
     if (participants.size < 2) {
       console.log('Waiting for interviewer to join before starting proctoring. Current participants:', participants.size);
       return;
@@ -724,46 +796,7 @@ function MeetingView({ interview, onLeave, participantRole, participantName }) {
     } catch (error) {
       console.error('Failed to initialize proctoring:', error);
     }
-  };
-
-  // Initialize proctoring session
-  const initializeProctoring = async () => {
-    try {
-      // First, end any active sessions for this interview
-      const { data: activeSessions } = await supabase
-        .from('proctoring_sessions')
-        .select('id')
-        .eq('interview_id', interview.id)
-        .is('ended_at', null);
-
-      if (activeSessions && activeSessions.length > 0) {
-        console.log(`Ending ${activeSessions.length} active session(s) before creating new one`);
-        await supabase
-          .from('proctoring_sessions')
-          .update({ ended_at: new Date().toISOString() })
-          .eq('interview_id', interview.id)
-          .is('ended_at', null);
-      }
-
-      // Create new proctoring session in database
-      const { data, error } = await supabase
-        .from('proctoring_sessions')
-        .insert([{
-          interview_id: interview.id,
-          started_at: new Date().toISOString(),
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      setSessionId(data.id);
-      console.log('Proctoring session created:', data.id);
-      return data.id;
-    } catch (error) {
-      console.error('Failed to create proctoring session:', error);
-      return null;
-    }
-  };
+  }, [proctoringEnabled, participantRole, participants.size, interview.id, initializeProctoring]);
 
   // Cleanup proctoring
   const cleanupProctoring = async () => {
@@ -791,7 +824,7 @@ function MeetingView({ interview, onLeave, participantRole, participantName }) {
 
   useEffect(() => {
     join();
-  }, []);
+  }, []); // Empty dependency array to prevent infinite re-renders
 
   useEffect(() => {
     if (meetingPresenterId) {
@@ -835,7 +868,7 @@ function MeetingView({ interview, onLeave, participantRole, participantName }) {
     } else {
       console.log('Waiting for second participant to join');
     }
-  }, [participants.size, proctoringEnabled, participantRole]);
+  }, [participants.size, proctoringEnabled, participantRole, handleVideoReady]);
 
   // Initialize and manage transcription
   useEffect(() => {
@@ -893,7 +926,7 @@ function MeetingView({ interview, onLeave, participantRole, participantName }) {
         console.error('Failed to initialize transcription:', error);
       }
     }
-  }, [participants.size, interview.id, participantName, participantRole, transcriptionEnabled]);
+  }, [participants.size, interview.id, participantName, participantRole, transcriptionEnabled, isTranscribing]);
 
   // Load existing transcripts when joining
   useEffect(() => {
@@ -951,132 +984,120 @@ function MeetingView({ interview, onLeave, participantRole, participantName }) {
     }
   }, [proctoringEnabled]);
 
-  // For interviewers: Subscribe to real-time incidents from database
+  // Subscribe to real-time incidents from database for all participants
   useEffect(() => {
-    if (participantRole === 'interviewer') {
-      let currentSessionIdRef = null;
-      let pollInterval = null;
+    let currentSessionIdRef = null;
+    let pollInterval = null;
 
-      // Poll for active session and load incidents
-      const loadCurrentSession = async () => {
-        const { data: sessionData } = await supabase
-          .from('proctoring_sessions')
-          .select('id')
+    // Poll for active session and load incidents
+    const loadCurrentSession = async () => {
+      const { data: sessionData } = await supabase
+        .from('proctoring_sessions')
+        .select('id')
+        .eq('interview_id', interview.id)
+        .is('ended_at', null)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (sessionData && sessionData.id !== currentSessionIdRef) {
+        currentSessionIdRef = sessionData.id;
+        setSessionId(currentSessionIdRef);
+        console.log('Loading incidents for session:', currentSessionIdRef);
+
+        // Load all incidents for this interview
+        const { data } = await supabase
+          .from('proctoring_incidents')
+          .select('*')
           .eq('interview_id', interview.id)
-          .is('ended_at', null)
-          .order('started_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          .order('timestamp', { ascending: true });
 
-        if (sessionData && sessionData.id !== currentSessionIdRef) {
-          currentSessionIdRef = sessionData.id;
-          setSessionId(currentSessionIdRef);
-          console.log('Loading incidents for session:', currentSessionIdRef);
+        if (data) {
+          // Filter incidents that match current session ID
+          const sessionIncidents = data.filter(incident => {
+            const incidentSessionId = incident.metadata?.session_id;
+            
+            // Include incidents without session_id (legacy data) or those matching current session
+            return !incidentSessionId || incidentSessionId === currentSessionIdRef;
+          });
 
-          // Load all incidents for this interview
-          const { data } = await supabase
-            .from('proctoring_incidents')
-            .select('*')
-            .eq('interview_id', interview.id)
-            .order('timestamp', { ascending: true });
+          console.log(`Found ${sessionIncidents.length} incidents for current session (${currentSessionIdRef}) out of ${data.length} total`);
+          setProctoringIncidents(sessionIncidents);
+          // Update tab switch count from database
+          const tabSwitches = sessionIncidents.filter(i => i.incident_type === 'TAB_SWITCH' || i.incident_type === 'WINDOW_BLUR').length;
+          setProctoringStats(prev => ({ ...prev, tabSwitches }));
 
-          if (data) {
-            // Filter incidents that match current session ID
-            const sessionIncidents = data.filter(incident => {
-              const incidentSessionId = incident.metadata?.session_id;
-              const matches = incidentSessionId === currentSessionIdRef;
-
-              // Debug log each incident
-              console.log('Incident session check:', {
-                incidentId: incident.id,
-                incidentSessionId,
-                currentSessionId: currentSessionIdRef,
-                matches,
-                timestamp: incident.timestamp
-              });
-
-              return matches;
-            });
-
-            console.log(`Found ${sessionIncidents.length} incidents for current session (${currentSessionIdRef}) out of ${data.length} total`);
-            setProctoringIncidents(sessionIncidents);
-            // Update tab switch count from database
-            const tabSwitches = sessionIncidents.filter(i => i.incident_type === 'TAB_SWITCH' || i.incident_type === 'WINDOW_BLUR').length;
-            setProctoringStats(prev => ({ ...prev, tabSwitches }));
-
-            // Stop polling once we have a session
-            if (pollInterval) {
-              clearInterval(pollInterval);
-              pollInterval = null;
-            }
+          // Stop polling once we have a session
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
           }
-        } else if (!sessionData) {
-          console.log('No active proctoring session found yet');
         }
-      };
+      } else if (!sessionData) {
+        console.log('No active proctoring session found yet');
+      }
+    };
 
-      // Initial load
-      loadCurrentSession();
+    // Initial load
+    loadCurrentSession();
 
-      // Poll every 2 seconds for session creation
-      pollInterval = setInterval(loadCurrentSession, 2000);
+    // Poll every 2 seconds for session creation
+    pollInterval = setInterval(loadCurrentSession, 2000);
 
-      // Subscribe to new incidents
-      const channel = supabase
-        .channel(`proctoring_${interview.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'proctoring_incidents',
-            filter: `interview_id=eq.${interview.id}`
-          },
-          (payload) => {
-            console.log('New incident received:', payload.new);
+    // Subscribe to new incidents
+    const channel = supabase
+      .channel(`proctoring_${interview.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'proctoring_incidents',
+          filter: `interview_id=eq.${interview.id}`
+        },
+        (payload) => {
+          console.log('New incident received:', payload.new);
 
-            // Only add if it matches current session
-            const incidentSessionId = payload.new.metadata?.session_id;
-            if (incidentSessionId && incidentSessionId === currentSessionIdRef) {
-              console.log('Incident matches current session, adding to list');
-              setProctoringIncidents(prev => [...prev, payload.new]);
-              // Update tab switch count
-              if (payload.new.incident_type === 'TAB_SWITCH' || payload.new.incident_type === 'WINDOW_BLUR') {
-                setProctoringStats(prev => ({ ...prev, tabSwitches: (prev.tabSwitches || 0) + 1 }));
-              }
-            } else {
-              console.log('Incident does not match current session, ignoring', {
-                incidentSessionId,
-                currentSessionId: currentSessionIdRef
-              });
+          // Only add if it matches current session
+          const incidentSessionId = payload.new.metadata?.session_id;
+          if (incidentSessionId && incidentSessionId === currentSessionIdRef) {
+            console.log('Incident matches current session, adding to list');
+            setProctoringIncidents(prev => [...prev, payload.new]);
+            // Update tab switch count
+            if (payload.new.incident_type === 'TAB_SWITCH' || payload.new.incident_type === 'WINDOW_BLUR') {
+              setProctoringStats(prev => ({ ...prev, tabSwitches: (prev.tabSwitches || 0) + 1 }));
             }
+          } else {
+            console.log('Incident does not match current session, ignoring', {
+              incidentSessionId,
+              currentSessionId: currentSessionIdRef
+            });
           }
-        )
-        .subscribe();
+        }
+      )
+      .subscribe();
 
-      return () => {
-        if (pollInterval) clearInterval(pollInterval);
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [participantRole, interview.id]);
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+      supabase.removeChannel(channel);
+    };
+  }, [interview.id]);
 
   const participantIds = participants ? [...participants.keys()] : [];
 
-  // Filter out the presenter from grid when screen sharing is active
-  const gridParticipantIds = presenterId 
-    ? participantIds.filter(id => id !== presenterId)
-    : participantIds;
+  // Filter participants to only show those with streams or local participant
+  const activeParticipantIds = participantIds.filter(id => {
+    const participant = participants.get(id);
+    const isLocalParticipant = participant?.id === localParticipant?.id;
+    const hasStreams = participant?.webcamStream || participant?.micStream;
+    return isLocalParticipant || hasStreams;
+  });
 
-  const getGridLayout = () => {
-    const count = gridParticipantIds.length;
-    if (count === 0) return 'grid-cols-1';
-    if (count === 1) return 'grid-cols-1';
-    if (count === 2) return 'grid-cols-2';
-    if (count === 3 || count === 4) return 'grid-cols-2';
-    if (count === 5 || count === 6) return 'grid-cols-3';
-    return 'grid-cols-4';
-  };
+  // Filter out the presenter from grid when screen sharing is active
+  const gridParticipantIds = presenterId
+    ? activeParticipantIds.filter(id => id !== presenterId)
+    : activeParticipantIds;
+
 
   // Only show proctoring tab to interviewers
   const baseTabs = [
@@ -1088,31 +1109,52 @@ function MeetingView({ interview, onLeave, participantRole, participantName }) {
     { id: 'people', label: 'People', icon: Users },
   ];
 
-  const tabs = participantRole === 'interviewer'
-    ? [
-        baseTabs[0],
-        baseTabs[1],
-        { id: 'proctoring', label: 'Proctoring', icon: Shield },
-        { id: 'transcript', label: 'Transcript', icon: MessageSquare },
-        ...baseTabs.slice(2, 4),
-        baseTabs[5]
-      ]
-    : baseTabs;
+  // All tabs available to all participants
+  const tabs = [
+    baseTabs[0], // candidate
+    baseTabs[1], // questions
+    { id: 'proctoring', label: 'Proctoring', icon: Shield },
+    { id: 'transcript', label: 'Transcript', icon: MessageSquare },
+    baseTabs[2], // feedback
+    baseTabs[3], // notes
+    baseTabs[4], // chat
+    baseTabs[5]  // people
+  ];
 
   return (
     <div className="h-screen flex flex-col bg-gray-900">
-      {/* Only show proctoring alerts to interviewers */}
-      {participantRole === 'interviewer' && <ProctoringAlerts incidents={proctoringIncidents} />}
+      {/* Connection Error Alert */}
+      {/* {connectionError && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{connectionError}</p>
+              <button
+                // onClick={() => setConnectionError('')} // Connection error UI disabled
+                className="mt-2 text-sm text-red-600 underline hover:text-red-800"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )} */}
+      
+      {/* Show proctoring alerts to all participants */}
+      <ProctoringAlerts incidents={proctoringIncidents} />
       <div className="bg-white border-b shadow-sm">
         <div className="max-w-full mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgb(33, 121, 137)' }}>
-              <Video className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-gray-800">UpInterview</h1>
-              <p className="text-xs text-gray-500">{interview.title}</p>
-            </div>
+          <div className="flex items-center">
+            <img
+              src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp"
+              alt="UpInterview Logo"
+              className="w-24"
+            />
           </div>
 
           <div className="flex items-center gap-3">
@@ -1126,41 +1168,28 @@ function MeetingView({ interview, onLeave, participantRole, participantName }) {
                     setActiveTab(tab.id);
                     setShowSidebar(true);
                   }}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition rounded-lg ${
-                    isActive
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition rounded-lg ${isActive
                       ? 'text-white'
                       : 'text-gray-600 hover:bg-gray-50'
-                  }`}
+                    }`}
                   style={isActive ? { backgroundColor: 'rgb(33, 121, 137)' } : {}}
                 >
-                <Icon className="w-4 h-4" />
-                <span className="hidden lg:inline">{tab.label}</span>
-              </button>
-            );
-          })}
+                  <Icon className="w-4 h-4" />
+                  <span className="hidden lg:inline">{tab.label}</span>
+                </button>
+              );
+            })}
 
-            <div className="flex items-center gap-2 px-3 py-2 bg-red-50 rounded-lg ml-2">
-              <Circle className="w-3 h-3 text-red-600 fill-red-600 animate-pulse" />
-              <span className="text-sm font-medium text-red-600">Recording</span>
-            </div>
 
-            {/* Show proctoring status to both, but different messages */}
-            {participantRole === 'interviewer' && proctoringEnabled && (
+            {/* Show proctoring status to all participants */}
+            {/* {proctoringEnabled && (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg ml-2" style={{ backgroundColor: 'rgba(33, 121, 137, 0.1)' }}>
                 <Shield className="w-4 h-4" style={{ color: 'rgb(33, 121, 137)' }} />
                 <span className="text-sm font-medium" style={{ color: 'rgb(33, 121, 137)' }}>
-                  Monitoring Candidates
+                  Monitoring Session
                 </span>
               </div>
-            )}
-            {participantRole === 'candidate' && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg ml-2 bg-green-50">
-                <Shield className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-600">
-                  Proctored Session
-                </span>
-              </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>
@@ -1207,12 +1236,11 @@ function MeetingView({ interview, onLeave, participantRole, participantName }) {
                 </div>
               ) : (
                 // Multiple participants - grid layout
-                <div className={`grid gap-4 h-full ${
-                  participantIds.length === 2 ? 'grid-cols-2' :
-                  participantIds.length <= 4 ? 'grid-cols-2' :
-                  participantIds.length <= 6 ? 'grid-cols-3' :
-                  'grid-cols-4'
-                }`}>
+                <div className={`grid gap-4 h-full ${participantIds.length === 2 ? 'grid-cols-2' :
+                    participantIds.length <= 4 ? 'grid-cols-2' :
+                      participantIds.length <= 6 ? 'grid-cols-3' :
+                        'grid-cols-4'
+                  }`}>
                   {participantIds.map((participantId) => (
                     <ParticipantView
                       key={participantId}
@@ -1286,120 +1314,68 @@ export default function InterviewRoom({ interview, participantName, onLeave }) {
     ? { name: participantName, role: 'candidate' }
     : participantName;
 
-  useEffect(() => {
-    initializeMeeting();
-  }, []);
-
-  const initializeMeeting = async () => {
+  const initializeMeeting = useCallback(async () => {
     try {
-      console.log('Initializing meeting for interview:', interview.id);
-      
-      // Always check database first for existing meeting_id
-      const { data: interviewData, error: fetchError } = await supabase
+      // Always fetch fresh meetingId from database to avoid stale data
+      const { data: freshInterviewData, error: fetchError } = await supabase
         .from('interviews')
         .select('meeting_id')
         .eq('id', interview.id)
         .maybeSingle();
 
-      if (fetchError) {
-        console.error('Database query error:', fetchError);
-        throw fetchError;
-      }
-      
-      let meetingId = interviewData?.meeting_id || interview.meeting_id;
-      console.log('MeetingId from database/interview:', meetingId);
+      if (fetchError) throw fetchError;
 
-      // If no meetingId exists, create a new one atomically
-      if (!meetingId) {
-        console.log('No meetingId found, creating new meeting...');
-        
-        // Use a database transaction to ensure only one meeting is created
-        const { createMeeting } = await import('../lib/videosdk.js');
-        const newMeetingId = await createMeeting();
-        console.log('Created new meetingId:', newMeetingId);
-        
-        // Try to update the interview with the new meetingId
-        // If another participant already created one, this will fail or we'll get the existing one
-        const { data: updatedData, error: updateError } = await supabase
-          .from('interviews')
-          .update({
-            meeting_id: newMeetingId,
-            status: 'in_progress'
-          })
-          .eq('id', interview.id)
-          .is('meeting_id', null) // Only update if meeting_id is still null
-          .select('meeting_id')
-          .single();
-        
-        if (updateError) {
-          console.log('Update failed, likely another participant created meeting. Fetching existing...');
-          // Fetch the meeting_id that was set by another participant
-          const { data: refetchData } = await supabase
-            .from('interviews')
-            .select('meeting_id')
-            .eq('id', interview.id)
-            .single();
-          
-          meetingId = refetchData?.meeting_id;
-          console.log('Using meetingId created by another participant:', meetingId);
-        } else {
-          meetingId = updatedData.meeting_id;
-          console.log('Successfully set new meetingId:', meetingId);
-        }
-      } else {
-        console.log('Found existing meetingId:', meetingId);
-      }
+      let meetingId = freshInterviewData?.meeting_id || interview.meeting_id;
 
-      console.log('Final meetingId to use:', meetingId);
-      
-      // Use frontend VideoSDK functions directly (no backend needed)
-      const { createMeeting, validateMeeting, getAuthToken } = await import('../lib/videosdk.js');
-      
-      let finalMeetingId = meetingId;
-      
-      if (!meetingId) {
-        // Create new meeting
-        finalMeetingId = await createMeeting();
-        console.log('Created new meeting:', finalMeetingId);
-        
-        // Update database with new meeting ID
-        await supabase
-          .from('interviews')
-          .update({
-            meeting_id: finalMeetingId,
-            status: 'in_progress'
-          })
-          .eq('id', interview.id);
-      } else {
-        // Validate existing meeting
-        try {
-          const validatedId = await validateMeeting(meetingId);
-          finalMeetingId = validatedId;
-          console.log('Validated existing meeting:', finalMeetingId);
-        } catch (error) {
-          console.log('Meeting validation failed, creating new one:', error);
-          finalMeetingId = await createMeeting();
-          
-          // Update database with new meeting ID
-          await supabase
-            .from('interviews')
-            .update({
-              meeting_id: finalMeetingId,
-              status: 'in_progress'
-            })
-            .eq('id', interview.id);
+      console.log('Initial meetingId from interview:', interview.meeting_id);
+      console.log('Fresh meetingId from database:', freshInterviewData?.meeting_id);
+      // console.log('Final meetingId to use:', meetingId);
+
+      console.log('Config values:', {
+        supabaseUrl: config?.REACT_APP_SUPABASE_URL,
+        supabaseAnonKey: config?.REACT_APP_SUPABASE_ANON_KEY,
+        directEnvUrl: process.env.REACT_APP_SUPABASE_URL,
+        directEnvKey: process.env.REACT_APP_SUPABASE_ANON_KEY
+      });
+
+      // Temporary direct token generation - replace with proper backend function
+      const generateVideoSDKToken = (roomId) => {
+        const apiKey = config?.REACT_APP_VIDEOSDK_API_KEY;
+        if (!apiKey) {
+          throw new Error('VideoSDK API key not found');
         }
+        
+        // For now, use API key directly (not recommended for production)
+        // TODO: Implement proper JWT token generation
+        return apiKey;
+      };
+
+      try {
+        const token = generateVideoSDKToken(meetingId);
+        
+        if (!token) {
+          throw new Error('Failed to generate token');
+        }
+
+        setToken(token);
+        setMeetingId(meetingId);
+      } catch (err) {
+        console.error('Error in initializeMeeting:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-      
-      setMeetingId(finalMeetingId);
-      setToken(getAuthToken());
     } catch (err) {
-      console.error('Error initializing meeting:', err);
+      console.error('Error in initializeMeeting:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [interview.id, interview.meeting_id]);
+
+  useEffect(() => {
+    initializeMeeting();
+  }, [initializeMeeting]);
 
   if (loading) {
     return (
@@ -1413,13 +1389,17 @@ export default function InterviewRoom({ interview, participantName, onLeave }) {
   }
 
   if (error) {
+    if (error.includes('credentials')) {
+      return <VideoSDKSetup />;
+    }
+
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center max-w-md">
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-red-600" />
+            <PhoneOff className="w-8 h-8 text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Meeting Error</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Unable to start meeting</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={onLeave}
@@ -1449,8 +1429,8 @@ export default function InterviewRoom({ interview, participantName, onLeave }) {
     <MeetingProvider
       config={{
         meetingId,
-        micEnabled: true,
-        webcamEnabled: true,
+        micEnabled: false,
+        webcamEnabled: false,
         name: participantData?.name || 'Participant',
       }}
       token={token}

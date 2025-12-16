@@ -1,4 +1,4 @@
-import { Video, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 function Header({ activeTab, setActiveTab, user }) {
@@ -20,14 +20,12 @@ function Header({ activeTab, setActiveTab, user }) {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgb(33, 121, 137)' }}>
-                <Video className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">UpInterview</h1>
-                <p className="text-xs text-gray-500">Outsourced Interview Platform</p>
-              </div>
+            <div className="flex items-center">
+              <img
+                src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp"
+                alt="UpInterview Logo"
+                className="w-24"
+              />
             </div>
 
             <nav className="hidden md:flex items-center gap-1">
