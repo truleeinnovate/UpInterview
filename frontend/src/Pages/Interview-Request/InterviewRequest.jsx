@@ -217,7 +217,7 @@ const InternalRequest = () => {
     // v1.0.0 <------------------------------------------------------------------------
     {
       key: "interviewRequestCode",
-      header: "Request ID",
+      header: "Interview Request ID",
       render: (vale, row) => (
         <span
           className={`font-medium ${
