@@ -97,37 +97,52 @@ exports.individualLogin = async (req, res) => {
     }
 
     // ---------------- OUTSOURCE INTERVIEWER ----------------
-    let newInterviewer = null;
-    if (currentStep === 3 && userData.isFreelancer) {
-      const outsourceRequestCode = await generateUniqueId(
-        "OINT",
-        OutsourceInterviewer,
-        "outsourceRequestCode"
-      );
-      newInterviewer = new OutsourceInterviewer({
-        outsourceRequestCode: outsourceRequestCode,
-        ownerId,
-        contactId: savedContact._id,
-        requestedRate: savedContact.rates ||
-          contactData.rates || {
-            junior: { usd: 0, inr: 0, isVisible: true },
-            mid: { usd: 0, inr: 0, isVisible: true },
-            senior: { usd: 0, inr: 0, isVisible: true },
-          },
-        feedback: [
-          {
-            givenBy: ownerId,
-            rating: 4.5,
-            comments: "",
-            createdAt: new Date(),
-          },
-        ],
-        status: "underReview",
-        createdBy: ownerId,
-        currency: "INR",
-      });
-      await newInterviewer.save();
-    }
+let newInterviewer = null;
+
+if (currentStep === 3 && userData.isFreelancer) {
+  // 🔹 Check if already exists for this owner
+  const existingInterviewer = await OutsourceInterviewer.findOne({
+    ownerId,
+  }).lean();
+
+  if (!existingInterviewer) {
+    const outsourceRequestCode = await generateUniqueId(
+      "OINT",
+      OutsourceInterviewer,
+      "outsourceRequestCode"
+    );
+
+    newInterviewer = new OutsourceInterviewer({
+      outsourceRequestCode,
+      ownerId,
+      contactId: savedContact._id,
+      requestedRate:
+        savedContact.rates ||
+        contactData.rates || {
+          junior: { usd: 0, inr: 0, isVisible: true },
+          mid: { usd: 0, inr: 0, isVisible: true },
+          senior: { usd: 0, inr: 0, isVisible: true },
+        },
+      feedback: [
+        {
+          givenBy: ownerId,
+          rating: 4.5,
+          comments: "",
+          createdAt: new Date(),
+        },
+      ],
+      status: "underReview",
+      createdBy: ownerId,
+      currency: "INR",
+    });
+
+    await newInterviewer.save();
+  } else {
+    // 🔹 Skip creation if already exists
+    newInterviewer = existingInterviewer;
+  }
+}
+
 
     // ---------------- TOKEN GENERATION ----------------
     const payload = {
