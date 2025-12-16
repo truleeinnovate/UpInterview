@@ -643,7 +643,7 @@ const MockInterview = () => {
   //   },
   // ];
 
-  const kanbanActions = [
+  const kanbanActions = () => [
     {
       key: "view",
       label: "View Details",

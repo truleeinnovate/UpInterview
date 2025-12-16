@@ -1545,7 +1545,7 @@ const RoundFormInterviews = () => {
               // ========================================
               // Google Meet creation
               // ========================================
-              if (selectedMeetingPlatform === "googlemeet") {
+              if (selectedMeetingPlatform === "google-meet") {
                 meetingLink = await createMeeting(
                   "googlemeet",
                   {
@@ -1743,7 +1743,7 @@ const RoundFormInterviews = () => {
                 navigate(`/interviews/${interviewId}`);
               }, successMessages.length * 1000);
             } catch (urlError) {
-              console.error("Error processing meeting URLs:", urlError);
+              // console.error("Error processing meeting URLs:", urlError);
               console.error("URL Error details:", {
                 message: urlError.message,
                 stack: urlError.stack,
