@@ -1350,6 +1350,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Calendar } from "lucide-react";
+import DropdownWithSearchField from "../../Components/FormFields/DropdownWithSearchField";
 
 const AdvancedFilters = ({
   availableFields = [],
@@ -1367,7 +1368,11 @@ const AdvancedFilters = ({
   const handleFilterChange = useCallback((key, value) => {
     setLocalFilters((prev) => {
       const newFilters = { ...prev };
-      if (value === "" || value === null || (Array.isArray(value) && value.length === 0)) {
+      if (
+        value === "" ||
+        value === null ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
         delete newFilters[key];
       } else {
         newFilters[key] = value;
@@ -1382,7 +1387,9 @@ const AdvancedFilters = ({
 
   if (availableFields.length === 0) return null;
 
-  const sortedFields = [...availableFields].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  const sortedFields = [...availableFields].sort(
+    (a, b) => (a.order ?? 999) - (b.order ?? 999)
+  );
 
   const activeCount = Object.keys(localFilters).filter(
     (key) => !["customStartDate", "customEndDate"].includes(key)
@@ -1417,12 +1424,14 @@ const AdvancedFilters = ({
           if (field.key === "dateRange") {
             return (
               <div key={field.key}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                {/* <label className="block text-sm font-medium text-gray-700 mb-2">
                   {field.label}
                 </label>
                 <select
                   value={value || ""}
-                  onChange={(e) => handleFilterChange("dateRange", e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("dateRange", e.target.value)
+                  }
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-transparent"
                 >
                   {field.options?.map((opt) => (
@@ -1431,6 +1440,50 @@ const AdvancedFilters = ({
                     </option>
                   ))}
                 </select>
+
+                {value === "custom" && (
+                  <div className="mt-4 grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border">
+                    <div>
+                      <label className="text-xs text-gray-600 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" /> From
+                      </label>
+                      <input
+                        type="date"
+                        value={localFilters.customStartDate || ""}
+                        onChange={(e) =>
+                          handleFilterChange("customStartDate", e.target.value)
+                        }
+                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-600 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" /> To
+                      </label>
+                      <input
+                        type="date"
+                        value={localFilters.customEndDate || ""}
+                        onChange={(e) =>
+                          handleFilterChange("customEndDate", e.target.value)
+                        }
+                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                  </div>
+                )} */}
+
+                <DropdownWithSearchField
+                  name="dateRange"
+                  label={field.label}
+                  options={field.options}
+                  isMulti={false} // single select
+                  value={value || ""} // current selection
+                  placeholder={`Select ${field.label}`}
+                  isSearchable={false} // usually small list
+                  onChange={(e) => {
+                    handleFilterChange("dateRange", e.target.value);
+                  }}
+                />
 
                 {/* Custom Calendar */}
                 {value === "custom" && (
@@ -1442,10 +1495,13 @@ const AdvancedFilters = ({
                       <input
                         type="date"
                         value={localFilters.customStartDate || ""}
-                        onChange={(e) => handleFilterChange("customStartDate", e.target.value)}
+                        onChange={(e) =>
+                          handleFilterChange("customStartDate", e.target.value)
+                        }
                         className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
                       />
                     </div>
+
                     <div>
                       <label className="text-xs text-gray-600 flex items-center gap-1">
                         <Calendar className="w-3 h-3" /> To
@@ -1453,7 +1509,9 @@ const AdvancedFilters = ({
                       <input
                         type="date"
                         value={localFilters.customEndDate || ""}
-                        onChange={(e) => handleFilterChange("customEndDate", e.target.value)}
+                        onChange={(e) =>
+                          handleFilterChange("customEndDate", e.target.value)
+                        }
                         className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
                       />
                     </div>
@@ -1467,49 +1525,82 @@ const AdvancedFilters = ({
           if (field.key === "viewScope") {
             return (
               <div key={field.key}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                {/* <label className="block text-sm font-medium text-gray-700 mb-2">
                   {field.label}
                 </label>
                 <select
                   value={value || "all"}
-                  onChange={(e) => handleFilterChange("viewScope", e.target.value || "all")}
+                  onChange={(e) =>
+                    handleFilterChange("viewScope", e.target.value || "all")
+                  }
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-transparent"
-                  >
+                >
                   {field.options?.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {opt.label}
                     </option>
                   ))}
-                </select>
+                </select> */}
+                <DropdownWithSearchField
+                  key={field.key}
+                  name="viewScope"
+                  label={field.label}
+                  options={field.options}
+                  isMulti={false} // single select
+                  value={value || "all"} // default value
+                  placeholder={`Select ${field.label}`}
+                  onChange={(e) => {
+                    handleFilterChange("viewScope", e.target.value || "all");
+                  }}
+                  isSearchable={false} // optional (usually viewScope is small)
+                />
               </div>
             );
           }
 
           // ALL OTHER SELECT / MULTISELECT
+          // if (field.type === "select" || field.type === "multiselect") {
+          //   return (
+          //     <div key={field.key}>
+          //       <label className="block text-sm font-medium text-gray-700 mb-2">
+          //         {field.label}
+          //       </label>
+          //       <select
+          //         multiple={field.type === "multiselect"}
+          //         value={Array.isArray(value) ? value : value ? [value] : []}
+          //         onChange={(e) => {
+          //           const selected = Array.from(e.target.selectedOptions, (opt) => opt.value);
+          //           const finalValue = field.type === "multiselect" ? selected : selected[0] || null;
+          //           handleFilterChange(field.key, finalValue);
+          //         }}
+          //         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-transparent"
+          //       >
+          //         <option value="">All {field.label}</option>
+          //         {field.options?.map((opt) => (
+          //           <option key={opt.value} value={opt.value}>
+          //             {opt.label}
+          //           </option>
+          //         ))}
+          //       </select>
+          //     </div>
+          //   );
+          // }
+
           if (field.type === "select" || field.type === "multiselect") {
             return (
-              <div key={field.key}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {field.label}
-                </label>
-                <select
-                  multiple={field.type === "multiselect"}
-                  value={Array.isArray(value) ? value : value ? [value] : []}
-                  onChange={(e) => {
-                    const selected = Array.from(e.target.selectedOptions, (opt) => opt.value);
-                    const finalValue = field.type === "multiselect" ? selected : selected[0] || null;
-                    handleFilterChange(field.key, finalValue);
-                  }}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-transparent"
-                >
-                  <option value="">All {field.label}</option>
-                  {field.options?.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <DropdownWithSearchField
+                key={field.key}
+                name={field.key}
+                label={field.label}
+                options={field.options}
+                isMulti={field.type === "multiselect"}
+                value={value || (field.type === "multiselect" ? [] : "")}
+                placeholder={`All ${field.label}`}
+                onChange={(e) => {
+                  handleFilterChange(field.key, e.target.value);
+                }}
+                isSearchable={true}
+              />
             );
           }
 
@@ -1517,15 +1608,17 @@ const AdvancedFilters = ({
           if (field.type === "text") {
             return (
               <div key={field.key}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   {field.label}
                 </label>
                 <input
                   type="text"
                   value={value || ""}
-                  onChange={(e) => handleFilterChange(field.key, e.target.value || null)}
+                  onChange={(e) =>
+                    handleFilterChange(field.key, e.target.value || null)
+                  }
                   placeholder={`Search ${field.label.toLowerCase()}...`}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
+                  className="w-full px-4 h-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-custom-blue"
                 />
               </div>
             );
