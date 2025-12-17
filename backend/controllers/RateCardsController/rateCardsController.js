@@ -38,10 +38,26 @@ const RateCard = require("../../models/RateCards/RateCards");
 // };
 
 const createRateCard = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  // res.locals.loggedByController = true;
+  // res.locals.processName = "Create Rate Card";
+
   try {
     if (Array.isArray(req.body.rateCards)) {
       // Bulk insert
       const savedCards = await RateCard.insertMany(req.body.rateCards);
+      
+      // Structured internal log for successful bulk create
+      // res.locals.logData = {
+      //   tenantId: req.body?.tenantId || "",
+      //   ownerId: req.body?.ownerId || "",
+      //   processName: "Create Rate Card",
+      //   requestBody: req.body,
+      //   status: "success",
+      //   message: `${savedCards.length} rate cards created successfully`,
+      //   responseBody: savedCards,
+      // };
+
       return res.status(201).json({
         message: `${savedCards.length} rate cards created successfully`,
         rateCards: savedCards,
@@ -70,6 +86,17 @@ const createRateCard = async (req, res) => {
 
       const savedCard = await newCard.save();
 
+      // Structured internal log for successful single create
+      // res.locals.logData = {
+      //   tenantId: req.body?.tenantId || "",
+      //   ownerId: req.body?.ownerId || "",
+      //   processName: "Create Rate Card",
+      //   requestBody: req.body,
+      //   status: "success",
+      //   message: "Rate card created successfully",
+      //   responseBody: savedCard,
+      // };
+
       return res.status(201).json({
         message: "Rate card created successfully",
         rateCard: savedCard,
@@ -77,6 +104,16 @@ const createRateCard = async (req, res) => {
     }
   } catch (error) {
     console.error("Error creating rate card:", error);
+    // Structured internal log for error case
+    // res.locals.logData = {
+    //   tenantId: req.body?.tenantId || "",
+    //   ownerId: req.body?.ownerId || "",
+    //   processName: "Create Rate Card",
+    //   requestBody: req.body,
+    //   status: "error",
+    //   message: error.message,
+    // };
+
     res.status(500).json({
       message: "Error creating rate card",
       error: error.message,
@@ -142,6 +179,10 @@ const getRateCardById = async (req, res) => {
 
 // Update RateCard by ID
 const updateRateCard = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  // res.locals.loggedByController = true;
+  // res.locals.processName = "Update Rate Card";
+
   try {
     const { id } = req.params;
     const updatedCard = await RateCard.findByIdAndUpdate(id, req.body, {
@@ -152,10 +193,31 @@ const updateRateCard = async (req, res) => {
     if (!updatedCard)
       return res.status(404).json({ message: "Rate card not found" });
 
+    // Structured internal log for successful update
+    // res.locals.logData = {
+    //   tenantId: req.body?.tenantId || "",
+    //   ownerId: req.body?.ownerId || "",
+    //   processName: "Update Rate Card",
+    //   requestBody: req.body,
+    //   status: "success",
+    //   message: "Rate card updated successfully",
+    //   responseBody: updatedCard,
+    // };
+
     res
       .status(200)
       .json({ message: "Rate card updated successfully", updatedCard });
   } catch (error) {
+    // Structured internal log for error case
+    // res.locals.logData = {
+    //   tenantId: req.body?.tenantId || "",
+    //   ownerId: req.body?.ownerId || "",
+    //   processName: "Update Rate Card",
+    //   requestBody: req.body,
+    //   status: "error",
+    //   message: error.message,
+    // };
+
     res
       .status(500)
       .json({ message: "Error updating rate card", error: error.message });

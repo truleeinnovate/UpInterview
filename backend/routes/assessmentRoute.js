@@ -16,15 +16,16 @@ const {
 } = require("../controllers/assessmentController");
 const { permissionMiddleware } = require("../middleware/permissionMiddleware");
 const { authContextMiddleware } = require("../middleware/authContext");
+const loggingService = require('../middleware/loggingService.js');
 
 const router = express.Router();
 
 // Validation endpoint for step-wise validation
 router.post("/validate/:tab", validateAssessmentStep);
 
-router.post("/new-assessment", newAssessment);
+router.post("/new-assessment", loggingService.internalLoggingMiddleware, newAssessment);
 
-router.patch("/update/:id", updateAssessment);
+router.patch("/update/:id", loggingService.internalLoggingMiddleware, updateAssessment);
 
 // SUPER ADMIN added by Ashok ----------------------------------------->
 // Place static route BEFORE param routes so '/all-assessments' is not
@@ -44,7 +45,7 @@ router.get(
 );
 router.get("/:id", getAssessmentById);
 
-router.post("/create-list", createList);
+router.post("/create-list", loggingService.internalLoggingMiddleware, createList);
 // router.get("/lists", getLists);
 
 // Delete assessment

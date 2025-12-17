@@ -779,6 +779,9 @@ exports.updateTicketById = async (req, res) => {
 };
 
 exports.updateSupportTicket = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Support Ticket Status";
+
   try {
     const { id } = req.params;
     const { status, comment, userComment, user, updatedByUserId, notifyUser } =
@@ -838,9 +841,29 @@ exports.updateSupportTicket = async (req, res) => {
       ticket: updatedTicket,
     });
 
+    res.locals.logData = {
+      tenantId: ticket.tenantId || req.body?.tenantId || "",
+      ownerId: ticket.ownerId || req.body?.ownerId || "",
+      processName: "Update Support Ticket Status",
+      requestBody: req.body,
+      status: "success",
+      message: `Ticket status updated from '${prevStatus}' to '${updatedTicket.status}'`,
+      responseBody: updatedTicket,
+    };
+
     return res.status(200).json(updatedTicket);
   } catch (error) {
     console.error("Error updating ticket:", error);
+
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Support Ticket Status",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res.status(500).json({
       message: "Failed to update ticket",
       errors: { general: error.message },

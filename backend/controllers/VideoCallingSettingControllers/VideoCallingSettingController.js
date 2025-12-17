@@ -104,6 +104,10 @@ const getVideoCallingSettings = async (req, res) => {
 
 // ✅ Test Connection Controller
 const VideoCallTestConnection = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Test Video Calling Connection";
+
   try {
     const { provider, credentials, tenantId: bodyTenantId, ownerId } = req.body;
     const tenantId = req.user?.tenantId || bodyTenantId;
@@ -141,6 +145,17 @@ const VideoCallTestConnection = async (req, res) => {
       { upsert: true, new: true }
     );
 
+    // Structured internal log for successful test
+    res.locals.logData = {
+      tenantId: tenantId || req.body?.tenantId || "",
+      ownerId: ownerId || req.body?.ownerId || "",
+      processName: "Test Video Calling Connection",
+      requestBody: req.body,
+      status: "success",
+      message: updated.testConnection?.message || "Video calling connection tested",
+      responseBody: updated,
+    };
+
     res.json({
       success: isValid,
       message: updated.testConnection.message,
@@ -148,6 +163,16 @@ const VideoCallTestConnection = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error testing connection:', error);
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Test Video Calling Connection",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({
       success: false,
       message: "Error testing connection: " + error.message,
@@ -157,9 +182,14 @@ const VideoCallTestConnection = async (req, res) => {
 
 // ✅ Save Credentials Controller
 const VideoCallTestCredentials = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Save Video Calling Credentials";
+
   try {
     const { provider, credentials } = req.body;
     const tenantId = req.user?.tenantId;
+    const ownerId = req.user?.ownerId;
 
     if (!tenantId) {
       return res.status(400).json({ 
@@ -181,16 +211,42 @@ const VideoCallTestCredentials = async (req, res) => {
     if (settings.updateCredentials) {
       await settings.updateCredentials(provider, credentials);
     }
+
+    const hasConfigured = settings.hasConfiguredCredentials 
+      ? settings.hasConfiguredCredentials(provider) 
+      : false;
+
+    // Structured internal log for successful credential save
+    res.locals.logData = {
+      tenantId: tenantId || "",
+      ownerId: ownerId || "",
+      processName: "Save Video Calling Credentials",
+      requestBody: req.body,
+      status: "success",
+      message: "Credentials saved successfully",
+      responseBody: {
+        provider,
+        hasConfiguredCredentials: hasConfigured,
+      },
+    };
     
     res.json({ 
       success: true, 
       message: 'Credentials saved successfully',
-      hasConfiguredCredentials: settings.hasConfiguredCredentials 
-        ? settings.hasConfiguredCredentials(provider) 
-        : false
+      hasConfiguredCredentials: hasConfigured,
     });
   } catch (error) {
     console.error('❌ Error saving credentials:', error);
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.user?.tenantId || "",
+      ownerId: req.user?.ownerId || "",
+      processName: "Save Video Calling Credentials",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({ 
       success: false, 
       message: 'Error saving credentials: ' + error.message 
@@ -209,8 +265,11 @@ async function testVideoProviderConnection(provider, credentials) {
   });
 }
 
+const updateVideoCallingSettings = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Video Calling Settings";
 
- const updateVideoCallingSettings = async (req, res) => {
   try {
     const { 
       defaultProvider, 
@@ -262,6 +321,17 @@ async function testVideoProviderConnection(provider, credentials) {
       }
     );
 
+    // Structured internal log for successful settings update
+    res.locals.logData = {
+      tenantId: tenantId || req.body?.tenantId || "",
+      ownerId: ownerId || req.body?.ownerId || "",
+      processName: "Update Video Calling Settings",
+      requestBody: req.body,
+      status: "success",
+      message: "Settings updated successfully",
+      responseBody: updatedSettings,
+    };
+
     res.json({
       success: true,
       message: "Settings updated successfully",
@@ -270,6 +340,16 @@ async function testVideoProviderConnection(provider, credentials) {
 
   } catch (err) {
     console.error('Error updating settings:', err);
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Video Calling Settings",
+      requestBody: req.body,
+      status: "error",
+      message: err.message,
+    };
+
     res.status(500).json({
       success: false,
       message: "Internal server error: " + err.message,
