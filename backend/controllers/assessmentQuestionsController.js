@@ -88,6 +88,10 @@ exports.getByAssessmentId = async (req, res) => {
 
 // for both post and patch in assessment
 exports.upsertAssessmentQuestions = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  // res.locals.loggedByController = true;
+  // res.locals.processName = "Upsert Assessment Questions";
+
   try {
     const { assessmentId, sections } = req.body;
 
@@ -129,6 +133,17 @@ exports.upsertAssessmentQuestions = async (req, res) => {
       }
     );
 
+    // Structured internal log for successful upsert
+    // res.locals.logData = {
+    //   tenantId: tenantId || "",
+    //   ownerId: ownerId || "",
+    //   processName: "Upsert Assessment Questions",
+    //   requestBody: req.body,
+    //   status: "success",
+    //   message: "Assessment questions processed successfully",
+    //   responseBody: result,
+    // };
+
     res.status(200).json({
       success: true,
       message: 'Assessment questions processed successfully',
@@ -137,6 +152,16 @@ exports.upsertAssessmentQuestions = async (req, res) => {
 
   } catch (error) {
     console.error('Error:', error);
+    // Structured internal log for error case
+    // res.locals.logData = {
+    //   tenantId: req.body?.tenantId || "",
+    //   ownerId: req.body?.ownerId || "",
+    //   processName: "Upsert Assessment Questions",
+    //   requestBody: req.body,
+    //   status: "error",
+    //   message: error.message,
+    // };
+
     res.status(500).json({
       success: false,
       message: error.message,

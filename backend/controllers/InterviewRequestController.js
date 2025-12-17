@@ -58,6 +58,10 @@ const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
 // each interviwer send one request
 
 exports.createRequest = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Interview Request";
+
   try {
     const {
       tenantId,
@@ -101,12 +105,34 @@ exports.createRequest = async (req, res) => {
     });
 
     await newRequest.save();
+
+    // Structured internal log for successful interview request creation
+    res.locals.logData = {
+      tenantId: tenantId || "",
+      ownerId: ownerId || "",
+      processName: "Create Interview Request",
+      requestBody: req.body,
+      status: "success",
+      message: "Interview request created successfully",
+      responseBody: newRequest,
+    };
+
     res.status(201).json({
       message: "Interview request created successfully",
       data: newRequest,
     });
   } catch (error) {
     console.error("Error creating interview request:", error);
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Interview Request",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
@@ -276,6 +302,10 @@ exports.getAllRequests = async (req, res) => {
 // };
 
 exports.updateRequestStatus = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Interview Request Status";
+
   try {
     const { id } = req.params;
     const { interviewerIds } = req.body;
@@ -318,12 +348,34 @@ exports.updateRequestStatus = async (req, res) => {
       }
     }
     await request.save();
+
+    // Structured internal log for successful status update
+    res.locals.logData = {
+      tenantId: request?.tenantId || "",
+      ownerId: request?.ownerId || "",
+      processName: "Update Interview Request Status",
+      requestBody: req.body,
+      status: "success",
+      message: "Request and interview updated successfully",
+      responseBody: request,
+    };
+
     res.status(200).json({
       message: "Request and interview updated successfully",
       data: request,
     });
   } catch (error) {
     console.error("Error updating request:", error);
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Interview Request Status",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
@@ -492,6 +544,10 @@ exports.getInterviewRequests = async (req, res) => {
   }
 };
 exports.acceptInterviewRequest = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Accept Interview Request";
+
   try {
     const { requestId, contactId, roundId } = req.body;
 
@@ -755,7 +811,7 @@ exports.acceptInterviewRequest = async (req, res) => {
       console.error('Failed to send interview round emails:', emailError);
     }
 
-    return res.status(200).json({
+    const successResponse = {
       success: true,
       message: `${request.isMockInterview ? 'Mock i' : 'I'}nterview request accepted; funds held and emails processed`,
       wallet: {
@@ -769,9 +825,32 @@ exports.acceptInterviewRequest = async (req, res) => {
       appliedDiscount: request.isMockInterview ? appliedDiscountPercentage : null,
       roundUpdated: true,
       holdTransactionId: transactionId
-    });
+    };
+
+    // Structured internal log for successful accept
+    res.locals.logData = {
+      tenantId: request?.tenantId || "",
+      ownerId: request?.ownerId || "",
+      processName: "Accept Interview Request",
+      requestBody: req.body,
+      status: "success",
+      message: successResponse.message,
+      responseBody: successResponse,
+    };
+
+    return res.status(200).json(successResponse);
   } catch (error) {
     console.error("[acceptInterviewRequest] Error:", error);
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Accept Interview Request",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

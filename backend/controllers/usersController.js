@@ -495,6 +495,9 @@ const getInterviewers = async (req, res) => {
 
 // PATCH /api/users/:id/status
 const UpdateUser = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update User Status";
+
   try {
     const userId = req.params.id;
     const { status } = req.body;
@@ -513,9 +516,29 @@ const UpdateUser = async (req, res) => {
       return res.status(404).json({ error: "User not found." });
     }
 
+    res.locals.logData = {
+      tenantId: updatedUser.tenantId || req.body?.tenantId || "",
+      ownerId: updatedUser._id?.toString() || req.body?.ownerId || "",
+      processName: "Update User Status",
+      requestBody: req.body,
+      status: "success",
+      message: `User status updated to ${status}`,
+      responseBody: updatedUser,
+    };
+
     res.json(updatedUser);
   } catch (error) {
     console.error("Error updating status:", error);
+
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.params?.id || req.body?.ownerId || "",
+      processName: "Update User Status",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({ error: "Internal server error." });
   }
 };
