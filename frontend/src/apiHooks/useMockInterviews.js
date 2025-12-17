@@ -20,7 +20,7 @@ export const useMockInterviews = (params = {}) => {
 
   // console.log("params", params);
   // Extract and validate params for API call
-  const { search = "", page = 0, limit, filters = {} } = params;
+  // const { search = "", page = 0, limit, filters = {} } = params;
 
   // // Ensure page is at least 0 and limit is positive
   // const validatedPage = Math.max(0, parseInt(page));
@@ -45,7 +45,7 @@ export const useMockInterviews = (params = {}) => {
         // Prepare API params for backend filtering
         const apiParams = {
           ...params,
-          mockLimit: params?.limit ?? limit ?? Infinity,
+          mockLimit: params?.limit ?? params?.limit ?? Infinity,
         };
 
         //console.log("apiParams", apiParams);
@@ -82,11 +82,6 @@ export const useMockInterviews = (params = {}) => {
   const totalPages = responseData?.totalPages || 0;
   // const loading = isQueryLoading;
   const loading = isQueryLoading && responseData?.data === undefined;
-
-  // const loading = isQueryLoading && !responseData?.data?.length;
-
-  // const loading = isQueryLoading && !responseData?.data?.length;
-  // console.log("mockinterviewData", mockinterviewData);
 
   // Add/Update mock interview mutation
   // In useMockInterviews.js - FIXED VERSION
@@ -201,10 +196,15 @@ export const useMockInterviews = (params = {}) => {
 
       return response.data;
     },
+    // Change the onSuccess in addOrUpdateMockInterview mutation:
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["mockinterviews"],
         exact: false,
+      });
+      // Also invalidate specific query if needed
+      queryClient.invalidateQueries({
+        queryKey: ["mockinterviews", params],
       });
     },
 

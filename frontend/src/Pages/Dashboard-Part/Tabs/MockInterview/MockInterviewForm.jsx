@@ -117,7 +117,7 @@ const MockSchedulelater = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMeetingPlatform, setSelectedMeetingPlatform] =
     useState("zoom"); // Default to Google Meet googlemeet
-  const [meetingCreationProgress, setMeetingCreationProgress] = useState("");
+  // const [meetingCreationProgress, setMeetingCreationProgress] = useState("");
 
   const [interviewType, setInterviewType] = useState("scheduled");
   const [combinedDateTime, setCombinedDateTime] = useState("");
@@ -232,6 +232,8 @@ const MockSchedulelater = () => {
       const MockEditData = mockInterview;
       if (MockEditData) {
         setMockEdit(true);
+
+        console.log("MockEditData", MockEditData);
 
         // Map interviewers to externalInterviewers format
         const formattedInterviewers =
@@ -742,10 +744,10 @@ const MockSchedulelater = () => {
                 combinedDateTime: roundData.dateTime,
                 duration: roundData.duration,
                 selectedInterviewers: roundData.interviewers,
-              },
-              (progress) => {
-                setMeetingCreationProgress(progress);
               }
+              // (progress) => {
+              //   setMeetingCreationProgress(progress);
+              // }
             );
           } else if (selectedMeetingPlatform === "zoom") {
             // Zoom meeting creation logic...
@@ -791,10 +793,10 @@ const MockSchedulelater = () => {
 
             meetingLink = await createMeeting(
               "zoommeet",
-              { payload: payloads },
-              (progress) => {
-                setMeetingCreationProgress(progress);
-              }
+              { payload: payloads }
+              // (progress) => {
+              //   setMeetingCreationProgress(progress);
+              // }
             );
           }
 
@@ -879,11 +881,11 @@ const MockSchedulelater = () => {
             : "Mock interview created successfully!"
         );
         setIsSubmitting(false);
-        setMeetingCreationProgress("");
+        // setMeetingCreationProgress("");
       }, 100);
     } catch (error) {
       setIsSubmitting(false);
-      setMeetingCreationProgress("");
+      // setMeetingCreationProgress("");
       let errorMessage = "Failed to save interview. Please try again.";
 
       if (error.response?.status === 500) {
@@ -1491,59 +1493,6 @@ const MockSchedulelater = () => {
                         error={errors.candidateName}
                         className="cursor-not-allowed bg-gray-50"
                       />
-                      <DropdownWithSearchField
-                        containerRef={fieldRefs.higherQualification}
-                        label="Higher Qualification"
-                        name="higherQualification"
-                        value={formData.higherQualification}
-                        options={qualifications.map((q) => ({
-                          value: q.QualificationName,
-                          label: q.QualificationName,
-                        }))}
-                        onChange={(e) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            higherQualification: e.target.value,
-                          }));
-                          setErrors((prev) => ({
-                            ...prev,
-                            higherQualification: "",
-                          }));
-                        }}
-                        error={errors.higherQualification}
-                        placeholder="Select Higher Qualification"
-                        required
-                        onMenuOpen={loadQualifications}
-                        loading={isQualificationsFetching}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
-                      {/* <DropdownWithSearchField
-                        containerRef={fieldRefs.technology}
-                        label="Technology"
-                        name="technology"
-                        value={formData.technology}
-                        options={currentRoles.map((r) => ({
-                          value: r.roleName,
-                          label: r.roleLabel,
-                        }))}
-                        onChange={(e) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            technology: e.target.value,
-                          }));
-
-                          setErrors((prev) => ({
-                            ...prev,
-                            technology: "",
-                          }));
-                        }}
-                        error={errors.technology}
-                        placeholder="Select Technology"
-                        required
-                        onMenuOpen={loadCurrentRoles}
-                        loading={isCurrentRolesFetching}
-                      /> */}
                       <InputField
                         inputRef={fieldRefs.currentExperience}
                         type="number"
@@ -1559,6 +1508,8 @@ const MockSchedulelater = () => {
                         error={errors.currentExperience}
                         placeholder="Enter experience in years"
                       />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
                       <DropdownWithSearchField
                         containerRef={fieldRefs.currentRole}
                         label="Current Role"
@@ -1583,6 +1534,32 @@ const MockSchedulelater = () => {
                         required
                         onMenuOpen={loadCurrentRoles}
                         loading={isCurrentRolesFetching}
+                      />
+
+                      <DropdownWithSearchField
+                        containerRef={fieldRefs.higherQualification}
+                        label="Higher Qualification"
+                        name="higherQualification"
+                        value={formData.higherQualification}
+                        options={qualifications.map((q) => ({
+                          value: q.QualificationName,
+                          label: q.QualificationName,
+                        }))}
+                        onChange={(e) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            higherQualification: e.target.value,
+                          }));
+                          // setErrors((prev) => ({
+                          //   ...prev,
+                          //   higherQualification: "",
+                          // }));
+                        }}
+                        // error={errors.higherQualification}
+                        placeholder="Select Higher Qualification"
+                        // required
+                        onMenuOpen={loadQualifications}
+                        loading={isQualificationsFetching}
                       />
                       {/* skills updated code by Ranjith */}
 
@@ -2597,11 +2574,12 @@ const MockSchedulelater = () => {
           dateTime={combinedDateTime}
           onProceed={handleExternalInterviewerSelect}
           skills={formData?.skills}
-          technology={formData.currentRole}
+          currentRole={formData.currentRole}
           navigatedfrom="mock-interview"
           candidateExperience={formData?.currentExperience}
-          isMockInterview={true} // Correctly passes true for mock interviews
-          // currentExperience={formData?.currentExperience}
+          previousSelectedInterviewers={externalInterviewers}
+
+          // isMockInterview={true} // Correctly passes true for mock interviews
         />
       )}
 

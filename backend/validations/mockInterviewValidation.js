@@ -85,9 +85,9 @@ const mockInterviewPage1Schema = Joi.object({
   candidateName: Joi.string().required().messages({
     "string.empty": "Candidate name is required",
   }),
-  higherQualification: Joi.string().required().messages({
-    "string.empty": "Higher qualification is required",
-  }),
+  // higherQualification: Joi.string().required().messages({
+  //   "string.empty": "Higher qualification is required",
+  // }),
   currentExperience: Joi.string().required().messages({
     "string.empty": "Current experience is required",
   }),
@@ -138,7 +138,7 @@ const mockInterviewUpdateSchema = Joi.object({
   ownerId: Joi.string().optional(),
   tenantId: Joi.string().optional(),
   candidateName: Joi.string().optional(),
-  higherQualification: Joi.string().optional(),
+  // higherQualification: Joi.string().optional(),
   currentExperience: Joi.string().optional(),
   // technology: Joi.string().optional(),
   currentRole: Joi.string().optional(),

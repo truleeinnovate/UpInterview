@@ -11,7 +11,6 @@ import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
 import MockProfileDetails from "./MockProfileDetails";
-import ReschedulePopup from "./ReschedulePopup.jsx";
 import { motion } from "framer-motion";
 import { Eye, MoreVertical, Pencil, Timer, XCircle } from "lucide-react";
 import CancelPopup from "./ScheduleCancelPopup.jsx";
@@ -182,7 +181,7 @@ const MockInterview = () => {
   const { mockinterviewData, loading, totalCount, totalPages } =
     useMockInterviews({
       search: searchQuery,
-      page: currentPage, // This is 0-based, will be converted to 1-based in hook
+      page: currentPage + 1, // This is 0-based, will be converted to 1-based in hook
       limit: rowsPerPage,
       filters: selectedFilters,
     });
@@ -334,18 +333,18 @@ const MockInterview = () => {
     }
   };
 
-  const onRescheduleClick = (mockinterview) => {
-    setReschedule(mockinterview);
-  };
+  // const onRescheduleClick = (mockinterview) => {
+  //   setReschedule(mockinterview);
+  // };
 
   const onCancelClick = (row) => {
     setSelectedRow(row);
     setCancelSchedule(true);
   };
 
-  const closeschedulepopup = () => {
-    setReschedule(false);
-  };
+  // const closeschedulepopup = () => {
+  //   setReschedule(false);
+  // };
 
   // const closepopup = () => {
   //   setCancelSchedule(false);
@@ -1033,12 +1032,12 @@ const MockInterview = () => {
           onClose={() => setCancelSchedule(false)}
         />
       )}
-      {reschedule && (
+      {/* {reschedule && (
         <ReschedulePopup
           onClose={closeschedulepopup}
           MockEditData={reschedule}
         />
-      )}
+      )} */}
     </div>
   );
 };

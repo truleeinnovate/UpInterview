@@ -55,7 +55,6 @@ const { authContextMiddleware } = require("../middleware/authContext.js");
 const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
 const { buildPermissionQuery } = require("../utils/buildPermissionQuery");
 
-
 const modelRequirements = {
   candidate: {
     model: Candidate,
@@ -259,14 +258,14 @@ router.get(
         case "mockinterview":
           const {
             search: mockSearch,
-            page: mockPage = 1,
+            page: mockPage = 0,
             limit: mockLimit,
             filters = {}, // Extract filters object
             currentRole,
             interviewer: mockInterviewer = [],
           } = req.query;
 
-          console.log("req.query", req.query);
+          // console.log("req.query", req.query);
 
           // Extract filters from the filters object
           const {
@@ -352,11 +351,11 @@ router.get(
 
             roundFilters.status = { $in: mappedStatus };
 
-            console.log("Status filter applied:", {
-              original: mockStatus,
-              mapped: mappedStatus,
-              roundFilters: roundFilters.status,
-            });
+            // console.log("Status filter applied:", {
+            //   original: mockStatus,
+            //   mapped: mappedStatus,
+            //   roundFilters: roundFilters.status,
+            // });
           }
 
           // DURATION filter (from MockInterviewRound)
@@ -370,10 +369,10 @@ router.get(
 
           // If any round filters exist → fetch matching mockInterviewIds
           if (Object.keys(roundFilters).length > 0) {
-            console.log(
-              "Applying round filters to MockInterviewRound:",
-              roundFilters
-            );
+            // console.log(
+            //   "Applying round filters to MockInterviewRound:",
+            //   roundFilters
+            // );
 
             const roundDocs = await MockInterviewRound.find(roundFilters)
               .select("mockInterviewId")
@@ -383,10 +382,10 @@ router.get(
               r.mockInterviewId.toString()
             );
 
-            console.log(
-              "Found interview IDs from round filters:",
-              roundFilteredInterviewIds.length
-            );
+            // console.log(
+            //   "Found interview IDs from round filters:",
+            //   roundFilteredInterviewIds.length
+            // );
 
             // No interview matches → return empty response
             if (roundFilteredInterviewIds.length === 0) {
@@ -421,6 +420,9 @@ router.get(
             limitNum = 0;
           }
 
+          // Then use pageNum in your query
+          const skip = limitNum > 0 ? (pageNum - 1) * limitNum : 0;
+
           // Count BEFORE pagination
           const totalCount = await MockInterview.countDocuments(mockQuery);
           const totalPages =
@@ -431,6 +433,7 @@ router.get(
           // ---------------------------------------------------------------
           const mockInterviews = await MockInterview.find(mockQuery)
             .sort({ _id: -1 })
+            .skip(skip)
             .limit(limitNum)
             .lean();
 
@@ -480,10 +483,10 @@ router.get(
               rounds,
               roleDetails: roleInfo
                 ? {
-                  roleName: roleInfo.roleName,
-                  roleLabel: roleInfo.roleLabel,
-                  roleCategory: roleInfo.roleCategory,
-                }
+                    roleName: roleInfo.roleName,
+                    roleLabel: roleInfo.roleLabel,
+                    roleCategory: roleInfo.roleCategory,
+                  }
                 : null,
             };
           });
@@ -498,8 +501,9 @@ router.get(
 
               return interviewers.some((int) => {
                 if (!int) return false;
-                const fullName = `${int.firstName || ""} ${int.lastName || ""
-                  }`.trim();
+                const fullName = `${int.firstName || ""} ${
+                  int.lastName || ""
+                }`.trim();
                 return mockInterviewer.includes(fullName);
               });
             });
@@ -1313,8 +1317,8 @@ router.get(
                 createdDate === "last7"
                   ? 7
                   : createdDate === "last30"
-                    ? 30
-                    : 90;
+                  ? 30
+                  : 90;
               const date = new Date();
               date.setDate(date.getDate() - days);
               Basequery.createdAt = { $gte: date };
@@ -2699,8 +2703,8 @@ async function handleInterviewFiltering(options) {
     const roundIds = rounds.map((r) => r._id);
     const questions = roundIds.length
       ? await InterviewQuestions.find({ roundId: { $in: roundIds } })
-        .select("roundId snapshot")
-        .lean()
+          .select("roundId snapshot")
+          .lean()
       : [];
 
     const questionsMap = questions.reduce((acc, q) => {
@@ -2869,17 +2873,17 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     monthlyData.lastMonthCount === 0
       ? "up"
       : monthlyData.currentMonthCount >= monthlyData.lastMonthCount
-        ? "up"
-        : "down";
+      ? "up"
+      : "down";
 
   const totalTrendValue =
     monthlyData.lastMonthCount === 0
       ? "+100% vs last month"
       : `${(
-        ((monthlyData.currentMonthCount - monthlyData.lastMonthCount) /
-          monthlyData.lastMonthCount) *
-        100
-      ).toFixed(1)}% vs last month`;
+          ((monthlyData.currentMonthCount - monthlyData.lastMonthCount) /
+            monthlyData.lastMonthCount) *
+          100
+        ).toFixed(1)}% vs last month`;
 
   // --------------------------------------------------------------------
   // OUTSOURCED INTERVIEWS
@@ -2939,17 +2943,17 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     outsourcedData.lastMonthCount === 0
       ? "up"
       : outsourcedData.currentMonthCount >= outsourcedData.lastMonthCount
-        ? "up"
-        : "down";
+      ? "up"
+      : "down";
 
   const outsourcedTrendValue =
     outsourcedData.lastMonthCount === 0
       ? "+100% vs last month"
       : `${(
-        ((outsourcedData.currentMonthCount - outsourcedData.lastMonthCount) /
-          outsourcedData.lastMonthCount) *
-        100
-      ).toFixed(1)}% vs last month`;
+          ((outsourcedData.currentMonthCount - outsourcedData.lastMonthCount) /
+            outsourcedData.lastMonthCount) *
+          100
+        ).toFixed(1)}% vs last month`;
 
   // --------------------------------------------------------------------
   // UPCOMING INTERVIEWS (with safe date parsing)
@@ -3070,17 +3074,17 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     upcomingData.lastWeekCount === 0
       ? "up"
       : upcomingData.currentWeekCount >= upcomingData.lastWeekCount
-        ? "up"
-        : "down";
+      ? "up"
+      : "down";
 
   const upcomingTrendValue =
     upcomingData.lastWeekCount === 0
       ? "+100% vs last week"
       : `${(
-        ((upcomingData.currentWeekCount - upcomingData.lastWeekCount) /
-          upcomingData.lastWeekCount) *
-        100
-      ).toFixed(1)}% vs last week`;
+          ((upcomingData.currentWeekCount - upcomingData.lastWeekCount) /
+            upcomingData.lastWeekCount) *
+          100
+        ).toFixed(1)}% vs last week`;
   console.log("upcomingData", {
     matchInterview,
     now,

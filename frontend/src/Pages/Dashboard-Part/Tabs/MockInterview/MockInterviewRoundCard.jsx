@@ -5,52 +5,55 @@ import React, { useState } from "react";
 import {
   Calendar,
   Clock,
-  ChevronDown,
-  ChevronUp,
+  // ChevronDown,
+  // ChevronUp,
   ExternalLink,
   XCircle,
-  User,
+  // User,
   MessageSquare,
-  ThumbsDown,
-  CheckCircle,
-  Edit,
+  // ThumbsDown,
+  // CheckCircle,
+  // Edit,
 } from "lucide-react";
-import Cookies from "js-cookie";
+// import Cookies from "js-cookie";
 import { createPortal } from "react-dom";
 // import { Button } from '../CommonCode-AllTabs/ui/button';
 import InterviewerAvatar from "../CommonCode-AllTabs/InterviewerAvatar";
 import FeedbackModal from "../Interview-New/components/FeedbackModal";
 import RejectionModal from "../Interview-New/components/RejectionModal";
 import { Button } from "../CommonCode-AllTabs/ui/button";
-import axios from "axios";
+// import axios from "axios";
 import { notify } from "../../../../services/toastService";
-import { config } from "../../../../config";
-import { useMockInterviews } from "../../../../apiHooks/useMockInterviews";
-import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+// import { config } from "../../../../config";
+import { useCancelRound } from "../../../../apiHooks/useMockInterviews";
+// import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { useNavigate } from "react-router-dom";
 
 const MoockRoundCard = ({
   mockinterview,
   round,
-    canEdit,
-    onEdit,
+  canEdit,
+  onEdit,
   isActive = false,
   hideHeader = false,
 }) => {
-  const [showInterviewers, setShowInterviewers] = useState(false);
+  // const [showInterviewers, setShowInterviewers] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
-    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-    const [actionInProgress, setActionInProgress] = useState(false);
-      const [confirmAction, setConfirmAction] = useState(null);
-      const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  // const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  // const [actionInProgress, setActionInProgress] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const navigate = useNavigate();
 
-      // console.log("round",round);
-      const { addOrUpdateMockInterview } = useMockInterviews();
+  // console.log("round",round);
+  // const { addOrUpdateMockInterview } = useMockInterviews();
+  const cancelRound = useCancelRound();
 
-       const authToken = Cookies.get("authToken");
-          const tokenPayload = decodeJwt(authToken);
-          const userId = tokenPayload?.userId;
-          const organizationId = tokenPayload?.tenantId;
+  // const authToken = Cookies.get("authToken");
+  // const tokenPayload = decodeJwt(authToken);
+  // const userId = tokenPayload?.userId;
+  // const organizationId = tokenPayload?.tenantId;
 
   const formatDate = (dateString) => {
     if (!dateString) return "Not scheduled";
@@ -65,71 +68,69 @@ const MoockRoundCard = ({
     });
   };
 
-
-  
   const handleStatusChange = async (newStatus, reason = null) => {
-    const roundData = {
-      ...round,
-      _id: round._id,
-     
-      status: newStatus,
-      completedDate: newStatus === "Completed",
-      rejectionReason: reason || null,
-    };
-   
-    
+    // const roundData = {
+    //   ...round,
+    //   _id: round._id,
 
+    //   status: newStatus,
+    //   completedDate: newStatus === "Completed",
+    //   rejectionReason: reason || null,
+    // };
 
     try {
       // const response = await axios.patch(
       //   `${config.REACT_APP_API_URL}/updateMockInterview/${round?.mockInterviewId}`,
       //   payload
       // );
-       // Call API to save/update Page 1 data
-       const response = await addOrUpdateMockInterview(
-        {
-          formData: {
-            // id: round?.mockInterviewId,      // ID of existing mock interview (if editing)
-            ...mockinterview,
-            
-            rounds: [                        // Always an array of rounds
-              {
-                ...round,
-                _id: round?._id,             // keep round ID for updates
-                status: newStatus,           // e.g. "Scheduled", "Completed", etc.
-                completedDate: newStatus === "Completed" ? new Date() : null,
-                rejectionReason: reason || null,
-                interviewers: Array.isArray(round?.interviewers)
-      ? round.interviewers.map((i) => (typeof i === "object" ? i._id : i))
-      : [],
-              },
-            ],
-            isEdit: true,                    // Always true for update
-          },
-          id: round?.mockInterviewId,        // duplicate for backend compatibility
-          isEdit: true,
-          userId,
-          organizationId,
-                                       // the original round reference
-        }
-       );
-       const savedMockId = response?.data?.mockInterview?._id || response?._id || response?.data?._id;
+      // Call API to save/update Page 1 data
+      // const response = await addOrUpdateMockInterview({
+      //   formData: {
+      //     // id: round?.mockInterviewId,      // ID of existing mock interview (if editing)
+      //     ...mockinterview,
 
+      //     rounds: [
+      //       // Always an array of rounds
+      //       {
+      //         ...round,
+      //         _id: round?._id, // keep round ID for updates
+      //         status: newStatus, // e.g. "Scheduled", "Completed", etc.
+      //         completedDate: newStatus === "Completed" ? new Date() : null,
+      //         rejectionReason: reason || null,
+      //         interviewers: Array.isArray(round?.interviewers)
+      //           ? round.interviewers.map((i) =>
+      //               typeof i === "object" ? i._id : i
+      //             )
+      //           : [],
+      //       },
+      //     ],
+      //     isEdit: true, // Always true for update
+      //   },
+      //   id: round?.mockInterviewId, // duplicate for backend compatibility
+      //   isEdit: true,
+      //   userId,
+      //   organizationId,
+      //   // the original round reference
+      // });
 
-       
-       // Show success toast
-       if (savedMockId) {
-        notify.success(`Round status updated to ${newStatus}`, {
-        });
-       }
+      const response = await cancelRound.mutateAsync({
+        mockInterviewId: mockinterview?._id,
+        roundId: round?.rounds[0]?._id,
+      });
+      // const savedMockId =
+      //   response?.data?.mockInterview?._id ||
+      //   response?._id ||
+      //   response?.data?._id;
 
-        if (!savedMockId) {
-               notify.error("Failed to save mock interview data");
-               return;
-             }
-  
-     
-   
+      // Show success toast
+      if (response) {
+        notify.success(`Round status updated to ${newStatus}`, {});
+      }
+
+      if (!response) {
+        notify.error("Failed to save mock interview data");
+        return;
+      }
     } catch (error) {
       console.error("Error updating status:", error);
     }
@@ -140,7 +141,7 @@ const MoockRoundCard = ({
       handleStatusChange(confirmAction);
     }
     setShowConfirmModal(false);
-    setActionInProgress(false);
+    // setActionInProgress(false);
   };
 
   const handleReject = (reason) => {
@@ -148,65 +149,26 @@ const MoockRoundCard = ({
     setShowRejectionModal(false);
   };
 
-    // const handleDeleteRound = async () => {
-    //   try {
-    //     await deleteRoundMutation(round._id);
-    //     notify.success("Round Deleted successfully");
-    //   } catch (error) {
-    //     console.error("Error Deleting Round:", error);
-    //     notify.error("Failed to Delete Round");
-    //   }
-    // };
+  // const handleDeleteRound = async () => {
+  //   try {
+  //     await deleteRoundMutation(round._id);
+  //     notify.success("Round Deleted successfully");
+  //   } catch (error) {
+  //     console.error("Error Deleting Round:", error);
+  //     notify.error("Failed to Delete Round");
+  //   }
+  // };
 
-
-  const handleRemoveInterviewer = (interviewerId) => {
-    const updatedRound = {
-      interviewers: round.interviewers.filter(id => id !== interviewerId)
-    };
-  };
+  // const handleRemoveInterviewer = (interviewerId) => {
+  //   const updatedRound = {
+  //     interviewers: round.interviewers.filter((id) => id !== interviewerId),
+  //   };
+  // };
 
   // Get interviewers based on interviewerType
 
   const externalInterviewers =
     round?.interviewerType === "external" ? round?.interviewers || [] : [];
-
-  // Check if round is active (can be modified)
-  //   const isRoundActive = round.status !== 'Completed' && round.status !== 'Cancelled' && round.status !== 'Rejected' && !isInterviewCompleted;
-
-  // Check if round has feedback
-  // const hasFeedback = round?.detailedFeedback || (round?.feedbacks && round.feedbacks.length > 0);
-
-  // Check if this is an instant interview (scheduled within 15 minutes of creation)
-  const isInstantInterview = () => {
-    if (!round.dateTime) return false;
-
-    const scheduledTime = new Date(round.dateTime).getTime();
-    const creationTime = new Date(round?.dateTime || "").getTime();
-
-    // If scheduled within 30 minutes of creation, consider it instant
-    return scheduledTime - creationTime < 30 * 60 * 1000;
-  };
-
-  const handleActionClick = (action) => {
-    setActionInProgress(true);
-    if (
-      action === "Completed" ||
-      action === "Cancelled" ||
-      action === "Rejected" ||
-      action === "Selected" ||
-      action === "Rescheduled"
-      // action === "Scheduled" // <-- add this line
-    ) {
-      setConfirmAction(action);
-      setShowConfirmModal(true);
-    }
-  };
-
-  const handleSelect = () => {
-    setActionInProgress(true);
-    setConfirmAction("Selected");
-    setShowConfirmModal(true);
-  };
 
   const roundActionPermissions = {
     // Draft: {
@@ -229,18 +191,16 @@ const MoockRoundCard = ({
       canComplete: false,
       canReject: false,
       canSelect: false,
-     
     },
     RequestSent: {
       // canEdit: true,
       // canDelete: false,
       // canMarkScheduled: true,
-      canReschedule: false,
-      canCancel: false,
+      canReschedule: true,
+      canCancel: true,
       canComplete: false,
       canReject: false,
       canSelect: false,
-    
     },
     Scheduled: {
       // canEdit: false,
@@ -251,7 +211,6 @@ const MoockRoundCard = ({
       canComplete: true,
       canReject: false,
       canSelect: false,
-     
     },
     Rescheduled: {
       // canEdit: false,
@@ -262,7 +221,6 @@ const MoockRoundCard = ({
       canComplete: true,
       // canReject: false,
       // canSelect: false,
-     
     },
     Completed: {
       // canEdit: false,
@@ -273,7 +231,6 @@ const MoockRoundCard = ({
       canComplete: false,
       // canReject: true,
       // canSelect: true,
-     
     },
     Cancelled: {
       // canEdit: false,
@@ -284,7 +241,6 @@ const MoockRoundCard = ({
       canComplete: false,
       canReject: false,
       canSelect: false,
-      
     },
     // Rejected: {
     //   canEdit: false,
@@ -295,7 +251,7 @@ const MoockRoundCard = ({
     //   canComplete: false,
     //   canReject: false,
     //   canSelect: false,
-      
+
     // },
     // Selected: {
     //   canEdit: false,
@@ -306,7 +262,7 @@ const MoockRoundCard = ({
     //   canComplete: false,
     //   canReject: false,
     //   canSelect: false,
-    
+
     // },
     InComplete: {
       canEdit: false,
@@ -317,7 +273,6 @@ const MoockRoundCard = ({
       canComplete: false,
       canReject: false,
       canSelect: false,
-     
     },
     NoShow: {
       canEdit: false,
@@ -328,17 +283,15 @@ const MoockRoundCard = ({
       canComplete: false,
       canReject: false,
       canSelect: false,
-      
     },
-
   };
 
   // Helper to get permissions for current round status
   const getRoundPermissions = (status) =>
     roundActionPermissions[status] || roundActionPermissions["Draft"];
 
-    // console.log("status", round.status);
-    const permissions = getRoundPermissions(round.status);
+  // console.log("status", round.status);
+  const permissions = getRoundPermissions(round.status);
 
   return (
     <>
@@ -362,7 +315,7 @@ const MoockRoundCard = ({
                   </div>
                   <div className="flex items-center justify-between sm:w-full">
                     <span>{formatDate(round?.dateTime?.split(" ")[0])}</span>
-                {/* commmented for conformation */}
+                    {/* commmented for conformation */}
                     {/* {isInstantInterview() && (
                       <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
                         Instant
@@ -404,14 +357,16 @@ const MoockRoundCard = ({
                   </button> */}
                 </div>
 
-                {(externalInterviewers).length === 0 && <span className="text-sm text-gray-500">No interviewers assigned</span>
-                  }
+                {externalInterviewers.length === 0 && (
+                  <span className="text-sm text-gray-500">
+                    No interviewers assigned
+                  </span>
+                )}
 
                 {
                   <div className="space-y-2">
                     {/* v1.0.0 ------------------------------------------------------------------ */}
-                   
-                   
+
                     {/* {round?.interviewers?.length > 0 && (
                       <div>
                         <div className="flex items-center text-xs text-gray-500 mb-1">
@@ -441,7 +396,6 @@ const MoockRoundCard = ({
                     )}
  */}
 
-
                     {externalInterviewers.length > 0 && (
                       <div>
                         <div className="flex items-center text-xs text-gray-500 mb-1">
@@ -459,8 +413,9 @@ const MoockRoundCard = ({
                                 size="sm"
                               />
                               <span className="ml-1 text-xs text-gray-600">
-                                {interviewer?.firstName  + " "
-                                 + interviewer?.lastName }
+                                {interviewer?.firstName +
+                                  " " +
+                                  interviewer?.lastName}
                               </span>
                               {/* {isRoundActive && canEdit && (
                                   <button
@@ -481,39 +436,45 @@ const MoockRoundCard = ({
             </div>
 
             <div className="overflow-x-auto">
-                <div className="mt-6 w-full flex gap-2 whitespace-nowrap sm:justify-start md:justify-start justify-end">
-                  {/* Reschedule */}
-                  {permissions.canReschedule &&
-                    round.interviewerType === "external" &&
-                     (
-                      <button
-                        // onClick={() => onEdit(round, { isReschedule: true })}
-                        onClick={() => {
-                          setActionInProgress(true);
-                          setConfirmAction("Rescheduled");
-                          setShowConfirmModal(true);
-                        }}
-                        className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
-                      >
-                        <Calendar className="h-4 w-4 mr-1" /> Reschedule
-                      </button>
-                    )}
-                  {/* Cancel */}
-                  {permissions.canCancel  && (
+              <div className="mt-6 w-full flex gap-2 whitespace-nowrap sm:justify-start md:justify-start justify-end">
+                {/* Reschedule */}
+                {permissions.canReschedule &&
+                  round.interviewerType === "external" && (
                     <button
-                      onClick={() => {
-                        setActionInProgress(true);
-                        setConfirmAction("Cancelled");
-                        setShowConfirmModal(true);
-                      }}
-                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                      onClick={() =>
+                        navigate(`/mock-interview/${mockinterview?._id}/edit`)
+                      }
+                      // onClick={() =>
+                      //   Navigate(`/mock-interview/${mockinterview?._id}/edit`)
+                      // }
+                      // `/mock-interview/${id}/edit`
+                      // onClick={() => onEdit(round, { isReschedule: true })}
+                      // onClick={() => {
+                      //   setActionInProgress(true);
+                      //   setConfirmAction("Rescheduled");
+                      //   setShowConfirmModal(true);
+                      // }}
+                      className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
                     >
-                      <XCircle className="h-4 w-4 mr-1" /> Cancel
+                      <Calendar className="h-4 w-4 mr-1" /> Reschedule
                     </button>
                   )}
-              
-                  {/* Delete */}
-                  {/* {canEdit && permissions.canDelete && (
+                {/* Cancel */}
+                {permissions.canCancel && (
+                  <button
+                    onClick={() => {
+                      // setActionInProgress(true);
+                      setConfirmAction("Cancelled");
+                      setShowConfirmModal(true);
+                    }}
+                    className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                  >
+                    <XCircle className="h-4 w-4 mr-1" /> Cancel
+                  </button>
+                )}
+
+                {/* Delete */}
+                {/* {canEdit && permissions.canDelete && (
                     <button
                       onClick={() => setShowDeleteConfirmModal(true)}
                       className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
@@ -522,19 +483,19 @@ const MoockRoundCard = ({
                     </button>
                   )}
                  */}
-                
-                  {/* Complete */}
-                  {permissions.canComplete  && (
-                    <button
-                      onClick={() => handleActionClick("Completed")}
-                      className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" /> Complete
-                    </button>
-                  )}
 
-                  {/* Select */}
-                  {/* {console.log("333", permissions.canSelect)}
+                {/* Complete */}
+                {/* {permissions.canComplete && (
+                  <button
+                    onClick={() => handleActionClick("Completed")}
+                    className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" /> Complete
+                  </button>
+                )} */}
+
+                {/* Select */}
+                {/* {console.log("333", permissions.canSelect)}
                   {permissions.canSelect && (
                     <button
                       onClick={handleSelect}
@@ -556,54 +517,47 @@ const MoockRoundCard = ({
                     </button>
                   )} */}
 
-                  {/* Feedback */}
-                  {permissions.canFeedback && (
-                    <button
-                      onClick={() => setShowFeedbackModal(true)}
-                      className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-1" /> Feedback
-                    </button>
-                  )}
-
-                  
-
-
-                
-
-                
-                </div>
+                {/* Feedback */}
+                {permissions.canFeedback && (
+                  <button
+                    onClick={() => setShowFeedbackModal(true)}
+                    className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-1" /> Feedback
+                  </button>
+                )}
               </div>
+            </div>
           </>
         </div>
       </div>
 
-         {showConfirmModal &&
-              createPortal(
-                // v1.0.5 <--------------------------------------------------------------------------------
-                <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
-                  <div className="bg-white p-5 rounded-lg shadow-md">
-                    <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-3">
-                      Are you sure you want to {confirmAction.toLowerCase()} this
-                      round?
-                    </h3>
-                    <div className="flex justify-end space-x-3">
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowConfirmModal(false)}
-                      >
-                        No, Cancel
-                      </Button>
-                      <Button variant="success" onClick={handleConfirmStatusChange}>
-                        Yes, Confirm
-                      </Button>
-                    </div>
-                  </div>
-                </div>,
-                document.body
-                // v1.0.5 -------------------------------------------------------------------------------->
-              )}
-            {/* {showDeleteConfirmModal &&
+      {showConfirmModal &&
+        createPortal(
+          // v1.0.5 <--------------------------------------------------------------------------------
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
+            <div className="bg-white p-5 rounded-lg shadow-md">
+              <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-3">
+                Are you sure you want to {confirmAction.toLowerCase()} this
+                round?
+              </h3>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowConfirmModal(false)}
+                >
+                  No, Cancel
+                </Button>
+                <Button variant="success" onClick={handleConfirmStatusChange}>
+                  Yes, Confirm
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+          // v1.0.5 -------------------------------------------------------------------------------->
+        )}
+      {/* {showDeleteConfirmModal &&
               createPortal(
                 // v1.0.5 <------------------------------------------------------------------------------------------
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
@@ -628,23 +582,21 @@ const MoockRoundCard = ({
                 // v1.0.5 ------------------------------------------------------------------------------------------>
               )} */}
 
-            {showRejectionModal && (
-              <RejectionModal
-                onClose={() => setShowRejectionModal(false)}
-                onReject={handleReject}
-                roundName={round.name}
-              />
-            )}
-            {showFeedbackModal && (
-              <FeedbackModal
-                onClose={() => setShowFeedbackModal(false)}
-                // interviewId={interviewData._id}
-                roundId={round}
-              />
-            )}
-      
-      
-      
+      {showRejectionModal && (
+        <RejectionModal
+          onClose={() => setShowRejectionModal(false)}
+          onReject={handleReject}
+          roundName={round.name}
+        />
+      )}
+      {showFeedbackModal && (
+        <FeedbackModal
+          onClose={() => setShowFeedbackModal(false)}
+          // interviewId={interviewData._id}
+          roundId={round}
+        />
+      )}
+
       {/* {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
           <div className="bg-white p-5 rounded-lg shadow-md">

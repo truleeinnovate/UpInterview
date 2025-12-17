@@ -29,6 +29,7 @@ const InterviewerSectionComponent = ({
   isViewMode,
   // Question Bank Props from parent
   interviewerSectionData,
+  preselectedQuestionsResponses,
   setInterviewerSectionData,
   removedQuestionIds,
   setRemovedQuestionIds,
@@ -855,7 +856,12 @@ const InterviewerSectionComponent = ({
     );
   });
   // v1.0.5 ----------------------------------------------------->
-
+  console.log(
+    "interviewerSection",
+    interviewerSectionData,
+    "Or",
+    ...questionsWithFeedback
+  );
   return (
     // v1.0.5 <-----------------------------------------------------------------
     <>
@@ -887,6 +893,217 @@ const InterviewerSectionComponent = ({
             </div>
           )}
         </div>
+        {/* <div className="space-y-4">
+          {(() => {
+            // Get the data to display based on mode
+            let displayData;
+
+            if (isEditMode || isAddMode) {
+              // Create a map to prioritize interviewerSectionData over questionsWithFeedback
+              const questionMap = new Map();
+
+              // First add all questions from questionsWithFeedback
+              (questionsWithFeedback || []).forEach((question) => {
+                const id = question.questionId || question._id || question.id;
+                if (id) {
+                  questionMap.set(id, question);
+                }
+              });
+
+              // Then override with questions from interviewerSectionData (these have latest edits)
+              (interviewerSectionData || []).forEach((question) => {
+                const id = question.questionId || question._id || question.id;
+                if (id) {
+                  questionMap.set(id, question);
+                }
+              });
+
+              displayData = Array.from(questionMap.values());
+            } else {
+              displayData = questionsWithFeedback || [];
+            }
+
+            return displayData.length > 0 ? (
+              displayData.map((question) => {
+                // Get question data from snapshot or root level
+                const questionText =
+                  question.snapshot?.questionText || question.question || "N/A";
+                const expectedAnswer =
+                  question.snapshot?.correctAnswer ||
+                  question.expectedAnswer ||
+                  "N/A";
+                const skill =
+                  question.snapshot?.technology?.[0] ||
+                  question.snapshot?.category?.[0] ||
+                  question.snapshot?.skill ||
+                  question.category ||
+                  "N/A";
+                const difficulty =
+                  question.snapshot?.difficultyLevel ||
+                  question.difficulty ||
+                  "N/A";
+
+                return (
+                  <div
+                    key={question.questionId || question._id || question.id}
+                    className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
+                        {skill}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {difficulty}
+                      </span>
+                    </div>
+                    <h3 className="sm:text-sm font-semibold text-gray-800 mb-2">
+                      {questionText}
+                    </h3>
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm font-medium text-gray-600 mb-2">
+                        Expected Answer:
+                      </p>
+                      <p className="text-sm text-gray-700">{expectedAnswer}</p>
+                    </div>
+                    {(isEditMode || isAddMode) && (
+                      <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
+                        <span>
+                          Mandatory:{" "}
+                          {question.mandatory === "true" ||
+                          question.snapshot?.mandatory === "true"
+                            ? "Yes"
+                            : "No"}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex sm:flex-col sm:items-start items-center justify-between gap-2 mt-2">
+                      <RadioGroupInput each={question} />
+                      <div className="flex items-center gap-4 mt-2">
+                        {(isEditMode || isAddMode) && (
+                          <button
+                            className={`text-sm py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
+                            onClick={() =>
+                              onClickAddNote(
+                                question.questionId ||
+                                  question.id ||
+                                  question._id
+                              )
+                            }
+                          >
+                            {question.notesBool ? "Delete Note" : "Add a Note"}
+                          </button>
+                        )}
+                        <SharePopupSection />
+                        {(isEditMode || isViewMode || isAddMode) && (
+                          <>
+                            <span
+                              className={`transition-transform hover:scale-110 duration-300 ease-in-out  ${
+                                question.isLiked === "liked"
+                                  ? "text-green-700"
+                                  : ""
+                              }`}
+                              onClick={() =>
+                                handleLikeToggle(
+                                  question.questionId ||
+                                    question._id ||
+                                    question.id
+                                )
+                              }
+                            >
+                              <ThumbsUp className="h-4 w-4" />
+                            </span>
+                            <span
+                              className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
+                                question.isLiked === "disliked"
+                                  ? "text-red-500"
+                                  : ""
+                              }`}
+                              style={{ cursor: "pointer" }}
+                              onClick={() =>
+                                handleDislikeToggle(
+                                  question.questionId ||
+                                    question._id ||
+                                    question.id
+                                )
+                              }
+                            >
+                              <ThumbsDown className="h-4 w-4" />
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {question.notesBool && (
+                      <div>
+                        <div className="flex flex-col justify-start mt-4">
+                          <label
+                            htmlFor={`note-input-${
+                              question.questionId || question.id || question._id
+                            }`}
+                            className="w-[170px] font-bold text-gray-700"
+                          >
+                            Note
+                          </label>
+                          {isEditMode || isAddMode ? (
+                            <div className="flex flex-col items-start w-full h-[80px]">
+                              <div className="w-full relative rounded-md">
+                                <input
+                                  className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
+                                  id={`note-input-${
+                                    question.questionId ||
+                                    question.id ||
+                                    question._id
+                                  }`}
+                                  type="text"
+                                  value={question.note || ""}
+                                  onChange={(e) =>
+                                    onChangeInterviewQuestionNotes(
+                                      question.questionId ||
+                                        question.id ||
+                                        question._id,
+                                      e.target.value.slice(0, 250)
+                                    )
+                                  }
+                                  placeholder="Add your note here"
+                                />
+                              </div>
+                              <span className="w-full text-sm text-right text-gray-500">
+                                {question.note?.length || 0}/250
+                              </span>
+                            </div>
+                          ) : (
+                            <p className="w-full flex gap-x-8 gap-y-2 text-sm text-gray-500">
+                              {question.note}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {(dislikeQuestionId ===
+                      (question.questionId || question._id || question.id) ||
+                      !!question.whyDislike) && (
+                      <DisLikeSection each={question} />
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              // Empty state when no questions are present
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+                <div className="text-gray-500 mb-4">
+                  <Plus className="mx-auto h-5 w-5 mb-2" />
+                  <p className="text-lg font-medium">
+                    No interviewer questions found
+                  </p>
+                  <p className="text-sm">
+                    No questions have been added by interviewers for this round
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+        </div> */}
+
         <div className="space-y-4">
           {questionsWithFeedback?.length > 0 ? (
             // Render merged interviewer questions with feedback applied
@@ -910,7 +1127,6 @@ const InterviewerSectionComponent = ({
                     question?.question ||
                     "N/A"}
                 </h3>
-                {/* {question.expectedAnswer && ( */}
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm font-medium text-gray-600 mb-2">
                     Expected Answer:
@@ -939,7 +1155,9 @@ const InterviewerSectionComponent = ({
                       <button
                         className={`text-sm py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
                         onClick={() =>
-                          onClickAddNote(question.questionId || question.id)
+                          onClickAddNote(
+                            question.questionId || question.id || question._id
+                          )
                         }
                       >
                         {question.notesBool ? "Delete Note" : "Add a Note"}
@@ -954,7 +1172,7 @@ const InterviewerSectionComponent = ({
                           }`}
                           onClick={() =>
                             handleLikeToggle(
-                              question.questionId || question._id
+                              question.questionId || question._id || question.id
                             )
                           }
                         >
@@ -969,7 +1187,7 @@ const InterviewerSectionComponent = ({
                           style={{ cursor: "pointer" }}
                           onClick={() =>
                             handleDislikeToggle(
-                              question.questionId || question._id
+                              question.questionId || question._id || question.id
                             )
                           }
                         >
@@ -981,11 +1199,11 @@ const InterviewerSectionComponent = ({
                 </div>
                 {question.notesBool && (
                   <div>
-                    {/* v1.0.4 <------------------------------------------------------ */}
                     <div className="flex flex-col justify-start mt-4">
-                      {/* v1.0.4 ------------------------------------------------------> */}
                       <label
-                        htmlFor={` note-input-${question.questionId}`}
+                        htmlFor={` note-input-${
+                          question.questionId || question._id || question.id
+                        }`}
                         className="w-[170px] font-bold text-gray-700"
                       >
                         Note
@@ -995,12 +1213,18 @@ const InterviewerSectionComponent = ({
                           <div className="w-full relative  rounded-md ">
                             <input
                               className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-                              id={`note-input-${question.questionId}`}
+                              id={`note-input-${
+                                question.questionId ||
+                                question._id ||
+                                question.id
+                              }`}
                               type="text"
                               value={question.note}
                               onChange={(e) =>
                                 onChangeInterviewQuestionNotes(
-                                  question.questionId,
+                                  question.questionId ||
+                                    question._id ||
+                                    question.id,
                                   e.target.value.slice(0, 250)
                                 )
                               }
@@ -1010,10 +1234,6 @@ const InterviewerSectionComponent = ({
                           <span className="w-full text-sm text-right text-gray-500">
                             {question.note?.length || 0}/250
                           </span>
-
-                          {/* <span className="absolute right-[1rem] bottom-[0.2rem] text-gray-500">
-                                  {question.note?.length || 0}/250
-                                </span> */}
                         </div>
                       ) : (
                         <p className="w-full flex gap-x-8 gap-y-2 text-sm text-gray-500">
@@ -1023,10 +1243,9 @@ const InterviewerSectionComponent = ({
                     </div>
                   </div>
                 )}
-                {(dislikeQuestionId === (question.questionId || question._id) ||
+                {(dislikeQuestionId ===
+                  (question.questionId || question._id || question.id) ||
                   !!question.whyDislike) && <DisLikeSection each={question} />}
-
-                {/* )} */}
               </div>
             ))
           ) : (

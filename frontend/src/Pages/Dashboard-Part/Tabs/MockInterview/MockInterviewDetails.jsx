@@ -4,7 +4,7 @@
 // v1.0.3 - Ashok - fixed style related issues
 
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   User,
   Plus,
@@ -19,12 +19,13 @@ import StatusBadge from "../CommonCode-AllTabs/StatusBadge.jsx";
 import Breadcrumb from "../CommonCode-AllTabs/Breadcrumb.jsx";
 import MoockRoundCard from "./MockInterviewRoundCard.jsx";
 import MockCandidateDetails from "./MockinterviewCandidate.jsx";
-import { config } from "../../../../config.js";
 import { useMockInterviewById } from "../../../../apiHooks/useMockInterviews.js";
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
   const { mockInterview: mockinterview, isLoading } = useMockInterviewById(id);
+
+  const navigate = useNavigate();
 
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -171,9 +172,17 @@ const MockInterviewDetails = () => {
 
   // Call this function for cancellation
 
+  /*************  ✨ Windsurf Command 🌟  *************/
+  /**
+   * Check if the user can add a new round to the mock interview
+   * @returns {boolean} True if the user can add a new round, false otherwise
+   */
   const canAddRound = () => {
-    return mockinterview?.status === "Draft";
+    // Check if the mock interview is in draft status
+    // If it is, then the user can add a new round
+    return mockinterview?.rounds?.status === "Draft";
   };
+  /*******  0f06b6ee-9185-481b-bd68-17acfa422ab0  *******/
 
   // const canEditRound = (round) => {
   //   return mockinterview?.status === 'Draft' && round.status !== 'Completed';
@@ -183,9 +192,12 @@ const MockInterviewDetails = () => {
   //   navigate(`/interviews/${id}/rounds/${round._id}`);
   // };
 
-  // const handleAddRound = () => {
-  //   navigate(`/interviews/${id}/rounds/new`);
-  // };
+  const handleAddRound = () => {
+    navigate(`/mock-interview/${id}/edit`, {
+      state: { from: "tableMode" },
+    });
+    // navigate(`/interviews/${id}/rounds/new`);
+  };
 
   // const handleSelectRound = (roundId) => {
   //   setActiveRound(roundId);
@@ -249,6 +261,8 @@ const MockInterviewDetails = () => {
     ? [rounds]
     : [];
 
+  // console.log(normalizedRounds.length);
+
   const capitalizeFirstLetter = (str) => {
     if (!str) return "";
     return str?.charAt(0)?.toUpperCase() + str?.slice(1);
@@ -278,9 +292,12 @@ const MockInterviewDetails = () => {
                   {/* v1.0.1 <----------------------------------------------------------------------------- */}
                   <h3 className="flex items-center text-lg leading-6 font-medium text-gray-900 gap-3">
                     Mock Interview Details
-                    {mockinterview?.status && (
+                    {mockinterview?.rounds[0]?.status && (
                       <span className="ml-1">
-                        <StatusBadge status={mockinterview?.status} size="md" />
+                        <StatusBadge
+                          status={mockinterview?.rounds[0]?.status}
+                          size="md"
+                        />
                       </span>
                     )}
                   </h3>
@@ -295,14 +312,32 @@ const MockInterviewDetails = () => {
                   {/* v1.0.0 ---------------------------------------------------------------> */}
                 </div>
                 <div className="flex space-x-2">
-                  <Link
+                  {![
+                    "Completed",
+                    "Rejected",
+                    "Selected",
+                    "Scheduled",
+                    "Cancelled",
+                    "RequestSent",
+                  ].includes(rounds[0]?.status) && (
+                    <button
+                      onClick={handleAddRound}
+                      // to={`/mock-interview/${id}/edit`}
+                      className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <Edit className="h-4 w-4 sm:mr-0 mr-1" />
+                      <span className="sm:hidden inline">Edit Interview</span>
+                    </button>
+                  )}
+
+                  {/* <Link
                     to={`/mock-interview/${id}/edit`}
                     // onClick={() =>  navigate(`/mock-interview/${mockinterview._id}/edit`, { state: { from: location.pathname }})}
                     className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     <Edit className="h-4 w-4 sm:mr-0 mr-1" />
                     <span className="sm:hidden inline">Edit Interview</span>
-                  </Link>
+                  </Link> */}
                 </div>
               </div>
               {/* v1.0.2 -------------------------------------------------------------------------> */}
@@ -498,15 +533,16 @@ const MockInterviewDetails = () => {
                   {normalizedRounds.length === 0 && (
                     <div className="text-center py-8 bg-gray-50 rounded-lg">
                       <p className="text-gray-500">No rounds added yet.</p>
-                      {canAddRound() && (
-                        <button
-                          // onClick={handleAddRound}
-                          className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Add First Round
-                        </button>
-                      )}
+                      {/* {canAddRound() && ( */}
+
+                      {/* <button
+                        onClick={handleAddRound}
+                        className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue  focus:outline-none "
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add First Round
+                      </button> */}
+                      {/* )} */}
                     </div>
                   )}
                 </div>
