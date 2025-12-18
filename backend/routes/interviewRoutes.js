@@ -19,23 +19,45 @@ const {
   getInterviewDataforOrg,
 } = require("../controllers/interviewController");
 
+const loggingService = require("../middleware/loggingService");
+
 // post call interview create routes
-router.post("/", createInterview);
+router.post(
+  "/",
+  loggingService.internalLoggingMiddleware,
+  createInterview
+);
 
 // patch call for interview update routes
-router.patch("/:id", updateInterview);
+router.patch(
+  "/:id",
+  loggingService.internalLoggingMiddleware,
+  updateInterview
+);
 
 // Interview Status Update
-router.patch("/status/:interviewId/:status", updateInterviewStatus);
+router.patch(
+  "/status/:interviewId/:status",
+  loggingService.internalLoggingMiddleware,
+  updateInterviewStatus
+);
 
 //  interview delete routes
 router.delete("/delete-interview/:id", deleteInterview);
 
 //  interview Rounds post APi's routes
-router.post("/save-round", saveInterviewRound);
+router.post(
+  "/save-round",
+  loggingService.internalLoggingMiddleware,
+  saveInterviewRound
+);
 
 //  interview round update routes
-router.patch("/update-round/:roundId", updateInterviewRound);
+router.patch(
+  "/update-round/:roundId",
+  loggingService.internalLoggingMiddleware,
+  updateInterviewRound
+);
 
 //  interview round delete routes
 router.delete("/delete-round/:id", deleteRound);

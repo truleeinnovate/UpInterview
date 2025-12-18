@@ -37,6 +37,9 @@ const {
 const InterviewAvailability = require("../models/InterviewAvailability.js");
 
 const organizationUserCreation = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create/Update Organization User";
+
   try {
     const { UserData, contactData } = req.body;
 
@@ -116,6 +119,23 @@ const organizationUserCreation = async (req, res) => {
       } else {
       }
 
+      res.locals.logData = {
+        tenantId:
+          existingUser.tenantId ||
+          contactData.tenantId ||
+          UserData.tenantId ||
+          "",
+        ownerId: savedUser._id?.toString() || "",
+        processName: "Create/Update Organization User",
+        requestBody: req.body,
+        status: "success",
+        message: "Organization user updated successfully",
+        responseBody: {
+          userId: savedUser._id,
+          contactId: existingContact?._id,
+        },
+      };
+
       return res.status(200).json({
         message: "User updated successfully",
         userId: savedUser._id,
@@ -159,6 +179,20 @@ const organizationUserCreation = async (req, res) => {
       });
 
       const savedContact = await newContact.save();
+
+      res.locals.logData = {
+        tenantId: savedUser.tenantId || contactData.tenantId || "",
+        ownerId: savedUser._id?.toString() || "",
+        processName: "Create/Update Organization User",
+        requestBody: req.body,
+        status: "success",
+        message: "Organization user created successfully",
+        responseBody: {
+          userId: savedUser._id,
+          contactId: savedContact._id,
+        },
+      };
+
       return res.status(200).json({
         message: "User created successfully",
         contactId: savedContact._id, // using this profile image upload
@@ -170,6 +204,19 @@ const organizationUserCreation = async (req, res) => {
       stack: error.stack,
       errorDetails: error,
     });
+
+    res.locals.logData = {
+      tenantId:
+        req.body?.UserData?.tenantId ||
+        req.body?.contactData?.tenantId ||
+        "",
+      ownerId: req.body?.UserData?._id || "",
+      processName: "Create/Update Organization User",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
@@ -404,6 +451,9 @@ const getBasedIdOrganizations = async (req, res) => {
 
 // Check subdomain availability
 const checkSubdomainAvailability = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Check Subdomain Availability";
+
   try {
     const { subdomain } = req.body;
 
@@ -425,11 +475,37 @@ const checkSubdomainAvailability = async (req, res) => {
     const existingOrganization = await Tenant.findOne({ subdomain });
 
     if (existingOrganization) {
+      res.locals.logData = {
+        tenantId: "",
+        ownerId: "",
+        processName: "Check Subdomain Availability",
+        requestBody: req.body,
+        status: "success",
+        message: `${subdomain} is already taken`,
+        responseBody: {
+          available: false,
+          message: `${subdomain} is already taken`,
+        },
+      };
+
       return res.status(200).json({
         available: false,
         message: `${subdomain} is already taken`,
       });
     }
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Check Subdomain Availability",
+      requestBody: req.body,
+      status: "success",
+      message: `${subdomain} is available`,
+      responseBody: {
+        available: true,
+        message: `${subdomain} is available`,
+      },
+    };
 
     return res.status(200).json({
       available: true,
@@ -437,6 +513,15 @@ const checkSubdomainAvailability = async (req, res) => {
     });
   } catch (error) {
     console.error("Error checking subdomain availability:", error);
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Check Subdomain Availability",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res
       .status(500)
       .json({ message: "Server error", error: error.message });
@@ -445,6 +530,9 @@ const checkSubdomainAvailability = async (req, res) => {
 
 // Update organization subdomain
 const updateSubdomain = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Organization Subdomain";
+
   try {
     const {
       organizationId,
@@ -509,6 +597,25 @@ const updateSubdomain = async (req, res) => {
       return res.status(404).json({ message: "Organization not found" });
     }
 
+    res.locals.logData = {
+      tenantId: updatedOrganization._id || "",
+      ownerId: updatedOrganization.ownerId || "",
+      processName: "Update Organization Subdomain",
+      requestBody: req.body,
+      status: "success",
+      message: "Subdomain updated successfully",
+      responseBody: {
+        success: true,
+        organization: {
+          subdomain: updatedOrganization.subdomain,
+          fullDomain: updatedOrganization.fullDomain,
+          subdomainStatus: updatedOrganization.subdomainStatus,
+          subdomainAddedDate: updatedOrganization.subdomainAddedDate,
+          subdomainLastVerified: updatedOrganization.subdomainLastVerified,
+        },
+      },
+    };
+
     return res.status(200).json({
       success: true,
       message: "Subdomain updated successfully",
@@ -523,6 +630,15 @@ const updateSubdomain = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating subdomain:", error);
+    res.locals.logData = {
+      tenantId: req.body?.organizationId || "",
+      ownerId: "",
+      processName: "Update Organization Subdomain",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res
       .status(500)
       .json({ message: "Server error", error: error.message });
@@ -572,6 +688,9 @@ const getOrganizationSubdomain = async (req, res) => {
 
 // Activate subdomain
 const activateSubdomain = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Activate Organization Subdomain";
+
   try {
     const {
       organizationId,
@@ -604,6 +723,22 @@ const activateSubdomain = async (req, res) => {
       return res.status(404).json({ message: "Organization not found" });
     }
 
+    res.locals.logData = {
+      tenantId: updatedOrganization._id || "",
+      ownerId: updatedOrganization.ownerId || "",
+      processName: "Activate Organization Subdomain",
+      requestBody: req.body,
+      status: "success",
+      message: "Subdomain activated successfully",
+      responseBody: {
+        success: true,
+        organization: {
+          subdomainStatus: updatedOrganization.subdomainStatus,
+          subdomainLastVerified: updatedOrganization.subdomainLastVerified,
+        },
+      },
+    };
+
     return res.status(200).json({
       success: true,
       message: "Subdomain activated successfully",
@@ -616,6 +751,15 @@ const activateSubdomain = async (req, res) => {
     });
   } catch (error) {
     console.error("Error activating subdomain:", error);
+    res.locals.logData = {
+      tenantId: req.body?.organizationId || "",
+      ownerId: "",
+      processName: "Activate Organization Subdomain",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res
       .status(500)
       .json({ message: "Server error", error: error.message });
@@ -624,6 +768,9 @@ const activateSubdomain = async (req, res) => {
 
 // Deactivate subdomain
 const deactivateSubdomain = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Deactivate Organization Subdomain";
+
   try {
     const { organizationId } = req.body;
 
@@ -654,6 +801,25 @@ const deactivateSubdomain = async (req, res) => {
       return res.status(404).json({ message: "Organization not found" });
     }
 
+    res.locals.logData = {
+      tenantId: updatedOrganization._id || "",
+      ownerId: updatedOrganization.ownerId || "",
+      processName: "Deactivate Organization Subdomain",
+      requestBody: req.body,
+      status: "success",
+      message: "Subdomain deactivated successfully",
+      responseBody: {
+        success: true,
+        organization: {
+          subdomain: updatedOrganization.subdomain,
+          fullDomain: updatedOrganization.fullDomain,
+          subdomainStatus: updatedOrganization.subdomainStatus,
+          subdomainAddedDate: updatedOrganization.subdomainAddedDate,
+          subdomainLastVerified: updatedOrganization.subdomainLastVerified,
+        },
+      },
+    };
+
     return res.status(200).json({
       success: true,
       message: "Subdomain deactivated successfully",
@@ -668,6 +834,15 @@ const deactivateSubdomain = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deactivating subdomain:", error);
+    res.locals.logData = {
+      tenantId: req.body?.organizationId || "",
+      ownerId: "",
+      processName: "Deactivate Organization Subdomain",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res
       .status(500)
       .json({ message: "Server error", error: error.message });
@@ -677,6 +852,9 @@ const deactivateSubdomain = async (req, res) => {
 // patch organization details
 
 const updateBasedIdOrganizations = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Organization Details";
+
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -700,6 +878,16 @@ const updateBasedIdOrganizations = async (req, res) => {
       return res.status(404).json({ message: "Organization not found" });
     }
 
+    res.locals.logData = {
+      tenantId: organization._id || id || "",
+      ownerId: organization.ownerId || "",
+      processName: "Update Organization Details",
+      requestBody: req.body,
+      status: "success",
+      message: "Organization updated successfully",
+      responseBody: organization,
+    };
+
     res.status(200).json({
       status: "success",
       message: "Organization updated success",
@@ -707,6 +895,15 @@ const updateBasedIdOrganizations = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating organization:", error);
+    res.locals.logData = {
+      tenantId: req.params?.id || "",
+      ownerId: "",
+      processName: "Update Organization Details",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({
       message: "Error updating organization",
       error: error.message,
@@ -1699,6 +1896,9 @@ const getOrganizationById = async (req, res) => {
 };
 // v1.0.0 -------------------------------------------------------------------------------------------->
 const superAdminLoginAsUser = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Super Admin Login As User";
+
   try {
     const { userId } = req.body;
 
@@ -1732,6 +1932,21 @@ const superAdminLoginAsUser = async (req, res) => {
     };
     const authToken = generateToken(payload, { expiresIn: "7h" });
 
+    res.locals.logData = {
+      tenantId: user.tenantId?.toString() || "",
+      ownerId: user._id?.toString() || "",
+      processName: "Super Admin Login As User",
+      requestBody: { userId: req.body?.userId },
+      status: "success",
+      message: "Super admin login as user successful",
+      responseBody: {
+        userId: user._id.toString(),
+        tenantId: user.tenantId.toString(),
+        isOrganization,
+        redirect: "/home",
+      },
+    };
+
     res.status(200).json({
       success: true,
       message: "Login as user successful",
@@ -1743,6 +1958,15 @@ const superAdminLoginAsUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Error during super admin login as user:", error);
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: req.body?.userId || "",
+      processName: "Super Admin Login As User",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
