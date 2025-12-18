@@ -2,7 +2,7 @@
 const getErrorMessage = (field, value) => {
   const messages = {
     candidateName: "Candidate Name is required",
-    higherQualification: "Higher Qualification is required",
+    // higherQualification: "Higher Qualification is required",
     currentExperience: "Experience is required",
     // technology: "Technology is required",
     currentRole: "Current Role is required",
@@ -30,7 +30,7 @@ const getErrorMessage = (field, value) => {
 const validatePage1 = (formData, entries) => {
   const requiredFields = {
     candidateName: formData.candidateName,
-    higherQualification: formData.higherQualification,
+    // higherQualification: formData.higherQualification,
     // technology: formData.technology,
     currentExperience: formData.currentExperience,
     currentRole: formData.currentRole,

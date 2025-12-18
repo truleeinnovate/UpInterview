@@ -3162,11 +3162,10 @@ const RoundFormInterviews = () => {
         <OutsourcedInterviewerModal
           onClose={() => setShowOutsourcePopup(false)}
           dateTime={combinedDateTime}
-          positionData={position}
-          candidateData={candidate}
-          onProceed={handleExternalInterviewerSelect}
+          skills={position?.skills}
           candidateExperience={candidate?.CurrentExperience}
-          isMockInterview={false}
+          currentRole={candidate?.CurrentRole}
+          onProceed={handleExternalInterviewerSelect}
           previousSelectedInterviewers={externalInterviewers}
           navigatedfrom="interviewRound"
         />

@@ -84,6 +84,11 @@ const InterviewsMiniTabComponent = ({
             // Question Bank Props
             interviewerSectionData={interviewerSectionData || []}
             setInterviewerSectionData={setInterviewerSectionData}
+            preselectedQuestionsResponses={preselectedQuestionsResponses}
+            // setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
+            // handlePreselectedQuestionResponse={
+            //   handlePreselectedQuestionResponse
+            // }
             removedQuestionIds={removedQuestionIds}
             setRemovedQuestionIds={setRemovedQuestionIds}
             isQuestionBankOpen={isQuestionBankOpen}

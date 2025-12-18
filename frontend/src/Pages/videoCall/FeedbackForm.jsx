@@ -84,7 +84,7 @@ const FeedbackForm = ({
   isScheduler,
   schedulerFeedbackData,
 }) => {
-  // console.log("feedbackCandidate", isEditMode, isViewMode, isAddMode);
+  console.log("feedbackCandidate", isEditMode, isViewMode, isAddMode);
   useScrollLock(true);
   const location = useLocation();
   const locationFeedback = location.state?.feedback;
@@ -1391,7 +1391,7 @@ const FeedbackForm = ({
   return (
     // v1.0.4 <----------------------------------------------------------------------
     <>
-      {isAddMode === true && (
+      {isAddMode && (
         <div className="right-4 z-40  pb-3 top-5">
           <div className="flex justify-end items-center gap-3">
             <button
@@ -1464,7 +1464,7 @@ const FeedbackForm = ({
                 Skill Ratings{" "}
                 {!isViewMode && <span className="text-red-500">*</span>}
               </label>
-              {isViewMode || isEditMode ? (
+              {isViewMode ? (
                 <div></div>
               ) : (
                 // {!isViewMode &&
@@ -1569,7 +1569,7 @@ const FeedbackForm = ({
                 </span>
               </div>
               {/* v1.0.3 --------------------------------------------------------> */}
-              {isViewMode || isEditMode ? (
+              {isViewMode ? (
                 <div></div>
               ) : (
                 <button
