@@ -304,6 +304,9 @@ exports.verifyOtp = async (req, res) => {
 };
 
 exports.submitCandidateAssessment = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Submit Candidate Assessment";
+
   try {
     const {
       candidateAssessmentId,
@@ -421,6 +424,16 @@ exports.submitCandidateAssessment = async (req, res) => {
       // Continue execution even if notification fails
     }
 
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Submit Candidate Assessment",
+      requestBody: req.body,
+      status: "success",
+      message: "Assessment submitted successfully",
+      responseBody: updatedAssessment,
+    };
+
     return res.status(200).json({
       success: true,
       message: "Assessment submitted successfully",
@@ -428,6 +441,16 @@ exports.submitCandidateAssessment = async (req, res) => {
     });
   } catch (error) {
     console.error("Error submitting candidate assessment:", error);
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Submit Candidate Assessment",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res.status(500).json({
       success: false,
       message: "Failed to submit assessment",
@@ -435,10 +458,12 @@ exports.submitCandidateAssessment = async (req, res) => {
     });
   }
 };
-// ------------------------------v1.0.0 >
 
 // Extend candidate assessment expiry date
 exports.extendCandidateAssessment = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Extend Candidate Assessment";
+
   try {
     const { candidateAssessmentIds, extensionDays } = req.body;
 
@@ -550,6 +575,19 @@ exports.extendCandidateAssessment = async (req, res) => {
       }
     }
 
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Extend Candidate Assessment",
+      requestBody: req.body,
+      status: "success",
+      message: `Successfully extended ${results.length} assessment(s)`,
+      responseBody: {
+        extended: results,
+        errors: errors,
+      },
+    };
+
     return res.status(200).json({
       success: true,
       message: `Successfully extended ${results.length} assessment(s)`,
@@ -560,6 +598,16 @@ exports.extendCandidateAssessment = async (req, res) => {
     });
   } catch (error) {
     console.error("Error extending candidate assessments:", error);
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Extend Candidate Assessment",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res.status(500).json({
       success: false,
       message: "Failed to extend assessments",
@@ -570,6 +618,9 @@ exports.extendCandidateAssessment = async (req, res) => {
 
 // Cancel candidate assessments
 exports.cancelCandidateAssessments = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Cancel Candidate Assessments";
+
   try {
     const { candidateAssessmentIds } = req.body;
 
@@ -662,6 +713,19 @@ exports.cancelCandidateAssessments = async (req, res) => {
       }
     }
 
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Cancel Candidate Assessments",
+      requestBody: req.body,
+      status: "success",
+      message: `Successfully cancelled ${results.length} assessment(s)`,
+      responseBody: {
+        cancelled: results,
+        errors: errors,
+      },
+    };
+
     return res.status(200).json({
       success: true,
       message: `Successfully cancelled ${results.length} assessment(s)`,
@@ -672,6 +736,16 @@ exports.cancelCandidateAssessments = async (req, res) => {
     });
   } catch (error) {
     console.error("Error cancelling candidate assessments:", error);
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Cancel Candidate Assessments",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res.status(500).json({
       success: false,
       message: "Failed to cancel assessments",
@@ -772,6 +846,9 @@ exports.updateScheduleAssessmentStatus = async (scheduleAssessmentId) => {
 
 // API endpoint to update schedule assessment status
 exports.updateScheduleStatus = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Schedule Assessment Status";
+
   try {
     const { scheduleAssessmentId } = req.params;
 
@@ -793,6 +870,16 @@ exports.updateScheduleStatus = async (req, res) => {
       });
     }
 
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Update Schedule Assessment Status",
+      requestBody: req.body,
+      status: "success",
+      message: "Schedule assessment status updated successfully",
+      responseBody: updatedSchedule,
+    };
+
     return res.status(200).json({
       success: true,
       message: "Schedule assessment status updated successfully",
@@ -800,6 +887,16 @@ exports.updateScheduleStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating schedule assessment status:", error);
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Update Schedule Assessment Status",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res.status(500).json({
       success: false,
       message: "Failed to update schedule assessment status",
@@ -810,6 +907,9 @@ exports.updateScheduleStatus = async (req, res) => {
 
 // Function to automatically check and update expired candidate assessments
 exports.checkAndUpdateExpiredAssessments = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Check And Update Expired Assessments";
+
   try {
     const now = new Date();
 
@@ -922,26 +1022,48 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
       }
     }
 
+    const responseBody = {
+      expiredAssessments: {
+        updated: updatedAssessments.length,
+        failed: failedUpdates.length,
+        details: updatedAssessments,
+        failures: failedUpdates,
+      },
+      scheduleAssessments: {
+        updated: updatedSchedules.length,
+        failed: failedScheduleUpdates.length,
+        details: updatedSchedules,
+        failures: failedScheduleUpdates,
+      },
+    };
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Check And Update Expired Assessments",
+      requestBody: req.body,
+      status: "success",
+      message: "Expiry check completed successfully",
+      responseBody,
+    };
+
     res.json({
       success: true,
       message: "Expiry check completed successfully",
-      data: {
-        expiredAssessments: {
-          updated: updatedAssessments.length,
-          failed: failedUpdates.length,
-          details: updatedAssessments,
-          failures: failedUpdates,
-        },
-        scheduleAssessments: {
-          updated: updatedSchedules.length,
-          failed: failedScheduleUpdates.length,
-          details: updatedSchedules,
-          failures: failedScheduleUpdates,
-        },
-      },
+      data: responseBody,
     });
   } catch (error) {
     console.error("Error checking expired assessments:", error);
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Check And Update Expired Assessments",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({
       success: false,
       message: "Failed to check expired assessments",
@@ -950,9 +1072,11 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
   }
 };
 
-//corn runScheduleAssessmentStatusUpdateJob and updateAllScheduleStatuse both is same code(ashraf)
 // API endpoint to update all schedule assessment statuses
 exports.updateAllScheduleStatuses = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update All Schedule Statuses";
+
   try {
     const scheduleAssessments = await ScheduleAssessment.find({});
     const results = [];
@@ -978,6 +1102,16 @@ exports.updateAllScheduleStatuses = async (req, res) => {
       }
     }
 
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Update All Schedule Statuses",
+      requestBody: req.body,
+      status: "success",
+      message: `Successfully updated ${results.length} schedule assessment(s)`,
+      responseBody: { updated: results, errors },
+    };
+
     return res.status(200).json({
       success: true,
       message: `Successfully updated ${results.length} schedule assessment(s)`,
@@ -985,6 +1119,16 @@ exports.updateAllScheduleStatuses = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating all schedule assessment statuses:", error);
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Update All Schedule Statuses",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res.status(500).json({
       success: false,
       message: "Failed to update schedule assessment statuses",

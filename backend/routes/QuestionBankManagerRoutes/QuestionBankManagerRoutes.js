@@ -4,6 +4,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer"); // import multer
 const { trackUploadBandwidth } = require("../../middleware/bandwidthTracking");
+const loggingService = require("../../middleware/loggingService");
 const {
   createQuestions,
   getQuestionById,
@@ -16,7 +17,13 @@ const {
 const upload = multer({ dest: "uploads/" });
 
 // Create single/bulk or CSV upload - with bandwidth tracking
-router.post("/:type", upload.single("file"), trackUploadBandwidth, createQuestions);
+router.post(
+  "/:type",
+  upload.single("file"),
+  trackUploadBandwidth,
+  loggingService.internalLoggingMiddleware,
+  createQuestions
+);
 
 // Get all
 router.get("/:type", getQuestions);
@@ -25,7 +32,11 @@ router.get("/:type", getQuestions);
 router.get("/:type/:id", getQuestionById);
 
 // Update by ID
-router.put("/:type/:id", updateQuestionById);
+router.put(
+  "/:type/:id",
+  loggingService.internalLoggingMiddleware,
+  updateQuestionById
+);
 
 router.delete("/:type", getQuestionDeleteById);
 

@@ -8,8 +8,14 @@ const {
     updateGroup
 } = require('../controllers/interviewerGroupController');
 
+const loggingService = require('../middleware/loggingService');
+
 // Create a new group
-router.post('/', createGroup);
+router.post(
+    '/',
+    loggingService.internalLoggingMiddleware,
+    createGroup
+);
 
 // Paginated list of groups
 router.get('/', getPaginatedGroups);
@@ -18,7 +24,11 @@ router.get('/', getPaginatedGroups);
 router.get('/data', getAllGroups);
 
 // Update group
-router.patch('/update/:id', updateGroup);
+router.patch(
+	'/update/:id',
+	loggingService.internalLoggingMiddleware,
+	updateGroup
+);
 
 // Get single group by ID
 router.get('/:id', getGroupById);
