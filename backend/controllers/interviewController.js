@@ -231,6 +231,9 @@ const {
 
 //  post call for interview page
 const createInterview = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Interview";
+
   try {
     const {
       candidateId,
@@ -425,9 +428,36 @@ const createInterview = async (req, res) => {
       status: "applied",
     });
 
+    res.locals.logData = {
+      tenantId: interview.tenantId?.toString() || orgId || "",
+      ownerId: interview.ownerId?.toString() || userId || "",
+      processName: "Create Interview",
+      requestBody: req.body,
+      status: "success",
+      message: "Interview created successfully",
+      responseBody: interview,
+    };
+
     res.status(201).json(interview);
   } catch (error) {
     console.error("Error creating interview:", error);
+
+    // Do not log 4xx validation errors
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+
+    res.locals.logData = {
+      tenantId: req.body?.orgId || "",
+      ownerId: req.body?.userId || "",
+      processName: "Create Interview",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
@@ -436,6 +466,9 @@ const createInterview = async (req, res) => {
 
 // PATCH call for interview page
 const updateInterview = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Interview";
+
   try {
     const { id } = req.params;
     const {
@@ -514,6 +547,18 @@ const updateInterview = async (req, res) => {
 
     // Check if there are any actual changes
     if (Object.keys(interviewData).length === 0) {
+      res.locals.logData = {
+        tenantId:
+          existingInterview.tenantId?.toString() || req.body?.orgId || "",
+        ownerId:
+          existingInterview.ownerId?.toString() || req.body?.userId || "",
+        processName: "Update Interview",
+        requestBody: req.body,
+        status: "success",
+        message: "No changes made to interview",
+        responseBody: existingInterview,
+      };
+
       return res.status(200).json({
         status: "no_changes",
         message: "No changes made",
@@ -601,6 +646,16 @@ const updateInterview = async (req, res) => {
       }
     }
 
+    res.locals.logData = {
+      tenantId: interview.tenantId?.toString() || req.body?.orgId || "",
+      ownerId: interview.ownerId?.toString() || req.body?.userId || "",
+      processName: "Update Interview",
+      requestBody: req.body,
+      status: "success",
+      message: "Interview updated successfully",
+      responseBody: interview,
+    };
+
     return res.status(200).json({
       status: "updated_successfully",
       message: "interview updated successfully",
@@ -609,6 +664,24 @@ const updateInterview = async (req, res) => {
 
     // res.json(interview);
   } catch (error) {
+    console.error("Error updating interview:", error);
+
+    // Do not log 4xx validation errors
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+
+    res.locals.logData = {
+      tenantId: req.body?.orgId || "",
+      ownerId: req.body?.userId || "",
+      processName: "Update Interview",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({
       message: "Internal server error",
       error: error.message,
@@ -699,6 +772,9 @@ async function processInterviewers(interviewers) {
 
 // post call for interview round creation
 const saveInterviewRound = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Save Interview Round";
+
   try {
     const { interviewId, round, roundId, questions } = req.body;
 
@@ -790,6 +866,31 @@ const saveInterviewRound = async (req, res) => {
         "Emails will be sent from frontend after meeting links are generated",
     };
 
+    // Enrich logging context with parent interview identifiers when possible
+    let parentInterviewForLog = null;
+    try {
+      parentInterviewForLog = await Interview.findById(interviewId).select(
+        "tenantId ownerId"
+      );
+    } catch (e) {
+      // Ignore enrichment errors for logging
+    }
+
+    res.locals.logData = {
+      tenantId: parentInterviewForLog?.tenantId?.toString() || "",
+      ownerId: parentInterviewForLog?.ownerId?.toString() || "",
+      processName: "Save Interview Round",
+      requestBody: req.body,
+      status: "success",
+      message: roundId
+        ? "Interview round updated successfully."
+        : "Interview round created successfully.",
+      responseBody: {
+        savedRound,
+        emailResult,
+      },
+    };
+
     return res.status(200).json({
       message: roundId
         ? "Round updated successfully."
@@ -810,6 +911,16 @@ const saveInterviewRound = async (req, res) => {
     }
   } catch (error) {
     console.error("Error saving interview round:", error);
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Save Interview Round",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res
       .status(500)
       .json({ message: "Internal server error.", error: error.message });
@@ -818,6 +929,9 @@ const saveInterviewRound = async (req, res) => {
 
 // PATCH call for interview round update
 const updateInterviewRound = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Interview Round";
+
   try {
     let roundIdParam = req.params.roundId;
     const { interviewId, round, questions } = req.body;
@@ -908,6 +1022,28 @@ const updateInterviewRound = async (req, res) => {
     } else {
     }
 
+    // Enrich logging context with parent interview identifiers when possible
+    let parentInterviewForLog = null;
+    try {
+      parentInterviewForLog = await Interview.findById(interviewId).select(
+        "tenantId ownerId"
+      );
+    } catch (e) {
+      // Ignore enrichment errors for logging
+    }
+
+    res.locals.logData = {
+      tenantId: parentInterviewForLog?.tenantId?.toString() || "",
+      ownerId: parentInterviewForLog?.ownerId?.toString() || "",
+      processName: "Update Interview Round",
+      requestBody: req.body,
+      status: "success",
+      message: "Interview round updated successfully.",
+      responseBody: {
+        savedRound,
+      },
+    };
+
     return res.status(200).json({
       message: "Round updated successfully.",
       savedRound,
@@ -925,6 +1061,16 @@ const updateInterviewRound = async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating interview round:", error);
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: "",
+      processName: "Update Interview Round",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res.status(500).json({
       message: "Internal server error.",
       error: error.message,
@@ -1363,6 +1509,9 @@ const checkInternalInterviewUsage = async (req, res) => {
 
 // PATCH Interview Status Update
 const updateInterviewStatusController = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Interview Status";
+
   try {
     const { interviewId, status } = req.params;
     const { reason } = req.body;
@@ -1397,12 +1546,38 @@ const updateInterviewStatusController = async (req, res) => {
     // Save the updated interview
     const updatedInterview = await interview.save();
 
+    res.locals.logData = {
+      tenantId: updatedInterview.tenantId?.toString() || "",
+      ownerId: updatedInterview.ownerId?.toString() || "",
+      processName: "Update Interview Status",
+      requestBody: {
+        params: req.params,
+        body: req.body,
+      },
+      status: "success",
+      message: "Interview status updated successfully",
+      responseBody: updatedInterview,
+    };
+
     res.status(200).json({
       success: true,
       data: updatedInterview,
     });
   } catch (error) {
     console.error("Error updating interview status:", error);
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: req.params?.interviewId || "",
+      processName: "Update Interview Status",
+      requestBody: {
+        params: req.params,
+        body: req.body,
+      },
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({
       success: false,
       message: "Error updating interview status",

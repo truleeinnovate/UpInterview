@@ -30,20 +30,44 @@ router.post(
 );
 router.post("/Login", loginOrganization);
 router.post("/reset-password", resetPassword);
-router.post("/new-user-Creation", organizationUserCreation);
+router.post(
+  "/new-user-Creation",
+  loggingService.internalLoggingMiddleware,
+  organizationUserCreation
+);
 //users in user creation in users tab
 router.get("/roles/:tenantId", getRolesByTenant);
 
 router.get("/organization-details/:id", getBasedIdOrganizations);
 
-router.patch("/organization-details/:id", updateBasedIdOrganizations);
+router.patch(
+  "/organization-details/:id",
+  loggingService.internalLoggingMiddleware,
+  updateBasedIdOrganizations
+);
 
 // Subdomain management routes
-router.post("/check-subdomain", checkSubdomainAvailability);
-router.post("/update-subdomain", updateSubdomain);
+router.post(
+  "/check-subdomain",
+  loggingService.internalLoggingMiddleware,
+  checkSubdomainAvailability
+);
+router.post(
+  "/update-subdomain",
+  loggingService.internalLoggingMiddleware,
+  updateSubdomain
+);
 router.get("/subdomain/:organizationId", getOrganizationSubdomain);
-router.post("/activate-subdomain", activateSubdomain);
-router.post("/deactivate-subdomain", deactivateSubdomain);
+router.post(
+  "/activate-subdomain",
+  loggingService.internalLoggingMiddleware,
+  activateSubdomain
+);
+router.post(
+  "/deactivate-subdomain",
+  loggingService.internalLoggingMiddleware,
+  deactivateSubdomain
+);
 
 router.get("/verify-email", verifyEmail);
 router.get("/verify-user-email", verifyEmailChange);
@@ -56,7 +80,11 @@ router.delete("/:tenantId", deleteTenantAndAssociatedData);
 //ashraf
 
 // Super Admin login as user route
-router.post("/login-as-user", superAdminLoginAsUser);
+router.post(
+  "/login-as-user",
+  loggingService.internalLoggingMiddleware,
+  superAdminLoginAsUser
+);
 // ---------------------------------------------------------------------------->
 
 // Get organization request status
