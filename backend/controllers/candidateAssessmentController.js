@@ -1138,7 +1138,8 @@ exports.updateAllScheduleStatuses = async (req, res) => {
 };
 
 // Function to run the schedule assessment status update job
-const runScheduleAssessmentStatusUpdateJob = async () => {
+//this is using in assessment cron job
+exports.runScheduleAssessmentStatusUpdateJob = async () => {
   try {
     const scheduleAssessments = await ScheduleAssessment.find({});
     const results = [];
@@ -1177,9 +1178,9 @@ const runScheduleAssessmentStatusUpdateJob = async () => {
 };
 
 // Cron job to automatically update schedule assessment statuses every 5 minutes
-cron.schedule("*/5 * * * *", async () => {
-  runScheduleAssessmentStatusUpdateJob();
-});
+// cron.schedule("*/5 * * * *", async () => {
+//   runScheduleAssessmentStatusUpdateJob();
+// });
 
 // */5 * * * * means: "Run every 5 minutes"
 // You can adjust this schedule as needed:
@@ -1188,6 +1189,6 @@ cron.schedule("*/5 * * * *", async () => {
 // 0 0 * * * = once daily at midnight
 
 // Run immediately on file load for initial check
-runScheduleAssessmentStatusUpdateJob();
+// runScheduleAssessmentStatusUpdateJob();
 
 // ------------------------------v1.0.0 >
