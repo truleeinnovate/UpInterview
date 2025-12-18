@@ -73,7 +73,7 @@ exports.createRequest = async (req, res) => {
       interviewerId,
       candidateId,
       positionId,
-      status,
+      // status,
       roundId,
       requestMessage,
       expiryDateTime,
