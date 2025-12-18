@@ -127,6 +127,9 @@ exports.getAllInterviewers = async (req, res) => {
 };
 
 exports.updateInterviewerFeedback = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Outsource Interviewer Feedback";
+
   try {
     const { contactId, givenBy, status, rating, comments } = req.body;
 
@@ -215,6 +218,16 @@ exports.updateInterviewerFeedback = async (req, res) => {
       );
     }
 
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: updatedInterviewer.ownerId?.toString() || req.body?.ownerId || "",
+      processName: "Update Outsource Interviewer Feedback",
+      requestBody: req.body,
+      status: "success",
+      message: "Outsource interviewer feedback updated successfully",
+      responseBody: updatedInterviewer,
+    };
+
     res.status(200).json({
       success: true,
       message: "Feedback updated successfully",
@@ -222,6 +235,16 @@ exports.updateInterviewerFeedback = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error updating interviewer feedback:", error);
+
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Outsource Interviewer Feedback",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({
       success: false,
       message: "Server error while updating feedback",

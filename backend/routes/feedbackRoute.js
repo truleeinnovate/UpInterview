@@ -3,6 +3,7 @@
 const express = require('express')
 
 const { createFeedback, getFeedbackByRoundId, getAllFeedback, updateFeedback, validateFeedback, getFeedbackByContactIdRoundId, getCandidateByRoundId, getFeedbackRoundId } = require('../controllers/feedbackController.js')
+const loggingService = require('../middleware/loggingService')
 
 const router = express.Router()
 
@@ -10,13 +11,13 @@ const router = express.Router()
 router.post('/validate/:operation?', validateFeedback)
 
 // Route to create feedback
-router.post('/create', createFeedback)
+router.post('/create', loggingService.internalLoggingMiddleware, createFeedback)
 
 // Route to get feedback by round ID (specific route for detailed view)
 router.get('/round/:roundId', getFeedbackByRoundId)
 
 // Route to update feedback by ID
-router.put('/:id', updateFeedback);
+router.put('/:id', loggingService.internalLoggingMiddleware, updateFeedback);
 
 // Route to get feedback by tenant ID
 // router.get('/:tenantId', getFeedbackByTenantId);//<----v1.0.0---

@@ -9,6 +9,9 @@ const {
 
 // Update contact status
 const updateContactStatus = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Contact Status";
+
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -41,6 +44,16 @@ const updateContactStatus = async (req, res) => {
       return res.status(404).json({ message: "Contact not found" });
     }
 
+    res.locals.logData = {
+      tenantId: updatedContact.tenantId?.toString() || "",
+      ownerId: updatedContact.ownerId?.toString() || "",
+      processName: "Update Contact Status",
+      requestBody: req.body,
+      status: "success",
+      message: "Contact status updated successfully",
+      responseBody: updatedContact,
+    };
+
     res.status(200).json({
       success: true,
       message: "Contact status updated successfully",
@@ -48,6 +61,15 @@ const updateContactStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating contact status:", error);
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Contact Status",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({
       success: false,
       message: "Error updating contact status",
@@ -108,32 +130,78 @@ const getAllContacts = async (req, res) => {
 // };
 
 const createContact = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Contact";
+
   try {
     const contact = new Contacts(req.body);
     const savedContact = await contact.save();
+
+    res.locals.logData = {
+      tenantId: savedContact.tenantId?.toString() || req.body?.tenantId || "",
+      ownerId: savedContact.ownerId?.toString() || req.body?.ownerId || "",
+      processName: "Create Contact",
+      requestBody: req.body,
+      status: "success",
+      message: "Contact created successfully",
+      responseBody: savedContact,
+    };
+
     res.status(201).json(savedContact);
   } catch (error) {
     console.error("Error saving contact:", error);
     if (error.name === "ValidationError") {
-      res
+      return res
         .status(400)
         .json({ message: "Validation Error", details: error.errors });
-    } else {
-      res.status(500).json({ message: "Internal Server Error", error });
     }
+
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Contact",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
+    res.status(500).json({ message: "Internal Server Error", error });
   }
 };
 
 const updateContact = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Contact";
+
   try {
     const { id } = req.params;
     const updatedContact = await Contacts.findByIdAndUpdate(id, req.body, {
       new: true,
     });
 
+    res.locals.logData = {
+      tenantId: updatedContact?.tenantId?.toString() || req.body?.tenantId || "",
+      ownerId: updatedContact?.ownerId?.toString() || req.body?.ownerId || "",
+      processName: "Update Contact",
+      requestBody: req.body,
+      status: "success",
+      message: "Contact updated successfully",
+      responseBody: updatedContact,
+    };
+
     res.status(200).json(updatedContact);
   } catch (error) {
     console.error("Error updating contact:", error);
+
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Contact",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res
       .status(500)
       .json({ message: "Error updating contact", error: error.message });

@@ -211,8 +211,8 @@ const safeParseJSON = (str) => {
 // --------------------- controller ---------------------
 const createQuestions = async (req, res) => {
   // Mark that logging will be handled by this controller
-  // res.locals.loggedByController = true;
-  // res.locals.processName = "Create Questions";
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Questions";
 
   try {
     const { type } = req.params;
@@ -331,26 +331,26 @@ const createQuestions = async (req, res) => {
     fs.unlinkSync(req.file.path);
 
     // Structured internal log for successful bulk create
-    // res.locals.logData = {
-    //   tenantId: req.body?.tenantId || "",
-    //   ownerId: req.body?.ownerId || "",
-    //   processName: "Create Questions",
-    //   requestBody: {
-    //     type,
-    //     totalRows: rawData.length,
-    //     validRows: validRows.length,
-    //     invalidRows: invalidRows.length,
-    //   },
-    //   status: "success",
-    //   message: "Questions created from CSV successfully",
-    //   responseBody: {
-    //     inserted: insertResult,
-    //     invalid: invalidRows,
-    //     totalAttempted: rawData.length,
-    //     totalInserted: insertResult.length,
-    //     totalInvalid: invalidRows.length,
-    //   },
-    //};
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Questions",
+      requestBody: {
+        type,
+        totalRows: rawData.length,
+        validRows: validRows.length,
+        invalidRows: invalidRows.length,
+      },
+      status: "success",
+      message: "Questions created from CSV successfully",
+      responseBody: {
+        inserted: insertResult,
+        invalid: invalidRows,
+        totalAttempted: rawData.length,
+        totalInserted: insertResult.length,
+        totalInvalid: invalidRows.length,
+      },
+    };
 
     return res.status(201).json({
       inserted: insertResult,
@@ -362,16 +362,16 @@ const createQuestions = async (req, res) => {
   } catch (error) {
     console.error("Error in createQuestions:", error);
     // Structured internal log for error case
-    // res.locals.logData = {
-    //   tenantId: req.body?.tenantId || "",
-    //   ownerId: req.body?.ownerId || "",
-    //   processName: "Create Questions",
-    //   requestBody: {
-    //     type: req.params?.type,
-    //   },
-    //   status: "error",
-    //   message: error.message,
-    // };
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Questions",
+      requestBody: {
+        type: req.params?.type,
+      },
+      status: "error",
+      message: error.message,
+    };
 
     res.status(500).json({ error: error.message });
   }
@@ -602,8 +602,8 @@ const getQuestionDeleteById = async (req, res) => {
 // Update by ID
 const updateQuestionById = async (req, res) => {
   // Mark that logging will be handled by this controller
-  // res.locals.loggedByController = true;
-  // res.locals.processName = "Update Question";
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Question";
 
   try {
     const { type, id } = req.params;
@@ -626,15 +626,15 @@ const updateQuestionById = async (req, res) => {
     }
 
     // Structured internal log for successful update
-    // res.locals.logData = {
-    //   tenantId: req.body?.tenantId || "",
-    //   ownerId: req.body?.ownerId || "",
-    //   processName: "Update Question",
-    //   requestBody: req.body,
-    //   status: "success",
-    //   message: "Question updated successfully",
-    //   responseBody: updatedQuestion,
-    // };
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Question",
+      requestBody: req.body,
+      status: "success",
+      message: "Question updated successfully",
+      responseBody: updatedQuestion,
+    };
 
     res.json({
       message: "Question updated successfully",
@@ -643,14 +643,14 @@ const updateQuestionById = async (req, res) => {
   } catch (error) {
     console.error("Error updating question:", error);
     // Structured internal log for error case
-    // res.locals.logData = {
-    //   tenantId: req.body?.tenantId || "",
-    //   ownerId: req.body?.ownerId || "",
-    //   processName: "Update Question",
-    //   requestBody: req.body,
-    //   status: "error",
-    //   message: error.message,
-    // };
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Question",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
 
     res
       .status(500)

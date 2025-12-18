@@ -30,8 +30,13 @@ const validateSubscriptionPlan = (data) => {
         trialPeriod: Joi.number().min(0).optional(),
         active: Joi.boolean().optional(),
         isCustomizable: Joi.boolean().optional(),
-        createdBy:Joi.string().required(),
-        modifiedBy:Joi.string(),
+
+        // Audit / ownership fields
+        ownerId: Joi.string().optional(),       // userId from frontend
+        createdBy: Joi.string().required(),
+        modifiedBy: Joi.string().optional(),    // legacy name
+        updatedBy: Joi.string().optional(),     // new field used by controllers
+
         createdAt: Joi.date().optional(),
         updatedAt: Joi.date().optional()
     });

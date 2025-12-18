@@ -25,8 +25,11 @@ const {
 // const Interview = require("../models/Interview");
 
 const createFeedback = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Feedback";
+
   try {
-    // ✅ Validate input using Joi schema
+    // Validate input using Joi schema
     const {
       isValid,
       errors,
@@ -41,7 +44,7 @@ const createFeedback = async (req, res) => {
       });
     }
 
-    // ✅ Apply additional business rule validations
+    // Apply additional business rule validations
     const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
     if (businessRuleErrors) {
       return res.status(400).json({
@@ -67,7 +70,7 @@ const createFeedback = async (req, res) => {
       feedbackCode,
     } = validatedData;
 
-    // ✅ Process questions
+    // Process questions
     const processedQuestionFeedback = (questionFeedback || []).map(
       (qFeedback) => {
         const rawQuestion = qFeedback?.questionId;
@@ -93,9 +96,7 @@ const createFeedback = async (req, res) => {
       }
     );
 
-    // ===========================================
-    // ✅ Check if feedback already exists
-    // ===========================================
+    // Check if feedback already exists
     let existingFeedback = await FeedbackModel.findOne({
       interviewRoundId,
       candidateId,
@@ -104,7 +105,7 @@ const createFeedback = async (req, res) => {
 
     if (existingFeedback) {
       if (type === "submit") {
-        // 🚨 Block duplicate submit
+        // Block duplicate submit
         return res.status(409).json({
           success: false,
           message:
@@ -114,9 +115,7 @@ const createFeedback = async (req, res) => {
       }
     }
 
-    // ===========================================
-    // ✅ Find existing feedback if draft
-    // ===========================================
+    // Find existing feedback if draft
     let feedbackInstance;
     if (type === "draft") {
       feedbackInstance = await FeedbackModel.findOne({
@@ -126,7 +125,7 @@ const createFeedback = async (req, res) => {
       });
 
       if (feedbackInstance) {
-        // 🔹 Update draft
+        // Update draft
         feedbackInstance.skills = skills || feedbackInstance.skills;
         feedbackInstance.questionFeedback =
           processedQuestionFeedback || feedbackInstance.questionFeedback;
@@ -138,9 +137,7 @@ const createFeedback = async (req, res) => {
       }
     }
 
-    // ===========================================
-    // ✅ Generate feedbackCode (only for new feedback)
-    // ===========================================
+    // Generate feedbackCode (only for new feedback)
     let finalFeedbackCode = feedbackInstance?.feedbackCode;
     if (!finalFeedbackCode && interviewRoundId && feedbackCode) {
       const existingCount = await FeedbackModel.countDocuments({
@@ -152,9 +149,7 @@ const createFeedback = async (req, res) => {
           : `${feedbackCode}-${existingCount + 1}`;
     }
 
-    // ===========================================
-    // ✅ Create new feedback (draft or submit)
-    // ===========================================
+    // Create new feedback (draft or submit)
     if (!feedbackInstance) {
       feedbackInstance = new FeedbackModel({
         tenantId,
@@ -207,9 +202,7 @@ const createFeedback = async (req, res) => {
       }
     }
 
-    // ===========================================
-    // ✅ Resolve interviewId from round
-    // ===========================================
+    // Resolve interviewId from round
     let resolvedInterviewId = null;
     try {
       if (interviewRoundId) {
@@ -220,15 +213,13 @@ const createFeedback = async (req, res) => {
       }
     } catch (e) {
       console.warn(
-        "⚠️ Unable to resolve interviewId:",
+        "Unable to resolve interviewId:",
         interviewRoundId,
         e?.message
       );
     }
 
-    // ===========================================
-    // ✅ Handle InterviewQuestions logic
-    // ===========================================
+    // Handle InterviewQuestions logic
     if (processedQuestionFeedback && processedQuestionFeedback.length > 0) {
       for (let i = 0; i < processedQuestionFeedback.length; i++) {
         const qFeedback = processedQuestionFeedback[i];
@@ -240,7 +231,7 @@ const createFeedback = async (req, res) => {
           const src = original.source || actual.source || "custom";
           const mand = original.mandatory || actual.mandatory || "false";
 
-          // 🔹 Avoid duplicates in draft updates
+          // Avoid duplicates in draft updates
           const exists = await InterviewQuestions.findOne({
             roundId: interviewRoundId,
             ownerId,
@@ -267,10 +258,8 @@ const createFeedback = async (req, res) => {
       }
     }
 
-    // ===========================================
-    // ✅ Final Response
-    // ===========================================
-    return res.status(201).json({
+    // Final Response
+    const responsePayload = {
       success: true,
       message:
         type === "submit"
@@ -283,9 +272,34 @@ const createFeedback = async (req, res) => {
         interviewerId: interviewerId,
         totalQuestions: processedQuestionFeedback?.length || 0,
       },
-    });
+    };
+
+    res.locals.logData = {
+      tenantId: feedbackInstance.tenantId?.toString() || tenantId || "",
+      ownerId: feedbackInstance.ownerId?.toString() || ownerId || "",
+      processName: "Create Feedback",
+      requestBody: req.body,
+      status: "success",
+      message:
+        type === "submit"
+          ? "Feedback submitted successfully"
+          : "Draft saved successfully",
+      responseBody: feedbackInstance,
+    };
+
+    return res.status(201).json(responsePayload);
   } catch (error) {
-    console.error("❌ Error creating/updating feedback:", error);
+    console.error("Error creating/updating feedback:", error);
+
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Feedback",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res.status(500).json({
       success: false,
       message: "Failed to process feedback",
@@ -527,7 +541,7 @@ const getFeedbackByRoundId = async (req, res) => {
       data: responseData,
     });
   } catch (error) {
-    console.error("🔥 Error fetching feedback:", error);
+    console.error("Error fetching feedback:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -592,7 +606,7 @@ const getFeedbackByContactIdRoundId = async (req, res) => {
 };
 
 //  Fixed backend route - add this to your routes file
-// ✅ Get Candidate, Position & InterviewRound Details by RoundId
+// Get Candidate, Position & InterviewRound Details by RoundId
 const getCandidateByRoundId = async (req, res) => {
   try {
     const roundId = req.query.roundId;
@@ -604,14 +618,14 @@ const getCandidateByRoundId = async (req, res) => {
       });
     }
 
-    // 🔍 Fetch Round + Interview + Candidate + Position + Interviewers
+    // Fetch Round + Interview + Candidate + Position + Interviewers
     const round = await InterviewRounds.findById(roundId)
       .populate({
         path: "interviewId",
         populate: [
           { path: "candidateId", model: "Candidate" },
           { path: "positionId", model: "Position" },
-          { path: "templateId", model: "InterviewTemplate" }, // ✅ Optional: interview template details
+          { path: "templateId", model: "InterviewTemplate" }, // Optional: interview template details
         ],
       })
       .populate({
@@ -640,7 +654,7 @@ const getCandidateByRoundId = async (req, res) => {
       });
     }
 
-    // ✅ Full Response with all details
+    // Full Response with all details
     return res.status(200).json({
       success: true,
       candidate,
@@ -648,7 +662,7 @@ const getCandidateByRoundId = async (req, res) => {
       round, // this includes full InterviewRounds schema details
     });
   } catch (error) {
-    console.error("❌ Error in getCandidateByRoundId:", error);
+    console.error("Error in getCandidateByRoundId:", error);
     return res.status(500).json({
       success: false,
       message: "Error fetching candidate/round details",
@@ -664,10 +678,10 @@ const getFeedbackRoundId = async (req, res) => {
   try {
     const { roundId } = req.params;
 
-    // 🔹 Cast properly
+    // Cast properly
     const objectRoundId = new mongoose.Types.ObjectId(roundId);
 
-    // 1️⃣ Find round
+    // 1. Find round
     const round = await InterviewRounds.findById(objectRoundId)
       .populate("interviewId")
       .populate("interviewers");
@@ -676,7 +690,7 @@ const getFeedbackRoundId = async (req, res) => {
       return res.status(404).json({ message: "Round not found" });
     }
 
-    // 2️⃣ Get Interview, Candidate, Position details
+    // 2. Get Interview, Candidate, Position details
     const interview = await Interview.findById(round.interviewId)
       .populate("candidateId")
       .populate("positionId");
@@ -685,7 +699,7 @@ const getFeedbackRoundId = async (req, res) => {
       return res.status(404).json({ message: "Interview not found" });
     }
 
-    // 3️⃣ Get Feedbacks (important: cast roundId to ObjectId)
+    // 3. Get Feedbacks (important: cast roundId to ObjectId)
     const feedbacks = await FeedbackModel.find({
       interviewRoundId: objectRoundId,
     })
@@ -693,7 +707,7 @@ const getFeedbackRoundId = async (req, res) => {
       .populate("candidateId")
       .populate("positionId");
 
-    // 4️⃣ Prepare response
+    // 4. Prepare response
     const response = {
       success: true,
       message: feedbacks.length
@@ -718,6 +732,9 @@ const getFeedbackRoundId = async (req, res) => {
 };
 
 const updateFeedback = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Feedback";
+
   try {
     const { id } = req.params;
 
@@ -728,7 +745,7 @@ const updateFeedback = async (req, res) => {
       });
     }
 
-    // ✅ Validate input using Joi schema
+    // Validate input using Joi schema
     const {
       isValid,
       errors,
@@ -743,7 +760,7 @@ const updateFeedback = async (req, res) => {
       });
     }
 
-    // ✅ Apply additional business rule validations if updating to submit
+    // Apply additional business rule validations if updating to submit
     if (
       validatedData.type === "submit" ||
       validatedData.status === "submitted"
@@ -837,6 +854,16 @@ const updateFeedback = async (req, res) => {
       }
     }
 
+    res.locals.logData = {
+      tenantId: updatedFeedback.tenantId?.toString() || "",
+      ownerId: updatedFeedback.ownerId?.toString() || "",
+      processName: "Update Feedback",
+      requestBody: req.body,
+      status: "success",
+      message: "Feedback updated successfully",
+      responseBody: updatedFeedback,
+    };
+
     return res.status(200).json({
       success: true,
       message: "Feedback updated successfully",
@@ -844,6 +871,16 @@ const updateFeedback = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating feedback:", error);
+
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Feedback",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res.status(500).json({
       success: false,
       message: "Failed to update feedback",

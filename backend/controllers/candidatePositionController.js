@@ -29,6 +29,7 @@ const getAllCandidatePositions = async (req, res) => {
 const createCandidatePosition = async (req, res, data) => {
   try {
     res.locals.loggedByController = true;
+    res.locals.processName = "Create Candidate Position";
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
     //     const canCreate =
@@ -39,11 +40,31 @@ const createCandidatePosition = async (req, res, data) => {
     //     }
     //-----v1.0.1--->
 
-    // const candidatePosition = new CandidatePosition(req.body || data);
-    const candidatePosition = new createCandidatePositionService(data);
-    // await candidatePosition.save();
+    // Use service to create and save the candidate position
+    const payload = data || req.body;
+    const candidatePosition = await createCandidatePositionService(payload);
+
+    res.locals.logData = {
+      tenantId: candidatePosition.tenantId?.toString() || payload?.tenantId || "",
+      ownerId: candidatePosition.ownerId?.toString() || payload?.ownerId || "",
+      processName: "Create Candidate Position",
+      requestBody: payload,
+      status: "success",
+      message: "Candidate position created successfully",
+      responseBody: candidatePosition,
+    };
+
     res.status(201).json(candidatePosition);
   } catch (error) {
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Candidate Position",
+      requestBody: req.body || data || {},
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({ error: error.message });
   }
 };
@@ -51,7 +72,8 @@ const createCandidatePosition = async (req, res, data) => {
 const createCandidatePositionService = async (data) => {
   try {
     const candidatePosition = new CandidatePosition(data);
-    return await candidatePosition.save();
+    const savedCandidatePosition = await candidatePosition.save();
+    return savedCandidatePosition;
   } catch (error) {
     throw new Error(error.message);
   }
