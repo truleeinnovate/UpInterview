@@ -835,62 +835,46 @@ const saveInterviewRound = async (req, res) => {
 
     const interview = await Interview.findById(interviewId).lean();
 
-    // ❌ Skip Assessment rounds
-    // if (
-    //   interview &&
-    //   savedRound.roundTitle !== "Assessment" &&
-    //   savedRound.interviewMode !== "Face to Face" &&
-    //   req.body?.round.selectedInterviewers?.length > 0
-    // ) {
-    //   for (const interviewer of req.body?.round.selectedInterviewers) {
-    //     const isInternal = interviewer.type === "Internal";
+// ================= CREATE INTERVIEW REQUEST (BACKEND ONLY) =================
+if (
+  interview &&
+  savedRound.roundTitle !== "Assessment" &&
+  savedRound.interviewMode !== "Face to Face" &&
+  Array.isArray(req.body?.round?.selectedInterviewers) &&
+  req.body.round.selectedInterviewers.length > 0
+) {
+  for (const interviewer of req.body.round.selectedInterviewers) {
+    const interviewerType = interviewer.type?.toLowerCase(); // "internal" | "external"
+    const isInternal = interviewerType === "internal";
 
-    //     let response = await createRequest({
-    //       tenantId: interview.tenantId,
-    //       ownerId: interview.ownerId,
-    //       scheduledInterviewId: interviewId,
-    //       interviewerType: interviewer.type,
-    //       interviewerId: interviewer.contact?._id || interviewer._id,
-    //       // status: isInternal ? "accepted" : "RequestSent",
-    //       dateTime: savedRound.dateTime,
-    //       duration: savedRound.duration,
-    //       candidateId: interview.candidateId,
-    //       positionId: interview.positionId,
-    //       roundId: savedRound._id,
-    //       isMockInterview: false,
-    //       requestMessage: isInternal
-    //         ? "Internal interview request"
-    //         : "Outsource interview request",
-    //       expiryDateTime: new Date(
-    //         Date.now() + 24 * 60 * 60 * 1000
-    //       ).toISOString(),
-    //       contactId: interviewer.contact?._id,
-    //     });
+    await createRequest(
+      {
+        body: {
+          tenantId: interview.tenantId,
+          ownerId: interview.ownerId,
+          scheduledInterviewId: interview._id,
+          interviewerType,
+          interviewerId: interviewer.contact?._id || interviewer._id,
+          contactId: interviewer.contact?._id,
+          dateTime: savedRound.dateTime,
+          duration: savedRound.duration,
+          candidateId: interview.candidateId,
+          positionId: interview.positionId,
+          roundId: savedRound._id,
+           expiryDateTime: req.body.round.expiryDateTime, // ✅ FROM FRONTEND
+          isMockInterview: false,
+        },
+      },
+      {
+        status: () => ({
+          json: () => {},
+        }),
+        locals: {},
+      }
+    );
+  }
+}
 
-    //     // let response = await createInterviewRequest({
-    //     //   tenantId: interview.tenantId,
-    //     //   ownerId: interview.ownerId,
-    //     //   scheduledInterviewId: interviewId,
-    //     //   interviewerType: interviewer.type,
-    //     //   interviewerId: interviewer.contact?._id || interviewer._id,
-    //     //   status: isInternal ? "accepted" : "RequestSent",
-    //     //   dateTime: savedRound.dateTime,
-    //     //   duration: savedRound.duration,
-    //     //   candidateId: interview.candidateId,
-    //     //   positionId: interview.positionId,
-    //     //   roundId: savedRound._id,
-    //     //   isMockInterview: false,
-    //     //   requestMessage: isInternal
-    //     //     ? "Internal interview request"
-    //     //     : "Outsource interview request",
-    //     //   expiryDateTime: new Date(
-    //     //     Date.now() + 24 * 60 * 60 * 1000
-    //     //   ).toISOString(),
-    //     //   contactId: interviewer.contact?._id,
-    //     // });
-    //     console.log("response response", response);
-    //   }
-    // }
 
     // Trigger interview.round.status.updated if status is one of the allowed values
     await triggerInterviewRoundStatusUpdated(savedRound, oldStatusForWebhook);

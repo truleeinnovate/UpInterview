@@ -1228,12 +1228,14 @@ const RoundFormInterviews = () => {
 
     setIsSubmitting(true);
 
+    const successMessages = []; // To collect and show success messages sequentially
+
     try {
-      // Clean interviewers data to remove undefined fields
-      const cleanInterviewer = (interviewer) => {
-        const { availability, ...rest } = interviewer;
-        return rest;
-      };
+      // Clean interviewers data to remove undefined fields (commented as per original)
+      // const cleanInterviewer = (interviewer) => {
+      //   const { availability, ...rest } = interviewer;
+      //   return rest;
+      // };
       // const cleanedInterviewers = selectedInterviewersData.map(cleanInterviewer);
 
       // Format interviewers data based on view type
@@ -1259,6 +1261,9 @@ const RoundFormInterviews = () => {
       } else if (isEditing) {
         updatedRescheduleCount = roundEditData?.rescheduleCount || 0;
       }
+
+      const interviewDateTime = new Date(combinedDateTime);
+      const expiryDateTime = calculateExpiryDate(interviewDateTime);
 
       const roundData = {
         roundTitle: roundTitle === "Other" ? customRoundTitle : roundTitle,
@@ -1292,6 +1297,9 @@ const RoundFormInterviews = () => {
         ...(selectedInterviewType !== "external" && {
           interviewers: formattedInterviewers || [],
         }),
+        // ✅ ADD THESE TWO LINES (VERY IMPORTANT) - KEPT EXACTLY AS REQUESTED
+        selectedInterviewers,      // ← backend uses this to create requests
+        expiryDateTime,            // ← backend uses frontend expiry
       };
 
       const validationErrors = validateInterviewRoundData(roundData);
@@ -1341,9 +1349,7 @@ const RoundFormInterviews = () => {
             const usageInfo = usageCheck.usageStats || usageCheck.usage || {};
             notify.error(
               `Cannot schedule: ${usageCheck.message}. ` +
-                `Used: ${usageInfo.utilized || 0}/${
-                  usageInfo.entitled || 0
-                } interviews.`,
+              `Used: ${usageInfo.utilized || 0}/${usageInfo.entitled || 0} interviews.`,
               { duration: 5000 }
             );
             setIsSubmitting(false);
@@ -1353,7 +1359,6 @@ const RoundFormInterviews = () => {
       }
 
       // Use saveInterviewRound mutation from useInterviews hook
-
       let response;
       if (isEditing) {
         response = await updateInterviewRound(payload);
@@ -1362,8 +1367,9 @@ const RoundFormInterviews = () => {
       }
 
       // ✅ Collect success messages instead of showing immediately
-      const successMessages = [];
       successMessages.push("Interview round created successfully!");
+
+      const targetRoundId = response?.savedRound?._id || roundId;
 
       if (payload.round.roundTitle === "Assessment") {
         // Calculate link expiry days
@@ -1397,7 +1403,6 @@ const RoundFormInterviews = () => {
             scheduleAssessmentId: result.data?.scheduledAssessmentId,
             // meetingId: data?.start_url || meetingLink,
           };
-          const targetRoundId = response?.savedRound?._id || roundId;
           const updatePayload = {
             interviewId,
             roundId: targetRoundId,
@@ -1415,40 +1420,73 @@ const RoundFormInterviews = () => {
           // toast.success('Assessment shared successfully!');
         }
       }
+
       if (payload.round.roundTitle !== "Assessment") {
         //  out sourced email sent
         if (payload?.round?.interviewMode !== "Face to Face") {
-          // Handle outsource request if interviewers are selected
-          if (selectedInterviewers && selectedInterviewers.length > 0) {
-            const isInternal = selectedInterviewType === "Internal";
+          //   // Handle outsource request if interviewers are selected
+          //   if (selectedInterviewers && selectedInterviewers.length > 0) {
+          //     const isInternal = selectedInterviewType === "Internal";
 
-            for (const interviewer of selectedInterviewers) {
-              console.log("interviewDateTime", combinedDateTime);
+          //     for (const interviewer of selectedInterviewers) {
 
-              const interviewDateTime = new Date(combinedDateTime);
-              const expiryDateTime = calculateExpiryDate(interviewDateTime);
-              const outsourceRequestData = {
-                tenantId: orgId,
-                ownerId: userId,
-                scheduledInterviewId: interviewId,
-                interviewerType: selectedInterviewType,
-                interviewerId: interviewer.contact?._id || interviewer._id,
-                // status: isInternal ? "accepted" : "inprogress",
-                dateTime: combinedDateTime,
-                duration,
-                candidateId: candidate?._id,
-                positionId: position?._id,
-                roundId: response.savedRound._id,
-                isMockInterview: false,
-                requestMessage: isInternal
-                  ? "Internal interview request"
-                  : "Outsource interview request",
-                expiryDateTime,
-              };
+          //       const interviewDateTime = new Date(combinedDateTime);
+          //       const expiryDateTime = calculateExpiryDate(interviewDateTime);
+          //       const outsourceRequestData = {
+          //         tenantId: orgId,
+          //         ownerId: userId,
+          //         scheduledInterviewId: interviewId,
+          //         interviewerType: selectedInterviewType,
+          //         interviewerId: interviewer.contact?._id || interviewer._id,
+          //         // status: isInternal ? "accepted" : "inprogress",
+          //         dateTime: combinedDateTime,
+          //         duration,
+          //         candidateId: candidate?._id,
+          //         positionId: position?._id,
+          //         roundId: response.savedRound._id,
+          //         isMockInterview: false,
+          //         requestMessage: isInternal
+          //           ? "Internal interview request"
+          //           : "Outsource interview request",
+          //         expiryDateTime
+          //       };
 
-              await axios.post(
-                `${config.REACT_APP_API_URL}/interviewrequest`,
-                outsourceRequestData,
+          //       await axios.post(
+          //         `${config.REACT_APP_API_URL}/interviewrequest`,
+          //         outsourceRequestData,
+          //         {
+          //           headers: {
+          //             "Content-Type": "application/json",
+          //             Authorization: `Bearer ${Cookies.get("authToken")}`,
+          //           },
+          //         }
+          //       );
+          //     }
+
+          //     // Send outsource interview request emails if this is an outsource round
+          if (
+            selectedInterviewType !== "Internal" &&
+            selectedInterviewers &&
+            selectedInterviewers.length > 0
+          ) {
+            try {
+              const interviewerIds = selectedInterviewers.map(
+                (interviewer) => interviewer.contact?._id || interviewer._id
+              );
+
+              const emailResponse = await axios.post(
+                `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
+                {
+                  interviewId: interviewId,
+                  roundId: response.savedRound._id || targetRoundId,
+                  interviewerIds: interviewerIds,
+                  candidateId: candidate?._id,
+                  positionId: position?._id,
+                  dateTime: combinedDateTime,
+                  type: "interview",
+                  // duration: duration,
+                  // roundTitle: roundTitle,
+                },
                 {
                   headers: {
                     "Content-Type": "application/json",
@@ -1456,61 +1494,27 @@ const RoundFormInterviews = () => {
                   },
                 }
               );
-            }
 
-            // Send outsource interview request emails if this is an outsource round
-            if (
-              !isInternal &&
-              selectedInterviewers &&
-              selectedInterviewers.length > 0
-            ) {
-              try {
-                const interviewerIds = selectedInterviewers.map(
-                  (interviewer) => interviewer.contact?._id || interviewer._id
-                );
-
-                const emailResponse = await axios.post(
-                  `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
-                  {
-                    interviewId: interviewId,
-                    roundId: response.savedRound._id,
-                    interviewerIds: interviewerIds,
-                    candidateId: candidate?._id,
-                    positionId: position?._id,
-                    dateTime: combinedDateTime,
-                    type: "interview",
-                    // duration: duration,
-                    // roundTitle: roundTitle,
-                  },
-                  {
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${Cookies.get("authToken")}`,
-                    },
-                  }
-                );
-
-                if (emailResponse.data.success) {
-                  // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
-                  if (emailResponse.data.data.failedEmails > 0) {
-                    notify.warning(
-                      `${emailResponse.data.data.failedEmails} emails failed to send`
-                    );
-                  }
-                } else {
-                  notify.error(
-                    "Failed to send outsource interview request emails"
+              if (emailResponse.data.success) {
+                // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
+                if (emailResponse.data.data.failedEmails > 0) {
+                  notify.warning(
+                    `${emailResponse.data.data.failedEmails} emails failed to send`
                   );
                 }
-              } catch (emailError) {
-                console.error(
-                  "Error sending outsource interview request emails:",
-                  emailError
-                );
+              } else {
                 notify.error(
                   "Failed to send outsource interview request emails"
                 );
               }
+            } catch (emailError) {
+              console.error(
+                "Error sending outsource interview request emails:",
+                emailError
+              );
+              notify.error(
+                "Failed to send outsource interview request emails"
+              );
             }
           }
         }
@@ -1535,6 +1539,8 @@ const RoundFormInterviews = () => {
             Array.isArray(selectedInterviewers) &&
             selectedInterviewers.length > 0;
 
+          let meetingLink = null;
+
           try {
             // v1.0.3 <-----------------------------------------------------------
             setMeetingCreationProgress("Creating links...");
@@ -1544,7 +1550,6 @@ const RoundFormInterviews = () => {
               "../../../../../utils/meetingPlatforms.js"
             );
 
-            let meetingLink;
             if (shouldGenerateMeeting) {
               setIsMeetingCreationLoading(true);
               // ========================================
@@ -1600,7 +1605,7 @@ const RoundFormInterviews = () => {
                   }
                 }
 
-                const formattedStartTime = formatStartTimeToUTC(startTime);
+                const formattedStartTime = formatStartTimeToUTC(combinedDateTime);
                 if (!formattedStartTime)
                   throw new Error("Invalid start time format");
 
@@ -1630,42 +1635,32 @@ const RoundFormInterviews = () => {
                 );
               }
 
-              const data = await meetingLink;
+              // Fixed: was using undefined 'data'
+              if (meetingLink) {
+                const updatedRoundData = {
+                  ...roundData,
+                  meetingId: meetingLink?.start_url
+                    ? meetingLink?.start_url
+                    : meetingLink,
+                  meetPlatform: selectedMeetingPlatform,
+                };
+                const updatePayload = {
+                  interviewId,
+                  roundId: targetRoundId,
+                  round: updatedRoundData,
+                  ...(isEditing ? { questions: interviewQuestionsList } : {}),
+                };
+
+                // 🔹 Call PATCH mutation instead of POST
+                await updateInterviewRound(updatePayload);
+              }
             }
 
-            // Persist meeting link on the round (avoid reassigning consts)
-            if (data) {
-              const updatedRoundData = {
-                ...roundData,
-                meetingId: meetingLink?.start_url
-                  ? meetingLink?.start_url
-                  : meetingLink,
-                meetPlatform: selectedMeetingPlatform,
-              };
-              const targetRoundId = response?.savedRound?._id || roundId;
-              const updatePayload = {
-                interviewId,
-                roundId: targetRoundId,
-                round: updatedRoundData,
-                ...(isEditing ? { questions: interviewQuestionsList } : {}),
-              };
-
-              // 🔹 Call PATCH mutation instead of POST
-              const updateResponse = await updateInterviewRound(updatePayload);
-            } else if (
-              Array.isArray(selectedInterviewers) &&
-              selectedInterviewers.length > 0
-            ) {
-              // Handle Face to Face interview
-
-              const targetRoundId = response?.savedRound?._id || roundId;
-
-              // have to add email template for face to face round
-
-              // Update the round with proper status
+            // Handle Face to Face (no meeting link)
+            if (!shouldGenerateMeeting && selectedInterviewers?.length > 0) {
               const faceToFaceRoundData = {
                 ...roundData,
-                status: isReschedule ? "Rescheduled" : "Scheduled", // Use the current status from state
+                status: isReschedule ? "Rescheduled" : "Scheduled",
               };
 
               const updatePayload = {
@@ -1675,86 +1670,64 @@ const RoundFormInterviews = () => {
                 ...(isEditing ? { questions: interviewQuestionsList } : {}),
               };
 
-              // Update the round status
-              const updateResponse = await updateInterviewRound(updatePayload);
-
-              // navigate(`/interviews/${interviewId}`);
-              // notify.success("Interview Round Created successfully");
+              await updateInterviewRound(updatePayload);
             }
 
-            // ✅ CHANGES START HERE - Email sending logic
-
-            // Use the new utility to generate and save meeting URLs
+            // ✅ Email sending logic (internal interviewers)
             try {
               const isInternal = selectedInterviewType === "Internal";
 
-              // Determine if we should send emails
               const shouldSendEmails =
-                // payload?.round?.interviewMode !== "Face to Face" && // Only for Virtual mode
+                payload?.round?.interviewMode !== "Face to Face" &&
                 Array.isArray(selectedInterviewers) &&
                 selectedInterviewers.length > 0;
 
-              if (shouldSendEmails) {
-                // Send emails after meeting links are generated
-                try {
-                  if (isInternal) {
-                    const emailResponse = await axios.post(
-                      `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
-                      {
-                        interviewId: interviewId,
-                        roundId: response.savedRound._id,
-                        sendEmails: true,
-                      },
-                      {
-                        headers: {
-                          "Content-Type": "application/json",
-                          Authorization: `Bearer ${Cookies.get("authToken")}`,
-                        },
-                      }
-                    );
-
-                    // Show success toast for emails
-                    if (emailResponse.data.success) {
-                      successMessages.push(
-                        "Interview round created and emails sent successfully!"
-                      );
-                      if (emailResponse.data.data.emailsSent > 0) {
-                        successMessages.push(
-                          `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
-                        );
-                        navigate(`/interviews/${interviewId}`);
-                      }
-                    } else {
-                      notify.error("Round created but email sending failed");
-                    }
+              if (shouldSendEmails && isInternal) {
+                const emailResponse = await axios.post(
+                  `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
+                  {
+                    interviewId: interviewId,
+                    roundId: targetRoundId,
+                    sendEmails: true,
+                  },
+                  {
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${Cookies.get("authToken")}`,
+                    },
                   }
-                } catch (emailError) {
-                  console.error("Error sending emails:", emailError);
+                );
+
+                if (emailResponse.data.success) {
+                  successMessages.push(
+                    "Interview round created and emails sent successfully!"
+                  );
+                  if (emailResponse.data.data.emailsSent > 0) {
+                    successMessages.push(
+                      `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
+                    );
+                  }
+                } else {
                   notify.error("Round created but email sending failed");
                 }
-              } else {
-                successMessages.push("Interview round created successfully!");
               }
-
-              // ✅ Show toasts one by one after everything finishes
-              for (const [i, msg] of successMessages.entries()) {
-                setTimeout(() => {
-                  notify.success(msg);
-                }, i * 1000); // gap of 1s between each toast
-              }
-
-              // ✅ Navigate after showing toasts
-              setTimeout(() => {
-                navigate(`/interviews/${interviewId}`);
-              }, successMessages.length * 1000);
-            } catch (urlError) {
-              // console.error("Error processing meeting URLs:", urlError);
-              console.error("URL Error details:", {
-                message: urlError.message,
-                stack: urlError.stack,
-                response: urlError.response?.data,
-              });
+            } catch (emailError) {
+              console.error("Error sending emails:", emailError);
+              notify.error("Round created but email sending failed");
             }
+
+            // ✅ Show all collected success messages sequentially
+            for (const [i, msg] of successMessages.entries()) {
+              setTimeout(() => {
+                notify.success(msg);
+              }, i * 1000);
+            }
+
+            // ✅ Navigate only once, after toasts
+            setTimeout(() => {
+              navigate(`/interviews/${interviewId}`);
+            }, successMessages.length * 1000 + 500);
+
           } catch (err) {
             console.error("Error in meeting creation:", err);
             setErrors({
@@ -1765,8 +1738,8 @@ const RoundFormInterviews = () => {
             setMeetingCreationProgress("");
           }
 
-          // notify.success("Selected interview mode is Face to Face");
-          navigate(`/interviews/${interviewId}`);
+          // Removed duplicate navigate here to prevent double navigation
+          // navigate(`/interviews/${interviewId}`);
         }
       }
     } catch (err) {
@@ -2280,29 +2253,22 @@ const RoundFormInterviews = () => {
                                                       sectionData?.sectionName.slice(
                                                         1
                                                       )
-                                                    : "Unnamed Section"}
-                                                </span>
-                                                <ChevronUp
-                                                  className={`transform transition-transform ${
-                                                    expandedSections[sectionId]
+                                                      : "Unnamed Section"}
+                                                  </span>
+                                                  <ChevronUp
+                                                    className={`transform transition-transform ${expandedSections[sectionId]
                                                       ? ""
                                                       : "rotate-180"
-                                                  }`}
-                                                />
-                                              </button>
+                                                      }`}
+                                                  />
+                                                </button>
 
-                                              {expandedSections[sectionId] && (
-                                                <div className="mt-4 space-y-3">
-                                                  {sectionData?.questions
-                                                    .length > 0 ? (
-                                                    sectionData?.questions.map(
-                                                      (question, idx) => (
-                                                        <div
-                                                          key={
-                                                            question._id || idx
-                                                          }
-                                                          className="border rounded-md shadow-sm overflow-hidden"
-                                                        >
+                                                {expandedSections[sectionId] && (
+                                                  <div className="mt-4 space-y-3">
+                                                    {sectionData?.questions
+                                                      .length > 0 ? (
+                                                      sectionData?.questions.map(
+                                                        (question, idx) => (
                                                           <div
                                                             onClick={() =>
                                                               setExpandedQuestions(
@@ -2312,22 +2278,31 @@ const RoundFormInterviews = () => {
                                                                     !prev[
                                                                       question
                                                                         ._id
-                                                                    ],
-                                                                })
-                                                              )
-                                                            }
-                                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                                                          >
-                                                            <div className="flex items-center gap-2">
-                                                              <span className="font-medium text-gray-600">
-                                                                {idx + 1}.
-                                                              </span>
-                                                              <p className="text-sm text-gray-700">
-                                                                {question
-                                                                  .snapshot
-                                                                  ?.questionText ||
-                                                                  "No question text"}
-                                                              </p>
+                                                                      ],
+                                                                  })
+                                                                )
+                                                              }
+                                                              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                                            >
+                                                              <div className="flex items-center gap-2">
+                                                                <span className="font-medium text-gray-600">
+                                                                  {idx + 1}.
+                                                                </span>
+                                                                <p className="text-sm text-gray-700">
+                                                                  {question
+                                                                    .snapshot
+                                                                    ?.questionText ||
+                                                                    "No question text"}
+                                                                </p>
+                                                              </div>
+                                                              <ChevronDown
+                                                                className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
+                                                                  question._id
+                                                                ]
+                                                                  ? "transform rotate-180"
+                                                                  : ""
+                                                                  }`}
+                                                              />
                                                             </div>
                                                             <ChevronDown
                                                               className={`w-5 h-5 text-gray-400 transition-transform ${
@@ -2369,44 +2344,46 @@ const RoundFormInterviews = () => {
                                                                 </div>
                                                               </div>
 
-                                                              {/* Display question options if MCQ */}
-                                                              {question.snapshot
-                                                                ?.questionType ===
-                                                                "MCQ" && (
-                                                                <div className="mt-2">
-                                                                  <span className="text-sm font-medium text-gray-500">
-                                                                    Options:
-                                                                  </span>
-                                                                  <div className="grid grid-cols-2 gap-2 mt-1">
-                                                                    {question.snapshot?.options?.map(
-                                                                      (
-                                                                        option,
-                                                                        optIdx
-                                                                      ) => (
-                                                                        <div
-                                                                          key={
-                                                                            optIdx
-                                                                          }
-                                                                          //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                          className={`text-sm p-2 rounded border ${
-                                                                            option ===
-                                                                            question
-                                                                              .snapshot
-                                                                              .correctAnswer
-                                                                              ? "bg-green-50 border-green-200 text-green-800"
-                                                                              : "bg-gray-50 border-gray-200"
-                                                                          }`}
-                                                                        >
-                                                                          {
-                                                                            option
-                                                                          }
-                                                                          {option ===
-                                                                            question
-                                                                              .snapshot
-                                                                              .correctAnswer && (
-                                                                            <span className="ml-2 text-green-600">
-                                                                              ✓
-                                                                            </span>
+                                                                  {/* Display question options if MCQ */}
+                                                                  {question.snapshot
+                                                                    ?.questionType ===
+                                                                    "MCQ" && (
+                                                                      <div className="mt-2">
+                                                                        <span className="text-sm font-medium text-gray-500">
+                                                                          Options:
+                                                                        </span>
+                                                                        <div className="grid grid-cols-2 gap-2 mt-1">
+                                                                          {question.snapshot?.options?.map(
+                                                                            (
+                                                                              option,
+                                                                              optIdx
+                                                                            ) => (
+                                                                              <div
+                                                                                key={
+                                                                                  optIdx
+                                                                                }
+                                                                                //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                                className={`text-sm p-2 rounded border ${option ===
+                                                                                  question
+                                                                                    .snapshot
+                                                                                    .correctAnswer
+                                                                                  ? "bg-green-50 border-green-200 text-green-800"
+                                                                                  : "bg-gray-50 border-gray-200"
+                                                                                  }`}
+                                                                              >
+                                                                                {
+                                                                                  option
+                                                                                }
+                                                                                {option ===
+                                                                                  question
+                                                                                    .snapshot
+                                                                                    .correctAnswer && (
+                                                                                    <span className="ml-2 text-green-600">
+                                                                                      ✓
+                                                                                    </span>
+                                                                                  )}
+                                                                              </div>
+                                                                            )
                                                                           )}
                                                                         </div>
                                                                       )
@@ -2492,25 +2469,22 @@ const RoundFormInterviews = () => {
                             type="button"
                             // onClick={() => setInterviewType("instant")}
                             onClick={() => handleInterviewTypeChange("instant")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
-                              interviewType === "instant"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${
-                                interviewType === "instant"
-                                  ? "text-custom-blue/70"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-6 w-6 ${interviewType === "instant"
+                                ? "text-custom-blue/70"
+                                : "text-gray-400"
+                                }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${
-                                interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
-                              }`}
+                              className={`mt-2 font-medium ${interviewType === "instant"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                                }`}
                             >
                               Instant Interview
                             </span>
@@ -2525,25 +2499,22 @@ const RoundFormInterviews = () => {
                               handleInterviewTypeChange("scheduled")
                             } // Use new handler
                             // onClick={() => setInterviewType("scheduled")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
-                              interviewType === "scheduled"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${
-                                interviewType === "scheduled"
-                                  ? "text-custom-blue/70"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-6 w-6 ${interviewType === "scheduled"
+                                ? "text-custom-blue/70"
+                                : "text-gray-400"
+                                }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${
-                                interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
-                              }`}
+                              className={`mt-2 font-medium ${interviewType === "scheduled"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                                }`}
                             >
                               Schedule for Later
                             </span>
@@ -2675,11 +2646,10 @@ const RoundFormInterviews = () => {
                               }}
                               variant="outline"
                               size="sm"
-                              className={`${
-                                isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
+                              className={`${isExternalSelected
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                                }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -2698,11 +2668,10 @@ const RoundFormInterviews = () => {
                               onClick={() => setInternalInterviews(true)}
                               variant="outline"
                               size="sm"
-                              className={`${
-                                isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
+                              className={`${isExternalSelected
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                                }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -2722,11 +2691,10 @@ const RoundFormInterviews = () => {
                             onClick={() => setShowOutsourcePopup(true)}
                             variant="outline"
                             size="sm"
-                            className={`${
-                              isInternalSelected
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                            }`}
+                            className={`${isInternalSelected
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                              }`}
                             disabled={
                               isInternalSelected ||
                               interviewMode === "Face to Face"
@@ -3021,11 +2989,10 @@ const RoundFormInterviews = () => {
                                     return (
                                       <li
                                         key={qIndex}
-                                        className={`flex justify-between items-center p-3 border rounded-md ${
-                                          isMandatory
-                                            ? "border-red-500"
-                                            : "border-gray-300"
-                                        }`}
+                                        className={`flex justify-between items-center p-3 border rounded-md ${isMandatory
+                                          ? "border-red-500"
+                                          : "border-gray-300"
+                                          }`}
                                       >
                                         <span className="text-gray-900 font-medium">
                                           {qIndex + 1}.{" "}
