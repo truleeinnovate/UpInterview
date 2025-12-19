@@ -99,7 +99,9 @@ exports.createRequest = async (req, res) => {
       positionId: isMockInterview ? undefined : new mongoose.Types.ObjectId(positionId),
       status: isInternal ? "accepted" : "inprogress",
       roundId: new mongoose.Types.ObjectId(roundId),
-      requestMessage,
+      requestMessage: isInternal
+        ? "Internal interview request"
+        : "Outsource interview request",
       expiryDateTime,
       isMockInterview
     });
@@ -238,7 +240,7 @@ exports.getAllRequests = async (req, res) => {
           { $project: { interviewer: 0, position: 0 } },
         ],
         totalCount: [{ $count: 'count' }],
-        statusCounts: [ { $group: { _id: '$status', count: { $sum: 1 } } } ],
+        statusCounts: [{ $group: { _id: '$status', count: { $sum: 1 } } }],
       },
     });
 

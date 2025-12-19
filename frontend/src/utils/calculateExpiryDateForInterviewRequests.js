@@ -1,12 +1,20 @@
-const SLA_CONFIG = require("../config");
+const { config: SLA_CONFIG } = require("../config");
+
 
 function getSlaHours(timeLeftHours) {
-  for (const rule of SLA_CONFIG.SCHEDULED_SLA_RULES) {
+  // ✅ SAFETY: ensure iterable
+  const rules = Array.isArray(SLA_CONFIG?.SCHEDULED_SLA_RULES)
+    ? SLA_CONFIG.SCHEDULED_SLA_RULES
+    : [];
+
+  for (const rule of rules) {
     if (timeLeftHours > rule.minHoursLeft) {
       return rule.acceptHours;
     }
   }
-  return SLA_CONFIG.DEFAULT_ACCEPT_HOURS;
+
+  // ✅ SAFETY: fallback default
+  return SLA_CONFIG?.DEFAULT_ACCEPT_HOURS ?? 24;
 }
 
 function calculateExpiryDate(interviewDateTime) {
@@ -16,14 +24,17 @@ function calculateExpiryDate(interviewDateTime) {
 
   const isInstant = timeLeftMinutes <= 20 && timeLeftMinutes > 0;
 
+  // ✅ Instant interview expiry logic (unchanged)
   if (isInstant) {
     return new Date(
       interviewDateTime.getTime() -
-      SLA_CONFIG.INSTANT_EXPIRE_BEFORE_MINUTES * 60 * 1000
+        (SLA_CONFIG?.INSTANT_EXPIRE_BEFORE_MINUTES ?? 10) * 60 * 1000
     );
   }
 
   const slaHours = getSlaHours(timeLeftHours);
+
+  // ✅ Final expiry calculation
   return new Date(now.getTime() + slaHours * 60 * 60 * 1000);
 }
 
