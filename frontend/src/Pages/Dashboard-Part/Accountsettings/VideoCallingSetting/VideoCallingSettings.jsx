@@ -103,6 +103,20 @@ export function VideoCallingSettings() {
 
   const videoProviders = [
     {
+      id: "platform",
+      name: "Platform",
+      description: "Use Platform for professional video interviews",
+      icon: VideoCameraIcon,
+      specifications: [
+        "Professional Video Quality",
+        "Platform Rooms Support",
+        "Webinar Capabilities",
+        "Local & Cloud Recording",
+        "Breakout Rooms",
+        "Advanced Security Features",
+      ],
+    },
+    {
       id: "zoom",
       name: "Zoom",
       description: "Use Zoom for professional video interviews",
@@ -342,6 +356,7 @@ export function VideoCallingSettings() {
           ownerId: ownerId,
         }
       );
+      console.log("response test-connection", response);
       if (response.data.success) {
         setSettings((prev) => ({
           ...prev,

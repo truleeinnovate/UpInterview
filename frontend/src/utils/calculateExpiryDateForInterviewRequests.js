@@ -16,10 +16,12 @@ function calculateExpiryDate(interviewDateTime) {
 
   const isInstant = timeLeftMinutes <= 20 && timeLeftMinutes > 0;
 
+  console.log("interviewDateTime", interviewDateTime);
+
   if (isInstant) {
     return new Date(
       interviewDateTime.getTime() -
-      SLA_CONFIG.INSTANT_EXPIRE_BEFORE_MINUTES * 60 * 1000
+        SLA_CONFIG.INSTANT_EXPIRE_BEFORE_MINUTES * 60 * 1000
     );
   }
 

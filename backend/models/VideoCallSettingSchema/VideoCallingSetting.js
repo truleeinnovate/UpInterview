@@ -1,81 +1,91 @@
 // ✅ Use CommonJS require
 const mongoose = require("mongoose");
 
-const videoCallingSettingsSchema = new mongoose.Schema({
-  tenantId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "Tenant"
-  },
-  ownerId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "Contacts"
-  },
-  defaultProvider: {
-    type: String,
-    enum: ["platform", "zoom", "google-meet", "teams"],
-    default: "zoom",
-  },
-  credentialType: { 
-    type: String, 
-    enum: ["platform", "tenant"], 
-    default: "platform" 
-  },
-  credentials: {
-    zoom: {
-      apiKey: { type: String, default: "" },
-      apiSecret: { type: String, default: "" },
-      accountId: { type: String, default: "" },
-      isConfigured: { type: Boolean, default: false },
+const videoCallingSettingsSchema = new mongoose.Schema(
+  {
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Tenant",
     },
-    googleMeet: {
-      clientId: { type: String, default: "" },
-      clientSecret: { type: String, default: "" },
-      refreshToken: { type: String, default: "" },
-      isConfigured: { type: Boolean, default: false },
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Contacts",
     },
-    teams: {
-      tenantId: { type: String, default: "" },
-      clientId: { type: String, default: "" },
-      clientSecret: { type: String, default: "" },
-      isConfigured: { type: Boolean, default: false },
+    defaultProvider: {
+      type: String,
+      enum: ["platform", "zoom", "google-meet", "teams"],
+      default: "zoom",
+    },
+    credentialType: {
+      type: String,
+      enum: ["platform", "tenant"],
+      default: "platform",
+    },
+    credentials: {
+      zoom: {
+        apiKey: { type: String, default: "" },
+        apiSecret: { type: String, default: "" },
+        accountId: { type: String, default: "" },
+        isConfigured: { type: Boolean, default: false },
+      },
+      googleMeet: {
+        clientId: { type: String, default: "" },
+        clientSecret: { type: String, default: "" },
+        refreshToken: { type: String, default: "" },
+        isConfigured: { type: Boolean, default: false },
+      },
+      teams: {
+        tenantId: { type: String, default: "" },
+        clientId: { type: String, default: "" },
+        clientSecret: { type: String, default: "" },
+        isConfigured: { type: Boolean, default: false },
+      },
+    },
+    testConnection: {
+      status: {
+        type: String,
+        enum: ["testing", "success", "failed", null],
+        default: null,
+      },
+      message: { type: String, default: "" },
+      lastTested: { type: Date },
+    },
+    uiState: {
+      lastConfiguredProvider: { type: String },
+      showCredentialHelp: { type: Boolean, default: true },
+      credentialPopupsDismissed: { type: Number, default: 0 },
     },
   },
-  testConnection: {
-    status: { 
-      type: String, 
-      enum: ["testing", "success", "failed", null], 
-      default: null 
-    },
-    message: { type: String, default: "" },
-    lastTested: { type: Date },
-  },
-  uiState: {
-    lastConfiguredProvider: { type: String },
-    showCredentialHelp: { type: Boolean, default: true },
-    credentialPopupsDismissed: { type: Number, default: 0 },
-  },
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 // ✅ Instance methods (optional)
-videoCallingSettingsSchema.methods.updateCredentials = function(provider, credentials) {
+videoCallingSettingsSchema.methods.updateCredentials = function (
+  provider,
+  credentials
+) {
   this.credentials[provider] = {
     ...this.credentials[provider],
     ...credentials,
-    isConfigured: true
+    isConfigured: true,
   };
   return this.save();
 };
 
-videoCallingSettingsSchema.methods.hasConfiguredCredentials = function(provider) {
+videoCallingSettingsSchema.methods.hasConfiguredCredentials = function (
+  provider
+) {
   return this.credentials[provider]?.isConfigured || false;
 };
 
 // ✅ Create model
-const VideoCallingDetails = mongoose.model("VideoCallingSettings", videoCallingSettingsSchema);
+const VideoCallingDetails = mongoose.model(
+  "VideoCallingSettings",
+  videoCallingSettingsSchema
+);
 
 // ✅ Export using CommonJS
 module.exports = VideoCallingDetails;
-
 
 // const mongoose = require("mongoose");
 
@@ -178,7 +188,6 @@ module.exports = VideoCallingDetails;
 // }, { timestamps: true });
 
 // module.exports = mongoose.model("VideoCallingSettings", videoCallingSettingsSchema);
-
 
 // // const mongoose = require("mongoose");
 
