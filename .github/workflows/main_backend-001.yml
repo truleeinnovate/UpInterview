@@ -195,6 +195,8 @@ jobs:
           cp -r backend/data deploy/backend/
           cp -r backend/validations deploy/backend/
           cp -r backend/services deploy/backend/
+          cp -r backend/cron deploy/backend/
+
 
           # Copy node_modules (already installed with production deps)
           cp -r backend/node_modules deploy/backend/
