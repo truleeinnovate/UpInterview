@@ -1353,6 +1353,11 @@ app.use("/wallet", WalletRouter);
 const taskRoutes = require("./routes/taskRoutes");
 app.use("/tasks", taskRoutes);
 
+// ----------------------- Code Editor Routes -------------------------
+const codeEditorRoutes = require("./routes/CodeEditorRoutes/CodeEditorRoutes.js");
+app.use("/execute", codeEditorRoutes);
+// ----------------------- Code Editor Routes -------------------------
+
 // Notification test routes (only for development/testing)
 if (process.env.NODE_ENV !== "production") {
   const notificationTestRoutes = require("./routes/pushNotificationTestRoutes");
