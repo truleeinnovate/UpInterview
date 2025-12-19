@@ -982,6 +982,8 @@ const updateInterviewRound = async (req, res) => {
     let roundIdParam = req.params.roundId;
     const { interviewId, round, questions } = req.body;
 
+    console.log("req.body", req.body);
+
     if (!mongoose.Types.ObjectId.isValid(roundIdParam)) {
       return res.status(400).json({ message: "Invalid roundId" });
     }
