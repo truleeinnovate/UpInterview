@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   User,
-  Plus,
+  // Plus,
   Edit,
   ArrowLeft,
   Users,
@@ -261,7 +261,7 @@ const MockInterviewDetails = () => {
     ? [rounds]
     : [];
 
-  // console.log(normalizedRounds.length);
+  console.log(mockinterview);
 
   const capitalizeFirstLetter = (str) => {
     if (!str) return "";
@@ -319,16 +319,20 @@ const MockInterviewDetails = () => {
                     "Scheduled",
                     "Cancelled",
                     "RequestSent",
-                  ].includes(rounds[0]?.status) && (
-                    <button
-                      onClick={handleAddRound}
-                      // to={`/mock-interview/${id}/edit`}
-                      className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <Edit className="h-4 w-4 sm:mr-0 mr-1" />
-                      <span className="sm:hidden inline">Edit Interview</span>
-                    </button>
-                  )}
+                  ].includes(rounds[0]?.status) &&
+                    mockinterview?.rounds[0]?.interviewType.toLowerCase() ===
+                      "instant" &&
+                    mockinterview?.rounds[0]?.status.toLowerCase() ===
+                      "draft" && (
+                      <button
+                        onClick={handleAddRound}
+                        // to={`/mock-interview/${id}/edit`}
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <Edit className="h-4 w-4 sm:mr-0 mr-1" />
+                        <span className="sm:hidden inline">Edit Interview</span>
+                      </button>
+                    )}
 
                   {/* <Link
                     to={`/mock-interview/${id}/edit`}

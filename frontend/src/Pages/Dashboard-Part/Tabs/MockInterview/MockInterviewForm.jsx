@@ -370,8 +370,8 @@ const MockSchedulelater = () => {
   const [errors, setErrors] = useState({});
   const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
 
-  const [showDropdownQualification, setShowDropdownQualification] =
-    useState(false);
+  // const [showDropdownQualification, setShowDropdownQualification] =
+  //   useState(false);
 
   // const toggleDropdownQualification = () => {
   //   setShowDropdownQualification(!showDropdownQualification);
@@ -2201,6 +2201,22 @@ const MockSchedulelater = () => {
                             type="button"
                             onClick={() => {
                               setInterviewType("instant");
+
+                              // Clear outsourced data when switching to instant
+                              if (externalInterviewers.length > 0) {
+                                setExternalInterviewers([]);
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  rounds: {
+                                    ...prev.rounds,
+                                    interviewers: [],
+                                  },
+                                }));
+                                notify.warning(
+                                  "Interview type changed to instant. Outsourced interviewers have been cleared."
+                                );
+                              }
+
                               setFormData((prev) => ({
                                 ...prev,
                                 rounds: {
@@ -2239,6 +2255,22 @@ const MockSchedulelater = () => {
                             type="button"
                             onClick={() => {
                               setInterviewType("scheduled");
+
+                              // Clear outsourced data when switching to scheduled
+                              if (externalInterviewers.length > 0) {
+                                setExternalInterviewers([]);
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  rounds: {
+                                    ...prev.rounds,
+                                    interviewers: [],
+                                  },
+                                }));
+                                notify.warning(
+                                  "Interview type changed. Outsourced interviewers have been cleared."
+                                );
+                              }
+
                               setFormData((prev) => ({
                                 ...prev,
                                 rounds: {
@@ -2292,9 +2324,26 @@ const MockSchedulelater = () => {
                                 id="scheduledDate"
                                 name="scheduledDate"
                                 value={scheduledDate}
-                                onChange={(e) =>
-                                  setScheduledDate(e.target.value)
-                                }
+                                // onChange={(e) =>
+                                //   setScheduledDate(e.target.value)
+                                // }
+                                onChange={(e) => {
+                                  // Clear outsourced data when date/time changes
+                                  if (externalInterviewers.length > 0) {
+                                    setExternalInterviewers([]);
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      rounds: {
+                                        ...prev.rounds,
+                                        interviewers: [],
+                                      },
+                                    }));
+                                    notify.warning(
+                                      "Date/time changed. Outsourced interviewers have been cleared."
+                                    );
+                                  }
+                                  setScheduledDate(e.target.value);
+                                }}
                                 min={new Date().toISOString().slice(0, 16)}
                                 className="mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                                 border border-gray-300 focus:ring-gray-300 focus:outline-gray-300"

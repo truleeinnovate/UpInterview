@@ -36,6 +36,9 @@ const {
 const {
   createCandidatePositionService,
 } = require("./candidatePositionController.js");
+const { createInterviewRequest } = require("../utils/interviewRequest.js");
+const InterviewRequest = require("../models/InterviewRequest.js");
+const { createRequest } = require("./InterviewRequestController.js");
 
 //  post call for interview page
 // const createInterview = async (req, res) => {
@@ -753,6 +756,65 @@ const saveInterviewRound = async (req, res) => {
     // like "Scheduled" we still want to emit the webhook once it is saved.
     const oldStatusForWebhook = undefined;
     savedRound = await newInterviewRound.save();
+
+    const interview = await Interview.findById(interviewId).lean();
+
+    // ❌ Skip Assessment rounds
+    if (
+      interview &&
+      savedRound.roundTitle !== "Assessment" &&
+      savedRound.interviewMode !== "Face to Face" &&
+      req.body?.round.selectedInterviewers?.length > 0
+    ) {
+      for (const interviewer of req.body?.round.selectedInterviewers) {
+        const isInternal = interviewer.type === "Internal";
+
+        let response = await createRequest({
+          tenantId: interview.tenantId,
+          ownerId: interview.ownerId,
+          scheduledInterviewId: interviewId,
+          interviewerType: interviewer.type,
+          interviewerId: interviewer.contact?._id || interviewer._id,
+          // status: isInternal ? "accepted" : "RequestSent",
+          dateTime: savedRound.dateTime,
+          duration: savedRound.duration,
+          candidateId: interview.candidateId,
+          positionId: interview.positionId,
+          roundId: savedRound._id,
+          isMockInterview: false,
+          requestMessage: isInternal
+            ? "Internal interview request"
+            : "Outsource interview request",
+          expiryDateTime: new Date(
+            Date.now() + 24 * 60 * 60 * 1000
+          ).toISOString(),
+          contactId: interviewer.contact?._id,
+        });
+
+        // let response = await createInterviewRequest({
+        //   tenantId: interview.tenantId,
+        //   ownerId: interview.ownerId,
+        //   scheduledInterviewId: interviewId,
+        //   interviewerType: interviewer.type,
+        //   interviewerId: interviewer.contact?._id || interviewer._id,
+        //   status: isInternal ? "accepted" : "RequestSent",
+        //   dateTime: savedRound.dateTime,
+        //   duration: savedRound.duration,
+        //   candidateId: interview.candidateId,
+        //   positionId: interview.positionId,
+        //   roundId: savedRound._id,
+        //   isMockInterview: false,
+        //   requestMessage: isInternal
+        //     ? "Internal interview request"
+        //     : "Outsource interview request",
+        //   expiryDateTime: new Date(
+        //     Date.now() + 24 * 60 * 60 * 1000
+        //   ).toISOString(),
+        //   contactId: interviewer.contact?._id,
+        // });
+        console.log("response response", response);
+      }
+    }
 
     // Trigger interview.round.status.updated if status is one of the allowed values
     await triggerInterviewRoundStatusUpdated(savedRound, oldStatusForWebhook);
@@ -1776,20 +1838,124 @@ const getInterviewRoundTransaction = async (req, res) => {
   }
 };
 
+// const getInterviewDataforOrg = async (req, res) => {
+//   try {
+//     const { interviewId } = req.params;
+
+//     // STEP 1: Fetch interview with population
+//     const interview = await Interview.findById(interviewId)
+//       .populate({
+//         path: "candidateId",
+//         select:
+//           "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
+//         model: "Candidate",
+//       })
+//       .populate({
+//         path: "positionId",
+//         select: "title companyname Location skills minexperience maxexperience",
+//         model: "Position",
+//       })
+//       .populate({ path: "templateId" })
+//       .lean();
+
+//     if (!interview) {
+//       return res.status(404).json({ message: "Interview not found" });
+//     }
+
+//     // STEP 2: Get all rounds for THIS interview
+//     const rounds = await InterviewRounds.find({ interviewId })
+//       .populate({
+//         path: "interviewers",
+//         select: "firstName lastName email",
+//       })
+//       .lean();
+
+//     // ============================================================
+//     // 🔹 NEW STEP 2.1: Fetch Interview Requests (ONLY RequestSent)
+//     // Purpose: For RequestSent rounds, interviewer data must come
+//     // from InterviewRequest → Contacts (not InterviewRounds)
+//     // ============================================================
+//     const interviewRequests = await InterviewRequest.find({
+//       scheduledInterviewId: interviewId,
+//       status: "RequestSent", // 🔹 NEW: only pending requests
+//     })
+//       .populate({
+//         path: "interviewerId",
+//         select: "_id firstName lastName email", // 🔹 NEW: required fields
+//         model: "Contacts",
+//       })
+//       .select("roundId interviewerId status") // 🔹 NEW
+//       .lean();
+
+//     // ============================================================
+//     // 🔹 NEW STEP 2.2: Map Interview Requests by roundId
+//     // Purpose: Attach interviewers correctly per round
+//     // ============================================================
+//     const requestMap = {}; // 🔹 NEW
+
+//     interviewRequests.forEach((reqItem) => {
+//       const roundKey = String(reqItem.roundId);
+
+//       if (!requestMap[roundKey]) {
+//         requestMap[roundKey] = [];
+//       }
+
+//       if (reqItem.interviewerId) {
+//         requestMap[roundKey].push(reqItem.interviewerId);
+//       }
+//     });
+
+//     // STEP 3: Fetch questions for rounds
+//     const roundIds = rounds.map((r) => r._id);
+//     const questions = await interviewQuestions
+//       .find({
+//         roundId: { $in: roundIds },
+//       })
+//       .select("roundId snapshot")
+//       .lean();
+
+//     // STEP 4: Map questions → rounds
+//     const questionMap = {};
+//     questions.forEach((q) => {
+//       const key = String(q.roundId);
+//       if (!questionMap[key]) questionMap[key] = [];
+//       questionMap[key].push(q);
+//     });
+
+//     // ============================================================
+//     // 🔹 NEW STEP 5: Attach interviewers properly per round
+//     // If round.status === "RequestSent"
+//     // → interviewer data comes from InterviewRequest (Contacts)
+//     // Else
+//     // → use InterviewRounds.interviewers
+//     // ============================================================
+//     const fullRounds = rounds.map((r) => ({
+//       ...r,
+
+//       interviewers:
+//         r.status === "RequestSent"
+//           ? requestMap[String(r._id)] || [] // 🔹 NEW
+//           : r.interviewers,
+
+//       questions: questionMap[String(r._id)] || [],
+//     }));
+
+//     // STEP 6: Attach rounds to interview
+//     interview.rounds = fullRounds;
+
+//     return res.json({ success: true, data: interview });
+//   } catch (err) {
+//     console.error("Interview Fetch Failed:", err);
+//     return res.status(500).json({ message: "Server error", error: err });
+//   }
+// };
+
 const getInterviewDataforOrg = async (req, res) => {
   try {
     const { interviewId } = req.params;
 
     // STEP 1: Fetch interview with population
     const interview = await Interview.findById(interviewId)
-      // .populate({
-      //   path: "candidateId",
-      //   select: "FirstName LastName Email skills CurrentExperience ImageData",
-      // })
-      // .populate({
-      //   path: "positionId",
-      //   select: "title companyname Location",
-      // })
       .populate({
         path: "candidateId",
         select:
