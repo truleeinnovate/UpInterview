@@ -835,46 +835,45 @@ const saveInterviewRound = async (req, res) => {
 
     const interview = await Interview.findById(interviewId).lean();
 
-// ================= CREATE INTERVIEW REQUEST (BACKEND ONLY) =================
-if (
-  interview &&
-  savedRound.roundTitle !== "Assessment" &&
-  savedRound.interviewMode !== "Face to Face" &&
-  Array.isArray(req.body?.round?.selectedInterviewers) &&
-  req.body.round.selectedInterviewers.length > 0
-) {
-  for (const interviewer of req.body.round.selectedInterviewers) {
-    const interviewerType = interviewer.type?.toLowerCase(); // "internal" | "external"
-    const isInternal = interviewerType === "internal";
+    // ================= CREATE INTERVIEW REQUEST (BACKEND ONLY) =================
+    if (
+      interview &&
+      savedRound.roundTitle !== "Assessment" &&
+      savedRound.interviewMode !== "Face to Face" &&
+      Array.isArray(req.body?.round?.selectedInterviewers) &&
+      req.body.round.selectedInterviewers.length > 0
+    ) {
+      for (const interviewer of req.body.round.selectedInterviewers) {
+        const interviewerType = interviewer.type?.toLowerCase(); // "internal" | "external"
+        // const isInternal = interviewerType === "internal";
 
-    await createRequest(
-      {
-        body: {
-          tenantId: interview.tenantId,
-          ownerId: interview.ownerId,
-          scheduledInterviewId: interview._id,
-          interviewerType,
-          interviewerId: interviewer.contact?._id || interviewer._id,
-          contactId: interviewer.contact?._id,
-          dateTime: savedRound.dateTime,
-          duration: savedRound.duration,
-          candidateId: interview.candidateId,
-          positionId: interview.positionId,
-          roundId: savedRound._id,
-           expiryDateTime: req.body.round.expiryDateTime, // ✅ FROM FRONTEND
-          isMockInterview: false,
-        },
-      },
-      {
-        status: () => ({
-          json: () => {},
-        }),
-        locals: {},
+        await createRequest(
+          {
+            body: {
+              tenantId: interview.tenantId,
+              ownerId: interview.ownerId,
+              scheduledInterviewId: interview._id,
+              interviewerType,
+              interviewerId: interviewer.contact?._id || interviewer._id,
+              contactId: interviewer.contact?._id,
+              dateTime: savedRound.dateTime,
+              duration: savedRound.duration,
+              candidateId: interview.candidateId,
+              positionId: interview.positionId,
+              roundId: savedRound._id,
+              expiryDateTime: req.body.round.expiryDateTime, // ✅ FROM FRONTEND
+              isMockInterview: false,
+            },
+          },
+          {
+            status: () => ({
+              json: () => {},
+            }),
+            locals: {},
+          }
+        );
       }
-    );
-  }
-}
-
+    }
 
     // Trigger interview.round.status.updated if status is one of the allowed values
     await triggerInterviewRoundStatusUpdated(savedRound, oldStatusForWebhook);
