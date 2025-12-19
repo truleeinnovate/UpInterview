@@ -932,7 +932,28 @@ const RoundFormInterviews = () => {
         setSequence(maxSequence + 1);
       }
     }
-  }, [rounds, roundId, isEditing, editingAssessment, groups]);
+  }, [
+    rounds,
+    roundId,
+    assessmentTemplate,
+    isEditing,
+    duration,
+    editingAssessment,
+    groups,
+    externalInterviewers,
+    instructions,
+    internalInterviewers,
+    interviewMode,
+    interviewQuestionsList,
+    interviewType,
+    interviewerGroupId,
+    interviewerGroupName,
+    interviewerViewType,
+    roundTitle,
+    selectedInterviewType,
+    sequence,
+    status,
+  ]);
 
   // Add this useEffect hook after your existing useEffect hooks
   useEffect(() => {
@@ -2926,15 +2947,17 @@ const RoundFormInterviews = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-3">
                                   {externalInterviewers?.map((interviewer) => (
                                     <div
-                                      key={interviewer.id}
+                                      key={interviewer.id || interviewer?._id}
                                       className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 p-3 shadow-sm hover:shadow-md transition-shadow duration-200 min-w-0"
 
                                       // className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
                                     >
                                       <div className="flex items-center min-w-0 flex-1">
                                         <span className="ml-2 text-sm text-orange-800 truncate">
-                                          {interviewer?.contact?.firstName}{" "}
-                                          {interviewer?.contact?.lastName}{" "}
+                                          {interviewer?.contact?.firstName ||
+                                            interviewer?.firstName}{" "}
+                                          {interviewer?.contact?.lastName ||
+                                            interviewer?.lastName}{" "}
                                           (Outsourced)
                                         </span>
                                       </div>

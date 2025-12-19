@@ -369,6 +369,68 @@ export const useInterviews = (
     },
   });
 
+  const updateRoundStatus = useMutation({
+    mutationFn: async ({ roundId, status, ...otherFields }) => {
+      const payload = { status };
+
+      // Add other fields only if they are provided
+      // if (otherFields.currentAction !== undefined) payload.currentAction = otherFields.currentAction;
+      // if (otherFields.currentActionReason !== undefined) payload.currentActionReason = otherFields.currentActionReason;
+      // if (otherFields.previousAction !== undefined) payload.previousAction = otherFields.previousAction;
+      // if (otherFields.previousActionReason !== undefined) payload.previousActionReason = otherFields.previousActionReason;
+      // if (otherFields.rejectionReason !== undefined) payload.rejectionReason = otherFields.rejectionReason;
+      // if (otherFields.settlementStatus !== undefined) payload.settlementStatus = otherFields.settlementStatus;
+      // if (otherFields.settlementDate !== undefined) payload.settlementDate = otherFields.settlementDate;
+      // if (otherFields.settlementTransactionId !== undefined) payload.settlementTransactionId = otherFields.settlementTransactionId;
+      // if (otherFields.holdTransactionId !== undefined) payload.holdTransactionId = otherFields.holdTransactionId;
+
+      const response = await axios.patch(
+        `${config.REACT_APP_API_URL}/interview-rounds/${roundId}/status`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Cookies.get("authToken")}`,
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate interview details query
+      queryClient.invalidateQueries([
+        "interview-details",
+        variables.interviewId,
+      ]);
+
+      // Invalidate interviews list
+      queryClient.invalidateQueries(["interviews"]);
+
+      // Optimistically update the cache for interview details
+      queryClient.setQueryData(
+        ["interview-details", variables.interviewId],
+        (oldData) => {
+          if (!oldData) return oldData;
+
+          // Update the specific round in the interview details
+          const updatedRounds = oldData.rounds?.map((round) =>
+            round._id === variables.roundId
+              ? { ...round, status: variables.status, ...variables }
+              : round
+          );
+
+          return {
+            ...oldData,
+            rounds: updatedRounds,
+          };
+        }
+      );
+    },
+    onError: (error) => {
+      console.error("Round status update error:", error);
+    },
+  });
+
   //  round deletion
   const deleteRoundMutation = useMutation({
     mutationFn: async (roundId) => {
@@ -474,6 +536,10 @@ export const useInterviews = (
     // refetchInterviews,
     deleteRoundMutation: deleteRoundMutation.mutateAsync,
     deleteInterviewMutation: deleteInterviewMutation.mutateAsync,
+    updateRoundStatus: updateRoundStatus.mutateAsync,
     refetch,
   };
 };
+
+// Add this to your existing useInterviews hook
+// Interview round status update mutation
