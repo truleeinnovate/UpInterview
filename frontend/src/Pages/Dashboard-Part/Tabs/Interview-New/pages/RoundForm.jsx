@@ -1319,8 +1319,8 @@ const RoundFormInterviews = () => {
           interviewers: formattedInterviewers || [],
         }),
         // ✅ ADD THESE TWO LINES (VERY IMPORTANT) - KEPT EXACTLY AS REQUESTED
-        selectedInterviewers,      // ← backend uses this to create requests
-        expiryDateTime,            // ← backend uses frontend expiry
+        selectedInterviewers, // ← backend uses this to create requests
+        expiryDateTime, // ← backend uses frontend expiry
       };
 
       const validationErrors = validateInterviewRoundData(roundData);
@@ -1370,7 +1370,9 @@ const RoundFormInterviews = () => {
             const usageInfo = usageCheck.usageStats || usageCheck.usage || {};
             notify.error(
               `Cannot schedule: ${usageCheck.message}. ` +
-              `Used: ${usageInfo.utilized || 0}/${usageInfo.entitled || 0} interviews.`,
+                `Used: ${usageInfo.utilized || 0}/${
+                  usageInfo.entitled || 0
+                } interviews.`,
               { duration: 5000 }
             );
             setIsSubmitting(false);
@@ -1533,9 +1535,7 @@ const RoundFormInterviews = () => {
                 "Error sending outsource interview request emails:",
                 emailError
               );
-              notify.error(
-                "Failed to send outsource interview request emails"
-              );
+              notify.error("Failed to send outsource interview request emails");
             }
           }
         }
@@ -1626,7 +1626,8 @@ const RoundFormInterviews = () => {
                   }
                 }
 
-                const formattedStartTime = formatStartTimeToUTC(combinedDateTime);
+                const formattedStartTime =
+                  formatStartTimeToUTC(combinedDateTime);
                 if (!formattedStartTime)
                   throw new Error("Invalid start time format");
 
@@ -1748,7 +1749,6 @@ const RoundFormInterviews = () => {
             setTimeout(() => {
               navigate(`/interviews/${interviewId}`);
             }, successMessages.length * 1000 + 500);
-
           } catch (err) {
             console.error("Error in meeting creation:", err);
             setErrors({
@@ -2274,22 +2274,29 @@ const RoundFormInterviews = () => {
                                                       sectionData?.sectionName.slice(
                                                         1
                                                       )
-                                                      : "Unnamed Section"}
-                                                  </span>
-                                                  <ChevronUp
-                                                    className={`transform transition-transform ${expandedSections[sectionId]
+                                                    : "Unnamed Section"}
+                                                </span>
+                                                <ChevronUp
+                                                  className={`transform transition-transform ${
+                                                    expandedSections[sectionId]
                                                       ? ""
                                                       : "rotate-180"
-                                                      }`}
-                                                  />
-                                                </button>
+                                                  }`}
+                                                />
+                                              </button>
 
-                                                {expandedSections[sectionId] && (
-                                                  <div className="mt-4 space-y-3">
-                                                    {sectionData?.questions
-                                                      .length > 0 ? (
-                                                      sectionData?.questions.map(
-                                                        (question, idx) => (
+                                              {expandedSections[sectionId] && (
+                                                <div className="mt-4 space-y-3">
+                                                  {sectionData?.questions
+                                                    .length > 0 ? (
+                                                    sectionData?.questions.map(
+                                                      (question, idx) => (
+                                                        <div
+                                                          key={
+                                                            question._id || idx
+                                                          }
+                                                          className="border rounded-md shadow-sm overflow-hidden"
+                                                        >
                                                           <div
                                                             onClick={() =>
                                                               setExpandedQuestions(
@@ -2299,31 +2306,22 @@ const RoundFormInterviews = () => {
                                                                     !prev[
                                                                       question
                                                                         ._id
-                                                                      ],
-                                                                  })
-                                                                )
-                                                              }
-                                                              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                                                            >
-                                                              <div className="flex items-center gap-2">
-                                                                <span className="font-medium text-gray-600">
-                                                                  {idx + 1}.
-                                                                </span>
-                                                                <p className="text-sm text-gray-700">
-                                                                  {question
-                                                                    .snapshot
-                                                                    ?.questionText ||
-                                                                    "No question text"}
-                                                                </p>
-                                                              </div>
-                                                              <ChevronDown
-                                                                className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
-                                                                  question._id
-                                                                ]
-                                                                  ? "transform rotate-180"
-                                                                  : ""
-                                                                  }`}
-                                                              />
+                                                                    ],
+                                                                })
+                                                              )
+                                                            }
+                                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                                          >
+                                                            <div className="flex items-center gap-2">
+                                                              <span className="font-medium text-gray-600">
+                                                                {idx + 1}.
+                                                              </span>
+                                                              <p className="text-sm text-gray-700">
+                                                                {question
+                                                                  .snapshot
+                                                                  ?.questionText ||
+                                                                  "No question text"}
+                                                              </p>
                                                             </div>
                                                             <ChevronDown
                                                               className={`w-5 h-5 text-gray-400 transition-transform ${
@@ -2365,46 +2363,44 @@ const RoundFormInterviews = () => {
                                                                 </div>
                                                               </div>
 
-                                                                  {/* Display question options if MCQ */}
-                                                                  {question.snapshot
-                                                                    ?.questionType ===
-                                                                    "MCQ" && (
-                                                                      <div className="mt-2">
-                                                                        <span className="text-sm font-medium text-gray-500">
-                                                                          Options:
-                                                                        </span>
-                                                                        <div className="grid grid-cols-2 gap-2 mt-1">
-                                                                          {question.snapshot?.options?.map(
-                                                                            (
-                                                                              option,
-                                                                              optIdx
-                                                                            ) => (
-                                                                              <div
-                                                                                key={
-                                                                                  optIdx
-                                                                                }
-                                                                                //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                                className={`text-sm p-2 rounded border ${option ===
-                                                                                  question
-                                                                                    .snapshot
-                                                                                    .correctAnswer
-                                                                                  ? "bg-green-50 border-green-200 text-green-800"
-                                                                                  : "bg-gray-50 border-gray-200"
-                                                                                  }`}
-                                                                              >
-                                                                                {
-                                                                                  option
-                                                                                }
-                                                                                {option ===
-                                                                                  question
-                                                                                    .snapshot
-                                                                                    .correctAnswer && (
-                                                                                    <span className="ml-2 text-green-600">
-                                                                                      ✓
-                                                                                    </span>
-                                                                                  )}
-                                                                              </div>
-                                                                            )
+                                                              {/* Display question options if MCQ */}
+                                                              {question.snapshot
+                                                                ?.questionType ===
+                                                                "MCQ" && (
+                                                                <div className="mt-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Options:
+                                                                  </span>
+                                                                  <div className="grid grid-cols-2 gap-2 mt-1">
+                                                                    {question.snapshot?.options?.map(
+                                                                      (
+                                                                        option,
+                                                                        optIdx
+                                                                      ) => (
+                                                                        <div
+                                                                          key={
+                                                                            optIdx
+                                                                          }
+                                                                          //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                          className={`text-sm p-2 rounded border ${
+                                                                            option ===
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer
+                                                                              ? "bg-green-50 border-green-200 text-green-800"
+                                                                              : "bg-gray-50 border-gray-200"
+                                                                          }`}
+                                                                        >
+                                                                          {
+                                                                            option
+                                                                          }
+                                                                          {option ===
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer && (
+                                                                            <span className="ml-2 text-green-600">
+                                                                              ✓
+                                                                            </span>
                                                                           )}
                                                                         </div>
                                                                       )
@@ -2490,22 +2486,25 @@ const RoundFormInterviews = () => {
                             type="button"
                             // onClick={() => setInterviewType("instant")}
                             onClick={() => handleInterviewTypeChange("instant")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "instant"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${interviewType === "instant"
-                                ? "text-custom-blue/70"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue/70"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "instant"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Instant Interview
                             </span>
@@ -2520,22 +2519,25 @@ const RoundFormInterviews = () => {
                               handleInterviewTypeChange("scheduled")
                             } // Use new handler
                             // onClick={() => setInterviewType("scheduled")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "scheduled"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${interviewType === "scheduled"
-                                ? "text-custom-blue/70"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue/70"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "scheduled"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Schedule for Later
                             </span>
@@ -2627,6 +2629,43 @@ const RoundFormInterviews = () => {
                           </div>
                         )}
 
+                        {/* Add this note when instant interview and outsourced interviewers are selected */}
+                        {interviewType === "instant" &&
+                          externalInterviewers.length > 0 && (
+                            <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                              <div className="flex">
+                                <div className="flex-shrink-0">
+                                  <svg
+                                    className="h-5 w-5 text-yellow-400"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </div>
+                                <div className="ml-3">
+                                  <p className="text-sm text-yellow-700">
+                                    <span className="font-medium">
+                                      Instant Interview Note:
+                                    </span>
+                                    <br />
+                                    • 15 minute interview schedule
+                                    <br />
+                                    • If interview is not accepted within 15
+                                    minutes, the round will be cancelled and
+                                    request will be automatically cancelled
+                                    <br />• Ensure interviewers are available
+                                    immediately
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                         {interviewType === "scheduled" && scheduledDate && (
                           <div className="mt-4 p-4 bg-green-50 rounded-md">
                             <div className="flex items-center">
@@ -2667,10 +2706,11 @@ const RoundFormInterviews = () => {
                               }}
                               variant="outline"
                               size="sm"
-                              className={`${isExternalSelected
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                                }`}
+                              className={`${
+                                isExternalSelected
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -2689,10 +2729,11 @@ const RoundFormInterviews = () => {
                               onClick={() => setInternalInterviews(true)}
                               variant="outline"
                               size="sm"
-                              className={`${isExternalSelected
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                                }`}
+                              className={`${
+                                isExternalSelected
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -2712,10 +2753,11 @@ const RoundFormInterviews = () => {
                             onClick={() => setShowOutsourcePopup(true)}
                             variant="outline"
                             size="sm"
-                            className={`${isInternalSelected
-                              ? "opacity-50 cursor-not-allowed"
-                              : ""
-                              }`}
+                            className={`${
+                              isInternalSelected
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }`}
                             disabled={
                               isInternalSelected ||
                               interviewMode === "Face to Face"
@@ -2947,7 +2989,7 @@ const RoundFormInterviews = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-3">
                                   {externalInterviewers?.map((interviewer) => (
                                     <div
-                                      key={interviewer.id || interviewer?._id}
+                                      key={interviewer._id || interviewer?.id}
                                       className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 p-3 shadow-sm hover:shadow-md transition-shadow duration-200 min-w-0"
 
                                       // className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
@@ -3012,10 +3054,11 @@ const RoundFormInterviews = () => {
                                     return (
                                       <li
                                         key={qIndex}
-                                        className={`flex justify-between items-center p-3 border rounded-md ${isMandatory
-                                          ? "border-red-500"
-                                          : "border-gray-300"
-                                          }`}
+                                        className={`flex justify-between items-center p-3 border rounded-md ${
+                                          isMandatory
+                                            ? "border-red-500"
+                                            : "border-gray-300"
+                                        }`}
                                       >
                                         <span className="text-gray-900 font-medium">
                                           {qIndex + 1}.{" "}
