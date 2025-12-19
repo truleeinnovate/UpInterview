@@ -218,7 +218,7 @@ const MasterTable = ({ permissions = {} }) => {
           `${config.REACT_APP_API_URL}/master-data/${type}`,
           payload
         );
-        console.log("Created master:", res);
+        // console.log("Created master:", res);
         notify.success(`Master created successfully!`);
       }
 
@@ -326,7 +326,7 @@ const MasterTable = ({ permissions = {} }) => {
 
   // console.log("masterData?.[type]", masterData?.[type]);
 
-  console.log("getMasterDataKeys(type)", getMasterDataKeys(type));
+  // console.log("getMasterDataKeys(type)", getMasterDataKeys(type));
   const currentFilteredRows = masterData?.[getMasterDataKeys(type)]?.data || [];
   const pagination = masterData?.[getMasterDataKeys(type)]?.pagination || {};
   const totalPages = pagination.totalPages || 1;

@@ -280,13 +280,10 @@ const getAllMasters = async (req, res) => {
       limit = 10,
       search = "",
       status, // for category (isActive) or others with status field
-      sortBy = "createdAt",
-      sortOrder = "desc",
+      // sortBy = "createdAt",
+      // sortOrder = "desc",
       pageType,
     } = req.query;
-
-    console.log("pageType", pageType);
-    console.log("req.query", req.query);
 
     if (pageType !== "adminPortal") {
       const Model = getModel(type);
@@ -303,7 +300,7 @@ const getAllMasters = async (req, res) => {
               { TechnologyMasterName: { $regex: search, $options: "i" } },
               { SkillName: { $regex: search, $options: "i" } },
               { LocationName: { $regex: search, $options: "i" } },
-              { RoleName: { $regex: search, $options: "i" } },
+              { roleName: { $regex: search, $options: "i" } },
               { QualificationName: { $regex: search, $options: "i" } },
               { University_CollegeName: { $regex: search, $options: "i" } },
               { CompanyName: { $regex: search, $options: "i" } },

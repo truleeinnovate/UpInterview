@@ -47,7 +47,6 @@ import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI";
 import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
-import { useInterviewerDetails } from "../../../../../utils/CommonFunctionRoundTemplates";
 import { notify } from "../../../../../services/toastService";
 import ScheduledAssessmentResultView from "../../Assessment-Tab/AssessmentViewDetails/ScheduledAssessmentResultView";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
@@ -78,7 +77,6 @@ const RoundCard = ({
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
-  const [showInterviewers, setShowInterviewers] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   const [confirmAction, setConfirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -1094,7 +1092,7 @@ const RoundCard = ({
                     </div>
                   )}
 
-                 {internalInterviewers.length === 0 &&
+                  {internalInterviewers.length === 0 &&
                     externalInterviewers.length === 0 &&
                     round.roundTitle !== "Assessment" && (
                       <span className="text-sm text-gray-500">
@@ -1178,8 +1176,8 @@ const RoundCard = ({
                                 />
                                 <span className="ml-1 text-xs text-gray-600">
                                   {interviewer?.firstName +
-                                      " " +
-                                      interviewer?.lastName || "N/A"}
+                                    " " +
+                                    interviewer?.lastName || "N/A"}
                                 </span>
                                 {/* {isRoundActive && canEdit && (
                                   <button
@@ -1659,14 +1657,15 @@ const RoundCard = ({
                       </button>
                     )}
                   {/* Edit */}
-                  {permissions.canEdit && (
-                    <button
-                      onClick={() => onEdit(round)}
-                      className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
-                    >
-                      <Edit className="h-4 w-4 mr-1" /> Edit Round
-                    </button>
-                  )}
+                  {permissions.canEdit &&
+                    round?.interviewType.toLowerCase() !== "instant" && (
+                      <button
+                        onClick={() => onEdit(round)}
+                        className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                      >
+                        <Edit className="h-4 w-4 mr-1" /> Edit Round
+                      </button>
+                    )}
                   {/* Delete */}
                   {permissions.canDelete && (
                     <button

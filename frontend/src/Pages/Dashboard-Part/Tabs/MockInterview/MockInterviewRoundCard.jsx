@@ -439,7 +439,8 @@ const MoockRoundCard = ({
               <div className="mt-6 w-full flex gap-2 whitespace-nowrap sm:justify-start md:justify-start justify-end">
                 {/* Reschedule */}
                 {permissions.canReschedule &&
-                  round.interviewerType === "external" && (
+                  round.interviewerType === "external" &&
+                  round?.interviewType.toLowerCase() !== "instant" && (
                     <button
                       onClick={() =>
                         navigate(`/mock-interview/${mockinterview?._id}/edit`)
@@ -460,18 +461,19 @@ const MoockRoundCard = ({
                     </button>
                   )}
                 {/* Cancel */}
-                {permissions.canCancel && (
-                  <button
-                    onClick={() => {
-                      // setActionInProgress(true);
-                      setConfirmAction("Cancelled");
-                      setShowConfirmModal(true);
-                    }}
-                    className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                  >
-                    <XCircle className="h-4 w-4 mr-1" /> Cancel
-                  </button>
-                )}
+                {permissions.canCancel &&
+                  round?.interviewType.toLowerCase() !== "instant" && (
+                    <button
+                      onClick={() => {
+                        // setActionInProgress(true);
+                        setConfirmAction("Cancelled");
+                        setShowConfirmModal(true);
+                      }}
+                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                    >
+                      <XCircle className="h-4 w-4 mr-1" /> Cancel
+                    </button>
+                  )}
 
                 {/* Delete */}
                 {/* {canEdit && permissions.canDelete && (
