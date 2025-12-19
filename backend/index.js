@@ -425,9 +425,6 @@ require("./cron/assessments/assessment.cron.js");
 require("./cron/subscriptions/subscriptionEmail.cron.js");
 require("./cron/organizations/organizationStatusReminder.cron");
 
-
-
-
 // Apply permission middleware to all routes except authentication routes
 const { authContextMiddleware } = require("./middleware/authContext.js");
 // const { permissionMiddleware } = require("./middleware/permissionMiddleware");
@@ -1385,6 +1382,12 @@ app.use("/outsourceInterviewers", outsourceInterviewerRoutes);
 
 const InterviewRoutes = require("./routes/interviewRoutes.js");
 app.use("/interview", InterviewRoutes);
+
+const InterviewRounds = require("./routes/interviewRoundsRoutes.js");
+
+app.use("/interview-rounds", InterviewRounds);
+
+// app.use("/candidate", router);
 
 const candidatePositionRoutes = require("./routes/candidatePositionRoutes.js");
 app.use("/candidateposition", candidatePositionRoutes);

@@ -68,7 +68,8 @@ const RoundCard = ({
   //   // questionsError,
   //   // setSectionQuestions,
   // } = useCustomContext();
-  const { deleteRoundMutation, updateInterviewRound } = useInterviews();
+  const { deleteRoundMutation, updateRoundStatus, updateInterviewRound } =
+    useInterviews();
   const { fetchAssessmentQuestions, fetchAssessmentResults, assessmentData } =
     useAssessments();
 
@@ -218,7 +219,13 @@ const RoundCard = ({
       //   `${config.REACT_APP_API_URL}/interview/save-round`,
       //   payload
       // );
-      const response = await updateInterviewRound(payload);
+      // const response = await updateInterviewRound(payload);
+
+      await updateRoundStatus({
+        roundId: round?._id,
+        interviewId: interview?._id,
+        status: newStatus, // or any other status
+      });
       // Show success toast
       notify.success(`Round Status updated to ${newStatus}`, {});
     } catch (error) {

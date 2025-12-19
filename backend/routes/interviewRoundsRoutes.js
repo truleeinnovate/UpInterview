@@ -1,7 +1,13 @@
-// const express = require('express');
-// const router = express.Router();
+const express = require("express");
+const {
+  updateInterviewRoundStatus,
+} = require("../controllers/interviewRoundsController");
+const router = express.Router();
 // const { getAllInterviewRounds } = require('../controllers/interviewRoundsController.js');
 
 // router.get('/', getAllInterviewRounds);
 
-// module.exports = router;
+// Update interview round status
+router.patch("/:roundId/status", updateInterviewRoundStatus);
+
+module.exports = router;
