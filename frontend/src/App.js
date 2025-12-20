@@ -495,11 +495,9 @@ const ContactUsViewPage = lazy(() =>
 // v1.0.8 ------------------------------------------------------------------------------->
 // v1.0.9 ------------------------------------------------------------------------------->
 
-// Video SDK Components
-const VideoSDKDashboard = lazy(() => import("./VideoSDK/components/Dashboard"));
-const VideoSDKJoinInterview = lazy(() =>
-  import("./VideoSDK/components/JoinInterview")
-);
+const VideoSDKDashboard = lazy(() => import('../src/VideoSDK/Dashboard.jsx'));
+const VideoSDKJoinMeeting = lazy(() => import('../src/VideoSDK/JoinMeeting.jsx'));
+const VideoSDKMeetingRoom = lazy(() => import('../src/VideoSDK/MeetingRoom.jsx'));
 
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
@@ -522,12 +520,15 @@ const AuthRoutes = () => (
     <Route path="/callback" element={<LinkedInCallback />} />
     <Route path="/oauth2callback" element={<OAuthCallback />} />
     <Route path="/join-meeting" element={<JoinMeeting />} />
-    <Route path="/video-sdk" element={<VideoSDKDashboard />} />
-    <Route path="/video-sdk/join" element={<VideoSDKJoinInterview />} />
     <Route path="/verify-email" element={<VerifyEmail />} />
     <Route path="/verify-user-email" element={<VerifyUserEmail />} />
     <Route path="/resetPassword" element={<ResetPassword />} />
     <Route path="/forgot-password" element={<ForgetPassword />} />
+
+    <Route path="/video-sdk" element={<VideoSDKDashboard />} />
+    <Route path="/meeting/:roomId" element={<VideoSDKJoinMeeting />} />
+    <Route path="/video-sdk-meeting-room" element={<VideoSDKMeetingRoom />} />
+
     <Route path="/assessmenttest" element={<AssessmentTest />} />
     <Route path="/pending-approval" element={<PendingApproval />} />
     <Route path="/subscription-success" element={<SubscriptionSuccess />} />
@@ -1487,6 +1488,9 @@ const App = () => {
       "/verify-user-email",
       "/resetPassword",
       "/forgot-password",
+      "/video-sdk",
+      "/meeting",
+      "/video-sdk-meeting-room",
       "/assessmenttest",
       "/pending-approval",
       "/subscription-success",
@@ -1495,8 +1499,6 @@ const App = () => {
       "/callback",
       "/oauth2callback",
       "/join-meeting",
-      "/video-sdk",
-      "/video-sdk/join",
     ].some(
       (path) =>
         location.pathname === path ||
