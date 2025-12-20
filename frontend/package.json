@@ -28,7 +28,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
-    "@videosdk.live/react-sdk": "^0.6.2",
+    "@videosdk.live/react-sdk": "^0.6.5",
     "axios": "^1.8.3",
     "canvas-confetti": "^1.9.3",
     "chart.js": "^4.4.8",

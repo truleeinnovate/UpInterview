@@ -1769,6 +1769,10 @@ app.use("/external", externalRoutes);
 const analyticsRoutes = require("./routes/AnalyticsRoutes/analytics.js");
 app.use("/analytics", analyticsRoutes);
 
+
+
+
+
 // Create meeting endpoint
 // app.post('/api/create-meeting', async (req, res) => {
 //   try {
@@ -1870,6 +1874,102 @@ app.use("/analytics", analyticsRoutes);
 //     return res.status(err.response?.status || 500).json({ error: err.response?.data || err.message });
 //   }
 // });
+
+
+// video sdk
+
+const jwt = require("jsonwebtoken");
+
+console.log("VIDEOSDK_API_KEY:", process.env.VIDEOSDK_API_KEY);
+console.log("VIDEOSDK_SECRET:", process.env.VIDEOSDK_SECRET);
+
+// 🔹 CREATE MEETING TOKEN
+function generateCreateToken() {
+  const token = jwt.sign(
+    {
+      apikey: process.env.VIDEOSDK_API_KEY,
+      permissions: ["allow_create"],
+      version: 2, // ✅ REQUIRED
+    },
+    process.env.VIDEOSDK_SECRET,
+    { expiresIn: "1h" }
+  );
+
+  // 🔍 DEBUG
+  console.log("CREATE TOKEN PAYLOAD:", jwt.decode(token));
+
+  return token;
+}
+
+// 🔹 JOIN MEETING TOKEN
+function generateJoinToken(meetingId) {
+  const token = jwt.sign(
+    {
+      apikey: process.env.VIDEOSDK_API_KEY,
+      permissions: ["allow_join"],
+      meetingId,
+      version: 2, // ✅ REQUIRED
+    },
+    process.env.VIDEOSDK_SECRET,
+    { expiresIn: "1h" }
+  );
+
+  // 🔍 DEBUG (THIS IS THE MOST IMPORTANT LOG)
+  console.log("JOIN TOKEN PAYLOAD:", jwt.decode(token));
+
+  return token;
+}
+
+// ---------------- CREATE MEETING ----------------
+app.post("/create-meeting", async (req, res) => {
+  try {
+    console.log("➡️ /create-meeting called");
+
+    const token = generateCreateToken();
+
+    const response = await fetch("https://api.videosdk.live/v2/rooms", {
+      method: "POST",
+      headers: {
+        Authorization: token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: "Meeting" }),
+    });
+
+    const data = await response.json();
+
+    console.log("📦 VideoSDK create response:", data);
+
+    res.json({
+      roomId: data.roomId,
+      meetingLink: `http://localhost:3000/meeting/${data.roomId}`,
+    });
+  } catch (err) {
+    console.error("❌ Create meeting error:", err);
+    res.status(500).json({ error: "Failed to create meeting" });
+  }
+});
+
+// ---------------- JOIN MEETING ----------------
+app.post("/get-meeting-token", (req, res) => {
+  try {
+    console.log("➡️ /get-meeting-token called");
+    console.log("📥 Request body:", req.body);
+
+    const { roomId } = req.body;
+
+    if (!roomId) {
+      return res.status(400).json({ error: "roomId missing" });
+    }
+
+    const token = generateJoinToken(roomId);
+
+    res.json({ token });
+  } catch (err) {
+    console.error("❌ Join token error:", err);
+    res.status(500).json({ error: "Failed to generate token" });
+  }
+});
 
 // Catch-all for undefined routes
 app.use("*", (req, res) => {
