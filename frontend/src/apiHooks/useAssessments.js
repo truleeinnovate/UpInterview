@@ -186,9 +186,18 @@ export const useAssessments = (filters = {}) => {
 
   const upsertAssessmentQuestions = useMutation({
     mutationFn: async (assessmentQuestionsData) => {
+      const authToken = Cookies.get("authToken") ?? "";
       const { data } = await axios.post(
         `${config.REACT_APP_API_URL}/assessment-questions/upsert`,
-        assessmentQuestionsData
+        assessmentQuestionsData,
+        {
+          headers: authToken
+            ? {
+                Authorization: `Bearer ${authToken}`,
+              }
+            : undefined,
+          withCredentials: true,
+        }
       );
       return data;
     },

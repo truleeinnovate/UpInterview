@@ -92,6 +92,11 @@ exports.upsertAssessmentQuestions = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Upsert Assessment Questions";
 
+  // derive tenant/owner for logging from authenticated context
+  const { actingAsUserId, actingAsTenantId } = res.locals.auth || {};
+  const tenantIdForLog = actingAsTenantId || req.body?.tenantId || "";
+  const ownerIdForLog = actingAsUserId || req.body?.ownerId || "";
+
   try {
     const { assessmentId, sections } = req.body;
 
@@ -135,8 +140,8 @@ exports.upsertAssessmentQuestions = async (req, res) => {
 
     // Structured internal log for successful upsert
     res.locals.logData = {
-      tenantId: tenantId || "",
-      ownerId: ownerId || "",
+      tenantId: tenantIdForLog,
+      ownerId: ownerIdForLog,
       processName: "Upsert Assessment Questions",
       requestBody: req.body,
       status: "success",
@@ -154,8 +159,8 @@ exports.upsertAssessmentQuestions = async (req, res) => {
     console.error('Error:', error);
     // Structured internal log for error case
     res.locals.logData = {
-      tenantId: req.body?.tenantId || "",
-      ownerId: req.body?.ownerId || "",
+      tenantId: tenantIdForLog,
+      ownerId: ownerIdForLog,
       processName: "Upsert Assessment Questions",
       requestBody: req.body,
       status: "error",
