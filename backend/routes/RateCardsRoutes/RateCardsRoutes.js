@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+const loggingService = require("../../middleware/loggingService");
+
 const {
     createRateCard,
     getAllRateCards,
@@ -11,7 +13,7 @@ const {
 } = require("../../controllers/RateCardsController/rateCardsController");
 
 // Create
-router.post("/", createRateCard);
+router.post("/", loggingService.internalLoggingMiddleware, createRateCard);
 
 // Get all
 router.get("/", getAllRateCards);
@@ -23,7 +25,7 @@ router.get("/technology/:technology", getRateCardsByTechnology);
 router.get("/:id", getRateCardById);
 
 // Update
-router.put("/:id", updateRateCard);
+router.put("/:id", loggingService.internalLoggingMiddleware, updateRateCard);
 
 // Delete
 router.delete("/:id", deleteRateCard);
