@@ -98,6 +98,10 @@ const { buildPermissionQuery } = require("../utils/buildPermissionQuery.js");
 // };
 
 exports.deleteAssessment = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  // res.locals.loggedByController = true;
+  // res.locals.processName = "Delete Assessment";
+
   // ✅ Start MongoDB session for transaction safety
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -153,6 +157,21 @@ exports.deleteAssessment = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
+    // Generate logs for successful delete
+    // res.locals.logData = {
+    //   tenantId: assessment?.tenantId || req.body?.tenantId || "",
+    //   ownerId: assessment?.ownerId || req.body?.ownerId || "",
+    //   processName: "Delete Assessment",
+    //   requestBody: req.body,
+    //   status: "success",
+    //   message: "Assessment and related data deleted successfully",
+    //   responseBody: {
+    //     assessmentId: id,
+    //     deletedCandidateAssessments,
+    //     deletedQuestions,
+    //   },
+    // };
+
     // ✅ Send success response
     res.status(200).json({
       success: true,
@@ -164,6 +183,16 @@ exports.deleteAssessment = async (req, res) => {
     session.endSession();
 
     console.error("[ASSESSMENT] Error deleting assessment:", error);
+
+    // Generate logs for error case
+    // res.locals.logData = {
+    //   tenantId: req.body?.tenantId || "",
+    //   ownerId: req.body?.ownerId || "",
+    //   processName: "Delete Assessment",
+    //   requestBody: req.body,
+    //   status: "error",
+    //   message: error.message,
+    // };
 
     res.status(500).json({
       success: false,
@@ -262,6 +291,10 @@ exports.validateAssessmentStep = async (req, res) => {
 //newassessment is using
 
 exports.newAssessment = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Assessment";
+
   try {
     // Validate the assessment data using Joi
     const { errors, isValid } = validateCreateAssessment(req.body);
@@ -363,9 +396,30 @@ exports.newAssessment = async (req, res) => {
       // Continue execution even if notification fails
     }
 
+    // Generate logs for successful assessment creation
+    res.locals.logData = {
+      tenantId: tenantId || "",
+      ownerId: ownerId || "",
+      processName: "Create Assessment",
+      requestBody: req.body,
+      status: "success",
+      message: "Assessment created successfully",
+      responseBody: assessment,
+    };
+
     res.status(201).json({ success: true, data: assessment });
   } catch (error) {
     console.error("[ASSESSMENT] Error creating assessment:", error);
+    // Generate logs for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Assessment",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({
       success: false,
       message: "Failed to create assessment",
@@ -376,6 +430,10 @@ exports.newAssessment = async (req, res) => {
 //update is using
 
 exports.updateAssessment = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Assessment";
+
   try {
     const { id } = req.params;
 
@@ -432,6 +490,16 @@ exports.updateAssessment = async (req, res) => {
         message: "Assessment not found",
       });
     }
+    // Generate logs for successful update
+    res.locals.logData = {
+      tenantId: updatedAssessment?.tenantId || req.body?.tenantId || "",
+      ownerId: updatedAssessment?.ownerId || req.body?.ownerId || "",
+      processName: "Update Assessment",
+      requestBody: req.body,
+      status: "success",
+      message: "Assessment updated successfully",
+      responseBody: updatedAssessment,
+    };
 
     res.status(200).json({
       success: true,
@@ -440,6 +508,16 @@ exports.updateAssessment = async (req, res) => {
     });
   } catch (error) {
     console.error("[ASSESSMENT] Error updating assessment:", error);
+    // Generate logs for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Assessment",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({
       success: false,
       message: "Failed to update assessment",
@@ -695,6 +773,10 @@ exports.getAllAssessments = async (req, res) => {
 
 // Create new list
 exports.createList = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Assessment List";
+
   try {
     const { categoryOrTechnology, name, ownerId, tenantId } = req.body;
     if (!name || !ownerId) {
@@ -722,6 +804,17 @@ exports.createList = async (req, res) => {
       ownerId,
       tenantId,
     });
+    
+    // Generate logs for successful list creation
+    res.locals.logData = {
+      tenantId: tenantId || "",
+      ownerId: ownerId || "",
+      processName: "Create Assessment List",
+      requestBody: req.body,
+      status: "success",
+      message: "List created successfully",
+      responseBody: newList,
+    };
 
     return res.status(201).json({
       success: true,
@@ -730,6 +823,16 @@ exports.createList = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating list:", error);
+    // Generate logs for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Assessment List",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",

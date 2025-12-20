@@ -418,6 +418,13 @@ const dbConnectionMiddleware = (req, res, next) => {
   next();
 };
 // ------------------------------v1.0.3 >
+//all cron paths
+
+require("./cron/Interviews/interviewRequests/expireInterviewRequests.js");
+require("./cron/assessments/assessment.cron.js");
+require("./cron/subscriptions/subscriptionEmail.cron.js");
+require("./cron/organizations/organizationStatusReminder.cron");
+
 // Apply permission middleware to all routes except authentication routes
 const { authContextMiddleware } = require("./middleware/authContext.js");
 // const { permissionMiddleware } = require("./middleware/permissionMiddleware");
@@ -1346,6 +1353,11 @@ app.use("/wallet", WalletRouter);
 const taskRoutes = require("./routes/taskRoutes");
 app.use("/tasks", taskRoutes);
 
+// ----------------------- Code Editor Routes -------------------------
+const codeEditorRoutes = require("./routes/CodeEditorRoutes/CodeEditorRoutes.js");
+app.use("/execute", codeEditorRoutes);
+// ----------------------- Code Editor Routes -------------------------
+
 // Notification test routes (only for development/testing)
 if (process.env.NODE_ENV !== "production") {
   const notificationTestRoutes = require("./routes/pushNotificationTestRoutes");
@@ -1375,6 +1387,12 @@ app.use("/outsourceInterviewers", outsourceInterviewerRoutes);
 
 const InterviewRoutes = require("./routes/interviewRoutes.js");
 app.use("/interview", InterviewRoutes);
+
+const InterviewRounds = require("./routes/interviewRoundsRoutes.js");
+
+app.use("/interview-rounds", InterviewRounds);
+
+// app.use("/candidate", router);
 
 const candidatePositionRoutes = require("./routes/candidatePositionRoutes.js");
 app.use("/candidateposition", candidatePositionRoutes);

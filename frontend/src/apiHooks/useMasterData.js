@@ -73,6 +73,8 @@ export const useMasterData = (paramsData, pageType, type) => {
   const isSuperAdminTable = pageType === "Super Admin" && !!type;
   const shouldEnable = (key) => !isSuperAdminTable || key === type;
 
+  console.log("shouldEnable", paramsData, pageType, type);
+
   // Individual queries for each master list (all disabled by default)
   const locationsQ = useOnDemandQuery(
     "locations",

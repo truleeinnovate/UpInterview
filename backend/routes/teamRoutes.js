@@ -1,8 +1,8 @@
 // routes/teamRoutes.js
-const express = require('express');
-const router = express.Router();
-const { createTeamMember } = require('../controllers/teamController.js');
+// const express = require('express');
+// const router = express.Router();
+// const { createTeamMember } = require('../controllers/teamController.js');
 
-router.post('/', createTeamMember);
+// router.post('/', createTeamMember);
 
-module.exports = router;
+// module.exports = router;

@@ -267,6 +267,9 @@ exports.getOrganizationRequests = async (req, res) => {
 
 // Create a new organization request
 exports.createOrganizationRequest = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Organization Request";
+
   try {
     const { tenantId, ownerId, status = "pending_review" } = req.body;
 
@@ -329,6 +332,16 @@ exports.createOrganizationRequest = async (req, res) => {
       .populate("tenantId", "-__v")
       .populate("ownerId", "-password -__v");
 
+    res.locals.logData = {
+      tenantId: tenantId || populatedRequest?.tenantId?._id || "",
+      ownerId: ownerId || populatedRequest?.ownerId?._id || "",
+      processName: "Create Organization Request",
+      requestBody: req.body,
+      status: "success",
+      message: "Organization request created successfully",
+      responseBody: populatedRequest,
+    };
+
     res.status(201).json(populatedRequest);
   } catch (error) {
     console.error("Error creating organization request:", error);
@@ -339,6 +352,16 @@ exports.createOrganizationRequest = async (req, res) => {
           "A request already exists for this tenant and owner combination",
       });
     }
+
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Organization Request",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({
       message: "Error creating organization request",
       error: error.message,
@@ -402,6 +425,9 @@ exports.getOrganizationRequestById = async (req, res) => {
 };
 
 exports.updateStatus = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Organization Request Status";
+
   try {
     const { id } = req.params;
     const { status, comments } = req.body;
@@ -464,9 +490,29 @@ exports.updateStatus = async (req, res) => {
       }
     }
 
+    res.locals.logData = {
+      tenantId: updatedRequest.tenantId || "",
+      ownerId: updatedRequest.ownerId || "",
+      processName: "Update Organization Request Status",
+      requestBody: req.body,
+      status: "success",
+      message: `Organization request status updated to ${status}`,
+      responseBody: updatedRequest,
+    };
+
     res.json(updatedRequest);
   } catch (error) {
     console.error("Error updating status:", error);
+
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Organization Request Status",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res
       .status(500)
       .json({ message: "Error updating status", error: error.message });

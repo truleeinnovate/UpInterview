@@ -29,6 +29,7 @@ const SubscriptionPlanSchema = new mongoose.Schema({
     active: { type: Boolean, default: true },
     isCustomizable: { type: Boolean, default: false },
     subscriptionType: { type: String, enum: ['organization', 'individual'], required: true }, 
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     createdBy:{type:String, required:true},
     updatedBy:{type:String},
 }, { timestamps: true });

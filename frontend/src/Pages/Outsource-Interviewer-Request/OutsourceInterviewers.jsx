@@ -210,7 +210,7 @@ const OutsourceInterviewers = () => {
   const tableColumns = [
     {
       key: "outsourceRequestCode",
-      header: "Interviewer ID",
+      header: "Outsource Request ID",
       render: (vale, row) => (
         <span
           // v1.0.0 <---------------------------------------------------------

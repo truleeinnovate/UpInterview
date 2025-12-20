@@ -4,10 +4,13 @@ const { validatePaymentDetails } = require('../utils/ValidationCardPayment.js');
 const PaymentGateway = require('../utils/PaymentDateway.js');
 
 const submitPaymentDetails = async (req, res) => {
+
+  res.locals.loggedByController = true;
+  res.locals.processName = "Submit Payment Details";
   
   const { cardDetails } = req.body; 
 
-  // Validate card details
+  // Validate card details (4xx - do not log)
   const errors = validatePaymentDetails(cardDetails);
   if (Object.keys(errors).length > 0) {
     return res.status(400).json({ errors });
@@ -44,6 +47,16 @@ const submitPaymentDetails = async (req, res) => {
 
         await existingPayment.save();
 
+        res.locals.logData = {
+          tenantId: existingPayment.tenantId?.toString() || cardDetails.tenantId || "",
+          ownerId: existingPayment.ownerId?.toString() || cardDetails.ownerId || "",
+          processName: "Submit Payment Details",
+          requestBody: req.body,
+          status: "success",
+          message: "Existing card updated successfully",
+          responseBody: existingPayment,
+        };
+
         return res.status(200).json({
           message: 'Existing card updated successfully',
           transactionId: gatewayresult.transactionId,
@@ -63,6 +76,16 @@ const submitPaymentDetails = async (req, res) => {
         });
 
         await existingPayment.save();
+
+        res.locals.logData = {
+          tenantId: existingPayment.tenantId?.toString() || cardDetails.tenantId || "",
+          ownerId: existingPayment.ownerId?.toString() || cardDetails.ownerId || "",
+          processName: "Submit Payment Details",
+          requestBody: req.body,
+          status: "success",
+          message: "New card added successfully for the tenant",
+          responseBody: existingPayment,
+        };
 
         return res.status(200).json({
           message: 'New card added successfully for the tenant',
@@ -91,6 +114,16 @@ const submitPaymentDetails = async (req, res) => {
 
       await newPayment.save();
 
+      res.locals.logData = {
+        tenantId: newPayment.tenantId?.toString() || cardDetails.tenantId || "",
+        ownerId: newPayment.ownerId?.toString() || cardDetails.ownerId || "",
+        processName: "Submit Payment Details",
+        requestBody: req.body,
+        status: "success",
+        message: "Payment details submitted successfully",
+        responseBody: newPayment,
+      };
+
       return res.status(201).json({
         message: 'Payment details submitted successfully',
         transactionId: gatewayresult.transactionId,
@@ -99,6 +132,16 @@ const submitPaymentDetails = async (req, res) => {
     }
   } catch (err) {
     console.error('Error saving payment details:', err);
+
+    res.locals.logData = {
+      tenantId: cardDetails?.tenantId || "",
+      ownerId: cardDetails?.ownerId || "",
+      processName: "Submit Payment Details",
+      requestBody: req.body,
+      status: "error",
+      message: err.message,
+    };
+
     return res.status(500).json({
       message: 'Error saving payment details',
       error: err.message,

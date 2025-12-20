@@ -2,24 +2,26 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import Cookies from 'js-cookie';
-import toast from 'react-hot-toast';
 import { config } from '../config';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
+import AuthCookieManager from '../utils/AuthCookieManager/AuthCookieManager';
 import { notify } from '../services/toastService';
 
 const getAuth = () => {
-  const authToken = Cookies.get('authToken');
+  // Use AuthCookieManager static methods so `this` is bound correctly inside them
+  const authToken = AuthCookieManager.getActiveToken();
   const token = authToken ? decodeJwt(authToken) : null;
-  const userId = token?.userId;
+  const userId = AuthCookieManager.getCurrentUserId() || token?.userId || token?.id || null;
   const userName = token?.name || token?.email || 'System';
-  const headers = authToken ? { headers: { Authorization: `Bearer ${authToken}` } } : undefined;
+  const headers = authToken
+    ? { headers: { Authorization: `Bearer ${authToken}` } }
+    : undefined;
   return { headers, userId, userName };
 };
 
 export const useSubscriptionPlansAdmin = (options = {}) => {
   const queryClient = useQueryClient();
-  const { headers, userName } = getAuth();
+  const { headers, userName, userId } = getAuth();
 
   // Remove any `_id` keys deep in the object (pricing/features, etc.)
   const stripIds = (input) => JSON.parse(
@@ -61,11 +63,10 @@ export const useSubscriptionPlansAdmin = (options = {}) => {
   const createMutation = useMutation({
     mutationFn: async (payload) => {
       const body = stripIds({ ...payload });
+      // Attach creator info so backend/logging can identify who created the plan
       if (!body.createdBy) body.createdBy = userName;
+      if (!body.ownerId && userId) body.ownerId = userId;
       return (await axios.post(`${config.REACT_APP_API_URL}/subscriptions`, body, headers)).data;
-    },
-    onMutate: async () => {
-      toast.loading('Creating plan...', { id: 'plan-create' });
     },
     onSuccess: () => {
       notify.success('Plan created', { id: 'plan-create' });
@@ -80,11 +81,10 @@ export const useSubscriptionPlansAdmin = (options = {}) => {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
       const body = stripIds({ ...data });
+      // Attach modifier info so backend/logging can identify who updated the plan
       body.modifiedBy = body.modifiedBy || userName;
+      if (!body.ownerId && userId) body.ownerId = userId;
       return (await axios.put(`${config.REACT_APP_API_URL}/subscription-plan-update/${id}`, body, headers)).data;
-    },
-    onMutate: async () => {
-      toast.loading('Updating plan...', { id: 'plan-update' });
     },
     onSuccess: () => {
       notify.success('Plan updated', { id: 'plan-update' });
@@ -99,9 +99,6 @@ export const useSubscriptionPlansAdmin = (options = {}) => {
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
       return (await axios.delete(`${config.REACT_APP_API_URL}/subscription-plan-delete/${id}`, headers)).data;
-    },
-    onMutate: async () => {
-      toast.loading('Deleting plan...', { id: 'plan-delete' });
     },
     onSuccess: () => {
       notify.success('Plan deleted', { id: 'plan-delete' });

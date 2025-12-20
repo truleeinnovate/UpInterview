@@ -296,7 +296,7 @@ const OrganizationRequest = () => {
   const tableColumns = [
     {
       key: "requestCode",
-      header: "Request Code",
+      header: "Organization Request ID",
       render: (value, row) =>
         row?.organizationRequestCode ? (
           <span className="font-medium text-custom-blue">

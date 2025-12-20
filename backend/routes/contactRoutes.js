@@ -15,8 +15,16 @@ const router = express.Router();
 
 router.get("/contacts", getAllContacts);
 // router.get('/contacts', fetchContacts);
-router.post("/contacts", createContact);
-router.patch("/contacts/:id", updateContact);
+router.post(
+  "/contacts",
+  loggingService.internalLoggingMiddleware,
+  createContact
+);
+router.patch(
+  "/contacts/:id",
+  loggingService.internalLoggingMiddleware,
+  updateContact
+);
 router.patch("/contact-detail/:id",loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, updateContactsDetails);
 router.get("/uniqe-contacts/owner/:ownerId", getUniqueContactsByOwnerId);
 
@@ -30,6 +38,10 @@ router.get(
 );
 // -----------------------------------------------
 // Add route to update contact status
-router.patch('/contacts/status/:id', updateContactStatus);
+router.patch(
+  '/contacts/status/:id',
+  loggingService.internalLoggingMiddleware,
+  updateContactStatus
+);
 
 module.exports = router;

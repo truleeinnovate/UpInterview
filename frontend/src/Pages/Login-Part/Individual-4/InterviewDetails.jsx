@@ -1,3 +1,6 @@
+// v1.0.0 - Ashok - fixed brand color (custom-blue) for radio and checkbox elements
+
+
 import React, {
   useRef,
   useState,
@@ -1035,7 +1038,7 @@ const InterviewDetails = ({
             <label className="inline-flex items-center">
               <input
                 type="radio"
-                className="form-radio text-gray-600"
+                className="form-radio text-gray-600 accent-custom-blue"
                 name="previousInterviewExperience"
                 value="yes"
                 checked={previousInterviewExperience === "yes"}
@@ -1046,7 +1049,7 @@ const InterviewDetails = ({
             <label className="inline-flex items-center">
               <input
                 type="radio"
-                className="form-radio text-gray-600"
+                className="form-radio text-gray-600 accent-custom-blue"
                 name="previousInterviewExperience"
                 value="no"
                 checked={previousInterviewExperience === "no"}
@@ -1437,7 +1440,7 @@ const InterviewDetails = ({
                     "technical"
                   )}
                   onChange={handleInterviewFormatChange}
-                  className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                  className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
                 />
               </div>
               <div className="ml-3">
@@ -1462,7 +1465,7 @@ const InterviewDetails = ({
                     "system_design"
                   )}
                   onChange={handleInterviewFormatChange}
-                  className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                  className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
                 />
               </div>
               <div className="ml-3">
@@ -1487,7 +1490,7 @@ const InterviewDetails = ({
                     "behavioral"
                   )}
                   onChange={handleInterviewFormatChange}
-                  className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                  className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
                 />
               </div>
               <div className="ml-3">
@@ -1512,7 +1515,7 @@ const InterviewDetails = ({
                     "mock"
                   )}
                   onChange={handleInterviewFormatChange}
-                  className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                  className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
                 />
               </div>
               <div className="ml-3">

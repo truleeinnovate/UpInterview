@@ -26,7 +26,6 @@ import {
   useUpdateFeedback,
 } from "../../apiHooks/useFeedbacks";
 import { useScrollLock } from "../../apiHooks/scrollHook/useScrollLock.js";
-import toast from "react-hot-toast";
 import { SchedulerViewMode } from "./SchedulerViewMode.jsx";
 import DescriptionField from "../../Components/FormFields/DescriptionField.jsx";
 import DropdownSelect from "../../Components/Dropdowns/DropdownSelect.jsx";
@@ -85,7 +84,7 @@ const FeedbackForm = ({
   isScheduler,
   schedulerFeedbackData,
 }) => {
-  console.log("feedbackCandidate", feedbackCandidate);
+  console.log("feedbackCandidate", isEditMode, isViewMode, isAddMode);
   useScrollLock(true);
   const location = useLocation();
   const locationFeedback = location.state?.feedback;
@@ -696,6 +695,7 @@ const FeedbackForm = ({
 
   const onChangeDislikeRadioInput = (questionId, value) => {
     //<---v1.0.0-----
+    console.log("onChangeDislikeRadioInput", questionId, value);
     setInterviewerSectionData((prev) => {
       const exists = prev.some((q) => (q.questionId || q.id) === questionId);
       if (exists) {
@@ -1391,7 +1391,7 @@ const FeedbackForm = ({
   return (
     // v1.0.4 <----------------------------------------------------------------------
     <>
-      {isAddMode === true && (
+      {isAddMode && (
         <div className="right-4 z-40  pb-3 top-5">
           <div className="flex justify-end items-center gap-3">
             <button
@@ -1464,7 +1464,7 @@ const FeedbackForm = ({
                 Skill Ratings{" "}
                 {!isViewMode && <span className="text-red-500">*</span>}
               </label>
-              {isViewMode || isEditMode ? (
+              {isViewMode ? (
                 <div></div>
               ) : (
                 // {!isViewMode &&
@@ -1569,7 +1569,7 @@ const FeedbackForm = ({
                 </span>
               </div>
               {/* v1.0.3 --------------------------------------------------------> */}
-              {isViewMode || isEditMode ? (
+              {isViewMode ? (
                 <div></div>
               ) : (
                 <button

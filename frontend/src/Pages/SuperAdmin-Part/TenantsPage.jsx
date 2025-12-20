@@ -25,6 +25,7 @@ import {
 import DeleteConfirmModal from "../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
 import { notify } from "../../services/toastService.js";
 import { useMasterData } from "../../apiHooks/useMasterData.js";
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 
 function TenantsPage() {
   const [deleteTenant, setDeleteTenant] = useState(null);
@@ -273,9 +274,6 @@ function TenantsPage() {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
   const formatRole = (role) => {
     if (!role || typeof role !== "string") return "N/A";
 
@@ -341,7 +339,7 @@ function TenantsPage() {
           </div>
           <div className="ml-4">
             <div
-              className={`font-medium ${
+              className={`font-medium truncate max-w-[140px] cursor-default ${
                 superAdminPermissions?.Tenants?.View
                   ? "text-custom-blue cursor-pointer"
                   : "text-gray-900"
@@ -352,19 +350,30 @@ function TenantsPage() {
                   navigate(`/tenants/${row._id}`);
                 }
               }}
+              title={`${capitalizeFirstLetter(row?.firstName) || "N/A"} ${
+                capitalizeFirstLetter(row?.lastName) || "N/A"
+              }`}
             >
               {capitalizeFirstLetter(row.firstName) || "N/A"}{" "}
               {capitalizeFirstLetter(row.lastName) || "N/A"}
               {/* capitalizeFirstLetter(row.lastName) */}
-              <div className="text-xs text-gray-500">
-                {currentRoles.find(
+              <div
+                className="text-xs text-gray-500 truncate max-w-[140px]"
+                title={capitalizeFirstLetter(
+                  currentRoles.find(
+                    (role) => role.roleName === row?.contact?.currentRole
+                  )?.roleLabel || "N/A"
+                )}
+              >
+                {/* {currentRoles.find(
                   (role) => role.roleName === row?.contact?.currentRole
-                )?.roleLabel || "N/A"}
-                {/* {currentRoles.includes(row?.contact?.currentRole) || "N/A"} */}
+                )?.roleLabel || "N/A"} */}
+                {capitalizeFirstLetter(
+                  currentRoles.find(
+                    (role) => role.roleName === row?.contact?.currentRole
+                  )?.roleLabel || "N/A"
+                )}
               </div>
-              {/* <span >
-               
-              </span> */}
             </div>
           </div>
         </div>
@@ -403,7 +412,7 @@ function TenantsPage() {
 
     {
       key: "yearsOfExperience",
-      header: "Years of Experience",
+      header: "Experience",
       render: (value, row) => (
         <span>
           {row?.contact?.yearsOfExperience
@@ -417,9 +426,7 @@ function TenantsPage() {
       key: "plan",
       header: "Plan",
       render: (value, row) => (
-        <span>
-          {row?.subscriptionPlan?.name ? row.subscriptionPlan.name : "N/A"}
-        </span>
+        <span>{row?.planName ? row?.planName : "N/A"}</span>
       ),
     },
 
@@ -432,11 +439,11 @@ function TenantsPage() {
         </div>
       ),
     },
-    {
-      key: "activeJobs",
-      header: "Active Jobs",
-      render: (value) => value || "0",
-    },
+    // {
+    //   key: "activeJobs",
+    //   header: "Active Jobs",
+    //   render: (value) => value || "0",
+    // },
     {
       key: "activeUsersCount",
       header: "Active Candidates",
@@ -557,9 +564,7 @@ function TenantsPage() {
       key: "plan",
       header: "Plan",
       render: (value, row) => (
-        <span>
-          {row?.subscriptionPlan?.name ? row.subscriptionPlan.name : "N/A"}
-        </span>
+        <span>{row?.planName ? row?.planName : "N/A"}</span>
       ),
     },
 
@@ -570,11 +575,11 @@ function TenantsPage() {
         return row.usersCount || 0;
       },
     },
-    {
-      key: "activeJobs",
-      header: "Active Jobs",
-      render: (value) => value || "0",
-    },
+    // {
+    //   key: "activeJobs",
+    //   header: "Active Jobs",
+    //   render: (value) => value || "0",
+    // },
     {
       key: "activeUsersCount",
       header: "Active Candidates",

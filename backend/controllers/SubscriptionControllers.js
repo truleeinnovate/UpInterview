@@ -3,39 +3,68 @@ const { validateSubscriptionPlan } = require('../utils/subscriptionPlanValidatio
 
 // Create a new subscription plan
 const createSubscriptionPlan = async (req, res) => {
-    try {
-        const body = req.body || {};
-        // Sanitize payload - pick only allowed fields
-        const payload = {
-          planId: body.planId,
-          name: body.name,
-          description: body.description,
-          pricing: body.pricing,
-          features: body.features,
-          razorpayPlanIds: body.razorpayPlanIds,
-          maxUsers: body.maxUsers,
-          subscriptionType: body.subscriptionType,
-          trialPeriod: body.trialPeriod,
-          active: body.active,
-          isCustomizable: body.isCustomizable,
-          createdBy: body.createdBy,
-          modifiedBy: body.modifiedBy,
-          createdAt: body.createdAt,
-          updatedAt: new Date(),
-        };
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Subscription Plan";
 
-        const { error } = validateSubscriptionPlan(payload);
-        if (error) return res.status(400).send({ message: error.details[0].message });
+  try {
+    const body = req.body || {};
+    // Sanitize payload - pick only allowed fields
+    const payload = {
+      planId: body.planId,
+      name: body.name,
+      description: body.description,
+      pricing: body.pricing,
+      features: body.features,
+      razorpayPlanIds: body.razorpayPlanIds,
+      maxUsers: body.maxUsers,
+      subscriptionType: body.subscriptionType,
+      trialPeriod: body.trialPeriod,
+      active: body.active,
+      isCustomizable: body.isCustomizable,
+      // Persist owning user and audit fields
+      ownerId: body.ownerId,
+      createdBy: body.createdBy,
+      updatedBy: body.modifiedBy || body.createdBy,
+      createdAt: body.createdAt,
+      updatedAt: new Date(),
+    };
 
-        const subscriptionPlan = new SubscriptionPlan(payload);
-        await subscriptionPlan.save();
-        res.status(201).send("Created Plan Successfully.");
-    } catch (err) {
-        if (err?.code === 11000 && err?.keyPattern?.planId) {
-          return res.status(409).send({ message: 'Duplicate planId. It must be unique.' });
-        }
-        res.status(500).send({ message: 'Internal Server Error', error: err.message });
+    const { error } = validateSubscriptionPlan(payload);
+    if (error) return res.status(400).send({ message: error.details[0].message });
+
+    const subscriptionPlan = new SubscriptionPlan(payload);
+    await subscriptionPlan.save();
+
+    // Structured internal log for successful plan creation
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Subscription Plan",
+      requestBody: req.body,
+      status: "success",
+      message: "Subscription plan created successfully",
+      responseBody: subscriptionPlan,
+    };
+
+    res.status(201).json("Created Plan Successfully.");
+  } catch (err) {
+    if (err?.code === 11000 && err?.keyPattern?.planId) {
+      return res.status(409).send({ message: 'Duplicate planId. It must be unique.' });
     }
+    
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Subscription Plan",
+      requestBody: req.body,
+      status: "error",
+      message: err.message,
+    };
+
+    res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  }
 };
 
 // Fetch subscription plans (list)
@@ -149,6 +178,10 @@ const getSubscriptionPlanById = async (req, res) => {
 
 // Update subscription plan by ID
 const updateSubscriptionPlan = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Subscription Plan Definition";
+
   try {
     const { id } = req.params;
     const existing = await SubscriptionPlan.findById(id);
@@ -170,8 +203,10 @@ const updateSubscriptionPlan = async (req, res) => {
       trialPeriod: body.trialPeriod,
       active: body.active,
       isCustomizable: body.isCustomizable,
+      // Keep original creator, but allow updating owner and updatedBy
+      ownerId: existing.ownerId || body.ownerId,
       createdBy: existing.createdBy,
-      modifiedBy: body.modifiedBy,
+      updatedBy: body.modifiedBy || existing.updatedBy || existing.createdBy,
       createdAt: existing.createdAt,
       updatedAt: new Date(),
     };
@@ -182,11 +217,34 @@ const updateSubscriptionPlan = async (req, res) => {
 
     existing.set(payload);
     const updated = await existing.save();
-    res.status(200).send(updated);
+
+    // Structured internal log for successful plan update
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Subscription Plan Definition",
+      requestBody: req.body,
+      status: "success",
+      message: "Subscription plan updated successfully",
+      responseBody: updated,
+    };
+
+    res.status(200).json(updated);
   } catch (err) {
     if (err?.code === 11000 && err?.keyPattern?.planId) {
       return res.status(409).send({ message: 'Duplicate planId. It must be unique.' });
     }
+    
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Subscription Plan Definition",
+      requestBody: req.body,
+      status: "error",
+      message: err.message,
+    };
+
     res.status(500).send({ message: 'Internal Server Error', error: err.message });
   }
 };

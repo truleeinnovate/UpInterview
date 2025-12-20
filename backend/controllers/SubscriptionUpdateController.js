@@ -25,6 +25,10 @@ const razorpay = new Razorpay({
  */
 
 const updateSubscriptionPlan = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Subscription Plan";
+
   // console.log('Request body:', req.body);
   const {
     tenantId,
@@ -320,6 +324,23 @@ const updateSubscriptionPlan = async (req, res) => {
       //   console.warn('Failed to update tenant on free plan switch:', tenantErr?.message);
       // }
 
+      // Structured internal log for successful free-plan update
+      res.locals.logData = {
+        tenantId: tenantId || customerSubscription.tenantId || "",
+        ownerId: ownerId || customerSubscription.ownerId || "",
+        processName: "Update Subscription Plan",
+        requestBody: req.body,
+        status: "success",
+        message: "Subscription updated to free plan",
+        responseBody: {
+          subscriptionId: customerSubscription._id,
+          invoiceId: customerSubscription.invoiceId,
+          planId: customerSubscription.subscriptionPlanId,
+          billingCycle: customerSubscription.selectedBillingCycle,
+          price: customerSubscription.price,
+        },
+      };
+
       return res.status(200).json({
         success: true,
         message: "Subscription updated to free plan",
@@ -520,6 +541,24 @@ const updateSubscriptionPlan = async (req, res) => {
           saveErr
         );
       }
+
+      // Structured internal log for successful upgrade from free to paid (no existing RP subscription)
+      res.locals.logData = {
+        tenantId: tenantId || customerSubscription.tenantId || "",
+        ownerId: ownerId || customerSubscription.ownerId || "",
+        processName: "Update Subscription Plan",
+        requestBody: req.body,
+        status: "success",
+        message: "Proceed to payment to activate the new plan",
+        responseBody: {
+          subscriptionId: customerSubscription._id,
+          invoiceId,
+          planId: newPlanId,
+          billingCycle: newBillingCycle,
+          price: finalPrice,
+          razorpayPlanId: planIdToUse,
+        },
+      };
 
       return res.status(200).json({
         success: true,
@@ -842,6 +881,26 @@ const updateSubscriptionPlan = async (req, res) => {
     //   console.error('Error updating tenant post-upgrade:', tenantErr);
     // }
 
+    // Structured internal log for successful paid-to-paid upgrade
+    res.locals.logData = {
+      tenantId: tenantId || customerSubscription.tenantId || "",
+      ownerId: ownerId || customerSubscription.ownerId || "",
+      processName: "Update Subscription Plan",
+      requestBody: req.body,
+      status: "success",
+      message:
+        "Subscription upgraded successfully. Authorize the new plan payment.",
+      responseBody: {
+        subscriptionId: customerSubscription._id,
+        razorpaySubscriptionId: customerSubscription.razorpaySubscriptionId,
+        planId: newPlanId,
+        billingCycle: newBillingCycle,
+        price: finalPrice,
+        razorpayPlanId: planIdToUse,
+        orderId: order.id,
+      },
+    };
+
     return res.status(200).json({
       success: true,
       message:
@@ -854,6 +913,17 @@ const updateSubscriptionPlan = async (req, res) => {
     });
   } catch (err) {
     console.error("Error updating subscription:", err);
+
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: tenantId || req.body?.tenantId || "",
+      ownerId: ownerId || req.body?.ownerId || "",
+      processName: "Update Subscription Plan",
+      requestBody: req.body,
+      status: "error",
+      message: err.message,
+    };
+
     return res
       .status(500)
       .json({ success: false, message: "Failed to update subscription" });

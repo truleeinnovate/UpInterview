@@ -281,6 +281,7 @@ const cancelSubscription = async (req, res) => {
       responseBody: {
         cancelled: true,
         subscription: updatedSubscription?._id || null,
+        response: updatedSubscription || null
       },
     };
 
@@ -293,7 +294,7 @@ const cancelSubscription = async (req, res) => {
   } catch (error) {
     console.error("Error in subscription cancellation:", error);
     res.locals.logData = {
-      tenantId: updatedSubscription?.tenantId || "",
+      tenantId: req.body?.tenantId || "",
       ownerId,
       processName: "Cancel Subscription",
       requestBody: req.body,

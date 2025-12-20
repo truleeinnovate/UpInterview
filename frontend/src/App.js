@@ -202,6 +202,11 @@ const FeedbackFormModel = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Feedback/FeedbackFormModel.jsx")
 );
 
+// Code Editor
+const CodeEditor = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/CodeEditor/CodeEditor.jsx")
+);
+
 const MyProfile = lazy(() =>
   import(
     "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx"
@@ -751,17 +756,17 @@ const MainAppRoutes = ({
                   />
                 )}
                 {hasPermission("AssessmentTemplates", "View") && (
-                <>
-                  <Route
-                    path="/assessment-template-details/:id"
-                    element={<AssessmentDetails />}
-                  />
-                  <Route index element={null} />
-                  <Route
-                    path="candidate-details/:id"
-                    element={<CandidateDetails mode="Assessment" />}
-                  />
-                </>
+                  <>
+                    <Route
+                      path="/assessment-template-details/:id"
+                      element={<AssessmentDetails />}
+                    />
+                    <Route index element={null} />
+                    <Route
+                      path="candidate-details/:id"
+                      element={<CandidateDetails mode="Assessment" />}
+                    />
+                  </>
                 )}
               </>
             )}
@@ -1188,6 +1193,10 @@ const MainAppRoutes = ({
             {/* Task */}
             {hasPermission("Tasks") && (
               <Route path="/task" element={<Task />} />
+            )}
+
+            {hasPermission("CodeEditor") && (
+              <Route path="/code-editor" element={<CodeEditor />} />
             )}
 
             {/* Outsource Interviewer Request */}
