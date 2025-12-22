@@ -137,7 +137,7 @@ const updateInterviewRoundStatus = async (req, res) => {
         message: "Interview round not found",
       });
     }
-    console.log("updatedRound", updatedRound);
+    // console.log("updatedRound", updatedRound);
 
     let result = await sendInterviewRoundCancellationEmails(
       {

@@ -1396,9 +1396,13 @@ const RoundFormInterviews = () => {
 
       const targetRoundId = response?.savedRound?._id || roundId;
 
-      console.log("assessment reespone", response);
+      // console.log("assessment reespone", response);
 
-      // if (payload.round.roundTitle === "Assessment") {
+      if (payload.round.roundTitle === "Assessment") {
+        if (response.status === "ok") {
+          navigate(`/interviews/${interviewId}`);
+        }
+      }
       //   // Calculate link expiry days
       //   let linkExpiryDays = null;
       //   if (selectedAssessmentData?.ExpiryDate) {
