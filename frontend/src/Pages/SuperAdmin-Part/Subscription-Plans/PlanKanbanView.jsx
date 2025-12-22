@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge";
 import { format, parseISO, isValid } from "date-fns";
+import { formatDateTime } from "../../../utils/dateFormatter";
 
 const currencyDisplay = (p) => `${p?.currency || ""} ${p?.price ?? ""}`.trim();
 
@@ -157,7 +158,7 @@ export default function PlanKanbanView({
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 text-gray-700">
+                    {/* <div className="grid grid-cols-2 text-gray-700">
                       <div className="flex items-center gap-1">
                         <Users className="w-4 h-4 text-gray-400" />
                         <div className="text-xs text-gray-500">Max Users</div>
@@ -167,8 +168,8 @@ export default function PlanKanbanView({
                           {plan.maxUsers ?? "—"}
                         </div>
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 text-gray-700">
+                    </div> */}
+                    {/* <div className="grid grid-cols-2 text-gray-700">
                       <div className="flex items-center gap-1">
                         <CalendarDays className="w-4 h-4 text-gray-400" />
                         <div className="text-xs text-gray-500">Trial</div>
@@ -178,7 +179,7 @@ export default function PlanKanbanView({
                           {plan.trialPeriod ? `${plan.trialPeriod} days` : "—"}
                         </div>
                       </div>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="grid grid-cols-1">
@@ -217,7 +218,7 @@ export default function PlanKanbanView({
                         <div className="text-xs text-gray-500">Updated At</div>
                       </div>
                       <div className="text-xs text-gray-500">
-                        {formatDate(plan.updatedAt)}
+                        {formatDateTime(plan.updatedAt)}
                       </div>
                     </div>
                   </div>

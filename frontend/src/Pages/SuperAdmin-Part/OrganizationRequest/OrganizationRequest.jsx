@@ -13,10 +13,11 @@ import { useOrganizationRequests } from "../../../apiHooks/superAdmin/useOrganiz
 import KanbanView from "./Kanban/KanbanView";
 import { motion } from "framer-motion";
 import SidebarPopup from "../../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup";
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { formatDateTime } from "../../../utils/dateFormatter.js";
 
 const OrganizationRequest = () => {
   const { superAdminPermissions } = usePermissions();
-  
 
   // Debug log removed
 
@@ -315,8 +316,12 @@ const OrganizationRequest = () => {
       render: (value, row) => {
         const contact = row.contact || {};
         const fullName =
-          [contact.firstName, contact.lastName].filter(Boolean).join(" ") ||
-          "N/A";
+          [
+            capitalizeFirstLetter(contact.firstName),
+            capitalizeFirstLetter(contact.lastName),
+          ]
+            .filter(Boolean)
+            .join(" ") || "N/A";
         return <span className="font-medium">{fullName}</span>;
       },
       width: 200,
@@ -354,7 +359,7 @@ const OrganizationRequest = () => {
       key: "createdAt",
       header: "Requested On",
       render: (value, row) =>
-        row?.createdAt ? new Date(row.createdAt).toLocaleDateString() : "N/A",
+        row?.createdAt ? formatDateTime(row.createdAt) : "N/A",
       width: 120,
     },
     // {
@@ -432,7 +437,10 @@ const OrganizationRequest = () => {
           view={view}
           setView={setView}
           searchQuery={searchQuery}
-          onSearch={(e) => { setSearchQuery(e.target.value); setCurrentPage(0); }}
+          onSearch={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(0);
+          }}
           currentPage={currentPage}
           totalPages={totalPages}
           onPrevPage={prevPage}
@@ -485,8 +493,17 @@ const OrganizationRequest = () => {
                 filterIconRef={filterIconRef}
               >
                 <div className="space-y-2 p-2">
-                  {['pending_review','in_contact','under_verification','approved','rejected'].map((st) => (
-                    <label key={st} className="flex items-center space-x-2 cursor-pointer text-sm">
+                  {[
+                    "pending_review",
+                    "in_contact",
+                    "under_verification",
+                    "approved",
+                    "rejected",
+                  ].map((st) => (
+                    <label
+                      key={st}
+                      className="flex items-center space-x-2 cursor-pointer text-sm"
+                    >
                       <input
                         type="checkbox"
                         checked={selectedFilters.status.includes(st)}

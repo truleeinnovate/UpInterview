@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock";
 import { notify } from "../../../services/toastService";
 // v1.0.1 ------------------------------------------------------------>
+import { formatDateTime } from "../../../utils/dateFormatter";
 
 function RatesKanbanView({ filterCategory, onEdit, onView }) {
   // v1.0.0 <------------------------------------------------------
@@ -448,7 +449,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
           </div> */}
           {/* v1.0.0 ----------------------------------------------------> */}
           <div className="text-xs text-gray-400">
-            {new Date(rateCard?.createdAt)?.toLocaleDateString()}
+            {formatDateTime(rateCard?.createdAt)}
           </div>
         </div>
       </div>

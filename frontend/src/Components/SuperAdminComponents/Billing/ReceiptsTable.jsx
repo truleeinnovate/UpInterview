@@ -32,6 +32,8 @@ import {
 // v1.0.0 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.0 -------------------------------------------------------------------------
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../../utils/dateFormatter.js";
 
 function ReceiptsTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
@@ -65,7 +67,7 @@ function ReceiptsTable({ organizationId, viewMode }) {
     search: searchQuery,
     status: toApiReceiptStatus(selectedStatus),
     tenantId: organizationId || "",
-    organizationId
+    organizationId,
   }); // from apiHooks
   const { receipt: selectedReceipt } = useReceiptById(selectedReceiptId); // from apiHooks
 
@@ -196,8 +198,6 @@ function ReceiptsTable({ organizationId, viewMode }) {
     }
   };
 
-  
-
   const totalPages = pagination?.totalPages || 0;
   const nextPage = () => {
     if (pagination?.hasNext) {
@@ -209,8 +209,6 @@ function ReceiptsTable({ organizationId, viewMode }) {
       setCurrentPage((prevPage) => prevPage - 1);
     }
   };
-
-  
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -227,9 +225,6 @@ function ReceiptsTable({ organizationId, viewMode }) {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();
   };
-
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
   const tableColumns = [
     {
@@ -294,7 +289,7 @@ function ReceiptsTable({ organizationId, viewMode }) {
     {
       key: "paymentDate",
       header: "Payment Date",
-      render: (value, row) => formatDate(row.paymentDate),
+      render: (value, row) => formatDateTime(row.paymentDate),
     },
   ];
 
@@ -309,7 +304,6 @@ function ReceiptsTable({ organizationId, viewMode }) {
         setIsPopupOpen(true);
       },
     },
-    
   ];
 
   // Kanban Columns Configuration
@@ -324,7 +318,7 @@ function ReceiptsTable({ organizationId, viewMode }) {
     {
       key: "paymentMethod",
       header: "Payment Method",
-      render: (value) => <div>{value || "N/A"}</div>,
+      render: (value) => <div>{capitalizeFirstLetter(value) || "N/A"}</div>,
     },
     {
       key: "status",
@@ -344,7 +338,6 @@ function ReceiptsTable({ organizationId, viewMode }) {
         setIsPopupOpen(true);
       },
     },
-    
   ];
 
   // Render Actions for Kanban
@@ -580,19 +573,42 @@ function ReceiptsTable({ organizationId, viewMode }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Receipts</div>
-            <div className="text-xl font-semibold">{stats?.totalReceipts ?? receipts?.length ?? 0}</div>
+            <div className="text-xl font-semibold">
+              {stats?.totalReceipts ?? receipts?.length ?? 0}
+            </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Amount</div>
-            <div className="text-xl font-semibold">{formatCurrency(stats?.totalAmount ?? receipts?.reduce((sum, r) => sum + (r.amount || 0), 0)) || 0}</div>
+            <div className="text-xl font-semibold">
+              {formatCurrency(
+                stats?.totalAmount ??
+                  receipts?.reduce((sum, r) => sum + (r.amount || 0), 0)
+              ) || 0}
+            </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Discounts</div>
-            <div className="text-xl font-semibold text-success-600">{formatCurrency(stats?.totalDiscount ?? receipts?.reduce((sum, r) => sum + (r.discount || 0), 0)) || 0}</div>
+            <div className="text-xl font-semibold text-success-600">
+              {formatCurrency(
+                stats?.totalDiscount ??
+                  receipts?.reduce((sum, r) => sum + (r.discount || 0), 0)
+              ) || 0}
+            </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Success Rate</div>
-            <div className="text-xl font-semibold">{typeof stats?.successRate === "number" ? stats.successRate.toFixed(1) : (receipts.length !== 0 ? ((receipts.filter((r) => r.status === "success").length / receipts.length) * 100).toFixed(1) : 0)}%</div>
+            <div className="text-xl font-semibold">
+              {typeof stats?.successRate === "number"
+                ? stats.successRate.toFixed(1)
+                : receipts.length !== 0
+                ? (
+                    (receipts.filter((r) => r.status === "success").length /
+                      receipts.length) *
+                    100
+                  ).toFixed(1)
+                : 0}
+              %
+            </div>
           </div>
         </div>
 
@@ -647,6 +663,10 @@ function ReceiptsTable({ organizationId, viewMode }) {
                       renderActions={renderKanbanActions}
                       emptyState="No receipts found."
                       viewMode={viewMode}
+                      onTitleClick={(item) => {
+                        setSelectedReceiptId(item?._id);
+                        setIsPopupOpen(true);
+                      }}
                     />
                   </div>
                 )}

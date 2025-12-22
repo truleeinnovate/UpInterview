@@ -14,6 +14,8 @@ import { usePermissionCheck } from "../../../utils/permissionUtils";
 import { Eye, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import ConfirmationPopup from "../../Dashboard-Part/Tabs/Assessment-Tab/ConfirmationPopup.jsx";
 //import { useScrollLock } from '../../../apiHooks/scrollHook/useScrollLock';
+import { formatDateTime } from "../../../utils/dateFormatter.js";
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -56,8 +58,6 @@ export default function Plans() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  
-
   // UI state
   const [view, setView] = useState("table"); // 'table' | 'kanban'
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,15 +95,18 @@ export default function Plans() {
   } = useSubscriptionPlansAdmin({
     page: currentPage + 1,
     limit: ITEMS_PER_PAGE,
-    search: (searchQuery || '').trim(), // debounced below
-    subscriptionTypes: (selectedFilters.subscriptionTypes || []).join(','),
-    activeStates: (selectedFilters.activeStates || []).join(','),
-    createdDate: selectedFilters.createdDate || '',
+    search: (searchQuery || "").trim(), // debounced below
+    subscriptionTypes: (selectedFilters.subscriptionTypes || []).join(","),
+    activeStates: (selectedFilters.activeStates || []).join(","),
+    createdDate: selectedFilters.createdDate || "",
   });
 
   // Debounce search input
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch((searchQuery || '').trim()), 500);
+    const t = setTimeout(
+      () => setDebouncedSearch((searchQuery || "").trim()),
+      500
+    );
     return () => clearTimeout(t);
   }, [searchQuery]);
 
@@ -278,7 +281,7 @@ export default function Plans() {
     {
       key: "createdAt",
       header: "Created",
-      render: (val) => formatDate(val),
+      render: (val) => formatDateTime(val),
     },
   ];
 
@@ -286,14 +289,14 @@ export default function Plans() {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => handleView(row),
       show: () => canView,
     },
     {
       key: "edit",
       label: "Edit",
-      icon: <Pencil className="w-4 h-4" />,
+      icon: <Pencil className="w-4 h-4 text-green-500" />,
       onClick: (row) => handleEdit(row),
       show: () => canEdit,
     },

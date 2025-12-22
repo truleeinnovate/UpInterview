@@ -7,8 +7,9 @@ import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup.
 import { useMediaQuery } from "react-responsive";
 import { motion } from "framer-motion";
 import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
-import { Eye, ChevronUp, ChevronDown } from "lucide-react";
-import KanbanView from "./KanbanView.jsx";
+import { Eye, ChevronUp, ChevronDown, MoreVertical } from "lucide-react";
+// import KanbanView from "./KanbanView.jsx";
+import KanbanView from "../../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import InterviewDetailsSidebar from "./InterviewDetailsSidebar.jsx";
 // v1.0.0 <------------------------------------------------------------
@@ -16,6 +17,106 @@ import { config } from "../../../config.js";
 import axios from "axios";
 import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect.jsx";
 // v1.0.0 ------------------------------------------------------------>
+
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../../utils/dateFormatter.js";
+
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Interviewers = () => {
   // const { superAdminPermissions } = usePermissions();
@@ -35,7 +136,7 @@ const Interviewers = () => {
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState(null); // For view details
-  console.log("interviewData--",selectedInterview);
+  console.log("interviewData--", selectedInterview);
   const [interviews, setInterviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true); // Loading state
   const [listType, setListType] = useState("interviews"); // interviews | mock
@@ -79,8 +180,8 @@ const Interviewers = () => {
           page: currentPage,
           limit: ITEMS_PER_PAGE,
           search: debouncedSearch,
-          status: (selectedFilters.status || []).join(','),
-          organizationType: selectedType === 'all' ? '' : selectedType,
+          status: (selectedFilters.status || []).join(","),
+          organizationType: selectedType === "all" ? "" : selectedType,
         };
 
         const response = await axios.get(
@@ -116,8 +217,6 @@ const Interviewers = () => {
     getInterviews();
   }, [listType, currentPage, debouncedSearch, selectedFilters, selectedType]);
   // v1.0.0 --------------------------------------------->
-
-  
 
   useEffect(() => {
     const handleResize = () => {
@@ -226,11 +325,15 @@ const Interviewers = () => {
       key: "interviewerNames",
       header: "Interviewer",
       render: (value, row) => (
-          <div className="truncate max-w-[200px]">
-            <div className="text-sm text-gray-700">
-              {row.interviewerNames || "No interviewers assigned"}
-            </div>
+        <div
+          title={capitalizeFirstLetter(row.interviewerNames)}
+          className="truncate max-w-[200px] cursor-default"
+        >
+          <div className="text-sm text-gray-700">
+            {capitalizeFirstLetter(row.interviewerNames) ||
+              "No interviewers assigned"}
           </div>
+        </div>
       ),
     },
     {
@@ -239,7 +342,7 @@ const Interviewers = () => {
       render: (value, row) => (
         <div className="truncate max-w-[150px]">
           <div className="text-sm text-gray-700">
-            {row.organization || "N/A"}
+            {capitalizeFirstLetter(row?.organization) || "N/A"}
           </div>
         </div>
       ),
@@ -256,9 +359,7 @@ const Interviewers = () => {
       render: (value, row) => (
         <div className="flex items-center truncate max-w-[120px]">
           <span className="text-sm text-gray-500">
-            {row.createdOn
-              ? new Date(row.createdOn).toLocaleDateString()
-              : "N/A"}
+            {row.createdOn ? formatDateTime(row.createdOn) : "N/A"}
           </span>
         </div>
       ),
@@ -271,13 +372,12 @@ const Interviewers = () => {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         setSelectedInterview(row);
         setIsPopupOpen(true);
       },
     },
-
   ];
 
   // Kanban Columns Configuration
@@ -286,8 +386,11 @@ const Interviewers = () => {
       key: "interviewerNames",
       header: "Interviewers",
       render: (value, row) => (
-        <div className="text-sm text-gray-700 truncate">
-          {row.interviewerNames || "No interviewers"}
+        <div
+          title={row.interviewerNames}
+          className="text-sm text-gray-700 truncate max-w-[160px] cursor-default"
+        >
+          {capitalizeFirstLetter(row.interviewerNames) || "No interviewers"}
         </div>
       ),
     },
@@ -296,7 +399,7 @@ const Interviewers = () => {
       header: "Organization",
       render: (value, row) => (
         <div className="text-sm text-gray-700">
-          {row.organization || "N/A"}
+          {capitalizeFirstLetter(row.organization) || "N/A"}
         </div>
       ),
     },
@@ -305,23 +408,19 @@ const Interviewers = () => {
       header: "Created On",
       render: (value, row) => (
         <div className="text-sm text-gray-500">
-          {row.createdOn
-            ? new Date(row.createdOn).toLocaleDateString()
-            : "N/A"}
+          {row.createdOn ? formatDateTime(row.createdOn) : "N/A"}
         </div>
       ),
     },
     {
       key: "status",
       header: "Status",
-      render: (value, row) => (
-        <StatusBadge status={row.status || "Draft"} />
-      ),
+      render: (value, row) => <StatusBadge status={row.status || "Draft"} />,
     },
   ];
 
   // Shared Actions Configuration for Table and Kanban
-  const actions = [
+  const kanbanActions = [
     {
       key: "view",
       label: "View Details",
@@ -331,13 +430,12 @@ const Interviewers = () => {
         setIsPopupOpen(true);
       },
     },
-
   ];
 
   // Render Actions for Kanban
   const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      {actions.map((action) => (
+      {kanbanActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -368,7 +466,7 @@ const Interviewers = () => {
       "Selected",
       "Cancelled",
       "Incomplete",
-      "NoShow"
+      "NoShow",
     ];
 
     return (
@@ -487,7 +585,11 @@ const Interviewers = () => {
                     { value: "interviews", label: "Interviews" },
                     { value: "mock", label: "Mock Interviews" },
                   ]}
-                  value={{ value: listType, label: listType === "mock" ? "Mock Interviews" : "Interviews" }}
+                  value={{
+                    value: listType,
+                    label:
+                      listType === "mock" ? "Mock Interviews" : "Interviews",
+                  }}
                   onChange={(opt) => setListType(opt?.value || "interviews")}
                   placeholder="Select Type"
                   menuPortalTarget={document.body}
@@ -518,17 +620,30 @@ const Interviewers = () => {
                       id: round._id,
                       title: round.interviewCode || "N/A",
                       subtitle: round.roundTitle || "Interview Round",
-                      interviewerNames: round.interviewerNames || "No interviewers",
+                      interviewerNames:
+                        round.interviewerNames || "No interviewers",
                       organization: round.organization || "N/A",
                       organizationType: round.organizationType || "individual",
                       createdOn: round.createdOn,
-                      status: round.status || "Draft"
+                      status: round.status || "Draft",
                     }))}
                     interviews={interviews}
                     columns={kanbanColumns}
                     loading={isLoading}
-                    renderActions={renderKanbanActions}
+                    // renderActions={renderKanbanActions}
                     emptyState="No interview rounds found."
+                    renderActions={(item) => (
+                      <KanbanActionsMenu
+                        item={item}
+                        kanbanActions={kanbanActions}
+                      />
+                    )}
+                    onTitleClick={(item) => {
+                      setSelectedInterview(item);
+                      setIsPopupOpen(true);
+                    }}
+                    kanbanTitle="Internal Log"
+                    customHeight="calc(100vh - 320px)"
                   />
                 </div>
               )}

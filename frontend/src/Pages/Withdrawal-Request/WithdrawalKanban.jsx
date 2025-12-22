@@ -206,9 +206,9 @@ const WithdrawalKanban = ({
                             e.stopPropagation();
                             onCardClick(request);
                           }}
-                          className="p-1 bg-gray-100 rounded hover:bg-gray-200"
+                          className="p-1 bg-custom-blue/10 rounded hover:bg-gray-200"
                         >
-                          <Eye className="h-3 w-3" />
+                          <Eye className="h-3 w-3 text-custom-blue" />
                         </button>
                         {/* {(request.status === "pending" || request.status === "processing") && (
                           <button
@@ -225,7 +225,7 @@ const WithdrawalKanban = ({
                     )}
 
                     {/* Withdrawal Code */}
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 mt-6">
                       <span className="font-semibold text-sm text-gray-900">
                         {request.withdrawalCode || "N/A"}
                       </span>
