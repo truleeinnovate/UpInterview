@@ -9,7 +9,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
-import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
 import { useCandidates } from "../../../../../apiHooks/useCandidates";
@@ -81,32 +80,29 @@ const InterviewForm = () => {
   const [candidateLimit, setCandidateLimit] = useState(DROPDOWN_LIMIT);
   const [positionLimit, setPositionLimit] = useState(DROPDOWN_LIMIT);
   const [templateLimit, setTemplateLimit] = useState(DROPDOWN_LIMIT);
-  
+
   // State for tooltip visibility
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Close tooltip when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showTooltip && !event.target.closest('.tooltip-container')) {
+      if (showTooltip && !event.target.closest(".tooltip-container")) {
         setShowTooltip(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showTooltip]);
 
   const [candidateSearch, setCandidateSearch] = useState("");
   const [positionSearch, setPositionSearch] = useState("");
   const [templateSearch, setTemplateSearch] = useState("");
 
-  const [debouncedCandidateSearch, setDebouncedCandidateSearch] =
-    useState("");
-  const [debouncedPositionSearch, setDebouncedPositionSearch] =
-    useState("");
-  const [debouncedTemplateSearch, setDebouncedTemplateSearch] =
-    useState("");
+  const [debouncedCandidateSearch, setDebouncedCandidateSearch] = useState("");
+  const [debouncedPositionSearch, setDebouncedPositionSearch] = useState("");
+  const [debouncedTemplateSearch, setDebouncedTemplateSearch] = useState("");
 
   const {
     positionData,
@@ -129,12 +125,8 @@ const InterviewForm = () => {
     ...(debouncedTemplateSearch && { search: debouncedTemplateSearch }),
   });
 
-  
-  const {
-    useInterviewDetails,
-    isMutationLoading,
-    createInterview,
-  } = useInterviews();
+  const { useInterviewDetails, isMutationLoading, createInterview } =
+    useInterviews();
   const {
     candidateData,
     totalCandidates,
@@ -251,8 +243,9 @@ const InterviewForm = () => {
 
   const isEditing = !!id;
 
-  const { data: interview, isLoading: interviewLoading } =
-    useInterviewDetails(isEditing ? id : null);
+  const { data: interview, isLoading: interviewLoading } = useInterviewDetails(
+    isEditing ? id : null
+  );
 
   // v1.0.7  -  Your Name  -  Fixed template dropdown not showing selected value in edit mode
 
@@ -502,8 +495,7 @@ const InterviewForm = () => {
               ...(isEditing && interview
                 ? [
                     {
-                      label:
-                        interview?.candidateId?.LastName || "Interview",
+                      label: interview?.candidateId?.LastName || "Interview",
                       path: `/interviews/${id}`,
                       status: interview.status,
                     },
@@ -626,9 +618,7 @@ const InterviewForm = () => {
                           setCandidateSearch(inputValue || "");
                         }
                       }}
-                      onMenuScrollToBottom={
-                        handleCandidateMenuScrollToBottom
-                      }
+                      onMenuScrollToBottom={handleCandidateMenuScrollToBottom}
                       error={candidateError}
                       //disabled={candidatesLoading && !candidateData?.length}
                       loading={candidatesLoading}
@@ -669,9 +659,7 @@ const InterviewForm = () => {
                           setPositionSearch(inputValue || "");
                         }
                       }}
-                      onMenuScrollToBottom={
-                        handlePositionMenuScrollToBottom
-                      }
+                      onMenuScrollToBottom={handlePositionMenuScrollToBottom}
                       error={positionError}
                       //disabled={positionsLoading && !positionData?.length}
                       loading={positionsLoading}
@@ -688,8 +676,8 @@ const InterviewForm = () => {
                           External ID
                         </label>
                         <div className="relative tooltip-container">
-                          <Info 
-                            className="w-4 h-4 text-gray-400 cursor-pointer" 
+                          <Info
+                            className="w-4 h-4 text-gray-400 cursor-pointer"
                             onClick={() => setShowTooltip(!showTooltip)}
                           />
                           {showTooltip && (
@@ -745,7 +733,9 @@ const InterviewForm = () => {
                           })
                           .map((template) => {
                             const titleLabel = capitalizeFirstLetter(
-                              template.title || template.type || "Unnamed Template"
+                              template.title ||
+                                template.type ||
+                                "Unnamed Template"
                             );
 
                             return {
