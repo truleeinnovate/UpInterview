@@ -53,9 +53,11 @@ const FeedbackFormModal = () => {
           ...prevList,
           {
             ...question,
+            addedBy: "interviewer",
             mandatory: "false", // Default to false when adding a new question
             snapshot: {
               ...question.snapshot,
+              addedBy: "interviewer",
               mandatory: "false",
             },
           },

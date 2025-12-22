@@ -60,41 +60,6 @@ function HeaderBar({
   return (
     <div className="flex items-center sm:justify-start justify-end px-4 py-3 marker:flex-shrink-0 overflow-x-auto">
       <div className="flex gap-x-3 min-w-max whitespace-nowrap">
-        {/* Range Label */}
-        <div className="flex items-center">
-          <p>{rangeLabel}</p>
-        </div>
-
-        {/* Questions per page selector */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-600">Show/Page:</span>
-          <div className="flex items-center gap-1">
-            <div className="w-28 flex-shrink-0">
-              {(() => {
-                const pageSizeOptions = [10, 20, 30, 50, 100, 150, 200].map((size) => ({
-                  value: size,
-                  label: size,
-                }));
-                const selectedOption =
-                  pageSizeOptions.find((opt) => opt.value === questionsPerPage) ||
-                  pageSizeOptions[0];
-                return (
-                  <DropdownSelect
-                    isSearchable={false}
-                    value={selectedOption}
-                    onChange={(opt) =>
-                      onChangeQuestionsPerPage(opt?.value ? Number(opt.value) : 10)
-                    }
-                    options={pageSizeOptions}
-                    placeholder="Per page"
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                  />
-                );
-              })()}
-            </div>
-          </div>
-        </div>
 
         {/* Search */}
         <div className="relative flex items-center rounded-md border flex-shrink-0 w-64 bg-white">
@@ -135,6 +100,42 @@ function HeaderBar({
             />
           </div>
         )}
+
+        {/* Range Label */}
+        <div className="flex items-center">
+          <p>{rangeLabel}</p>
+        </div>
+
+        {/* Questions per page selector */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-gray-600">Show/Page:</span>
+          <div className="flex items-center gap-1">
+            <div className="w-28 flex-shrink-0">
+              {(() => {
+                const pageSizeOptions = [10, 20, 30, 50, 100, 150, 200].map((size) => ({
+                  value: size,
+                  label: size,
+                }));
+                const selectedOption =
+                  pageSizeOptions.find((opt) => opt.value === questionsPerPage) ||
+                  pageSizeOptions[0];
+                return (
+                  <DropdownSelect
+                    isSearchable={false}
+                    value={selectedOption}
+                    onChange={(opt) =>
+                      onChangeQuestionsPerPage(opt?.value ? Number(opt.value) : 10)
+                    }
+                    options={pageSizeOptions}
+                    placeholder="Per page"
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                  />
+                );
+              })()}
+            </div>
+          </div>
+        </div>
 
         {/* Pagination + Filter */}
         <div className="flex items-center gap-3 flex-shrink-0">
