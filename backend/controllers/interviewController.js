@@ -840,66 +840,96 @@ const saveInterviewRound = async (req, res) => {
     savedRound = await newInterviewRound.save();
 
     const interview = await Interview.findById(interviewId).lean();
+    console.log("interview", interview);
 
-    // =================== start == assessment mails sending fuctionality == start ========================
+    const candidate = await Candidate.findById(interview.candidateId).lean();
+
+    if (!candidate) {
+      return res.status(404).json({
+        message: "Candidate not found for assessment sharing",
+        status: "error",
+      });
+    }
+
+
+    // =================== start == assessment mails sending functionality == start ========================
 
     let linkExpiryDays = null;
     if (round?.selectedAssessmentData?.ExpiryDate) {
-      const expiryDate = new Date(round?.selectedAssessmentData.ExpiryDate);
+      const expiryDate = new Date(round.selectedAssessmentData.ExpiryDate);
       const today = new Date();
       const diffTime = expiryDate.getTime() - today.getTime();
-      linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
+      linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
-    console.log("savedRound", {
+
+    console.log("[ASSESSMENT] Preparing assessment share payload", {
+      interviewId,
+      roundTitle: savedRound?.roundTitle,
       assessmentId: round?.assessmentId,
-      selectedCandidates: [interview?.candidateId],
+      candidateId: interview?.candidateId,
       linkExpiryDays,
-      organizationId: interview?.tenantId,
-      userId: interview?.ownerId,
+      tenantId: interview?.tenantId,
+      ownerId: interview?.ownerId,
     });
 
     if (savedRound.roundTitle === "Assessment") {
       try {
-        // Create a proper mock response object
+        console.log("[ASSESSMENT] shareAssessment() triggered");
+
         let assessmentResponse = null;
         let responseStatus = 200;
 
         const mockRes = {
           status: function (statusCode) {
             responseStatus = statusCode;
-            return this; // Return 'this' for chaining
+            console.log("[ASSESSMENT] shareAssessment response status:", statusCode);
+            return this;
           },
           json: function (data) {
             assessmentResponse = data;
-            return this; // Return 'this' for chaining
+            console.log("[ASSESSMENT] shareAssessment response body:", data);
+            return this;
           },
         };
 
+        const payload = {
+          assessmentId: round?.assessmentId,
+          selectedCandidates: [candidate],
+          linkExpiryDays,
+          organizationId: interview?.tenantId.toString(),
+          userId: interview?.ownerId.toString(),
+        };
+
+        console.log("[ASSESSMENT] shareAssessment payload:", payload);
+
         await shareAssessment(
-          {
-            body: {
-              assessmentId: round?.assessmentId,
-              selectedCandidates: [interview?.candidateId],
-              linkExpiryDays,
-              organizationId: interview?.tenantId.toString(),
-              userId: interview?.ownerId.toString(),
-            },
-          },
+          { body: payload },
           mockRes
         );
 
-        // console.log("assessmentResult", assessmentResponse);
+        console.log("[ASSESSMENT] shareAssessment completed");
 
-        // Check if sharing failed
         if (responseStatus !== 200 || !assessmentResponse?.success) {
+          console.error("[ASSESSMENT] shareAssessment failed", {
+            responseStatus,
+            assessmentResponse,
+          });
+
           return res.status(404).json({
             message: "Assessment sharing failed",
             details: assessmentResponse?.message || "Unknown error",
             status: "error",
           });
         }
+
+        console.log("[ASSESSMENT] Assessment shared successfully");
+
       } catch (error) {
-        console.error("Error in assessment sharing:", error);
+        console.error("[ASSESSMENT] Error during shareAssessment execution:", {
+          message: error.message,
+          stack: error.stack,
+        });
+
         return res.status(404).json({
           message: "Assessment sharing failed",
           details: error.message,
@@ -907,6 +937,7 @@ const saveInterviewRound = async (req, res) => {
         });
       }
     }
+
 
     // if (savedRound.roundTitle === "Assessment") {
     //   let assessmentResult = await shareAssessment(
@@ -981,7 +1012,7 @@ const saveInterviewRound = async (req, res) => {
           },
           {
             status: () => ({
-              json: () => {},
+              json: () => { },
             }),
             locals: {},
           }
@@ -1008,7 +1039,7 @@ const saveInterviewRound = async (req, res) => {
         },
         {
           status: () => ({
-            json: () => {},
+            json: () => { },
           }),
           locals: {},
         }
@@ -1801,26 +1832,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-          from: "mockinterviews",
-          localField: "mockInterviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        }
+        from: "mockinterviews",
+        localField: "mockInterviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      }
       : {
-          from: "interviews",
-          localField: "interviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        };
+        from: "interviews",
+        localField: "interviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -1842,23 +1873,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-            {
-              $addFields: {
-                mainTenantIdNormalized: {
-                  $cond: [
-                    {
-                      $and: [
-                        { $ne: ["$mainInterview.tenantId", null] },
-                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                      ],
-                    },
-                    { $toObjectId: "$mainInterview.tenantId" },
-                    null,
-                  ],
-                },
+          {
+            $addFields: {
+              mainTenantIdNormalized: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ["$mainInterview.tenantId", null] },
+                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                    ],
+                  },
+                  { $toObjectId: "$mainInterview.tenantId" },
+                  null,
+                ],
               },
             },
-          ]
+          },
+        ]
         : []),
       // Lookup tenant for organization info
       {
