@@ -552,6 +552,7 @@ const AuthRoutes = () => (
         </>
       }
     />
+    <Route path="/code-editor" element={<CodeEditor />} />
   </Routes>
 );
 
@@ -1193,10 +1194,6 @@ const MainAppRoutes = ({
             {/* Task */}
             {hasPermission("Tasks") && (
               <Route path="/task" element={<Task />} />
-            )}
-
-            {hasPermission("CodeEditor") && (
-              <Route path="/code-editor" element={<CodeEditor />} />
             )}
 
             {/* Outsource Interviewer Request */}

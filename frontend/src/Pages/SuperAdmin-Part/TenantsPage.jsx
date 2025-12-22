@@ -11,9 +11,17 @@ import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx
 import { useMediaQuery } from "react-responsive";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
-import KanbanView from "./Tenant/KanbanView.jsx";
+// import KanbanView from "./Tenant/KanbanView.jsx";
+import KanbanView from "../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import DropdownSelect from "../../Components/Dropdowns/DropdownSelect.jsx";
-import { Eye, Mail, ChevronUp, ChevronDown, Trash } from "lucide-react";
+import {
+  Eye,
+  Mail,
+  ChevronUp,
+  ChevronDown,
+  Trash,
+  MoreVertical,
+} from "lucide-react";
 // import axios from "axios";
 // import { config } from "../../config.js";
 import { usePermissions } from "../../Context/PermissionsContext";
@@ -26,6 +34,103 @@ import DeleteConfirmModal from "../../Pages/Dashboard-Part/Tabs/CommonCode-AllTa
 import { notify } from "../../services/toastService.js";
 import { useMasterData } from "../../apiHooks/useMasterData.js";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 function TenantsPage() {
   const [deleteTenant, setDeleteTenant] = useState(null);
@@ -552,10 +657,10 @@ function TenantsPage() {
 
     {
       key: "yearsOfExperience",
-      header: "Years of Experience",
+      header: "Experience",
       render: (value, row) => {
         return row?.contact?.yearsOfExperience
-          ? row?.contact?.yearsOfExperience + " years"
+          ? row?.contact?.yearsOfExperience + " Years"
           : "N/A";
       },
     },
@@ -683,6 +788,39 @@ function TenantsPage() {
       )}
     </div>
   );
+
+  const kanbanActions = [
+    // View Details
+    ...(superAdminPermissions?.Tenants?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (item, e) => {
+              e.stopPropagation();
+              navigate(`/tenants/${item._id}`);
+            },
+          },
+        ]
+      : []),
+
+    // Delete (shown only if NOT loading and has View permission)
+    ...(!isLoading && superAdminPermissions?.Tenants?.View
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (item, e) => {
+              e.stopPropagation();
+              setShowDeleteConfirmModal(true);
+              setDeleteTenant(item);
+            },
+          },
+        ]
+      : []),
+  ];
 
   // Render Filter Content
   const renderFilterContent = () => {
@@ -1031,12 +1169,21 @@ function TenantsPage() {
                       title: tenant.firstName || "N/A",
                       subtitle: tenant.lastName || "N/A",
                       avatar: tenant?.contact?.imageData?.path || null,
+                      navigateTo: `/tenants/${tenant._id}`,
                     }))}
                     tenants={tenants}
                     columns={kanbanColumns}
                     loading={isLoading}
-                    renderActions={renderKanbanActions}
+                    // renderActions={renderKanbanActions}
+                    renderActions={(item) => (
+                      <KanbanActionsMenu
+                        item={item}
+                        kanbanActions={kanbanActions}
+                      />
+                    )}
                     emptyState="No Tenants Found."
+                    kanbanTitle="Tenant"
+                    customHeight="calc(100vh - 380px)"
                   />
                 </div>
               )}

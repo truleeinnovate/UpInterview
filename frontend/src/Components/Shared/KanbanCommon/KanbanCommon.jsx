@@ -18,6 +18,7 @@ const KanbanCommon = ({
   emptyState = "No Data Found",
   kanbanTitle = "",
   onTitleClick,
+  customHeight = "calc(100vh - 250px)",
 }) => {
   const navigate = useNavigate();
 
@@ -82,7 +83,9 @@ const KanbanCommon = ({
             <p className="text-sm font-medium">{emptyState}</p>
           </div>
         ) : (
-          <div className="overflow-y-auto max-h-[calc(100vh-250px)] sm:pb-28 md:pb-28 lg:pb-28 xl:pb-16 2xl:pb-16">
+          <div className="overflow-y-auto sm:pb-28 md:pb-28 lg:pb-28 xl:pb-16 2xl:pb-16"
+          style={{ maxHeight: customHeight }}
+          >
             <div className="px-4 grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
               {data.map((item, index) => (
                 <motion.div

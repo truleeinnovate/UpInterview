@@ -138,10 +138,6 @@ const LANGUAGES = [
   },
 ];
 
-// const API_URL = `${
-//   import.meta.env.VITE_SUPABASE_URL
-// }/functions/v1/execute-code`;
-
 export default function CodeEditor() {
   const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGES[0]);
   const [code, setCode] = useState(LANGUAGES[0].defaultCode);
@@ -158,33 +154,6 @@ export default function CodeEditor() {
     setCode(language.defaultCode);
     setOutput("");
   };
-
-  // const runCode = async () => {
-  //   setIsRunning(true);
-  //   setOutput("⏳ Executing code...");
-
-  //   try {
-  //     const response = await axios.post(API_URL, {
-  //       code: code,
-  //       language: selectedLanguage.value,
-  //       versionIndex: selectedLanguage.version,
-  //     });
-
-  //     if (response.data.output) {
-  //       setOutput(response.data.output);
-  //     } else if (response.data.error) {
-  //       setOutput(`❌ Error:\n${response.data.error}`);
-  //     } else {
-  //       setOutput("✅ Execution completed with no output");
-  //     }
-  //   } catch (error) {
-  //     setOutput(
-  //       `❌ Error: ${error.message}\n\nPlease try again or select a different language.`
-  //     );
-  //   } finally {
-  //     setIsRunning(false);
-  //   }
-  // };
 
   const runCode = async () => {
     setIsRunning(true);
@@ -229,23 +198,23 @@ export default function CodeEditor() {
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-emerald-500/5 pointer-events-none"></div>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-500/10 via-transparent to-transparent pointer-events-none"></div>
 
-      <div className="relative z-10 flex items-center justify-between px-8 py-5 bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 shadow-2xl">
+      <div className="relative z-10 flex items-center justify-between px-6 py-2.5 bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 shadow-2xl">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4 bg-slate-800/60 px-5 py-3 rounded-xl border border-slate-700/50 shadow-lg backdrop-blur-sm">
-            <div className="relative">
+          <div className="flex items-center gap-4 bg-slate-800/60 px-3 py-2 rounded-md border border-slate-700/50 shadow-lg backdrop-blur-sm">
+            {/* <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 blur-lg opacity-50 animate-pulse"></div>
-              <span className="relative text-3xl drop-shadow-lg">
+              <span className="relative text-xl drop-shadow-lg">
                 {selectedLanguage.icon}
               </span>
-            </div>
-            <div className="flex flex-col gap-1">
+            </div> */}
+            <div className="flex items-center gap-3">
               <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                Select Language
+                Select Language :
               </label>
               <select
                 value={selectedLanguage.value}
                 onChange={handleLanguageChange}
-                className="bg-slate-700/50 text-slate-100 px-4 py-2.5 rounded-lg border border-slate-600/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all hover:bg-slate-700 cursor-pointer font-semibold text-sm shadow-inner"
+                className="bg-slate-700/50 text-slate-100 px-3 py-1 rounded-md border border-slate-600/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all hover:bg-slate-700 cursor-pointer font-semibold text-sm shadow-inner"
               >
                 {LANGUAGES.map((lang) => (
                   <option key={lang.value + lang.label} value={lang.value}>
@@ -267,10 +236,15 @@ export default function CodeEditor() {
           <button
             onClick={runCode}
             disabled={isRunning}
-            className={`group relative px-8 py-3.5 rounded-xl font-bold transition-all duration-300 flex items-center gap-3 shadow-2xl ${
+            // className={`group relative px-8 py-3.5 rounded-xl font-bold transition-all duration-300 flex items-center gap-3 shadow-2xl ${
+            //   isRunning
+            //     ? "bg-slate-700 text-slate-400 cursor-not-allowed"
+            //     : "bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 hover:from-cyan-400 hover:via-blue-400 hover:to-cyan-400 text-white transform hover:scale-105 hover:-translate-y-0.5 active:scale-100"
+            // }`}
+            className={`text-xs group relative px-4 py-1.5 rounded-md font-bold transition-all duration-300 flex items-center gap-3 shadow-2xl ${
               isRunning
                 ? "bg-slate-700 text-slate-400 cursor-not-allowed"
-                : "bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 hover:from-cyan-400 hover:via-blue-400 hover:to-cyan-400 text-white transform hover:scale-105 hover:-translate-y-0.5 active:scale-100"
+                : "bg-gradient-to-r from-custom-blue via-custom-blue to-custom-blue/60 hover:from-custom-blue hover:via-custom-blue/80 hover:to-custom-blue/90 text-white transform hover:scale-105 hover:-translate-y-0.5 active:scale-100"
             }`}
           >
             {!isRunning && (
@@ -322,13 +296,13 @@ export default function CodeEditor() {
         <div
           className={`${
             rightExpanded ? "hidden" : leftExpanded ? "w-full" : "w-1/2"
-          } flex flex-col bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-2xl transition-all duration-500 ease-in-out overflow-hidden`}
+          } flex flex-col bg-slate-900/50 backdrop-blur-xl rounded-md border border-slate-700/50 shadow-2xl transition-all duration-500 ease-in-out overflow-hidden`}
         >
-          <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-800/80 via-slate-800/60 to-slate-800/80 backdrop-blur-sm border-b border-slate-700/50">
+          <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-slate-800/80 via-slate-800/60 to-slate-800/80 backdrop-blur-sm border-b border-slate-700/50">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg border border-cyan-500/30">
+              <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-md border border-cyan-500/30">
                 <svg
-                  className="w-5 h-5 text-cyan-400"
+                  className="w-4 h-4 text-cyan-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -342,7 +316,7 @@ export default function CodeEditor() {
                 </svg>
               </div>
               <div>
-                <span className="text-slate-100 font-bold text-lg">
+                <span className="text-slate-100 font-bold text-sm">
                   Code Editor
                 </span>
                 <p className="text-[10px] text-slate-500 uppercase tracking-wider">
@@ -355,12 +329,12 @@ export default function CodeEditor() {
                 setLeftExpanded(!leftExpanded);
                 if (rightExpanded) setRightExpanded(false);
               }}
-              className="group p-2.5 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg border border-slate-700/50 hover:border-cyan-500/50 transition-all"
+              className="group p-2.5 bg-slate-800/50 hover:bg-slate-700/50 rounded-md border border-slate-700/50 hover:border-cyan-500/50 transition-all"
               title={leftExpanded ? "Restore" : "Maximize"}
             >
               {leftExpanded ? (
                 <svg
-                  className="w-5 h-5 text-slate-400 group-hover:text-cyan-400 transition-colors"
+                  className="w-4 h-4 text-slate-400 group-hover:text-cyan-400 transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -374,7 +348,7 @@ export default function CodeEditor() {
                 </svg>
               ) : (
                 <svg
-                  className="w-5 h-5 text-slate-400 group-hover:text-cyan-400 transition-colors"
+                  className="w-4 h-4 text-slate-400 group-hover:text-cyan-400 transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -419,13 +393,13 @@ export default function CodeEditor() {
         <div
           className={`${
             leftExpanded ? "hidden" : rightExpanded ? "w-full" : "w-1/2"
-          } flex flex-col bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-2xl transition-all duration-500 ease-in-out overflow-hidden`}
+          } flex flex-col bg-slate-900/50 backdrop-blur-xl rounded-md border border-slate-700/50 shadow-2xl transition-all duration-500 ease-in-out overflow-hidden`}
         >
-          <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-800/80 via-slate-800/60 to-slate-800/80 backdrop-blur-sm border-b border-slate-700/50">
+          <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-slate-800/80 via-slate-800/60 to-slate-800/80 backdrop-blur-sm border-b border-slate-700/50">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-lg border border-emerald-500/30">
+              <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-md border border-emerald-500/30">
                 <svg
-                  className="w-5 h-5 text-emerald-400"
+                  className="w-4 h-4 text-emerald-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -439,7 +413,7 @@ export default function CodeEditor() {
                 </svg>
               </div>
               <div>
-                <span className="text-slate-100 font-bold text-lg">
+                <span className="text-slate-100 font-bold text-sm">
                   Output Console
                 </span>
                 <p className="text-[10px] text-slate-500 uppercase tracking-wider">
@@ -452,12 +426,12 @@ export default function CodeEditor() {
                 setRightExpanded(!rightExpanded);
                 if (leftExpanded) setLeftExpanded(false);
               }}
-              className="group p-2.5 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg border border-slate-700/50 hover:border-emerald-500/50 transition-all"
+              className="group p-2.5 bg-slate-800/50 hover:bg-slate-700/50 rounded-md border border-slate-700/50 hover:border-emerald-500/50 transition-all"
               title={rightExpanded ? "Restore" : "Maximize"}
             >
               {rightExpanded ? (
                 <svg
-                  className="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition-colors"
+                  className="w-4 h-4 text-slate-400 group-hover:text-emerald-400 transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -471,7 +445,7 @@ export default function CodeEditor() {
                 </svg>
               ) : (
                 <svg
-                  className="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition-colors"
+                  className="w-4 h-4 text-slate-400 group-hover:text-emerald-400 transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
