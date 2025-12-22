@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchFilterData } from "../api.js";
 import { usePermissions } from "../Context/PermissionsContext";
 import axios from "axios";
@@ -35,6 +35,8 @@ export const useFeedbacks = (filters = {}) => {
 };
 
 export const useCreateFeedback = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (feedbackData) => {
       const response = await axios.post(
@@ -42,6 +44,10 @@ export const useCreateFeedback = () => {
         feedbackData
       );
       return response.data;
+    },
+    onSuccess: () => {
+      // Ensure feedback lists are refreshed after creating new feedback
+      queryClient.invalidateQueries({ queryKey: ["feedbacks"] });
     },
     onError: (error) => {
       if (error.response?.status === 409) {
@@ -56,6 +62,8 @@ export const useCreateFeedback = () => {
 };
 
 export const useUpdateFeedback = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ feedbackId, feedbackData }) => {
       const response = await axios.put(
@@ -63,6 +71,10 @@ export const useUpdateFeedback = () => {
         feedbackData
       );
       return response.data;
+    },
+    onSuccess: () => {
+      // Ensure feedback lists are refreshed after updating existing feedback
+      queryClient.invalidateQueries({ queryKey: ["feedbacks"] });
     },
     onError: (error) => {
       console.error("Error updating feedback:", error);

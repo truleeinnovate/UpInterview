@@ -270,24 +270,40 @@ const FeedbackForm = ({
   //   }, [isEditMode, isViewMode, feedbackData, interviewerSectionData, filteredInterviewerQuestions]);
 
   const questionsWithFeedback = React.useMemo(() => {
-    // Start with all questions from all sources
+    // Start with interviewer-added questions from preselected/merged data
     const allQuestions = [
       ...(filteredInterviewerQuestions || []),
-      // ...(interviewerSectionData || [])
     ];
 
     console.log("allQuestions", allQuestions);
 
-    // Create a map by question ID for quick lookup
+    // Build a quick lookup of current UI state overlays
+    const overlayMap = (interviewerSectionData || []).reduce((acc, q) => {
+      const id = q.questionId || q._id || q.id;
+      if (!id) return acc;
+      acc[id] = q;
+      return acc;
+    }, {});
+
+    // Create a map by question ID and overlay interviewerSectionData when present
     const questionsMap = new Map();
     allQuestions.forEach((q) => {
       const id = q.questionId || q._id || q.id;
-      if (id) {
+      if (!id) return;
+      const overlay = overlayMap[id];
+      questionsMap.set(id, overlay ? { ...q, ...overlay } : { ...q });
+    });
+
+    // Include any interviewerSectionData questions that aren't in filteredInterviewerQuestions yet
+    (interviewerSectionData || []).forEach((q) => {
+      const id = q.questionId || q._id || q.id;
+      if (!id) return;
+      if (!questionsMap.has(id)) {
         questionsMap.set(id, { ...q });
       }
     });
 
-    // Apply feedback data if available
+    // Apply persisted feedback data if available (only filling in when UI state is missing)
     if (
       (isEditMode || isViewMode || isAddMode) &&
       feedbackData?.questionFeedback
@@ -299,21 +315,30 @@ const FeedbackForm = ({
 
           // Merge answer data
           if (feedback.candidateAnswer) {
-            question.isAnswered = fromBackendAnswerType(
+            const mappedType = fromBackendAnswerType(
               feedback.candidateAnswer.answerType
             );
-            question.answer =
-              feedback.candidateAnswer.submittedAnswer || question.answer;
+            if (!question.isAnswered && mappedType) {
+              question.isAnswered = mappedType;
+            }
+            if (!question.answer && feedback.candidateAnswer.submittedAnswer) {
+              question.answer = feedback.candidateAnswer.submittedAnswer;
+            }
           }
 
           // Merge feedback data
           if (feedback.interviewerFeedback) {
-            question.isLiked =
-              feedback.interviewerFeedback.liked || question.isLiked;
-            question.whyDislike =
-              feedback.interviewerFeedback.dislikeReason || question.whyDislike;
-            question.note = feedback.interviewerFeedback.note || question.note;
-            question.notesBool = !!feedback.interviewerFeedback.note;
+            if (!question.isLiked) {
+              question.isLiked = feedback.interviewerFeedback.liked;
+            }
+            if (!question.whyDislike) {
+              question.whyDislike =
+                feedback.interviewerFeedback.dislikeReason || "";
+            }
+            if (!question.note) {
+              question.note = feedback.interviewerFeedback.note || "";
+              question.notesBool = !!feedback.interviewerFeedback.note;
+            }
           }
         }
       });
@@ -326,6 +351,7 @@ const FeedbackForm = ({
     feedbackData,
     interviewerSectionData,
     filteredInterviewerQuestions,
+    isAddMode,
   ]);
 
   // console.log("questionsWithFeedback",questionsWithFeedback);
@@ -476,14 +502,13 @@ const FeedbackForm = ({
     // console.log("existingMap",existingMap);
     // console.log("idsSet",idsSet);
 
-    // Compose final items per id
     const result = [];
     idsSet.forEach((id) => {
       const overlay = overlayMap[id] || {};
       const pre = preselectedMap[id] || {};
-      const existing = existingMap[id] || {};
+      const existingEntry = existingMap[id];
+      const existing = existingEntry || {};
 
-      // Prefer UI state; then preselected; then existing persisted
       const uiIsAnswered =
         overlay.isAnswered ??
         pre.isAnswered ??
@@ -497,14 +522,20 @@ const FeedbackForm = ({
         pre.whyDislike ??
         existing?.interviewerFeedback?.dislikeReason;
 
+      const isNewInterviewerQuestion =
+        !existingEntry &&
+        (overlay.addedBy === "interviewer" ||
+          overlay.snapshot?.addedBy === "interviewer");
+
+      const questionIdPayload = isNewInterviewerQuestion ? overlay : id;
+
       result.push({
-        questionId: id,
+        questionId: questionIdPayload,
         candidateAnswer: {
           answerType: toBackendAnswerType(uiIsAnswered),
           submittedAnswer: "",
         },
         interviewerFeedback: {
-          // Only default if truly missing everywhere to avoid overwriting existing data
           liked: uiLiked ?? "none",
           note: uiNote ?? "",
           dislikeReason: uiWhyDislike ?? "",
@@ -1116,6 +1147,7 @@ const FeedbackForm = ({
         generalComments: comments,
         overallImpression: {
           overallRating,
+          communicationRating,
           recommendation,
           note: comments,
         },
@@ -1596,8 +1628,8 @@ const FeedbackForm = ({
                     >
                       <div className="flex items-start justify-between mb-3">
                         <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                          {question.snapshot?.skill ||
-                            question.category ||
+                          {question.snapshot?.technology[0] ||
+                            question.snapshot?.category[0] ||
                             "N/A"}
                         </span>
                         <span className="text-sm text-gray-500">
