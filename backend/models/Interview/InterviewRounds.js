@@ -15,11 +15,13 @@ const participantSchema = new mongoose.Schema(
 );
 
 // Only schedule / reschedule / cancel info
-const roundScheduleSchema = new mongoose.Schema(
+const roundHistorySchema = new mongoose.Schema(
     {
         scheduledAt: { type: Date, required: true },
         action: { type: String, enum: ["Scheduled", "Rescheduled"], required: true },
-        reason: { type: String },
+        // reason: { type: String },
+        reasonCode: { type: String },      // e.g. "candidate_requested"
+        comment: { type: String },         // only when reasonCode === "other"
         participants: [participantSchema],
         updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         updatedAt: { type: Date, default: Date.now },
@@ -75,32 +77,21 @@ const interviewRoundSchema = new mongoose.Schema({
     },
 
     // Track last and current actions + reasons
-    currentAction: {
-        type: String,
-        enum: [
-            "Candidate_NoShow",
-            "Interviewer_NoShow",
-            "Technical_Issue"
-        ],
-        default: null,
-    },
-    previousAction: {
-        type: String,
-        enum: [
-            "Candidate_NoShow",
-            "Interviewer_NoShow",
-            "Technical_Issue"
-        ],
-        default: null,
-    },
-    currentActionReason: { type: String },
-    previousActionReason: { type: String },
-    supportTickets: [{ type: mongoose.Schema.Types.ObjectId, ref: "SupportUser" }],
+ /* ------------------------------------
+     * Current Action Tracking
+     * ---------------------------------- */
+    currentAction: { type: String },          // e.g. Rescheduled
+    currentActionReason: { type: String },    // reasonCode
+    comments: { type: String },               // only for "other"
 
-    // Full history of all scheduling attempts
-    history: [roundScheduleSchema],
+    /* ------------------------------------
+     * History (append-only)
+     * ---------------------------------- */
+    history: [roundHistorySchema],
 
-    // Extra
+    /* ------------------------------------
+     * Meeting / Assessment
+     * ---------------------------------- */
     meetingId: String,
     meetPlatform: String,
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
@@ -119,7 +110,7 @@ const interviewRoundSchema = new mongoose.Schema({
     },
     settlementDate: { type: Date },
     settlementTransactionId: { type: String },  // Credit transaction ID in interviewer's wallet
-    
+
     // External system identifier
     externalId: { type: String, sparse: true, index: true }, // External system identifier
 }, { timestamps: true });
