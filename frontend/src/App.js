@@ -551,6 +551,7 @@ const AuthRoutes = () => (
         </>
       }
     />
+    <Route path="/code-editor" element={<CodeEditor />} />
   </Routes>
 );
 
@@ -1194,10 +1195,6 @@ const MainAppRoutes = ({
               <Route path="/task" element={<Task />} />
             )}
 
-            {hasPermission("CodeEditor") && (
-              <Route path="/code-editor" element={<CodeEditor />} />
-            )}
-
             {/* Outsource Interviewer Request */}
             {/* {hasPermission("OutsourceInterviewerRequest") && (
                             <Route
@@ -1497,6 +1494,7 @@ const App = () => {
       "/join-meeting",
       "/video-sdk",
       "/video-sdk/join",
+      "/code-editor",
     ].some(
       (path) =>
         location.pathname === path ||

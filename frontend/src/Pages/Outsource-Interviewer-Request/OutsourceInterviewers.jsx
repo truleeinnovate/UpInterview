@@ -398,14 +398,6 @@ const OutsourceInterviewers = () => {
       ),
     },
     {
-      key: "currentRole",
-      header: "Current Role",
-      render: (value, row) => (
-        <span>{row?.contactId?.currentRole || "N/A"}</span>
-      ),
-    },
-
-    {
       key: "experience",
       header: "Experience",
       render: (value, row) => (
@@ -647,14 +639,8 @@ const OutsourceInterviewers = () => {
                   data={currentFilteredRows.map((interview) => ({
                     ...interview,
                     id: interview._id,
-                    title:
-                      interview.interviewerNo ||
-                      `TEMP-${interview?._id?.slice(-6) || "NA"}`,
-                    subtitle:
-                      interview?.contactId?.firstName &&
-                      interview?.contactId?.lastName
-                        ? `${interview?.contactId.firstName} ${interview?.contactId.lastName}`
-                        : "N/A",
+                    title: interview.outsourceRequestCode || "NA",
+                    subtitle: interview?.contactId?.currentRole || "N/A",
                   }))}
                   outsourceInterviewers={outsourceInterviewers}
                   columns={kanbanColumns}
