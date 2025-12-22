@@ -201,7 +201,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
           "Candidate";
         const emailSubject = faceToFaceTemplate.subject
-          // .replace('{{companyName}}', tenantCompanyName)
+          .replace(/{{orgCompanyName}}/g, tenantCompanyName)
           .replace("{{roundTitle}}", roundTitle);
 
         const emailBody = faceToFaceTemplate.body
@@ -256,7 +256,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
               .filter(Boolean)
               .join(" ") || "Interviewer";
           const emailSubject = faceToFaceTemplate.subject
-            // .replace('{{companyName}}', tenantCompanyName)
+           .replace(/{{orgCompanyName}}/g, tenantCompanyName)
             .replace("{{roundTitle}}", roundTitle);
 
           const emailBody = faceToFaceTemplate.body
@@ -311,7 +311,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             .filter(Boolean)
             .join(" ") || "Scheduler";
         const emailSubject = faceToFaceTemplate.subject
-          // .replace('{{companyName}}', tenantCompanyName)
+          .replace(/{{orgCompanyName}}/g, tenantCompanyName)
           .replace("{{roundTitle}}", roundTitle);
 
         const emailBody = faceToFaceTemplate.body
@@ -402,7 +402,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
           "Candidate";
         const emailSubject = candidateTemplate.subject
-          .replace(/{{companyName}}/g, tenantCompanyName)
+          .replace(/{{orgCompanyName}}/g, tenantCompanyName)
           .replace(/{{roundTitle}}/g, roundTitle);
 
         let emailBody = candidateTemplate.body
@@ -465,7 +465,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       if (interviewerTemplate && interviewerEmails.length > 0) {
         for (const interviewer of interviewerEmails) {
           const emailSubject = interviewerTemplate.subject
-            .replace(/{{companyName}}/g, tenantCompanyName)
+            .replace(/{{orgCompanyName}}/g, tenantCompanyName)
             .replace(/{{roundTitle}}/g, roundTitle);
 
           let emailBody = interviewerTemplate.body
@@ -538,7 +538,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
           "Candidate";
         const emailSubject = schedulerTemplate.subject
-          .replace(/{{companyName}}/g, tenantCompanyName)
+          .replace(/{{orgCompanyName}}/g, tenantCompanyName)
           .replace(/{{roundTitle}}/g, roundTitle);
 
         let emailBody = schedulerTemplate.body
@@ -960,7 +960,7 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
         })),
       },
     };
-    conole.log("result outsource interview", result);
+    console.log("result outsource interview", result);
 
     if (res) {
       return res.status(200).json(result);
