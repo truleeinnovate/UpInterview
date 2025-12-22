@@ -39,6 +39,12 @@ const {
 const { createInterviewRequest } = require("../utils/interviewRequest.js");
 const InterviewRequest = require("../models/InterviewRequest.js");
 const { createRequest } = require("./InterviewRequestController.js");
+const {
+  shareAssessment,
+} = require("./EmailsController/assessmentEmailController.js");
+const {
+  sendOutsourceInterviewRequestEmails,
+} = require("./EmailsController/interviewEmailController.js");
 
 //  post call for interview page
 // const createInterview = async (req, res) => {
@@ -835,15 +841,123 @@ const saveInterviewRound = async (req, res) => {
 
     const interview = await Interview.findById(interviewId).lean();
 
+    // =================== start == assessment mails sending fuctionality == start ========================
+
+    let linkExpiryDays = null;
+    if (round?.selectedAssessmentData?.ExpiryDate) {
+      const expiryDate = new Date(round?.selectedAssessmentData.ExpiryDate);
+      const today = new Date();
+      const diffTime = expiryDate.getTime() - today.getTime();
+      linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
+    }
+    console.log("savedRound", {
+      assessmentId: round?.assessmentId,
+      selectedCandidates: [interview?.candidateId],
+      linkExpiryDays,
+      organizationId: interview?.tenantId,
+      userId: interview?.ownerId,
+    });
+
+    if (savedRound.roundTitle === "Assessment") {
+      try {
+        // Create a proper mock response object
+        let assessmentResponse = null;
+        let responseStatus = 200;
+
+        const mockRes = {
+          status: function (statusCode) {
+            responseStatus = statusCode;
+            return this; // Return 'this' for chaining
+          },
+          json: function (data) {
+            assessmentResponse = data;
+            return this; // Return 'this' for chaining
+          },
+        };
+
+        await shareAssessment(
+          {
+            body: {
+              assessmentId: round?.assessmentId,
+              selectedCandidates: [interview?.candidateId],
+              linkExpiryDays,
+              organizationId: interview?.tenantId.toString(),
+              userId: interview?.ownerId.toString(),
+            },
+          },
+          mockRes
+        );
+
+        // console.log("assessmentResult", assessmentResponse);
+
+        // Check if sharing failed
+        if (responseStatus !== 200 || !assessmentResponse?.success) {
+          return res.status(404).json({
+            message: "Assessment sharing failed",
+            details: assessmentResponse?.message || "Unknown error",
+            status: "error",
+          });
+        }
+      } catch (error) {
+        console.error("Error in assessment sharing:", error);
+        return res.status(404).json({
+          message: "Assessment sharing failed",
+          details: error.message,
+          status: "error",
+        });
+      }
+    }
+
+    // if (savedRound.roundTitle === "Assessment") {
+    //   let assessmentResult = await shareAssessment(
+    //     {
+    //       body: {
+    //         assessmentId: savedRound?.assessmentId,
+    //         selectedCandidates: [interview?.candidateId],
+    //         linkExpiryDays,
+    //         organizationId: interview?.tenantId,
+    //         userId: interview?.ownerId,
+    //       },
+    //     },
+    //     {
+    //       status: (code) => ({
+    //         json: (data) => {
+    //           // Capture the response from shareAssessment
+    //           if (code !== 200) {
+    //             throw new Error(
+    //               `Assessment sharing failed: ${
+    //                 data?.message || "Unknown error"
+    //               }`
+    //             );
+    //           }
+    //           return data;
+    //         },
+    //       }),
+    //       locals: {},
+    //     }
+    //   );
+
+    //   console.log("assessmentResult", assessmentResult);
+
+    //   if (!assessmentResult?.success) {
+    //     return res.status(404).json({
+    //       message: "Assessment sharing failed",
+    //       details: assessmentResult?.message || "Unknown error",
+    //     });
+    //   }
+    // }
+
+    //================ end ==   assessment mails sending fuctionality == end =======================
+
     // ================= CREATE INTERVIEW REQUEST (BACKEND ONLY) =================
     if (
       interview &&
       savedRound.roundTitle !== "Assessment" &&
       savedRound.interviewMode !== "Face to Face" &&
       Array.isArray(req.body?.round?.selectedInterviewers) &&
-      req.body.round.selectedInterviewers.length > 0
+      req.body?.round?.selectedInterviewers.length > 0
     ) {
-      for (const interviewer of req.body.round.selectedInterviewers) {
+      for (const interviewer of req.body?.round?.selectedInterviewers) {
         const interviewerType = interviewer.type?.toLowerCase(); // "internal" | "external"
         // const isInternal = interviewerType === "internal";
 
@@ -874,6 +988,35 @@ const saveInterviewRound = async (req, res) => {
         );
       }
     }
+
+    // sending outsource interview request emails fuctionality === start === =====================
+    if (
+      interview &&
+      savedRound?.round?.interviewerType !== "Internal" &&
+      savedRound.interviewMode !== "Face to Face" &&
+      req.body?.round?.selectedInterviewers &&
+      req.body?.round?.selectedInterviewers.length > 0
+    ) {
+      let emailOusourceResult = await sendOutsourceInterviewRequestEmails(
+        {
+          body: {
+            interviewId: interview?._id,
+            roundId: savedRound?._id,
+            interviewerIds: req.body?.round?.selectedInterviewers,
+            type: "interview",
+          },
+        },
+        {
+          status: () => ({
+            json: () => {},
+          }),
+          locals: {},
+        }
+      );
+
+      console.log("emailOusourceResult", emailOusourceResult);
+    }
+    // sending outsource interview request emails fuctionality === end === =====================
 
     // Trigger interview.round.status.updated if status is one of the allowed values
     await triggerInterviewRoundStatusUpdated(savedRound, oldStatusForWebhook);

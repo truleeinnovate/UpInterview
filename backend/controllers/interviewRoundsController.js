@@ -1,7 +1,9 @@
 const { InterviewRounds } = require("../models/Interview/InterviewRounds");
 const express = require("express");
+const {
+  sendInterviewRoundCancellationEmails,
+} = require("./EmailsController/interviewEmailController");
 
-const router = express.Router();
 // Update interview round status
 const updateInterviewRoundStatus = async (req, res) => {
   try {
@@ -130,6 +132,31 @@ const updateInterviewRoundStatus = async (req, res) => {
       .populate("interviewers", "firstName lastName email");
 
     if (!updatedRound) {
+      return res.status(404).json({
+        success: false,
+        message: "Interview round not found",
+      });
+    }
+    console.log("updatedRound", updatedRound);
+
+    let result = await sendInterviewRoundCancellationEmails(
+      {
+        body: {
+          interviewId: updatedRound?.interviewId,
+          roundId: updatedRound?._id,
+        },
+      },
+      {
+        status: () => ({
+          json: () => {},
+        }),
+        locals: {},
+      }
+    );
+
+    console.log("result sendInterviewRoundCancellationEmails", result);
+
+    if (!result) {
       return res.status(404).json({
         success: false,
         message: "Interview round not found",
