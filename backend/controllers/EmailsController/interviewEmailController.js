@@ -19,6 +19,13 @@ const Notification = require("../../models/notification");
 const mongoose = require("mongoose");
 const config = require("../../config");
 const Tenant = require("../../models/Tenant");
+const Handlebars = require("handlebars");
+
+function compileEmailTemplate(template, data) {
+  const compiled = Handlebars.compile(template);
+  return compiled(data);
+};
+
 
 const SECRET_KEY = "asdnalksm$$@#@cjh#@$abidsduwoa";
 
@@ -256,7 +263,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
               .filter(Boolean)
               .join(" ") || "Interviewer";
           const emailSubject = faceToFaceTemplate.subject
-           .replace(/{{orgCompanyName}}/g, tenantCompanyName)
+            .replace(/{{orgCompanyName}}/g, tenantCompanyName)
             .replace("{{roundTitle}}", roundTitle);
 
           const emailBody = faceToFaceTemplate.body
@@ -1071,19 +1078,20 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
     const generateBody = (name) => {
       if (!cancelTemplate) return "<p>Interview has been canceled.</p>";
 
-      return cancelTemplate.body
-        .replace(/{{recipientName}}/g, name)
-        .replace(/{{companyName}}/g, tenantCompanyName)
-        .replace(/{{roundTitle}}/g, roundTitle)
-        .replace(/{{interviewMode}}/g, interviewMode)
-        .replace(/{{dateTime}}/g, dateTime)
-        .replace(/{{duration}}/g, duration)
-        .replace(/{{supportEmail}}/g, supportEmail)
-        .replace(/{{position}}/g, position)
-        .replace(
-          /{{address}}/g,
-          interviewMode === "Face to Face" ? address : ""
-        );
+      const templateData = {
+        recipientName: name,
+        companyName: companyName,
+        roundTitle,
+        interviewMode,
+        dateTime,
+        duration,
+        supportEmail,
+        position,
+        address:
+          interviewMode === "Face to Face" && address ? address : null,
+      };
+
+      return compileEmailTemplate(cancelTemplate.body, templateData);
     };
 
     // Send to Candidate

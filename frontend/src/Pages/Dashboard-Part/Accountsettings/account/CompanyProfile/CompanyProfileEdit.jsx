@@ -748,7 +748,7 @@ const CompanyEditProfile = () => {
               type="button"
               onClick={handleSave}
               isLoading={isLoading}
-              loadingText="updating..."
+              loadingText="Updating..."
             >
               Save
             </LoadingButton>
