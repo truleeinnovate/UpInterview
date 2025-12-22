@@ -11,7 +11,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // const showCandidateSection = !roleInfo?.hasRolePreference || roleInfo?.isCandidate;
   // const showInterviewerSection = !roleInfo?.hasRolePreference || roleInfo?.isInterviewer;
   // const isSingleRole = roleInfo?.hasRolePreference && (roleInfo?.isCandidate || roleInfo?.isInterviewer);
-  const { saveInterviewRound } = useInterviews();
+  const { updateRoundStatus } = useInterviews();
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [localInterviewTime, setLocalInterviewTime] = useState("");
@@ -38,7 +38,11 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
       //   `${config.REACT_APP_API_URL}/interview/save-round`,
       //   payload
       // );
-      const response = await saveInterviewRound(payload);
+      const response = await updateRoundStatus({
+        roundId: feedbackData?.interviewRound?._id,
+        interviewId: feedbackData?.interviewRound?.interviewId,
+        status: "InProgress",
+      });
 
       // toast.success("Interview marked as in progress", {});
     } catch (error) {
