@@ -1033,7 +1033,9 @@ const saveInterviewRound = async (req, res) => {
           body: {
             interviewId: interview?._id,
             roundId: savedRound?._id,
-            interviewerIds: req.body?.round?.selectedInterviewers,
+            interviewerIds: req.body?.round?.selectedInterviewers.map(
+              interviewer => interviewer.contact?._id || interviewer._id
+            ),
             type: "interview",
           },
         },
