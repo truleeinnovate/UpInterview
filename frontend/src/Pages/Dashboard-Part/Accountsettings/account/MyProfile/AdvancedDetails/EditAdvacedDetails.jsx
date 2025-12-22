@@ -410,7 +410,7 @@ const EditAdvacedDetails = ({
               onClick={handleSave}
               type="submit"
               isLoading={loading}
-              loadingText="updating..."
+              loadingText="Updating..."
             >
               Save Changes
             </LoadingButton>

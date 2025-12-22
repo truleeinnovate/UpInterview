@@ -2037,7 +2037,7 @@ const EditInterviewDetails = ({
             type="submit"
             onClick={handleSave}
             isLoading={loading}
-            loadingText="updating..."
+            loadingText="Updating..."
           >
             Save Changes
           </LoadingButton>
