@@ -29,7 +29,10 @@ const config = require("../../config");
 const {
   createAssessmentScheduledNotification,
 } = require("../PushNotificationControllers/pushNotificationAssessmentController");
-const { triggerWebhook, EVENT_TYPES } = require("../../services/webhookService");
+const {
+  triggerWebhook,
+  EVENT_TYPES,
+} = require("../../services/webhookService");
 const {
   validateScheduledAssessment,
   //validateCandidateAssessment
@@ -46,12 +49,10 @@ exports.sendOtp = async (req, res) => {
       !scheduledAssessmentId ||
       !mongoose.isValidObjectId(scheduledAssessmentId)
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid or missing scheduled assessment ID",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or missing scheduled assessment ID",
+      });
     }
     if (!candidateId || !mongoose.isValidObjectId(candidateId)) {
       return res
@@ -62,12 +63,10 @@ exports.sendOtp = async (req, res) => {
       !candidateAssessmentId ||
       !mongoose.isValidObjectId(candidateAssessmentId)
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid or missing candidate assessment ID",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or missing candidate assessment ID",
+      });
     }
 
     // Fetch candidate with assessment
@@ -93,12 +92,10 @@ exports.sendOtp = async (req, res) => {
       : [];
 
     if (emails.length === 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "No valid email address for candidate",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "No valid email address for candidate",
+      });
     }
 
     // Generate OTP
@@ -128,12 +125,10 @@ exports.sendOtp = async (req, res) => {
     });
 
     if (!template) {
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "OTP email template not found in the system",
-        });
+      return res.status(500).json({
+        success: false,
+        message: "OTP email template not found in the system",
+      });
     }
 
     // Replace placeholders in template body
@@ -188,6 +183,8 @@ exports.resendAssessmentLink = async (req, res) => {
       supportEmail = process.env.SUPPORT_EMAIL,
     } = req.body;
 
+    console.log("req.body", req.body);
+
     // Handle both single and multiple candidate assessment IDs
     let candidateAssessmentIdArray = [];
 
@@ -201,12 +198,10 @@ exports.resendAssessmentLink = async (req, res) => {
       // Single candidate
       candidateAssessmentIdArray = [candidateAssessmentId];
     } else {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid or missing candidate assessment ID(s)",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or missing candidate assessment ID(s)",
+      });
     }
 
     if (!userId || !mongoose.isValidObjectId(userId)) {
@@ -216,23 +211,19 @@ exports.resendAssessmentLink = async (req, res) => {
     }
 
     if (!organizationId || !mongoose.isValidObjectId(organizationId)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid or missing organization ID",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or missing organization ID",
+      });
     }
 
     // Validate all candidate assessment IDs
     for (const id of candidateAssessmentIdArray) {
       if (!mongoose.isValidObjectId(id)) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: `Invalid candidate assessment ID: ${id}`,
-          });
+        return res.status(400).json({
+          success: false,
+          message: `Invalid candidate assessment ID: ${id}`,
+        });
       }
     }
 
@@ -461,6 +452,8 @@ exports.shareAssessment = async (req, res) => {
       supportEmail = process.env.SUPPORT_EMAIL,
     } = req.body;
 
+    console.log(" req.body", req.body);
+
     // Validate input
     if (!assessmentId || !mongoose.isValidObjectId(assessmentId)) {
       return res
@@ -623,14 +616,17 @@ exports.shareAssessment = async (req, res) => {
         expiryAt, // Add the expiry date
       });
       savedScheduleAssessment = await scheduleAssessment.save();
-      
-      console.log(`[ASSESSMENT WEBHOOK] New assessment created via share: ${savedScheduleAssessment._id} with status: ${savedScheduleAssessment.status}`);
+
+      console.log(
+        `[ASSESSMENT WEBHOOK] New assessment created via share: ${savedScheduleAssessment._id} with status: ${savedScheduleAssessment.status}`
+      );
 
       // Trigger webhook for assessment creation
       try {
         const webhookPayload = {
           scheduledAssessmentId: savedScheduleAssessment._id,
-          scheduledAssessmentCode: savedScheduleAssessment.scheduledAssessmentCode,
+          scheduledAssessmentCode:
+            savedScheduleAssessment.scheduledAssessmentCode,
           assessmentId: savedScheduleAssessment.assessmentId,
           tenantId: savedScheduleAssessment.tenantId,
           ownerId: savedScheduleAssessment.ownerId,
@@ -639,23 +635,27 @@ exports.shareAssessment = async (req, res) => {
           order: savedScheduleAssessment.order,
           proctoringEnabled: savedScheduleAssessment.proctoringEnabled,
           createdAt: savedScheduleAssessment.createdAt,
-          event: "assessment.created"
+          event: "assessment.created",
         };
-        
-        console.log(`[ASSESSMENT WEBHOOK] Triggering creation webhook for event: ${EVENT_TYPES.ASSESSMENT_STATUS_UPDATED}`);
+
+        console.log(
+          `[ASSESSMENT WEBHOOK] Triggering creation webhook for event: ${EVENT_TYPES.ASSESSMENT_STATUS_UPDATED}`
+        );
         console.log(`[ASSESSMENT WEBHOOK] Payload:`, {
           event: EVENT_TYPES.ASSESSMENT_STATUS_UPDATED,
           data: webhookPayload,
-          tenantId: savedScheduleAssessment.tenantId
+          tenantId: savedScheduleAssessment.tenantId,
         });
-        
+
         await triggerWebhook(
           EVENT_TYPES.ASSESSMENT_STATUS_UPDATED,
           webhookPayload,
           savedScheduleAssessment.tenantId
         );
-        
-        console.log(`[ASSESSMENT WEBHOOK] Creation webhook sent successfully for assessment ${savedScheduleAssessment._id}`);
+
+        console.log(
+          `[ASSESSMENT WEBHOOK] Creation webhook sent successfully for assessment ${savedScheduleAssessment._id}`
+        );
       } catch (webhookError) {
         console.error(
           "[ASSESSMENT WEBHOOK] Error triggering assessment creation webhook:",

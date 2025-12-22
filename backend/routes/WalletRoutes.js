@@ -33,10 +33,10 @@ WalletRouter.post('/verify-payment', loggingService.internalLoggingMiddleware,lo
 
 // Bank Account Routes
 // POST /wallet/bank-accounts - Add a new bank account
-WalletRouter.post('/bank-accounts', addBankAccount);
+WalletRouter.post('/bank-accounts', loggingService.internalLoggingMiddleware, addBankAccount);
 
 // DELETE /wallet/bank-accounts/:bankAccountId - Delete a bank account
-WalletRouter.delete('/bank-accounts/:bankAccountId', deleteBankAccount);
+WalletRouter.delete('/bank-accounts/:bankAccountId', loggingService.internalLoggingMiddleware, deleteBankAccount);
 
 // Withdrawal Routes
 // POST /wallet/withdrawals - Create a new withdrawal request
@@ -54,28 +54,28 @@ WalletRouter.post('/payout-webhook', handlePayoutWebhook);
 
 // Settlement Routes
 // POST /wallet/settle-interview - Settle interview payment from hold to interviewer
-WalletRouter.post('/settle-interview', settleInterviewPayment);
+WalletRouter.post('/settle-interview', loggingService.internalLoggingMiddleware, settleInterviewPayment);
 
 // Utility Routes
 // POST /wallet/fix-verified-accounts - Fix verified bank accounts that are not marked as active
-WalletRouter.post('/fix-verified-accounts', fixVerifiedBankAccounts);
+WalletRouter.post('/fix-verified-accounts', loggingService.internalLoggingMiddleware, fixVerifiedBankAccounts);
 
 // Manual Processing Routes (for Superadmin)
 // POST /wallet/withdrawals/:withdrawalRequestId/process - Manually process a withdrawal
-WalletRouter.post('/withdrawals/:withdrawalRequestId/process', processManualWithdrawal);
+WalletRouter.post('/withdrawals/:withdrawalRequestId/process', loggingService.internalLoggingMiddleware, processManualWithdrawal);
 
 // POST /wallet/withdrawals/:withdrawalRequestId/fail - Manually mark a withdrawal as failed
-WalletRouter.post('/withdrawals/:withdrawalRequestId/fail', failManualWithdrawal);
+WalletRouter.post('/withdrawals/:withdrawalRequestId/fail', loggingService.internalLoggingMiddleware, failManualWithdrawal);
 
 // POST /wallet/withdrawals/:withdrawalRequestId/cancel - Cancel a withdrawal request
-WalletRouter.post('/withdrawals/:withdrawalRequestId/cancel', cancelWithdrawalRequest);
+WalletRouter.post('/withdrawals/:withdrawalRequestId/cancel', loggingService.internalLoggingMiddleware, cancelWithdrawalRequest);
 
 // PARAMETERIZED ROUTES SHOULD BE LAST - These catch-all routes go at the end
 // GET /wallet/bank-accounts/:ownerId - Get all bank accounts for an owner
 WalletRouter.get('/bank-accounts/:ownerId', getBankAccounts);
 
 // POST /wallet/bank-accounts/:bankAccountId/verify - Verify a bank account
-WalletRouter.post('/bank-accounts/:bankAccountId/verify', verifyBankAccount);
+WalletRouter.post('/bank-accounts/:bankAccountId/verify', loggingService.internalLoggingMiddleware, verifyBankAccount);
 
 // GET /wallet/withdrawals/:ownerId - Get withdrawal requests for an owner
 WalletRouter.get('/withdrawals/:ownerId', getWithdrawalRequests);

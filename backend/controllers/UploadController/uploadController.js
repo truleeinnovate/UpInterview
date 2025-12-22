@@ -50,6 +50,10 @@ const deleteFromCloudinary = async (publicId, resource_type) => {
 };
 
 const uploadHandler = async (req, res) => {
+  // Structured logging context for internalLoggingMiddleware
+  res.locals.loggedByController = true;
+  res.locals.processName = "Upload File";
+
   try {
     const file = req.file;
     const { entity, entityId, type, action } = req.body;
@@ -85,6 +89,23 @@ const uploadHandler = async (req, res) => {
         await deleteFromCloudinary(existingFile.publicId, resourceType);
         instance[field] = null;
         await instance.save();
+
+        // Internal log: successful delete
+        res.locals.logData = {
+          tenantId: req.body?.tenantId || "",
+          ownerId: req.body?.ownerId || entityId,
+          processName: "Upload File",
+          status: "success",
+          message: `${entity} ${type} deleted from Cloudinary`,
+          requestBody: { ...req.body, action: "delete" },
+          responseBody: {
+            entity,
+            entityId,
+            type,
+            action: "delete",
+            result: "deleted",
+          },
+        };
 
         return res.status(200).json({
           status: "success",
@@ -129,6 +150,28 @@ const uploadHandler = async (req, res) => {
 
     await instance.save();
 
+    // Internal log: successful upload
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || entityId,
+      processName: "Upload File",
+      status: "success",
+      message: `${entity} ${type} uploaded and updated successfully`,
+      requestBody: {
+        ...req.body,
+        fileName: file.originalname,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+      },
+      responseBody: {
+        entity,
+        entityId,
+        type,
+        url: result.secure_url,
+        publicId: result.public_id,
+      },
+    };
+
     return res.status(200).json({
       status: "success",
       message: `${entity} ${type} uploaded and updated successfully`,
@@ -136,6 +179,19 @@ const uploadHandler = async (req, res) => {
     });
   } catch (error) {
     console.error("Upload failed:", error);
+    // Internal log: error (5xx only)
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || req.body?.entityId || "",
+      processName: "Upload File",
+      status: "error",
+      message: "Upload failed",
+      requestBody: req.body,
+      responseBody: {
+        error: error.message,
+      },
+    };
+
     return res.status(500).json({ error: "Upload failed" });
   }
 };
