@@ -1082,15 +1082,43 @@ function OutsourcedInterviewerModal({
   //   });
   // };
 
+  // const handleSelectClick = (interviewer) => {
+  //   // console.log("Selected or removed interviewer:", interviewer);
+  //   setSelectedInterviewersLocal((prev) => {
+  //     const isAlreadySelected = prev.some(
+  //       (selected) => selected._id === interviewer._id
+  //     );
+  //     return isAlreadySelected
+  //       ? prev.filter((selected) => selected._id !== interviewer._id)
+  //       : [...prev, interviewer];
+  //   });
+  // };
+
   const handleSelectClick = (interviewer) => {
-    // console.log("Selected or removed interviewer:", interviewer);
     setSelectedInterviewersLocal((prev) => {
-      const isAlreadySelected = prev.some(
-        (selected) => selected._id === interviewer._id
-      );
-      return isAlreadySelected
-        ? prev.filter((selected) => selected._id !== interviewer._id)
-        : [...prev, interviewer];
+      // Check if interviewer is already selected
+      const isAlreadySelected = prev.some((selected) => {
+        // Handle both cases: selected could be an object or an array
+        if (Array.isArray(selected)) {
+          return selected[0]?._id === interviewer._id;
+        } else {
+          return selected?._id === interviewer._id;
+        }
+      });
+
+      if (isAlreadySelected) {
+        // Remove the interviewer
+        return prev.filter((selected) => {
+          if (Array.isArray(selected)) {
+            return selected[0]?._id !== interviewer._id;
+          } else {
+            return selected?._id !== interviewer._id;
+          }
+        });
+      } else {
+        // Add the interviewer
+        return [...prev, interviewer];
+      }
     });
   };
 
@@ -1373,9 +1401,17 @@ function OutsourcedInterviewerModal({
                   //   const selectedId = sel?._id ? sel?._id : sel?.[0]?._id;
                   //   return selectedId === interviewer?._id;
                   // })}
-                  isSelected={selectedInterviewersLocal.some(
-                    (sel) => sel?._id || sel[0]?._id === interviewer?._id
-                  )}
+                  // isSelected={selectedInterviewersLocal.some(
+                  //   (sel) => sel?._id || sel[0]?._id === interviewer?._id
+                  // )}
+                  isSelected={selectedInterviewersLocal.some((sel) => {
+                    // Handle both cases: sel could be an object or an array
+                    if (Array.isArray(sel)) {
+                      return sel[0]?._id === interviewer._id;
+                    } else {
+                      return sel?._id === interviewer._id;
+                    }
+                  })}
                   onSelect={() => handleSelectClick(interviewer)}
                   onViewDetails={() => setSelectedInterviewer(interviewer)}
                   navigatedfrom={navigatedfrom}
