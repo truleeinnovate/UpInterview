@@ -354,6 +354,20 @@ const Interviewers = () => {
       render: (value, row) => <StatusBadge status={row.status || "Draft"} />,
     },
     {
+      key: "settlementStatus",
+      header: "Settlement",
+      render: (value, row) => (
+        <StatusBadge
+          status={capitalizeFirstLetter(row.settlementStatus) || "N/A"}
+          customColors={{
+            pending: "bg-yellow-100 text-yellow-800",
+            completed: "bg-green-100 text-green-800",
+            failed: "bg-red-100 text-red-800",
+          }}
+        />
+      ),
+    },
+    {
       key: "createdOn",
       header: "Created On",
       render: (value, row) => (

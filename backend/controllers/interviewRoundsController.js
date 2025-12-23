@@ -139,7 +139,10 @@ const updateInterviewRoundStatus = async (req, res) => {
     }
     // console.log("updatedRound", updatedRound);
 
-    // If round was cancelled, append a history entry capturing the cancellation time
+    // If round was cancelled, append a history entry capturing the cancellation time.
+    // This history entry is later used by WalletControllers.settleInterviewPayment
+    // to compute "hoursBefore" and decide which reschedule/cancellation policy
+    // bracket (moreThan24 / 12-24 / 2-12 / <2h) should be applied.
     if (status === "Cancelled" && updatedRound && updatedRound.dateTime) {
       const scheduledAt = new Date(updatedRound.dateTime);
 
