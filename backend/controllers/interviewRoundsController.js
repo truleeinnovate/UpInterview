@@ -1,5 +1,5 @@
 const { InterviewRounds } = require("../models/Interview/InterviewRounds");
-const express = require("express");
+
 const {
   sendInterviewRoundCancellationEmails,
 } = require("./EmailsController/interviewEmailController");

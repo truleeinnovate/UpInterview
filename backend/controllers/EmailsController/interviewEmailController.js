@@ -24,8 +24,7 @@ const Handlebars = require("handlebars");
 function compileEmailTemplate(template, data) {
   const compiled = Handlebars.compile(template);
   return compiled(data);
-};
-
+}
 
 const SECRET_KEY = "asdnalksm$$@#@cjh#@$abidsduwoa";
 
@@ -1087,8 +1086,7 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
         duration,
         supportEmail,
         position,
-        address:
-          interviewMode === "Face to Face" && address ? address : null,
+        address: interviewMode === "Face to Face" && address ? address : null,
       };
 
       return compileEmailTemplate(cancelTemplate.body, templateData);

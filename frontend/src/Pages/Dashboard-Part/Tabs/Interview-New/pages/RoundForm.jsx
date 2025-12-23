@@ -139,6 +139,8 @@ const RoundFormInterviews = () => {
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
   // v1.0.2 <-----------------------------------------
 
+  console.log("selectedMeetingPlatform", selectedMeetingPlatform);
+
   const { interviewId, roundId } = useParams();
   const { data: interviewDetails } = useInterviewDetails(interviewId);
   // const stateisReschedule = useLocation().state;

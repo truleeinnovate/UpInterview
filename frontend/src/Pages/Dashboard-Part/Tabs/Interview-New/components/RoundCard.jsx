@@ -50,6 +50,7 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { notify } from "../../../../../services/toastService";
 import ScheduledAssessmentResultView from "../../Assessment-Tab/AssessmentViewDetails/ScheduledAssessmentResultView";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
+
 const RoundCard = ({
   round,
   interviewData,
@@ -82,6 +83,20 @@ const RoundCard = ({
   const [confirmAction, setConfirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  // Add near other state declarations
+  const [cancelReason, setCancelReason] = useState("");
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReasons, setCancelReasons] = useState([
+    "Candidate unavailable",
+    "Interviewer unavailable",
+    "Technical issues",
+    "Position on hold",
+    "Candidate withdrew application",
+    "Other",
+  ]);
+  // Add this near other state declarations
+  const [otherReason, setOtherReason] = useState("");
+
   const queryClient = useQueryClient();
   // v1.0.1 <--------------------------------------------
   // v1.0.3 <--------------------------------------------------------
@@ -107,9 +122,9 @@ const RoundCard = ({
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
-
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [assessment, setAssessment] = useState(null);
   const [actionInProgress, setActionInProgress] = useState(false);
-  
 
   useEffect(() => {
     if (isExpanded && round?.assessmentId) {
@@ -201,19 +216,28 @@ const RoundCard = ({
     });
   };
 
-  const handleStatusChange = async (newStatus, reason = null) => {
-    const roundData = {
-      status: newStatus,
-      completedDate: newStatus === "Completed",
-      rejectionReason: reason || null,
-    };
+  const handleStatusChange = async (newStatus, cancellationReason = null) => {
+    // const roundData = {
+    //   status: newStatus,
+    //   completedDate: newStatus === "Completed",
+    //   rejectionReason: reason || null,
+    // };
 
-    const payload = {
-      interviewId: interview._id,
-      round: { ...roundData },
-      roundId: round._id,
-      isEditing: true, // Always set isEditing to true
-    };
+    // const payload = {
+    //   interviewId: interview._id,
+    //   round: { ...roundData },
+    //   roundId: round._id,
+    //   isEditing: true, // Always set isEditing to true
+    // };
+
+    // For cancellation, we need to ensure we pass the cancellation reason
+    if (newStatus === "Cancelled" && !cancellationReason) {
+      // If cancellation is triggered without reason, open the cancel modal
+      setActionInProgress(true);
+      setShowCancelModal(true);
+      return;
+    }
+    console.log("cancellationReason", cancellationReason);
 
     try {
       // const response = await axios.post(
@@ -222,15 +246,55 @@ const RoundCard = ({
       // );
       // const response = await updateInterviewRound(payload);
 
-      await updateRoundStatus({
+      // Build the payload based on status
+      const payload = {
         roundId: round?._id,
         interviewId: interview?._id,
-        status: newStatus, // or any other status
-      });
+        status: newStatus,
+      };
+
+      // Add cancellation reason if provided
+      if (newStatus === "Cancelled" && cancellationReason) {
+        payload.cancellationReason = cancellationReason;
+      }
+
+      await updateRoundStatus(payload);
+
+      // await updateRoundStatus({
+      //   roundId: round?._id,
+      //   interviewId: interview?._id,
+      //   status: newStatus, // or any other status
+      //   ...(cancellationReason && { cancellationReason }),
+      // });
       // Show success toast
       notify.success(`Round Status updated to ${newStatus}`, {});
     } catch (error) {
       console.error("Error updating status:", error);
+    }
+  };
+
+  const handleCancelWithReason = async () => {
+    // Determine the final reason to send
+    let finalReason = cancelReason;
+
+    // If user selected "Other" and typed something, use that
+    if (cancelReason === "Other" && otherReason.trim()) {
+      finalReason = otherReason;
+    }
+
+    if (!finalReason.trim()) {
+      notify.error("Please provide a cancellation reason");
+      return;
+    }
+
+    try {
+      await handleStatusChange("Cancelled", finalReason);
+      setShowCancelModal(false);
+      setCancelReason("");
+      setOtherReason("");
+      setActionInProgress(false);
+    } catch (error) {
+      setActionInProgress(false);
     }
   };
 
@@ -275,15 +339,15 @@ const RoundCard = ({
     round?.detailedFeedback || (round?.feedbacks && round.feedbacks.length > 0);
 
   // Check if this is an instant interview (scheduled within 15 minutes of creation)
-  const isInstantInterview = () => {
-    if (!round.scheduledDate) return false;
+  // const isInstantInterview = () => {
+  //   if (!round.scheduledDate) return false;
 
-    const scheduledTime = new Date(round.scheduledDate).getTime();
-    const creationTime = new Date(interview?.createdAt || "").getTime();
+  //   const scheduledTime = new Date(round.scheduledDate).getTime();
+  //   const creationTime = new Date(interview?.createdAt || "").getTime();
 
-    // If scheduled within 30 minutes of creation, consider it instant
-    return scheduledTime - creationTime < 30 * 60 * 1000;
-  };
+  //   // If scheduled within 30 minutes of creation, consider it instant
+  //   return scheduledTime - creationTime < 30 * 60 * 1000;
+  // };
 
   // New state for candidate assessment data
   let [candidateAssessment, setCandidateAssessment] = useState(null);
@@ -478,9 +542,6 @@ const RoundCard = ({
   //     getResults();
   //   }
   // }, []);
-
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [assessment, setAssessment] = useState(null);
 
   // const [currentScheduledAssessment, setCurrentScheduledAssessment] = useState(null);
 
@@ -695,64 +756,13 @@ const RoundCard = ({
     }
   };
 
-  // const handleShareClick = async (round) => {
-
-  //   if (!round?.assessmentId) {
-  //     throw new Error("Unable to determine assessment ID for resend operation");
-  //   }
-
-  //   // Use the same API endpoint for both single and multiple candidates
-  //   const response = await axios.post(
-  //     `${config.REACT_APP_API_URL}/emails/resend-link`,
-  //     {
-  //       // candidateAssessmentIds: selectedCandidates,
-  //       // userId,
-  //       // organizationId,
-  //       // assessmentId,
-
-  //       // candidateAssessmentId: interviewData?.candidateId,
-  //       candidateAssessmentIds: [candidateAssessment?._id],
-  //       userId,
-  //       organizationId: orgId,
-  //       assessmentId: round?.assessmentId,
-  //     }
-  //   );
-
-  //   if (response?.data?.success) {
-
-  //     const roundData = {
-  //       ...round,
-  //       scheduleAssessmentId: response?.data?.scheduledAssessmentId,
-  //     };
-
-  //     const payload =   {
-  //       interviewId: interview._id,
-  //       round: { ...roundData },
-  //       roundId: round._id,
-  //       isEditing: true,
-  //     };
-
-  //     // React Query will handle data refresh automatically
-  //     // No need to manually fetch data
-
-  //     response = await updateInterviewRound(payload);
-  //     if  (response.status === "ok") {
-  //       notify.success("Assessment link resend successfully");
-  //     }
-
-  //   } else {
-  //     notify.error(response?.message || "Failed to schedule assessment");
-  //   }
-  //   // setIsLoading(false);
-  // };
-
   // <----------------------- v1.0.4
 
   const handleActionClick = (action) => {
     setActionInProgress(true);
     if (
       action === "Completed" ||
-      action === "Cancelled" ||
+      // action === "Cancelled" ||
       action === "Rejected" ||
       action === "Selected" ||
       action === "Scheduled" // <-- add this line
@@ -989,6 +999,81 @@ const RoundCard = ({
     // } else {
     //   toast.error(result.message || "Failed to schedule assessment");
     // }
+  };
+
+  // 5. Added renderCancelModal function
+  const renderCancelModal = () => {
+    return createPortal(
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
+        <div className="bg-white p-5 rounded-lg shadow-md max-w-md w-full">
+          <h3 className="text-lg font-semibold mb-3">Cancel Round</h3>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Reason for Cancellation
+            </label>
+            <select
+              value={cancelReason}
+              onChange={(e) => {
+                setCancelReason(e.target.value);
+                // Clear other reason when switching away from "Other"
+                if (e.target.value !== "Other") {
+                  setOtherReason("");
+                }
+              }}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            >
+              <option value="">Select a reason</option>
+              {cancelReasons.map((reason, index) => (
+                <option key={index} value={reason}>
+                  {reason}
+                </option>
+              ))}
+            </select>
+
+            {cancelReason === "Other" && (
+              <div className="mt-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Specify other reason
+                </label>
+                <input
+                  type="text"
+                  value={otherReason}
+                  onChange={(e) => setOtherReason(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  placeholder="Enter reason..."
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCancelModal(false);
+                setCancelReason("");
+                setOtherReason("");
+                setActionInProgress(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelWithReason}
+              disabled={
+                !cancelReason.trim() ||
+                (cancelReason === "Other" && !otherReason.trim())
+              }
+            >
+              Confirm Cancel
+            </Button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
   };
 
   return (
@@ -1651,13 +1736,16 @@ const RoundCard = ({
                       </button>
                     )}
                   {/* Cancel */}
+
                   {permissions.canCancel &&
                     round.roundTitle !== "Assessment" && (
                       <button
                         onClick={() => {
                           setActionInProgress(true);
-                          setConfirmAction("Cancelled");
-                          setShowConfirmModal(true);
+                          setShowCancelModal(true);
+
+                          // setConfirmAction("Cancelled");
+                          // setShowConfirmModal(true);
                         }}
                         className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
                       >
@@ -1787,6 +1875,9 @@ const RoundCard = ({
           )}
         </div>
       </div>
+
+      {/*  cancelllation modal */}
+      {showCancelModal && renderCancelModal()}
 
       {showConfirmModal &&
         createPortal(
