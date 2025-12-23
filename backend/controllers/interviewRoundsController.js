@@ -139,6 +139,31 @@ const updateInterviewRoundStatus = async (req, res) => {
     }
     // console.log("updatedRound", updatedRound);
 
+    // If round was cancelled, append a history entry capturing the cancellation time
+    if (status === "Cancelled" && updatedRound && updatedRound.dateTime) {
+      const scheduledAt = new Date(updatedRound.dateTime);
+
+      if (!isNaN(scheduledAt.getTime())) {
+        await InterviewRounds.findByIdAndUpdate(
+          roundId,
+          {
+            $push: {
+              history: {
+                scheduledAt,
+                action: "Cancelled",
+                reasonCode: undefined,
+                comment: undefined,
+                participants: [],
+                updatedBy: actingAsUserId,
+                updatedAt: new Date(),
+              },
+            },
+          },
+          { new: true }
+        );
+      }
+    }
+
     let result = await sendInterviewRoundCancellationEmails(
       {
         body: {

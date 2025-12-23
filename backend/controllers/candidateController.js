@@ -513,19 +513,17 @@ const getCandidateById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { actingAsUserId, actingAsTenantId } = res.locals.auth;
-
-    if (!actingAsUserId || !actingAsTenantId) {
-      return res
-        .status(400)
-        .json({ message: "OwnerId or TenantId ID is required" });
-    }
-
     if (!id) {
       return res.status(400).json({ message: "Candidate ID is required" });
     }
 
-    let query = { _id: id };
+    const auth = res.locals.auth || {};
+    const { actingAsTenantId } = auth;
+
+    // Base query by ID; if we have a tenant scope from auth, enforce it
+    const query = actingAsTenantId
+      ? { _id: id, tenantId: actingAsTenantId }
+      : { _id: id };
 
     const candidate = await Candidate.findOne(query)
       // .populate("CurrentRole", "roleName roleLabel")

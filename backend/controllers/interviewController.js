@@ -2040,7 +2040,6 @@ const getAllInterviewRounds = async (req, res) => {
         holdTransactionId: 1,
         settlementStatus: 1,
         settlementDate: 1,
-        settlementTransactionId: 1,
         organizationType: 1,
         organization: 1,
         createdOn: 1,
@@ -2125,41 +2124,82 @@ const getInterviewRoundTransaction = async (req, res) => {
       });
     }
 
-    // Fetch wallet transaction data if holdTransactionId exists
+    // Fetch wallet transaction data based on roundId (preferred) or legacy holdTransactionId
     let holdTransactionData = null;
-    if (round.holdTransactionId) {
-      try {
-        // Find the wallet that contains this transaction
-        const wallet = await Wallet.findOne({
+    let resolvedHoldTransactionId = null;
+    let roundTransactions = [];
+
+    try {
+      const roundIdStr = round._id.toString();
+
+      // Preferred: find wallet and all transactions using metadata.roundId
+      const walletByMetadata = await Wallet.findOne({
+        "transactions.metadata.roundId": roundIdStr,
+      });
+
+      if (walletByMetadata && Array.isArray(walletByMetadata.transactions)) {
+        // All transactions for this round (hold + debit after settlement, etc.)
+        roundTransactions = walletByMetadata.transactions.filter(
+          (t) =>
+            t &&
+            t.metadata &&
+            String(t.metadata.roundId) === roundIdStr
+        );
+
+        if (roundTransactions.length > 0) {
+          // Prefer the original hold transaction if it still exists
+          const preferredHold = roundTransactions.find(
+            (t) => String(t.type).toLowerCase() === "hold"
+          );
+
+          const primaryTx = preferredHold || roundTransactions[roundTransactions.length - 1];
+
+          if (primaryTx) {
+            holdTransactionData = primaryTx;
+            resolvedHoldTransactionId = primaryTx._id
+              ? primaryTx._id.toString()
+              : null;
+          }
+        }
+      }
+
+      // Legacy fallback: use round.holdTransactionId if metadata lookup failed
+      if (!holdTransactionData && round.holdTransactionId) {
+        const walletById = await Wallet.findOne({
           "transactions._id": round.holdTransactionId,
         });
 
-        if (wallet) {
-          // Find the specific transaction in the wallet
-          holdTransactionData = wallet.transactions.find(
+        if (walletById && Array.isArray(walletById.transactions)) {
+          const legacyTx = walletById.transactions.find(
             (t) => t._id && t._id.toString() === round.holdTransactionId
           );
-        }
 
-        if (!holdTransactionData) {
+          if (legacyTx) {
+            holdTransactionData = legacyTx;
+            resolvedHoldTransactionId = legacyTx._id
+              ? legacyTx._id.toString()
+              : round.holdTransactionId;
+            // For legacy data, expose this single transaction in the array as well
+            roundTransactions = [legacyTx];
+          }
         }
-      } catch (error) {
-        console.error(
-          `Error fetching transaction for round ${round._id}:`,
-          error
-        );
       }
+    } catch (error) {
+      console.error(
+        `Error fetching transaction for round ${round._id}:`,
+        error
+      );
     }
 
     res.status(200).json({
       success: true,
       data: {
         roundId: round._id,
-        holdTransactionId: round.holdTransactionId,
+        holdTransactionId: resolvedHoldTransactionId,
         holdTransactionData: holdTransactionData,
+        transactions: roundTransactions,
         settlementStatus: round.settlementStatus || "pending",
         settlementDate: round.settlementDate || null,
-        settlementTransactionId: round.settlementTransactionId || null,
       },
     });
   } catch (error) {

@@ -18,7 +18,7 @@ const participantSchema = new mongoose.Schema(
 const roundHistorySchema = new mongoose.Schema(
     {
         scheduledAt: { type: Date, required: true },
-        action: { type: String, enum: ["Scheduled", "Rescheduled"], required: true },
+        action: { type: String, enum: ["Scheduled", "Rescheduled", "Cancelled"], required: true },
         // reason: { type: String },
         reasonCode: { type: String },      // e.g. "candidate_requested"
         comment: { type: String },         // only when reasonCode === "other"
@@ -99,9 +99,6 @@ const interviewRoundSchema = new mongoose.Schema({
     scheduleAssessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "ScheduledAssessment" },
     rejectionReason: String,
 
-    // Hold transaction reference for payment tracking
-    holdTransactionId: { type: String },  // Store the transaction ID from wallet hold
-
     // Settlement tracking
     settlementStatus: {
         type: String,
@@ -109,7 +106,6 @@ const interviewRoundSchema = new mongoose.Schema({
         default: 'pending'
     },
     settlementDate: { type: Date },
-    settlementTransactionId: { type: String },  // Credit transaction ID in interviewer's wallet
 
     // External system identifier
     externalId: { type: String, sparse: true, index: true }, // External system identifier

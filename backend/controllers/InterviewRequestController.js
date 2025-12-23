@@ -782,23 +782,6 @@ exports.acceptInterviewRequest = async (req, res) => {
     const savedTransaction = updatedWallet.transactions[updatedWallet.transactions.length - 1];
     const transactionId = savedTransaction._id ? savedTransaction._id.toString() : null;
 
-    // Update the round with the hold transaction ID
-    if (transactionId) {
-      if (request.isMockInterview) {
-        await MockInterviewRound.findByIdAndUpdate(
-          roundId,
-          { holdTransactionId: transactionId },
-          { new: true }
-        );
-      } else {
-        await InterviewRounds.findByIdAndUpdate(
-          roundId,
-          { holdTransactionId: transactionId },
-          { new: true }
-        );
-      }
-    }
-
     // Send emails
     try {
       const emailController = require('./EmailsController/interviewEmailController');

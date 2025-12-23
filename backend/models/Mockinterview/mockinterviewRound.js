@@ -17,7 +17,7 @@ const participantSchema = new mongoose.Schema(
 const roundScheduleSchema = new mongoose.Schema(
   {
     scheduledAt: { type: Date, required: true },
-    action: { type: String, enum: ["Scheduled", "Rescheduled"], required: true },
+    action: { type: String, enum: ["Scheduled", "Rescheduled", "Cancelled"], required: true },
     reason: { type: String },
     participants: [participantSchema],
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -93,9 +93,6 @@ currentAction: {
   meetingId: String,
   rejectionReason: String,
   
-  // Hold transaction reference for payment tracking
-  holdTransactionId: { type: String },  // Store the transaction ID from wallet hold
-  
   // Settlement tracking
   settlementStatus: { 
     type: String, 
@@ -103,7 +100,7 @@ currentAction: {
     default: 'pending'
   },
   settlementDate: { type: Date },
-  settlementTransactionId: { type: String }  // Credit transaction ID in interviewer's wallet
+
 },{ timestamps: true });
 
 // Check if model is already defined to avoid overwriting
