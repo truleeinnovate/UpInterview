@@ -691,6 +691,15 @@ const RoundFormInterviews = () => {
     }
   }, [selectedInterviewType]);
 
+  // Add this cleanup effect
+  useEffect(() => {
+    return () => {
+      // Clean up all modal states when component unmounts
+      setShowOutsourcePopup(false);
+      setInternalInterviews(false);
+    };
+  }, [roundId]);
+
   // while editing
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
@@ -800,8 +809,12 @@ const RoundFormInterviews = () => {
     assessmentTemplate?.assessmentName,
   ]);
 
+  // Add this state near your other state declarations
+  const [hasManuallyClearedInterviewers, setHasManuallyClearedInterviewers] =
+    useState(false);
+
   useEffect(() => {
-    if (isEditing && roundEditData) {
+    if (isEditing && roundEditData && !hasManuallyClearedInterviewers) {
       // Update assessmentTemplate only if different
 
       const foundGroup = groups?.find(
@@ -870,7 +883,11 @@ const RoundFormInterviews = () => {
       }
 
       // Update interviewers only if different
-      if (roundEditData.interviewers && roundEditData.interviewers.length > 0) {
+      if (
+        roundEditData.interviewers &&
+        roundEditData.interviewers.length > 0 &&
+        !hasManuallyClearedInterviewers
+      ) {
         const normalizedInterviewers = roundEditData.interviewers.map(
           (interviewer) => ({
             _id: interviewer._id,
@@ -940,9 +957,10 @@ const RoundFormInterviews = () => {
     duration,
     editingAssessment,
     groups,
-    externalInterviewers,
+    // externalInterviewers,
     instructions,
-    internalInterviewers,
+    // internalInterviewers,
+    hasManuallyClearedInterviewers,
     interviewMode,
     interviewQuestionsList,
     interviewType,
@@ -954,6 +972,20 @@ const RoundFormInterviews = () => {
     sequence,
     status,
   ]);
+
+  // Add this cleanup effect
+  useEffect(() => {
+    return () => {
+      // Clean up all modal states when component unmounts
+      setShowOutsourcePopup(false);
+      setInternalInterviews(false);
+    };
+  }, [roundId]);
+
+  // Add this useEffect to reset the flag when roundId changes
+  useEffect(() => {
+    setHasManuallyClearedInterviewers(false);
+  }, [roundId]);
 
   // Add this useEffect hook after your existing useEffect hooks
   useEffect(() => {
@@ -1050,6 +1082,7 @@ const RoundFormInterviews = () => {
       setInternalInterviewers([]);
       setInterviewerGroupName("");
       setInterviewerGroupId("");
+      setHasManuallyClearedInterviewers(true);
     }
 
     setInterviewerViewType(viewType);
@@ -1093,15 +1126,15 @@ const RoundFormInterviews = () => {
 
     setSelectedInterviewType("External");
     setExternalInterviewers([...externalInterviewers, ...uniqueInterviewers]); // Append new interviewers
+    setHasManuallyClearedInterviewers(false); // Reset flag when adding new interviewers
   };
-
   const handleRemoveInternalInterviewer = (interviewerId) => {
     setInternalInterviewers((prev) => {
       const updatedInterviewers = prev.filter((i) => i._id !== interviewerId);
 
       // Reset selectedInterviewType if no interviewers are left
       if (updatedInterviewers.length === 0) {
-        //  && externalInterviewers.length === 0
+        setHasManuallyClearedInterviewers(true);
         setSelectedInterviewType(null);
         // setInternalInterviewers("")
         setInterviewerGroupName("");
@@ -1127,6 +1160,8 @@ const RoundFormInterviews = () => {
         updatedInterviewers.length === 0 &&
         internalInterviewers.length === 0
       ) {
+        // Set flag when manually removing all external interviewers
+        setHasManuallyClearedInterviewers(true);
         setSelectedInterviewType(null);
       }
 
@@ -1134,13 +1169,52 @@ const RoundFormInterviews = () => {
     });
   };
 
+  // const handleClearAllInterviewers = () => {
+  //   setInternalInterviewers([]);
+  //   setExternalInterviewers([]);
+  //   setSelectedInterviewType(null);
+  //   setInterviewerGroupName("");
+  //   setInterviewerGroupId("");
+  //   setInterviewerViewType("individuals");
+
+  //   if (isInternalInterviews) {
+  //     setInternalInterviews(false); // Close and reopen modal to reset its state
+  //   }
+  // };
+
   const handleClearAllInterviewers = () => {
+    console.log("Clearing all interviewers...");
+    console.log(
+      "Before clear - internal:",
+      internalInterviewers.length,
+      "external:",
+      externalInterviewers.length
+    );
+
     setInternalInterviewers([]);
     setExternalInterviewers([]);
     setSelectedInterviewType(null);
     setInterviewerGroupName("");
     setInterviewerGroupId("");
     setInterviewerViewType("individuals");
+
+    // Set the flag to prevent re-initialization
+    setHasManuallyClearedInterviewers(true);
+
+    // Also clear any related modal states
+    if (isInternalInterviews) {
+      setInternalInterviews(false); // Close the internal interviewers modal
+    }
+
+    // Force a complete reset by closing any open modals
+    setShowOutsourcePopup(false);
+
+    console.log(
+      "After clear - internal:",
+      internalInterviewers.length,
+      "external:",
+      externalInterviewers.length
+    );
   };
 
   const selectedInterviewers =
@@ -3210,6 +3284,7 @@ const RoundFormInterviews = () => {
       {/* External Interviews Modal */}
       {showOutsourcePopup && (
         <OutsourcedInterviewerModal
+          key={`outsource-modal-${externalInterviewers.length}`}
           onClose={() => setShowOutsourcePopup(false)}
           dateTime={combinedDateTime}
           skills={position?.skills}
@@ -3223,6 +3298,7 @@ const RoundFormInterviews = () => {
 
       {isInternalInterviews && (
         <InternalInterviews
+          key={`internal-modal-${internalInterviewers.length}-${interviewerGroupId}`}
           isOpen={isInternalInterviews}
           // onClose={() => setInternalInterviews(false)}
           onClose={() => {
@@ -3238,6 +3314,7 @@ const RoundFormInterviews = () => {
           // defaultViewType={interviewerViewType}
           selectedGroupName={interviewerGroupName}
           selectedGroupId={interviewerGroupId}
+          // key={`${internalInterviewers.length}-${interviewerGroupId}`}
           //  clearOnViewTypeChange={true}
         />
       )}
