@@ -1,10 +1,10 @@
 # Interview Round Form – React Component Documentation
 
 ## Overview
-The **RoundFormInterviews** component manages the creation, scheduling, and lifecycle of interview rounds within the Interview Scheduling module.  
+The **RoundFormInterviews** component manages the creation, scheduling, editing, rescheduling, and lifecycle of interview rounds within the Interview Scheduling module.  
 It supports **Assessment**, **Technical**, **HR**, **Final**, and **Custom** rounds with strict business rules that dynamically control form behavior, interviewer selection, meeting creation, email notifications, and round status transitions.
 
-This document emphasizes **clear behavioral rules during round creation** and **post-creation workflows**.
+This document emphasizes **clear behavioral rules during round creation, edit, reschedule, and post-creation workflows**.
 
 ---
 
@@ -18,6 +18,7 @@ Assessment rounds follow a **fully controlled workflow**.
 - ❌ Cannot select **Outsource Interviewers**
 - ❌ Cannot select **Interview Mode**
 - ❌ Cannot select **Instant Interview**
+- ❌ Cannot edit or reschedule after creation
 - ✅ Can only select **Assessment Template**
   - Standard Assessment
   - Custom Assessment
@@ -79,10 +80,56 @@ These rounds support **Instant** or **Scheduled** interviews and interviewer sel
 ### Instant Interview
 - Starts **15 minutes** from creation time
 - Available only for **non-assessment** rounds
+- ❌ Not allowed during edit or reschedule
 
 ### Scheduled Interview
 - Must be at least **2 hours in the future**
 - Supports date & time selection
+
+---
+
+## 🔒 Edit & Reschedule Restrictions
+
+### Core Principle
+> **Once a round is created, core identity fields must not change.**  
+Changing them can cause issues in:
+- Interviewer workflows
+- Wallet hold & settlement logic
+- Meeting creation
+- Email notifications
+- Policy-based reschedule & cancellation rules
+
+---
+
+### Fields Hidden During Edit / Reschedule
+When **editing or rescheduling** an existing round, the following fields are **hidden and locked**:
+
+- ❌ Round Title
+- ❌ Interview Mode
+- ❌ Interviewer Type (Internal / Outsource)
+
+These values are **fixed from initial creation**.
+
+---
+
+### Allowed Changes During Edit / Reschedule
+The scheduler may update:
+- ✅ Date & time
+- ✅ Instructions
+- ✅ Interviewers (within same interviewer type)
+- ✅ Assessment (only if round type is Assessment and status allows)
+
+---
+
+### Cancelled Round – Full Edit Allowed
+When a round status is **Cancelled**:
+- ✅ All fields become editable again
+- ✅ Round can be recreated with:
+  - New title
+  - New interview mode
+  - New interviewer type
+  - New interviewers
+- Treated as a **fresh scheduling flow**
 
 ---
 
@@ -104,8 +151,9 @@ These rounds support **Instant** or **Scheduled** interviews and interviewer sel
 - 📧 Candidate  
 (All receive meeting links for virtual mode)
 
-### Status
-- Round status → `Scheduled`
+### Status Behavior
+- First time scheduling → `Scheduled`
+- On reschedule → `Rescheduled`
 
 ---
 
@@ -115,14 +163,12 @@ These rounds support **Instant** or **Scheduled** interviews and interviewer sel
 Outsource interviewers are filtered using:
 1. Candidate experience
 2. Candidate role
-3. Skills mapped from Position  
-   _(Position may contain more skills than candidate)_
-4. Interviewer availability (time-based)
+3. Skills mapped from Position
+4. Interviewer availability
 5. Interviewer pricing
 
 ### Balance Validation
 - Organization wallet balance is checked
-- Higher-priced interviewers require sufficient balance
 - Round cannot be scheduled if balance is insufficient
 
 ---
@@ -140,28 +186,24 @@ Outsource interviewers are filtered using:
 #### Status
 - Round status → `RequestSent`
 
-#### Emails (Initial)
-- 📧 Outsource Interviewers: Request email (no meeting link)
-- ❌ Candidate does not receive meeting link yet
+#### Emails
+- 📧 Outsource Interviewers only
 
 ---
 
-### Outsource Acceptance Flow
+### Outsource Acceptance & Reschedule Logic
 
-#### When One Outsource Accepts
-1. Accepted interviewer is assigned to the round
-2. Other outsource interviewers are marked as:
-   - `Withdrawn`
-3. Accepted interviewer status → `Accepted`
+#### First Acceptance
+- Accepted interviewer assigned
+- Other requests marked **Withdrawn**
+- Status → `Scheduled`
 
-#### Emails After Acceptance
-- 📧 Scheduler
-- 📧 Accepted Interviewer
-- 📧 Candidate  
-(All receive **meeting link & details**)
-
-#### Status Update
-- Round status → `Scheduled`
+#### Reschedule After First Schedule
+- New outsource requests are raised again
+- Acceptance flow repeats
+- Status → `Rescheduled`
+- Ensures **only one Scheduled action exists**
+- All subsequent scheduling actions are treated as **Rescheduled**
 
 ---
 
@@ -177,30 +219,33 @@ Outsource interviewers are filtered using:
   - Immediately for **Outsource Virtual Rounds**
 - Links are shared:
   - Immediately for Internal
-  - Only after acceptance for Outsource
+  - Only after outsource acceptance
 
 ---
 
 ## Round Status Lifecycle
 
-| Status        | Description |
-|--------------|-------------|
-| Draft        | Initial state before scheduling |
-| RequestSent  | Outsource requests sent |
-| Scheduled    | Interview confirmed |
-| Rescheduled  | Interview rescheduled |
-| Cancelled    | Interview cancelled |
-| Completed    | Interview completed |
+| Status       | Description |
+|-------------|-------------|
+| Draft       | Initial state |
+| RequestSent | Outsource request sent |
+| Scheduled   | First confirmed schedule |
+| Rescheduled | Any schedule after first |
+| Cancelled   | Interview cancelled |
+| Completed   | Interview completed |
 
 ---
 
-## Edit & Action Permissions
+## Edit Permissions Summary
 
-### Edit Availability
-- ✅ **Draft** → Editable
-- ✅ **RequestSent** → Editable (Outsource only)
-- ❌ **Scheduled** → No edit, only reschedule
-- ❌ **Completed** → Read-only
+| Status       | Editable | Notes |
+|-------------|---------|------|
+| Draft       | ✅ Yes | Full edit |
+| RequestSent | ⚠️ Limited | Date & instructions only |
+| Scheduled   | ❌ No | Only reschedule |
+| Rescheduled | ❌ No | Only reschedule |
+| Cancelled   | ✅ Yes | Full edit |
+| Completed   | ❌ No | Read-only |
 
 ---
 
@@ -212,61 +257,34 @@ Scheduler can:
 - Select Candidate
 - Reject Candidate
 
-These actions update downstream hiring workflows.
-
 ---
 
 ## Email Notification Summary
 
 | Scenario | Emails Sent |
-|-------|------------|
-| Assessment | Candidate only |
+|--------|------------|
+| Assessment | Candidate |
 | Internal – Face to Face | Scheduler, Interviewers, Candidate |
 | Internal – Virtual | Scheduler, Interviewers, Candidate |
-| Outsource (RequestSent) | Outsource only |
+| Outsource (RequestSent) | Outsource Interviewers |
 | Outsource (Accepted) | Scheduler, Interviewer, Candidate |
 
 ---
 
 ## Validation Summary
-
-- Assessment template is mandatory for assessment rounds
+- Assessment template is mandatory
 - Minimum 2-hour gap for scheduled interviews
-- Instructions must be **50–1000 characters**
+- Instructions: **50–1000 characters**
 - Internal interviewers required for Face-to-Face
 - Wallet balance validation for outsource rounds
 
 ---
 
-## Known Limitations
-- No batch outsource requests
-- Limited to Zoom & Google Meet
-
----
-
-## Future Enhancements
-- Recurring interviews
-- Advanced availability matching
-- Interview templates
-- WebSocket-based real-time updates
-- Offline support (PWA)
-
----
-
-## Technical Stack
-- React 18
-- TanStack Query
-- Zoom / Google Meet APIs
-- JWT-based authentication
-- Role & tenant-based access control
-
----
-
 ## Conclusion
-This component enforces **strict interview governance**, ensuring:
-- Correct interviewer assignment
-- Secure meeting handling
-- Clear communication
-- Accurate round status transitions
+This component enforces **strict interview governance** by:
+- Preventing unsafe edits
+- Maintaining clean status transitions
+- Preserving wallet & settlement integrity
+- Ensuring consistent interviewer workflows
 
-Designed for **enterprise-scale hiring workflows** with extensibility in mind.
+Designed for **enterprise-scale hiring systems** with strong audit and policy compliance.
