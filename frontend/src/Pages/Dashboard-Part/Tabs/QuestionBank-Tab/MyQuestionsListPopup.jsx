@@ -3,16 +3,22 @@
 //<---------------------- v1.0.1------Venkatesh------Prevent double-click save (simplified)
 //<---------------------- v1.0.2------Venkatesh------Type dropdown value is now passed to the backend as a boolean (true for Interviews, false for Assignments)
 //<---------------------- v1.0.3------Venkatesh------Type dropdown value is now passed to the backend as a boolean (true for Interviews, false for Assignments)
-import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from 'react';
-import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
-import Cookies from 'js-cookie';
-import { Search, Trash2, X, BookOpen } from 'lucide-react';
-import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
-import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
-import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
-import { useQuestions } from '../../../../apiHooks/useQuestionBank.js';
-import LoadingButton from '../../../../Components/LoadingButton';
-import DropdownSelect from '../../../../Components/Dropdowns/DropdownSelect.jsx';
+import {
+  useState,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+  useRef,
+} from "react";
+import { ReactComponent as IoIosAdd } from "../../../../icons/IoIosAdd.svg";
+import Cookies from "js-cookie";
+import { Search, Trash2, X, BookOpen } from "lucide-react";
+import { ReactComponent as IoIosAddCircle } from "../../../../icons/IoIosAddCircle.svg";
+import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
+import LoadingButton from "../../../../Components/LoadingButton";
+import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 
 const MyQuestionsList1 = forwardRef(
   (
@@ -46,18 +52,20 @@ const MyQuestionsList1 = forwardRef(
     // console.log("notEditmode ---", notEditmode);
     // console.log("created ---", createdLists);
 
-    const [selectedListIds, setSelectedListIds] = useState(notEditmode ? [selectedListId] : []);
+    const [selectedListIds, setSelectedListIds] = useState(
+      notEditmode ? [selectedListId] : []
+    );
     // console.log("selectedListIds ---", selectedListIds);
     const [showNewListPopup, setShowNewListPopup] = useState(false);
-    const [newListName, setNewListName] = useState('');
-    const [newListNameForName, setNewListNameForName] = useState('');
-    const [searchTermTechnology, setSearchTermTechnology] = useState('');
+    const [newListName, setNewListName] = useState("");
+    const [newListNameForName, setNewListNameForName] = useState("");
+    const [searchTermTechnology, setSearchTermTechnology] = useState("");
     const [selectedCandidates, setSelectedCandidates] = useState([]);
     // console.log('selectedCandidates ----------------',selectedCandidates)
-    const [inputError, setInputError] = useState('');
-    const [dropdownValue, setDropdownValue] = useState('');//<----v1.0.2----
+    const [inputError, setInputError] = useState("");
+    const [dropdownValue, setDropdownValue] = useState(""); //<----v1.0.2----
 
-    const authToken = Cookies.get('authToken');
+    const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
     const userId = tokenPayload?.userId;
 
@@ -70,7 +78,9 @@ const MyQuestionsList1 = forwardRef(
     // Set initial selectedListIds based on existing question
     useEffect(() => {
       if (existingQuestion?.data?.tenantListId) {
-        setSelectedListIds(existingQuestion?.data?.tenantListId?.map((id) => id.toString()));
+        setSelectedListIds(
+          existingQuestion?.data?.tenantListId?.map((id) => id.toString())
+        );
       }
     }, [existingQuestion]);
 
@@ -79,33 +89,46 @@ const MyQuestionsList1 = forwardRef(
         setSelectedCandidates(defaultTenantList);
       }
     }, [defaultTenantList]);
-    
+
     //<----v1.0.2----
     useImperativeHandle(ref, () => ({
-      openPopup: ({ isEditingMode = false, sectionId = null, label = '', defaultType } = {}) => {
+      openPopup: ({
+        isEditingMode = false,
+        sectionId = null,
+        label = "",
+        defaultType,
+      } = {}) => {
         setIsEditing(isEditingMode);
         setEditingSectionId(sectionId);
         setNewListName(label);
-        setNewListNameForName(label.replace(/\s+/g, '_'));
+        setNewListNameForName(label.replace(/\s+/g, "_"));
         // Sync the Type dropdown with caller or existing list type (supports boolean or string)
-        if (typeof defaultType !== 'undefined') {
-          if (typeof defaultType === 'boolean') {
-            setDropdownValue(defaultType ? 'Interview Questions' : 'Assessment Questions');
-          } else if (typeof defaultType === 'string') {
+        if (typeof defaultType !== "undefined") {
+          if (typeof defaultType === "boolean") {
+            setDropdownValue(
+              defaultType ? "Interview Questions" : "Assessment Questions"
+            );
+          } else if (typeof defaultType === "string") {
             const dt = defaultType.toLowerCase();
-            if (dt === 'true' || dt === 'interview questions') setDropdownValue('Interview Questions');
-            else if (dt === 'false' || dt === 'assessment questions') setDropdownValue('Assessment Questions');
-            else setDropdownValue('Interview Questions');
+            if (dt === "true" || dt === "interview questions")
+              setDropdownValue("Interview Questions");
+            else if (dt === "false" || dt === "assessment questions")
+              setDropdownValue("Assessment Questions");
+            else setDropdownValue("Interview Questions");
           }
         } else if (isEditingMode) {
           const existing = createdLists.find((l) => l._id === sectionId);
-          if (existing && typeof existing.type !== 'undefined') {
-            if (typeof existing.type === 'boolean') {
-              setDropdownValue(existing.type ? 'Interview Questions' : 'Assessment Questions');
-            } else if (typeof existing.type === 'string') {
+          if (existing && typeof existing.type !== "undefined") {
+            if (typeof existing.type === "boolean") {
+              setDropdownValue(
+                existing.type ? "Interview Questions" : "Assessment Questions"
+              );
+            } else if (typeof existing.type === "string") {
               const et = existing.type.toLowerCase();
-              if (et === 'true' || et === 'interview questions') setDropdownValue('Interview Questions');
-              else if (et === 'false' || et === 'assessment questions') setDropdownValue('Assessment Questions');
+              if (et === "true" || et === "interview questions")
+                setDropdownValue("Interview Questions");
+              else if (et === "false" || et === "assessment questions")
+                setDropdownValue("Assessment Questions");
             }
           }
         }
@@ -127,14 +150,14 @@ const MyQuestionsList1 = forwardRef(
     const handleSave = async () => {
       if (saveOrUpdateListLoading || isSaving) return; // Prevent multiple clicks
       setIsSaving(true);
-      
+
       if (!newListName.trim()) {
-        setInputError('Label is required.');
+        setInputError("Label is required.");
         setIsSaving(false);
         return;
       }
       if (!newListNameForName.trim()) {
-        setInputError('Name is required.');
+        setInputError("Name is required.");
         setIsSaving(false);
         return;
       }
@@ -149,7 +172,7 @@ const MyQuestionsList1 = forwardRef(
           (!isEditing || list._id !== editingSectionId)
       );
       if (duplicateLabel) {
-        setInputError('A list with this label already exists.');
+        setInputError("A list with this label already exists.");
         setIsSaving(false);
         return;
       }
@@ -161,14 +184,14 @@ const MyQuestionsList1 = forwardRef(
           (!isEditing || list._id !== editingSectionId)
       );
       if (duplicateName) {
-        setInputError('A list with this name already exists.');
+        setInputError("A list with this name already exists.");
         setIsSaving(false);
         return;
       }
 
       //---------- v1.0.0------>
 
-      setInputError('');
+      setInputError("");
       try {
         const result = await saveOrUpdateList({
           isEditing,
@@ -178,22 +201,22 @@ const MyQuestionsList1 = forwardRef(
           userId,
           orgId: tokenPayload?.tenantId,
           // Map selected label to boolean for backend: Interviews=true, Assignments=false
-          type: dropdownValue === 'Interview Questions',//<----v1.0.2----
+          type: dropdownValue === "Interview Questions", //<----v1.0.2----
         });
 
         if (isEditing && result?.updated) {
-          console.log('List updated successfully');
+          console.log("List updated successfully");
           setSelectedLabelnew(newListName);
-          Cookies.set('lastSelectedLabel', newListName);
+          Cookies.set("lastSelectedLabel", newListName);
           setShowNewListPopup(false);
         } else {
-          console.log('New list created:', result);
-          setNewListName('');
-          setNewListNameForName('');
+          console.log("New list created:", result);
+          setNewListName("");
+          setNewListNameForName("");
           setShowNewListPopup(false);
         }
       } catch (error) {
-        console.error('Error saving list:', error);
+        console.error("Error saving list:", error);
       } finally {
         setIsSaving(false);
       }
@@ -201,8 +224,8 @@ const MyQuestionsList1 = forwardRef(
     //-------v1.0.0------->
 
     useEffect(() => {
-      const savedLabel = Cookies.get('lastSelectedLabel');
-      if (savedLabel && typeof setSelectedLabelnew === 'function') {
+      const savedLabel = Cookies.get("lastSelectedLabel");
+      if (savedLabel && typeof setSelectedLabelnew === "function") {
         setSelectedLabelnew(savedLabel);
       }
     }, [setSelectedLabelnew]);
@@ -216,32 +239,52 @@ const MyQuestionsList1 = forwardRef(
       setIsAddingToList(true);
       try {
         // Determine lists to add and remove
-        const currentListIds = existingQuestion?.data?.tenantListId?.map((id) => id.toString()) || [];
+        const currentListIds =
+          existingQuestion?.data?.tenantListId?.map((id) => id.toString()) ||
+          [];
         console.log("currentListIds ------", currentListIds);
-        const listsToAdd = selectedListIds.filter((id) => !currentListIds.includes(id));
+        const listsToAdd = selectedListIds.filter(
+          (id) => !currentListIds.includes(id)
+        );
         console.log("listsToAdd ------", listsToAdd);
-        const listsToRemove = currentListIds.filter((id) => !selectedListIds.includes(id));
+        const listsToRemove = currentListIds.filter(
+          (id) => !selectedListIds.includes(id)
+        );
         console.log("listsToRemove ------", listsToRemove);
-        
+
         if (listsToAdd.length > 0) {
           //<--------v1.0.3-----
           // Determine question type from selected lists; enforce single type
           const normalizeType = (t) => {
-            if (typeof t === 'boolean') return t;
-            if (typeof t === 'string') {
+            if (typeof t === "boolean") return t;
+            if (typeof t === "string") {
               const s = t.toLowerCase();
-              if (s === 'true' || s === 'interview questions' || s === 'interview' || s === 'interviews') return true;
-              if (s === 'false' || s === 'assessment questions' || s === 'assessment' || s === 'assessment') return false;
+              if (
+                s === "true" ||
+                s === "interview questions" ||
+                s === "interview" ||
+                s === "interviews"
+              )
+                return true;
+              if (
+                s === "false" ||
+                s === "assessment questions" ||
+                s === "assessment" ||
+                s === "assessment"
+              )
+                return false;
             }
             return undefined;
           };
           const selectedTypes = listsToAdd
-            .map(id => createdLists.find(l => l._id === id)?.type)
+            .map((id) => createdLists.find((l) => l._id === id)?.type)
             .map(normalizeType)
-            .filter(t => typeof t === 'boolean');
+            .filter((t) => typeof t === "boolean");
           const uniqueTypes = Array.from(new Set(selectedTypes));
           if (uniqueTypes.length > 1) {
-            alert('Please select lists of the same type (Interview or Assignment) when adding a question.');
+            alert(
+              "Please select lists of the same type (Interview or Assignment) when adding a question."
+            );
             return;
           }
           const isInterviewType = uniqueTypes[0]; // may be undefined; backend defaults to assessment if not provided
@@ -250,10 +293,12 @@ const MyQuestionsList1 = forwardRef(
             listIds: listsToAdd,
             suggestedQuestionId: question._id,
             userId,
-            ...(typeof isInterviewType !== 'undefined' ? { isInterviewType } : {})
+            ...(typeof isInterviewType !== "undefined"
+              ? { isInterviewType }
+              : {}),
           });
 
-          console.log('addQuestionToList------------', addQuestion)
+          console.log("addQuestionToList------------", addQuestion);
           //--------v1.0.3----->
         }
 
@@ -265,11 +310,11 @@ const MyQuestionsList1 = forwardRef(
           });
         }
 
-        console.log('Question lists updated successfully');
+        console.log("Question lists updated successfully");
         setSelectedListIds([]);
         closeDropdown();
       } catch (error) {
-        console.error('Error updating question lists:', error);
+        console.error("Error updating question lists:", error);
       } finally {
         setIsAddingToList(false);
       }
@@ -297,14 +342,16 @@ const MyQuestionsList1 = forwardRef(
     };
 
     useEffect(() => {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }, []);
 
     const handleSelectCandidate = (service) => {
-      const isSelected = selectedCandidates.some((candidate) => candidate._id === service._id);
+      const isSelected = selectedCandidates.some(
+        (candidate) => candidate._id === service._id
+      );
       // console.log('isSelected ----------------',isSelected)
       if (!isSelected) {
         setSelectedCandidates((prevState) => [
@@ -312,7 +359,7 @@ const MyQuestionsList1 = forwardRef(
           { label: service.label, _id: service._id },
         ]);
       } else {
-        console.log('Candidate already selected.');
+        console.log("Candidate already selected.");
       }
       if (error) {
         onErrorClear();
@@ -324,10 +371,13 @@ const MyQuestionsList1 = forwardRef(
 
     useEffect(() => {
       const ids = selectedCandidates
-        .map((candidate) => (candidate && typeof candidate === 'object' ? candidate._id : null))
+        .map((candidate) =>
+          candidate && typeof candidate === "object" ? candidate._id : null
+        )
         .filter(Boolean);
       const prev = prevIdsRef.current;
-      const changed = ids.length !== prev.length || ids.some((id, i) => id !== prev[i]);
+      const changed =
+        ids.length !== prev.length || ids.some((id, i) => id !== prev[i]);
       if (changed) {
         prevIdsRef.current = ids;
         onSelectList(ids);
@@ -342,7 +392,9 @@ const MyQuestionsList1 = forwardRef(
 
             {/* Header */}
             <div className="flex justify-between border border-b border-gray-50 items-center px-4 py-2 bg-white rounded-t-lg">
-              <p className="text-base font-semibold text-custom-blue">Select List</p>
+              <p className="text-base font-semibold text-custom-blue">
+                Select List
+              </p>
               <button onClick={closeDropdown}>
                 <X className="h-5 w-5 text-gray-400" />
               </button>
@@ -364,31 +416,39 @@ const MyQuestionsList1 = forwardRef(
                   No lists found. Create a new list to get started.
                 </div>
               ) : (
-                createdLists.filter((list) => list.type === isInterviewType).map((list) => (
-                  <label
-                    key={list._id}
-                    className="flex items-center gap-2 py-1 text-sm hover:bg-gray-50 rounded px-2"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedListIds.includes(list._id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedListIds((prev) => [...prev, list._id]);
-                        } else {
-                          setSelectedListIds((prev) => prev.filter((id) => id !== list._id));
-                        }
-                      }}
-                    />
-                    {list.label ?list.label.charAt(0).toUpperCase() + list.label.slice(1) : ""}
-                  </label>
-                ))
+                createdLists
+                  .filter((list) => list.type === isInterviewType)
+                  .map((list) => (
+                    <label
+                      key={list._id}
+                      className="flex items-center gap-2 py-1 text-sm hover:bg-gray-50 rounded px-2"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedListIds.includes(list._id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedListIds((prev) => [...prev, list._id]);
+                          } else {
+                            setSelectedListIds((prev) =>
+                              prev.filter((id) => id !== list._id)
+                            );
+                          }
+                        }}
+                        className="accent-custom-blue"
+                      />
+                      {list.label
+                        ? list.label.charAt(0).toUpperCase() +
+                          list.label.slice(1)
+                        : ""}
+                    </label>
+                  ))
               )}
             </div>
 
             <div className="border-t mt-2 flex justify-end p-2">
               <LoadingButton
-              // <---v1.0.0-------
+                // <---v1.0.0-------
                 type="button"
                 //----v1.0.0--->
                 onClick={handleAddToList}
@@ -405,22 +465,25 @@ const MyQuestionsList1 = forwardRef(
           <>
             <div className="flex flex-col gap-2 mb-5 relative">
               <div>
-                <label htmlFor="technology" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="technology"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Question List <span className="text-red-500">*</span>
                 </label>
               </div>
               <div className="relative" ref={popupRef}>
                 <input
-                ref={ref}
-                placeholder="Select Question List"
+                  ref={ref}
+                  placeholder="Select Question List"
                   // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 cursor-pointer ${
                   //   error ? 'border-red-500' : 'border-gray-300 focus:border-black'
                   // }`}
-                    className={`w-full px-3 py-2 border sm:text-sm rounded-md cursor-pointer ${
-                  error
-                    ? 'border-red-500 focus:ring-red-500 focus:outline-red-300'
-                    : 'border-gray-300 focus:border-black'
-                }`}
+                  className={`w-full px-3 py-2 border sm:text-sm rounded-md cursor-pointer ${
+                    error
+                      ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                      : "border-gray-300 focus:border-black"
+                  }`}
                   onClick={togglePopup}
                   readOnly
                 />
@@ -439,23 +502,30 @@ const MyQuestionsList1 = forwardRef(
                           type="text"
                           placeholder="Search list"
                           value={searchTermTechnology}
-                          onChange={(e) => setSearchTermTechnology(e.target.value)}
+                          onChange={(e) =>
+                            setSearchTermTechnology(e.target.value)
+                          }
                           className="pl-8 focus:border-black focus:outline-none w-full"
                         />
                       </div>
                     </div>
                     <ul>
-                      {createdLists
-                        .filter((service) =>
+                      {createdLists.filter(
+                        (service) =>
                           service.label &&
-                          service.label.toLowerCase().includes(searchTermTechnology.toLowerCase())
-                          && service.type === isInterviewType
-                        ).length > 0 ? (
+                          service.label
+                            .toLowerCase()
+                            .includes(searchTermTechnology.toLowerCase()) &&
+                          service.type === isInterviewType
+                      ).length > 0 ? (
                         createdLists
-                          .filter((service) =>
-                            service.label &&
-                            service.label.toLowerCase().includes(searchTermTechnology.toLowerCase())
-                            && service.type === isInterviewType
+                          .filter(
+                            (service) =>
+                              service.label &&
+                              service.label
+                                .toLowerCase()
+                                .includes(searchTermTechnology.toLowerCase()) &&
+                              service.type === isInterviewType
                           )
                           .map((service) => (
                             <li
@@ -491,7 +561,9 @@ const MyQuestionsList1 = forwardRef(
 
               <div className="px-4 py-3 rounded-md border border-gray-200 -mt-3">
                 {selectedCandidates.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center">No Question List selected</p>
+                  <p className="text-sm text-gray-500 text-center">
+                    No Question List selected
+                  </p>
                 ) : (
                   <div>
                     <div className="flex items-center justify-between mb-3">
@@ -499,10 +571,10 @@ const MyQuestionsList1 = forwardRef(
                         <BookOpen className="h-4 w-4 text-gray-500 mr-2" />
                         <span className="text-sm text-gray-700">
                           {selectedCandidates.length} Question List
-                          {selectedCandidates.length !== 1 ? 's' : ''} selected
+                          {selectedCandidates.length !== 1 ? "s" : ""} selected
                         </span>
                       </div>
-                      
+
                       {selectedCandidates.length > 0 && (
                         <button
                           type="button"
@@ -521,11 +593,13 @@ const MyQuestionsList1 = forwardRef(
                         <div
                           key={index}
                           className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
-                          style={{ minWidth: '150px', maxWidth: '250px' }}
+                          style={{ minWidth: "150px", maxWidth: "250px" }}
                         >
                           <div className="flex-1 overflow-hidden">
                             <span className="ml-2 text-sm text-blue-800 truncate whitespace-nowrap">
-                              {notEditmode && typeof candidate === 'string' ? candidate : candidate.label}
+                              {notEditmode && typeof candidate === "string"
+                                ? candidate
+                                : candidate.label}
                             </span>
                           </div>
                           <button
@@ -552,14 +626,14 @@ const MyQuestionsList1 = forwardRef(
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 bg-white rounded-t-xl">
                 <h2 className="text-lg font-semibold text-custom-blue">
-                  {isEditing ? 'Edit List' : 'New List'}
+                  {isEditing ? "Edit List" : "New List"}
                 </h2>
                 <button
                   onClick={() => {
                     setShowNewListPopup(false);
-                    setInputError('');
-                    setNewListName('');
-                    setNewListNameForName('');
+                    setInputError("");
+                    setNewListName("");
+                    setNewListNameForName("");
                   }}
                 >
                   <X className="w-6 h-6 text-gray-500 hover:text-gray-800" />
@@ -579,24 +653,29 @@ const MyQuestionsList1 = forwardRef(
                       value={newListName}
                       maxLength={30}
                       onChange={(e) => {
-                        const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9_ ]/g, '');
+                        const sanitizedValue = e.target.value.replace(
+                          /[^a-zA-Z0-9_ ]/g,
+                          ""
+                        );
                         setNewListName(sanitizedValue);
-                        setInputError('');
+                        setInputError("");
                       }}
-                      onBlur={() => setNewListNameForName(newListName.replace(/\s+/g, '_'))}
+                      onBlur={() =>
+                        setNewListNameForName(newListName.replace(/\s+/g, "_"))
+                      }
                       className="w-full px-3 py-2 h-10 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-custom-blue"
                       placeholder="Enter label"
                     />
                     {/* Character Counter */}
                     <div className="flex justify-between items-center text-sm text-gray-500 mt-1">
                       {inputError ? (
-                        <p className="text-red-500 text-xs">
-                          {inputError}
-                        </p>
+                        <p className="text-red-500 text-xs">{inputError}</p>
                       ) : (
                         <div></div>
                       )}
-                      <span className="text-xs">{newListName.length}/30 characters</span>
+                      <span className="text-xs">
+                        {newListName.length}/30 characters
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -615,35 +694,45 @@ const MyQuestionsList1 = forwardRef(
                 </div>
                 {/*<----v1.0.2---- */}
                 <div className="flex items-center">
-                <label className="text-sm font-medium w-20">
+                  <label className="text-sm font-medium w-20">
                     Type <span className="text-red-500">*</span>
                   </label>
-              <div className="flex-1">
-                <DropdownSelect
-                  isSearchable={false}
-                  value={dropdownValue ? { value: dropdownValue, label: dropdownValue } : null}
-                  onChange={(opt) => setDropdownValue(opt?.value || "")}
-                  options={[
-                    { value: "Interview Questions", label: "Interview Questions" },
-                    { value: "Assessment Questions", label: "Assessment Questions" },
-                  ]}
-                  placeholder="Select Question Type"
-                />
-              </div>
-            {/*----v1.0.2---->*/}
-            </div>
+                  <div className="flex-1">
+                    <DropdownSelect
+                      isSearchable={false}
+                      value={
+                        dropdownValue
+                          ? { value: dropdownValue, label: dropdownValue }
+                          : null
+                      }
+                      onChange={(opt) => setDropdownValue(opt?.value || "")}
+                      options={[
+                        {
+                          value: "Interview Questions",
+                          label: "Interview Questions",
+                        },
+                        {
+                          value: "Assessment Questions",
+                          label: "Assessment Questions",
+                        },
+                      ]}
+                      placeholder="Select Question Type"
+                    />
+                  </div>
+                  {/*----v1.0.2---->*/}
+                </div>
               </div>
               <div className="flex justify-end border-t p-3 rounded-b-md text-sm">
                 <LoadingButton
-                // <---v1.0.0-------
+                  // <---v1.0.0-------
                   type="button"
                   //------v1.0.0--->
                   onClick={handleSave}
                   isLoading={saveOrUpdateListLoading || isSaving}
-                  loadingText={isEditing ? 'Updating...' : 'Saving...'}
+                  loadingText={isEditing ? "Updating..." : "Saving..."}
                   disabled={saveOrUpdateListLoading || isSaving}
                 >
-                  {isEditing ? 'Update' : 'Save'}
+                  {isEditing ? "Update" : "Save"}
                 </LoadingButton>
               </div>
             </div>

@@ -6,6 +6,7 @@ import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2, Upload, ChevronDown } from "lucide-react";
 import Papa from "papaparse";
 import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { notify } from "../../../services/toastService";
 
 const StatusDropdown = ({ value, onChange }) => {
   const [open, setOpen] = useState(false);
@@ -150,6 +151,52 @@ const MasterForm = ({
   };
   const nameFieldKey = getNameFieldKey();
 
+  // Helper for Required Star
+  const RequiredStar = () => <span className="text-red-500 ml-1">*</span>;
+
+  // Validation Logic
+  const validateFields = (dataArray) => {
+    for (let i = 0; i < dataArray.length; i++) {
+      const item = dataArray[i];
+      const entryNum = dataArray.length > 1 ? `(Entry ${i + 1})` : "";
+
+      if (!item[nameFieldKey]?.trim()) {
+        notify.error(
+          `${capitalizeFirstLetter(type)} Name is required ${entryNum}`
+        );
+        return false;
+      }
+
+      if (type === "roles") {
+        if (!item.roleLabel?.trim()) {
+          notify.error(`Role Label is required ${entryNum}`);
+          return false;
+        }
+        if (!item.roleCategory?.trim()) {
+          notify.error(`Role Category is required ${entryNum}`);
+          return false;
+        }
+      }
+
+      if (type === "technology") {
+        if (!item.Category?.trim()) {
+          notify.error(`Category is required ${entryNum}`);
+          return false;
+        }
+        if (!item.name?.trim()) {
+          notify.error(`Technical Name is required ${entryNum}`);
+          return false;
+        }
+      }
+
+      if (type === "category" && item.isActive === null) {
+        notify.error(`Status is required ${entryNum}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
   // v1.0.2 <---------------------------------------------------------------------------
   // helper: create a fresh empty field object that includes extra fields for type
   // const createEmptyField = () => {
@@ -253,6 +300,9 @@ const MasterForm = ({
       payload = mode === "edit" ? { ...formData } : { ...fields[0].data };
     }
 
+    // Run Validation
+    if (!validateFields(payload)) return;
+
     // Call parent's onSubmit
     onSubmit(payload);
 
@@ -345,6 +395,7 @@ const MasterForm = ({
                         {/* Master Name */}
                         {capitalizeFirstLetter(type) || type}
                         {fields.length > 1 && `#${idx + 1}`}
+                        <RequiredStar />
                       </label>
                       <input
                         type="text"
@@ -361,7 +412,7 @@ const MasterForm = ({
                       <>
                         <div>
                           <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Role Label
+                            Role Label <RequiredStar />
                           </label>
                           <input
                             type="text"
@@ -388,7 +439,7 @@ const MasterForm = ({
                         </div>
                         <div>
                           <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Role Category
+                            Role Category <RequiredStar />
                           </label>
                           <input
                             type="text"
@@ -420,7 +471,7 @@ const MasterForm = ({
                       <>
                         <div>
                           <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Category
+                            Category <RequiredStar />
                           </label>
                           <input
                             type="text"
@@ -449,7 +500,7 @@ const MasterForm = ({
                         {/* New Field Added */}
                         <div>
                           <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Name
+                            Name <RequiredStar />
                           </label>
                           <input
                             type="text"
@@ -480,7 +531,7 @@ const MasterForm = ({
                     {type === "category" && (
                       <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
-                          Status
+                          Status <RequiredStar />
                         </label>
                         <StatusDropdown
                           value={f.data.isActive}
@@ -528,7 +579,7 @@ const MasterForm = ({
               {mode === "edit" && !isBulkEdit && (
                 <div className="p-3 border rounded-lg">
                   <label className="block text-gray-700 text-sm font-medium mb-1">
-                    Master Name
+                    Master Name <RequiredStar />
                   </label>
                   <input
                     type="text"
@@ -547,7 +598,7 @@ const MasterForm = ({
                   {type === "technology" && (
                     <div>
                       <label className="block text-gray-700 text-sm font-medium mb-1">
-                        Category
+                        Category <RequiredStar />
                       </label>
                       <input
                         type="text"
@@ -561,7 +612,7 @@ const MasterForm = ({
                       />
                       <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
-                          Name
+                          Name <RequiredStar />
                         </label>
                         <input
                           type="text"
@@ -582,7 +633,7 @@ const MasterForm = ({
                     <>
                       <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
-                          Role Label
+                          Role Label <RequiredStar />
                         </label>
                         <input
                           type="text"
@@ -600,7 +651,7 @@ const MasterForm = ({
                       </div>
                       <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
-                          Role Category
+                          Role Category <RequiredStar />
                         </label>
                         <input
                           type="text"
@@ -622,7 +673,7 @@ const MasterForm = ({
                   {type === "category" && (
                     <div>
                       <label className="block text-gray-700 text-sm font-medium mb-1">
-                        Status
+                        Status <RequiredStar />
                       </label>
                       <StatusDropdown
                         value={formData.isActive}
