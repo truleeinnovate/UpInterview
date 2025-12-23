@@ -731,6 +731,10 @@ exports.acceptInterviewRequest = async (req, res) => {
     const prevHoldAmount = Number(wallet.holdAmount || 0);
     const holdID = request?.interviewRequestCode || String(requestId).slice(-10);
 
+    // Create a wallet "hold" transaction for the full amount that will later
+    // be settled according to the interview policy (normal vs mock, time brackets,
+    // no-show rules). WalletControllers.settleInterviewPayment reads this
+    // transaction as the baseAmount for all payout/refund calculations.
     const holdTransaction = {
       type: "hold",
       amount: totalAmount,
@@ -738,6 +742,9 @@ exports.acceptInterviewRequest = async (req, res) => {
       relatedInvoiceId: holdID,
       status: "pending",
       metadata: {
+        // Policy inputs: these fields are used downstream by settlement logic
+        // and reporting to understand how the original hold amount was computed
+        // and to link all transactions back to the specific interview round.
         interviewId: String(request.isMockInterview ? round?.mockInterviewId : round?.interviewId || ""),
         roundId: String(roundId),
         requestId: String(requestId),
