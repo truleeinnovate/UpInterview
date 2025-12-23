@@ -744,7 +744,7 @@ const PositionRoundCard = ({
             className="flex items-center"
           >
             <Clock className="h-4 w-4 mr-1" />
-            <span>Activity</span>
+            <span>Feeds</span>
           </Button>
 
           {canEdit && (

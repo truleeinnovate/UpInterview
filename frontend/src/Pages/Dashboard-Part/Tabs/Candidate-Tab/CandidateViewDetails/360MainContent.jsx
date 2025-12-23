@@ -45,7 +45,7 @@ const tabs = [
   { id: "positions", name: "Positions", icon: Briefcase },
   { id: "timeline", name: "Timeline", icon: Calendar },
   { id: "documents", name: "Documents", icon: FileText },
-  { id: "activity", name: "Activity", icon: Activity },
+  { id: "activity", name: "Feeds", icon: Activity },
 ];
 // v1.0.0 -------------------------------------------------------->
 

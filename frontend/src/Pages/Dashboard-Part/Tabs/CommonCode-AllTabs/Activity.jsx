@@ -667,7 +667,7 @@ function Activity({ parentId, parentId2, mode }) {
     <div className="space-y-6 max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:mt-4 gap-4">
-          <h3 className="text-lg font-medium text-gray-900">Activity Feed</h3>
+          <h3 className="text-lg font-medium text-gray-900">Feeds</h3>
         </div>
         <div className="flex items-center gap-2 sm:mt-4">
           <div className="relative">

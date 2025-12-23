@@ -26,7 +26,12 @@ import {
 } from "../../../../../Components/FormFields";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
-import { useCreateGroup, useGroupById, useGroupsQuery, useUpdateGroup } from "../../../../../apiHooks/useInterviewerGroups";
+import {
+  useCreateGroup,
+  useGroupById,
+  useGroupsQuery,
+  useUpdateGroup,
+} from "../../../../../apiHooks/useInterviewerGroups";
 
 const InterviewerGroupFormPopup = () => {
   const { id } = useParams();
@@ -170,25 +175,24 @@ const InterviewerGroupFormPopup = () => {
       //   });
       // }
 
-        const groupPayload = {
+      const groupPayload = {
         name: formData.name,
         description: formData.description,
         status: formData.status,
         users: formData.members,
         tenantId: tenantId,
       };
-      
+
       if (id) {
         // Update existing group
         await updateGroup.mutateAsync({
           groupId: id,
-          groupData: groupPayload
+          groupData: groupPayload,
         });
       } else {
         // Create new group
         await createGroup.mutateAsync(groupPayload);
       }
-
 
       navigate("/account-settings/interviewer-groups");
     } catch (error) {
@@ -437,7 +441,7 @@ const InterviewerGroupFormPopup = () => {
                               onChange={() =>
                                 handleMemberToggle(member?.contact?._id)
                               }
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              className="rounded border-gray-300 accent-custom-blue focus:ring-custom-blue"
                             />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">

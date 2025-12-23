@@ -95,9 +95,7 @@ const PositionSlideDetails = () => {
     }
 
     try {
-
       const foundPosition = fetchedPosition;
-
 
       const roundsList = foundPosition.rounds || [];
 
@@ -115,7 +113,6 @@ const PositionSlideDetails = () => {
       const internalSet = new Set();
       const externalSet = new Set();
 
-
       roundsList.forEach((round) => {
         round?.interviewers?.forEach((interviewer) => {
           if (interviewer?._id) {
@@ -123,9 +120,7 @@ const PositionSlideDetails = () => {
 
             if (round.interviewerType?.toLowerCase() === "internal") {
               internalSet.add(interviewer._id);
-            } else if (
-              round.interviewerType?.toLowerCase() === "external"
-            ) {
+            } else if (round.interviewerType?.toLowerCase() === "external") {
               externalSet.add(interviewer._id);
             }
           }
@@ -188,7 +183,7 @@ const PositionSlideDetails = () => {
 
   const tabs = [
     { id: "Details", name: "Details", icon: "📋" },
-    { id: "Activity", name: "Activity", icon: "📊" },
+    { id: "Activity", name: "Feeds", icon: "📊" },
   ];
 
   if (isLoading || !position) {
@@ -235,10 +230,11 @@ const PositionSlideDetails = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`${activeTab === tab.id
+                className={`${
+                  activeTab === tab.id
                     ? "border-custom-blue text-custom-blue"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
               >
                 <span className="mr-2">{tab.icon}</span>
                 {tab.name}
@@ -328,10 +324,10 @@ const PositionSlideDetails = () => {
                       {position?.minSalary && position?.maxSalary
                         ? `${position.minSalary} - ${position.maxSalary}`
                         : position?.minSalary
-                          ? `${position.minSalary} - Not Disclosed`
-                          : position?.maxSalary
-                            ? `0 - ${position.maxSalary}`
-                            : "Not Disclosed"}
+                        ? `${position.minSalary} - Not Disclosed`
+                        : position?.maxSalary
+                        ? `0 - ${position.maxSalary}`
+                        : "Not Disclosed"}
                     </p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">

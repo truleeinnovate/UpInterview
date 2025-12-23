@@ -72,7 +72,7 @@ function CandidateDetailsPopup({ candidate, onClose }) {
             }`}
             onClick={() => setActiveTab("activity")}
           >
-            Activity
+            Feeds
           </button>
         </div>
       </div>
