@@ -87,6 +87,7 @@ const ResetPassword = lazy(() => import("./Pages/Login-Part/ResetPassword"));
 const VideoCallLanding = lazy(() =>
   import("./Pages/CustomVideoCall/Landing.jsx")
 );
+const VideoSDKDashboard1 = lazy(() => import("./VideoSDK1/Dashboard"));
 const VideoCallJoinRoom = lazy(() =>
   import("./Pages/CustomVideoCall/JoinRoom.jsx")
 );
@@ -490,9 +491,6 @@ const ContactUsViewPage = lazy(() =>
 // v1.0.8 ------------------------------------------------------------------------------->
 // v1.0.9 ------------------------------------------------------------------------------->
 
-const VideoSDKDashboard = lazy(() => import('../src/VideoSDK/Dashboard.jsx'));
-const VideoSDKJoinMeeting = lazy(() => import('../src/VideoSDK/JoinMeeting.jsx'));
-const VideoSDKMeetingRoom = lazy(() => import('../src/VideoSDK/MeetingRoom.jsx'));
 
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
@@ -520,9 +518,7 @@ const AuthRoutes = () => (
     <Route path="/resetPassword" element={<ResetPassword />} />
     <Route path="/forgot-password" element={<ForgetPassword />} />
 
-    <Route path="/video-sdk" element={<VideoSDKDashboard />} />
-    <Route path="/meeting/:roomId" element={<VideoSDKJoinMeeting />} />
-    <Route path="/video-sdk-meeting-room" element={<VideoSDKMeetingRoom />} />
+    <Route path="/video-dashboard" element={<VideoSDKDashboard1 />} />
 
     <Route path="/assessmenttest" element={<AssessmentTest />} />
     <Route path="/pending-approval" element={<PendingApproval />} />
@@ -1479,9 +1475,6 @@ const App = () => {
       "/verify-user-email",
       "/resetPassword",
       "/forgot-password",
-      "/video-sdk",
-      "/meeting",
-      "/video-sdk-meeting-room",
       "/assessmenttest",
       "/pending-approval",
       "/subscription-success",
@@ -1490,6 +1483,7 @@ const App = () => {
       "/callback",
       "/oauth2callback",
       "/join-meeting",
+      '/video-dashboard',
     ].some(
       (path) =>
         location.pathname === path ||

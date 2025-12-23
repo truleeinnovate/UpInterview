@@ -1876,99 +1876,68 @@ app.use("/analytics", analyticsRoutes);
 // });
 
 
-// video sdk
+// v1
+// get
+app.get("/get-token", (req, res) => {
+  const API_KEY = process.env.VIDEOSDK_API_KEY;
+  const SECRET_KEY = process.env.VIDEOSDK_SECRET_KEY;
 
-const jwt = require("jsonwebtoken");
+  const options = { expiresIn: "10m", algorithm: "HS256" };
 
-console.log("VIDEOSDK_API_KEY:", process.env.VIDEOSDK_API_KEY);
-console.log("VIDEOSDK_SECRET:", process.env.VIDEOSDK_SECRET);
+  const { roomId, peerId } = req.body;
 
-// 🔹 CREATE MEETING TOKEN
-function generateCreateToken() {
-  const token = jwt.sign(
-    {
-      apikey: process.env.VIDEOSDK_API_KEY,
-      permissions: ["allow_create"],
-      version: 2, // ✅ REQUIRED
-    },
-    process.env.VIDEOSDK_SECRET,
-    { expiresIn: "1h" }
-  );
+  let payload = {
+    apikey: API_KEY,
+    permissions: ["allow_join", "allow_mod"],
+  };
 
-  // 🔍 DEBUG
-  console.log("CREATE TOKEN PAYLOAD:", jwt.decode(token));
-
-  return token;
-}
-
-// 🔹 JOIN MEETING TOKEN
-function generateJoinToken(meetingId) {
-  const token = jwt.sign(
-    {
-      apikey: process.env.VIDEOSDK_API_KEY,
-      permissions: ["allow_join"],
-      meetingId,
-      version: 2, // ✅ REQUIRED
-    },
-    process.env.VIDEOSDK_SECRET,
-    { expiresIn: "1h" }
-  );
-
-  // 🔍 DEBUG (THIS IS THE MOST IMPORTANT LOG)
-  console.log("JOIN TOKEN PAYLOAD:", jwt.decode(token));
-
-  return token;
-}
-
-// ---------------- CREATE MEETING ----------------
-app.post("/create-meeting", async (req, res) => {
-  try {
-    console.log("➡️ /create-meeting called");
-
-    const token = generateCreateToken();
-
-    const response = await fetch("https://api.videosdk.live/v2/rooms", {
-      method: "POST",
-      headers: {
-        Authorization: token,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name: "Meeting" }),
-    });
-
-    const data = await response.json();
-
-    console.log("📦 VideoSDK create response:", data);
-
-    res.json({
-      roomId: data.roomId,
-      meetingLink: `http://localhost:3000/meeting/${data.roomId}`,
-    });
-  } catch (err) {
-    console.error("❌ Create meeting error:", err);
-    res.status(500).json({ error: "Failed to create meeting" });
+  if (roomId || peerId) {
+    payload.version = 2;
+    payload.roles = ["rtc"];
   }
+  if (roomId) {
+    payload.roomId = roomId;
+  }
+  if (peerId) {
+    payload.participantId = peerId;
+  }
+
+  const token = jwt.sign(payload, SECRET_KEY, options);
+  res.json({ token });
 });
 
-// ---------------- JOIN MEETING ----------------
-app.post("/get-meeting-token", (req, res) => {
-  try {
-    console.log("➡️ /get-meeting-token called");
-    console.log("📥 Request body:", req.body);
+//post
+app.post("/create-meeting/", (req, res) => {
+  const { token, region } = req.body;
+  const url = `${process.env.VIDEOSDK_API_ENDPOINT}/rooms`;
+  const options = {
+    method: "POST",
+    headers: { Authorization: token, "Content-Type": "application/json" },
+    body: JSON.stringify({ region }),
+  };
 
-    const { roomId } = req.body;
+  fetch(url, options)
+    .then((response) => response.json())
+    .then((result) => res.json(result))roomId
+    .catch((error) => console.error("error", error));
+});
 
-    if (!roomId) {
-      return res.status(400).json({ error: "roomId missing" });
-    }
+//validate
+app.post("/validate-meeting/:meetingId", (req, res) => {
+  const token = req.body.token;
+  const meetingId = req.params.meetingId;
 
-    const token = generateJoinToken(roomId);
+  const url = `${process.env.VIDEOSDK_API_ENDPOINT}/rooms/validate/${meetingId}`;
 
-    res.json({ token });
-  } catch (err) {
-    console.error("❌ Join token error:", err);
-    res.status(500).json({ error: "Failed to generate token" });
-  }
+  const options = {
+    method: "GET",
+    headers: { Authorization: token },
+  };
+
+  fetch(url, options)
+    .then((response) => response.json())
+    .then((result) => res.json(result))roomId
+    .catch((error) => console.error("error", error));
 });
 
 // Catch-all for undefined routes
